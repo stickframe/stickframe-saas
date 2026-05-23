@@ -1905,17 +1905,24 @@ function Orcamentos({clientes,orcamentos,setOrcamentos,registrar}) {
           {orcamentos.map(o=>{
             const clienteOrc = clientes.find(c=>c.nome===o.cliente);
             return (
-            <div key={o.id} style={{background:C.surface,borderRadius:12,border:`1px solid ${C.border}`,padding:"15px 20px",display:"flex",alignItems:"center",gap:16}}>
-              <div style={{flex:1}}>
-                <div style={{display:"flex",gap:10,alignItems:"center",marginBottom:4}}><span style={{fontSize:11,color:C.red,fontWeight:700,letterSpacing:1}}>{o.ref}</span><Badge label={o.status} color={statusColor(o.status)}/></div>
-                <div style={{fontSize:14,fontWeight:700}}>{o.cliente}</div>
-                <div style={{fontSize:11,color:C.muted,marginTop:2}}>{o.unidades} UH · {o.area} m²/und · {PRECOS[o.padrao]?.label||"Padrão"} · {o.criado}</div>
+            <div key={o.id} style={{background:C.surface,borderRadius:12,border:`1px solid ${C.border}`,padding:"15px 20px"}}>
+              <div style={{display:"flex",alignItems:"center",gap:16,flexWrap:"wrap"}}>
+                <div style={{flex:1,minWidth:200}}>
+                  <div style={{display:"flex",gap:10,alignItems:"center",marginBottom:4}}><span style={{fontSize:11,color:C.red,fontWeight:700,letterSpacing:1}}>{o.ref}</span><Badge label={o.status} color={statusColor(o.status)}/></div>
+                  <div style={{fontSize:14,fontWeight:700}}>{o.cliente}</div>
+                  <div style={{fontSize:11,color:C.muted,marginTop:2}}>{o.unidades} UH · {o.area} m²/und · {PRECOS[o.padrao]?.label||"Padrão"} · {o.criado}</div>
+                </div>
+                <div style={{textAlign:"right",flexShrink:0}}>
+                  <div style={{fontSize:17,fontWeight:800}}>{fmt(o.valor)}</div>
+                  <div style={{fontSize:11,color:C.muted,marginTop:2}}>{fmt(o.valor/o.unidades)}/UH</div>
+                </div>
               </div>
-              <div style={{textAlign:"right"}}><div style={{fontSize:17,fontWeight:800}}>{fmt(o.valor)}</div><div style={{fontSize:11,color:C.muted,marginTop:2}}>{fmt(o.valor/o.unidades)}/UH</div></div>
-              <Btn variant="ghost" size="sm" onClick={()=>abrirEditar(o)}>✏️ Editar</Btn>
-              <Btn variant="ghost" size="sm">Ver PDF</Btn>
-              <button onClick={()=>enviarWhatsApp(clienteOrc?.contato||"", msgOrcamento(o))} style={{padding:"6px 12px",background:"#25D366"+"22",border:`1px solid #25D36644`,borderRadius:6,color:"#25D366",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap"}}>📲 Zap</button>
-              <button onClick={()=>setConfirm(o.id)} style={{padding:"6px 12px",background:C.danger+"22",border:`1px solid ${C.danger}44`,borderRadius:6,color:C.danger,fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>🗑</button>
+              <div style={{display:"flex",gap:8,marginTop:12,flexWrap:"wrap"}}>
+                <Btn variant="ghost" size="sm" onClick={()=>abrirEditar(o)}>✏️ Editar</Btn>
+                <Btn variant="ghost" size="sm">Ver PDF</Btn>
+                <button onClick={()=>enviarWhatsApp(clienteOrc?.contato||"", msgOrcamento(o))} style={{padding:"6px 14px",background:"#25D366"+"22",border:`1px solid #25D36644`,borderRadius:6,color:"#25D366",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>📲 Enviar pelo Zap</button>
+                <button onClick={()=>setConfirm(o.id)} style={{padding:"6px 12px",background:C.danger+"22",border:`1px solid ${C.danger}44`,borderRadius:6,color:C.danger,fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>🗑 Deletar</button>
+              </div>
             </div>
           );})}
         </div>
