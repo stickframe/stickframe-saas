@@ -135,9 +135,9 @@ const Btn = ({children,onClick,variant="primary",size="md",disabled,fullWidth}) 
   }}>{children}</button>
 );
 const Modal = ({title,onClose,children}) => (
-  <div style={{position:"fixed",inset:0,background:"#000b",zIndex:100,display:"flex",alignItems:"center",justifyContent:"center"}}
+  <div style={{position:"fixed",inset:0,background:"#000b",zIndex:100,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 12px"}}
     onClick={e=>e.target===e.currentTarget&&onClose()}>
-    <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:28,width:500,maxHeight:"90vh",overflowY:"auto"}}>
+    <div className="modal-inner" style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:24,width:500,maxWidth:"100%",maxHeight:"90vh",overflowY:"auto"}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:22}}>
         <h3 style={{fontSize:15,fontWeight:700}}>{title}</h3>
         <button onClick={onClose} style={{background:"none",border:"none",color:C.muted,fontSize:22,cursor:"pointer"}}>×</button>
@@ -334,6 +334,399 @@ ${(o.fin.lancamentos||[]).map(l=>`
   URL.revokeObjectURL(url);
 }
 
+// ─── PORTAL DO CLIENTE ───────────────────────────────────────────────────────
+function gerarPortalCliente(obra, registros, financeiro) {
+  const hoje = new Date().toLocaleDateString("pt-BR");
+  const fin  = financeiro[obra.id] || {contrato:0, lancamentos:[]};
+  const rec  = fin.lancamentos.filter(l=>l.tipo==="receita").reduce((a,l)=>a+l.valor,0);
+  const pct  = fin.contrato>0 ? Math.round((rec/fin.contrato)*100) : 0;
+  const fmt  = v => "R$ " + Number(v).toLocaleString("pt-BR",{minimumFractionDigits:0});
+  const FASES_P = ["Projeto executivo","Fundação","Estrutura Steel Frame","Fechamentos","Instalações","Acabamento","Entrega"];
+  const faseIdx = FASES_P.indexOf(obra.fase);
+
+  const html = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Acompanhamento — ${obra.cliente}</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700;800&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'DM Sans',sans-serif;background:#f4f4f4;color:#222;min-height:100vh;}
+  .header{background:#1A1A1A;padding:18px 20px;display:flex;justify-content:space-between;align-items:center;}
+  .logo-row{display:flex;align-items:center;gap:10px;}
+  .logo-box{width:34px;height:34px;background:linear-gradient(135deg,#414141 50%,#981915 50%);border-radius:7px;border:1px solid #333;}
+  .logo-name{font-size:15px;font-weight:800;letter-spacing:2.5px;}
+  .logo-name .g{color:#555;} .logo-name .r{color:#981915;}
+  .logo-sub{font-size:8px;color:#444;letter-spacing:1.5px;}
+  .header-date{font-size:10px;color:#444;}
+  .hero{background:linear-gradient(135deg,#981915,#6e1210);padding:28px 20px;color:#fff;}
+  .hero-label{font-size:10px;letter-spacing:1.5px;opacity:.7;margin-bottom:6px;}
+  .hero-nome{font-size:20px;font-weight:800;margin-bottom:4px;}
+  .hero-cliente{font-size:13px;opacity:.8;margin-bottom:16px;}
+  .hero-badge{display:inline-block;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:20px;padding:3px 12px;font-size:11px;font-weight:600;}
+  .body{padding:16px;max-width:480px;margin:0 auto;}
+  .card{background:#fff;border-radius:12px;padding:18px;margin-bottom:14px;box-shadow:0 1px 6px rgba(0,0,0,.06);}
+  .card-title{font-size:10px;font-weight:700;letter-spacing:1.2px;color:#888;margin-bottom:12px;text-transform:uppercase;}
+  .prog-pct{font-size:32px;font-weight:800;color:#981915;}
+  .prog-label{font-size:11px;color:#888;margin-top:2px;margin-bottom:12px;}
+  .prog-bar{height:8px;background:#f0f0f0;border-radius:4px;overflow:hidden;}
+  .prog-fill{height:8px;border-radius:4px;background:linear-gradient(90deg,#981915,#6e1210);}
+  .fase-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid #f5f5f5;}
+  .fase-row:last-child{border:none;}
+  .fase-dot{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;}
+  .fase-dot.done{background:#2e9e5b;color:#fff;}
+  .fase-dot.current{background:#981915;color:#fff;}
+  .fase-dot.pending{background:#f0f0f0;color:#bbb;}
+  .fase-nome{font-size:12px;}
+  .fase-nome.done{color:#2e9e5b;}
+  .fase-nome.current{font-weight:700;color:#981915;}
+  .fase-nome.pending{color:#bbb;}
+  .fase-badge{margin-left:auto;background:#981915;color:#fff;border-radius:10px;padding:1px 8px;font-size:9px;font-weight:700;}
+  .fin-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+  .fin-item{background:#f9f9f9;border-radius:8px;padding:10px;}
+  .fin-label{font-size:9px;color:#888;margin-bottom:3px;}
+  .fin-val{font-size:14px;font-weight:800;}
+  .fin-val.green{color:#2e9e5b;}
+  .rec-bar{height:7px;background:#f0f0f0;border-radius:4px;overflow:hidden;margin-bottom:5px;}
+  .rec-fill{height:7px;background:linear-gradient(90deg,#2e9e5b,#1a7a40);border-radius:4px;}
+  .rec-label{display:flex;justify-content:space-between;font-size:10px;color:#888;}
+  .diario-item{padding:10px 0;border-bottom:1px solid #f5f5f5;}
+  .diario-item:last-child{border:none;}
+  .diario-data{font-size:10px;color:#888;margin-bottom:3px;}
+  .diario-text{font-size:12px;color:#444;line-height:1.5;}
+  .diario-oc{background:#fff5f5;border-left:3px solid #981915;padding:6px 10px;border-radius:0 4px 4px 0;font-size:11px;color:#666;margin-top:5px;}
+  .footer{text-align:center;padding:20px 16px;font-size:10px;color:#aaa;}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="logo-row">
+    <div class="logo-box"></div>
+    <div><div class="logo-name"><span class="g">STICK</span><span class="r">FRAME</span></div><div class="logo-sub">SISTEMAS CONSTRUTIVOS</div></div>
+  </div>
+  <div class="header-date">Atualizado em ${hoje}</div>
+</div>
+<div class="hero">
+  <div class="hero-label">ACOMPANHAMENTO DE OBRA</div>
+  <div class="hero-nome">${obra.nome}</div>
+  <div class="hero-cliente">Cliente: ${obra.cliente}</div>
+  <div class="hero-badge">${obra.status} · Prazo: ${obra.prazo}</div>
+</div>
+<div class="body">
+  <div class="card">
+    <div class="card-title">Progresso Geral</div>
+    <div class="prog-pct">${obra.progresso}%</div>
+    <div class="prog-label">concluído</div>
+    <div class="prog-bar"><div class="prog-fill" style="width:${obra.progresso}%"></div></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Etapas da Obra</div>
+    ${FASES_P.map((f,i)=>{
+      const done=i<faseIdx,curr=i===faseIdx,cls=done?"done":curr?"current":"pending";
+      return `<div class="fase-row"><div class="fase-dot ${cls}">${done?"✓":i+1}</div><div class="fase-nome ${cls}">${f}</div>${curr?`<div class="fase-badge">Atual</div>`:""}</div>`;
+    }).join("")}
+  </div>
+  ${fin.contrato>0?`
+  <div class="card">
+    <div class="card-title">Financeiro</div>
+    <div class="fin-grid">
+      <div class="fin-item"><div class="fin-label">Contrato</div><div class="fin-val">${fmt(fin.contrato)}</div></div>
+      <div class="fin-item"><div class="fin-label">Recebido</div><div class="fin-val green">${fmt(rec)}</div></div>
+    </div>
+    <div class="rec-bar"><div class="rec-fill" style="width:${pct}%"></div></div>
+    <div class="rec-label"><span>${pct}% recebido</span><span>${100-pct}% a receber</span></div>
+  </div>`:""}
+  ${registros.length>0?`
+  <div class="card">
+    <div class="card-title">Últimas Atualizações</div>
+    ${registros.slice(0,5).map(r=>`
+    <div class="diario-item">
+      <div class="diario-data">${r.data} · ${r.clima} · ${r.turno}</div>
+      <div class="diario-text">${r.atividades}</div>
+      ${r.ocorrencias?`<div class="diario-oc">⚠️ ${r.ocorrencias}</div>`:""}
+    </div>`).join("")}
+  </div>`:""}
+</div>
+<div class="footer">
+  <strong style="color:#555;">Stick Frame Sistemas Construtivos</strong><br>
+  Santo André/SP · ${hoje}
+</div>
+</body>
+</html>`;
+
+  const blob = new Blob([html],{type:"text/html"});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement("a");
+  a.href=url; a.download=`Portal_${obra.cliente.replace(/\s/g,"_")}.html`; a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ─── MÓDULO DIÁRIO DE OBRA ───────────────────────────────────────────────────
+const CLIMAS = ["☀️ Ensolarado","⛅ Nublado","🌧️ Chuvoso","⛈️ Tempestade","🌫️ Neblina"];
+const TURNOS = ["Manhã","Tarde","Integral"];
+
+const MOCK_DIARIO = {
+  1: [
+    { id:1, data:"20/04/2025", turno:"Integral", clima:"☀️ Ensolarado", equipe:8, responsavel:"Carlos Silva", atividades:"Execução do projeto executivo. Revisão das plantas com engenheiro responsável. Definição do layout das fundações.", ocorrencias:"", fotos:[], created:"20/04/2025 08:30" },
+    { id:2, data:"21/04/2025", turno:"Manhã", clima:"⛅ Nublado", equipe:6, responsavel:"Carlos Silva", atividades:"Início da locação da obra. Implantação do canteiro de obras. Delimitação do terreno.", ocorrencias:"Atraso de 2h no início por falta de gabarito.", fotos:[], created:"21/04/2025 07:45" },
+  ],
+  2: [
+    { id:1, data:"01/04/2025", turno:"Integral", clima:"☀️ Ensolarado", equipe:12, responsavel:"João Melo", atividades:"Montagem da estrutura steel frame — bloco A concluído. Instalação dos perfis verticais e horizontais.", ocorrencias:"", fotos:[], created:"01/04/2025 07:00" },
+    { id:2, data:"02/04/2025", turno:"Integral", clima:"🌧️ Chuvoso", equipe:10, responsavel:"João Melo", atividades:"Continuação da montagem estrutural — bloco B. Aplicação da OSB nas vedações.", ocorrencias:"Paralisação das 14h às 16h por chuva forte.", fotos:[], created:"02/04/2025 07:00" },
+    { id:3, data:"03/04/2025", turno:"Tarde", clima:"⛅ Nublado", equipe:8, responsavel:"João Melo", atividades:"Instalação das placas cimentícias na fachada. Revisão dos encaixes estruturais.", ocorrencias:"", fotos:[], created:"03/04/2025 13:00" },
+  ],
+  3: [],
+};
+
+function gerarDiarioPDF(obra, registros) {
+  const hoje = new Date().toLocaleDateString("pt-BR");
+  const fmt  = v => v || "—";
+
+  const html = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<title>Diário de Obra — ${obra.nome}</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700;800&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'DM Sans',sans-serif;color:#222;font-size:12px;background:#fff;}
+  .header{background:#414141;padding:20px 30px 16px;display:flex;justify-content:space-between;align-items:center;}
+  .logo-row{display:flex;align-items:center;gap:12px;}
+  .logo-box{width:36px;height:36px;background:linear-gradient(135deg,#414141 50%,#981915 50%);border-radius:7px;border:1.5px solid #fff;}
+  .logo-name{font-size:18px;font-weight:800;letter-spacing:3px;}
+  .logo-name .g{color:#888;} .logo-name .r{color:#981915;}
+  .logo-sub{font-size:8px;color:#666;letter-spacing:2px;}
+  .header-right{text-align:right;color:#aaa;font-size:11px;}
+  .header-right strong{color:#fff;font-size:13px;display:block;margin-bottom:2px;}
+  .red-bar{height:4px;background:#981915;}
+  .body{padding:24px 30px;}
+  .titulo{font-size:20px;font-weight:800;color:#414141;margin-bottom:4px;}
+  .subtitulo{font-size:12px;color:#888;margin-bottom:24px;}
+  h3{font-size:9px;font-weight:700;letter-spacing:1.5px;color:#981915;text-transform:uppercase;margin:20px 0 10px;border-bottom:1px solid #eee;padding-bottom:6px;}
+  .registro{border:1px solid #ddd;border-radius:8px;margin-bottom:16px;overflow:hidden;}
+  .reg-header{background:#f7f7f7;padding:12px 16px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px;border-bottom:1px solid #eee;}
+  .reg-field{font-size:10px;} .reg-label{color:#888;margin-bottom:3px;} .reg-val{font-weight:700;color:#222;}
+  .reg-body{padding:14px 16px;}
+  .reg-section{margin-bottom:12px;}
+  .reg-section-label{font-size:9px;color:#888;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px;}
+  .reg-section-val{font-size:11.5px;color:#333;line-height:1.6;}
+  .ocorrencia{background:#fff5f5;border-left:3px solid #981915;padding:8px 12px;border-radius:0 4px 4px 0;font-size:11px;color:#333;}
+  .footer{margin-top:32px;padding-top:12px;border-top:1px solid #eee;display:flex;justify-content:space-between;font-size:9px;color:#aaa;}
+  @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="logo-row">
+    <div class="logo-box"></div>
+    <div><div class="logo-name"><span class="g">STICK</span><span class="r">FRAME</span></div><div class="logo-sub">SISTEMAS CONSTRUTIVOS</div></div>
+  </div>
+  <div class="header-right">
+    <strong>DIÁRIO DE OBRA</strong>
+    Emitido em ${hoje}
+  </div>
+</div>
+<div class="red-bar"></div>
+<div class="body">
+  <div class="titulo">${obra.nome}</div>
+  <div class="subtitulo">Cliente: ${obra.cliente} · Fase: ${obra.fase} · ${registros.length} registro(s)</div>
+
+  ${registros.length === 0 ? '<p style="color:#888;text-align:center;padding:32px 0;">Nenhum registro lançado nesta obra.</p>' :
+    registros.map(r => `
+    <div class="registro">
+      <div class="reg-header">
+        <div class="reg-field"><div class="reg-label">Data</div><div class="reg-val">${r.data}</div></div>
+        <div class="reg-field"><div class="reg-label">Turno</div><div class="reg-val">${r.turno}</div></div>
+        <div class="reg-field"><div class="reg-label">Clima</div><div class="reg-val">${r.clima}</div></div>
+        <div class="reg-field"><div class="reg-label">Equipe</div><div class="reg-val">${r.equipe} pessoas</div></div>
+      </div>
+      <div class="reg-body">
+        <div class="reg-section">
+          <div class="reg-section-label">Responsável</div>
+          <div class="reg-section-val">${fmt(r.responsavel)}</div>
+        </div>
+        <div class="reg-section">
+          <div class="reg-section-label">Atividades realizadas</div>
+          <div class="reg-section-val">${fmt(r.atividades)}</div>
+        </div>
+        ${r.ocorrencias ? `
+        <div class="reg-section">
+          <div class="reg-section-label">Ocorrências</div>
+          <div class="ocorrencia">${r.ocorrencias}</div>
+        </div>` : ""}
+      </div>
+    </div>`).join("")}
+
+  <div class="footer">
+    <div>Stick Frame Sistemas Construtivos Ltda. | Documento interno</div>
+    <div>Santo André, ${hoje}</div>
+  </div>
+</div>
+</body>
+</html>`;
+
+  const blob = new Blob([html], {type:"text/html"});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement("a");
+  a.href     = url;
+  a.download = `Diario_${obra.nome.split("—")[0].trim().replace(/\s/g,"_")}.html`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function DiarioObra({obras, registrar}) {
+  const [obraId,   setObraId]   = useState(obras[0]?.id);
+  const [diario,   setDiario]   = useState(MOCK_DIARIO);
+  const [modal,    setModal]    = useState(false);
+  const [verReg,   setVerReg]   = useState(null);
+  const FORM_VAZIO = {data:"", turno:"Integral", clima:"☀️ Ensolarado", equipe:1, responsavel:"", atividades:"", ocorrencias:""};
+  const [form,     setForm]     = useState(FORM_VAZIO);
+  const set = k => v => setForm(f=>({...f,[k]:v}));
+
+  const obra      = obras.find(o=>o.id===obraId) || obras[0];
+  const registros = diario[obraId] || [];
+
+  const salvar = () => {
+    const novo = {...form, id:Date.now(), fotos:[], created:new Date().toLocaleString("pt-BR")};
+    setDiario(prev=>({...prev,[obraId]:[novo,...(prev[obraId]||[])]}));
+    registrar("obra","editado",`Diário registrado em ${obra?.nome?.split("—")[0]?.trim()} — ${form.data}`);
+    setModal(false);
+    setForm(FORM_VAZIO);
+  };
+
+  const ok = form.data && form.responsavel && form.atividades;
+
+  return (
+    <>
+      {modal && (
+        <Modal title="Novo registro de diário" onClose={()=>setModal(false)}>
+          <div style={{display:"flex",flexDirection:"column",gap:14}}>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+              <div><div style={{fontSize:11,fontWeight:700,letterSpacing:1,color:C.muted,marginBottom:6}}>DATA</div><Input value={form.data} onChange={set("data")} placeholder="DD/MM/AAAA"/></div>
+              <div><div style={{fontSize:11,fontWeight:700,letterSpacing:1,color:C.muted,marginBottom:6}}>TURNO</div><Select value={form.turno} onChange={set("turno")} options={TURNOS.map(t=>({value:t,label:t}))}/></div>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+              <div><div style={{fontSize:11,fontWeight:700,letterSpacing:1,color:C.muted,marginBottom:6}}>CLIMA</div><Select value={form.clima} onChange={set("clima")} options={CLIMAS.map(c=>({value:c,label:c}))}/></div>
+              <div><div style={{fontSize:11,fontWeight:700,letterSpacing:1,color:C.muted,marginBottom:6}}>EQUIPE (pessoas)</div><Input type="number" value={form.equipe} onChange={set("equipe")}/></div>
+            </div>
+            <div><div style={{fontSize:11,fontWeight:700,letterSpacing:1,color:C.muted,marginBottom:6}}>RESPONSÁVEL</div><Input value={form.responsavel} onChange={set("responsavel")} placeholder="Nome do responsável presente"/></div>
+            <div>
+              <div style={{fontSize:11,fontWeight:700,letterSpacing:1,color:C.muted,marginBottom:6}}>ATIVIDADES REALIZADAS</div>
+              <textarea value={form.atividades} onChange={e=>set("atividades")(e.target.value)} placeholder="Descreva as atividades do dia..." rows={4}
+                style={{width:"100%",background:"transparent",border:`1px solid ${C.border}`,borderRadius:6,padding:"10px 13px",color:C.text,fontSize:13,outline:"none",fontFamily:"inherit",resize:"vertical"}}/>
+            </div>
+            <div>
+              <div style={{fontSize:11,fontWeight:700,letterSpacing:1,color:C.muted,marginBottom:6}}>OCORRÊNCIAS <span style={{color:C.muted,fontWeight:400}}>(opcional)</span></div>
+              <textarea value={form.ocorrencias} onChange={e=>set("ocorrencias")(e.target.value)} placeholder="Problemas, paralisações, visitas..." rows={3}
+                style={{width:"100%",background:"transparent",border:`1px solid ${C.border}`,borderRadius:6,padding:"10px 13px",color:C.text,fontSize:13,outline:"none",fontFamily:"inherit",resize:"vertical"}}/>
+            </div>
+            <div style={{display:"flex",gap:10,justifyContent:"flex-end",marginTop:6}}>
+              <Btn variant="ghost" onClick={()=>setModal(false)}>Cancelar</Btn>
+              <Btn disabled={!ok} onClick={salvar}>Salvar registro</Btn>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {verReg && (
+        <Modal title={`Registro — ${verReg.data}`} onClose={()=>setVerReg(null)}>
+          <div style={{display:"flex",flexDirection:"column",gap:14}}>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10}}>
+              {[["Data",verReg.data],["Turno",verReg.turno],["Clima",verReg.clima],["Equipe",`${verReg.equipe} pessoas`]].map(([k,v])=>(
+                <div key={k} style={{background:C.darker,borderRadius:6,padding:"10px 12px"}}>
+                  <div style={{fontSize:10,color:C.muted,marginBottom:4}}>{k}</div>
+                  <div style={{fontSize:12,fontWeight:700}}>{v}</div>
+                </div>
+              ))}
+            </div>
+            <div>
+              <div style={{fontSize:11,color:C.muted,marginBottom:4}}>RESPONSÁVEL</div>
+              <div style={{fontSize:13,fontWeight:600}}>{verReg.responsavel}</div>
+            </div>
+            <div>
+              <div style={{fontSize:11,color:C.muted,marginBottom:6}}>ATIVIDADES REALIZADAS</div>
+              <div style={{background:C.darker,borderRadius:6,padding:"12px 14px",fontSize:13,lineHeight:1.7,color:C.text}}>{verReg.atividades}</div>
+            </div>
+            {verReg.ocorrencias && (
+              <div>
+                <div style={{fontSize:11,color:C.muted,marginBottom:6}}>OCORRÊNCIAS</div>
+                <div style={{background:C.red+"0f",border:`1px solid ${C.red}33`,borderRadius:6,padding:"12px 14px",fontSize:13,lineHeight:1.7,color:C.text,borderLeft:`3px solid ${C.red}`}}>{verReg.ocorrencias}</div>
+              </div>
+            )}
+          </div>
+        </Modal>
+      )}
+
+      <div>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:22}}>
+          <div>
+            <h2 style={{fontSize:22,fontWeight:800}}>Diário de Obra</h2>
+            <p style={{color:C.muted,fontSize:13,marginTop:4}}>Registro diário de atividades e ocorrências</p>
+          </div>
+          <div style={{display:"flex",gap:10}}>
+            <button onClick={()=>gerarDiarioPDF(obra,registros)} style={{padding:"10px 16px",background:"transparent",border:`1px solid ${C.success}`,borderRadius:6,color:C.success,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>📄 Exportar PDF</button>
+            <Btn onClick={()=>setModal(true)}>+ Novo registro</Btn>
+          </div>
+        </div>
+
+        {/* Seletor de obra */}
+        <div style={{display:"flex",gap:10,marginBottom:22}}>
+          {obras.map(o=>(
+            <button key={o.id} onClick={()=>setObraId(o.id)} style={{padding:"8px 16px",borderRadius:8,border:`1px solid ${obraId===o.id?C.red:C.border}`,background:obraId===o.id?C.red+"18":"transparent",color:obraId===o.id?C.text:C.muted,fontSize:12,fontWeight:obraId===o.id?700:400,cursor:"pointer"}}>{o.nome.split("—")[0].trim()}</button>
+          ))}
+        </div>
+
+        {/* Info da obra */}
+        <div style={{background:C.surface,borderRadius:12,border:`1px solid ${C.border}`,padding:"14px 20px",marginBottom:20,display:"flex",gap:24,alignItems:"center"}}>
+          <div><div style={{fontSize:10,color:C.muted,marginBottom:3}}>OBRA</div><div style={{fontSize:13,fontWeight:700}}>{obra?.nome}</div></div>
+          <div><div style={{fontSize:10,color:C.muted,marginBottom:3}}>FASE ATUAL</div><div style={{fontSize:13,fontWeight:600}}>{obra?.fase}</div></div>
+          <div><div style={{fontSize:10,color:C.muted,marginBottom:3}}>PROGRESSO</div><div style={{fontSize:13,fontWeight:600}}>{obra?.progresso}%</div></div>
+          <div><div style={{fontSize:10,color:C.muted,marginBottom:3}}>REGISTROS</div><div style={{fontSize:13,fontWeight:700,color:C.red}}>{registros.length}</div></div>
+        </div>
+
+        {/* Lista de registros */}
+        {registros.length === 0 ? (
+          <div style={{background:C.surface,borderRadius:12,border:`1px solid ${C.border}`,padding:"48px 0",textAlign:"center"}}>
+            <div style={{fontSize:32,marginBottom:12}}>📋</div>
+            <div style={{fontSize:14,fontWeight:600,marginBottom:6}}>Nenhum registro ainda</div>
+            <div style={{fontSize:13,color:C.muted,marginBottom:20}}>Clique em "+ Novo registro" para começar o diário desta obra.</div>
+          </div>
+        ) : (
+          <div style={{display:"flex",flexDirection:"column",gap:12}}>
+            {registros.map(r=>(
+              <div key={r.id} style={{background:C.surface,borderRadius:12,border:`1px solid ${C.border}`,overflow:"hidden"}}>
+                <div style={{display:"flex",alignItems:"center",gap:16,padding:"14px 20px"}}>
+                  {/* Data destaque */}
+                  <div style={{background:C.red,borderRadius:8,padding:"10px 14px",textAlign:"center",flexShrink:0,minWidth:60}}>
+                    <div style={{fontSize:20,fontWeight:800,color:"#fff",lineHeight:1}}>{r.data.split("/")[0]}</div>
+                    <div style={{fontSize:10,color:"rgba(255,255,255,0.8)",marginTop:2}}>{["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"][Number(r.data.split("/")[1])-1]}</div>
+                  </div>
+
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{display:"flex",gap:10,alignItems:"center",marginBottom:6,flexWrap:"wrap"}}>
+                      <span style={{fontSize:12,fontWeight:700}}>{r.clima}</span>
+                      <span style={{background:C.graphite+"33",color:C.muted,borderRadius:4,padding:"1px 8px",fontSize:11}}>{r.turno}</span>
+                      <span style={{fontSize:11,color:C.muted}}>👥 {r.equipe} pessoas</span>
+                      {r.ocorrencias && <span style={{background:C.red+"18",color:C.red,border:`1px solid ${C.red}33`,borderRadius:4,padding:"1px 8px",fontSize:11,fontWeight:700}}>⚠️ Ocorrência</span>}
+                    </div>
+                    <div style={{fontSize:13,color:C.text,lineHeight:1.5,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{r.atividades}</div>
+                    <div style={{fontSize:11,color:C.muted,marginTop:4}}>Por {r.responsavel} · {r.created}</div>
+                  </div>
+
+                  <button onClick={()=>setVerReg(r)} style={{background:"transparent",border:`1px solid ${C.border}`,borderRadius:6,color:C.muted,fontSize:12,cursor:"pointer",padding:"8px 14px",fontFamily:"inherit",flexShrink:0}}>Ver detalhes</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
+
 // ─── MÓDULO FINANCEIRO ────────────────────────────────────────────────────────
 function Financeiro({obras,financeiro,setFinanceiro,registrar}) {
   const [obraId, setObraId]   = useState(obras[0]?.id);
@@ -437,7 +830,7 @@ function Financeiro({obras,financeiro,setFinanceiro,registrar}) {
         </div>
 
         {/* KPIs financeiros */}
-        <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:14,marginBottom:22}}>
+        <div className="kpi-grid-5">
           {[
             {label:"Contrato",    value:fmt(fin.contrato), color:C.border,   sub:"valor total" },
             {label:"Recebido",    value:fmt(receitas),     color:C.success,  sub:fmtPct(pctRec)+" do contrato" },
@@ -592,7 +985,7 @@ const PERFIS = {
   diretor: {
     label: "Diretor",
     cor: C.red,
-    paginas: ["dashboard","crm","orcamentos","obras","financeiro","contratos","historico"],
+    paginas: ["dashboard","crm","orcamentos","obras","diario","financeiro","contratos","historico"],
   },
   comercial: {
     label: "Comercial",
@@ -602,7 +995,7 @@ const PERFIS = {
   engenheiro: {
     label: "Engenheiro",
     cor: "#4a9eff",
-    paginas: ["dashboard","obras","historico"],
+    paginas: ["dashboard","obras","diario","historico"],
   },
   financeiro: {
     label: "Financeiro",
@@ -631,7 +1024,7 @@ function LoginScreen({onLogin}) {
     <div style={{minHeight:"100vh",background:C.darker,display:"flex",alignItems:"center",justifyContent:"center",position:"relative",overflow:"hidden"}}>
       <div style={{position:"absolute",inset:0,backgroundImage:`linear-gradient(${C.border} 1px,transparent 1px),linear-gradient(90deg,${C.border} 1px,transparent 1px)`,backgroundSize:"48px 48px",opacity:0.3}}/>
       <div style={{position:"absolute",width:600,height:600,background:`radial-gradient(circle,${C.redGlow} 0%,transparent 70%)`,top:"50%",left:"50%",transform:"translate(-50%,-50%)"}}/>
-      <div style={{position:"relative",width:420,background:C.surface,border:`1px solid ${C.border}`,borderRadius:18,padding:"40px 40px 36px",boxShadow:"0 0 80px #00000088"}}>
+      <div style={{position:"relative",width:"min(420px, 94vw)",background:C.surface,border:`1px solid ${C.border}`,borderRadius:18,padding:"clamp(24px, 5vw, 40px)",boxShadow:"0 0 80px #00000088"}}>
         <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:32}}>
           <img src="/logo.png" style={{width:44,height:44,borderRadius:10,flexShrink:0,objectFit:"contain"}}/>
           <div>
@@ -684,6 +1077,7 @@ const NAV = [
   {key:"crm",        label:"CRM / Clientes",   icon:"◈"},
   {key:"orcamentos", label:"Orçamentos",        icon:"◻"},
   {key:"obras",      label:"Gestão de Obras",  icon:"◆"},
+  {key:"diario",     label:"Diário de Obra",   icon:"📋"},
   {key:"financeiro", label:"Financeiro",        icon:"◉"},
   {key:"contratos",  label:"Contratos",         icon:"◑"},
   {key:"historico",  label:"Histórico",         icon:"◎"},
@@ -873,7 +1267,7 @@ function Dashboard({clientes,orcamentos,obras,financeiro}) {
       </div>
 
       {/* KPIs — 6 cards */}
-      <div style={{display:"grid",gridTemplateColumns:"repeat(6,1fr)",gap:12,marginBottom:22}}>
+      <div className="kpi-grid-6">
         {kpis.map((k,i)=>(
           <div key={i} style={{background:C.surface,borderRadius:12,padding:"16px 14px",border:`1px solid ${C.border}`,borderTop:`3px solid ${k.accent}`}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
@@ -885,11 +1279,7 @@ function Dashboard({clientes,orcamentos,obras,financeiro}) {
           </div>
         ))}
       </div>
-
-      {/* Linha 2: Gráfico receita/despesa + evolução */}
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:16}}>
-
-        {/* Receita vs Despesa por obra */}
+      <div className="two-col" style={{marginBottom:16}}>
         <div style={{background:C.surface,borderRadius:12,padding:20,border:`1px solid ${C.border}`}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
             <div style={{fontSize:11,fontWeight:700,letterSpacing:1,color:C.muted}}>RECEITA VS DESPESA POR OBRA</div>
@@ -900,17 +1290,13 @@ function Dashboard({clientes,orcamentos,obras,financeiro}) {
           </div>
           <GraficoBarras data={graficoObras} height={130}/>
         </div>
-
-        {/* Evolução de receitas */}
         <div style={{background:C.surface,borderRadius:12,padding:20,border:`1px solid ${C.border}`}}>
           <div style={{fontSize:11,fontWeight:700,letterSpacing:1,color:C.muted,marginBottom:4}}>EVOLUÇÃO DE RECEITAS</div>
           <div style={{fontSize:18,fontWeight:800,color:C.success,marginBottom:14}}>{fmt(totalRec)}</div>
           <GraficoLinha data={evolucao} height={80} color={C.success}/>
         </div>
       </div>
-
-      {/* Linha 3: Pipeline por status + despesas por categoria + obras */}
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:16}}>
+      <div className="three-col">
 
         {/* Pipeline por status */}
         <div style={{background:C.surface,borderRadius:12,padding:20,border:`1px solid ${C.border}`}}>
@@ -1029,7 +1415,7 @@ function CRM({clientes,setClientes,registrar}) {
         </div>
       )}
 
-      <div style={{display:"grid",gridTemplateColumns:sel?"1fr 300px":"1fr",gap:18}}>
+      <div style={{display:"grid",gridTemplateColumns:sel?"1fr min(300px, 100%)":"1fr",gap:18}}>
         <div>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
             <div><h2 style={{fontSize:22,fontWeight:800}}>CRM / Clientes</h2><p style={{color:C.muted,fontSize:13,marginTop:4}}>{clientes.length} contatos</p></div>
@@ -1202,7 +1588,7 @@ const MOCK_ARQUIVOS = {
 const ICONE_TIPO = { pdf:"📄", imagem:"🖼️", outro:"📎" };
 const CATS = ["Projeto","Foto","Documento","Outro"];
 
-function GestaoObras({obras,setObras,registrar}) {
+function GestaoObras({obras,setObras,registrar,financeiro}) {
   const [obraId,   setObraId]   = useState(obras[0]?.id);
   const [arquivos, setArquivos] = useState(MOCK_ARQUIVOS);
   const [dragOver, setDragOver] = useState(false);
@@ -1355,6 +1741,14 @@ function GestaoObras({obras,setObras,registrar}) {
               <div style={{fontSize:11,fontWeight:700,letterSpacing:1,color:C.muted,marginBottom:12}}>AÇÃO RÁPIDA</div>
               <Btn onClick={avancar} disabled={obra.fase==="Entrega"} fullWidth>{obra.fase==="Entrega"?"✓ Concluída":"Avançar fase →"}</Btn>
               {obra.fase!=="Entrega"&&<div style={{fontSize:11,color:C.muted,marginTop:8}}>Próxima: {FASES[FASES.indexOf(obra.fase)+1]}</div>}
+              <div style={{marginTop:12}}>
+                <button onClick={()=>gerarPortalCliente(obra, [], financeiro)} style={{
+                  width:"100%",padding:"9px 0",background:"transparent",
+                  border:`1px solid ${C.success}`,borderRadius:6,
+                  color:C.success,fontSize:12,fontWeight:700,
+                  cursor:"pointer",fontFamily:"inherit",
+                }}>🔗 Portal do Cliente</button>
+              </div>
             </div>
             <div style={{background:C.surface,borderRadius:12,border:`1px solid ${C.border}`,padding:18}}>
               <div style={{fontSize:11,fontWeight:700,letterSpacing:1,color:C.muted,marginBottom:14}}>RESUMO</div>
@@ -1879,7 +2273,8 @@ export default function App() {
     dashboard:  <Dashboard  clientes={clientes} orcamentos={orcamentos} obras={obras} financeiro={financeiro}/>,
     crm:        <CRM        clientes={clientes} setClientes={setClientes} registrar={registrar}/>,
     orcamentos: <Orcamentos clientes={clientes} orcamentos={orcamentos} setOrcamentos={setOrcamentos} registrar={registrar}/>,
-    obras:      <GestaoObras obras={obras} setObras={setObras} registrar={registrar}/>,
+    obras:      <GestaoObras obras={obras} setObras={setObras} registrar={registrar} financeiro={financeiro}/>,
+    diario:     <DiarioObra obras={obras} registrar={registrar}/>,
     financeiro: <Financeiro obras={obras} financeiro={financeiro} setFinanceiro={setFinanceiro} registrar={registrar}/>,
     contratos:  <Contratos  clientes={clientes} registrar={registrar}/>,
     historico:  <Historico  historico={historico}/>,
@@ -1895,28 +2290,102 @@ export default function App() {
         ::-webkit-scrollbar{width:6px;}
         ::-webkit-scrollbar-track{background:${C.dark};}
         ::-webkit-scrollbar-thumb{background:${C.border};border-radius:3px;}
+
+        /* ── RESPONSIVO ── */
+        .app-layout{display:flex;min-height:100vh;}
+        .sidebar-desktop{width:220px;flex-shrink:0;}
+        .main-area{flex:1;display:flex;flex-direction:column;min-width:0;}
+        .topbar{padding:12px 38px;border-bottom:1px solid ${C.border};display:flex;justify-content:space-between;align-items:center;background:${C.darker};gap:12;}
+        .main-content{flex:1;padding:34px 38px;overflow:auto;}
+        .hamburger{display:none;background:none;border:none;color:${C.text};font-size:22px;cursor:pointer;padding:4px 8px;}
+        .mobile-overlay{display:none;position:fixed;inset:0;background:#000a;z-index:90;}
+        .sidebar-mobile-open .mobile-overlay{display:block;}
+        .sidebar-mobile-open .sidebar-desktop{position:fixed;top:0;left:0;height:100vh;z-index:95;}
+
+        /* KPI grids */
+        .kpi-grid-6{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:22px;}
+        .kpi-grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:26px;}
+        .kpi-grid-5{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:20px;}
+        .two-col{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+        .three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+
+        @media(max-width:768px){
+          .sidebar-desktop{
+            position:fixed;top:0;left:-220px;height:100vh;z-index:95;
+            transition:left 0.25s ease;
+          }
+          .sidebar-desktop.open{left:0;}
+          .hamburger{display:block;}
+          .topbar{padding:10px 16px;}
+          .main-content{padding:16px 14px;}
+
+          /* grids → 2 colunas ou 1 */
+          .kpi-grid-6{grid-template-columns:repeat(2,1fr);gap:10px;}
+          .kpi-grid-4{grid-template-columns:repeat(2,1fr);gap:10px;}
+          .kpi-grid-5{grid-template-columns:repeat(2,1fr);gap:10px;}
+          .two-col{grid-template-columns:1fr;}
+          .three-col{grid-template-columns:1fr;}
+
+          /* tabelas → scroll horizontal */
+          .table-wrap{overflow-x:auto;}
+
+          /* modais menores */
+          .modal-inner{width:95vw!important;max-width:95vw!important;margin:0 auto;}
+
+          /* orc cards em coluna */
+          .orc-card-inner{flex-direction:column!important;align-items:flex-start!important;}
+        }
+
+        @media(max-width:480px){
+          .kpi-grid-6{grid-template-columns:1fr 1fr;}
+          .kpi-grid-4{grid-template-columns:1fr 1fr;}
+        }
       `}</style>
 
       {!user ? (
         <LoginScreen onLogin={setUser}/>
       ) : (
-        <div style={{display:"flex",minHeight:"100vh"}}>
-          <Sidebar active={active} setActive={setActive} user={user} onLogout={handleLogout}/>
-          <div style={{flex:1,display:"flex",flexDirection:"column"}}>
-            {/* TOPBAR */}
-            <div style={{
-              padding:"12px 38px", borderBottom:`1px solid ${C.border}`,
-              display:"flex", justifyContent:"flex-end", alignItems:"center",
-              background:C.darker, gap:12,
-            }}>
-              <Notificacoes obras={obras}/>
-            </div>
-            <main style={{flex:1,padding:"34px 38px",overflow:"auto"}}>
-              {pages[active]}
-            </main>
-          </div>
-        </div>
+        <AppLayout
+          active={active} setActive={setActive}
+          user={user} onLogout={handleLogout}
+          obras={obras}
+          page={pages[active]}
+        />
       )}
     </>
+  );
+}
+
+function AppLayout({active, setActive, user, onLogout, obras, page}) {
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const handleNav = (key) => {
+    setActive(key);
+    setMenuOpen(false);
+  };
+
+  return (
+    <div className="app-layout">
+      {/* Overlay mobile */}
+      {menuOpen && (
+        <div className="mobile-overlay" onClick={()=>setMenuOpen(false)}/>
+      )}
+
+      {/* Sidebar */}
+      <div className={`sidebar-desktop${menuOpen?" open":""}`}>
+        <Sidebar active={active} setActive={handleNav} user={user} onLogout={onLogout}/>
+      </div>
+
+      {/* Main */}
+      <div className="main-area">
+        <div className="topbar">
+          <button className="hamburger" onClick={()=>setMenuOpen(v=>!v)}>☰</button>
+          <Notificacoes obras={obras}/>
+        </div>
+        <main className="main-content">
+          {page}
+        </main>
+      </div>
+    </div>
   );
 }
