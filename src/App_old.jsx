@@ -406,7 +406,7 @@ function LoginScreen({onLogin}) {
       <div style={{position:"absolute",width:600,height:600,background:`radial-gradient(circle,${C.redGlow} 0%,transparent 70%)`,top:"50%",left:"50%",transform:"translate(-50%,-50%)"}}/>
       <div style={{position:"relative",width:420,background:C.surface,border:`1px solid ${C.border}`,borderRadius:18,padding:"40px 40px 36px",boxShadow:"0 0 80px #00000088"}}>
         <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:32}}>
-          <img src="/logo.png" style={{width:44,height:44,borderRadius:10,flexShrink:0,objectFit:"contain"}}/>
+          <div style={{width:44,height:44,borderRadius:10,flexShrink:0,background:`linear-gradient(135deg,${C.graphite} 50%,${C.red} 50%)`,boxShadow:`0 4px 16px ${C.redGlow}`}}/>
           <div>
             <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,letterSpacing:3,fontSize:20,lineHeight:1}}>
               <span style={{color:C.graphite}}>STICK</span><span style={{color:C.red}}>FRAME</span>
@@ -416,6 +416,9 @@ function LoginScreen({onLogin}) {
         </div>
         <h1 style={{fontSize:20,fontWeight:800,marginBottom:4}}>Bem-vindo de volta</h1>
         <p style={{fontSize:13,color:C.muted,marginBottom:24}}>Entre com sua conta para acessar o sistema.</p>
+        <div style={{background:C.darker,border:`1px solid ${C.border}`,borderRadius:8,padding:"9px 14px",marginBottom:22,fontSize:11,color:C.muted,lineHeight:1.7}}>
+          <span style={{color:C.red,fontWeight:700}}>Demo — </span>andre@stickframe.com.br · <code style={{color:C.text}}>stick2025</code>
+        </div>
         <div style={{display:"flex",flexDirection:"column",gap:14}}>
           <div>
             <div style={{fontSize:11,fontWeight:700,letterSpacing:1,color:C.muted,marginBottom:6}}>E-MAIL</div>
@@ -457,7 +460,7 @@ function Sidebar({active,setActive,user,onLogout}) {
     <aside style={{width:220,minHeight:"100vh",background:C.darker,borderRight:`1px solid ${C.border}`,display:"flex",flexDirection:"column",flexShrink:0}}>
       <div style={{padding:"22px 20px 18px",borderBottom:`1px solid ${C.border}`}}>
         <div style={{display:"flex",alignItems:"center",gap:10}}>
-          <img src="/logo.png" style={{width:34,height:34,borderRadius:8,flexShrink:0,objectFit:"contain"}}/>
+          <div style={{width:34,height:34,background:`linear-gradient(135deg,${C.graphite} 50%,${C.red} 50%)`,borderRadius:8,flexShrink:0}}/>
           <div>
             <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,letterSpacing:2.5,fontSize:15,lineHeight:1}}>
               <span style={{color:C.graphite}}>STICK</span><span style={{color:C.red}}>FRAME</span>
