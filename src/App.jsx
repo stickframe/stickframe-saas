@@ -1794,6 +1794,31 @@ function CRM({clientes,setClientes,registrar}) {
   );
 }
 
+// ─── WHATSAPP HELPERS ────────────────────────────────────────────────────────
+const fmtWA = v => "R$ " + Number(v).toLocaleString("pt-BR", {minimumFractionDigits:0});
+
+function enviarWhatsApp(telefone, mensagem) {
+  const num = (telefone||"").replace(/\D/g,"");
+  const url = `https://wa.me/${num.startsWith("55")?num:"55"+num}?text=${encodeURIComponent(mensagem)}`;
+  window.open(url, "_blank");
+}
+
+function msgOrcamento(o) {
+  return `Olá ${o.cliente}! 👋\n\nSegue a proposta da *Stick Frame Sistemas Construtivos*:\n\n📋 *Ref:* ${o.ref}\n🏗️ *Projeto:* ${o.unidades} UH · ${o.area} m²/und · ${PRECOS[o.padrao]?.label||"Padrão"}\n💰 *Valor total:* ${fmtWA(o.valor)}\n💰 *Valor/UH:* ${fmtWA(o.valor/o.unidades)}\n\nPara dúvidas ou aprovação, entre em contato!\n\nStick Frame Sistemas Construtivos\nSanto André/SP`;
+}
+
+function msgContrato(c) {
+  return `Olá ${c.cliente}! 👋\n\nSeu contrato está pronto para assinatura:\n\n📄 *Ref:* ${c.ref}\n🏗️ *Obra:* ${c.obra}\n💰 *Valor:* ${fmtWA(c.valor)}\n📅 *Prazo:* ${c.prazo}\n\nCondições: 30% assinatura · 40% estrutura · 30% entrega.\n\nStick Frame Sistemas Construtivos`;
+}
+
+function msgCliente(c) {
+  const msg = c.status==="Lead"?"Gostaria de apresentar nossas soluções em Steel Frame para seu projeto.":
+    c.status==="Em negociação"?"Dando continuidade à nossa negociação, estou à disposição.":
+    c.status==="Proposta enviada"?"Verificando se recebeu nossa proposta e se há dúvidas.":
+    "Obrigado pela confiança! Estamos à disposição.";
+  return `Olá ${c.nome}! 👋\n\n${msg}\n\nStick Frame Sistemas Construtivos\nSanto André/SP`;
+}
+
 function Orcamentos({clientes,orcamentos,setOrcamentos,registrar}) {
   const [modal,setModal]     = useState(false); // "novo" | "editar"
   const [editId,setEditId]   = useState(null);
@@ -1875,63 +1900,6 @@ function Orcamentos({clientes,orcamentos,setOrcamentos,registrar}) {
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
           <div><h2 style={{fontSize:22,fontWeight:800}}>Orçamentos</h2><p style={{color:C.muted,fontSize:13,marginTop:4}}>{orcamentos.length} propostas</p></div>
           <Btn onClick={abrirNovo}>+ Novo orçamento</Btn>
-        </div>
-// ─── WHATSAPP HELPERS ─────────────────────────────────────────────────────────
-const fmtWA = v => "R$ " + Number(v).toLocaleString("pt-BR", {minimumFractionDigits:0});
-
-function enviarWhatsApp(telefone, mensagem) {
-  const num = telefone ? telefone.replace(/\D/g,"") : "";
-  const url = `https://wa.me/${num.startsWith("55")?num:"55"+num}?text=${encodeURIComponent(mensagem)}`;
-  window.open(url, "_blank");
-}
-
-function msgOrcamento(o) {
-  return `Olá ${o.cliente}! 👋
-
-Segue a proposta da *Stick Frame Sistemas Construtivos* para seu projeto:
-
-📋 *Referência:* ${o.ref}
-🏗️ *Projeto:* ${o.unidades} UH · ${o.area} m²/und · ${PRECOS[o.padrao]?.label||"Padrão"}
-💰 *Valor total:* ${fmtWA(o.valor)}
-💰 *Valor por UH:* ${fmtWA(o.valor/o.unidades)}
-
-Para dúvidas ou aprovação, entre em contato conosco.
-
-Stick Frame Sistemas Construtivos
-Santo André/SP`;
-}
-
-function msgContrato(c) {
-  return `Olá ${c.cliente}! 👋
-
-O contrato para sua obra está pronto para assinatura:
-
-📄 *Referência:* ${c.ref}
-🏗️ *Obra:* ${c.obra}
-💰 *Valor total:* ${fmtWA(c.valor)}
-📅 *Prazo:* ${c.prazo}
-
-Condições: 30% na assinatura · 40% na estrutura · 30% na entrega.
-
-Aguardamos seu retorno!
-
-Stick Frame Sistemas Construtivos`;
-}
-
-function msgCliente(c) {
-  return `Olá ${c.nome}! 👋
-
-Entrando em contato da *Stick Frame Sistemas Construtivos*.
-
-${c.status==="Lead"?"Gostaria de apresentar nossas soluções em Steel Frame para seu projeto.":
-  c.status==="Em negociação"?"Dando continuidade à nossa negociação, estou à disposição para esclarecer qualquer dúvida.":
-  c.status==="Proposta enviada"?"Verificando se recebeu nossa proposta e se há alguma dúvida.":
-  "Obrigado pela confiança! Estamos à disposição para o que precisar."}
-
-Stick Frame Sistemas Construtivos
-Santo André/SP`;
-}
-
         <div style={{display:"flex",flexDirection:"column",gap:12}}>
           {orcamentos.map(o=>{
             const clienteOrc = clientes.find(c=>c.nome===o.cliente);
