@@ -149,6 +149,171 @@ function BarChart({data, height=100}) {
   );
 }
 
+// ─── GERADOR DE PDF FINANCEIRO (client-side, sem dependências) ───────────────
+function gerarRelatorioPDF(obras, financeiro) {
+  const hoje = new Date().toLocaleDateString("pt-BR");
+  const mes  = new Date().toLocaleString("pt-BR", { month:"long" });
+  const ano  = new Date().getFullYear();
+  const fmt  = v => "R$ " + Number(v).toLocaleString("pt-BR", {minimumFractionDigits:0});
+  const fmtP = v => v.toFixed(1) + "%";
+
+  // Calcula totais por obra
+  const obrasData = obras.map(o => {
+    const fin = financeiro[o.id] || { contrato:0, lancamentos:[] };
+    const rec  = fin.lancamentos.filter(l=>l.tipo==="receita").reduce((a,l)=>a+l.valor,0);
+    const desp = fin.lancamentos.filter(l=>l.tipo==="despesa").reduce((a,l)=>a+l.valor,0);
+    const saldo = rec - desp;
+    const marg  = rec>0 ? (saldo/rec*100) : 0;
+    return { ...o, fin, rec, desp, saldo, marg, contrato: fin.contrato||o.contrato||0 };
+  });
+
+  const totRec  = obrasData.reduce((a,o)=>a+o.rec,0);
+  const totDesp = obrasData.reduce((a,o)=>a+o.desp,0);
+  const totSaldo= totRec - totDesp;
+  const totMarg = totRec>0 ? (totSaldo/totRec*100) : 0;
+  const totCont = obrasData.reduce((a,o)=>a+o.contrato,0);
+
+  const cor = (v) => v>=0 ? "#2e9e5b" : "#c0392b";
+
+  const html = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<title>Relatorio Financeiro — ${mes} ${ano}</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700;800&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'DM Sans',sans-serif;background:#fff;color:#222;font-size:12px;padding:0;}
+  .header{background:#414141;padding:20px 30px 16px;display:flex;justify-content:space-between;align-items:center;}
+  .logo-row{display:flex;align-items:center;gap:12px;}
+  .logo-box{width:40px;height:40px;background:linear-gradient(135deg,#414141 50%,#981915 50%);border-radius:8px;border:1.5px solid #fff;}
+  .logo-name{font-size:20px;font-weight:800;letter-spacing:3px;line-height:1;}
+  .logo-name .g{color:#888;}
+  .logo-name .r{color:#981915;}
+  .logo-sub{font-size:8px;color:#666;letter-spacing:2px;margin-top:2px;}
+  .header-right{text-align:right;color:#aaa;font-size:11px;}
+  .header-right strong{color:#fff;font-size:15px;display:block;margin-bottom:3px;}
+  .red-bar{height:4px;background:#981915;}
+  .body{padding:24px 30px;}
+  h2{font-size:8px;font-weight:700;letter-spacing:1.5px;color:#981915;margin:20px 0 8px;text-transform:uppercase;}
+  .kpi-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:20px;}
+  .kpi{background:#f7f7f7;border:1px solid #ddd;border-radius:8px;padding:12px;text-align:center;}
+  .kpi-label{font-size:9px;color:#888;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.8px;}
+  .kpi-val{font-size:14px;font-weight:800;}
+  table{width:100%;border-collapse:collapse;margin-bottom:20px;}
+  th{background:#414141;color:#fff;padding:8px 10px;text-align:left;font-size:9px;letter-spacing:0.8px;font-weight:700;}
+  th.r{text-align:right;}
+  td{padding:7px 10px;border-bottom:1px solid #eee;font-size:11px;}
+  td.r{text-align:right;font-weight:700;}
+  tr:nth-child(even) td{background:#f9f9f9;}
+  .total-row td{background:#981915!important;color:#fff;font-weight:800;font-size:12px;}
+  .obra-header{background:#f0f0f0;border:1px solid #ddd;border-radius:6px;padding:10px 14px;margin-bottom:8px;display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .oh-item{font-size:10px;} .oh-label{color:#888;margin-right:4px;}
+  .badge-rec{color:#2e9e5b;font-weight:700;}
+  .badge-desp{color:#981915;font-weight:700;}
+  .subtotal-row td{background:#2e9e5b!important;color:#fff;font-weight:800;}
+  .subtotal-row.neg td{background:#c0392b!important;}
+  .footer{margin-top:40px;border-top:1px solid #ddd;padding-top:16px;display:flex;justify-content:space-between;font-size:10px;color:#aaa;}
+  .assin{text-align:center;} .assin-line{border-top:1px solid #999;margin-bottom:6px;margin-top:30px;}
+  @media print{body{padding:0;}.header{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="logo-row">
+    <div class="logo-box"></div>
+    <div><div class="logo-name"><span class="g">STICK</span><span class="r">FRAME</span></div><div class="logo-sub">SISTEMAS CONSTRUTIVOS</div></div>
+  </div>
+  <div class="header-right">
+    <strong>RELATÓRIO FINANCEIRO — ${mes.toUpperCase()} ${ano}</strong>
+    Emitido em ${hoje}
+  </div>
+</div>
+<div class="red-bar"></div>
+<div class="body">
+
+<h2>Consolidado Geral</h2>
+<div class="kpi-grid">
+  <div class="kpi"><div class="kpi-label">Contratos</div><div class="kpi-val">${fmt(totCont)}</div></div>
+  <div class="kpi"><div class="kpi-label">Receitas</div><div class="kpi-val" style="color:#2e9e5b">${fmt(totRec)}</div></div>
+  <div class="kpi"><div class="kpi-label">Despesas</div><div class="kpi-val" style="color:#981915">${fmt(totDesp)}</div></div>
+  <div class="kpi"><div class="kpi-label">Saldo</div><div class="kpi-val" style="color:${cor(totSaldo)}">${fmt(totSaldo)}</div></div>
+  <div class="kpi"><div class="kpi-label">Margem</div><div class="kpi-val" style="color:${cor(totMarg)}">${fmtP(totMarg)}</div></div>
+  <div class="kpi"><div class="kpi-label">A receber</div><div class="kpi-val" style="color:#c88a00">${fmt(totCont-totRec)}</div></div>
+</div>
+
+<h2>Resumo por Obra</h2>
+<table>
+<thead><tr>
+  <th>Obra</th><th>Cliente</th><th>Fase</th>
+  <th class="r">Receitas</th><th class="r">Despesas</th><th class="r">Saldo</th><th class="r">Margem</th>
+</tr></thead>
+<tbody>
+${obrasData.map(o=>`
+<tr>
+  <td>${o.nome.split("—")[0].trim()}</td>
+  <td style="color:#888">${o.cliente}</td>
+  <td style="color:#888">${o.fase}</td>
+  <td class="r" style="color:#2e9e5b">${fmt(o.rec)}</td>
+  <td class="r" style="color:#981915">${fmt(o.desp)}</td>
+  <td class="r" style="color:${cor(o.saldo)}">${fmt(o.saldo)}</td>
+  <td class="r" style="color:${cor(o.marg)}">${fmtP(o.marg)}</td>
+</tr>`).join("")}
+<tr class="total-row">
+  <td colspan="3"><strong>TOTAL CONSOLIDADO</strong></td>
+  <td class="r">${fmt(totRec)}</td>
+  <td class="r">${fmt(totDesp)}</td>
+  <td class="r">${fmt(totSaldo)}</td>
+  <td class="r">${fmtP(totMarg)}</td>
+</tr>
+</tbody>
+</table>
+
+${obrasData.map(o=>`
+<h2>Detalhamento — ${o.nome}</h2>
+<div class="obra-header">
+  <div class="oh-item"><span class="oh-label">Cliente:</span><strong>${o.cliente}</strong></div>
+  <div class="oh-item"><span class="oh-label">Contrato:</span><strong>${fmt(o.contrato)}</strong></div>
+  <div class="oh-item"><span class="oh-label">Fase:</span>${o.fase}</div>
+  <div class="oh-item"><span class="oh-label">Progresso:</span>${o.progresso}%</div>
+</div>
+<table>
+<thead><tr><th>Data</th><th>Tipo</th><th>Categoria</th><th>Descricao</th><th class="r">Valor</th></tr></thead>
+<tbody>
+${(o.fin.lancamentos||[]).map(l=>`
+<tr>
+  <td style="color:#888">${l.data}</td>
+  <td class="${l.tipo==="receita"?"badge-rec":"badge-desp"}">${l.tipo.charAt(0).toUpperCase()+l.tipo.slice(1)}</td>
+  <td>${l.categoria}</td>
+  <td>${l.descricao}</td>
+  <td class="r" style="color:${l.tipo==="receita"?"#2e9e5b":"#981915"}">${l.tipo==="receita"?"+":"-"} ${fmt(l.valor)}</td>
+</tr>`).join("")}
+<tr class="subtotal-row${o.saldo<0?" neg":""}">
+  <td colspan="4"><strong>Saldo do periodo</strong></td>
+  <td class="r">${o.saldo>=0?"+":""}${fmt(o.saldo)}</td>
+</tr>
+</tbody>
+</table>
+`).join("")}
+
+<div class="footer">
+  <div>Stick Frame Sistemas Construtivos Ltda. &nbsp;|&nbsp; Documento confidencial</div>
+  <div>Santo Andre, ${hoje}</div>
+</div>
+
+</div>
+</body>
+</html>`;
+
+  const blob = new Blob([html], {type:"text/html"});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement("a");
+  a.href     = url;
+  a.download = `Relatorio_Financeiro_StickFrame_${mes}_${ano}.html`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 // ─── MÓDULO FINANCEIRO ────────────────────────────────────────────────────────
 function Financeiro({obras,financeiro,setFinanceiro}) {
   const [obraId, setObraId]   = useState(obras[0]?.id);
@@ -229,6 +394,11 @@ function Financeiro({obras,financeiro,setFinanceiro}) {
             <p style={{color:C.muted,fontSize:13,marginTop:4}}>Receitas, despesas e margem por obra</p>
           </div>
           <div style={{display:"flex",gap:10}}>
+            <button onClick={()=>gerarRelatorioPDF(obras,financeiro)} style={{
+              padding:"10px 18px",background:"transparent",border:`1px solid ${C.success}`,
+              borderRadius:6,color:C.success,fontSize:13,fontWeight:700,cursor:"pointer",
+              fontFamily:"inherit",letterSpacing:0.4,
+            }}>📄 Gerar Relatório</button>
             <Btn variant="success" onClick={()=>{ setForm(f=>({...f,tipo:"receita",categoria:"Entrada contrato"})); setModal("receita"); }}>+ Receita</Btn>
             <Btn onClick={()=>{ setForm(f=>({...f,tipo:"despesa",categoria:"Materiais"})); setModal("despesa"); }}>+ Despesa</Btn>
           </div>
