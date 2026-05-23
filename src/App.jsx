@@ -1900,6 +1900,7 @@ function Orcamentos({clientes,orcamentos,setOrcamentos,registrar}) {
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
           <div><h2 style={{fontSize:22,fontWeight:800}}>Orçamentos</h2><p style={{color:C.muted,fontSize:13,marginTop:4}}>{orcamentos.length} propostas</p></div>
           <Btn onClick={abrirNovo}>+ Novo orçamento</Btn>
+        </div>
         <div style={{display:"flex",flexDirection:"column",gap:12}}>
           {orcamentos.map(o=>{
             const clienteOrc = clientes.find(c=>c.nome===o.cliente);
