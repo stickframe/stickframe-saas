@@ -556,68 +556,33 @@ function Dashboard({clientes,orcamentos,obras,financeiro}) {
 }
 
 function CRM({clientes,setClientes}) {
-  const [modal,setModal]   = useState(false);  // "novo" | "editar"
-  const [sel,setSel]       = useState(null);
-  const [confirm,setConfirm] = useState(false);
-  const FORM_VAZIO = {nome:"",cidade:"",contato:"",status:"Lead"};
-  const [form,setForm]     = useState(FORM_VAZIO);
-  const set = k => v => setForm(f=>({...f,[k]:v}));
-  const cliente = clientes.find(c=>c.id===sel);
-
-  const abrirNovo  = () => { setForm(FORM_VAZIO); setModal("novo"); };
-  const abrirEditar = (c) => { setForm({nome:c.nome,cidade:c.cidade,contato:c.contato||"",status:c.status}); setModal("editar"); };
-
-  const salvarNovo = () => {
-    setClientes(p=>[...p,{...form,id:Date.now(),valor:0,unidades:0}]);
-    setModal(false);
-  };
-  const salvarEdicao = () => {
-    setClientes(p=>p.map(c=>c.id===sel?{...c,...form}:c));
-    setModal(false);
-  };
-  const deletar = () => {
-    setClientes(p=>p.filter(c=>c.id!==sel));
-    setSel(null); setConfirm(false);
-  };
-
-  const FormCliente = ({onSave,btnLabel}) => (
-    <div style={{display:"flex",flexDirection:"column",gap:14}}>
-      {[["Nome","nome","Ex: João Silva"],["Cidade/UF","cidade","Ex: Bofete/SP"],["Contato","contato","(11) 9xxxx-xxxx"]].map(([l,k,ph])=>(
-        <div key={k}><div style={{fontSize:11,fontWeight:700,letterSpacing:1,color:C.muted,marginBottom:6}}>{l.toUpperCase()}</div><Input value={form[k]} onChange={set(k)} placeholder={ph}/></div>
-      ))}
-      <div><div style={{fontSize:11,fontWeight:700,letterSpacing:1,color:C.muted,marginBottom:6}}>STATUS</div>
-        <Select value={form.status} onChange={set("status")} options={[{value:"Lead",label:"Lead"},{value:"Em negociação",label:"Em negociação"},{value:"Proposta enviada",label:"Proposta enviada"},{value:"Fechado",label:"Fechado"}]}/>
-      </div>
-      <div style={{display:"flex",gap:10,justifyContent:"flex-end",marginTop:6}}>
-        <Btn variant="ghost" onClick={()=>setModal(false)}>Cancelar</Btn>
-        <Btn disabled={!form.nome||!form.cidade} onClick={onSave}>{btnLabel}</Btn>
-      </div>
-    </div>
-  );
-
+  const [modal,setModal]=useState(false);
+  const [sel,setSel]=useState(null);
+  const [form,setForm]=useState({nome:"",cidade:"",contato:"",status:"Lead"});
+  const set=k=>v=>setForm(f=>({...f,[k]:v}));
+  const cliente=clientes.find(c=>c.id===sel);
+  const salvar=()=>{setClientes(p=>[...p,{...form,id:Date.now(),valor:0,unidades:0}]);setModal(false);setForm({nome:"",cidade:"",contato:"",status:"Lead"});};
   return (
     <>
-      {modal==="novo"   && <Modal title="Novo cliente"   onClose={()=>setModal(false)}><FormCliente onSave={salvarNovo}   btnLabel="Salvar cliente"/></Modal>}
-      {modal==="editar" && <Modal title="Editar cliente" onClose={()=>setModal(false)}><FormCliente onSave={salvarEdicao} btnLabel="Salvar alterações"/></Modal>}
-
-      {confirm && (
-        <div style={{position:"fixed",inset:0,background:"#000b",zIndex:200,display:"flex",alignItems:"center",justifyContent:"center"}}>
-          <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:28,width:360,textAlign:"center"}}>
-            <div style={{fontSize:16,fontWeight:700,marginBottom:8}}>Deletar cliente?</div>
-            <div style={{fontSize:13,color:C.muted,marginBottom:24}}>Essa ação não pode ser desfeita.</div>
-            <div style={{display:"flex",gap:10,justifyContent:"center"}}>
-              <Btn variant="ghost" onClick={()=>setConfirm(false)}>Cancelar</Btn>
-              <button onClick={deletar} style={{padding:"10px 20px",background:C.danger,border:"none",borderRadius:6,color:"#fff",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>Deletar</button>
-            </div>
+      {modal&&<Modal title="Novo cliente" onClose={()=>setModal(false)}>
+        <div style={{display:"flex",flexDirection:"column",gap:14}}>
+          {[["Nome","nome","Ex: João Silva"],["Cidade/UF","cidade","Ex: Bofete/SP"],["Contato","contato","(11) 9xxxx-xxxx"]].map(([l,k,ph])=>(
+            <div key={k}><div style={{fontSize:11,fontWeight:700,letterSpacing:1,color:C.muted,marginBottom:6}}>{l.toUpperCase()}</div><Input value={form[k]} onChange={set(k)} placeholder={ph}/></div>
+          ))}
+          <div><div style={{fontSize:11,fontWeight:700,letterSpacing:1,color:C.muted,marginBottom:6}}>STATUS</div>
+            <Select value={form.status} onChange={set("status")} options={[{value:"Lead",label:"Lead"},{value:"Em negociação",label:"Em negociação"},{value:"Proposta enviada",label:"Proposta enviada"},{value:"Fechado",label:"Fechado"}]}/>
+          </div>
+          <div style={{display:"flex",gap:10,justifyContent:"flex-end",marginTop:6}}>
+            <Btn variant="ghost" onClick={()=>setModal(false)}>Cancelar</Btn>
+            <Btn disabled={!form.nome||!form.cidade} onClick={salvar}>Salvar</Btn>
           </div>
         </div>
-      )}
-
+      </Modal>}
       <div style={{display:"grid",gridTemplateColumns:sel?"1fr 300px":"1fr",gap:18}}>
         <div>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
             <div><h2 style={{fontSize:22,fontWeight:800}}>CRM / Clientes</h2><p style={{color:C.muted,fontSize:13,marginTop:4}}>{clientes.length} contatos</p></div>
-            <Btn onClick={abrirNovo}>+ Novo cliente</Btn>
+            <Btn onClick={()=>setModal(true)}>+ Novo cliente</Btn>
           </div>
           <div style={{background:C.surface,borderRadius:12,border:`1px solid ${C.border}`,overflow:"hidden"}}>
             <table style={{width:"100%",borderCollapse:"collapse"}}>
@@ -653,10 +618,6 @@ function CRM({clientes,setClientes}) {
                 </div>
               ))}
             </div>
-            <div style={{display:"flex",gap:8,marginTop:18}}>
-              <Btn variant="ghost" size="sm" onClick={()=>abrirEditar(cliente)} fullWidth>✏️ Editar</Btn>
-              <button onClick={()=>setConfirm(true)} style={{flex:1,padding:"7px 0",background:C.danger+"22",border:`1px solid ${C.danger}44`,borderRadius:6,color:C.danger,fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>🗑 Deletar</button>
-            </div>
           </div>
         )}
       </div>
@@ -665,78 +626,39 @@ function CRM({clientes,setClientes}) {
 }
 
 function Orcamentos({clientes,orcamentos,setOrcamentos}) {
-  const [modal,setModal]     = useState(false); // "novo" | "editar"
-  const [editId,setEditId]   = useState(null);
-  const [confirm,setConfirm] = useState(null);
-  const FORM_VAZIO = {cliente_id:clientes[0]?.id||"",unidades:1,area:48,padrao:"padrao"};
-  const [form,setForm] = useState(FORM_VAZIO);
-  const set = k => v => setForm(f=>({...f,[k]:v}));
-
-  const calc        = calcOrcamento({area:Number(form.area),unidades:Number(form.unidades),padrao:form.padrao});
-  const clienteSel  = clientes.find(c=>c.id===Number(form.cliente_id));
-
-  const abrirNovo = () => { setForm(FORM_VAZIO); setModal("novo"); };
-  const abrirEditar = (o) => {
-    setEditId(o.id);
-    setForm({cliente_id:o.cliente_id||clientes[0]?.id||"",unidades:o.unidades,area:o.area,padrao:o.padrao||"padrao"});
-    setModal("editar");
-  };
-
-  const salvarNovo = () => {
-    setOrcamentos(p=>[{id:Date.now(),ref:`ORC-2025-${String(p.length+32).padStart(3,"0")}`,cliente:clienteSel?.nome||"—",cliente_id:Number(form.cliente_id),valor:calc.valor_total,unidades:Number(form.unidades),area:Number(form.area),padrao:form.padrao,status:"Aguardando resposta",criado:new Date().toLocaleDateString("pt-BR")},...p]);
-    setModal(false);
-  };
-  const salvarEdicao = () => {
-    setOrcamentos(p=>p.map(o=>o.id===editId?{...o,cliente:clienteSel?.nome||o.cliente,cliente_id:Number(form.cliente_id),unidades:Number(form.unidades),area:Number(form.area),padrao:form.padrao,valor:calc.valor_total}:o));
-    setModal(false);
-  };
-  const deletar = (id) => { setOrcamentos(p=>p.filter(o=>o.id!==id)); setConfirm(null); };
-
-  const FormOrc = ({onSave,btnLabel}) => (
-    <div style={{display:"flex",flexDirection:"column",gap:14}}>
-      <div><div style={{fontSize:11,fontWeight:700,letterSpacing:1,color:C.muted,marginBottom:6}}>CLIENTE</div><Select value={form.cliente_id} onChange={set("cliente_id")} options={clientes.map(c=>({value:c.id,label:c.nome}))}/></div>
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
-        <div><div style={{fontSize:11,fontWeight:700,letterSpacing:1,color:C.muted,marginBottom:6}}>UNIDADES</div><Input type="number" value={form.unidades} onChange={set("unidades")}/></div>
-        <div><div style={{fontSize:11,fontWeight:700,letterSpacing:1,color:C.muted,marginBottom:6}}>ÁREA/UH (m²)</div><Input type="number" value={form.area} onChange={set("area")}/></div>
-      </div>
-      <div><div style={{fontSize:11,fontWeight:700,letterSpacing:1,color:C.muted,marginBottom:6}}>PADRÃO</div><Select value={form.padrao} onChange={set("padrao")} options={Object.entries(PRECOS).map(([k,v])=>({value:k,label:v.label}))}/></div>
-      <div style={{background:C.darker,borderRadius:8,border:`1px solid ${C.red}33`,padding:14}}>
-        <div style={{fontSize:10,fontWeight:700,letterSpacing:1,color:C.red,marginBottom:10}}>PRÉVIA</div>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
-          {[["Valor/m²",fmt(calc.valor_m2)],["Valor/UH",fmt(calc.valor_uh)],["Total",fmt(calc.valor_total)]].map(([k,v])=>(
-            <div key={k} style={{background:C.surface,borderRadius:6,padding:"8px 10px"}}><div style={{fontSize:10,color:C.muted,marginBottom:3}}>{k}</div><div style={{fontSize:12,fontWeight:700,color:k==="Total"?C.red:C.text}}>{v}</div></div>
-          ))}
-        </div>
-      </div>
-      <div style={{display:"flex",gap:10,justifyContent:"flex-end"}}>
-        <Btn variant="ghost" onClick={()=>setModal(false)}>Cancelar</Btn>
-        <Btn onClick={onSave}>{btnLabel}</Btn>
-      </div>
-    </div>
-  );
-
+  const [modal,setModal]=useState(false);
+  const [form,setForm]=useState({cliente_id:clientes[0]?.id||"",unidades:1,area:48,padrao:"padrao"});
+  const set=k=>v=>setForm(f=>({...f,[k]:v}));
+  const calc=calcOrcamento({area:Number(form.area),unidades:Number(form.unidades),padrao:form.padrao});
+  const clienteSel=clientes.find(c=>c.id===Number(form.cliente_id));
+  const salvar=()=>{setOrcamentos(p=>[{id:Date.now(),ref:`ORC-2025-${String(p.length+32).padStart(3,"0")}`,cliente:clienteSel?.nome||"—",valor:calc.valor_total,unidades:Number(form.unidades),area:Number(form.area),padrao:form.padrao,status:"Aguardando resposta",criado:new Date().toLocaleDateString("pt-BR")},...p]);setModal(false);};
   return (
     <>
-      {modal==="novo"   && <Modal title="Novo orçamento"   onClose={()=>setModal(false)}><FormOrc onSave={salvarNovo}   btnLabel="Gerar orçamento"/></Modal>}
-      {modal==="editar" && <Modal title="Editar orçamento" onClose={()=>setModal(false)}><FormOrc onSave={salvarEdicao} btnLabel="Salvar alterações"/></Modal>}
-
-      {confirm && (
-        <div style={{position:"fixed",inset:0,background:"#000b",zIndex:200,display:"flex",alignItems:"center",justifyContent:"center"}}>
-          <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:28,width:360,textAlign:"center"}}>
-            <div style={{fontSize:16,fontWeight:700,marginBottom:8}}>Deletar orçamento?</div>
-            <div style={{fontSize:13,color:C.muted,marginBottom:24}}>Essa ação não pode ser desfeita.</div>
-            <div style={{display:"flex",gap:10,justifyContent:"center"}}>
-              <Btn variant="ghost" onClick={()=>setConfirm(null)}>Cancelar</Btn>
-              <button onClick={()=>deletar(confirm)} style={{padding:"10px 20px",background:C.danger,border:"none",borderRadius:6,color:"#fff",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>Deletar</button>
+      {modal&&<Modal title="Novo orçamento" onClose={()=>setModal(false)}>
+        <div style={{display:"flex",flexDirection:"column",gap:14}}>
+          <div><div style={{fontSize:11,fontWeight:700,letterSpacing:1,color:C.muted,marginBottom:6}}>CLIENTE</div><Select value={form.cliente_id} onChange={set("cliente_id")} options={clientes.map(c=>({value:c.id,label:c.nome}))}/></div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+            <div><div style={{fontSize:11,fontWeight:700,letterSpacing:1,color:C.muted,marginBottom:6}}>UNIDADES</div><Input type="number" value={form.unidades} onChange={set("unidades")}/></div>
+            <div><div style={{fontSize:11,fontWeight:700,letterSpacing:1,color:C.muted,marginBottom:6}}>ÁREA/UH (m²)</div><Input type="number" value={form.area} onChange={set("area")}/></div>
+          </div>
+          <div><div style={{fontSize:11,fontWeight:700,letterSpacing:1,color:C.muted,marginBottom:6}}>PADRÃO</div><Select value={form.padrao} onChange={set("padrao")} options={Object.entries(PRECOS).map(([k,v])=>({value:k,label:v.label}))}/></div>
+          <div style={{background:C.darker,borderRadius:8,border:`1px solid ${C.red}33`,padding:14}}>
+            <div style={{fontSize:10,fontWeight:700,letterSpacing:1,color:C.red,marginBottom:10}}>PRÉVIA</div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
+              {[["Valor/m²",fmt(calc.valor_m2)],["Valor/UH",fmt(calc.valor_uh)],["Total",fmt(calc.valor_total)]].map(([k,v])=>(
+                <div key={k} style={{background:C.surface,borderRadius:6,padding:"8px 10px"}}><div style={{fontSize:10,color:C.muted,marginBottom:3}}>{k}</div><div style={{fontSize:12,fontWeight:700,color:k==="Total"?C.red:C.text}}>{v}</div></div>
+              ))}
             </div>
           </div>
+          <div style={{display:"flex",gap:10,justifyContent:"flex-end"}}>
+            <Btn variant="ghost" onClick={()=>setModal(false)}>Cancelar</Btn><Btn onClick={salvar}>Gerar</Btn>
+          </div>
         </div>
-      )}
-
+      </Modal>}
       <div>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
           <div><h2 style={{fontSize:22,fontWeight:800}}>Orçamentos</h2><p style={{color:C.muted,fontSize:13,marginTop:4}}>{orcamentos.length} propostas</p></div>
-          <Btn onClick={abrirNovo}>+ Novo orçamento</Btn>
+          <Btn onClick={()=>setModal(true)}>+ Novo orçamento</Btn>
         </div>
         <div style={{display:"flex",flexDirection:"column",gap:12}}>
           {orcamentos.map(o=>(
@@ -747,9 +669,7 @@ function Orcamentos({clientes,orcamentos,setOrcamentos}) {
                 <div style={{fontSize:11,color:C.muted,marginTop:2}}>{o.unidades} UH · {o.area} m²/und · {PRECOS[o.padrao]?.label||"Padrão"} · {o.criado}</div>
               </div>
               <div style={{textAlign:"right"}}><div style={{fontSize:17,fontWeight:800}}>{fmt(o.valor)}</div><div style={{fontSize:11,color:C.muted,marginTop:2}}>{fmt(o.valor/o.unidades)}/UH</div></div>
-              <Btn variant="ghost" size="sm" onClick={()=>abrirEditar(o)}>✏️ Editar</Btn>
               <Btn variant="ghost" size="sm">Ver PDF</Btn>
-              <button onClick={()=>setConfirm(o.id)} style={{padding:"6px 12px",background:C.danger+"22",border:`1px solid ${C.danger}44`,borderRadius:6,color:C.danger,fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>🗑</button>
             </div>
           ))}
         </div>
