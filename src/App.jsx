@@ -611,21 +611,6 @@ const PERFIS = {
   },
 };
 
-    await new Promise(r=>setTimeout(r,800));
-    const USERS = {
-      "andre@stickframe.com.br":     {password:"stick2025",  nome:"André",          cargo:"Diretor Comercial",   perfil:"diretor"   },
-      "vendas@stickframe.com.br":    {password:"vendas123",  nome:"Equipe Vendas",  cargo:"Consultor",           perfil:"comercial" },
-      "eng@stickframe.com.br":       {password:"eng2025",    nome:"Engenheiro",     cargo:"Eng. Civil",          perfil:"engenheiro"},
-      "financeiro@stickframe.com.br":{password:"fin2025",    nome:"Financeiro",     cargo:"Analista Financeiro", perfil:"financeiro"},
-      "jonathan@stickframe.com.br":  {password:"jonathan1981",nome:"Jonathan",      cargo:"Diretor",             perfil:"diretor"   },
-    };
-    const u = USERS[email.toLowerCase()];
-    if (!u||u.password!==password) throw new Error("E-mail ou senha incorretos.");
-    return {user:{email,nome:u.nome,cargo:u.cargo,perfil:u.perfil}};
-  },
-  async signOut() { await new Promise(r=>setTimeout(r,200)); },
-};
-
 // ─── LOGIN ────────────────────────────────────────────────────────────────────
 function LoginScreen({onLogin}) {
   const [email,setEmail]       = useState("");
