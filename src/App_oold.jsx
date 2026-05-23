@@ -83,9 +83,7 @@ const MOCK_HISTORICO = [
   { id:8,  tipo:"obra",       acao:"fase",      desc:"Obra Socorro avançou para: Montagem estrutural",    usuario:"André", data:"01/04/2025", hora:"07:55" },
   { id:9,  tipo:"orcamento",  acao:"aprovado",  desc:"Orçamento ORC-2025-019 aprovado pelo cliente",      usuario:"André", data:"20/03/2025", hora:"16:40" },
   { id:10, tipo:"financeiro", acao:"receita",   desc:"Medição 1 de R$ 372.000 recebida — Socorro",        usuario:"André", data:"01/04/2025", hora:"15:10" },
-];
-
-const CATEGORIAS_DESPESA = ["Materiais","Mão de obra","Projeto","Transporte","Equipamentos","Administrativo","Outros"];
+]; = ["Materiais","Mão de obra","Projeto","Transporte","Equipamentos","Administrativo","Outros"];
 const CATEGORIAS_RECEITA = ["Entrada contrato","Medição 1","Medição 2","Medição 3","Saldo final","Outros"];
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
