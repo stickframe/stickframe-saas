@@ -334,6 +334,331 @@ ${(o.fin.lancamentos||[]).map(l=>`
   URL.revokeObjectURL(url);
 }
 
+// ─── MÓDULO AGENDA ───────────────────────────────────────────────────────────
+const TIPOS_EVENTO = ["Visita de obra","Reunião com cliente","Vistoria","Entrega de documentos","Medição","Outro"];
+const MOCK_EVENTOS = [
+  { id:1, titulo:"Visita Residencial Bofete",      tipo:"Visita de obra",        data:"26/05/2025", hora:"09:00", cliente:"Milton Ferreira",        obra:"Residencial Bofete", obs:"Verificar fundações", cor:"#981915" },
+  { id:2, titulo:"Reunião Alphaville",             tipo:"Reunião com cliente",   data:"27/05/2025", hora:"14:00", cliente:"Construtora Alphaville",  obra:"Alphaville Offices", obs:"Definir escopo do projeto", cor:C.warning },
+  { id:3, titulo:"Medição Socorro — bloco A",      tipo:"Medição",               data:"28/05/2025", hora:"08:00", cliente:"Pref. de Socorro",        obra:"Conjunto Socorro", obs:"", cor:"#4a9eff" },
+  { id:4, titulo:"Entrega plantas Bofete",         tipo:"Entrega de documentos", data:"29/05/2025", hora:"10:30", cliente:"Milton Ferreira",        obra:"Residencial Bofete", obs:"Plantas executivas revisadas", cor:C.success },
+];
+
+const COR_TIPO = {
+  "Visita de obra": "#981915",
+  "Reunião com cliente": C.warning,
+  "Vistoria": "#4a9eff",
+  "Entrega de documentos": C.success,
+  "Medição": "#9b59b6",
+  "Outro": C.muted,
+};
+
+function Agenda({clientes, obras, registrar}) {
+  const [eventos,  setEventos]  = useState(MOCK_EVENTOS);
+  const [modal,    setModal]    = useState(false);
+  const [verEvento,setVerEvento]= useState(null);
+  const [filtro,   setFiltro]   = useState("todos");
+  const FORM_VAZIO = {titulo:"", tipo:"Visita de obra", data:"", hora:"", cliente_id:"", obra:"", obs:""};
+  const [form, setForm] = useState(FORM_VAZIO);
+  const set = k => v => setForm(f=>({...f,[k]:v}));
+
+  const hoje = new Date();
+  const hojeStr = hoje.toLocaleDateString("pt-BR");
+
+  const eventosFiltro = eventos
+    .filter(e => filtro==="todos" || (filtro==="hoje" && e.data===hojeStr) || (filtro==="semana") || e.tipo===filtro)
+    .sort((a,b) => a.data.split("/").reverse().join("") > b.data.split("/").reverse().join("") ? 1 : -1);
+
+  const salvar = () => {
+    const clienteSel = clientes.find(c=>c.id===Number(form.cliente_id));
+    const novo = {
+      ...form, id:Date.now(),
+      cliente: clienteSel?.nome || "—",
+      cor: COR_TIPO[form.tipo] || C.muted,
+    };
+    setEventos(p=>[...p, novo]);
+    registrar("cliente","criado",`Evento agendado: ${form.titulo} — ${form.data}`);
+    setModal(false);
+    setForm(FORM_VAZIO);
+  };
+
+  const deletar = (id) => setEventos(p=>p.filter(e=>e.id!==id));
+  const ok = form.titulo && form.data && form.hora;
+
+  // Próximos eventos (hoje em diante)
+  const proximos = eventos.filter(e => {
+    const [d,m,a] = e.data.split("/");
+    return new Date(a,m-1,d) >= new Date(hoje.getFullYear(),hoje.getMonth(),hoje.getDate());
+  }).sort((a,b)=> a.data.split("/").reverse().join("")>b.data.split("/").reverse().join("")?1:-1).slice(0,3);
+
+  return (
+    <>
+      {modal && (
+        <Modal title="Novo compromisso" onClose={()=>setModal(false)}>
+          <div style={{display:"flex",flexDirection:"column",gap:14}}>
+            <div><div style={{fontSize:11,fontWeight:700,letterSpacing:1,color:C.muted,marginBottom:6}}>TÍTULO</div><Input value={form.titulo} onChange={set("titulo")} placeholder="Ex: Visita de vistoria — Bofete"/></div>
+            <div><div style={{fontSize:11,fontWeight:700,letterSpacing:1,color:C.muted,marginBottom:6}}>TIPO</div><Select value={form.tipo} onChange={set("tipo")} options={TIPOS_EVENTO.map(t=>({value:t,label:t}))}/></div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+              <div><div style={{fontSize:11,fontWeight:700,letterSpacing:1,color:C.muted,marginBottom:6}}>DATA</div><Input value={form.data} onChange={set("data")} placeholder="DD/MM/AAAA"/></div>
+              <div><div style={{fontSize:11,fontWeight:700,letterSpacing:1,color:C.muted,marginBottom:6}}>HORA</div><Input value={form.hora} onChange={set("hora")} placeholder="HH:MM"/></div>
+            </div>
+            <div><div style={{fontSize:11,fontWeight:700,letterSpacing:1,color:C.muted,marginBottom:6}}>CLIENTE</div><Select value={form.cliente_id} onChange={set("cliente_id")} options={[{value:"",label:"— Selecione —"},...clientes.map(c=>({value:c.id,label:c.nome}))]}/></div>
+            <div><div style={{fontSize:11,fontWeight:700,letterSpacing:1,color:C.muted,marginBottom:6}}>OBRA</div><Input value={form.obra} onChange={set("obra")} placeholder="Nome da obra (opcional)"/></div>
+            <div><div style={{fontSize:11,fontWeight:700,letterSpacing:1,color:C.muted,marginBottom:6}}>OBSERVAÇÕES</div>
+              <textarea value={form.obs} onChange={e=>set("obs")(e.target.value)} placeholder="Detalhes do compromisso..." rows={3}
+                style={{width:"100%",background:"transparent",border:`1px solid ${C.border}`,borderRadius:6,padding:"10px 13px",color:C.text,fontSize:13,outline:"none",fontFamily:"inherit",resize:"vertical"}}/>
+            </div>
+            <div style={{display:"flex",gap:10,justifyContent:"flex-end",marginTop:6}}>
+              <Btn variant="ghost" onClick={()=>setModal(false)}>Cancelar</Btn>
+              <Btn disabled={!ok} onClick={salvar}>Salvar compromisso</Btn>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {verEvento && (
+        <Modal title={verEvento.titulo} onClose={()=>setVerEvento(null)}>
+          <div style={{display:"flex",flexDirection:"column",gap:14}}>
+            <span style={{background:verEvento.cor+"22",color:verEvento.cor,border:`1px solid ${verEvento.cor}44`,borderRadius:4,padding:"3px 10px",fontSize:11,fontWeight:700,width:"fit-content"}}>{verEvento.tipo}</span>
+            {[["Data",verEvento.data],["Hora",verEvento.hora],["Cliente",verEvento.cliente||"—"],["Obra",verEvento.obra||"—"]].map(([k,v])=>(
+              <div key={k} style={{display:"flex",justifyContent:"space-between",borderBottom:`1px solid ${C.border}`,paddingBottom:10}}>
+                <span style={{fontSize:12,color:C.muted}}>{k}</span>
+                <span style={{fontSize:13,fontWeight:600}}>{v}</span>
+              </div>
+            ))}
+            {verEvento.obs && <div style={{background:C.darker,borderRadius:6,padding:"12px 14px",fontSize:13,color:C.text,lineHeight:1.6}}>{verEvento.obs}</div>}
+            <div style={{display:"flex",gap:10,justifyContent:"flex-end",marginTop:6}}>
+              <button onClick={()=>{deletar(verEvento.id);setVerEvento(null);}} style={{padding:"8px 16px",background:C.danger+"22",border:`1px solid ${C.danger}44`,borderRadius:6,color:C.danger,fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>🗑 Deletar</button>
+              <Btn variant="ghost" onClick={()=>setVerEvento(null)}>Fechar</Btn>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      <div>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:22}}>
+          <div>
+            <h2 style={{fontSize:22,fontWeight:800}}>Agenda</h2>
+            <p style={{color:C.muted,fontSize:13,marginTop:4}}>{eventos.length} compromissos cadastrados</p>
+          </div>
+          <Btn onClick={()=>setModal(true)}>+ Novo compromisso</Btn>
+        </div>
+
+        {/* Próximos 3 eventos destaque */}
+        {proximos.length>0 && (
+          <div style={{marginBottom:22}}>
+            <div style={{fontSize:11,fontWeight:700,letterSpacing:1,color:C.muted,marginBottom:12}}>PRÓXIMOS COMPROMISSOS</div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12}}>
+              {proximos.map(e=>(
+                <div key={e.id} onClick={()=>setVerEvento(e)} style={{background:C.surface,borderRadius:10,border:`1px solid ${C.border}`,borderLeft:`4px solid ${e.cor}`,padding:"14px 16px",cursor:"pointer",transition:"opacity .15s"}}
+                  onMouseOver={el=>el.currentTarget.style.opacity=".85"} onMouseOut={el=>el.currentTarget.style.opacity="1"}>
+                  <div style={{fontSize:11,color:e.cor,fontWeight:700,marginBottom:4}}>{e.data} · {e.hora}</div>
+                  <div style={{fontSize:13,fontWeight:700,marginBottom:2}}>{e.titulo}</div>
+                  <div style={{fontSize:11,color:C.muted}}>{e.tipo}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Filtros */}
+        <div style={{display:"flex",gap:8,marginBottom:18,flexWrap:"wrap"}}>
+          {["todos","hoje",...TIPOS_EVENTO].map(f=>(
+            <button key={f} onClick={()=>setFiltro(f)} style={{
+              padding:"6px 14px",borderRadius:6,fontSize:11,
+              fontWeight:filtro===f?700:400,
+              border:`1px solid ${filtro===f?(COR_TIPO[f]||C.red):C.border}`,
+              background:filtro===f?(COR_TIPO[f]||C.red)+"18":"transparent",
+              color:filtro===f?(COR_TIPO[f]||C.text):C.muted,
+              cursor:"pointer",fontFamily:"inherit",textTransform:"capitalize",
+            }}>{f==="todos"?"Todos":f==="hoje"?"Hoje":f}</button>
+          ))}
+        </div>
+
+        {/* Lista de eventos */}
+        <div style={{display:"flex",flexDirection:"column",gap:10}}>
+          {eventosFiltro.length===0?(
+            <div style={{background:C.surface,borderRadius:12,border:`1px solid ${C.border}`,padding:"40px 0",textAlign:"center",color:C.muted,fontSize:13}}>
+              Nenhum compromisso encontrado.
+            </div>
+          ):eventosFiltro.map(e=>(
+            <div key={e.id} onClick={()=>setVerEvento(e)} style={{background:C.surface,borderRadius:10,border:`1px solid ${C.border}`,borderLeft:`4px solid ${e.cor}`,padding:"14px 20px",display:"flex",alignItems:"center",gap:16,cursor:"pointer"}}>
+              <div style={{flexShrink:0,textAlign:"center",minWidth:48}}>
+                <div style={{fontSize:20,fontWeight:800,color:e.cor,lineHeight:1}}>{e.data.split("/")[0]}</div>
+                <div style={{fontSize:10,color:C.muted}}>{["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"][Number(e.data.split("/")[1])-1]}</div>
+              </div>
+              <div style={{width:1,height:36,background:C.border,flexShrink:0}}/>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontSize:13,fontWeight:700,marginBottom:2}}>{e.titulo}</div>
+                <div style={{fontSize:11,color:C.muted}}>{e.tipo}{e.cliente&&e.cliente!=="—"?` · ${e.cliente}`:""}{e.obra?` · ${e.obra}`:""}</div>
+              </div>
+              <div style={{fontSize:13,fontWeight:700,color:e.cor,flexShrink:0}}>{e.hora}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ─── MÓDULO MEDIÇÕES DE OBRA ─────────────────────────────────────────────────
+const MOCK_MEDICOES = {
+  1: [
+    { id:1, numero:1, data:"15/04/2025", descricao:"Projeto executivo e locação", percentual:12, valor:150000, status:"Aprovada", obs:"" },
+  ],
+  2: [
+    { id:1, numero:1, data:"01/03/2025", descricao:"Fundação e infraestrutura",   percentual:20, valor:186000, status:"Aprovada", obs:"" },
+    { id:2, numero:2, data:"01/04/2025", descricao:"Estrutura steel frame",        percentual:40, valor:372000, status:"Aprovada", obs:"" },
+    { id:3, numero:3, data:"01/05/2025", descricao:"Fechamentos e vedações",       percentual:18, valor:167400, status:"Pendente", obs:"Aguardando vistoria" },
+  ],
+  3: [],
+};
+
+function Medicoes({obras, financeiro, registrar}) {
+  const [obraId,   setObraId]   = useState(obras[0]?.id);
+  const [medicoes, setMedicoes] = useState(MOCK_MEDICOES);
+  const [modal,    setModal]    = useState(false);
+  const FORM_VAZIO = {descricao:"", percentual:"", valor:"", data:"", obs:""};
+  const [form, setForm] = useState(FORM_VAZIO);
+  const set = k => v => setForm(f=>({...f,[k]:v}));
+
+  const obra    = obras.find(o=>o.id===obraId)||obras[0];
+  const lista   = medicoes[obraId]||[];
+  const fin     = financeiro[obraId]||{contrato:0,lancamentos:[]};
+  const fmt     = v => "R$ "+Number(v).toLocaleString("pt-BR",{minimumFractionDigits:0});
+
+  const totalMedido   = lista.reduce((a,m)=>a+Number(m.valor),0);
+  const pctMedido     = fin.contrato>0?Math.round((totalMedido/fin.contrato)*100):0;
+  const totalAprovado = lista.filter(m=>m.status==="Aprovada").reduce((a,m)=>a+Number(m.valor),0);
+
+  const salvar = () => {
+    const novo = {
+      ...form, id:Date.now(),
+      numero: lista.length+1,
+      valor: Number(form.valor),
+      percentual: Number(form.percentual),
+      status:"Pendente",
+    };
+    setMedicoes(p=>({...p,[obraId]:[...lista,novo]}));
+    registrar("financeiro","criado",`Medição ${novo.numero} registrada — ${obra?.nome?.split("—")[0]?.trim()}`);
+    setModal(false);
+    setForm(FORM_VAZIO);
+  };
+
+  const aprovar = (id) => {
+    setMedicoes(p=>({...p,[obraId]:lista.map(m=>m.id===id?{...m,status:"Aprovada"}:m)}));
+    registrar("financeiro","receita",`Medição aprovada — ${obra?.nome?.split("—")[0]?.trim()}`);
+  };
+
+  const ok = form.descricao && form.valor && form.data;
+
+  return (
+    <>
+      {modal && (
+        <Modal title="Nova medição" onClose={()=>setModal(false)}>
+          <div style={{display:"flex",flexDirection:"column",gap:14}}>
+            <div><div style={{fontSize:11,fontWeight:700,letterSpacing:1,color:C.muted,marginBottom:6}}>DESCRIÇÃO DA ETAPA</div><Input value={form.descricao} onChange={set("descricao")} placeholder="Ex: Estrutura steel frame — bloco A"/></div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+              <div><div style={{fontSize:11,fontWeight:700,letterSpacing:1,color:C.muted,marginBottom:6}}>VALOR (R$)</div><Input type="number" value={form.valor} onChange={set("valor")} placeholder="Ex: 150000"/></div>
+              <div><div style={{fontSize:11,fontWeight:700,letterSpacing:1,color:C.muted,marginBottom:6}}>% DA OBRA</div><Input type="number" value={form.percentual} onChange={set("percentual")} placeholder="Ex: 30"/></div>
+            </div>
+            <div><div style={{fontSize:11,fontWeight:700,letterSpacing:1,color:C.muted,marginBottom:6}}>DATA DA MEDIÇÃO</div><Input value={form.data} onChange={set("data")} placeholder="DD/MM/AAAA"/></div>
+            <div><div style={{fontSize:11,fontWeight:700,letterSpacing:1,color:C.muted,marginBottom:6}}>OBSERVAÇÕES</div>
+              <textarea value={form.obs} onChange={e=>set("obs")(e.target.value)} placeholder="Observações sobre a medição..." rows={3}
+                style={{width:"100%",background:"transparent",border:`1px solid ${C.border}`,borderRadius:6,padding:"10px 13px",color:C.text,fontSize:13,outline:"none",fontFamily:"inherit",resize:"vertical"}}/>
+            </div>
+            <div style={{display:"flex",gap:10,justifyContent:"flex-end",marginTop:6}}>
+              <Btn variant="ghost" onClick={()=>setModal(false)}>Cancelar</Btn>
+              <Btn disabled={!ok} onClick={salvar}>Registrar medição</Btn>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      <div>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:22}}>
+          <div>
+            <h2 style={{fontSize:22,fontWeight:800}}>Medições de Obra</h2>
+            <p style={{color:C.muted,fontSize:13,marginTop:4}}>Controle de avanço físico-financeiro por etapa</p>
+          </div>
+          <Btn onClick={()=>setModal(true)}>+ Nova medição</Btn>
+        </div>
+
+        {/* Seletor de obra */}
+        <div style={{display:"flex",gap:10,marginBottom:22,flexWrap:"wrap"}}>
+          {obras.map(o=>(
+            <button key={o.id} onClick={()=>setObraId(o.id)} style={{padding:"8px 16px",borderRadius:8,border:`1px solid ${obraId===o.id?C.red:C.border}`,background:obraId===o.id?C.red+"18":"transparent",color:obraId===o.id?C.text:C.muted,fontSize:12,fontWeight:obraId===o.id?700:400,cursor:"pointer"}}>{o.nome.split("—")[0].trim()}</button>
+          ))}
+        </div>
+
+        {/* KPIs */}
+        <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14,marginBottom:22}}>
+          {[
+            {label:"Contrato",      value:fmt(fin.contrato||0),   color:C.border},
+            {label:"Total medido",  value:fmt(totalMedido),       color:C.red},
+            {label:"Total aprovado",value:fmt(totalAprovado),     color:C.success},
+          ].map((k,i)=>(
+            <div key={i} style={{background:C.surface,borderRadius:10,padding:"16px 18px",border:`1px solid ${C.border}`,borderTop:`3px solid ${k.color}`}}>
+              <div style={{fontSize:10,color:C.muted,letterSpacing:1,marginBottom:8}}>{k.label.toUpperCase()}</div>
+              <div style={{fontSize:18,fontWeight:800,color:k.color===C.border?C.text:k.color}}>{k.value}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Barra de progresso das medições */}
+        <div style={{background:C.surface,borderRadius:10,padding:"16px 20px",border:`1px solid ${C.border}`,marginBottom:20}}>
+          <div style={{display:"flex",justifyContent:"space-between",fontSize:12,marginBottom:8}}>
+            <span style={{color:C.muted}}>Progresso financeiro medido</span>
+            <span style={{fontWeight:700}}>{pctMedido}% do contrato</span>
+          </div>
+          <div style={{height:8,background:C.dark,borderRadius:4}}>
+            <div style={{height:8,width:`${Math.min(pctMedido,100)}%`,background:`linear-gradient(90deg,${C.red},${C.redDark})`,borderRadius:4,transition:"width 0.5s"}}/>
+          </div>
+        </div>
+
+        {/* Lista de medições */}
+        {lista.length===0?(
+          <div style={{background:C.surface,borderRadius:12,border:`1px solid ${C.border}`,padding:"48px 0",textAlign:"center"}}>
+            <div style={{fontSize:32,marginBottom:12}}>📐</div>
+            <div style={{fontSize:14,fontWeight:600,marginBottom:6}}>Nenhuma medição registrada</div>
+            <div style={{fontSize:13,color:C.muted}}>Clique em "+ Nova medição" para começar.</div>
+          </div>
+        ):(
+          <div style={{background:C.surface,borderRadius:12,border:`1px solid ${C.border}`,overflow:"hidden"}}>
+            <table style={{width:"100%",borderCollapse:"collapse"}}>
+              <thead>
+                <tr style={{borderBottom:`2px solid ${C.red}22`}}>
+                  {["Nº","Data","Descrição","% Obra","Valor","Status",""].map(h=>(
+                    <th key={h} style={{padding:"11px 16px",textAlign:"left",fontSize:10,letterSpacing:1.2,color:C.muted,fontWeight:700}}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {lista.map(m=>(
+                  <tr key={m.id} style={{borderBottom:`1px solid ${C.border}`}}>
+                    <td style={{padding:"13px 16px",fontSize:13,fontWeight:700,color:C.red}}>#{m.numero}</td>
+                    <td style={{padding:"13px 16px",fontSize:13,color:C.muted}}>{m.data}</td>
+                    <td style={{padding:"13px 16px",fontSize:13,fontWeight:600}}>{m.descricao}</td>
+                    <td style={{padding:"13px 16px",fontSize:13}}>{m.percentual}%</td>
+                    <td style={{padding:"13px 16px",fontSize:13,fontWeight:700}}>{fmt(m.valor)}</td>
+                    <td style={{padding:"13px 16px"}}>
+                      <Badge label={m.status} color={m.status==="Aprovada"?C.success:C.warning}/>
+                    </td>
+                    <td style={{padding:"13px 16px"}}>
+                      {m.status==="Pendente" && (
+                        <button onClick={()=>aprovar(m.id)} style={{padding:"5px 12px",background:C.success+"22",border:`1px solid ${C.success}44`,borderRadius:6,color:C.success,fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>✓ Aprovar</button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
+
 // ─── PORTAL DO CLIENTE ───────────────────────────────────────────────────────
 function gerarPortalCliente(obra, registros, financeiro) {
   const hoje = new Date().toLocaleDateString("pt-BR");
@@ -985,17 +1310,17 @@ const PERFIS = {
   diretor: {
     label: "Diretor",
     cor: C.red,
-    paginas: ["dashboard","crm","orcamentos","obras","diario","financeiro","contratos","historico"],
+    paginas: ["dashboard","agenda","crm","orcamentos","obras","medicoes","diario","financeiro","contratos","historico"],
   },
   comercial: {
     label: "Comercial",
     cor: C.warning,
-    paginas: ["dashboard","crm","orcamentos","contratos"],
+    paginas: ["dashboard","agenda","crm","orcamentos","contratos"],
   },
   engenheiro: {
     label: "Engenheiro",
     cor: "#4a9eff",
-    paginas: ["dashboard","obras","diario","historico"],
+    paginas: ["dashboard","agenda","obras","medicoes","diario","historico"],
   },
   financeiro: {
     label: "Financeiro",
@@ -1074,9 +1399,11 @@ function LoginScreen({onLogin}) {
 // ─── SIDEBAR ─────────────────────────────────────────────────────────────────
 const NAV = [
   {key:"dashboard",  label:"Dashboard",        icon:"▣"},
+  {key:"agenda",     label:"Agenda",            icon:"📅"},
   {key:"crm",        label:"CRM / Clientes",   icon:"◈"},
   {key:"orcamentos", label:"Orçamentos",        icon:"◻"},
   {key:"obras",      label:"Gestão de Obras",  icon:"◆"},
+  {key:"medicoes",   label:"Medições de Obra",  icon:"📐"},
   {key:"diario",     label:"Diário de Obra",   icon:"📋"},
   {key:"financeiro", label:"Financeiro",        icon:"◉"},
   {key:"contratos",  label:"Contratos",         icon:"◑"},
@@ -2271,9 +2598,11 @@ export default function App() {
 
   const pages = {
     dashboard:  <Dashboard  clientes={clientes} orcamentos={orcamentos} obras={obras} financeiro={financeiro}/>,
+    agenda:     <Agenda     clientes={clientes} obras={obras} registrar={registrar}/>,
     crm:        <CRM        clientes={clientes} setClientes={setClientes} registrar={registrar}/>,
     orcamentos: <Orcamentos clientes={clientes} orcamentos={orcamentos} setOrcamentos={setOrcamentos} registrar={registrar}/>,
     obras:      <GestaoObras obras={obras} setObras={setObras} registrar={registrar} financeiro={financeiro}/>,
+    medicoes:   <Medicoes   obras={obras} financeiro={financeiro} registrar={registrar}/>,
     diario:     <DiarioObra obras={obras} registrar={registrar}/>,
     financeiro: <Financeiro obras={obras} financeiro={financeiro} setFinanceiro={setFinanceiro} registrar={registrar}/>,
     contratos:  <Contratos  clientes={clientes} registrar={registrar}/>,
