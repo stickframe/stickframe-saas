@@ -1,4 +1,10 @@
 import { useState, useCallback } from "react";
+import { createClient } from "@supabase/supabase-js";
+
+const _sb = createClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_KEY
+);
 
 // ─── PALETA ──────────────────────────────────────────────────────────────────
 const C = {
@@ -551,9 +557,35 @@ function Financeiro({obras,financeiro,setFinanceiro,registrar}) {
 // ════════════════════════════════════════════════════════════════════════════
 // SUPABASE MOCK + AUTH
 // ════════════════════════════════════════════════════════════════════════════
+// ─── SUPABASE AUTH REAL ───────────────────────────────────────────────────────
+const PERFIL_MAP = {
+  "andre@stickframe.com.br":       "diretor",
+  "jonathan@stickframe.com.br":    "diretor",
+  "vendas@stickframe.com.br":      "comercial",
+  "eng@stickframe.com.br":         "engenheiro",
+  "financeiro@stickframe.com.br":  "financeiro",
+};
+
+const NOME_MAP = {
+  "andre@stickframe.com.br":       { nome:"André",         cargo:"Diretor Comercial"   },
+  "jonathan@stickframe.com.br":    { nome:"Jonathan",      cargo:"Diretor"             },
+  "vendas@stickframe.com.br":      { nome:"Equipe Vendas", cargo:"Consultor"           },
+  "eng@stickframe.com.br":         { nome:"Engenheiro",    cargo:"Eng. Civil"          },
+  "financeiro@stickframe.com.br":  { nome:"Financeiro",    cargo:"Analista Financeiro" },
+};
+
 const supabaseMock = {
-  async signIn(email,password) {
-// ─── PERFIS E PERMISSÕES ──────────────────────────────────────────────────────
+  async signIn(email, password) {
+    const { data, error } = await _sb.auth.signInWithPassword({ email, password })
+    if (error) throw new Error("E-mail ou senha incorretos.")
+    const info   = NOME_MAP[email.toLowerCase()] || { nome: email.split("@")[0], cargo: "Usuário" }
+    const perfil = PERFIL_MAP[email.toLowerCase()] || "comercial"
+    return { user: { email, nome: info.nome, cargo: info.cargo, perfil } }
+  },
+  async signOut() {
+    await _sb.auth.signOut()
+  },
+};
 const PERFIS = {
   diretor: {
     label: "Diretor",
