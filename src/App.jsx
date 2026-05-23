@@ -659,6 +659,141 @@ function Medicoes({obras, financeiro, registrar}) {
   );
 }
 
+// ─── RELATÓRIO DA OBRA ───────────────────────────────────────────────────────
+function gerarRelatorioObra(obra, arquivos) {
+  const hoje = new Date().toLocaleDateString("pt-BR");
+  const FASES_R = ["Projeto executivo","Fundação","Estrutura Steel Frame","Fechamentos","Instalações","Acabamento","Entrega"];
+  const faseIdx = FASES_R.indexOf(obra.fase);
+
+  const html = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<title>Relatório de Obra — ${obra.nome}</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700;800&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'DM Sans',sans-serif;color:#222;background:#fff;font-size:12px;}
+  .capa{background:linear-gradient(135deg,#1A1A1A 60%,#981915 100%);min-height:280px;padding:50px 40px;display:flex;flex-direction:column;justify-content:flex-end;color:#fff;}
+  .capa-logo{display:flex;align-items:center;gap:12px;margin-bottom:40px;}
+  .capa-logo-box{width:42px;height:42px;background:#981915;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:#fff;border:1.5px solid rgba(255,255,255,.3);}
+  .capa-logo-nome{font-size:20px;font-weight:800;letter-spacing:3px;color:#fff;}
+  .capa-logo-nome .r{color:#981915;}
+  .capa-logo-sub{font-size:8px;color:#555;letter-spacing:2px;}
+  .capa-titulo{font-size:11px;letter-spacing:2px;color:rgba(255,255,255,.5);margin-bottom:10px;}
+  .capa-nome{font-size:28px;font-weight:800;margin-bottom:6px;}
+  .capa-cliente{font-size:14px;color:rgba(255,255,255,.7);margin-bottom:16px;}
+  .capa-badges{display:flex;gap:10px;flex-wrap:wrap;}
+  .capa-badge{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:4px 14px;font-size:11px;font-weight:600;}
+  .red-bar{height:4px;background:#981915;}
+  .body{padding:32px 40px;}
+  h2{font-size:9px;font-weight:700;letter-spacing:1.5px;color:#981915;text-transform:uppercase;margin:28px 0 12px;padding-bottom:6px;border-bottom:1px solid #eee;}
+  .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;}
+  .info-item{padding:9px 14px;border:1px solid #eee;font-size:11px;}
+  .info-item:nth-child(even){background:#f9f9f9;}
+  .info-label{color:#888;margin-bottom:3px;font-size:9px;text-transform:uppercase;letter-spacing:.5px;}
+  .info-val{font-weight:700;color:#222;font-size:13px;}
+  .prog-box{background:#f7f7f7;border-radius:8px;padding:20px;margin-bottom:20px;}
+  .prog-pct{font-size:36px;font-weight:800;color:#981915;}
+  .prog-label{font-size:11px;color:#888;margin-bottom:14px;}
+  .prog-bar{height:10px;background:#e8e8e8;border-radius:5px;overflow:hidden;margin-bottom:20px;}
+  .prog-fill{height:10px;border-radius:5px;background:linear-gradient(90deg,#981915,#6e1210);}
+  .fase-row{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid #f4f4f4;}
+  .fase-row:last-child{border:none;}
+  .fase-dot{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;}
+  .fase-dot.done{background:#2e9e5b;color:#fff;}
+  .fase-dot.current{background:#981915;color:#fff;}
+  .fase-dot.pending{background:#f0f0f0;color:#bbb;}
+  .fase-nome{font-size:12px;}
+  .fase-nome.done{color:#2e9e5b;}
+  .fase-nome.current{font-weight:700;color:#981915;}
+  .fase-nome.pending{color:#bbb;}
+  .fase-atual-badge{margin-left:auto;background:#981915;color:#fff;border-radius:10px;padding:2px 10px;font-size:9px;font-weight:700;}
+  .arq-row{display:flex;align-items:center;gap:12px;padding:8px 14px;border-bottom:1px solid #f5f5f5;font-size:11px;}
+  .arq-row:last-child{border:none;}
+  .arq-icone{font-size:18px;flex-shrink:0;}
+  .arq-nome{flex:1;font-weight:600;color:#222;}
+  .arq-meta{color:#888;}
+  .footer{margin-top:40px;padding-top:14px;border-top:1px solid #eee;display:flex;justify-content:space-between;font-size:9px;color:#aaa;}
+  @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}
+</style>
+</head>
+<body>
+
+<!-- CAPA -->
+<div class="capa">
+  <div class="capa-logo">
+    <div class="capa-logo-box">SF</div>
+    <div><div class="capa-logo-nome">STICK<span class="r">FRAME</span></div><div class="capa-logo-sub">SISTEMAS CONSTRUTIVOS</div></div>
+  </div>
+  <div class="capa-titulo">RELATÓRIO DE OBRA</div>
+  <div class="capa-nome">${obra.nome}</div>
+  <div class="capa-cliente">Cliente: ${obra.cliente}</div>
+  <div class="capa-badges">
+    <div class="capa-badge">${obra.status}</div>
+    <div class="capa-badge">Prazo: ${obra.prazo}</div>
+    <div class="capa-badge">Emitido: ${hoje}</div>
+  </div>
+</div>
+<div class="red-bar"></div>
+
+<div class="body">
+
+  <!-- DADOS DA OBRA -->
+  <h2>Dados da Obra</h2>
+  <div class="info-grid">
+    <div class="info-item"><div class="info-label">Nome da obra</div><div class="info-val">${obra.nome}</div></div>
+    <div class="info-item"><div class="info-label">Cliente</div><div class="info-val">${obra.cliente}</div></div>
+    <div class="info-item"><div class="info-label">Status</div><div class="info-val">${obra.status}</div></div>
+    <div class="info-item"><div class="info-label">Prazo de entrega</div><div class="info-val">${obra.prazo}</div></div>
+    <div class="info-item"><div class="info-label">Fase atual</div><div class="info-val">${obra.fase}</div></div>
+    <div class="info-item"><div class="info-label">Data do relatório</div><div class="info-val">${hoje}</div></div>
+  </div>
+
+  <!-- PROGRESSO -->
+  <h2>Progresso da Obra</h2>
+  <div class="prog-box">
+    <div class="prog-pct">${obra.progresso}%</div>
+    <div class="prog-label">concluído</div>
+    <div class="prog-bar"><div class="prog-fill" style="width:${obra.progresso}%"></div></div>
+    ${FASES_R.map((f,i)=>{
+      const done=i<faseIdx,curr=i===faseIdx,cls=done?"done":curr?"current":"pending";
+      return `<div class="fase-row">
+        <div class="fase-dot ${cls}">${done?"✓":i+1}</div>
+        <div class="fase-nome ${cls}">${f}</div>
+        ${curr?`<div class="fase-atual-badge">Fase atual</div>`:""}
+      </div>`;
+    }).join("")}
+  </div>
+
+  <!-- ARQUIVOS -->
+  ${arquivos.length>0?`
+  <h2>Documentos e Arquivos (${arquivos.length})</h2>
+  <div style="border:1px solid #eee;border-radius:8px;overflow:hidden;">
+    ${arquivos.map(a=>`
+    <div class="arq-row">
+      <div class="arq-icone">${a.tipo==="pdf"?"📄":a.tipo==="imagem"?"🖼️":"📎"}</div>
+      <div class="arq-nome">${a.nome}</div>
+      <div class="arq-meta">${a.categoria} · ${a.tamanho} · ${a.data}</div>
+    </div>`).join("")}
+  </div>`:""}
+
+  <div class="footer">
+    <div>Stick Frame Sistemas Construtivos Ltda. · Santo André/SP · Documento interno</div>
+    <div>${hoje}</div>
+  </div>
+
+</div>
+</body>
+</html>`;
+
+  const blob = new Blob([html],{type:"text/html"});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement("a");
+  a.href=url; a.download=`Relatorio_${obra.nome.split("—")[0].trim().replace(/\s/g,"_")}.html`; a.click();
+  URL.revokeObjectURL(url);
+}
+
 // ─── PORTAL DO CLIENTE ───────────────────────────────────────────────────────
 function gerarPortalCliente(obra, registros, financeiro) {
   const hoje = new Date().toLocaleDateString("pt-BR");
@@ -2104,13 +2239,19 @@ function GestaoObras({obras,setObras,registrar,financeiro}) {
               <div style={{fontSize:11,fontWeight:700,letterSpacing:1,color:C.muted,marginBottom:12}}>AÇÃO RÁPIDA</div>
               <Btn onClick={avancar} disabled={obra.fase==="Entrega"} fullWidth>{obra.fase==="Entrega"?"✓ Concluída":"Avançar fase →"}</Btn>
               {obra.fase!=="Entrega"&&<div style={{fontSize:11,color:C.muted,marginTop:8}}>Próxima: {FASES[FASES.indexOf(obra.fase)+1]}</div>}
-              <div style={{marginTop:12}}>
+              <div style={{marginTop:12,display:"flex",flexDirection:"column",gap:8}}>
                 <button onClick={()=>gerarPortalCliente(obra, [], financeiro)} style={{
                   width:"100%",padding:"9px 0",background:"transparent",
                   border:`1px solid ${C.success}`,borderRadius:6,
                   color:C.success,fontSize:12,fontWeight:700,
                   cursor:"pointer",fontFamily:"inherit",
                 }}>🔗 Portal do Cliente</button>
+                <button onClick={()=>gerarRelatorioObra(obra, arqObra)} style={{
+                  width:"100%",padding:"9px 0",background:"transparent",
+                  border:`1px solid ${C.red}`,borderRadius:6,
+                  color:C.red,fontSize:12,fontWeight:700,
+                  cursor:"pointer",fontFamily:"inherit",
+                }}>📄 Relatório da Obra</button>
               </div>
             </div>
             <div style={{background:C.surface,borderRadius:12,border:`1px solid ${C.border}`,padding:18}}>
