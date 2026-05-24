@@ -1,15 +1,14 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-import { createAuthSlice }      from "./slices/authSlice";
-import { createClienteSlice }   from "./slices/clienteSlice";
-import { createObraSlice }      from "./slices/obraSlice";
-import { createFinanceiroSlice} from "./slices/financeiroSlice";
-import { createContratoSlice }  from "./slices/contratoSlice";
-import { createAgendaSlice }    from "./slices/agendaSlice";
-import { createHistoricoSlice } from "./slices/historicoSlice";
+import { createAuthSlice }       from "./slices/authSlice";
+import { createClienteSlice }    from "./slices/clienteSlice";
+import { createObraSlice }       from "./slices/obraSlice";
+import { createFinanceiroSlice } from "./slices/financeiroSlice";
+import { createContratoSlice }   from "./slices/contratoSlice";
+import { createAgendaSlice }     from "./slices/agendaSlice";
+import { createHistoricoSlice }  from "./slices/historicoSlice";
 
-// ─── ESTADO BASE (loading + loaded + activePage) ─────────────────────────────
 const createBaseSlice = (set) => ({
   activePage: "dashboard",
   setActivePage: (page) => set({ activePage: page }),
@@ -28,7 +27,6 @@ const createBaseSlice = (set) => ({
   },
 });
 
-// ─── STORE PRINCIPAL — composição de slices ───────────────────────────────────
 const useAppStore = create(
   persist(
     (...a) => ({
@@ -43,9 +41,9 @@ const useAppStore = create(
     }),
     {
       name: "stickframe-storage",
-      // Persiste só estado de UI — dados do banco são recarregados
+      // Persiste APENAS user e activePage — nada mais
       partialize: (s) => ({
-        user:       s.user,
+        user:       s.user       ? { email: s.user.email, nome: s.user.nome, cargo: s.user.cargo, perfil: s.user.perfil, uid: s.user.uid } : null,
         empresaId:  s.empresaId,
         activePage: s.activePage,
       }),
