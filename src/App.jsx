@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import "./styles/globals.css";
 import "./styles/responsive.css";
@@ -6,8 +6,8 @@ import useAppStore from "./store/useAppStore";
 import AppLayout from "./components/layout/AppLayout";
 import LoginScreen from "./pages/LoginScreen";
 import LoadingScreen from "./components/ui/LoadingScreen";
+import { ErrorBoundary } from "./components/ui/ErrorBoundary";
 
-// ─── LAZY PAGES ───────────────────────────────────────────────────────────────
 const Dashboard   = lazy(() => import("./pages/Dashboard"));
 const Agenda      = lazy(() => import("./pages/Agenda"));
 const CRM         = lazy(() => import("./pages/CRM"));
@@ -20,7 +20,6 @@ const Contratos   = lazy(() => import("./pages/Contratos"));
 const Historico   = lazy(() => import("./pages/Historico"));
 const PortalOnline= lazy(() => import("./pages/PortalOnline"));
 
-// ─── MAPA DE PÁGINAS (componentes, não elementos) ─────────────────────────────
 const PAGES = {
   dashboard:  Dashboard,
   agenda:     Agenda,
@@ -34,39 +33,43 @@ const PAGES = {
   historico:  Historico,
 };
 
-// ─── APP AUTENTICADO ──────────────────────────────────────────────────────────
 function AuthenticatedApp() {
   const activePage = useAppStore((s) => s.activePage);
+  const user       = useAppStore((s) => s.user);
+  const loaded     = useAppStore((s) => s.loaded);
+
+  // Restaura empresaId no service após refresh (persist só salva o valor, não o setter)
+  useEffect(() => {
+    if (user?.empresaId) {
+      import("./services/supabase").then(({ setEmpresaId }) => setEmpresaId(user.empresaId));
+    }
+  }, [user]);
+
   const ActivePage = PAGES[activePage] || Dashboard;
 
   return (
     <AppLayout>
-      <Suspense fallback={<LoadingScreen />}>
-        <ActivePage />
-      </Suspense>
+      <ErrorBoundary>
+        <Suspense fallback={<LoadingScreen />}>
+          <ActivePage />
+        </Suspense>
+      </ErrorBoundary>
     </AppLayout>
   );
 }
 
-// ─── GUARD ───────────────────────────────────────────────────────────────────
 function RequireAuth({ children }) {
   const user = useAppStore((s) => s.user);
   return user ? children : <Navigate to="/login" replace />;
 }
 
-// ─── APP ROOT ─────────────────────────────────────────────────────────────────
 export default function App() {
   return (
     <BrowserRouter>
       <Suspense fallback={<LoadingScreen />}>
         <Routes>
-          {/* Portal público — sem autenticação */}
           <Route path="/portal/:token" element={<PortalOnline />} />
-
-          {/* Login */}
           <Route path="/login" element={<LoginScreen />} />
-
-          {/* Sistema autenticado */}
           <Route path="/*" element={
             <RequireAuth>
               <AuthenticatedApp />
