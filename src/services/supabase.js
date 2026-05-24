@@ -6,15 +6,30 @@ export const sb = createClient(
 );
 
 let _empresaId = null;
+let _restoring = false; // evita loop
+
 export const setEmpresaId = (id) => { _empresaId = id; };
 export const getEmpresaId = () => _empresaId;
 
-// Restaura empresa_id após refresh de página
 export async function restoreEmpresaId() {
   if (_empresaId) return _empresaId;
-  const { data: { user } } = await sb.auth.getUser();
-  if (!user) return null;
-  const { data } = await sb.from("usuarios").select("empresa_id").eq("id", user.id).single();
-  if (data?.empresa_id) setEmpresaId(data.empresa_id);
-  return data?.empresa_id || null;
+  if (_restoring) return null; // evita recursão
+  _restoring = true;
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session?.user) return null;
+    const { data } = await sb
+      .from("usuarios")
+      .select("empresa_id")
+      .eq("id", session.user.id)
+      .single();
+    if (data?.empresa_id) {
+      _empresaId = data.empresa_id;
+    }
+    return _empresaId;
+  } catch {
+    return null;
+  } finally {
+    _restoring = false;
+  }
 }
