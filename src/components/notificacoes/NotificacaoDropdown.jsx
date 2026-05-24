@@ -20,7 +20,7 @@ function calcAlerta(obra) {
 
 export default function NotificacaoDropdown() {
   const [aberto, setAberto] = useState(false);
-  const obras   = useAppStore((s) => s.obras);
+  const obras = useAppStore((s) => s.obras);
   const alertas = obras.map(calcAlerta).filter(Boolean);
   const count   = alertas.length;
 

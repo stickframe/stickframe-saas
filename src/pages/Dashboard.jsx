@@ -59,7 +59,10 @@ function GraficoLinha({ data, height = 80, color = C.red }) {
 }
 
 export default function Dashboard() {
-  const { clientes, orcamentos, obras, financeiro } = useAppStore();
+  const clientes   = useAppStore((s) => s.clientes);
+  const orcamentos = useAppStore((s) => s.orcamentos);
+  const obras      = useAppStore((s) => s.obras);
+  const financeiro = useAppStore((s) => s.financeiro);
 
   const pipeline  = clientes.reduce((a, c) => a + (c.valor || 0), 0);
   const totalRec  = Object.values(financeiro).reduce((a, f) => a + f.lancamentos.filter((l) => l.tipo === "receita").reduce((b, l) => b + l.valor, 0), 0);

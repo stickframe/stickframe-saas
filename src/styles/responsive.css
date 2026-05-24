@@ -1,0 +1,80 @@
+/* Grid helpers */
+.kpi-grid-6 { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-bottom: 22px; }
+.kpi-grid-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 20px; }
+.kpi-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 26px; }
+.two-col    { display: grid; grid-template-columns: 1fr 1fr;         gap: 18px; }
+.three-col  { display: grid; grid-template-columns: 1fr 1fr 1fr;     gap: 16px; }
+
+/* Modal */
+.modal-inner {
+  width: 500px;
+  max-width: 100%;
+}
+
+/* Tablet */
+@media (max-width: 1024px) {
+  .kpi-grid-6 { grid-template-columns: repeat(3, 1fr); }
+  .three-col  { grid-template-columns: 1fr 1fr; }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .sidebar-desktop {
+    position: fixed;
+    top: 0;
+    left: -220px;
+    height: 100vh;
+    z-index: 95;
+    transition: left 0.25s ease;
+  }
+
+  .sidebar-desktop.open {
+    left: 0;
+  }
+
+  .hamburger {
+    display: block;
+  }
+
+  .topbar {
+    padding: 10px 16px;
+  }
+
+  .main-content {
+    padding: 16px 14px;
+  }
+
+  .mobile-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 90;
+  }
+
+  .kpi-grid-6,
+  .kpi-grid-5,
+  .kpi-grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .two-col,
+  .three-col {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-inner {
+    width: 95vw !important;
+    max-width: 95vw !important;
+  }
+}
+
+/* Small mobile */
+@media (max-width: 480px) {
+  .kpi-grid-6,
+  .kpi-grid-5,
+  .kpi-grid-4 {
+    grid-template-columns: 1fr 1fr;
+  }
+}

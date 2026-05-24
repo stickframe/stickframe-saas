@@ -20,7 +20,10 @@ const STATUS_COR = {
 function statusColor(s) { return STATUS_COR[s] || C.muted; }
 
 export default function CRM() {
-  const { clientes, addCliente, updateCliente, deleteCliente } = useAppStore();
+  const clientes      = useAppStore((s) => s.clientes);
+  const addCliente    = useAppStore((s) => s.addCliente);
+  const updateCliente = useAppStore((s) => s.updateCliente);
+  const deleteCliente = useAppStore((s) => s.deleteCliente);
   const [modal,   setModal]   = useState(false);
   const [sel,     setSel]     = useState(null);
   const [confirm, setConfirm] = useState(false);

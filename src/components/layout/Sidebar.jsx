@@ -3,7 +3,10 @@ import { C, NAV, PERFIS } from "../../utils/constants";
 import useAppStore from "../../store/useAppStore";
 
 export default function Sidebar({ open }) {
-  const { user, activePage, setActivePage, logout } = useAppStore();
+  const user        = useAppStore((s) => s.user);
+  const activePage  = useAppStore((s) => s.activePage);
+  const setActivePage = useAppStore((s) => s.setActivePage);
+  const logout      = useAppStore((s) => s.logout);
   const [confirm, setConfirm] = useState(false);
 
   const perfil    = PERFIS[user?.perfil] || PERFIS.diretor;

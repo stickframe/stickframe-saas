@@ -1,9 +1,11 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { C, PERFIS } from "../utils/constants";
 import useAppStore from "../store/useAppStore";
 
 export default function LoginScreen() {
-  const login = useAppStore((s) => s.login);
+  const login    = useAppStore((s) => s.login);
+  const navigate = useNavigate();
   const [email,  setEmail]  = useState("");
   const [senha,  setSenha]  = useState("");
   const [erro,   setErro]   = useState("");
@@ -13,9 +15,14 @@ export default function LoginScreen() {
   const handleLogin = async () => {
     if (!email || !senha) return;
     setLoading(true); setErro("");
-    try { await login(email.trim(), senha); }
-    catch (e) { setErro(e.message); }
-    finally { setLoading(false); }
+    try {
+      await login(email.trim(), senha);
+      navigate("/");
+    } catch (e) {
+      setErro(e.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

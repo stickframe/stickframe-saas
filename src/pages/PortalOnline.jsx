@@ -1,11 +1,14 @@
+import { useParams } from "react-router-dom";
 import { C, FASES, OBRA_TOKENS } from "../utils/constants";
 import { fmt } from "../utils/format";
 import useAppStore from "../store/useAppStore";
 
 export default function PortalOnline() {
-  const { obras, financeiro, diario } = useAppStore();
-  const hash   = window.location.hash.replace("#/portal/", "");
-  const obraId = OBRA_TOKENS[hash];
+  const { token } = useParams();
+  const obras      = useAppStore((s) => s.obras);
+  const financeiro = useAppStore((s) => s.financeiro);
+  const diario     = useAppStore((s) => s.diario);
+  const obraId = OBRA_TOKENS[token];
   const obra   = obras.find((o) => o.id === obraId);
   const fin    = financeiro[obraId] || { contrato: 0, lancamentos: [] };
   const regs   = (diario || {})[obraId] || [];
