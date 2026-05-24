@@ -2246,6 +2246,17 @@ function GestaoObras({obras,setObras,registrar,financeiro}) {
                   color:C.success,fontSize:12,fontWeight:700,
                   cursor:"pointer",fontFamily:"inherit",
                 }}>🔗 Portal do Cliente</button>
+                <button onClick={()=>{
+                  const tokens = {"1":"bofete2025","2":"socorro2025","3":"alpha2025"};
+                  const token  = tokens[String(obra.id)]||"";
+                  const link   = `${window.location.origin}/#/portal/${token}`;
+                  navigator.clipboard.writeText(link).then(()=>alert("Link copiado!\n\n"+link));
+                }} style={{
+                  width:"100%",padding:"9px 0",background:"transparent",
+                  border:`1px solid #4a9eff`,borderRadius:6,
+                  color:"#4a9eff",fontSize:12,fontWeight:700,
+                  cursor:"pointer",fontFamily:"inherit",
+                }}>📋 Copiar Link do Portal</button>
                 <button onClick={()=>gerarRelatorioObra(obra, arqObra)} style={{
                   width:"100%",padding:"9px 0",background:"transparent",
                   border:`1px solid ${C.red}`,borderRadius:6,
@@ -2755,7 +2766,133 @@ function Notificacoes({obras}) {
 }
 
 // ─── APP ROOT ─────────────────────────────────────────────────────────────────
+// ─── PORTAL ONLINE DO CLIENTE ────────────────────────────────────────────────
+// Tokens fixos por obra (em produção viriam do banco)
+const OBRA_TOKENS = {
+  "bofete2025":  1,
+  "socorro2025": 2,
+  "alpha2025":   3,
+};
+
+function PortalOnline({obras, financeiro, diario}) {
+  const hash   = window.location.hash.replace("#/portal/","");
+  const obraId = OBRA_TOKENS[hash];
+  const obra   = obras.find(o=>o.id===obraId);
+  const fin    = financeiro[obraId]||{contrato:0,lancamentos:[]};
+  const regs   = (diario||{})[obraId]||[];
+  const rec    = fin.lancamentos.filter(l=>l.tipo==="receita").reduce((a,l)=>a+l.valor,0);
+  const pct    = fin.contrato>0?Math.round((rec/fin.contrato)*100):0;
+  const fmtP   = v => "R$ "+Number(v).toLocaleString("pt-BR",{minimumFractionDigits:0});
+  const FASES_P= ["Projeto executivo","Fundação","Estrutura Steel Frame","Fechamentos","Instalações","Acabamento","Entrega"];
+  const faseIdx= obra ? FASES_P.indexOf(obra.fase) : -1;
+
+  if (!obra) return (
+    <div style={{minHeight:"100vh",background:"#1A1A1A",display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:16,padding:24}}>
+      <div style={{fontSize:48}}>🔒</div>
+      <div style={{fontSize:18,fontWeight:700,color:"#f0f0f0",textAlign:"center"}}>Link inválido ou expirado</div>
+      <div style={{fontSize:13,color:"#888",textAlign:"center"}}>Entre em contato com a Stick Frame para obter o link correto.</div>
+    </div>
+  );
+
+  return (
+    <div style={{minHeight:"100vh",background:"#f4f4f4",fontFamily:"'DM Sans',sans-serif"}}>
+      {/* Header */}
+      <div style={{background:"#1A1A1A",padding:"16px 20px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          <div style={{width:32,height:32,background:"linear-gradient(135deg,#414141 50%,#981915 50%)",borderRadius:7,border:"1px solid #333"}}/>
+          <div>
+            <div style={{fontSize:14,fontWeight:800,letterSpacing:2,color:"#fff"}}><span style={{color:"#555"}}>STICK</span><span style={{color:"#981915"}}>FRAME</span></div>
+            <div style={{fontSize:8,color:"#444",letterSpacing:1.5}}>SISTEMAS CONSTRUTIVOS</div>
+          </div>
+        </div>
+        <div style={{fontSize:10,color:"#444"}}>Portal do Cliente</div>
+      </div>
+
+      {/* Hero */}
+      <div style={{background:"linear-gradient(135deg,#981915,#6e1210)",padding:"28px 20px",color:"#fff"}}>
+        <div style={{fontSize:10,letterSpacing:1.5,opacity:.7,marginBottom:6}}>ACOMPANHAMENTO DE OBRA</div>
+        <div style={{fontSize:20,fontWeight:800,marginBottom:4}}>{obra.nome}</div>
+        <div style={{fontSize:13,opacity:.8,marginBottom:14}}>Cliente: {obra.cliente}</div>
+        <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+          {[obra.status,`Prazo: ${obra.prazo}`,`${obra.progresso}% concluído`].map(b=>(
+            <span key={b} style={{background:"rgba(255,255,255,.15)",border:"1px solid rgba(255,255,255,.25)",borderRadius:20,padding:"3px 12px",fontSize:11,fontWeight:600}}>{b}</span>
+          ))}
+        </div>
+      </div>
+
+      <div style={{padding:"16px",maxWidth:480,margin:"0 auto"}}>
+
+        {/* Progresso */}
+        <div style={{background:"#fff",borderRadius:12,padding:18,marginBottom:14,boxShadow:"0 1px 6px rgba(0,0,0,.06)"}}>
+          <div style={{fontSize:10,fontWeight:700,letterSpacing:1.2,color:"#888",marginBottom:12,textTransform:"uppercase"}}>Progresso Geral</div>
+          <div style={{fontSize:32,fontWeight:800,color:"#981915"}}>{obra.progresso}%</div>
+          <div style={{fontSize:11,color:"#888",marginTop:2,marginBottom:12}}>concluído</div>
+          <div style={{height:8,background:"#f0f0f0",borderRadius:4,overflow:"hidden"}}>
+            <div style={{height:8,width:`${obra.progresso}%`,background:"linear-gradient(90deg,#981915,#6e1210)",borderRadius:4}}/>
+          </div>
+        </div>
+
+        {/* Fases */}
+        <div style={{background:"#fff",borderRadius:12,padding:18,marginBottom:14,boxShadow:"0 1px 6px rgba(0,0,0,.06)"}}>
+          <div style={{fontSize:10,fontWeight:700,letterSpacing:1.2,color:"#888",marginBottom:12,textTransform:"uppercase"}}>Etapas da Obra</div>
+          {FASES_P.map((f,i)=>{
+            const done=i<faseIdx,curr=i===faseIdx;
+            return (
+              <div key={f} style={{display:"flex",alignItems:"center",gap:10,padding:"7px 0",borderBottom:i<FASES_P.length-1?"1px solid #f5f5f5":"none"}}>
+                <div style={{width:22,height:22,borderRadius:"50%",background:done?"#2e9e5b":curr?"#981915":"#f0f0f0",display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:700,color:done||curr?"#fff":"#bbb",flexShrink:0}}>{done?"✓":i+1}</div>
+                <div style={{fontSize:12,color:done?"#2e9e5b":curr?"#981915":"#bbb",fontWeight:curr?700:400,flex:1}}>{f}</div>
+                {curr&&<span style={{background:"#981915",color:"#fff",borderRadius:10,padding:"1px 8px",fontSize:9,fontWeight:700}}>Atual</span>}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Financeiro */}
+        {fin.contrato>0&&(
+          <div style={{background:"#fff",borderRadius:12,padding:18,marginBottom:14,boxShadow:"0 1px 6px rgba(0,0,0,.06)"}}>
+            <div style={{fontSize:10,fontWeight:700,letterSpacing:1.2,color:"#888",marginBottom:12,textTransform:"uppercase"}}>Financeiro</div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
+              <div style={{background:"#f9f9f9",borderRadius:8,padding:10}}><div style={{fontSize:9,color:"#888",marginBottom:3}}>Contrato</div><div style={{fontSize:14,fontWeight:800}}>{fmtP(fin.contrato)}</div></div>
+              <div style={{background:"#f9f9f9",borderRadius:8,padding:10}}><div style={{fontSize:9,color:"#888",marginBottom:3}}>Recebido</div><div style={{fontSize:14,fontWeight:800,color:"#2e9e5b"}}>{fmtP(rec)}</div></div>
+            </div>
+            <div style={{height:7,background:"#f0f0f0",borderRadius:4,overflow:"hidden",marginBottom:5}}>
+              <div style={{height:7,width:`${pct}%`,background:"linear-gradient(90deg,#2e9e5b,#1a7a40)",borderRadius:4}}/>
+            </div>
+            <div style={{display:"flex",justifyContent:"space-between",fontSize:10,color:"#888"}}>
+              <span>{pct}% recebido</span><span>{100-pct}% a receber</span>
+            </div>
+          </div>
+        )}
+
+        {/* Diário */}
+        {regs.length>0&&(
+          <div style={{background:"#fff",borderRadius:12,padding:18,marginBottom:14,boxShadow:"0 1px 6px rgba(0,0,0,.06)"}}>
+            <div style={{fontSize:10,fontWeight:700,letterSpacing:1.2,color:"#888",marginBottom:12,textTransform:"uppercase"}}>Últimas Atualizações</div>
+            {regs.slice(0,5).map((r,i)=>(
+              <div key={i} style={{paddingBottom:10,marginBottom:10,borderBottom:i<Math.min(regs.length,5)-1?"1px solid #f5f5f5":"none"}}>
+                <div style={{fontSize:10,color:"#888",marginBottom:3}}>{r.data} · {r.clima} · {r.turno}</div>
+                <div style={{fontSize:12,color:"#333",lineHeight:1.5}}>{r.atividades}</div>
+                {r.ocorrencias&&<div style={{background:"#fff5f5",borderLeft:"3px solid #981915",padding:"6px 10px",borderRadius:"0 4px 4px 0",fontSize:11,color:"#555",marginTop:5}}>⚠️ {r.ocorrencias}</div>}
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div style={{textAlign:"center",padding:"16px 0",fontSize:10,color:"#aaa"}}>
+          <strong style={{color:"#555"}}>Stick Frame Sistemas Construtivos</strong><br/>
+          Santo André/SP · Atualizado em {new Date().toLocaleDateString("pt-BR")}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
+  // Detectar portal antes de qualquer state de auth
+  const hash = window.location.hash;
+  if (hash.startsWith("#/portal/")) {
+    return <PortalOnline obras={MOCK_OBRAS} financeiro={MOCK_FINANCEIRO} diario={MOCK_DIARIO}/>;
+  }
   const [user,        setUser]        = useState(null);
   const [active,      setActive]      = useState("dashboard");
   const [clientes,    setClientes]    = useState(MOCK_CLIENTES);
