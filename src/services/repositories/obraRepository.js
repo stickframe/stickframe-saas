@@ -1,7 +1,11 @@
-import { sb, getEmpresaId } from "../supabase";
+import { sb, getEmpresaId, restoreEmpresaId } from "../supabase";
+
+async function empresaId() {
+  return await empresaId() || await restoreEmpresaId();
+}
 
 export async function listarObras() {
-  const { data, error } = await sb.from("obras").select("*").eq("empresa_id", getEmpresaId()).order("created_at");
+  const { data, error } = await sb.from("obras").select("*").eq("empresa_id", await empresaId()).order("created_at");
   if (error) throw error;
   return data;
 }
