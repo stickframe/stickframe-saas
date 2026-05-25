@@ -11,8 +11,9 @@ export class ErrorBoundary extends Component {
     return { hasError: true, error };
   }
 
-  componentDidCatch(error, info) {
-    console.error("ErrorBoundary capturou:", error, info);
+  componentDidCatch(error, errorInfo) {
+    console.error("[ErrorBoundary]", error, errorInfo);
+    // Futuro: Sentry.captureException(error, { extra: errorInfo });
   }
 
   render() {
@@ -23,12 +24,12 @@ export class ErrorBoundary extends Component {
           <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 8 }}>
             Algo deu errado neste módulo
           </div>
-          <div style={{ fontSize: 13, color: C.muted, marginBottom: 24 }}>
+          <div style={{ fontSize: 13, color: C.muted, marginBottom: 24, maxWidth: 400, margin: "0 auto 24px" }}>
             {this.state.error?.message || "Erro desconhecido"}
           </div>
           <button
             onClick={() => this.setState({ hasError: false, error: null })}
-            style={{ padding: "10px 20px", background: C.red, border: "none", borderRadius: 8, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}
+            style={{ padding: "10px 24px", background: C.red, border: "none", borderRadius: 8, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}
           >
             Tentar novamente
           </button>

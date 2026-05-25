@@ -1,5 +1,4 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
 
 import { createAuthSlice }       from "./slices/authSlice";
 import { createClienteSlice }    from "./slices/clienteSlice";
@@ -9,9 +8,22 @@ import { createContratoSlice }   from "./slices/contratoSlice";
 import { createAgendaSlice }     from "./slices/agendaSlice";
 import { createHistoricoSlice }  from "./slices/historicoSlice";
 
+// Lê sessão salva no sessionStorage (sobrevive ao F5, some ao fechar aba)
+function lerSessao() {
+  try {
+    const s = sessionStorage.getItem("sf_session");
+    return s ? JSON.parse(s) : {};
+  } catch { return {}; }
+}
+
+const sessao = lerSessao();
+
 const createBaseSlice = (set) => ({
-  activePage: "dashboard",
-  setActivePage: (page) => set({ activePage: page }),
+  activePage: sessao.activePage || "dashboard",
+  setActivePage: (page) => {
+    try { sessionStorage.setItem("sf_session", JSON.stringify({ ...lerSessao(), activePage: page })); } catch {}
+    set({ activePage: page });
+  },
 
   loading: {
     auth:false, clientes:false, obras:false, orcamentos:false,
@@ -27,28 +39,15 @@ const createBaseSlice = (set) => ({
   },
 });
 
-const useAppStore = create(
-  persist(
-    (...a) => ({
-      ...createBaseSlice(...a),
-      ...createAuthSlice(...a),
-      ...createClienteSlice(...a),
-      ...createObraSlice(...a),
-      ...createFinanceiroSlice(...a),
-      ...createContratoSlice(...a),
-      ...createAgendaSlice(...a),
-      ...createHistoricoSlice(...a),
-    }),
-    {
-      name: "stickframe-storage",
-      // Persiste APENAS user e activePage — nada mais
-      partialize: (s) => ({
-        user:       s.user       ? { email: s.user.email, nome: s.user.nome, cargo: s.user.cargo, perfil: s.user.perfil, uid: s.user.uid } : null,
-        empresaId:  s.empresaId,
-        activePage: s.activePage,
-      }),
-    }
-  )
-);
+const useAppStore = create((...a) => ({
+  ...createBaseSlice(...a),
+  ...createAuthSlice(...a),
+  ...createClienteSlice(...a),
+  ...createObraSlice(...a),
+  ...createFinanceiroSlice(...a),
+  ...createContratoSlice(...a),
+  ...createAgendaSlice(...a),
+  ...createHistoricoSlice(...a),
+}));
 
 export default useAppStore;

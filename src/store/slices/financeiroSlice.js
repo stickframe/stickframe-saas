@@ -33,6 +33,20 @@ export const createFinanceiroSlice = (set, get) => ({
       `${lancamento.tipo === "receita" ? "Receita" : "Despesa"} de R$ ${lancamento.valor} — ${o?.nome?.split("—")[0]?.trim()}`);
   },
 
+  // Carrega dados essenciais para o Dashboard e navegação inicial
+  loadInitialData: async () => {
+    await Promise.all([
+      get().loadClientes(),
+      get().loadObras(),
+      get().loadOrcamentos(),
+      get().loadContratos(),
+      get().loadEventos(),
+      get().loadHistorico(),
+    ]);
+    // Financeiro depende de obras — carrega depois
+    await get().loadFinanceiro();
+  },
+
   loadDashboard: async () => {
     await Promise.all([get().loadClientes(), get().loadObras(), get().loadFinanceiro()]);
   },
