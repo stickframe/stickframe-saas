@@ -1,29 +1,18 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
-import { createAuthSlice }       from "./slices/authSlice";
-import { createClienteSlice }    from "./slices/clienteSlice";
-import { createObraSlice }       from "./slices/obraSlice";
-import { createFinanceiroSlice } from "./slices/financeiroSlice";
-import { createContratoSlice }   from "./slices/contratoSlice";
-import { createAgendaSlice }     from "./slices/agendaSlice";
-import { createHistoricoSlice }  from "./slices/historicoSlice";
+import { createAuthSlice }      from "./slices/authSlice";
+import { createClienteSlice }   from "./slices/clienteSlice";
+import { createObraSlice }      from "./slices/obraSlice";
+import { createFinanceiroSlice} from "./slices/financeiroSlice";
+import { createContratoSlice }  from "./slices/contratoSlice";
+import { createAgendaSlice }    from "./slices/agendaSlice";
+import { createHistoricoSlice } from "./slices/historicoSlice";
 
-// Lê sessão salva no sessionStorage (sobrevive ao F5, some ao fechar aba)
-function lerSessao() {
-  try {
-    const s = sessionStorage.getItem("sf_session");
-    return s ? JSON.parse(s) : {};
-  } catch { return {}; }
-}
-
-const sessao = lerSessao();
-
+// ─── ESTADO BASE (loading + loaded + activePage) ─────────────────────────────
 const createBaseSlice = (set) => ({
-  activePage: sessao.activePage || "dashboard",
-  setActivePage: (page) => {
-    try { sessionStorage.setItem("sf_session", JSON.stringify({ ...lerSessao(), activePage: page })); } catch {}
-    set({ activePage: page });
-  },
+  activePage: "dashboard",
+  setActivePage: (page) => set({ activePage: page }),
 
   loading: {
     auth:false, clientes:false, obras:false, orcamentos:false,
@@ -39,15 +28,29 @@ const createBaseSlice = (set) => ({
   },
 });
 
-const useAppStore = create((...a) => ({
-  ...createBaseSlice(...a),
-  ...createAuthSlice(...a),
-  ...createClienteSlice(...a),
-  ...createObraSlice(...a),
-  ...createFinanceiroSlice(...a),
-  ...createContratoSlice(...a),
-  ...createAgendaSlice(...a),
-  ...createHistoricoSlice(...a),
-}));
+// ─── STORE PRINCIPAL — composição de slices ───────────────────────────────────
+const useAppStore = create(
+  persist(
+    (...a) => ({
+      ...createBaseSlice(...a),
+      ...createAuthSlice(...a),
+      ...createClienteSlice(...a),
+      ...createObraSlice(...a),
+      ...createFinanceiroSlice(...a),
+      ...createContratoSlice(...a),
+      ...createAgendaSlice(...a),
+      ...createHistoricoSlice(...a),
+    }),
+    {
+      name: "stickframe-storage",
+      // Persiste só estado de UI — dados do banco são recarregados
+      partialize: (s) => ({
+        user:       s.user,
+        empresaId:  s.empresaId,
+        activePage: s.activePage,
+      }),
+    }
+  )
+);
 
 export default useAppStore;

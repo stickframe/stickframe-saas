@@ -1,8 +1,4 @@
-import { sb, getEmpresaId, restoreEmpresaId } from "../supabase";
-
-async function empresaId() {
-  return await empresaId() || await restoreEmpresaId();
-}
+import { sb, getEmpresaId } from "../supabase";
 
 export async function listarLancamentos(obraId) {
   const { data, error } = await sb.from("financeiro").select("*").eq("obra_id", obraId).order("created_at");
@@ -10,7 +6,7 @@ export async function listarLancamentos(obraId) {
   return data;
 }
 export async function adicionarLancamento(obraId, lancamento) {
-  const { data, error } = await sb.from("financeiro").insert({ ...lancamento, obra_id: obraId, empresa_id: await empresaId() }).select().single();
+  const { data, error } = await sb.from("financeiro").insert({ ...lancamento, obra_id: obraId, empresa_id: getEmpresaId() }).select().single();
   if (error) throw error;
   return data;
 }

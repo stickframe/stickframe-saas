@@ -8,34 +8,44 @@ import LoginScreen from "./pages/LoginScreen";
 import LoadingScreen from "./components/ui/LoadingScreen";
 import { ErrorBoundary } from "./components/ui/ErrorBoundary";
 
-// ─── PAGES — congelado fora do componente ─────────────────────────────────────
-const PAGES = Object.freeze({
-  dashboard:  lazy(() => import("./pages/Dashboard")),
-  agenda:     lazy(() => import("./pages/Agenda")),
-  crm:        lazy(() => import("./pages/CRM")),
-  orcamentos: lazy(() => import("./pages/Orcamentos")),
-  obras:      lazy(() => import("./pages/GestaoObras")),
-  medicoes:   lazy(() => import("./pages/Medicoes")),
-  diario:     lazy(() => import("./pages/DiarioObra")),
-  financeiro: lazy(() => import("./pages/Financeiro")),
-  contratos:  lazy(() => import("./pages/Contratos")),
-  historico:  lazy(() => import("./pages/Historico")),
-});
+const Dashboard   = lazy(() => import("./pages/Dashboard"));
+const Agenda      = lazy(() => import("./pages/Agenda"));
+const CRM         = lazy(() => import("./pages/CRM"));
+const Orcamentos  = lazy(() => import("./pages/Orcamentos"));
+const GestaoObras = lazy(() => import("./pages/GestaoObras"));
+const Medicoes    = lazy(() => import("./pages/Medicoes"));
+const DiarioObra  = lazy(() => import("./pages/DiarioObra"));
+const Financeiro  = lazy(() => import("./pages/Financeiro"));
+const Contratos   = lazy(() => import("./pages/Contratos"));
+const Historico   = lazy(() => import("./pages/Historico"));
+const PortalOnline= lazy(() => import("./pages/PortalOnline"));
 
-const PortalOnline = lazy(() => import("./pages/PortalOnline"));
+const PAGES = {
+  dashboard:  Dashboard,
+  agenda:     Agenda,
+  crm:        CRM,
+  orcamentos: Orcamentos,
+  obras:      GestaoObras,
+  medicoes:   Medicoes,
+  diario:     DiarioObra,
+  financeiro: Financeiro,
+  contratos:  Contratos,
+  historico:  Historico,
+};
 
-// ─── APP AUTENTICADO — sem lógica de negócio, só orquestração ────────────────
 function AuthenticatedApp() {
-  const { activePage, loadInitialData } = useAppStore((s) => ({
-    activePage:      s.activePage,
-    loadInitialData: s.loadInitialData,
-  }));
+  const activePage = useAppStore((s) => s.activePage);
+  const user       = useAppStore((s) => s.user);
+  const loaded     = useAppStore((s) => s.loaded);
 
+  // Restaura empresaId no service após refresh (persist só salva o valor, não o setter)
   useEffect(() => {
-    loadInitialData();
-  }, []); // [] — roda só uma vez no mount
+    if (user?.empresaId) {
+      import("./services/supabase").then(({ setEmpresaId }) => setEmpresaId(user.empresaId));
+    }
+  }, [user]);
 
-  const ActivePage = PAGES[activePage] || PAGES.dashboard;
+  const ActivePage = PAGES[activePage] || Dashboard;
 
   return (
     <AppLayout>
@@ -48,13 +58,11 @@ function AuthenticatedApp() {
   );
 }
 
-// ─── GUARD ────────────────────────────────────────────────────────────────────
 function RequireAuth({ children }) {
   const user = useAppStore((s) => s.user);
   return user ? children : <Navigate to="/login" replace />;
 }
 
-// ─── ROOT — apenas roteamento ─────────────────────────────────────────────────
 export default function App() {
   return (
     <BrowserRouter>
