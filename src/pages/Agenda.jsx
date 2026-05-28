@@ -1,12 +1,16 @@
 import { useState } from "react";
 import { C, TIPOS_EVENTO, COR_TIPO_EVENTO } from "../utils/constants";
 import useAppStore from "../store/useAppStore";
+import { useModuleLoad } from "../hooks/useModuleLoad";
 import Btn from "../components/ui/Btn";
 import Input from "../components/ui/Input";
 import Select from "../components/ui/Select";
 import Modal from "../components/ui/Modal";
 
 export default function Agenda() {
+  useModuleLoad("clientes");
+  useModuleLoad("eventos");
+
   const clientes    = useAppStore((s) => s.clientes);
   const eventos     = useAppStore((s) => s.eventos);
   const addEvento   = useAppStore((s) => s.addEvento);

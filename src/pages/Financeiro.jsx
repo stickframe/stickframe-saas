@@ -1,14 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { C, CATEGORIAS_RECEITA, CATEGORIAS_DESPESA } from "../utils/constants";
 import { fmt, fmtPct } from "../utils/format";
-import { gerarRelatorioFinanceiro } from "../services/pdfService";
 import useAppStore from "../store/useAppStore";
+import { useModuleLoad } from "../hooks/useModuleLoad";
 import Btn from "../components/ui/Btn";
 import Input from "../components/ui/Input";
 import Select from "../components/ui/Select";
 import Modal from "../components/ui/Modal";
 
-// ─── MINI GRÁFICO DE BARRAS ───────────────────────────────────────────────────
+// ─── Mini gráfico ─────────────────────────────────────────────────────────────
 function BarChart({ data, height = 100 }) {
   const max = Math.max(...data.map((d) => d.value), 1);
   return (
@@ -23,84 +23,179 @@ function BarChart({ data, height = 100 }) {
             transition: "height .4s",
             opacity: .85,
           }} />
-          <span style={{ fontSize: 9, color: C.muted, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "100%", textAlign: "center" }}>{d.label}</span>
+          <span style={{ fontSize: 9, color: C.muted, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "100%", textAlign: "center" }}>
+            {d.label}
+          </span>
         </div>
       ))}
     </div>
   );
 }
 
-// ─── COMPONENTE ──────────────────────────────────────────────────────────────
-export default function Financeiro() {
-  const obras          = useAppStore((s) => s.obras);
-  const financeiro     = useAppStore((s) => s.financeiro);
-  const addLancamento  = useAppStore((s) => s.addLancamento);
+// ─── Label ───────────────────────────────────────────────────────────────────
+function Label({ children }) {
+  return (
+    <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 6 }}>
+      {String(children).toUpperCase()}
+    </div>
+  );
+}
 
-  const [obraId, setObraId] = useState(obras[0]?.id);
-  const [modal,  setModal]  = useState(null); // "receita" | "despesa"
-  const FORM_VAZIO = { tipo: "despesa", categoria: "Materiais", valor: "", data: "", descricao: "" };
-  const [form, setForm] = useState(FORM_VAZIO);
+// ─── Formulário de lançamento (fora do componente) ───────────────────────────
+function FormLancamento({ tipo, form, setForm, onSave, onCancel }) {
+  const categorias = tipo === "receita" ? CATEGORIAS_RECEITA : CATEGORIAS_DESPESA;
   const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
+  const ok  = form.valor && form.data && form.descricao;
 
-  const obra = obras.find((o) => o.id === obraId) || obras[0];
-  const fin  = financeiro[obraId] || { contrato: 0, lancamentos: [] };
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      <div>
+        <Label>Categoria</Label>
+        <Select
+          value={form.categoria}
+          onChange={set("categoria")}
+          options={categorias.map((c) => ({ value: c, label: c }))}
+        />
+      </div>
 
-  const receitas = fin.lancamentos.filter((l) => l.tipo === "receita").reduce((a, l) => a + l.valor, 0);
-  const despesas = fin.lancamentos.filter((l) => l.tipo === "despesa").reduce((a, l) => a + l.valor, 0);
-  const saldo    = receitas - despesas;
-  const margem   = receitas > 0 ? saldo / receitas : 0;
-  const aReceber = fin.contrato - receitas;
-  const pctRec   = fin.contrato > 0 ? receitas / fin.contrato : 0;
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+        <div>
+          <Label>Valor (R$) *</Label>
+          <Input
+            value={form.valor}
+            onChange={set("valor")}
+            placeholder="Ex: 15000"
+            type="number"
+            min="0"
+          />
+        </div>
+        <div>
+          <Label>Data *</Label>
+          <Input
+            value={form.data}
+            onChange={set("data")}
+            type="date"
+          />
+        </div>
+      </div>
 
-  const porCategoria = CATEGORIAS_DESPESA.map((cat) => {
-    const total = fin.lancamentos.filter((l) => l.tipo === "despesa" && l.categoria === cat).reduce((a, l) => a + l.valor, 0);
-    return { label: cat.split(" ")[0], value: total, color: C.red };
-  }).filter((d) => d.value > 0);
+      <div>
+        <Label>Descrição *</Label>
+        <Input
+          value={form.descricao}
+          onChange={set("descricao")}
+          placeholder={tipo === "receita" ? "Ex: Medição 1 — contrato" : "Ex: Compra de aço galvanizado"}
+        />
+      </div>
 
-  const salvar = () => {
+      <div style={{
+        display: "flex", gap: 10, justifyContent: "flex-end",
+        marginTop: 4, paddingTop: 12, borderTop: `1px solid ${C.border}`,
+      }}>
+        <Btn variant="ghost" onClick={onCancel}>Cancelar</Btn>
+        <Btn disabled={!ok} onClick={onSave}>
+          {tipo === "receita" ? "✅ Registrar receita" : "⬇️ Registrar despesa"}
+        </Btn>
+      </div>
+    </div>
+  );
+}
+
+// ─── Financeiro ───────────────────────────────────────────────────────────────
+const FORM_VAZIO = { categoria: "Materiais", valor: "", data: "", descricao: "" };
+
+export default function Financeiro() {
+  useModuleLoad("obras");
+  useModuleLoad("financeiro");
+
+  const obras         = useAppStore((s) => s.obras);
+  const financeiro    = useAppStore((s) => s.financeiro);
+  const addLancamento = useAppStore((s) => s.addLancamento);
+
+  const [obraId, setObraId] = useState(null);
+  const [modal,  setModal]  = useState(null); // "receita" | "despesa"
+  const [form,   setForm]   = useState(FORM_VAZIO);
+  const [toast,  setToast]  = useState(null);
+
+  // Inicializa obraId quando obras carregarem (corrige race condition)
+  useEffect(() => {
+    if (!obraId && obras.length > 0) setObraId(obras[0].id);
+  }, [obras, obraId]);
+
+  function mostrarToast(msg) {
+    setToast(msg);
+    setTimeout(() => setToast(null), 3000);
+  }
+
+  function abrirModal(tipo) {
+    const catPadrao = tipo === "receita" ? "Entrada contrato" : "Materiais";
+    setForm({ ...FORM_VAZIO, categoria: catPadrao });
+    setModal(tipo);
+  }
+
+  function salvar() {
     const valor = parseFloat(String(form.valor).replace(",", "."));
-    if (!valor || !form.data || !form.descricao) return;
-    addLancamento(obraId, { ...form, valor });
+    if (!valor || !form.data || !form.descricao || !obraId) return;
+    addLancamento(obraId, { ...form, tipo: modal, valor });
     setModal(null);
     setForm(FORM_VAZIO);
-  };
+    mostrarToast(modal === "receita" ? "✅ Receita registrada!" : "✅ Despesa registrada!");
+  }
 
-  const ok = form.valor && form.data && form.descricao;
+  // ── Dados da obra selecionada ───────────────────────────────────────────────
+  const obra = obras.find((o) => o.id === obraId) || null;
+  const fin  = (obraId && financeiro[obraId]) || { contrato: 0, lancamentos: [] };
+
+  const receitas = fin.lancamentos.filter((l) => l.tipo === "receita").reduce((a, l) => a + (l.valor || 0), 0);
+  const despesas = fin.lancamentos.filter((l) => l.tipo === "despesa").reduce((a, l) => a + (l.valor || 0), 0);
+  const saldo    = receitas - despesas;
+  const margem   = receitas > 0 ? saldo / receitas : 0;
+  const aReceber = Math.max((fin.contrato || 0) - receitas, 0);
+  const pctRec   = fin.contrato > 0 ? Math.min(receitas / fin.contrato, 1) : 0;
+
+  const porCategoria = CATEGORIAS_DESPESA.map((cat) => ({
+    label: cat.split(" ")[0],
+    value: fin.lancamentos.filter((l) => l.tipo === "despesa" && l.categoria === cat).reduce((a, l) => a + (l.valor || 0), 0),
+    color: C.red,
+  })).filter((d) => d.value > 0);
+
+  // ── Empty state: sem obras ──────────────────────────────────────────────────
+  if (obras.length === 0) {
+    return (
+      <div style={{ textAlign: "center", padding: "80px 0" }}>
+        <div style={{ fontSize: 40, marginBottom: 16 }}>◉</div>
+        <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Nenhuma obra cadastrada</div>
+        <div style={{ fontSize: 13, color: C.muted }}>
+          Cadastre uma obra em <strong>Gestão de Obras</strong> para começar a registrar lançamentos financeiros.
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
+      {/* Toast */}
+      {toast && (
+        <div style={{
+          position: "fixed", bottom: 28, right: 28, zIndex: 999,
+          background: C.surface, border: `1px solid ${C.border}`,
+          borderRadius: 10, padding: "12px 20px",
+          fontSize: 13, fontWeight: 600, boxShadow: "0 8px 32px #0006",
+        }}>
+          {toast}
+        </div>
+      )}
+
+      {/* Modal */}
       {modal && (
-        <Modal title={modal === "receita" ? "Nova receita" : "Nova despesa"} onClose={() => setModal(null)}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            <div>
-              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 6 }}>CATEGORIA</div>
-              <Select
-                value={form.categoria}
-                onChange={(v) => setForm((f) => ({ ...f, categoria: v, tipo: modal }))}
-                options={(modal === "receita" ? CATEGORIAS_RECEITA : CATEGORIAS_DESPESA).map((c) => ({ value: c, label: c }))}
-              />
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-              <div>
-                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 6 }}>VALOR (R$)</div>
-                <Input value={form.valor} onChange={set("valor")} placeholder="Ex: 15000" type="number" />
-              </div>
-              <div>
-                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 6 }}>DATA</div>
-                <Input value={form.data} onChange={set("data")} placeholder="DD/MM/AAAA" />
-              </div>
-            </div>
-            <div>
-              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 6 }}>DESCRIÇÃO</div>
-              <Input value={form.descricao} onChange={set("descricao")} placeholder="Detalhe do lançamento" />
-            </div>
-            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 6 }}>
-              <Btn variant="ghost" onClick={() => setModal(null)}>Cancelar</Btn>
-              <Btn variant={modal === "receita" ? "success" : "primary"} disabled={!ok} onClick={salvar}>
-                {modal === "receita" ? "+ Registrar receita" : "+ Registrar despesa"}
-              </Btn>
-            </div>
-          </div>
+        <Modal
+          title={modal === "receita" ? "📈 Nova receita" : "📉 Nova despesa"}
+          onClose={() => setModal(null)}
+        >
+          <FormLancamento
+            tipo={modal} form={form} setForm={setForm}
+            onSave={salvar} onCancel={() => setModal(null)}
+          />
         </Modal>
       )}
 
@@ -111,39 +206,69 @@ export default function Financeiro() {
             <h2 style={{ fontSize: 22, fontWeight: 800 }}>Controle Financeiro</h2>
             <p style={{ color: C.muted, fontSize: 13, marginTop: 4 }}>Receitas, despesas e margem por obra</p>
           </div>
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-            <button onClick={() => gerarRelatorioFinanceiro(obras, financeiro)} style={{
-              padding: "10px 18px", background: "transparent", border: `1px solid ${C.success}`,
-              borderRadius: 6, color: C.success, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
-            }}>📄 Gerar Relatório</button>
-            <Btn variant="success" onClick={() => { setForm((f) => ({ ...f, tipo: "receita", categoria: "Entrada contrato" })); setModal("receita"); }}>+ Receita</Btn>
-            <Btn onClick={() => { setForm((f) => ({ ...f, tipo: "despesa", categoria: "Materiais" })); setModal("despesa"); }}>+ Despesa</Btn>
+          <div style={{ display: "flex", gap: 10 }}>
+            <Btn
+              onClick={() => abrirModal("receita")}
+              style={{ background: C.success + "22", border: `1px solid ${C.success}44`, color: C.success }}
+            >
+              + Receita
+            </Btn>
+            <Btn onClick={() => abrirModal("despesa")}>+ Despesa</Btn>
           </div>
         </div>
 
         {/* Seletor de obra */}
-        <div style={{ display: "flex", gap: 10, marginBottom: 22, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: 8, marginBottom: 22, flexWrap: "wrap" }}>
           {obras.map((o) => (
-            <button key={o.id} onClick={() => setObraId(o.id)} style={{
-              padding: "8px 16px", borderRadius: 8,
-              border: `1px solid ${obraId === o.id ? C.red : C.border}`,
-              background: obraId === o.id ? C.red + "18" : "transparent",
-              color: obraId === o.id ? C.text : C.muted,
-              fontSize: 12, fontWeight: obraId === o.id ? 700 : 400, cursor: "pointer",
-            }}>{o.nome.split("—")[0].trim()}</button>
+            <button
+              key={o.id}
+              onClick={() => setObraId(o.id)}
+              style={{
+                padding: "8px 16px", borderRadius: 8,
+                border: `1px solid ${obraId === o.id ? C.red : C.border}`,
+                background: obraId === o.id ? C.red + "18" : "transparent",
+                color: obraId === o.id ? C.text : C.muted,
+                fontSize: 12, fontWeight: obraId === o.id ? 700 : 400,
+                cursor: "pointer", fontFamily: "inherit",
+                transition: "all .15s",
+              }}
+            >
+              {o.nome?.split("—")[0]?.trim()}
+            </button>
           ))}
         </div>
 
+        {/* Obra selecionada — nome completo */}
+        {obra && (
+          <div style={{ fontSize: 13, color: C.muted, marginBottom: 18 }}>
+            <span style={{ color: C.text, fontWeight: 600 }}>{obra.nome}</span>
+            {obra.fase && <span> · {obra.fase}</span>}
+            {obra.status && (
+              <span style={{
+                marginLeft: 10, padding: "2px 8px", borderRadius: 4,
+                background: obra.status === "Em andamento" ? C.success + "22" : C.border,
+                color: obra.status === "Em andamento" ? C.success : C.muted,
+                fontSize: 11, fontWeight: 600,
+              }}>
+                {obra.status}
+              </span>
+            )}
+          </div>
+        )}
+
         {/* KPIs */}
-        <div className="kpi-grid-5">
+        <div className="kpi-grid-5" style={{ marginBottom: 18 }}>
           {[
-            { label: "Contrato",    value: fmt(fin.contrato),  color: C.border,                        sub: "valor total" },
-            { label: "Recebido",    value: fmt(receitas),      color: C.success,                       sub: fmtPct(pctRec) + " do contrato" },
-            { label: "A receber",   value: fmt(aReceber),      color: C.warning,                       sub: "saldo em aberto" },
-            { label: "Despesas",    value: fmt(despesas),      color: C.red,                           sub: `${fin.lancamentos.filter((l) => l.tipo === "despesa").length} lançamentos` },
-            { label: "Margem real", value: fmtPct(margem),     color: margem > 0 ? C.success : C.danger, sub: saldo >= 0 ? "saldo positivo" : "saldo negativo" },
+            { label: "Contrato",    value: fmt(fin.contrato),  color: C.border,                           sub: "valor total" },
+            { label: "Recebido",    value: fmt(receitas),      color: C.success,                          sub: `${fmtPct(pctRec)} do contrato` },
+            { label: "A receber",   value: fmt(aReceber),      color: C.warning,                          sub: "saldo em aberto" },
+            { label: "Despesas",    value: fmt(despesas),      color: C.red,                              sub: `${fin.lancamentos.filter(l => l.tipo === "despesa").length} lançamentos` },
+            { label: "Margem real", value: fmtPct(margem * 100), color: margem > 0 ? C.success : C.danger, sub: saldo >= 0 ? `saldo +${fmt(saldo)}` : `saldo ${fmt(saldo)}` },
           ].map((k, i) => (
-            <div key={i} style={{ background: C.surface, borderRadius: 10, padding: "16px 18px", border: `1px solid ${C.border}`, borderTop: `3px solid ${k.color}` }}>
+            <div key={i} style={{
+              background: C.surface, borderRadius: 10, padding: "16px 18px",
+              border: `1px solid ${C.border}`, borderTop: `3px solid ${k.color}`,
+            }}>
               <div style={{ fontSize: 10, color: C.muted, letterSpacing: 1, marginBottom: 8 }}>{k.label.toUpperCase()}</div>
               <div style={{ fontSize: 18, fontWeight: 800, color: k.color === C.border ? C.text : k.color }}>{k.value}</div>
               <div style={{ fontSize: 10, color: C.muted, marginTop: 4 }}>{k.sub}</div>
@@ -158,11 +283,16 @@ export default function Financeiro() {
             <span style={{ fontWeight: 700 }}>{fmt(receitas)} <span style={{ color: C.muted, fontWeight: 400 }}>de {fmt(fin.contrato)}</span></span>
           </div>
           <div style={{ height: 10, background: C.dark, borderRadius: 5, overflow: "hidden" }}>
-            <div style={{ height: 10, width: `${Math.min(pctRec * 100, 100)}%`, background: `linear-gradient(90deg,${C.success},#1a7a40)`, borderRadius: 5, transition: "width .5s" }} />
+            <div style={{
+              height: 10,
+              width: `${Math.min(pctRec * 100, 100)}%`,
+              background: `linear-gradient(90deg,${C.success},#1a7a40)`,
+              borderRadius: 5, transition: "width .5s",
+            }} />
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: C.muted, marginTop: 6 }}>
-            <span>{fmtPct(pctRec)} recebido</span>
-            <span>{fmtPct(1 - pctRec)} a receber</span>
+            <span>{fmtPct(pctRec * 100)} recebido</span>
+            <span>{fmtPct((1 - pctRec) * 100)} a receber</span>
           </div>
         </div>
 
@@ -185,7 +315,10 @@ export default function Financeiro() {
                 </div>
               </>
             ) : (
-              <div style={{ fontSize: 12, color: C.muted, textAlign: "center", padding: "24px 0" }}>Nenhuma despesa lançada</div>
+              <div style={{ textAlign: "center", padding: "32px 0" }}>
+                <div style={{ fontSize: 28, opacity: .4, marginBottom: 8 }}>◉</div>
+                <div style={{ fontSize: 12, color: C.muted }}>Nenhuma despesa lançada</div>
+              </div>
             )}
           </div>
 
@@ -193,27 +326,57 @@ export default function Financeiro() {
           <div style={{ background: C.surface, borderRadius: 10, border: `1px solid ${C.border}`, overflow: "hidden" }}>
             <div style={{ padding: "16px 20px", borderBottom: `1px solid ${C.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted }}>EXTRATO DE LANÇAMENTOS</div>
-              <span style={{ fontSize: 11, color: C.muted }}>{fin.lancamentos.length} registros</span>
+              <span style={{ fontSize: 11, color: C.muted }}>{fin.lancamentos.length} registro{fin.lancamentos.length !== 1 ? "s" : ""}</span>
             </div>
-            <div style={{ maxHeight: 360, overflowY: "auto" }}>
+
+            <div style={{ maxHeight: 380, overflowY: "auto" }}>
               {fin.lancamentos.length === 0 ? (
-                <div style={{ padding: 32, textAlign: "center", color: C.muted, fontSize: 13 }}>Nenhum lançamento registrado.</div>
+                <div style={{ padding: "40px 0", textAlign: "center" }}>
+                  <div style={{ fontSize: 28, opacity: .4, marginBottom: 8 }}>◎</div>
+                  <div style={{ fontSize: 13, color: C.muted }}>Nenhum lançamento registrado</div>
+                  <div style={{ fontSize: 11, color: C.muted, marginTop: 4 }}>Use "+ Receita" ou "+ Despesa" para começar</div>
+                </div>
               ) : (
                 [...fin.lancamentos].reverse().map((l) => (
-                  <div key={l.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "13px 20px", borderBottom: `1px solid ${C.border}` }}>
-                    <div style={{ width: 8, height: 8, borderRadius: "50%", flexShrink: 0, background: l.tipo === "receita" ? C.success : C.red }} />
+                  <div key={l.id} style={{
+                    display: "flex", alignItems: "center", gap: 14,
+                    padding: "13px 20px", borderBottom: `1px solid ${C.border}`,
+                    transition: "background .1s",
+                  }}>
+                    {/* Indicador */}
+                    <div style={{
+                      width: 36, height: 36, borderRadius: 8, display: "flex",
+                      alignItems: "center", justifyContent: "center", flexShrink: 0,
+                      background: l.tipo === "receita" ? C.success + "22" : C.red + "22",
+                      fontSize: 14,
+                    }}>
+                      {l.tipo === "receita" ? "↑" : "↓"}
+                    </div>
+                    {/* Info */}
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 13, fontWeight: 600 }}>{l.descricao}</div>
-                      <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{l.categoria} · {l.data}</div>
+                      <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>
+                        {l.categoria} · {l.data}
+                      </div>
                     </div>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: l.tipo === "receita" ? C.success : C.red, flexShrink: 0 }}>
-                      {l.tipo === "receita" ? "+" : "-"} {fmt(l.valor)}
+                    {/* Valor */}
+                    <div style={{
+                      fontSize: 14, fontWeight: 700, flexShrink: 0,
+                      color: l.tipo === "receita" ? C.success : C.red,
+                    }}>
+                      {l.tipo === "receita" ? "+" : "−"} {fmt(l.valor)}
                     </div>
                   </div>
                 ))
               )}
             </div>
-            <div style={{ padding: "12px 20px", borderTop: `2px solid ${C.border}`, display: "flex", justifyContent: "space-between", background: C.darker }}>
+
+            {/* Rodapé do extrato */}
+            <div style={{
+              padding: "12px 20px", borderTop: `2px solid ${C.border}`,
+              display: "flex", justifyContent: "space-between", alignItems: "center",
+              background: C.darker,
+            }}>
               <div style={{ fontSize: 12 }}>
                 <span style={{ color: C.muted }}>Receitas </span>
                 <span style={{ color: C.success, fontWeight: 700 }}>{fmt(receitas)}</span>
@@ -221,7 +384,7 @@ export default function Financeiro() {
                 <span style={{ color: C.muted }}>Despesas </span>
                 <span style={{ color: C.red, fontWeight: 700 }}>{fmt(despesas)}</span>
               </div>
-              <div style={{ fontSize: 13, fontWeight: 800, color: saldo >= 0 ? C.success : C.danger }}>
+              <div style={{ fontSize: 14, fontWeight: 800, color: saldo >= 0 ? C.success : C.danger }}>
                 Saldo: {saldo >= 0 ? "+" : ""}{fmt(saldo)}
               </div>
             </div>

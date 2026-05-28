@@ -2,6 +2,7 @@ import { useState } from "react";
 import { C, CLIMAS, TURNOS } from "../utils/constants";
 import { gerarDiarioPDF } from "../services/pdfService";
 import useAppStore from "../store/useAppStore";
+import { useModuleLoad } from "../hooks/useModuleLoad";
 import Btn from "../components/ui/Btn";
 import Input from "../components/ui/Input";
 import Select from "../components/ui/Select";
@@ -15,6 +16,9 @@ export default function DiarioObra() {
   const addDiario = useAppStore((s) => s.addDiario);
 
   const [obraId, setObraId] = useState(obras[0]?.id);
+
+  useModuleLoad("obras");
+  useModuleLoad("diario", obraId || obras[0]?.id);
   const [modal,  setModal]  = useState(false);
   const [verReg, setVerReg] = useState(null);
   const FORM_VAZIO = { data: "", turno: "Integral", clima: "☀️ Ensolarado", equipe: 1, responsavel: "", atividades: "", ocorrencias: "" };

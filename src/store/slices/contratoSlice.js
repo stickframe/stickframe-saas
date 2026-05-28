@@ -1,4 +1,5 @@
-import { listarContratos, criarContrato } from "../../services/repositories/contratoRepository";
+import { listarContratos, criarContrato, atualizarContrato, deletarContrato } from "../../services/repositories/contratoRepository";
+
 import { listarOrcamentos, criarOrcamento, atualizarOrcamento, deletarOrcamento } from "../../services/repositories/orcamentoRepository";
 
 export const createContratoSlice = (set, get) => ({
@@ -20,6 +21,19 @@ export const createContratoSlice = (set, get) => ({
     const data = await criarContrato(contrato);
     set((s) => ({ contratos: [data, ...s.contratos] }));
     get().registrar("contrato", "criado", `Contrato ${contrato.ref} criado para ${contrato.cliente}`);
+  },
+
+  updateContrato: async (id, updates) => {
+    const data = await atualizarContrato(id, updates);
+    set((s) => ({ contratos: s.contratos.map((c) => (c.id === id ? data : c)) }));
+    get().registrar("contrato", "editado", `Contrato atualizado`);
+  },
+
+  deleteContrato: async (id) => {
+    const c = get().contratos.find((x) => x.id === id);
+    await deletarContrato(id);
+    set((s) => ({ contratos: s.contratos.filter((x) => x.id !== id) }));
+    get().registrar("contrato", "deletado", `Contrato ${c?.ref} removido`);
   },
 
   loadOrcamentos: async () => {

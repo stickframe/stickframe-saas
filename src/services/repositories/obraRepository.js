@@ -5,6 +5,20 @@ export async function listarObras() {
   if (error) throw error;
   return data;
 }
+export async function criarObra(obra) {
+  const { data, error } = await sb.from("obras").insert({ ...obra, empresa_id: getEmpresaId() }).select().single();
+  if (error) throw error;
+  return data;
+}
+export async function atualizarObra(id, updates) {
+  const { data, error } = await sb.from("obras").update({ ...updates, updated_at: new Date() }).eq("id", id).select().single();
+  if (error) throw error;
+  return data;
+}
+export async function deletarObra(id) {
+  const { error } = await sb.from("obras").delete().eq("id", id);
+  if (error) throw error;
+}
 export async function atualizarFase(id, fase, progresso) {
   const { data, error } = await sb.from("obras").update({ fase, progresso, updated_at: new Date() }).eq("id", id).select().single();
   if (error) throw error;

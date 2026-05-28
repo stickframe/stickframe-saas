@@ -2,6 +2,7 @@ import { useState } from "react";
 import { C } from "../utils/constants";
 import { fmt } from "../utils/format";
 import useAppStore from "../store/useAppStore";
+import { useModuleLoad } from "../hooks/useModuleLoad";
 import Btn from "../components/ui/Btn";
 import Input from "../components/ui/Input";
 import Badge from "../components/ui/Badge";
@@ -15,6 +16,10 @@ export default function Medicoes() {
   const aprovarMedicao = useAppStore((s) => s.aprovarMedicao);
 
   const [obraId, setObraId] = useState(obras[0]?.id);
+
+  useModuleLoad("obras");
+  useModuleLoad("financeiro");
+  useModuleLoad("medicoes", obraId || obras[0]?.id);
   const [modal,  setModal]  = useState(false);
   const FORM_VAZIO = { descricao: "", percentual: "", valor: "", data: "", obs: "" };
   const [form, setForm] = useState(FORM_VAZIO);

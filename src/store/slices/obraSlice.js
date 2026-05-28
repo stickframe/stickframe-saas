@@ -1,5 +1,5 @@
 import {
-  listarObras, atualizarFase,
+  listarObras, criarObra, atualizarObra, deletarObra, atualizarFase,
   listarDiario, adicionarDiario,
   listarMedicoes, adicionarMedicao, aprovarMedicao,
   listarArquivos, adicionarArquivos, deletarArquivo,
@@ -28,6 +28,26 @@ export const createObraSlice = (set, get) => ({
     set((s) => ({ obras: s.obras.map((o) => o.id === obraId ? { ...o, fase: novaFase, progresso } : o) }));
     const o = get().obras.find((x) => x.id === obraId);
     get().registrar("obra", "fase", `Obra ${o?.nome?.split("—")[0]?.trim()} avançou para: ${novaFase}`);
+  },
+
+  addObra: async (obra) => {
+    const data = await criarObra(obra);
+    set((s) => ({ obras: [...s.obras, data] }));
+    get().registrar("obra", "criado", `Obra ${data.nome} cadastrada`);
+    return data;
+  },
+
+  updateObra: async (id, updates) => {
+    const data = await atualizarObra(id, updates);
+    set((s) => ({ obras: s.obras.map((o) => o.id === id ? data : o) }));
+    get().registrar("obra", "editado", `Obra ${data.nome} atualizada`);
+  },
+
+  deleteObra: async (id) => {
+    const o = get().obras.find((x) => x.id === id);
+    await deletarObra(id);
+    set((s) => ({ obras: s.obras.filter((x) => x.id !== id) }));
+    get().registrar("obra", "deletado", `Obra ${o?.nome} removida`);
   },
 
   loadDiario: async (obraId) => {

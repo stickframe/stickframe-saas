@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { C } from "../utils/constants";
 import useAppStore from "../store/useAppStore";
+import { useModuleLoad } from "../hooks/useModuleLoad";
 
 const TIPO_CONFIG = {
   cliente:    { cor: "#2e9e5b", icone: "◈", label: "Cliente"    },
@@ -21,6 +22,7 @@ const ACAO_CONFIG = {
 };
 
 export default function Historico() {
+  useModuleLoad("historico");
   const historico    = useAppStore((s) => s.historico);
   const [filtroTipo, setFiltroTipo] = useState("todos");
   const [busca,      setBusca]      = useState("");
