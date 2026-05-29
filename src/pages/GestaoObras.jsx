@@ -56,7 +56,7 @@ function FormObra({ form, setForm, clientes, onSave, onCancel, btnLabel }) {
           <Label>Cliente</Label>
           <Select value={form.cliente_id} onChange={(v) => {
             const c = clientes.find((x) => x.id === v);
-            setForm((f) => ({ ...f, cliente_id: v, cliente: c?.nome || "" }));
+            setForm((f) => ({ ...f, cliente_id: v, cliente: c?.nome || "", email_cliente: c?.email || f.email_cliente }));
           }} options={clienteOpts} />
         </div>
         <div>
@@ -76,6 +76,12 @@ function FormObra({ form, setForm, clientes, onSave, onCancel, btnLabel }) {
           <Label>Valor do contrato (R$)</Label>
           <Input value={form.contrato} onChange={set("contrato")} type="number" min="0" placeholder="0" />
         </div>
+      </div>
+
+      {/* Email do cliente */}
+      <div>
+        <Label>Email do cliente <span style={{ fontSize: 10, color: C.muted, fontWeight: 400 }}>(para notificações automáticas)</span></Label>
+        <Input value={form.email_cliente} onChange={set("email_cliente")} placeholder="cliente@email.com" type="email" />
       </div>
 
       {/* Fase inicial */}
@@ -99,7 +105,7 @@ function FormObra({ form, setForm, clientes, onSave, onCancel, btnLabel }) {
 
 // ─── Gestão de Obras ──────────────────────────────────────────────────────────
 const FORM_VAZIO = {
-  nome: "", cliente_id: "", cliente: "",
+  nome: "", cliente_id: "", cliente: "", email_cliente: "",
   status: "Planejamento", fase: "Projeto executivo",
   prazo: "—", contrato: 0, progresso: 0,
 };
@@ -152,14 +158,15 @@ export default function GestaoObras() {
   function abrirEditar() {
     if (!obra) return;
     setForm({
-      nome:       obra.nome || "",
-      cliente_id: obra.cliente_id || "",
-      cliente:    obra.cliente || "",
-      status:     obra.status || "Planejamento",
-      fase:       obra.fase || "Projeto executivo",
-      prazo:      obra.prazo || "—",
-      contrato:   obra.contrato || 0,
-      progresso:  obra.progresso || 0,
+      nome:          obra.nome || "",
+      cliente_id:    obra.cliente_id || "",
+      cliente:       obra.cliente || "",
+      email_cliente: obra.email_cliente || "",
+      status:        obra.status || "Planejamento",
+      fase:          obra.fase || "Projeto executivo",
+      prazo:         obra.prazo || "—",
+      contrato:      obra.contrato || 0,
+      progresso:     obra.progresso || 0,
     });
     setModal("editar");
   }
