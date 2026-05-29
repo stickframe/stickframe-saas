@@ -1,32 +1,41 @@
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { sb } from "../services/supabase";
 import { FASES } from "../utils/constants";
 import { fmt } from "../utils/format";
-import useAppStore from "../store/useAppStore";
-import { useModuleLoad } from "../hooks/useModuleLoad";
 
 export default function PortalOnline() {
-  const { token } = useParams(); // token = obra ID (UUID)
+  const { token } = useParams();
+  const [obra, setObra]       = useState(null);
+  const [financeiro, setFin]  = useState({ contrato: 0, lancamentos: [] });
+  const [diario, setDiario]   = useState([]);
+  const [loading, setLoading] = useState(true);
+  const hoje = new Date().toLocaleDateString("pt-BR");
 
-  useModuleLoad("obras");
-  useModuleLoad("financeiro");
-  useModuleLoad("diario", token);
+  useEffect(() => {
+    if (!token) { setLoading(false); return; }
+    (async () => {
+      try {
+        const { data: obraData, error } = await sb.rpc("get_obra_portal", { p_token: token });
+        if (error || !obraData) { setLoading(false); return; }
+        setObra(obraData);
 
-  const obras      = useAppStore((s) => s.obras);
-  const financeiro = useAppStore((s) => s.financeiro);
-  const diario     = useAppStore((s) => s.diario);
-  const loading    = useAppStore((s) => s.loading);
-  const loaded     = useAppStore((s) => s.loaded);
+        const [{ data: fins }, { data: logs }] = await Promise.all([
+          sb.from("financeiro").select("*").eq("obra_id", obraData.id),
+          sb.from("diario").select("*").eq("obra_id", obraData.id).order("created_at", { ascending: false }).limit(5),
+        ]);
 
-  const obra   = obras.find((o) => o.id === token);
-  const fin    = financeiro[token] || { contrato: 0, lancamentos: [] };
-  const regs   = (diario || {})[token] || [];
-  const rec    = fin.lancamentos.filter((l) => l.tipo === "receita").reduce((a, l) => a + l.valor, 0);
-  const pct    = fin.contrato > 0 ? Math.round((rec / fin.contrato) * 100) : 0;
-  const faseIdx= obra ? FASES.indexOf(obra.fase) : -1;
-  const hoje   = new Date().toLocaleDateString("pt-BR");
+        const lancamentos = fins || [];
+        const contrato    = obraData.contrato || 0;
+        setFin({ contrato, lancamentos });
+        setDiario(logs || []);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [token]);
 
-  // Aguarda carregamento das obras antes de mostrar erro
-  if (loading.obras || !loaded.obras) return (
+  if (loading) return (
     <div style={{ minHeight: "100vh", background: "#1A1A1A", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16 }}>
       <div style={{ width: 40, height: 40, border: "3px solid #333", borderTop: "3px solid #981915", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
@@ -34,6 +43,7 @@ export default function PortalOnline() {
     </div>
   );
 
+  if (!obra) return (
     <div style={{ minHeight: "100vh", background: "#1A1A1A", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16, padding: 24 }}>
       <div style={{ fontSize: 48 }}>🔒</div>
       <div style={{ fontSize: 18, fontWeight: 700, color: "#f0f0f0", textAlign: "center" }}>Link inválido ou expirado</div>
@@ -41,11 +51,14 @@ export default function PortalOnline() {
     </div>
   );
 
+  const rec     = financeiro.lancamentos.filter((l) => l.tipo === "receita").reduce((a, l) => a + l.valor, 0);
+  const pct     = financeiro.contrato > 0 ? Math.round((rec / financeiro.contrato) * 100) : 0;
+  const faseIdx = FASES.indexOf(obra.fase);
+
   return (
     <div style={{ minHeight: "100vh", background: "#f4f4f4", fontFamily: "'DM Sans',sans-serif" }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700;800&display=swap');*{box-sizing:border-box;margin:0;padding:0;}`}</style>
 
-      {/* Header */}
       <div style={{ background: "#1A1A1A", padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div style={{ width: 32, height: 32, background: "linear-gradient(135deg,#414141 50%,#981915 50%)", borderRadius: 7, border: "1px solid #333" }} />
@@ -59,7 +72,6 @@ export default function PortalOnline() {
         <div style={{ fontSize: 10, color: "#444" }}>Atualizado em {hoje}</div>
       </div>
 
-      {/* Hero */}
       <div style={{ background: "linear-gradient(135deg,#981915,#6e1210)", padding: "28px 20px", color: "#fff" }}>
         <div style={{ fontSize: 10, letterSpacing: 1.5, opacity: .7, marginBottom: 6 }}>ACOMPANHAMENTO DE OBRA</div>
         <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 4 }}>{obra.nome}</div>
@@ -72,15 +84,12 @@ export default function PortalOnline() {
       </div>
 
       <div style={{ padding: "14px", maxWidth: 480, margin: "0 auto" }}>
-
-        {/* Progresso */}
         <Card title="Progresso Geral">
           <div style={{ fontSize: 30, fontWeight: 800, color: "#981915" }}>{obra.progresso}%</div>
           <div style={{ fontSize: 11, color: "#888", marginTop: 2, marginBottom: 10 }}>concluído</div>
           <Bar val={obra.progresso} color="linear-gradient(90deg,#981915,#6e1210)" />
         </Card>
 
-        {/* Fases */}
         <Card title="Etapas da Obra">
           {FASES.map((f, i) => {
             const done = i < faseIdx, curr = i === faseIdx;
@@ -96,11 +105,10 @@ export default function PortalOnline() {
           })}
         </Card>
 
-        {/* Financeiro */}
-        {fin.contrato > 0 && (
+        {financeiro.contrato > 0 && (
           <Card title="Financeiro">
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
-              <FinItem label="Contrato" value={fmt(fin.contrato)} />
+              <FinItem label="Contrato" value={fmt(financeiro.contrato)} />
               <FinItem label="Recebido"  value={fmt(rec)} color="#2e9e5b" />
             </div>
             <Bar val={pct} color="linear-gradient(90deg,#2e9e5b,#1a7a40)" />
@@ -110,11 +118,10 @@ export default function PortalOnline() {
           </Card>
         )}
 
-        {/* Diário */}
-        {regs.length > 0 && (
+        {diario.length > 0 && (
           <Card title="Últimas Atualizações">
-            {regs.slice(0, 5).map((r, i) => (
-              <div key={i} style={{ paddingBottom: 10, marginBottom: 10, borderBottom: i < Math.min(regs.length, 5) - 1 ? "1px solid #f5f5f5" : "none" }}>
+            {diario.map((r, i) => (
+              <div key={r.id || i} style={{ paddingBottom: 10, marginBottom: 10, borderBottom: i < diario.length - 1 ? "1px solid #f5f5f5" : "none" }}>
                 <div style={{ fontSize: 10, color: "#888", marginBottom: 3 }}>{r.data} · {r.clima} · {r.turno}</div>
                 <div style={{ fontSize: 12, color: "#444", lineHeight: 1.5 }}>{r.atividades}</div>
                 {r.ocorrencias && (

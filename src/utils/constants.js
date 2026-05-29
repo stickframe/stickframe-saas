@@ -82,13 +82,6 @@ export const COR_TIPO_EVENTO = {
   "Outro":                  C.muted,
 };
 
-// ─── TOKENS PORTAL ───────────────────────────────────────────────────────────
-export const OBRA_TOKENS = {
-  "bofete2025":  1,
-  "socorro2025": 2,
-  "alpha2025":   3,
-};
-
 // ─── CLIMAS ──────────────────────────────────────────────────────────────────
 export const CLIMAS = ["☀️ Ensolarado","⛅ Nublado","🌧️ Chuvoso","⛈️ Tempestade","🌫️ Neblina"];
 export const TURNOS = ["Manhã","Tarde","Integral"];
