@@ -9,8 +9,8 @@
 }
 
 body {
-  background: #121212;
-  color: #f0f0f0;
+  background: #f0f0f3;
+  color: #1a1a1a;
   font-family: 'DM Sans', sans-serif;
   -webkit-font-smoothing: antialiased;
 }
@@ -23,8 +23,8 @@ select:focus {
 
 /* Scrollbar */
 ::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: #121212; }
-::-webkit-scrollbar-thumb { background: #2e2e2e; border-radius: 3px; }
+::-webkit-scrollbar-track { background: #f0f0f3; }
+::-webkit-scrollbar-thumb { background: #dcdce4; border-radius: 3px; }
 
 /* Layout principal */
 .app-layout {
@@ -46,11 +46,11 @@ select:focus {
 
 .topbar {
   padding: 12px 38px;
-  border-bottom: 1px solid #2e2e2e;
+  border-bottom: 1px solid #dcdce4;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #1A1A1A;
+  background: #ffffff;
   gap: 12px;
 }
 
@@ -64,7 +64,7 @@ select:focus {
   display: none;
   background: none;
   border: none;
-  color: #f0f0f0;
+  color: #1a1a1a;
   font-size: 22px;
   cursor: pointer;
   padding: 4px 8px;

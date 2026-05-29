@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { sb } from "../services/supabase";
-import { C, FASES } from "../utils/constants";
+import { FASES } from "../utils/constants";
 import { fmt } from "../utils/format";
 
 export default function PortalOnline() {
@@ -36,8 +36,10 @@ export default function PortalOnline() {
   }, [token]);
 
   if (loading) return (
-    <div style={{ minHeight: "100vh", background: "#1A1A1A", display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <div style={{ color: "#888", fontSize: 14 }}>Carregando...</div>
+    <div style={{ minHeight: "100vh", background: "#1A1A1A", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16 }}>
+      <div style={{ width: 40, height: 40, border: "3px solid #333", borderTop: "3px solid #981915", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <div style={{ fontSize: 13, color: "#666" }}>Carregando...</div>
     </div>
   );
 
@@ -57,7 +59,6 @@ export default function PortalOnline() {
     <div style={{ minHeight: "100vh", background: "#f4f4f4", fontFamily: "'DM Sans',sans-serif" }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700;800&display=swap');*{box-sizing:border-box;margin:0;padding:0;}`}</style>
 
-      {/* Header */}
       <div style={{ background: "#1A1A1A", padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div style={{ width: 32, height: 32, background: "linear-gradient(135deg,#414141 50%,#981915 50%)", borderRadius: 7, border: "1px solid #333" }} />
@@ -71,7 +72,6 @@ export default function PortalOnline() {
         <div style={{ fontSize: 10, color: "#444" }}>Atualizado em {hoje}</div>
       </div>
 
-      {/* Hero */}
       <div style={{ background: "linear-gradient(135deg,#981915,#6e1210)", padding: "28px 20px", color: "#fff" }}>
         <div style={{ fontSize: 10, letterSpacing: 1.5, opacity: .7, marginBottom: 6 }}>ACOMPANHAMENTO DE OBRA</div>
         <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 4 }}>{obra.nome}</div>
@@ -84,15 +84,12 @@ export default function PortalOnline() {
       </div>
 
       <div style={{ padding: "14px", maxWidth: 480, margin: "0 auto" }}>
-
-        {/* Progresso */}
         <Card title="Progresso Geral">
           <div style={{ fontSize: 30, fontWeight: 800, color: "#981915" }}>{obra.progresso}%</div>
           <div style={{ fontSize: 11, color: "#888", marginTop: 2, marginBottom: 10 }}>concluído</div>
           <Bar val={obra.progresso} color="linear-gradient(90deg,#981915,#6e1210)" />
         </Card>
 
-        {/* Fases */}
         <Card title="Etapas da Obra">
           {FASES.map((f, i) => {
             const done = i < faseIdx, curr = i === faseIdx;
@@ -108,7 +105,6 @@ export default function PortalOnline() {
           })}
         </Card>
 
-        {/* Financeiro */}
         {financeiro.contrato > 0 && (
           <Card title="Financeiro">
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
@@ -122,7 +118,6 @@ export default function PortalOnline() {
           </Card>
         )}
 
-        {/* Diário */}
         {diario.length > 0 && (
           <Card title="Últimas Atualizações">
             {diario.map((r, i) => (
