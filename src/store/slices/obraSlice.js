@@ -6,6 +6,7 @@ import {
   subscribeObras, subscribeDiario,
 } from "../../services/repositories/obraRepository";
 import { criarNotificacao } from "../../services/repositories/notificacoesRepository";
+import { emailFaseAvancada, emailMedicaoAprovada } from "../../services/emailService";
 
 export const createObraSlice = (set, get) => ({
   obras:    [],
@@ -32,6 +33,7 @@ export const createObraSlice = (set, get) => ({
     get().registrar("obra", "fase", `Obra ${nome} avançou para: ${novaFase}`);
     const uid = get().user?.uid;
     if (uid) criarNotificacao({ usuarioId: uid, titulo: `Fase avançada: ${novaFase}`, mensagem: `Obra ${nome} avançou para a fase "${novaFase}".`, tipo: "info" }).catch(() => {});
+    if (o?.email_cliente) emailFaseAvancada({ obraEmail: o.email_cliente, obraNome: nome, fase: novaFase, progresso }).catch(() => {});
   },
 
   addObra: async (obra) => {
@@ -105,6 +107,7 @@ export const createObraSlice = (set, get) => ({
     get().registrar("financeiro", "receita", `Medição aprovada — ${nome}`);
     const uid = get().user?.uid;
     if (uid) criarNotificacao({ usuarioId: uid, titulo: `Medição ${med?.numero || ""} aprovada`, mensagem: `Medição da obra "${nome}" foi aprovada.`, tipo: "sucesso" }).catch(() => {});
+    if (o?.email_cliente) emailMedicaoAprovada({ obraEmail: o.email_cliente, obraNome: nome, numMedicao: med?.numero, valor: med?.valor }).catch(() => {});
   },
 
   loadArquivos: async (obraId) => {
