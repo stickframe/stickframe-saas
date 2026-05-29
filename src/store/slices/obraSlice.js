@@ -5,6 +5,7 @@ import {
   listarArquivos, adicionarArquivos, deletarArquivo,
   subscribeObras, subscribeDiario,
 } from "../../services/repositories/obraRepository";
+import { criarNotificacao } from "../../services/repositories/notificacoesRepository";
 
 export const createObraSlice = (set, get) => ({
   obras:    [],
@@ -27,13 +28,18 @@ export const createObraSlice = (set, get) => ({
     await atualizarFase(obraId, novaFase, progresso);
     set((s) => ({ obras: s.obras.map((o) => o.id === obraId ? { ...o, fase: novaFase, progresso } : o) }));
     const o = get().obras.find((x) => x.id === obraId);
-    get().registrar("obra", "fase", `Obra ${o?.nome?.split("—")[0]?.trim()} avançou para: ${novaFase}`);
+    const nome = o?.nome?.split("—")[0]?.trim();
+    get().registrar("obra", "fase", `Obra ${nome} avançou para: ${novaFase}`);
+    const uid = get().user?.uid;
+    if (uid) criarNotificacao({ usuarioId: uid, titulo: `Fase avançada: ${novaFase}`, mensagem: `Obra ${nome} avançou para a fase "${novaFase}".`, tipo: "info" }).catch(() => {});
   },
 
   addObra: async (obra) => {
     const data = await criarObra(obra);
     set((s) => ({ obras: [...s.obras, data] }));
     get().registrar("obra", "criado", `Obra ${data.nome} cadastrada`);
+    const uid = get().user?.uid;
+    if (uid) criarNotificacao({ usuarioId: uid, titulo: "Nova obra cadastrada", mensagem: `A obra "${data.nome}" foi adicionada.`, tipo: "info" }).catch(() => {});
     return data;
   },
 
@@ -93,8 +99,12 @@ export const createObraSlice = (set, get) => ({
   aprovarMedicao: async (obraId, id) => {
     await aprovarMedicao(id);
     set((s) => ({ medicoes: { ...s.medicoes, [obraId]: s.medicoes[obraId].map((m) => m.id === id ? { ...m, status: "Aprovada" } : m) } }));
-    const o = get().obras.find((x) => x.id === obraId);
-    get().registrar("financeiro", "receita", `Medição aprovada — ${o?.nome?.split("—")[0]?.trim()}`);
+    const o    = get().obras.find((x) => x.id === obraId);
+    const nome = o?.nome?.split("—")[0]?.trim();
+    const med  = get().medicoes[obraId]?.find((m) => m.id === id);
+    get().registrar("financeiro", "receita", `Medição aprovada — ${nome}`);
+    const uid = get().user?.uid;
+    if (uid) criarNotificacao({ usuarioId: uid, titulo: `Medição ${med?.numero || ""} aprovada`, mensagem: `Medição da obra "${nome}" foi aprovada.`, tipo: "sucesso" }).catch(() => {});
   },
 
   loadArquivos: async (obraId) => {
