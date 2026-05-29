@@ -19,3 +19,9 @@ export async function deletarCliente(id) {
   const { error } = await sb.from("clientes").delete().eq("id", id);
   if (error) throw error;
 }
+export async function importarClientes(lista) {
+  const rows = lista.map((c) => ({ ...c, empresa_id: getEmpresaId() }));
+  const { data, error } = await sb.from("clientes").insert(rows).select();
+  if (error) throw error;
+  return data;
+}

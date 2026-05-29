@@ -213,16 +213,20 @@ const FORM_VAZIO = {
 
 export default function CRM() {
   useModuleLoad("clientes");
-  const clientes      = useAppStore((s) => s.clientes);
-  const addCliente    = useAppStore((s) => s.addCliente);
-  const updateCliente = useAppStore((s) => s.updateCliente);
-  const deleteCliente = useAppStore((s) => s.deleteCliente);
+  const clientes       = useAppStore((s) => s.clientes);
+  const addCliente     = useAppStore((s) => s.addCliente);
+  const updateCliente  = useAppStore((s) => s.updateCliente);
+  const deleteCliente  = useAppStore((s) => s.deleteCliente);
+  const importClientes = useAppStore((s) => s.importClientes);
 
-  const [modal,   setModal]   = useState(false);
-  const [sel,     setSel]     = useState(null);
-  const [confirm, setConfirm] = useState(false);
-  const [toast,   setToast]   = useState(null);
-  const [form,    setForm]    = useState(FORM_VAZIO);
+  const [modal,      setModal]      = useState(false);
+  const [sel,        setSel]        = useState(null);
+  const [confirm,    setConfirm]    = useState(false);
+  const [toast,      setToast]      = useState(null);
+  const [form,       setForm]       = useState(FORM_VAZIO);
+  const [csvModal,   setCsvModal]   = useState(false);
+  const [csvPreview, setCsvPreview] = useState([]);
+  const [csvErro,    setCsvErro]    = useState("");
 
   const cliente = clientes.find((c) => c.id === sel);
 
@@ -280,6 +284,47 @@ export default function CRM() {
     setSel(null);
     setConfirm(false);
     mostrarToast("🗑 Cliente removido.");
+  }
+
+  function parsearCSV(texto) {
+    const linhas = texto.trim().split("\n").map((l) => l.split(",").map((c) => c.trim().replace(/^"|"$/g, "")));
+    const header = linhas[0].map((h) => h.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, ""));
+    const col = (nomes) => header.findIndex((h) => nomes.some((n) => h.includes(n)));
+    const iNome    = col(["nome"]);
+    const iEmail   = col(["email"]);
+    const iContato = col(["contato", "telefone", "fone", "whatsapp"]);
+    const iCidade  = col(["cidade", "city"]);
+    const iStatus  = col(["status"]);
+    if (iNome === -1) { setCsvErro("Coluna 'nome' não encontrada no CSV."); return; }
+    const dados = linhas.slice(1).filter((l) => l[iNome]?.trim()).map((l) => ({
+      nome:    l[iNome]    || "",
+      email:   iEmail   >= 0 ? l[iEmail]   || "" : "",
+      contato: iContato >= 0 ? l[iContato] || "" : "",
+      cidade:  iCidade  >= 0 ? l[iCidade]  || "" : "",
+      status:  iStatus  >= 0 ? l[iStatus]  || "Lead" : "Lead",
+      valor: 0, unidades: 0, observacoes: "",
+    }));
+    if (dados.length === 0) { setCsvErro("Nenhum dado válido encontrado."); return; }
+    setCsvErro("");
+    setCsvPreview(dados);
+  }
+
+  function handleCSVFile(file) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => parsearCSV(e.target.result);
+    reader.readAsText(file, "UTF-8");
+  }
+
+  async function confirmarImportacao() {
+    try {
+      const data = await importClientes(csvPreview);
+      setCsvModal(false);
+      setCsvPreview([]);
+      mostrarToast(`✅ ${data.length} clientes importados!`);
+    } catch (e) {
+      setCsvErro("Erro ao importar: " + e.message);
+    }
   }
 
   return (
@@ -340,6 +385,74 @@ export default function CRM() {
         </div>
       )}
 
+      {/* Modal Importar CSV */}
+      {csvModal && (
+        <Modal title="Importar clientes via CSV" onClose={() => setCsvModal(false)}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            {csvPreview.length === 0 ? (
+              <>
+                <div style={{ fontSize: 13, color: C.muted, lineHeight: 1.6 }}>
+                  O arquivo CSV deve ter uma linha de cabeçalho com as colunas:<br />
+                  <code style={{ background: C.darker, padding: "2px 6px", borderRadius: 4, fontSize: 12 }}>
+                    nome, email, contato, cidade, status
+                  </code>
+                  <br /><br />
+                  Apenas <strong>nome</strong> é obrigatório. As demais colunas são opcionais.
+                </div>
+                <a
+                  href="data:text/csv;charset=utf-8,nome,email,contato,cidade,status%0AJoão Silva,joao@email.com,(11) 99999-0000,São Paulo,Lead%0AMaria Souza,maria@email.com,(11) 88888-0000,Campinas,Proposta"
+                  download="modelo_clientes.csv"
+                  style={{ fontSize: 12, color: C.red, textDecoration: "none" }}
+                >
+                  ⬇ Baixar modelo CSV
+                </a>
+                <label style={{
+                  display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                  gap: 8, padding: "28px 20px", border: `2px dashed ${C.border}`, borderRadius: 10,
+                  cursor: "pointer", color: C.muted, fontSize: 13,
+                }}>
+                  <span style={{ fontSize: 28 }}>📂</span>
+                  Clique para selecionar o arquivo CSV
+                  <input type="file" accept=".csv,text/csv" style={{ display: "none" }} onChange={(e) => handleCSVFile(e.target.files[0])} />
+                </label>
+                {csvErro && <div style={{ fontSize: 12, color: C.danger }}>{csvErro}</div>}
+              </>
+            ) : (
+              <>
+                <div style={{ fontSize: 13, color: C.muted }}>{csvPreview.length} clientes encontrados — confira antes de importar:</div>
+                <div style={{ maxHeight: 280, overflowY: "auto", border: `1px solid ${C.border}`, borderRadius: 8 }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                    <thead>
+                      <tr style={{ background: C.darker }}>
+                        {["Nome", "Email", "Contato", "Cidade", "Status"].map((h) => (
+                          <th key={h} style={{ padding: "8px 12px", textAlign: "left", fontWeight: 700, color: C.muted, whiteSpace: "nowrap" }}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {csvPreview.map((r, i) => (
+                        <tr key={i} style={{ borderTop: `1px solid ${C.border}` }}>
+                          <td style={{ padding: "8px 12px", fontWeight: 600 }}>{r.nome}</td>
+                          <td style={{ padding: "8px 12px", color: C.muted }}>{r.email || "—"}</td>
+                          <td style={{ padding: "8px 12px", color: C.muted }}>{r.contato || "—"}</td>
+                          <td style={{ padding: "8px 12px", color: C.muted }}>{r.cidade || "—"}</td>
+                          <td style={{ padding: "8px 12px" }}><span style={{ background: C.red + "22", color: C.red, borderRadius: 6, padding: "2px 8px", fontSize: 11, fontWeight: 600 }}>{r.status}</span></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                {csvErro && <div style={{ fontSize: 12, color: C.danger }}>{csvErro}</div>}
+                <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+                  <Btn variant="ghost" onClick={() => setCsvPreview([])}>← Voltar</Btn>
+                  <Btn onClick={confirmarImportacao}>Importar {csvPreview.length} clientes</Btn>
+                </div>
+              </>
+            )}
+          </div>
+        </Modal>
+      )}
+
       {/* Layout principal */}
       <div style={{ display: "grid", gridTemplateColumns: sel ? "1fr min(320px,100%)" : "1fr", gap: 18 }}>
 
@@ -350,7 +463,10 @@ export default function CRM() {
               <h2 style={{ fontSize: 22, fontWeight: 800 }}>CRM / Clientes</h2>
               <p style={{ color: C.muted, fontSize: 13, marginTop: 4 }}>{clientes.length} contato{clientes.length !== 1 ? "s" : ""}</p>
             </div>
-            <Btn onClick={abrirNovo}>+ Novo cliente</Btn>
+            <div style={{ display: "flex", gap: 8 }}>
+              <Btn variant="ghost" onClick={() => { setCsvPreview([]); setCsvErro(""); setCsvModal(true); }}>⬆ Importar CSV</Btn>
+              <Btn onClick={abrirNovo}>+ Novo cliente</Btn>
+            </div>
           </div>
 
           <div style={{ background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, overflow: "hidden" }}>
