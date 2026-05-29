@@ -1,18 +1,19 @@
-// ─── PALETA ──────────────────────────────────────────────────────────────────
+// ─── PALETA (TEMA CLARO) ─────────────────────────────────────────────────────
 export const C = {
   red:      "#981915",
   redDark:  "#6e1210",
-  graphite: "#414141",
-  dark:     "#121212",
-  darker:   "#1A1A1A",
-  surface:  "#242424",
-  border:   "#2e2e2e",
-  text:     "#f0f0f0",
-  muted:    "#888888",
+  graphite: "#4b4b4b",
+  dark:     "#f0f0f3",
+  darker:   "#e4e4ea",
+  surface:  "#ffffff",
+  border:   "#dcdce4",
+  text:     "#1a1a1a",
+  muted:    "#6b7280",
   success:  "#2e9e5b",
-  warning:  "#c88a00",
+  warning:  "#b97a00",
   danger:   "#c0392b",
 };
+
 
 // ─── NAV ─────────────────────────────────────────────────────────────────────
 export const NAV = [

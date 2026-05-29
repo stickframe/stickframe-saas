@@ -1,23 +1,39 @@
 import { useParams } from "react-router-dom";
-import { C, FASES, OBRA_TOKENS } from "../utils/constants";
+import { FASES } from "../utils/constants";
 import { fmt } from "../utils/format";
 import useAppStore from "../store/useAppStore";
+import { useModuleLoad } from "../hooks/useModuleLoad";
 
 export default function PortalOnline() {
-  const { token } = useParams();
+  const { token } = useParams(); // token = obra ID (UUID)
+
+  useModuleLoad("obras");
+  useModuleLoad("financeiro");
+  useModuleLoad("diario", token);
+
   const obras      = useAppStore((s) => s.obras);
   const financeiro = useAppStore((s) => s.financeiro);
   const diario     = useAppStore((s) => s.diario);
-  const obraId = OBRA_TOKENS[token];
-  const obra   = obras.find((o) => o.id === obraId);
-  const fin    = financeiro[obraId] || { contrato: 0, lancamentos: [] };
-  const regs   = (diario || {})[obraId] || [];
+  const loading    = useAppStore((s) => s.loading);
+  const loaded     = useAppStore((s) => s.loaded);
+
+  const obra   = obras.find((o) => o.id === token);
+  const fin    = financeiro[token] || { contrato: 0, lancamentos: [] };
+  const regs   = (diario || {})[token] || [];
   const rec    = fin.lancamentos.filter((l) => l.tipo === "receita").reduce((a, l) => a + l.valor, 0);
   const pct    = fin.contrato > 0 ? Math.round((rec / fin.contrato) * 100) : 0;
   const faseIdx= obra ? FASES.indexOf(obra.fase) : -1;
   const hoje   = new Date().toLocaleDateString("pt-BR");
 
-  if (!obra) return (
+  // Aguarda carregamento das obras antes de mostrar erro
+  if (loading.obras || !loaded.obras) return (
+    <div style={{ minHeight: "100vh", background: "#1A1A1A", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16 }}>
+      <div style={{ width: 40, height: 40, border: "3px solid #333", borderTop: "3px solid #981915", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <div style={{ fontSize: 13, color: "#666" }}>Carregando...</div>
+    </div>
+  );
+
     <div style={{ minHeight: "100vh", background: "#1A1A1A", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16, padding: 24 }}>
       <div style={{ fontSize: 48 }}>🔒</div>
       <div style={{ fontSize: 18, fontWeight: 700, color: "#f0f0f0", textAlign: "center" }}>Link inválido ou expirado</div>

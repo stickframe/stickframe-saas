@@ -15,7 +15,7 @@ const STATUS_COR  = {
   "Em andamento": "#2e9e5b",
   "Planejamento": "#4a9eff",
   "Pausada":      "#c88a00",
-  "Concluída":    "#888888",
+  "Concluída":    C.muted,
 };
 const statusColor = (s) => STATUS_COR[s] || "#888";
 
@@ -445,6 +445,16 @@ export default function GestaoObras() {
                   )}
                   <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 8 }}>
                     <Btn variant="ghost" size="sm" fullWidth onClick={abrirEditar}>✏️ Editar obra</Btn>
+                    <button onClick={() => {
+                      const url = `${window.location.origin}/portal/${obra.id}`;
+                      navigator.clipboard.writeText(url);
+                      mostrarToast("🔗 Link do portal copiado!");
+                    }} style={{
+                      width: "100%", padding: "8px 0",
+                      background: "#4a9eff22", border: "1px solid #4a9eff44",
+                      borderRadius: 6, color: "#4a9eff", fontSize: 12, fontWeight: 700,
+                      cursor: "pointer", fontFamily: "inherit",
+                    }}>🔗 Link do portal</button>
                     <button onClick={() => setConfirm(true)} style={{
                       width: "100%", padding: "8px 0",
                       background: C.danger + "22", border: `1px solid ${C.danger}44`,
