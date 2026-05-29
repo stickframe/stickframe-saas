@@ -1,21 +1,45 @@
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { C, FASES, OBRA_TOKENS } from "../utils/constants";
+import { sb } from "../services/supabase";
+import { C, FASES } from "../utils/constants";
 import { fmt } from "../utils/format";
-import useAppStore from "../store/useAppStore";
 
 export default function PortalOnline() {
   const { token } = useParams();
-  const obras      = useAppStore((s) => s.obras);
-  const financeiro = useAppStore((s) => s.financeiro);
-  const diario     = useAppStore((s) => s.diario);
-  const obraId = OBRA_TOKENS[token];
-  const obra   = obras.find((o) => o.id === obraId);
-  const fin    = financeiro[obraId] || { contrato: 0, lancamentos: [] };
-  const regs   = (diario || {})[obraId] || [];
-  const rec    = fin.lancamentos.filter((l) => l.tipo === "receita").reduce((a, l) => a + l.valor, 0);
-  const pct    = fin.contrato > 0 ? Math.round((rec / fin.contrato) * 100) : 0;
-  const faseIdx= obra ? FASES.indexOf(obra.fase) : -1;
-  const hoje   = new Date().toLocaleDateString("pt-BR");
+  const [obra, setObra]       = useState(null);
+  const [financeiro, setFin]  = useState({ contrato: 0, lancamentos: [] });
+  const [diario, setDiario]   = useState([]);
+  const [loading, setLoading] = useState(true);
+  const hoje = new Date().toLocaleDateString("pt-BR");
+
+  useEffect(() => {
+    if (!token) { setLoading(false); return; }
+    (async () => {
+      try {
+        const { data: obraData, error } = await sb.rpc("get_obra_portal", { p_token: token });
+        if (error || !obraData) { setLoading(false); return; }
+        setObra(obraData);
+
+        const [{ data: fins }, { data: logs }] = await Promise.all([
+          sb.from("financeiro").select("*").eq("obra_id", obraData.id),
+          sb.from("diario").select("*").eq("obra_id", obraData.id).order("created_at", { ascending: false }).limit(5),
+        ]);
+
+        const lancamentos = fins || [];
+        const contrato    = obraData.contrato || 0;
+        setFin({ contrato, lancamentos });
+        setDiario(logs || []);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [token]);
+
+  if (loading) return (
+    <div style={{ minHeight: "100vh", background: "#1A1A1A", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ color: "#888", fontSize: 14 }}>Carregando...</div>
+    </div>
+  );
 
   if (!obra) return (
     <div style={{ minHeight: "100vh", background: "#1A1A1A", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16, padding: 24 }}>
@@ -24,6 +48,10 @@ export default function PortalOnline() {
       <div style={{ fontSize: 13, color: "#888", textAlign: "center" }}>Entre em contato com a Stick Frame para obter o link correto.</div>
     </div>
   );
+
+  const rec     = financeiro.lancamentos.filter((l) => l.tipo === "receita").reduce((a, l) => a + l.valor, 0);
+  const pct     = financeiro.contrato > 0 ? Math.round((rec / financeiro.contrato) * 100) : 0;
+  const faseIdx = FASES.indexOf(obra.fase);
 
   return (
     <div style={{ minHeight: "100vh", background: "#f4f4f4", fontFamily: "'DM Sans',sans-serif" }}>
@@ -81,10 +109,10 @@ export default function PortalOnline() {
         </Card>
 
         {/* Financeiro */}
-        {fin.contrato > 0 && (
+        {financeiro.contrato > 0 && (
           <Card title="Financeiro">
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
-              <FinItem label="Contrato" value={fmt(fin.contrato)} />
+              <FinItem label="Contrato" value={fmt(financeiro.contrato)} />
               <FinItem label="Recebido"  value={fmt(rec)} color="#2e9e5b" />
             </div>
             <Bar val={pct} color="linear-gradient(90deg,#2e9e5b,#1a7a40)" />
@@ -95,10 +123,10 @@ export default function PortalOnline() {
         )}
 
         {/* Diário */}
-        {regs.length > 0 && (
+        {diario.length > 0 && (
           <Card title="Últimas Atualizações">
-            {regs.slice(0, 5).map((r, i) => (
-              <div key={i} style={{ paddingBottom: 10, marginBottom: 10, borderBottom: i < Math.min(regs.length, 5) - 1 ? "1px solid #f5f5f5" : "none" }}>
+            {diario.map((r, i) => (
+              <div key={r.id || i} style={{ paddingBottom: 10, marginBottom: 10, borderBottom: i < diario.length - 1 ? "1px solid #f5f5f5" : "none" }}>
                 <div style={{ fontSize: 10, color: "#888", marginBottom: 3 }}>{r.data} · {r.clima} · {r.turno}</div>
                 <div style={{ fontSize: 12, color: "#444", lineHeight: 1.5 }}>{r.atividades}</div>
                 {r.ocorrencias && (
