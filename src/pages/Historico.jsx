@@ -46,22 +46,20 @@ export default function Historico() {
   const perfil    = useAppStore((s) => s.user?.perfil);
   const userId    = useAppStore((s) => s.user?.uid);
 
-  const tiposPermitidos = TIPOS_PERFIL[perfil] || null; // null = todos (diretor)
+  const tiposPermitidos = TIPOS_PERFIL[perfil] || null;
 
-  const [filtroTipo,  setFiltroTipo]  = useState("todos");
-  const [busca,       setBusca]       = useState("");
-  const [soMinhas,    setSoMinhas]    = useState(false); // toggle diretor
+  const [filtroTipo, setFiltroTipo] = useState("todos");
+  const [busca,      setBusca]      = useState("");
+  const [soMinhas,   setSoMinhas]   = useState(false);
 
   const titulo = TITULO_PERFIL[perfil] || "Histórico de Atividades";
 
-  const itensFiltrados = historico
+  const itens = historico
     .filter((h) => !tiposPermitidos || tiposPermitidos.includes(h.tipo))
     .filter((h) => !soMinhas || h.usuario_id === userId)
     .filter((h) => filtroTipo === "todos" || h.tipo === filtroTipo)
     .filter((h) => !busca || (h.descricao || h.desc || "").toLowerCase().includes(busca.toLowerCase()))
     .sort((a, b) => b.id - a.id);
-
-  const itens = itensFiltrados;
   const tipos = ["todos", ...(tiposPermitidos || ["cliente", "orcamento", "contrato", "financeiro", "obra"])];
 
   return (
