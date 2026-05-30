@@ -1,9 +1,12 @@
-import { useEffect } from "react";
+import { useEffect, lazy, Suspense } from "react";
 import { C, CATEGORIAS_DESPESA, FASES } from "../utils/constants";
 import { fmt } from "../utils/format";
 import { mesAno } from "../utils/date";
 import useAppStore from "../store/useAppStore";
 import { useModuleLoad } from "../hooks/useModuleLoad";
+
+const DashboardComercial  = lazy(() => import("./DashboardComercial"));
+const DashboardEngenheiro = lazy(() => import("./DashboardEngenheiro"));
 
 // ─── Gráfico de barras ────────────────────────────────────────────────────────
 function GraficoBarras({ data, height = 120 }) {
@@ -112,8 +115,15 @@ function evolucaoMensal(lancamentos, tipo = "receita", mesesAtras = 6) {
   return result;
 }
 
-// ─── Dashboard ───────────────────────────────────────────────────────────────
+// ─── Dashboard (roteador por perfil) ─────────────────────────────────────────
 export default function Dashboard() {
+  const perfil = useAppStore((s) => s.user?.perfil);
+  if (perfil === "comercial")  return <Suspense fallback={null}><DashboardComercial /></Suspense>;
+  if (perfil === "engenheiro") return <Suspense fallback={null}><DashboardEngenheiro /></Suspense>;
+  return <DashboardDiretor />;
+}
+
+function DashboardDiretor() {
   useModuleLoad("clientes");
   useModuleLoad("orcamentos");
   useModuleLoad("obras");

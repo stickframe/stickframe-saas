@@ -45,16 +45,19 @@ export const PERFIS = {
   comercial: {
     label: "Comercial",
     cor: C.warning,
-    paginas: ["dashboard","agenda","crm","orcamentos","contratos","configuracoes"],
+    // Foco em prospecção: sem acesso a financeiro global, obras, medições
+    paginas: ["dashboard","agenda","crm","orcamentos","configuracoes"],
   },
   engenheiro: {
     label: "Engenheiro",
     cor: "#4a9eff",
-    paginas: ["dashboard","agenda","obras","cronograma","medicoes","diario","vistorias","bim","quantitativos","historico","configuracoes"],
+    // Foco em entrega: sem CRM, financeiro global ou pipeline comercial
+    paginas: ["dashboard","obras","cronograma","medicoes","diario","vistorias","bim","quantitativos","historico","configuracoes"],
   },
   financeiro: {
     label: "Financeiro",
     cor: C.success,
+    // Foco em números: sem obras operacionais ou CRM
     paginas: ["dashboard","financeiro","contratos","historico","configuracoes"],
   },
 };
