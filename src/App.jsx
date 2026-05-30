@@ -21,6 +21,7 @@ const Historico   = lazy(() => import("./pages/Historico"));
 const PortalOnline= lazy(() => import("./pages/PortalOnline"));
 const Equipe      = lazy(() => import("./pages/Equipe"));
 const Cronograma  = lazy(() => import("./pages/Cronograma"));
+const Vistorias   = lazy(() => import("./pages/Vistorias"));
 
 const PAGES = {
   dashboard:  Dashboard,
@@ -35,6 +36,7 @@ const PAGES = {
   historico:  Historico,
   equipe:     Equipe,
   cronograma: Cronograma,
+  vistorias:  Vistorias,
 };
 
 function AuthenticatedApp() {
