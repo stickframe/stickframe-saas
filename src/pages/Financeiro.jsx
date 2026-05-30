@@ -111,11 +111,14 @@ export default function Financeiro() {
   const obras         = useAppStore((s) => s.obras);
   const financeiro    = useAppStore((s) => s.financeiro);
   const addLancamento = useAppStore((s) => s.addLancamento);
+  const updateObra    = useAppStore((s) => s.updateObra);
 
-  const [obraId, setObraId] = useState(null);
-  const [modal,  setModal]  = useState(null); // "receita" | "despesa"
-  const [form,   setForm]   = useState(FORM_VAZIO);
-  const [toast,  setToast]  = useState(null);
+  const [obraId,      setObraId]      = useState(null);
+  const [modal,       setModal]       = useState(null); // "receita" | "despesa"
+  const [form,        setForm]        = useState(FORM_VAZIO);
+  const [toast,       setToast]       = useState(null);
+  const [editOrc,     setEditOrc]     = useState(false); // editar orçamento por categoria
+  const [orcForm,     setOrcForm]     = useState({});    // { [categoria]: valor }
 
   function exportarRelatorio() {
     const o   = obras.find((x) => x.id === obraId);
@@ -215,6 +218,33 @@ export default function Financeiro() {
     value: fin.lancamentos.filter((l) => l.tipo === "despesa" && l.categoria === cat).reduce((a, l) => a + (l.valor || 0), 0),
     color: C.red,
   })).filter((d) => d.value > 0);
+
+  // ── Orçamento por categoria ────────────────────────────────────────────────
+  const orcCats = obra?.orcamento_categorias || {};
+  const temOrcCats = Object.values(orcCats).some((v) => Number(v) > 0);
+
+  const desvioCategoria = CATEGORIAS_DESPESA.map((cat) => {
+    const realizado  = fin.lancamentos.filter((l) => l.tipo === "despesa" && l.categoria === cat).reduce((a, l) => a + (l.valor || 0), 0);
+    const previsto   = Number(orcCats[cat] || 0);
+    const desvio     = realizado - previsto;
+    const pct        = previsto > 0 ? (desvio / previsto) * 100 : null;
+    return { cat, realizado, previsto, desvio, pct };
+  }).filter((d) => d.realizado > 0 || d.previsto > 0);
+
+  async function salvarOrcCats() {
+    const parsed = {};
+    Object.entries(orcForm).forEach(([k, v]) => { parsed[k] = Number(v) || 0; });
+    await updateObra(obraId, { orcamento_categorias: parsed });
+    setEditOrc(false);
+    mostrarToast("✅ Orçamento por categoria salvo!");
+  }
+
+  function abrirEditOrc() {
+    const init = {};
+    CATEGORIAS_DESPESA.forEach((cat) => { init[cat] = orcCats[cat] || ""; });
+    setOrcForm(init);
+    setEditOrc(true);
+  }
 
   // ── Empty state: sem obras ──────────────────────────────────────────────────
   if (obras.length === 0) {
@@ -470,28 +500,103 @@ export default function Financeiro() {
           </div>
         )}
 
-        {/* Grid: gráfico + extrato */}
-        <div style={{ display: "grid", gridTemplateColumns: "260px 1fr", gap: 18 }}>
-
-          {/* Despesas por categoria */}
-          <div style={{ background: C.surface, borderRadius: 10, padding: 20, border: `1px solid ${C.border}` }}>
-            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 16 }}>DESPESAS POR CATEGORIA</div>
-            {porCategoria.length > 0 ? (
-              <>
-                <BarChart data={porCategoria} height={110} />
-                <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 8 }}>
-                  {porCategoria.map((d) => (
-                    <div key={d.label} style={{ display: "flex", justifyContent: "space-between", fontSize: 11 }}>
-                      <span style={{ color: C.muted }}>{d.label}</span>
-                      <span style={{ color: C.text, fontWeight: 600 }}>{fmt(d.value)}</span>
-                    </div>
-                  ))}
+        {/* Modal orçamento por categoria */}
+        {editOrc && (
+          <Modal title="Orçamento de custo por categoria" onClose={() => setEditOrc(false)}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <div style={{ fontSize: 12, color: C.muted }}>
+                Defina o valor previsto para cada categoria de despesa desta obra. O sistema vai mostrar o desvio em tempo real.
+              </div>
+              {CATEGORIAS_DESPESA.map((cat) => (
+                <div key={cat} style={{ display: "grid", gridTemplateColumns: "1fr 160px", gap: 10, alignItems: "center" }}>
+                  <div style={{ fontSize: 13, fontWeight: 600 }}>{cat}</div>
+                  <Input
+                    type="number" min="0"
+                    value={orcForm[cat] || ""}
+                    onChange={(v) => setOrcForm((f) => ({ ...f, [cat]: v }))}
+                    placeholder="R$ 0"
+                  />
                 </div>
-              </>
-            ) : (
+              ))}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 12, borderTop: `1px solid ${C.border}` }}>
+                <div style={{ fontSize: 12, color: C.muted }}>
+                  Total previsto:{" "}
+                  <strong style={{ color: C.text }}>
+                    {fmt(Object.values(orcForm).reduce((a, v) => a + (Number(v) || 0), 0))}
+                  </strong>
+                </div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <Btn variant="ghost" onClick={() => setEditOrc(false)}>Cancelar</Btn>
+                  <Btn onClick={salvarOrcCats}>Salvar</Btn>
+                </div>
+              </div>
+            </div>
+          </Modal>
+        )}
+
+        {/* Grid: gráfico + extrato */}
+        <div style={{ display: "grid", gridTemplateColumns: "300px 1fr", gap: 18 }}>
+
+          {/* Desvio por categoria */}
+          <div style={{ background: C.surface, borderRadius: 10, padding: 20, border: `1px solid ${C.border}` }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted }}>DESVIO POR CATEGORIA</div>
+              <button onClick={abrirEditOrc} style={{
+                fontSize: 10, color: C.red, background: "none", border: `1px solid ${C.border}`,
+                borderRadius: 5, padding: "3px 8px", cursor: "pointer", fontFamily: "inherit", fontWeight: 600,
+              }}>
+                {temOrcCats ? "✏ Editar" : "+ Definir orçamento"}
+              </button>
+            </div>
+
+            {desvioCategoria.length === 0 ? (
               <div style={{ textAlign: "center", padding: "32px 0" }}>
                 <div style={{ fontSize: 28, opacity: .4, marginBottom: 8 }}>◉</div>
                 <div style={{ fontSize: 12, color: C.muted }}>Nenhuma despesa lançada</div>
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {desvioCategoria.map(({ cat, realizado, previsto, desvio, pct }) => {
+                  const semOrc  = previsto === 0;
+                  const acima   = !semOrc && desvio > 0;
+                  const cor     = semOrc ? C.muted : acima ? C.danger : C.success;
+                  const barPct  = previsto > 0
+                    ? Math.min((realizado / previsto) * 100, 150)
+                    : 100;
+                  return (
+                    <div key={cat}>
+                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, marginBottom: 4 }}>
+                        <span style={{ color: C.text, fontWeight: 600 }}>{cat}</span>
+                        <span style={{ color: cor, fontWeight: 700 }}>
+                          {fmt(realizado)}
+                          {!semOrc && (
+                            <span style={{ fontSize: 10, fontWeight: 400, color: C.muted }}> / {fmt(previsto)}</span>
+                          )}
+                        </span>
+                      </div>
+                      <div style={{ height: 6, background: C.dark, borderRadius: 3, overflow: "hidden", marginBottom: semOrc ? 0 : 3 }}>
+                        <div style={{
+                          height: 6,
+                          width: `${Math.min(barPct, 100)}%`,
+                          background: semOrc ? C.muted : acima ? C.danger : C.success,
+                          borderRadius: 3, transition: "width .4s",
+                        }} />
+                      </div>
+                      {!semOrc && (
+                        <div style={{ fontSize: 10, color: cor, textAlign: "right" }}>
+                          {acima
+                            ? `⚠ +${fmt(desvio)} (${pct?.toFixed(0)}% acima)`
+                            : `✓ ${fmt(Math.abs(desvio))} dentro do previsto`}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+                {!temOrcCats && (
+                  <div style={{ fontSize: 11, color: C.muted, textAlign: "center", marginTop: 8, padding: "8px", background: C.darker, borderRadius: 6 }}>
+                    Defina o orçamento por categoria para ver o desvio
+                  </div>
+                )}
               </div>
             )}
           </div>
