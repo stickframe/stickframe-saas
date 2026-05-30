@@ -1,4 +1,5 @@
-import { C, CATEGORIAS_DESPESA } from "../utils/constants";
+import { useEffect } from "react";
+import { C, CATEGORIAS_DESPESA, FASES } from "../utils/constants";
 import { fmt } from "../utils/format";
 import { mesAno } from "../utils/date";
 import useAppStore from "../store/useAppStore";
@@ -95,20 +96,17 @@ const MESES = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov"
 function evolucaoMensal(lancamentos, tipo = "receita", mesesAtras = 6) {
   const agora  = new Date();
   const result = [];
-
   for (let i = mesesAtras - 1; i >= 0; i--) {
     const d     = new Date(agora.getFullYear(), agora.getMonth() - i, 1);
     const ano   = d.getFullYear();
     const mes   = d.getMonth();
     const label = `${MESES[mes]}/${String(ano).slice(2)}`;
-
     const total = lancamentos
       .filter((l) => {
         const ld = new Date(l.created_at || l.data);
         return l.tipo === tipo && ld.getFullYear() === ano && ld.getMonth() === mes;
       })
       .reduce((sum, l) => sum + (l.valor || 0), 0);
-
     result.push({ label, value: total });
   }
   return result;
@@ -121,10 +119,17 @@ export default function Dashboard() {
   useModuleLoad("obras");
   useModuleLoad("financeiro");
 
-  const clientes   = useAppStore((s) => s.clientes);
-  const orcamentos = useAppStore((s) => s.orcamentos);
-  const obras      = useAppStore((s) => s.obras);
-  const financeiro = useAppStore((s) => s.financeiro);
+  const clientes    = useAppStore((s) => s.clientes);
+  const orcamentos  = useAppStore((s) => s.orcamentos);
+  const obras       = useAppStore((s) => s.obras);
+  const financeiro  = useAppStore((s) => s.financeiro);
+  const medicoes    = useAppStore((s) => s.medicoes);
+  const loadMedicoes = useAppStore((s) => s.loadMedicoes);
+
+  // Carrega medições de todas as obras
+  useEffect(() => {
+    obras.forEach((o) => loadMedicoes(o.id));
+  }, [obras, loadMedicoes]);
 
   // ── Cálculos financeiros ────────────────────────────────────────────────
   const allLancamentos = Object.values(financeiro).flatMap((f) => f.lancamentos || []);
@@ -133,10 +138,20 @@ export default function Dashboard() {
   const saldo          = totalRec - totalDesp;
   const margem         = totalRec > 0 ? ((saldo / totalRec) * 100).toFixed(1) : "0.0";
 
-  // Pipeline: soma dos orçamentos aprovados ou aguardando
   const pipelineOrc = orcamentos
     .filter((o) => !["Recusado"].includes(o.status))
     .reduce((a, o) => a + (o.valor || 0), 0);
+
+  // ── Medições pendentes ────────────────────────────────────────────────────
+  const allMedicoes     = Object.values(medicoes).flat();
+  const medPendentes    = allMedicoes.filter((m) => m.status === "Pendente");
+  const valorPendente   = medPendentes.reduce((a, m) => a + (m.valor || 0), 0);
+
+  // ── Prazo das obras ───────────────────────────────────────────────────────
+  const hoje       = new Date();
+  const obrasComPrazo = obras.filter((o) => o.prazo_fim && o.status !== "Concluída");
+  const atrasadas  = obrasComPrazo.filter((o) => new Date(o.prazo_fim) < hoje);
+  const noPrazo    = obrasComPrazo.filter((o) => new Date(o.prazo_fim) >= hoje);
 
   // ── KPIs ──────────────────────────────────────────────────────────────────
   const obrasAtivas = obras.filter((o) => o.status === "Em andamento").length;
@@ -147,7 +162,7 @@ export default function Dashboard() {
     { label: "Obras ativas", value: String(obrasAtivas),      sub: `de ${obras.length} total`,                                            accent: C.red,        icon: "◆" },
     { label: "Receitas",     value: fmt(totalRec),            sub: "total recebido",                                                       accent: C.success,    icon: "↑" },
     { label: "Despesas",     value: fmt(totalDesp),           sub: "total lançado",                                                        accent: C.danger,     icon: "↓" },
-    { label: "Margem",       value: `${margem}%`,            sub: `saldo ${fmt(saldo)}`,                                                  accent: Number(margem) >= 20 ? C.success : C.warning, icon: "%" },
+    { label: "Margem",       value: `${margem}%`,             sub: `saldo ${fmt(saldo)}`,                                                  accent: Number(margem) >= 20 ? C.success : C.warning, icon: "%" },
   ];
 
   // ── Gráfico receita vs despesa por obra ───────────────────────────────────
@@ -159,16 +174,27 @@ export default function Dashboard() {
     return { label: nome.length > 8 ? nome.slice(0, 7) + "." : nome, rec, desp };
   }).filter((d) => d.rec > 0 || d.desp > 0);
 
+  // ── Obras por fase ────────────────────────────────────────────────────────
+  const obrasPorFase = FASES.map((fase, i) => ({
+    label: fase.split(" ")[0],
+    value: obras.filter((o) => o.fase === fase).length,
+    color: `hsl(${(i / FASES.length) * 200 + 10}, 65%, 50%)`,
+  })).filter((d) => d.value > 0);
+
   // ── Pipeline CRM por status ───────────────────────────────────────────────
   const STATUS_CRM = ["Lead", "Em negociação", "Proposta enviada", "Fechado"];
-  const statusData = STATUS_CRM.map((s) => ({
+  const statusCRM = STATUS_CRM.map((s) => ({
     label: s.split(" ")[0],
+    fullLabel: s,
     value: clientes.filter((c) => c.status === s).reduce((a, c) => a + (c.valor || 0), 0),
     count: clientes.filter((c) => c.status === s).length,
     color: s === "Fechado" ? C.success : C.red,
   }));
+  const totalLeads = clientes.length || 1;
+  const fechados   = clientes.filter((c) => c.status === "Fechado").length;
+  const taxaConv   = ((fechados / totalLeads) * 100).toFixed(0);
 
-  // ── Evolução mensal de receitas (dados reais) ─────────────────────────────
+  // ── Evolução mensal de receitas ───────────────────────────────────────────
   const evolucao = evolucaoMensal(allLancamentos, "receita", 6);
 
   // ── Despesas por categoria ────────────────────────────────────────────────
@@ -192,6 +218,46 @@ export default function Dashboard() {
       {/* KPIs */}
       <div className="kpi-grid-6" style={{ marginBottom: 20 }}>
         {kpis.map((k, i) => <KpiCard key={i} {...k} />)}
+      </div>
+
+      {/* KPIs secundários */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 20 }}>
+        {/* Medições pendentes */}
+        <div style={{ background: C.surface, borderRadius: 12, padding: "14px 16px", border: `1px solid ${C.border}`, borderLeft: `4px solid ${C.warning}` }}>
+          <div style={{ fontSize: 10, color: C.muted, letterSpacing: 1, marginBottom: 6 }}>MEDIÇÕES PENDENTES</div>
+          <div style={{ fontSize: 20, fontWeight: 800, color: C.warning }}>{medPendentes.length}</div>
+          <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>
+            {medPendentes.length > 0 ? `${fmt(valorPendente)} aguardando aprovação` : "Nenhuma pendente"}
+          </div>
+        </div>
+
+        {/* Prazo das obras */}
+        <div style={{ background: C.surface, borderRadius: 12, padding: "14px 16px", border: `1px solid ${C.border}`, borderLeft: `4px solid ${atrasadas.length > 0 ? C.danger : C.success}` }}>
+          <div style={{ fontSize: 10, color: C.muted, letterSpacing: 1, marginBottom: 6 }}>PRAZOS DAS OBRAS</div>
+          <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
+            <div>
+              <div style={{ fontSize: 20, fontWeight: 800, color: C.danger }}>{atrasadas.length}</div>
+              <div style={{ fontSize: 10, color: C.muted }}>atrasadas</div>
+            </div>
+            <div style={{ width: 1, height: 32, background: C.border }} />
+            <div>
+              <div style={{ fontSize: 20, fontWeight: 800, color: C.success }}>{noPrazo.length}</div>
+              <div style={{ fontSize: 10, color: C.muted }}>no prazo</div>
+            </div>
+            {obrasComPrazo.length === 0 && (
+              <div style={{ fontSize: 11, color: C.muted }}>Sem prazo definido</div>
+            )}
+          </div>
+        </div>
+
+        {/* Taxa de conversão CRM */}
+        <div style={{ background: C.surface, borderRadius: 12, padding: "14px 16px", border: `1px solid ${C.border}`, borderLeft: `4px solid #4a9eff` }}>
+          <div style={{ fontSize: 10, color: C.muted, letterSpacing: 1, marginBottom: 6 }}>CONVERSÃO CRM</div>
+          <div style={{ fontSize: 20, fontWeight: 800, color: "#4a9eff" }}>{taxaConv}%</div>
+          <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>
+            {fechados} fechados de {clientes.length} clientes
+          </div>
+        </div>
       </div>
 
       {/* Gráficos linha 1 */}
@@ -218,7 +284,7 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* Evolução mensal de receitas — dados reais */}
+        {/* Evolução mensal de receitas */}
         <div style={{ background: C.surface, borderRadius: 12, padding: 20, border: `1px solid ${C.border}` }}>
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 4 }}>
             EVOLUÇÃO DE RECEITAS — 6 MESES
@@ -227,7 +293,7 @@ export default function Dashboard() {
           {evolucao.every((d) => d.value === 0) ? (
             <div style={{ height: 80, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 6 }}>
               <div style={{ fontSize: 22, opacity: .4 }}>↑</div>
-              <div style={{ fontSize: 12, color: C.muted }}>Nenhum lançamento de receita nos últimos 6 meses</div>
+              <div style={{ fontSize: 12, color: C.muted }}>Nenhum lançamento nos últimos 6 meses</div>
             </div>
           ) : (
             <GraficoLinha data={evolucao} height={80} color={C.success} />
@@ -236,86 +302,120 @@ export default function Dashboard() {
       </div>
 
       {/* Gráficos linha 2 */}
-      <div className="three-col">
-        
-
-        {/* Progresso das obras */}
+      <div className="three-col" style={{ marginBottom: 16 }}>
+        {/* Obras por fase */}
         <div style={{ background: C.surface, borderRadius: 12, padding: 20, border: `1px solid ${C.border}` }}>
-          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 16 }}>PROGRESSO DAS OBRAS</div>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 16 }}>OBRAS POR FASE</div>
           {obras.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "28px 0", color: C.muted }}>
-              <div style={{ fontSize: 24, marginBottom: 8 }}>◆</div>
-              <div style={{ fontSize: 12 }}>Nenhuma obra cadastrada</div>
-            </div>
+            <div style={{ textAlign: "center", padding: "28px 0", color: C.muted, fontSize: 12 }}>Nenhuma obra cadastrada</div>
+          ) : obrasPorFase.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "28px 0", color: C.muted, fontSize: 12 }}>Fases não definidas</div>
           ) : (
-            obras.map((o) => (
-              <div key={o.id} style={{ marginBottom: 16 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
-                  <span style={{ fontSize: 12, fontWeight: 600 }}>{o.nome?.split("—")[0]?.trim()}</span>
-                  <span style={{ fontSize: 11, color: o.progresso >= 50 ? C.success : C.muted }}>{o.progresso}%</span>
-                </div>
-                <div style={{ height: 6, background: C.dark, borderRadius: 3, overflow: "hidden" }}>
-                  <div style={{
-                    height: 6,
-                    width: `${o.progresso || 0}%`,
-                    background: o.progresso >= 75 ? C.success : o.progresso >= 40 ? C.warning : C.red,
-                    borderRadius: 3,
-                    transition: "width .4s ease",
-                  }} />{/* Pipeline CRM - Versão Moderna */}
-<div style={{ 
-  background: "#ffffff", borderRadius: 16, padding: "24px", 
-  boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)",
-  border: "1px solid rgba(0, 0, 0, 0.06)" 
-}}>
-  <h3 style={{ fontSize: 13, fontWeight: 700, color: "#374151", marginBottom: 20, letterSpacing: "0.5px" }}>
-    PIPELINE POR ETAPA
-  </h3>
-  <GraficoBarras data={statusData} height={90} />
-  <div style={{ marginTop: 20, display: "flex", flexDirection: "column", gap: 10 }}>
-    {statusData.map((s) => (
-      <div key={s.label} style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
-        <span style={{ color: "#6b7280" }}>{STATUS_CRM.find((x) => x.startsWith(s.label)) || s.label}</span>
-        <span style={{ fontWeight: 700, color: s.color }}>
-          {s.count} · {s.value > 0 ? fmt(s.value) : "—"}
-        </span>
-      </div>
-    ))}
-  </div>
-</div>
-
-{/* Despesas por Categoria - Versão Moderna */}
-<div style={{ 
-  background: "#ffffff", borderRadius: 16, padding: "24px", 
-  boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)",
-  border: "1px solid rgba(0, 0, 0, 0.06)" 
-}}>
-  <h3 style={{ fontSize: 13, fontWeight: 700, color: "#374151", marginBottom: 20, letterSpacing: "0.5px" }}>
-    DESPESAS POR CATEGORIA
-  </h3>
-  {despCats.length > 0 ? (
-    <>
-      <GraficoBarras data={despCats} height={90} />
-      <div style={{ marginTop: 20, display: "flex", flexDirection: "column", gap: 10 }}>
-        {despCats.slice(0, 5).map((d) => (
-          <div key={d.label} style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
-            <span style={{ color: "#6b7280" }}>{d.label}</span>
-            <span style={{ fontWeight: 700, color: "#ef4444" }}>{fmt(d.value)}</span>
-          </div>
-        ))}
-      </div>
-    </>
-  ) : (
-    <div style={{ textAlign: "center", padding: "40px 0", color: "#9ca3af", fontSize: 12 }}>
-      Sem despesas lançadas
-    </div>
-  )}
-</div>
-                </div>
-                <div style={{ fontSize: 10, color: C.muted, marginTop: 3 }}>{o.fase}</div>
+            <>
+              <GraficoBarras data={obrasPorFase} height={90} />
+              <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 8 }}>
+                {FASES.map((fase) => {
+                  const count = obras.filter((o) => o.fase === fase).length;
+                  if (!count) return null;
+                  return (
+                    <div key={fase} style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
+                      <span style={{ color: C.muted }}>{fase}</span>
+                      <span style={{ fontWeight: 700, color: C.text }}>{count} obra{count > 1 ? "s" : ""}</span>
+                    </div>
+                  );
+                })}
               </div>
-            ))
+            </>
           )}
         </div>
+
+        {/* Pipeline CRM */}
+        <div style={{ background: C.surface, borderRadius: 12, padding: 20, border: `1px solid ${C.border}` }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted }}>PIPELINE CRM</div>
+            <div style={{ fontSize: 11, color: "#4a9eff", fontWeight: 700 }}>{taxaConv}% conv.</div>
+          </div>
+          <GraficoBarras data={statusCRM} height={90} />
+          <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 8 }}>
+            {statusCRM.map((s) => (
+              <div key={s.label} style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
+                <span style={{ color: C.muted }}>{s.fullLabel}</span>
+                <span style={{ fontWeight: 700, color: s.color }}>
+                  {s.count} · {s.value > 0 ? fmt(s.value) : "—"}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Despesas por categoria */}
+        <div style={{ background: C.surface, borderRadius: 12, padding: 20, border: `1px solid ${C.border}` }}>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 16 }}>DESPESAS POR CATEGORIA</div>
+          {despCats.length > 0 ? (
+            <>
+              <GraficoBarras data={despCats} height={90} />
+              <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 8 }}>
+                {despCats.slice(0, 5).map((d) => (
+                  <div key={d.label} style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
+                    <span style={{ color: C.muted }}>{d.label}</span>
+                    <span style={{ fontWeight: 700, color: C.red }}>{fmt(d.value)}</span>
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : (
+            <div style={{ textAlign: "center", padding: "28px 0", color: C.muted, fontSize: 12 }}>Sem despesas lançadas</div>
+          )}
+        </div>
+      </div>
+
+      {/* Progresso das obras */}
+      <div style={{ background: C.surface, borderRadius: 12, padding: 20, border: `1px solid ${C.border}` }}>
+        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 16 }}>PROGRESSO DAS OBRAS</div>
+        {obras.length === 0 ? (
+          <div style={{ textAlign: "center", padding: "28px 0", color: C.muted }}>
+            <div style={{ fontSize: 24, marginBottom: 8 }}>◆</div>
+            <div style={{ fontSize: 12 }}>Nenhuma obra cadastrada</div>
+          </div>
+        ) : (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "12px 24px" }}>
+            {obras.map((o) => {
+              const prazoFim   = o.prazo_fim ? new Date(o.prazo_fim) : null;
+              const atrasada   = prazoFim && prazoFim < hoje && o.status !== "Concluída";
+              const medObra    = (medicoes[o.id] || []).filter((m) => m.status === "Pendente");
+              return (
+                <div key={o.id} style={{ marginBottom: 4 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
+                    <span style={{ fontSize: 12, fontWeight: 600 }}>{o.nome?.split("—")[0]?.trim()}</span>
+                    <span style={{ fontSize: 11, color: o.progresso >= 50 ? C.success : C.muted }}>{o.progresso || 0}%</span>
+                  </div>
+                  <div style={{ height: 6, background: C.dark, borderRadius: 3, overflow: "hidden" }}>
+                    <div style={{
+                      height: 6,
+                      width: `${o.progresso || 0}%`,
+                      background: o.progresso >= 75 ? C.success : o.progresso >= 40 ? C.warning : C.red,
+                      borderRadius: 3,
+                      transition: "width .4s ease",
+                    }} />
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: C.muted, marginTop: 3 }}>
+                    <span>{o.fase || "—"}</span>
+                    <span style={{ display: "flex", gap: 8 }}>
+                      {medObra.length > 0 && (
+                        <span style={{ color: C.warning }}>⚠ {medObra.length} med. pendente{medObra.length > 1 ? "s" : ""}</span>
+                      )}
+                      {prazoFim && (
+                        <span style={{ color: atrasada ? C.danger : C.muted }}>
+                          {atrasada ? "⚠ Atrasada" : `até ${prazoFim.toLocaleDateString("pt-BR")}`}
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );
