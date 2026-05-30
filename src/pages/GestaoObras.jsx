@@ -250,6 +250,8 @@ export default function GestaoObras() {
 
   async function salvarEdicao() {
     try {
+      const faseIdx   = FASES.indexOf(form.fase);
+      const progresso = faseIdx >= 0 ? Math.round(((faseIdx + 1) / FASES.length) * 100) : (form.progresso || 0);
       await updateObra(obraId, {
         nome:          form.nome,
         cliente_id:    form.cliente_id || null,
@@ -259,7 +261,7 @@ export default function GestaoObras() {
         prazo_inicio:  form.prazo_inicio || null,
         prazo_fim:     form.prazo_fim    || null,
         contrato:      Number(form.contrato) || 0,
-        progresso:     form.progresso || 0,
+        progresso,
       });
       setModal(null);
       mostrarToast("✅ Obra atualizada!");
