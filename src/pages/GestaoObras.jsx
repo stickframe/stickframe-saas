@@ -124,13 +124,18 @@ export default function GestaoObras() {
   const obras       = useAppStore((s) => s.obras);
   const clientes    = useAppStore((s) => s.clientes);
   const arquivos    = useAppStore((s) => s.arquivos);
-  const addObra          = useAppStore((s) => s.addObra);
-  const updateObra       = useAppStore((s) => s.updateObra);
-  const deleteObra       = useAppStore((s) => s.deleteObra);
-  const avancarFase      = useAppStore((s) => s.avancarFase);
-  const addArquivos      = useAppStore((s) => s.addArquivos);
-  const deleteArquivo    = useAppStore((s) => s.deleteArquivo);
+  const addObra           = useAppStore((s) => s.addObra);
+  const updateObra        = useAppStore((s) => s.updateObra);
+  const deleteObra        = useAppStore((s) => s.deleteObra);
+  const avancarFase       = useAppStore((s) => s.avancarFase);
+  const addArquivos       = useAppStore((s) => s.addArquivos);
+  const deleteArquivo     = useAppStore((s) => s.deleteArquivo);
   const loadHistoricoObra = useAppStore((s) => s.loadHistoricoObra);
+  const financeiro        = useAppStore((s) => s.financeiro);
+  const medicoes          = useAppStore((s) => s.medicoes);
+  const diario            = useAppStore((s) => s.diario);
+  const loadMedicoes      = useAppStore((s) => s.loadMedicoes);
+  const loadDiario        = useAppStore((s) => s.loadDiario);
 
   useModuleLoad("arquivos", obras[0]?.id);
 
@@ -260,6 +265,83 @@ export default function GestaoObras() {
     const progresso = Math.round(((i + 2) / FASES.length) * 100);
     avancarFase(obra.id, novaFase, progresso);
     mostrarToast(`📋 Avançou para: ${novaFase}`);
+  }
+
+  async function gerarRelatorio() {
+    if (!obra) return;
+    await Promise.all([loadMedicoes(obraId), loadDiario(obraId)]);
+    const fin  = (financeiro || []).filter((l) => l.obra_id === obraId);
+    const meds = medicoes[obraId] || [];
+    const diarioObra = (diario[obraId] || []).slice(0, 10);
+    const arqs = arqObra;
+    const fmt  = (v) => (v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    const receitas  = fin.filter((l) => l.tipo === "receita").reduce((a, l) => a + (l.valor || 0), 0);
+    const despesas  = fin.filter((l) => l.tipo === "despesa").reduce((a, l) => a + (l.valor || 0), 0);
+    const resultado = receitas - despesas;
+    const hoje = new Date().toLocaleDateString("pt-BR");
+
+    const faseIdx = FASES.indexOf(obra.fase);
+    const fasesHtml = FASES.map((f, i) => {
+      const done = i < faseIdx, curr = i === faseIdx;
+      return `<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid #eee">
+        <div style="width:20px;height:20px;border-radius:50%;background:${done ? "#2e9e5b" : curr ? "#981915" : "#ddd"};display:flex;align-items:center;justify-content:center;font-size:9px;color:#fff;font-weight:700;flex-shrink:0">${done ? "✓" : i + 1}</div>
+        <span style="font-size:13px;color:${done ? "#2e9e5b" : curr ? "#1a1a1a" : "#aaa"};font-weight:${curr ? 700 : 400}">${f}${curr ? ' <span style="background:#981915;color:#fff;border-radius:8px;padding:1px 8px;font-size:9px;margin-left:6px">ATUAL</span>' : ""}</span>
+      </div>`;
+    }).join("");
+
+    const medsHtml = meds.length === 0 ? "<p style='color:#888;font-size:13px'>Nenhuma medição registrada.</p>"
+      : meds.map((m) => `<tr><td>${m.numero}</td><td>${m.descricao || "—"}</td><td>${fmt(m.valor)}</td><td><span style="color:${m.status === "Aprovada" ? "#2e9e5b" : "#b97a00"}">${m.status}</span></td></tr>`).join("");
+
+    const finHtml = fin.length === 0 ? "<p style='color:#888;font-size:13px'>Nenhum lançamento registrado.</p>"
+      : fin.map((l) => `<tr><td>${l.data || "—"}</td><td>${l.descricao || "—"}</td><td>${l.categoria || "—"}</td><td style="color:${l.tipo === "receita" ? "#2e9e5b" : "#c0392b"}">${l.tipo === "receita" ? "+" : "-"}${fmt(l.valor)}</td></tr>`).join("");
+
+    const diarioHtml = diarioObra.length === 0 ? "<p style='color:#888;font-size:13px'>Nenhum registro no diário.</p>"
+      : diarioObra.map((r) => `<div style="padding:8px 0;border-bottom:1px solid #eee"><div style="font-size:11px;color:#888;margin-bottom:4px">${r.data} · ${r.clima || ""} · ${r.turno || ""}</div><div style="font-size:13px">${r.atividades || ""}</div>${r.ocorrencias ? `<div style="background:#fff5f5;border-left:3px solid #981915;padding:5px 10px;margin-top:6px;font-size:12px;color:#555">⚠️ ${r.ocorrencias}</div>` : ""}</div>`).join("");
+
+    const arqHtml = arqs.length === 0 ? "<p style='color:#888;font-size:13px'>Nenhum arquivo.</p>"
+      : arqs.map((a) => `<div style="font-size:12px;padding:4px 0;border-bottom:1px solid #eee">${a.nome} <span style="color:#888">· ${a.categoria} · ${a.tamanho}</span></div>`).join("");
+
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Relatório — ${obra.nome}</title>
+    <style>
+      *{box-sizing:border-box;margin:0;padding:0}body{font-family:'Segoe UI',Arial,sans-serif;color:#1a1a1a;padding:32px;max-width:900px;margin:0 auto}
+      h1{font-size:22px;font-weight:800;margin-bottom:4px}h2{font-size:14px;font-weight:700;letter-spacing:1px;color:#981915;margin:24px 0 12px;text-transform:uppercase;border-bottom:2px solid #981915;padding-bottom:6px}
+      table{width:100%;border-collapse:collapse;font-size:13px}th{text-align:left;padding:8px;background:#f5f5f5;font-size:11px;letter-spacing:.5px}td{padding:8px;border-bottom:1px solid #eee}
+      .kpi{display:inline-block;background:#f5f5f5;border-radius:8px;padding:10px 18px;margin-right:10px;margin-bottom:10px;text-align:center}
+      .kpi-v{font-size:18px;font-weight:800}.kpi-l{font-size:10px;color:#888;letter-spacing:.5px;margin-top:2px}
+      @media print{body{padding:16px}h2{margin-top:16px}}
+    </style></head><body>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px">
+      <div>
+        <div style="font-size:10px;letter-spacing:2px;color:#981915;margin-bottom:6px">STICKFRAME · RELATÓRIO DE OBRA</div>
+        <h1>${obra.nome}</h1>
+        <div style="font-size:13px;color:#555;margin-top:6px">Cliente: <strong>${obra.cliente || "—"}</strong> &nbsp;·&nbsp; Status: <strong>${obra.status}</strong> &nbsp;·&nbsp; Progresso: <strong>${obra.progresso || 0}%</strong></div>
+        ${obra.prazo_inicio || obra.prazo_fim ? `<div style="font-size:12px;color:#888;margin-top:4px">Início: ${obra.prazo_inicio ? new Date(obra.prazo_inicio + "T00:00").toLocaleDateString("pt-BR") : "—"} &nbsp;·&nbsp; Entrega: ${obra.prazo_fim ? new Date(obra.prazo_fim + "T00:00").toLocaleDateString("pt-BR") : "—"}</div>` : ""}
+      </div>
+      <div style="text-align:right;font-size:11px;color:#888">Gerado em ${hoje}</div>
+    </div>
+
+    <h2>Resumo Financeiro</h2>
+    <div>
+      ${[["Contrato", fmt(obra.contrato)], ["Receitas", fmt(receitas)], ["Despesas", fmt(despesas)], ["Resultado", fmt(resultado)]].map(([l, v]) => `<div class="kpi"><div class="kpi-v">${v}</div><div class="kpi-l">${l.toUpperCase()}</div></div>`).join("")}
+    </div>
+
+    <h2>Etapas da Obra</h2>${fasesHtml}
+
+    <h2>Medições</h2>
+    ${meds.length > 0 ? `<table><tr><th>Nº</th><th>Descrição</th><th>Valor</th><th>Status</th></tr>${medsHtml}</table>` : medsHtml}
+
+    <h2>Lançamentos Financeiros</h2>
+    ${fin.length > 0 ? `<table><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th>Valor</th></tr>${finHtml}</table>` : finHtml}
+
+    <h2>Diário de Obra (últimos 10)</h2>${diarioHtml}
+
+    <h2>Arquivos (${arqs.length})</h2>${arqHtml}
+    </body></html>`;
+
+    const win = window.open("", "_blank");
+    win.document.write(html);
+    win.document.close();
+    setTimeout(() => win.print(), 400);
   }
 
   async function handleFiles(files) {
@@ -582,6 +664,12 @@ export default function GestaoObras() {
                   )}
                   <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 8 }}>
                     <Btn variant="ghost" size="sm" fullWidth onClick={abrirEditar}>✏️ Editar obra</Btn>
+                    <button onClick={gerarRelatorio} style={{
+                      width: "100%", padding: "8px 0",
+                      background: "#2e9e5b22", border: "1px solid #2e9e5b44",
+                      borderRadius: 6, color: "#2e9e5b", fontSize: 12, fontWeight: 700,
+                      cursor: "pointer", fontFamily: "inherit",
+                    }}>📄 Relatório PDF</button>
                     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                       <button onClick={copiarLinkPortal} style={{
                         width: "100%", padding: "8px 0",
