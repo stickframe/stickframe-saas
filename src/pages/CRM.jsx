@@ -185,6 +185,19 @@ function FormCliente({ form, setForm, onSave, onCancel, btnLabel }) {
         </div>
       </div>
 
+      {/* FOLLOW-UP */}
+      <Secao titulo="Follow-up" />
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+        <div>
+          <Label>Próximo contato</Label>
+          <Input type="date" value={form.proximo_contato || ""} onChange={set("proximo_contato")} />
+        </div>
+        <div>
+          <Label>Responsável</Label>
+          <Input value={form.responsavel || ""} onChange={set("responsavel")} placeholder="Nome do vendedor" />
+        </div>
+      </div>
+
       {/* OBSERVAÇÕES */}
       <Secao titulo="Observações" />
       <div>
@@ -209,6 +222,7 @@ function FormCliente({ form, setForm, onSave, onCancel, btnLabel }) {
 const FORM_VAZIO = {
   nome: "", cidade: "", contato: "", email: "",
   status: "Lead", unidades: "", valor: 0, valorDisplay: "", observacoes: "",
+  proximo_contato: "", responsavel: "",
 };
 
 export default function CRM() {
@@ -242,15 +256,17 @@ export default function CRM() {
 
   function abrirEditar(c) {
     setForm({
-      nome:         c.nome || "",
-      cidade:       c.cidade || "",
-      contato:      c.contato || "",
-      email:        c.email || "",
-      status:       c.status || "Lead",
-      unidades:     c.unidades ? String(c.unidades) : "",
-      valor:        c.valor || 0,
-      valorDisplay: c.valor ? fmtMoeda(String(Math.round(c.valor * 100))) : "",
-      observacoes:  c.observacoes || "",
+      nome:            c.nome || "",
+      cidade:          c.cidade || "",
+      contato:         c.contato || "",
+      email:           c.email || "",
+      status:          c.status || "Lead",
+      unidades:        c.unidades ? String(c.unidades) : "",
+      valor:           c.valor || 0,
+      valorDisplay:    c.valor ? fmtMoeda(String(Math.round(c.valor * 100))) : "",
+      observacoes:     c.observacoes || "",
+      proximo_contato: c.proximo_contato || "",
+      responsavel:     c.responsavel || "",
     });
     setModal("editar");
   }
