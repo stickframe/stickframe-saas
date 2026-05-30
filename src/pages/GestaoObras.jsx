@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { C, FASES } from "../utils/constants";
+import { exportarObrasExcel } from "../utils/exportExcel";
 import useAppStore from "../store/useAppStore";
 import { useModuleLoad } from "../hooks/useModuleLoad";
 import Btn from "../components/ui/Btn";
@@ -544,7 +545,15 @@ export default function GestaoObras() {
           <h2 style={{ fontSize: 22, fontWeight: 800 }}>Gestão de Obras</h2>
           <p style={{ color: C.muted, fontSize: 13, marginTop: 4 }}>{obras.length} projeto{obras.length !== 1 ? "s" : ""}</p>
         </div>
-        <Btn onClick={abrirNova}>+ Nova obra</Btn>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button onClick={() => exportarObrasExcel(obras)} style={{
+            padding: "8px 14px", background: "#2e9e5b22",
+            border: "1px solid #2e9e5b44", borderRadius: 8,
+            color: "#2e9e5b", fontSize: 12, fontWeight: 700,
+            cursor: "pointer", fontFamily: "inherit",
+          }}>📊 Exportar Excel</button>
+          <Btn onClick={abrirNova}>+ Nova obra</Btn>
+        </div>
       </div>
 
       {/* Filtros */}

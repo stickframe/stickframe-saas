@@ -17,6 +17,7 @@
     "react-router-dom": "^7.15.1",
     "three": "^0.184.0",
     "web-ifc": "^0.0.77",
+    "xlsx": "^0.18.5",
     "zustand": "^4.5.2"
   },
   "devDependencies": {

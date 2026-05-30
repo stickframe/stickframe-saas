@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Stickframe SaaS — Resumo do Sistema</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #f5f5f8;
+    color: #1a1a1a;
+    padding: 40px 24px;
+  }
+
+  .page {
+    max-width: 860px;
+    margin: 0 auto;
+  }
+
+  /* ── CAPA ── */
+  .cover {
+    background: linear-gradient(135deg, #981915 0%, #6e1210 100%);
+    color: #fff;
+    border-radius: 16px;
+    padding: 64px 56px;
+    margin-bottom: 32px;
+    position: relative;
+    overflow: hidden;
+  }
+  .cover::after {
+    content: "";
+    position: absolute;
+    right: -40px; top: -40px;
+    width: 280px; height: 280px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.06);
+  }
+  .cover-tag {
+    display: inline-block;
+    background: rgba(255,255,255,0.15);
+    color: rgba(255,255,255,0.9);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 5px 14px;
+    border-radius: 20px;
+    margin-bottom: 24px;
+  }
+  .cover h1 {
+    font-size: 38px;
+    font-weight: 700;
+    line-height: 1.15;
+    margin-bottom: 12px;
+  }
+  .cover h1 span { color: rgba(255,255,255,0.6); }
+  .cover p {
+    font-size: 15px;
+    color: rgba(255,255,255,0.75);
+    line-height: 1.6;
+    max-width: 480px;
+    margin-bottom: 32px;
+  }
+  .cover-meta {
+    display: flex;
+    gap: 32px;
+    font-size: 13px;
+    color: rgba(255,255,255,0.6);
+  }
+  .cover-meta strong { color: #fff; display: block; font-size: 15px; margin-bottom: 2px; }
+
+  /* ── PERFIS ── */
+  .section-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #981915;
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #981915;
+  }
+
+  .card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 24px 28px;
+    margin-bottom: 16px;
+    border: 1px solid #e4e4ea;
+  }
+
+  .profiles-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  .profile-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px 22px;
+    border: 1px solid #e4e4ea;
+    border-top: 4px solid var(--color);
+  }
+  .profile-card h3 { font-size: 15px; font-weight: 600; margin-bottom: 8px; }
+  .profile-card ul { padding-left: 16px; }
+  .profile-card li { font-size: 12px; color: #4b4b4b; line-height: 1.7; }
+
+  /* ── MÓDULOS ── */
+  .modules-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  .module-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px 22px;
+    border: 1px solid #e4e4ea;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .module-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .module-icon {
+    width: 36px; height: 36px;
+    background: #f5f5f8;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .module-name { font-size: 14px; font-weight: 600; }
+  .module-desc { font-size: 12px; color: #6b7280; line-height: 1.55; }
+  .module-features { list-style: none; padding: 0; margin-top: 4px; }
+  .module-features li {
+    font-size: 11.5px;
+    color: #4b4b4b;
+    padding: 3px 0 3px 14px;
+    position: relative;
+    line-height: 1.5;
+  }
+  .module-features li::before {
+    content: "▸";
+    position: absolute; left: 0;
+    color: #981915;
+    font-size: 10px;
+    top: 4px;
+  }
+
+  /* ── STACK ── */
+  .stack-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 32px;
+  }
+  .stack-item {
+    background: #fff;
+    border-radius: 10px;
+    padding: 16px 18px;
+    border: 1px solid #e4e4ea;
+    text-align: center;
+  }
+  .stack-item .icon { font-size: 22px; margin-bottom: 8px; }
+  .stack-item .label { font-size: 13px; font-weight: 600; }
+  .stack-item .sub { font-size: 11px; color: #6b7280; margin-top: 2px; }
+
+  /* ── FOOTER ── */
+  .footer {
+    text-align: center;
+    font-size: 12px;
+    color: #9ca3af;
+    padding-top: 24px;
+    border-top: 1px solid #e4e4ea;
+    margin-top: 8px;
+  }
+  .footer strong { color: #981915; }
+
+  /* ── PRINT ── */
+  @media print {
+    body { background: #fff; padding: 0; }
+    .page { max-width: 100%; }
+    .cover { border-radius: 0; }
+    .card, .module-card, .profile-card, .stack-item { break-inside: avoid; }
+    .modules-grid, .profiles-grid { break-inside: avoid; }
+  }
+
+  .print-btn {
+    position: fixed;
+    bottom: 28px; right: 28px;
+    background: #981915;
+    color: #fff;
+    border: none;
+    border-radius: 50px;
+    padding: 12px 24px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(152,25,21,0.4);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .print-btn:hover { background: #6e1210; }
+  @media print { .print-btn { display: none; } }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- CAPA -->
+  <div class="cover">
+    <div class="cover-tag">Documentação do Sistema</div>
+    <h1>Stickframe <span>SaaS</span></h1>
+    <p>Plataforma de gestão para construtoras de Steel Frame — do orçamento à entrega da obra, com módulos integrados para equipe, finanças e documentação técnica.</p>
+    <div class="cover-meta">
+      <div><strong>16 módulos</strong>funcionais</div>
+      <div><strong>4 perfis</strong>de acesso</div>
+      <div><strong>stickframe.com.br</strong>produção</div>
+      <div><strong>Maio 2026</strong>versão atual</div>
+    </div>
+  </div>
+
+  <!-- PERFIS DE ACESSO -->
+  <div class="section-title">Perfis de Acesso</div>
+  <div class="profiles-grid" style="margin-bottom:32px">
+
+    <div class="profile-card" style="--color:#981915">
+      <h3>🔴 Diretor</h3>
+      <ul>
+        <li>Acesso total ao sistema</li>
+        <li>Relatórios financeiros e PDF de obras</li>
+        <li>Gestão de equipe e configurações</li>
+        <li>Aprovação de medições e contratos</li>
+      </ul>
+    </div>
+
+    <div class="profile-card" style="--color:#4a9eff">
+      <h3>🔵 Engenheiro</h3>
+      <ul>
+        <li>Obras, cronograma, diário e medições</li>
+        <li>Vistorias, BIM e quantitativos</li>
+        <li>Galeria de fotos por fase</li>
+        <li>Sem acesso a financeiro ou CRM</li>
+      </ul>
+    </div>
+
+    <div class="profile-card" style="--color:#b97a00">
+      <h3>🟡 Comercial</h3>
+      <ul>
+        <li>Dashboard, agenda e CRM de clientes</li>
+        <li>Criação e envio de orçamentos</li>
+        <li>Integração com WhatsApp</li>
+        <li>Sem acesso a obras ou financeiro</li>
+      </ul>
+    </div>
+
+    <div class="profile-card" style="--color:#2e9e5b">
+      <h3>🟢 Financeiro</h3>
+      <ul>
+        <li>Dashboard financeiro completo</li>
+        <li>Lançamentos, contratos e histórico</li>
+        <li>Visão de receitas e despesas por obra</li>
+        <li>Sem acesso a obras operacionais</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <!-- MÓDULOS -->
+  <div class="section-title">Módulos do Sistema</div>
+  <div class="modules-grid">
+
+    <div class="module-card">
+      <div class="module-header">
+        <div class="module-icon">▣</div>
+        <div class="module-name">Dashboard</div>
+      </div>
+      <div class="module-desc">Visão executiva do negócio com gráficos de desempenho financeiro e operacional, personalizado por perfil de acesso.</div>
+      <ul class="module-features">
+        <li>Gráficos de receita vs. despesa</li>
+        <li>Linha histórica de resultados</li>
+        <li>Dashboards distintos por perfil</li>
+        <li>Indicadores de obras ativas</li>
+      </ul>
+    </div>
+
+    <div class="module-card">
+      <div class="module-header">
+        <div class="module-icon">📅</div>
+        <div class="module-name">Agenda</div>
+      </div>
+      <div class="module-desc">Calendário de eventos vinculados a obras e clientes, com categorização por tipo de compromisso.</div>
+      <ul class="module-features">
+        <li>Criação de eventos por data</li>
+        <li>Tipos: visita, reunião, vistoria, medição</li>
+        <li>Vinculação com obra ou cliente</li>
+        <li>Filtro por tipo de evento</li>
+      </ul>
+    </div>
+
+    <div class="module-card">
+      <div class="module-header">
+        <div class="module-icon">◈</div>
+        <div class="module-name">CRM / Clientes</div>
+      </div>
+      <div class="module-desc">Pipeline comercial para gestão do ciclo de vida do cliente, desde o lead até a execução do contrato.</div>
+      <ul class="module-features">
+        <li>Funil: Lead → Proposta → Fechado</li>
+        <li>Envio de proposta via WhatsApp</li>
+        <li>Histórico de contato por cliente</li>
+        <li>Validação de email e telefone</li>
+      </ul>
+    </div>
+
+    <div class="module-card">
+      <div class="module-header">
+        <div class="module-icon">◻</div>
+        <div class="module-name">Orçamentos</div>
+      </div>
+      <div class="module-desc">Geração automática de orçamentos com base em área, padrão construtivo e tabela de preços configurável.</div>
+      <ul class="module-features">
+        <li>Cálculo automático por m² e padrão</li>
+        <li>Status: Aguardando → Aprovado</li>
+        <li>Proposta online com link público</li>
+        <li>Envio direto pelo WhatsApp</li>
+      </ul>
+    </div>
+
+    <div class="module-card">
+      <div class="module-header">
+        <div class="module-icon">◆</div>
+        <div class="module-name">Gestão de Obras</div>
+      </div>
+      <div class="module-desc">Central de controle de obras com fases, checklists, galeria de fotos, arquivos, diário e relatório PDF completo.</div>
+      <ul class="module-features">
+        <li>7 fases com checklist obrigatório</li>
+        <li>Avançar / retornar fase manualmente</li>
+        <li>Galeria de fotos por fase</li>
+        <li>Relatório PDF com resumo financeiro</li>
+        <li>Gestão de arquivos por disciplina</li>
+        <li>Diário de obra integrado</li>
+      </ul>
+    </div>
+
+    <div class="module-card">
+      <div class="module-header">
+        <div class="module-icon">📊</div>
+        <div class="module-name">Cronograma</div>
+      </div>
+      <div class="module-desc">Gráfico de Gantt interativo para planejamento e acompanhamento do cronograma das obras.</div>
+      <ul class="module-features">
+        <li>Visualização por mês/período</li>
+        <li>Edição de datas por fase</li>
+        <li>Filtro por obra ativa</li>
+        <li>Expansão automática de intervalo</li>
+      </ul>
+    </div>
+
+    <div class="module-card">
+      <div class="module-header">
+        <div class="module-icon">📐</div>
+        <div class="module-name">Medições de Obra</div>
+      </div>
+      <div class="module-desc">Controle financeiro de medições com fluxo de aprovação e comparativo com valor contratado.</div>
+      <ul class="module-features">
+        <li>Registro com valor e percentual</li>
+        <li>Fluxo: Pendente → Aprovada</li>
+        <li>Comparativo com contrato</li>
+        <li>Notificação ao cliente por email</li>
+      </ul>
+    </div>
+
+    <div class="module-card">
+      <div class="module-header">
+        <div class="module-icon">📋</div>
+        <div class="module-name">Diário de Obra</div>
+      </div>
+      <div class="module-desc">Registro cronológico diário das atividades executadas em obra, com clima, turno e ocorrências.</div>
+      <ul class="module-features">
+        <li>Clima: ensolarado, chuvoso, etc.</li>
+        <li>Turnos: manhã, tarde, integral</li>
+        <li>Campo de ocorrências destacado</li>
+        <li>Histórico completo por obra</li>
+      </ul>
+    </div>
+
+    <div class="module-card">
+      <div class="module-header">
+        <div class="module-icon">🔍</div>
+        <div class="module-name">Vistorias & FVS</div>
+      </div>
+      <div class="module-desc">Inspeções guiadas por checklists específicos por serviço, com registro de conformidades e pendências.</div>
+      <ul class="module-features">
+        <li>Checklists por tipo de serviço</li>
+        <li>Status: Aprovado / Reprovado</li>
+        <li>FVS (Ficha de Verificação de Serviço)</li>
+        <li>Registro de não conformidades</li>
+      </ul>
+    </div>
+
+    <div class="module-card">
+      <div class="module-header">
+        <div class="module-icon">🧊</div>
+        <div class="module-name">BIM</div>
+      </div>
+      <div class="module-desc">Visualizador 3D de modelos IFC integrado ao sistema, com apontamentos e gestão de elementos.</div>
+      <ul class="module-features">
+        <li>Viewer IFC com Three.js</li>
+        <li>Clique em elementos para info</li>
+        <li>Upload e gestão de modelos</li>
+        <li>Apontamentos por elemento</li>
+      </ul>
+    </div>
+
+    <div class="module-card">
+      <div class="module-header">
+        <div class="module-icon">📐</div>
+        <div class="module-name">Quantitativos</div>
+      </div>
+      <div class="module-desc">Levantamento de materiais e custos por fase da obra, com templates pré-configurados por serviço.</div>
+      <ul class="module-features">
+        <li>Templates por fase construtiva</li>
+        <li>9 categorias de materiais</li>
+        <li>Quantidades e preço unitário</li>
+        <li>Custo total automático</li>
+      </ul>
+    </div>
+
+    <div class="module-card">
+      <div class="module-header">
+        <div class="module-icon">◉</div>
+        <div class="module-name">Financeiro</div>
+      </div>
+      <div class="module-desc">Gestão de receitas e despesas por obra com gráficos de acompanhamento e categorização de lançamentos.</div>
+      <ul class="module-features">
+        <li>Lançamentos de receita e despesa</li>
+        <li>Categorias configuráveis</li>
+        <li>Mini gráficos de evolução</li>
+        <li>Saldo por obra em tempo real</li>
+      </ul>
+    </div>
+
+    <div class="module-card">
+      <div class="module-header">
+        <div class="module-icon">◑</div>
+        <div class="module-name">Contratos</div>
+      </div>
+      <div class="module-desc">Gestão do ciclo de vida contratual com vinculação a clientes e obras, e integração com WhatsApp.</div>
+      <ul class="module-features">
+        <li>Status: Rascunho → Assinado</li>
+        <li>Vinculação com obra e cliente</li>
+        <li>Envio de contrato por WhatsApp</li>
+        <li>Precificação automática por padrão</li>
+      </ul>
+    </div>
+
+    <div class="module-card">
+      <div class="module-header">
+        <div class="module-icon">◎</div>
+        <div class="module-name">Histórico</div>
+      </div>
+      <div class="module-desc">Trilha de auditoria completa com todas as ações realizadas no sistema, filtrada por perfil e usuário.</div>
+      <ul class="module-features">
+        <li>Log de criação, edição e exclusão</li>
+        <li>Filtro por perfil e período</li>
+        <li>Rastreabilidade de receitas/despesas</li>
+        <li>Visão por usuário específico</li>
+      </ul>
+    </div>
+
+    <div class="module-card">
+      <div class="module-header">
+        <div class="module-icon">👷</div>
+        <div class="module-name">Equipe</div>
+      </div>
+      <div class="module-desc">Gestão de colaboradores com especialidades, status de trabalho e controle salarial.</div>
+      <ul class="module-features">
+        <li>9 especialidades técnicas</li>
+        <li>Status: Ativo, Férias, Afastado</li>
+        <li>Registro salarial</li>
+        <li>Interface em abas por setor</li>
+      </ul>
+    </div>
+
+    <div class="module-card">
+      <div class="module-header">
+        <div class="module-icon">⚙️</div>
+        <div class="module-name">Configurações</div>
+      </div>
+      <div class="module-desc">Painel de configuração da empresa e usuários do sistema, com upload de logotipo e dados cadastrais.</div>
+      <ul class="module-features">
+        <li>Perfil da empresa (CNPJ, cidade)</li>
+        <li>Upload e preview de logotipo</li>
+        <li>Gestão de usuários e perfis</li>
+        <li>Configurações em abas</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <!-- STACK TECNOLÓGICA -->
+  <div class="section-title">Stack Tecnológica</div>
+  <div class="stack-grid" style="margin-bottom:32px">
+    <div class="stack-item">
+      <div class="icon">⚛️</div>
+      <div class="label">React 18</div>
+      <div class="sub">Interface e componentes</div>
+    </div>
+    <div class="stack-item">
+      <div class="icon">🗄️</div>
+      <div class="label">Supabase</div>
+      <div class="sub">Banco de dados e autenticação</div>
+    </div>
+    <div class="stack-item">
+      <div class="icon">▲</div>
+      <div class="label">Vercel</div>
+      <div class="sub">Deploy contínuo via GitHub</div>
+    </div>
+    <div class="stack-item">
+      <div class="icon">🐻</div>
+      <div class="label">Zustand</div>
+      <div class="sub">Gerenciamento de estado global</div>
+    </div>
+    <div class="stack-item">
+      <div class="icon">⚡</div>
+      <div class="label">Vite</div>
+      <div class="sub">Build e dev server</div>
+    </div>
+    <div class="stack-item">
+      <div class="icon">🧊</div>
+      <div class="label">Three.js / IFC</div>
+      <div class="sub">Visualização 3D BIM</div>
+    </div>
+  </div>
+
+  <!-- FASES DA OBRA -->
+  <div class="section-title">Fases Construtivas</div>
+  <div class="card" style="margin-bottom:32px">
+    <div style="display:flex;gap:0;flex-wrap:nowrap;overflow-x:auto">
+      <div style="flex:1;text-align:center;padding:12px 8px;border-right:1px solid #e4e4ea">
+        <div style="font-size:20px;margin-bottom:6px">📐</div>
+        <div style="font-size:11px;font-weight:600">1</div>
+        <div style="font-size:11px;color:#4b4b4b;margin-top:4px">Projeto<br>executivo</div>
+      </div>
+      <div style="flex:1;text-align:center;padding:12px 8px;border-right:1px solid #e4e4ea">
+        <div style="font-size:20px;margin-bottom:6px">⛏️</div>
+        <div style="font-size:11px;font-weight:600">2</div>
+        <div style="font-size:11px;color:#4b4b4b;margin-top:4px">Fundação</div>
+      </div>
+      <div style="flex:1;text-align:center;padding:12px 8px;border-right:1px solid #e4e4ea">
+        <div style="font-size:20px;margin-bottom:6px">🔩</div>
+        <div style="font-size:11px;font-weight:600">3</div>
+        <div style="font-size:11px;color:#4b4b4b;margin-top:4px">Estrutura<br>Steel Frame</div>
+      </div>
+      <div style="flex:1;text-align:center;padding:12px 8px;border-right:1px solid #e4e4ea">
+        <div style="font-size:20px;margin-bottom:6px">🧱</div>
+        <div style="font-size:11px;font-weight:600">4</div>
+        <div style="font-size:11px;color:#4b4b4b;margin-top:4px">Fechamentos</div>
+      </div>
+      <div style="flex:1;text-align:center;padding:12px 8px;border-right:1px solid #e4e4ea">
+        <div style="font-size:20px;margin-bottom:6px">⚡</div>
+        <div style="font-size:11px;font-weight:600">5</div>
+        <div style="font-size:11px;color:#4b4b4b;margin-top:4px">Instalações</div>
+      </div>
+      <div style="flex:1;text-align:center;padding:12px 8px;border-right:1px solid #e4e4ea">
+        <div style="font-size:20px;margin-bottom:6px">🎨</div>
+        <div style="font-size:11px;font-weight:600">6</div>
+        <div style="font-size:11px;color:#4b4b4b;margin-top:4px">Acabamento</div>
+      </div>
+      <div style="flex:1;text-align:center;padding:12px 8px">
+        <div style="font-size:20px;margin-bottom:6px">🏠</div>
+        <div style="font-size:11px;font-weight:600">7</div>
+        <div style="font-size:11px;color:#4b4b4b;margin-top:4px">Entrega</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <strong>Stickframe SaaS</strong> — Sistema de Gestão para Construtoras de Steel Frame &nbsp;·&nbsp; stickframe.com.br &nbsp;·&nbsp; Maio 2026
+  </div>
+
+</div>
+
+<button class="print-btn" onclick="window.print()">🖨️ Salvar como PDF</button>
+
+</body>
+</html>

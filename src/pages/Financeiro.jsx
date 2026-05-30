@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { C, CATEGORIAS_RECEITA, CATEGORIAS_DESPESA } from "../utils/constants";
 import { fmt, fmtPct } from "../utils/format";
+import { exportarFinanceiroExcel } from "../utils/exportExcel";
 import useAppStore from "../store/useAppStore";
 import { useModuleLoad } from "../hooks/useModuleLoad";
 import Btn from "../components/ui/Btn";
@@ -294,6 +295,12 @@ export default function Financeiro() {
             <p style={{ color: C.muted, fontSize: 13, marginTop: 4 }}>Receitas, despesas e margem por obra</p>
           </div>
           <div style={{ display: "flex", gap: 10 }}>
+            <button onClick={() => exportarFinanceiroExcel(obras, financeiro)} style={{
+              padding: "8px 16px", background: "#2e9e5b22",
+              border: "1px solid #2e9e5b44", borderRadius: 8,
+              color: "#2e9e5b", fontSize: 12, fontWeight: 700,
+              cursor: "pointer", fontFamily: "inherit",
+            }}>📊 Exportar Excel</button>
             <button onClick={exportarRelatorio} style={{
               padding: "8px 16px", background: "#4a9eff22",
               border: "1px solid #4a9eff44", borderRadius: 8,
