@@ -251,9 +251,15 @@ export default function GestaoObras() {
   async function salvarEdicao() {
     try {
       await updateObra(obraId, {
-        ...form,
-        cliente_id: form.cliente_id || null,
-        contrato:   Number(form.contrato) || 0,
+        nome:          form.nome,
+        cliente_id:    form.cliente_id || null,
+        email_cliente: form.email_cliente,
+        status:        form.status,
+        fase:          form.fase,
+        prazo_inicio:  form.prazo_inicio || null,
+        prazo_fim:     form.prazo_fim    || null,
+        contrato:      Number(form.contrato) || 0,
+        progresso:     form.progresso || 0,
       });
       setModal(null);
       mostrarToast("✅ Obra atualizada!");
@@ -282,6 +288,10 @@ export default function GestaoObras() {
 
   async function gerarRelatorio() {
     if (!obra) return;
+    mostrarToast("⏳ Gerando relatório...");
+    const win = window.open("", "_blank");
+    if (!win) { mostrarToast("❌ Popup bloqueado. Permita popups para este site."); return; }
+    win.document.write("<html><body style='font-family:sans-serif;padding:40px;color:#555'>⏳ Carregando...</body></html>");
     await Promise.all([loadMedicoes(obraId), loadDiario(obraId)]);
     const fin  = (financeiro || []).filter((l) => l.obra_id === obraId);
     const meds = medicoes[obraId] || [];
@@ -351,7 +361,7 @@ export default function GestaoObras() {
     <h2>Arquivos (${arqs.length})</h2>${arqHtml}
     </body></html>`;
 
-    const win = window.open("", "_blank");
+    win.document.open();
     win.document.write(html);
     win.document.close();
     setTimeout(() => win.print(), 400);
