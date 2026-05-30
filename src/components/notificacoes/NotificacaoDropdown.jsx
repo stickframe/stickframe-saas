@@ -82,13 +82,26 @@ function tempoAtras(ts) {
   return `${Math.floor(diff / 86400)}d atrás`;
 }
 
+// Categorias de alerta relevantes por perfil
+const CATS_PERFIL = {
+  engenheiro: ["prazo", "medicao", "vistoria", "bim"],
+  comercial:  ["orcamento"],
+  financeiro: ["prazo"],
+};
+
 export default function NotificacaoDropdown() {
   const [aberto,    setAberto]    = useState(false);
   const [aba,       setAba]       = useState("alertas");
   const [catFiltro, setCatFiltro] = useState("todas");
 
+  const perfil = useAppStore((s) => s.user?.perfil);
   const { notificacoes, marcar, marcarTodas } = useNotificacoes();
-  const alertas = useAlertas();
+  const allAlertas = useAlertas();
+
+  const catsPermitidas = CATS_PERFIL[perfil] || null; // null = diretor vê tudo
+  const alertas = catsPermitidas
+    ? allAlertas.filter((a) => catsPermitidas.includes(a.categoria))
+    : allAlertas;
 
   const naoLidas    = notificacoes.filter((n) => !n.lida).length;
   const totalBadge  = naoLidas + alertas.length;
