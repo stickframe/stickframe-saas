@@ -21,18 +21,30 @@ const ACAO_CONFIG = {
   aprovado: { cor: "#2e9e5b", label: "Aprovado" },
 };
 
+// Tipos visíveis por perfil — diretor vê tudo
+const TIPOS_PERFIL = {
+  engenheiro: ["obra"],
+  comercial:  ["cliente", "orcamento"],
+  financeiro: ["financeiro", "contrato"],
+};
+
 export default function Historico() {
   useModuleLoad("historico");
-  const historico    = useAppStore((s) => s.historico);
+  const historico = useAppStore((s) => s.historico);
+  const perfil    = useAppStore((s) => s.user?.perfil);
+
+  const tiposPermitidos = TIPOS_PERFIL[perfil] || null; // null = todos (diretor)
+
   const [filtroTipo, setFiltroTipo] = useState("todos");
   const [busca,      setBusca]      = useState("");
 
   const itens = historico
+    .filter((h) => !tiposPermitidos || tiposPermitidos.includes(h.tipo))
     .filter((h) => filtroTipo === "todos" || h.tipo === filtroTipo)
-    .filter((h) => !busca || h.desc.toLowerCase().includes(busca.toLowerCase()))
+    .filter((h) => !busca || (h.descricao || h.desc || "").toLowerCase().includes(busca.toLowerCase()))
     .sort((a, b) => b.id - a.id);
 
-  const tipos = ["todos", "cliente", "orcamento", "contrato", "financeiro", "obra"];
+  const tipos = ["todos", ...(tiposPermitidos || ["cliente", "orcamento", "contrato", "financeiro", "obra"])];
 
   return (
     <div>
