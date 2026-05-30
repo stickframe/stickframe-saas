@@ -359,6 +359,117 @@ export default function Financeiro() {
           </div>
         </div>
 
+        {/* Análise de Desvio */}
+        {fin.contrato > 0 && (
+          <div style={{ background: C.surface, borderRadius: 12, padding: "20px 24px", border: `1px solid ${C.border}`, marginBottom: 20 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 16 }}>ANÁLISE DE DESVIO</div>
+
+            {/* Dupla barra: progresso físico vs financeiro */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 20 }}>
+              <div>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 6 }}>
+                  <span style={{ color: C.muted }}>Progresso físico</span>
+                  <span style={{ fontWeight: 700, color: C.red }}>{obra?.progresso || 0}%</span>
+                </div>
+                <div style={{ height: 10, background: C.dark, borderRadius: 5, overflow: "hidden" }}>
+                  <div style={{ height: 10, width: `${Math.min(obra?.progresso || 0, 100)}%`, background: `linear-gradient(90deg,${C.red},#6e1210)`, borderRadius: 5, transition: "width .5s" }} />
+                </div>
+              </div>
+              <div>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 6 }}>
+                  <span style={{ color: C.muted }}>Custo consumido</span>
+                  <span style={{ fontWeight: 700, color: fin.contrato > 0 && despesas / fin.contrato > (obra?.progresso || 0) / 100 + 0.05 ? C.danger : C.success }}>
+                    {fin.contrato > 0 ? fmtPct((despesas / fin.contrato) * 100) : "—"}
+                  </span>
+                </div>
+                <div style={{ height: 10, background: C.dark, borderRadius: 5, overflow: "hidden" }}>
+                  <div style={{
+                    height: 10,
+                    width: `${fin.contrato > 0 ? Math.min((despesas / fin.contrato) * 100, 100) : 0}%`,
+                    background: fin.contrato > 0 && despesas / fin.contrato > (obra?.progresso || 0) / 100 + 0.05
+                      ? `linear-gradient(90deg,${C.danger},#8b0000)`
+                      : `linear-gradient(90deg,${C.success},#1a7a40)`,
+                    borderRadius: 5, transition: "width .5s",
+                  }} />
+                </div>
+              </div>
+            </div>
+
+            {/* Cards de desvio */}
+            {(() => {
+              const progFisico   = (obra?.progresso || 0) / 100;
+              const custoPrevisto = fin.contrato * progFisico;
+              const desvio       = despesas - custoPrevisto;
+              const pctDesvio    = custoPrevisto > 0 ? (desvio / custoPrevisto) * 100 : 0;
+              const margemPrevista = fin.contrato - despesas;
+              const pctMargem    = fin.contrato > 0 ? (margemPrevista / fin.contrato) * 100 : 0;
+              const emDesvio     = desvio > 0 && Math.abs(pctDesvio) > 5;
+
+              return (
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+                  {[
+                    {
+                      label: "Custo previsto",
+                      sublabel: `para ${obra?.progresso || 0}% físico`,
+                      value: fmt(custoPrevisto),
+                      color: C.muted,
+                    },
+                    {
+                      label: "Custo realizado",
+                      sublabel: "despesas lançadas",
+                      value: fmt(despesas),
+                      color: C.red,
+                    },
+                    {
+                      label: "Desvio",
+                      sublabel: desvio === 0 ? "dentro do orçamento" : desvio > 0 ? "acima do previsto" : "abaixo do previsto",
+                      value: `${desvio >= 0 ? "+" : ""}${fmt(desvio)}`,
+                      color: emDesvio ? C.danger : desvio < 0 ? C.success : C.muted,
+                    },
+                    {
+                      label: "Margem prevista",
+                      sublabel: "contrato − despesas",
+                      value: `${pctMargem.toFixed(1)}%`,
+                      color: pctMargem >= 20 ? C.success : pctMargem >= 10 ? C.warning : C.danger,
+                    },
+                  ].map((k, i) => (
+                    <div key={i} style={{
+                      background: C.darker, borderRadius: 8, padding: "12px 14px",
+                      borderLeft: `3px solid ${k.color}`,
+                    }}>
+                      <div style={{ fontSize: 10, color: C.muted, marginBottom: 4, letterSpacing: .5 }}>{k.label.toUpperCase()}</div>
+                      <div style={{ fontSize: 16, fontWeight: 800, color: k.color === C.muted ? C.text : k.color }}>{k.value}</div>
+                      <div style={{ fontSize: 10, color: C.muted, marginTop: 3 }}>{k.sublabel}</div>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
+
+            {/* Alerta de desvio */}
+            {(() => {
+              const progFisico    = (obra?.progresso || 0) / 100;
+              const custoPrevisto = fin.contrato * progFisico;
+              const desvio        = despesas - custoPrevisto;
+              const pctDesvio     = custoPrevisto > 0 ? (desvio / custoPrevisto) * 100 : 0;
+              if (Math.abs(pctDesvio) <= 5 || custoPrevisto === 0) return null;
+              return (
+                <div style={{
+                  marginTop: 14, borderRadius: 8, padding: "10px 16px",
+                  background: desvio > 0 ? C.danger + "12" : C.success + "12",
+                  border: `1px solid ${desvio > 0 ? C.danger : C.success}33`,
+                  fontSize: 12, color: desvio > 0 ? C.danger : C.success, fontWeight: 600,
+                }}>
+                  {desvio > 0
+                    ? `⚠ Custo ${pctDesvio.toFixed(1)}% acima do previsto para o progresso atual (${obra?.progresso || 0}% físico). Revise os lançamentos de despesa.`
+                    : `✓ Custo ${Math.abs(pctDesvio).toFixed(1)}% abaixo do previsto — obra dentro do orçamento.`
+                  }
+                </div>
+              );
+            })()}
+          </div>
+        )}
+
         {/* Grid: gráfico + extrato */}
         <div style={{ display: "grid", gridTemplateColumns: "260px 1fr", gap: 18 }}>
 
