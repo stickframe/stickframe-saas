@@ -27,6 +27,7 @@ export const NAV = [
   { key: "financeiro", label: "Financeiro",       icon: "◉" },
   { key: "contratos",  label: "Contratos",        icon: "◑" },
   { key: "historico",  label: "Histórico",        icon: "◎" },
+  { key: "equipe",     label: "Equipe",           icon: "👷" },
 ];
 
 // ─── PERFIS ──────────────────────────────────────────────────────────────────
@@ -34,7 +35,7 @@ export const PERFIS = {
   diretor: {
     label: "Diretor",
     cor: C.red,
-    paginas: ["dashboard","agenda","crm","orcamentos","obras","medicoes","diario","financeiro","contratos","historico"],
+    paginas: ["dashboard","agenda","crm","orcamentos","obras","medicoes","diario","financeiro","contratos","historico","equipe"],
   },
   comercial: {
     label: "Comercial",

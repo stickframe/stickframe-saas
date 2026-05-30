@@ -19,6 +19,7 @@ const Financeiro  = lazy(() => import("./pages/Financeiro"));
 const Contratos   = lazy(() => import("./pages/Contratos"));
 const Historico   = lazy(() => import("./pages/Historico"));
 const PortalOnline= lazy(() => import("./pages/PortalOnline"));
+const Equipe      = lazy(() => import("./pages/Equipe"));
 
 const PAGES = {
   dashboard:  Dashboard,
@@ -31,6 +32,7 @@ const PAGES = {
   financeiro: Financeiro,
   contratos:  Contratos,
   historico:  Historico,
+  equipe:     Equipe,
 };
 
 function AuthenticatedApp() {
