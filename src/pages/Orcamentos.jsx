@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { C, PRECOS } from "../utils/constants";
+import { C, PRECOS, FASES } from "../utils/constants";
 import { fmt } from "../utils/format";
 import { enviarWhatsApp, msgOrcamento } from "../services/whatsappService";
 import useAppStore from "../store/useAppStore";
@@ -210,18 +210,23 @@ const FORM_VAZIO = {
 export default function Orcamentos() {
   useModuleLoad("orcamentos");
   useModuleLoad("clientes");
+  useModuleLoad("obras");
 
   const clientes        = useAppStore((s) => s.clientes);
   const orcamentos      = useAppStore((s) => s.orcamentos);
   const addOrcamento    = useAppStore((s) => s.addOrcamento);
   const updateOrcamento = useAppStore((s) => s.updateOrcamento);
   const deleteOrcamento = useAppStore((s) => s.deleteOrcamento);
+  const addObra         = useAppStore((s) => s.addObra);
+  const setActivePage   = useAppStore((s) => s.setActivePage);
 
-  const [modal,   setModal]   = useState(false);
-  const [editId,  setEditId]  = useState(null);
-  const [confirm, setConfirm] = useState(null);
-  const [toast,   setToast]   = useState(null);
-  const [form,    setForm]    = useState({ ...FORM_VAZIO, cliente_id: clientes[0]?.id || "" });
+  const [modal,      setModal]      = useState(false);
+  const [editId,     setEditId]     = useState(null);
+  const [confirm,    setConfirm]    = useState(null);
+  const [toast,      setToast]      = useState(null);
+  const [form,       setForm]       = useState({ ...FORM_VAZIO, cliente_id: clientes[0]?.id || "" });
+  const [converterOrc, setConverterOrc] = useState(null); // orçamento sendo convertido
+  const [obraForm,   setObraForm]   = useState({ nome: "", prazo_inicio: "", prazo_fim: "" });
 
   function mostrarToast(msg) {
     setToast(msg);
@@ -286,6 +291,35 @@ export default function Orcamentos() {
   }
 
   function confirmarDelete(id) { setConfirm(id); }
+
+  function abrirConverter(o) {
+    const clienteSel = clientes.find((c) => c.id === o.cliente_id);
+    const nomeSugerido = `${o.cliente} — ${new Date().getFullYear()}`;
+    setObraForm({ nome: nomeSugerido, prazo_inicio: "", prazo_fim: "" });
+    setConverterOrc(o);
+  }
+
+  async function confirmarConverter() {
+    const o = converterOrc;
+    const clienteSel = clientes.find((c) => c.id === o.cliente_id);
+    await addObra({
+      nome:          obraForm.nome,
+      cliente_id:    o.cliente_id,
+      cliente:       o.cliente,
+      email_cliente: clienteSel?.email || "",
+      status:        "Planejamento",
+      fase:          FASES[0],
+      progresso:     0,
+      contrato:      o.valor,
+      prazo:         obraForm.prazo_fim || "—",
+      prazo_inicio:  obraForm.prazo_inicio || null,
+      prazo_fim:     obraForm.prazo_fim || null,
+    });
+    updateOrcamento(o.id, { status: "Aprovado" });
+    setConverterOrc(null);
+    mostrarToast("✅ Obra criada! Redirecionando...");
+    setTimeout(() => setActivePage("obras"), 1200);
+  }
   function executarDelete() {
     deleteOrcamento(confirm);
     setConfirm(null);
@@ -345,6 +379,59 @@ export default function Orcamentos() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Modal converter em obra */}
+      {converterOrc && (
+        <Modal title="Converter em Obra" onClose={() => setConverterOrc(null)}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            {/* Resumo do orçamento */}
+            <div style={{ background: C.darker, borderRadius: 10, padding: "14px 16px", border: `1px solid ${C.red}33` }}>
+              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1.5, color: C.red, marginBottom: 10 }}>ORÇAMENTO ORIGEM</div>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13 }}>
+                <span style={{ color: C.muted }}>Cliente</span>
+                <span style={{ fontWeight: 700 }}>{converterOrc.cliente}</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginTop: 6 }}>
+                <span style={{ color: C.muted }}>Padrão · Área total</span>
+                <span style={{ fontWeight: 700 }}>{converterOrc.padrao} · {converterOrc.unidades * converterOrc.area} m²</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14, marginTop: 6 }}>
+                <span style={{ color: C.muted }}>Valor do contrato</span>
+                <span style={{ fontWeight: 800, color: C.success }}>{fmt(converterOrc.valor)}</span>
+              </div>
+            </div>
+
+            {/* Campos da obra */}
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 6 }}>NOME DA OBRA</div>
+              <Input
+                value={obraForm.nome}
+                onChange={(v) => setObraForm((f) => ({ ...f, nome: v }))}
+                placeholder="Ex: Residência João — Bofete/SP"
+              />
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 6 }}>INÍCIO PREVISTO</div>
+                <Input type="date" value={obraForm.prazo_inicio} onChange={(v) => setObraForm((f) => ({ ...f, prazo_inicio: v }))} />
+              </div>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 6 }}>ENTREGA PREVISTA</div>
+                <Input type="date" value={obraForm.prazo_fim} onChange={(v) => setObraForm((f) => ({ ...f, prazo_fim: v }))} />
+              </div>
+            </div>
+
+            <div style={{ background: "#4a9eff11", border: "1px solid #4a9eff33", borderRadius: 8, padding: "10px 14px", fontSize: 12, color: "#4a9eff" }}>
+              ✔ O valor do contrato ({fmt(converterOrc.valor)}) será preenchido automaticamente no financeiro da obra.
+            </div>
+
+            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", paddingTop: 12, borderTop: `1px solid ${C.border}` }}>
+              <Btn variant="ghost" onClick={() => setConverterOrc(null)}>Cancelar</Btn>
+              <Btn disabled={!obraForm.nome} onClick={confirmarConverter}>◆ Criar Obra</Btn>
+            </div>
+          </div>
+        </Modal>
       )}
 
       {/* Layout */}
@@ -418,6 +505,19 @@ export default function Orcamentos() {
                     >
                       📄 PDF
                     </button>
+                    {o.status !== "Recusado" && (
+                      <button
+                        onClick={() => abrirConverter(o)}
+                        style={{
+                          padding: "6px 14px", background: C.success + "22",
+                          border: `1px solid ${C.success}44`, borderRadius: 6,
+                          color: C.success, fontSize: 11, fontWeight: 700,
+                          cursor: "pointer", fontFamily: "inherit",
+                        }}
+                      >
+                        ◆ Converter em Obra
+                      </button>
+                    )}
 
                     <Select
                       value={o.status}
