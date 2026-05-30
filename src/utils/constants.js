@@ -31,7 +31,8 @@ export const NAV = [
   { key: "financeiro", label: "Financeiro",       icon: "◉" },
   { key: "contratos",  label: "Contratos",        icon: "◑" },
   { key: "historico",  label: "Histórico",        icon: "◎" },
-  { key: "equipe",     label: "Equipe",           icon: "👷" },
+  { key: "equipe",        label: "Equipe",          icon: "👷" },
+  { key: "configuracoes", label: "Configurações",   icon: "⚙️" },
 ];
 
 // ─── PERFIS ──────────────────────────────────────────────────────────────────
@@ -39,22 +40,22 @@ export const PERFIS = {
   diretor: {
     label: "Diretor",
     cor: C.red,
-    paginas: ["dashboard","agenda","crm","orcamentos","obras","cronograma","medicoes","diario","vistorias","bim","quantitativos","financeiro","contratos","historico","equipe"],
+    paginas: ["dashboard","agenda","crm","orcamentos","obras","cronograma","medicoes","diario","vistorias","bim","quantitativos","financeiro","contratos","historico","equipe","configuracoes"],
   },
   comercial: {
     label: "Comercial",
     cor: C.warning,
-    paginas: ["dashboard","agenda","crm","orcamentos","contratos"],
+    paginas: ["dashboard","agenda","crm","orcamentos","contratos","configuracoes"],
   },
   engenheiro: {
     label: "Engenheiro",
     cor: "#4a9eff",
-    paginas: ["dashboard","agenda","obras","cronograma","medicoes","diario","vistorias","bim","quantitativos","historico"],
+    paginas: ["dashboard","agenda","obras","cronograma","medicoes","diario","vistorias","bim","quantitativos","historico","configuracoes"],
   },
   financeiro: {
     label: "Financeiro",
     cor: C.success,
-    paginas: ["dashboard","financeiro","contratos","historico"],
+    paginas: ["dashboard","financeiro","contratos","historico","configuracoes"],
   },
 };
 
