@@ -199,7 +199,160 @@ function gerarPDF(o) {
   win.onload = () => win.print();
 }
 
-// ─── Orçamentos principal ─────────────────────────────────────────────────────
+// ─── Índices técnicos StickFrame (baseados em obras reais) ───────────────────
+const INDICES = {
+  residencial: {
+    label: "Residencial",
+    itens: [
+      { grupo: "Estrutura",   item: "Aço LSF (lista de corte LE230 / Z275)",      un: "kg",  coef: 31.25, precoUnit: 15.00 },
+      { grupo: "Estrutura",   item: "Acessórios estrutura (parafusos, conectores)", un: "vb",  coef: 0.15,  precoUnit: 15.00, sobreAco: true },
+      { grupo: "Vedação ext", item: "Placa Glasroc X 12,5mm (cimentícia ext.)",    un: "m²",  coef: 2.58,  precoUnit: 86.80 },
+      { grupo: "Vedação ext", item: "Membrana Typar (WRB)",                        un: "m²",  coef: 3.48,  precoUnit: 16.17 },
+      { grupo: "Vedação ext", item: "Massa Base Coat 20kg",                        un: "sc",  coef: 0.79,  precoUnit: 88.00 },
+      { grupo: "Vedação ext", item: "Tela fibra de vidro",                         un: "m²",  coef: 1.04,  precoUnit: 14.00 },
+      { grupo: "Isolamento",  item: "Lã de vidro 50mm (15m²/rl)",                 un: "m²",  coef: 3.75,  precoUnit: 16.00 },
+      { grupo: "Vedação int", item: "Placa Gesso ST 12,5mm (drywall interno)",     un: "m²",  coef: 3.28,  precoUnit: 17.13 },
+      { grupo: "Vedação int", item: "Placa Gesso RU 12,5mm (área molhada)",        un: "m²",  coef: 0.63,  precoUnit: 25.46, areaUmida: true },
+      { grupo: "Vedação int", item: "Massa junta drywall 25kg",                    un: "bd",  coef: 0.17,  precoUnit: 80.00 },
+      { grupo: "Vedação int", item: "Fita papel perfurada junta",                  un: "pc",  coef: 0.06,  precoUnit: 60.00 },
+      { grupo: "Forro",       item: "Perfil forro F530 3000mm",                    un: "pc",  coef: 0.63,  precoUnit: 15.00 },
+      { grupo: "Forro",       item: "Pendural REG F530",                           un: "pc",  coef: 1.38,  precoUnit: 1.60  },
+    ],
+  },
+  galpao: {
+    label: "Galpão / Comercial",
+    itens: [
+      { grupo: "Estrutura",   item: "Aço LSF + acessórios Smart Frame Z275",       un: "vb",  coef: 441.31, precoUnit: 1.00 },
+      { grupo: "Vedação ext", item: "Vedação externa Smart Glasroc",               un: "vb",  coef: 353.55, precoUnit: 1.00 },
+      { grupo: "Vedação int", item: "Vedação interna Performa",                    un: "vb",  coef: 59.83,  precoUnit: 1.00 },
+      { grupo: "Vedação int", item: "Vedação interna Performa RU (área molhada)",  un: "vb",  coef: 21.76,  precoUnit: 1.00, areaUmida: true },
+      { grupo: "Cobertura",   item: "Telha metálica sanduíche",                    un: "vb",  coef: 119.11, precoUnit: 1.00, opcional: true },
+    ],
+  },
+};
+
+function CalculadoraEstimativa({ onAplicar, onClose }) {
+  const [tipo,      setTipo]      = useState("residencial");
+  const [area,      setArea]      = useState(48);
+  const [areaUmida, setAreaUmida] = useState(8);
+  const [cobertura, setCobertura] = useState(false);
+  const [itens,     setItens]     = useState(null);
+
+  function calcular() {
+    const template = INDICES[tipo];
+    const resultado = template.itens
+      .filter((i) => !i.opcional || (i.opcional && cobertura))
+      .map((i) => {
+        let qtd;
+        if (i.sobreAco) {
+          const aco = template.itens.find((x) => x.grupo === "Estrutura" && !x.sobreAco);
+          const pesoAco = (aco?.coef || 31.25) * area;
+          qtd = pesoAco * i.coef;
+        } else if (i.areaUmida) {
+          qtd = i.un === "vb" ? areaUmida * i.coef : areaUmida * i.coef;
+        } else {
+          qtd = i.un === "vb" ? area * i.coef : area * i.coef;
+        }
+        qtd = Math.ceil(qtd * 100) / 100;
+        const total = qtd * i.precoUnit;
+        return { ...i, qtd, total };
+      });
+    setItens(resultado);
+  }
+
+  const totalGeral = itens ? itens.reduce((s, i) => s + i.total, 0) : 0;
+  const grupos = itens ? [...new Set(itens.map((i) => i.grupo))] : [];
+
+  const fmt = (v) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      {/* Parâmetros */}
+      <div style={{ background: C.darker, borderRadius: 10, padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.red }}>PARÂMETROS DA OBRA</div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          <div>
+            <Label required>Tipo de obra</Label>
+            <Select value={tipo} onChange={(v) => { setTipo(v); setItens(null); }}
+              options={Object.entries(INDICES).map(([k, v]) => ({ value: k, label: v.label }))} />
+          </div>
+          <div>
+            <Label required>Área total (m²)</Label>
+            <Input type="number" min="1" value={area} onChange={(v) => { setArea(parseFloat(v) || 0); setItens(null); }} />
+          </div>
+          <div>
+            <Label>Área molhada — banheiros/coz. (m²)</Label>
+            <Input type="number" min="0" value={areaUmida} onChange={(v) => { setAreaUmida(parseFloat(v) || 0); setItens(null); }} />
+          </div>
+          <div style={{ display: "flex", alignItems: "flex-end", paddingBottom: 2 }}>
+            <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, cursor: "pointer" }}>
+              <input type="checkbox" checked={cobertura} onChange={(e) => { setCobertura(e.target.checked); setItens(null); }} />
+              Incluir cobertura
+            </label>
+          </div>
+        </div>
+        <button onClick={calcular} style={{
+          background: C.red, color: "#fff", border: "none", borderRadius: 8,
+          padding: "10px 0", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
+        }}>
+          ⚡ Calcular estimativo
+        </button>
+      </div>
+
+      {/* Resultado */}
+      {itens && (
+        <>
+          <div style={{ maxHeight: 340, overflowY: "auto", border: `1px solid ${C.border}`, borderRadius: 10, overflow: "hidden" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+              <thead>
+                <tr style={{ background: C.darker }}>
+                  <th style={{ padding: "8px 12px", textAlign: "left", fontWeight: 700, fontSize: 11 }}>Item</th>
+                  <th style={{ padding: "8px 8px", textAlign: "center", fontWeight: 700, fontSize: 11 }}>UN</th>
+                  <th style={{ padding: "8px 8px", textAlign: "right", fontWeight: 700, fontSize: 11 }}>Qtd</th>
+                  <th style={{ padding: "8px 12px", textAlign: "right", fontWeight: 700, fontSize: 11 }}>Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {grupos.map((grupo) => (
+                  <>
+                    <tr key={`g-${grupo}`} style={{ background: C.red + "11" }}>
+                      <td colSpan={4} style={{ padding: "6px 12px", fontSize: 10, fontWeight: 800, color: C.red, letterSpacing: 1, textTransform: "uppercase" }}>{grupo}</td>
+                    </tr>
+                    {itens.filter((i) => i.grupo === grupo).map((i, idx) => (
+                      <tr key={idx} style={{ borderBottom: `1px solid ${C.border}` }}>
+                        <td style={{ padding: "7px 12px", color: C.text }}>{i.item}</td>
+                        <td style={{ padding: "7px 8px", textAlign: "center", color: C.muted }}>{i.un}</td>
+                        <td style={{ padding: "7px 8px", textAlign: "right", color: C.text }}>{i.qtd % 1 === 0 ? i.qtd : i.qtd.toFixed(2)}</td>
+                        <td style={{ padding: "7px 12px", textAlign: "right", fontWeight: 600, color: C.text }}>{fmt(i.total)}</td>
+                      </tr>
+                    ))}
+                  </>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Total + ações */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: C.darker, borderRadius: 10, padding: "14px 16px" }}>
+            <div>
+              <div style={{ fontSize: 11, color: C.muted }}>Estimativo de materiais — {area} m²</div>
+              <div style={{ fontSize: 20, fontWeight: 900, color: C.red }}>{fmt(totalGeral)}</div>
+              <div style={{ fontSize: 11, color: C.muted }}>{fmt(totalGeral / area)}/m²</div>
+            </div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button onClick={onClose} style={{ background: "none", border: `1px solid ${C.border}`, borderRadius: 8, padding: "9px 16px", fontSize: 12, cursor: "pointer", fontFamily: "inherit", color: C.muted }}>
+                Cancelar
+              </button>
+              <button onClick={() => onAplicar(itens, totalGeral, area, tipo)} style={{ background: C.red, color: "#fff", border: "none", borderRadius: 8, padding: "9px 16px", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+                Aplicar ao orçamento →
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
 const FORM_VAZIO = {
   cliente_id: "",
   unidades:   1,
@@ -221,12 +374,14 @@ export default function Orcamentos() {
   const addObra         = useAppStore((s) => s.addObra);
   const setActivePage   = useAppStore((s) => s.setActivePage);
 
-  const [modal,      setModal]      = useState(false);
-  const [editId,     setEditId]     = useState(null);
-  const [confirm,    setConfirm]    = useState(null);
-  const [toast,      setToast]      = useState(null);
-  const [form,       setForm]       = useState({ ...FORM_VAZIO, cliente_id: clientes[0]?.id || "" });
-  const [converterOrc, setConverterOrc] = useState(null); // orçamento sendo convertido
+  const [modal,        setModal]        = useState(false);
+  const [editId,       setEditId]       = useState(null);
+  const [confirm,      setConfirm]      = useState(null);
+  const [toast,        setToast]        = useState(null);
+  const [form,         setForm]         = useState({ ...FORM_VAZIO, cliente_id: clientes[0]?.id || "" });
+  const [converterOrc, setConverterOrc] = useState(null);
+  const [calculadora,  setCalculadora]  = useState(false);
+  const [estimativo,   setEstimativo]   = useState(null); // resultado da calculadora
   const [obraForm,   setObraForm]   = useState({ nome: "", prazo_inicio: "", prazo_fim: "" });
 
   function mostrarToast(msg) {
@@ -237,6 +392,12 @@ export default function Orcamentos() {
   function abrirNovo() {
     setForm({ ...FORM_VAZIO, cliente_id: clientes[0]?.id || "" });
     setModal("novo");
+  }
+
+  function aplicarEstimativo(itens, totalGeral, area, tipo) {
+    setEstimativo({ itens, totalGeral, area, tipo });
+    setCalculadora(false);
+    mostrarToast(`✅ Estimativo aplicado — ${area}m² · ${totalGeral.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`);
   }
 
   function abrirEditar(o) {
@@ -356,6 +517,13 @@ export default function Orcamentos() {
         </div>
       )}
 
+      {/* Modal Calculadora */}
+      {calculadora && (
+        <Modal title="⚡ Calculadora Estimativa Steel Frame" onClose={() => setCalculadora(false)}>
+          <CalculadoraEstimativa onAplicar={aplicarEstimativo} onClose={() => setCalculadora(false)} />
+        </Modal>
+      )}
+
       {/* Modais */}
       {modal === "novo" && (
         <Modal title="Novo orçamento" onClose={() => setModal(false)}>
@@ -460,8 +628,28 @@ export default function Orcamentos() {
               {orcamentos.length} proposta{orcamentos.length !== 1 ? "s" : ""}
             </p>
           </div>
-          <Btn onClick={abrirNovo}>+ Novo orçamento</Btn>
+          <div style={{ display: "flex", gap: 10 }}>
+            <button onClick={() => setCalculadora(true)} style={{
+              background: "none", border: `1px solid ${C.red}`, color: C.red,
+              borderRadius: 8, padding: "9px 16px", fontSize: 13, fontWeight: 700,
+              cursor: "pointer", fontFamily: "inherit",
+            }}>
+              ⚡ Calculadora estimativa
+            </button>
+            <Btn onClick={abrirNovo}>+ Novo orçamento</Btn>
+          </div>
         </div>
+
+        {/* Estimativo aplicado */}
+        {estimativo && (
+          <div style={{ background: C.red + "0d", border: `1px solid ${C.red}33`, borderRadius: 12, padding: "14px 18px", marginBottom: 16, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: C.red, marginBottom: 2 }}>⚡ Estimativo calculado — {INDICES[estimativo.tipo]?.label} · {estimativo.area}m²</div>
+              <div style={{ fontSize: 11, color: C.muted }}>{estimativo.itens.length} itens · Total materiais: <strong>{estimativo.totalGeral.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</strong></div>
+            </div>
+            <button onClick={() => setEstimativo(null)} style={{ background: "none", border: "none", color: C.muted, cursor: "pointer", fontSize: 18 }}>×</button>
+          </div>
+        )}
 
         {/* Lista */}
         {orcamentos.length === 0 ? (
