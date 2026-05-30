@@ -14,6 +14,16 @@ const DISCIPLINAS = ["Arquitetônico","Estrutural","Steel Frame","Elétrico","Hi
 const STATUS_DOC  = ["Ativo","Em revisão","Aprovado","Obsoleto"];
 const STATUS_DOC_COR = { "Ativo": "#4a9eff", "Em revisão": "#b97a00", "Aprovado": "#2e9e5b", "Obsoleto": C.muted };
 const STATUS_OBRA = ["Planejamento", "Em andamento", "Pausada", "Concluída"];
+
+const CHECKLIST_FASES = {
+  "Projeto executivo":    ["Projeto arquitetônico aprovado", "ART emitida e assinada", "Memorial descritivo entregue"],
+  "Fundação":             ["Sondagem do terreno realizada", "Locação executada", "Radier/sapatas concluídos e curados"],
+  "Estrutura Steel Frame":["Perfis montados conforme projeto", "Contraventamentos instalados", "Vistoria estrutural realizada"],
+  "Fechamentos":          ["Placas OSB/gesso instaladas", "Esquadrias fixadas e niveladas", "Impermeabilização de fachada aplicada"],
+  "Instalações":          ["Instalação elétrica aprovada", "Instalação hidráulica aprovada", "Passagens de dutos concluídas"],
+  "Acabamento":           ["Pintura interna e externa concluída", "Pisos e revestimentos assentados", "Louças e metais instalados"],
+  "Entrega":              ["Vistoria final realizada e aprovada", "Manual do proprietário entregue", "Documentação técnica enviada"],
+};
 const STATUS_COR  = {
   "Em andamento": "#2e9e5b",
   "Planejamento": "#4a9eff",
@@ -158,6 +168,9 @@ export default function GestaoObras() {
   const [statusFiltro, setStatusFiltro] = useState("Todos");
   const [histObra,    setHistObra]    = useState([]);
   const [histLoading, setHistLoading] = useState(false);
+  const [checklistModal,   setChecklistModal]   = useState(false);
+  const [checklistMarcados, setChecklistMarcados] = useState({});
+  const [fotoAmpliada, setFotoAmpliada] = useState(null);
 
   useEffect(() => {
     if (!obraId && obras.length > 0) setObraId(obras[0].id);
@@ -282,9 +295,17 @@ export default function GestaoObras() {
     if (!obra) return;
     const i = FASES.indexOf(obra.fase);
     if (i >= FASES.length - 1) return;
+    setChecklistMarcados({});
+    setChecklistModal(true);
+  }
+
+  function confirmarAvancar() {
+    const i = FASES.indexOf(obra.fase);
+    if (i >= FASES.length - 1) return;
     const novaFase  = FASES[i + 1];
     const progresso = Math.round(((i + 2) / FASES.length) * 100);
     avancarFase(obra.id, novaFase, progresso);
+    setChecklistModal(false);
     mostrarToast(`📋 Avançou para: ${novaFase}`);
   }
 
@@ -564,7 +585,7 @@ export default function GestaoObras() {
               <div>
                 {/* Abas */}
                 <div style={{ display: "flex", borderBottom: `1px solid ${C.border}` }}>
-                  {[["fases", "📋 Fases da obra"], ["arquivos", "📁 Arquivos"], ["historico", "🕑 Histórico"]].map(([k, l]) => (
+                  {[["fases", "📋 Fases da obra"], ["fotos", "📷 Fotos"], ["arquivos", "📁 Arquivos"], ["historico", "🕑 Histórico"]].map(([k, l]) => (
                     <button key={k} onClick={() => setAbaAtiva(k)} style={{
                       padding: "10px 20px", background: "transparent", border: "none",
                       borderBottom: `2px solid ${abaAtiva === k ? C.red : "transparent"}`,
@@ -622,6 +643,55 @@ export default function GestaoObras() {
                         </div>
                       );
                     })}
+                  </div>
+                )}
+
+                {/* ABA FOTOS */}
+                {abaAtiva === "fotos" && (
+                  <div style={{ background: C.surface, borderRadius: "0 0 12px 12px", border: `1px solid ${C.border}`, borderTop: "none", padding: 22 }}>
+                    <label style={{
+                      display: "block", border: `2px dashed ${dragOver ? C.red : C.border}`,
+                      borderRadius: 10, padding: "18px 20px", textAlign: "center",
+                      cursor: "pointer", marginBottom: 18, background: dragOver ? C.red + "0a" : C.darker, transition: "all .2s",
+                    }}
+                      onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                      onDragLeave={() => setDragOver(false)}
+                      onDrop={(e) => { e.preventDefault(); setDragOver(false); handleFiles(e.dataTransfer.files); }}
+                    >
+                      <input type="file" multiple accept="image/*" style={{ display: "none" }} onChange={(e) => handleFiles(e.target.files)} />
+                      <div style={{ fontSize: 11, color: C.muted }}>📷 Arraste fotos ou clique para enviar — as fotos ficam vinculadas à fase atual ({obra.fase})</div>
+                    </label>
+
+                    {(() => {
+                      const todasFotos = arqObra.filter((a) => a.tipo === "imagem");
+                      if (todasFotos.length === 0) return (
+                        <div style={{ textAlign: "center", padding: "32px 0", color: C.muted, fontSize: 13 }}>Nenhuma foto enviada ainda.</div>
+                      );
+                      const grupos = [
+                        ...FASES.map((fase) => ({ fase, fotos: todasFotos.filter((f) => f.fase === fase) })).filter((g) => g.fotos.length > 0),
+                        { fase: null, fotos: todasFotos.filter((f) => !f.fase) },
+                      ].filter((g) => g.fotos.length > 0);
+                      return grupos.map(({ fase, fotos }) => (
+                        <div key={fase || "sem-fase"} style={{ marginBottom: 20 }}>
+                          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 10, textTransform: "uppercase" }}>
+                            {fase || "Sem fase"} · {fotos.length} foto(s)
+                          </div>
+                          <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8 }}>
+                            {fotos.map((f) => (
+                              <div key={f.id} onClick={() => setFotoAmpliada(f)} style={{
+                                cursor: "pointer", borderRadius: 8, overflow: "hidden",
+                                aspectRatio: "4/3", background: C.darker, position: "relative",
+                              }}>
+                                {f.url
+                                  ? <img src={f.url} alt={f.nome} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                                  : <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", fontSize: 28 }}>🖼️</div>
+                                }
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ));
+                    })()}
                   </div>
                 )}
 
@@ -818,6 +888,63 @@ export default function GestaoObras() {
             </div>
           )}
         </>
+      )}
+      {/* Modal checklist avançar fase */}
+      {checklistModal && obra && (() => {
+        const itens    = CHECKLIST_FASES[obra.fase] || [];
+        const proxima  = FASES[FASES.indexOf(obra.fase) + 1];
+        const todosMarcados = itens.every((_, i) => checklistMarcados[i]);
+        return (
+          <Modal onClose={() => setChecklistModal(false)}>
+            <div style={{ minWidth: 360 }}>
+              <div style={{ fontSize: 16, fontWeight: 800, marginBottom: 4 }}>Checklist — {obra.fase}</div>
+              <div style={{ fontSize: 12, color: C.muted, marginBottom: 20 }}>
+                Confirme os itens antes de avançar para <strong>{proxima}</strong>
+              </div>
+              {itens.map((item, i) => (
+                <div key={i} onClick={() => setChecklistMarcados((p) => ({ ...p, [i]: !p[i] }))} style={{
+                  display: "flex", alignItems: "center", gap: 12,
+                  padding: "12px 0", borderBottom: `1px solid ${C.border}`, cursor: "pointer",
+                }}>
+                  <div style={{
+                    width: 20, height: 20, borderRadius: 4, flexShrink: 0,
+                    border: `2px solid ${checklistMarcados[i] ? "#2e9e5b" : C.border}`,
+                    background: checklistMarcados[i] ? "#2e9e5b" : "transparent",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                  }}>
+                    {checklistMarcados[i] && <span style={{ color: "#fff", fontSize: 12, fontWeight: 700 }}>✓</span>}
+                  </div>
+                  <span style={{ fontSize: 13, color: checklistMarcados[i] ? C.muted : C.text, textDecoration: checklistMarcados[i] ? "line-through" : "none" }}>
+                    {item}
+                  </span>
+                </div>
+              ))}
+              <div style={{ marginTop: 20, display: "flex", gap: 10, justifyContent: "flex-end" }}>
+                <Btn variant="ghost" onClick={() => setChecklistModal(false)}>Cancelar</Btn>
+                <Btn disabled={!todosMarcados} onClick={confirmarAvancar}>
+                  Avançar para {proxima} →
+                </Btn>
+              </div>
+            </div>
+          </Modal>
+        );
+      })()}
+
+      {/* Lightbox fotos */}
+      {fotoAmpliada && (
+        <div onClick={() => setFotoAmpliada(null)} style={{
+          position: "fixed", inset: 0, background: "rgba(0,0,0,0.92)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          zIndex: 9999, cursor: "pointer",
+        }}>
+          <img src={fotoAmpliada.url} alt={fotoAmpliada.nome} style={{
+            maxWidth: "90vw", maxHeight: "88vh", objectFit: "contain", borderRadius: 8,
+          }} />
+          <div style={{ position: "absolute", top: 18, right: 22, color: "#fff", fontSize: 24, fontWeight: 700 }}>✕</div>
+          <div style={{ position: "absolute", bottom: 16, left: 0, right: 0, textAlign: "center", color: "rgba(255,255,255,0.6)", fontSize: 12 }}>
+            {fotoAmpliada.nome}{fotoAmpliada.fase ? ` · ${fotoAmpliada.fase}` : ""}
+          </div>
+        </div>
       )}
     </>
   );
