@@ -66,16 +66,22 @@ function FormObra({ form, setForm, clientes, onSave, onCancel, btnLabel }) {
         </div>
       </div>
 
-      {/* Prazo + Contrato */}
+      {/* Datas */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
         <div>
-          <Label>Prazo previsto</Label>
-          <Input value={form.prazo} onChange={set("prazo")} placeholder="Ex: Dez/2025" />
+          <Label>Início da obra</Label>
+          <Input value={form.prazo_inicio} onChange={set("prazo_inicio")} type="date" />
         </div>
         <div>
-          <Label>Valor do contrato (R$)</Label>
-          <Input value={form.contrato} onChange={set("contrato")} type="number" min="0" placeholder="0" />
+          <Label>Entrega prevista</Label>
+          <Input value={form.prazo_fim} onChange={set("prazo_fim")} type="date" />
         </div>
+      </div>
+
+      {/* Contrato */}
+      <div>
+        <Label>Valor do contrato (R$)</Label>
+        <Input value={form.contrato} onChange={set("contrato")} type="number" min="0" placeholder="0" />
       </div>
 
       {/* Email do cliente */}
@@ -107,7 +113,7 @@ function FormObra({ form, setForm, clientes, onSave, onCancel, btnLabel }) {
 const FORM_VAZIO = {
   nome: "", cliente_id: "", cliente: "", email_cliente: "",
   status: "Planejamento", fase: "Projeto executivo",
-  prazo: "—", contrato: 0, progresso: 0,
+  prazo_inicio: "", prazo_fim: "", contrato: 0, progresso: 0,
 };
 
 export default function GestaoObras() {
@@ -192,7 +198,8 @@ export default function GestaoObras() {
       email_cliente: obra.email_cliente || "",
       status:        obra.status || "Planejamento",
       fase:          obra.fase || "Projeto executivo",
-      prazo:         obra.prazo || "—",
+      prazo_inicio:  obra.prazo_inicio || "",
+      prazo_fim:     obra.prazo_fim    || "",
       contrato:      obra.contrato || 0,
       progresso:     obra.progresso || 0,
     });
@@ -565,7 +572,8 @@ export default function GestaoObras() {
                   {[
                     ["Status",    obra.status],
                     ["Fase",      obra.fase],
-                    ["Prazo",     obra.prazo],
+                    ["Início",    obra.prazo_inicio ? new Date(obra.prazo_inicio + "T00:00").toLocaleDateString("pt-BR") : "—"],
+                    ["Entrega",   obra.prazo_fim    ? new Date(obra.prazo_fim    + "T00:00").toLocaleDateString("pt-BR") : "—"],
                     ["Concluído", `${obra.progresso}%`],
                     ["Arquivos",  `${arqObra.length} arquivo(s)`],
                   ].map(([k, v]) => (
