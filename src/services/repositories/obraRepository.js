@@ -78,6 +78,9 @@ export async function adicionarArquivos(obraId, arquivos, empresaId) {
       tamanho:      a.tamanho,
       data:         a.data,
       categoria:    a.categoria,
+      fase:         a.fase       || null,
+      disciplina:   a.disciplina || null,
+      status_doc:   a.status_doc || "Ativo",
       storage_path: storagePath,
     });
   }
