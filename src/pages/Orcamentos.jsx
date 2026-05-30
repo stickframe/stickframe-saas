@@ -397,7 +397,9 @@ export default function Orcamentos() {
   function aplicarEstimativo(itens, totalGeral, area, tipo) {
     setEstimativo({ itens, totalGeral, area, tipo });
     setCalculadora(false);
-    mostrarToast(`✅ Estimativo aplicado — ${area}m² · ${totalGeral.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`);
+    // Pré-preenche o formulário de novo orçamento com a área calculada
+    setForm((f) => ({ ...f, area, cliente_id: clientes[0]?.id || "" }));
+    setModal("novo");
   }
 
   function abrirEditar(o) {
@@ -527,9 +529,18 @@ export default function Orcamentos() {
       {/* Modais */}
       {modal === "novo" && (
         <Modal title="Novo orçamento" onClose={() => setModal(false)}>
+          {estimativo && (
+            <div style={{ background: C.red + "0d", border: `1px solid ${C.red}33`, borderRadius: 10, padding: "12px 16px", marginBottom: 16 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: C.red, marginBottom: 4 }}>⚡ Estimativo — {INDICES[estimativo.tipo]?.label} · {estimativo.area}m²</div>
+              <div style={{ fontSize: 12, color: C.muted }}>
+                {estimativo.itens.length} itens · Custo materiais: <strong style={{ color: C.text }}>{estimativo.totalGeral.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</strong>
+                <span style={{ marginLeft: 8 }}>· {(estimativo.totalGeral / estimativo.area).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}/m²</span>
+              </div>
+            </div>
+          )}
           <FormOrc
             form={form} setForm={setForm} clientes={clientes}
-            onSave={salvarNovo} onCancel={() => setModal(false)}
+            onSave={salvarNovo} onCancel={() => { setModal(false); setEstimativo(null); }}
             btnLabel="Gerar orçamento"
           />
         </Modal>
