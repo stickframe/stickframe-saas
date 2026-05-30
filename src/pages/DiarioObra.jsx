@@ -107,6 +107,18 @@ function FormDiario({ form, setForm, onSave, onCancel }) {
         />
       </div>
 
+      {/* Materiais e Equipamentos */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+        <div>
+          <Label>Materiais utilizados</Label>
+          <Textarea value={form.materiais} onChange={set("materiais")} placeholder="Ex: 20 perfis C90, 2 bobinas OSB..." rows={2} />
+        </div>
+        <div>
+          <Label>Equipamentos</Label>
+          <Textarea value={form.equipamentos} onChange={set("equipamentos")} placeholder="Ex: Parafusadeira, nível laser..." rows={2} />
+        </div>
+      </div>
+
       {/* Ocorrências */}
       <div>
         <Label>Ocorrências <span style={{ fontWeight: 400, textTransform: "none" }}>(opcional)</span></Label>
@@ -165,6 +177,24 @@ function ModalDetalhes({ reg, onClose }) {
           </div>
         </div>
 
+        {/* Materiais / Equipamentos */}
+        {(reg.materiais || reg.equipamentos) && (
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            {reg.materiais && (
+              <div>
+                <div style={{ fontSize: 11, color: C.muted, marginBottom: 6 }}>MATERIAIS UTILIZADOS</div>
+                <div style={{ background: C.darker, borderRadius: 6, padding: "10px 12px", fontSize: 13, lineHeight: 1.6 }}>{reg.materiais}</div>
+              </div>
+            )}
+            {reg.equipamentos && (
+              <div>
+                <div style={{ fontSize: 11, color: C.muted, marginBottom: 6 }}>EQUIPAMENTOS</div>
+                <div style={{ background: C.darker, borderRadius: 6, padding: "10px 12px", fontSize: 13, lineHeight: 1.6 }}>{reg.equipamentos}</div>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Ocorrências */}
         {reg.ocorrencias && (
           <div>
@@ -192,12 +222,14 @@ function ModalDetalhes({ reg, onClose }) {
 
 // ─── Diário de Obra ───────────────────────────────────────────────────────────
 const FORM_VAZIO = {
-  data: new Date().toISOString().slice(0, 10), // hoje no formato YYYY-MM-DD
+  data: new Date().toISOString().slice(0, 10),
   turno: "Integral",
   clima: "☀️ Ensolarado",
   equipe: 1,
   responsavel: "",
   atividades: "",
+  materiais: "",
+  equipamentos: "",
   ocorrencias: "",
 };
 
