@@ -46,6 +46,12 @@ function IFCViewer({ url, onElementClick }) {
         const grids = components.get(OBC.Grids);
         grids.create(world);
 
+        // FragmentsManager deve ser inicializado antes do IfcLoader (API v3)
+        setMsg("Inicializando motor de fragmentos...");
+        const fragments = components.get(OBC.FragmentsManager);
+        const workerUrl = await OBC.FragmentsManager.getWorker();
+        fragments.init(workerUrl);
+
         const ifcLoader = components.get(OBC.IfcLoader);
         await ifcLoader.setup();
 
