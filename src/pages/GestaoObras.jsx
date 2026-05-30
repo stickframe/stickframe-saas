@@ -354,8 +354,29 @@ export default function GestaoObras() {
     const diarioHtml = diarioObra.length === 0 ? "<p style='color:#888;font-size:13px'>Nenhum registro no diário.</p>"
       : diarioObra.map((r) => `<div style="padding:8px 0;border-bottom:1px solid #eee"><div style="font-size:11px;color:#888;margin-bottom:4px">${r.data} · ${r.clima || ""} · ${r.turno || ""}</div><div style="font-size:13px">${r.atividades || ""}</div>${r.ocorrencias ? `<div style="background:#fff5f5;border-left:3px solid #981915;padding:5px 10px;margin-top:6px;font-size:12px;color:#555">⚠️ ${r.ocorrencias}</div>` : ""}</div>`).join("");
 
-    const arqHtml = arqs.length === 0 ? "<p style='color:#888;font-size:13px'>Nenhum arquivo.</p>"
-      : arqs.map((a) => `<div style="font-size:12px;padding:4px 0;border-bottom:1px solid #eee">${a.nome} <span style="color:#888">· ${a.categoria} · ${a.tamanho}</span></div>`).join("");
+    const fotos    = arqs.filter((a) => a.tipo === "imagem" && a.url);
+    const docsArqs = arqs.filter((a) => a.tipo !== "imagem");
+
+    const fotosPorFase = FASES.map((fase) => {
+      const imgs = fotos.filter((f) => f.fase === fase);
+      if (!imgs.length) return "";
+      return `<div style="margin-bottom:16px">
+        <div style="font-size:10px;font-weight:700;letter-spacing:1px;color:#981915;margin-bottom:8px;text-transform:uppercase">${fase}</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+          ${imgs.map((f) => `<img src="${f.url}" alt="${f.nome}" style="width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:6px;border:1px solid #eee">`).join("")}
+        </div>
+      </div>`;
+    }).join("");
+    const fotosSemFase = fotos.filter((f) => !f.fase);
+    const fotosSemFaseHtml = fotosSemFase.length ? `<div style="margin-bottom:16px">
+      <div style="font-size:10px;font-weight:700;letter-spacing:1px;color:#981915;margin-bottom:8px;text-transform:uppercase">Sem fase</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+        ${fotosSemFase.map((f) => `<img src="${f.url}" alt="${f.nome}" style="width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:6px;border:1px solid #eee">`).join("")}
+      </div>
+    </div>` : "";
+
+    const arqHtml = docsArqs.length === 0 ? "<p style='color:#888;font-size:13px'>Nenhum documento.</p>"
+      : docsArqs.map((a) => `<div style="font-size:12px;padding:4px 0;border-bottom:1px solid #eee">${a.nome} <span style="color:#888">· ${a.categoria} · ${a.tamanho}</span></div>`).join("");
 
     const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Relatório — ${obra.nome}</title>
     <style>
@@ -391,7 +412,9 @@ export default function GestaoObras() {
 
     <h2>Diário de Obra (últimos 10)</h2>${diarioHtml}
 
-    <h2>Arquivos (${arqs.length})</h2>${arqHtml}
+    ${fotos.length > 0 ? `<h2>Fotos por Fase (${fotos.length})</h2>${fotosPorFase}${fotosSemFaseHtml}` : ""}
+
+    ${docsArqs.length > 0 ? `<h2>Documentos (${docsArqs.length})</h2>${arqHtml}` : ""}
     </body></html>`;
 
     win.document.open();
