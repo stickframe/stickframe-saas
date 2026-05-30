@@ -23,7 +23,8 @@ const PropostaOnline = lazy(() => import("./pages/PropostaOnline"));
 const Equipe      = lazy(() => import("./pages/Equipe"));
 const Cronograma  = lazy(() => import("./pages/Cronograma"));
 const Vistorias   = lazy(() => import("./pages/Vistorias"));
-const BIM         = lazy(() => import("./pages/BIM"));
+const BIM           = lazy(() => import("./pages/BIM"));
+const Quantitativos = lazy(() => import("./pages/Quantitativos"));
 
 const PAGES = {
   dashboard:  Dashboard,
@@ -39,7 +40,8 @@ const PAGES = {
   equipe:     Equipe,
   cronograma: Cronograma,
   vistorias:  Vistorias,
-  bim:        BIM,
+  bim:           BIM,
+  quantitativos: Quantitativos,
 };
 
 function AuthenticatedApp() {
