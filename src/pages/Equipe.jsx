@@ -110,8 +110,9 @@ export default function Equipe() {
   const [form,       setForm]       = useState(FORM_VAZIO);
   const [busca,      setBusca]      = useState("");
   const [statusF,    setStatusF]    = useState("Todos");
-  const [folhaModal, setFolhaModal] = useState(false);
-  const [obraFolha,  setObraFolha]  = useState("");
+  const [folhaModal,  setFolhaModal]  = useState(false);
+  const [obraFolha,   setObraFolha]   = useState("");
+  const [selecionados, setSelecionados] = useState({}); // { [colaboradorId]: true }
 
   function mostrarToast(msg) {
     setToast(msg);
@@ -151,19 +152,41 @@ export default function Equipe() {
     mostrarToast("🗑 Colaborador removido.");
   }
 
+  function abrirFolhaModal() {
+    const iniciais = {};
+    colaboradoresAtivosComSalario.forEach((c) => { iniciais[c.id] = true; });
+    setSelecionados(iniciais);
+    setObraFolha(obras[0]?.id || "");
+    setFolhaModal(true);
+  }
+
+  const colaboradoresAtivosComSalario = colaboradores.filter((c) => c.status === "Ativo" && c.salario);
+  const totalSelecionado = colaboradoresAtivosComSalario
+    .filter((c) => selecionados[c.id])
+    .reduce((a, c) => a + (c.salario || 0), 0);
+
+  function toggleColab(id) {
+    setSelecionados((prev) => ({ ...prev, [id]: !prev[id] }));
+  }
+
   async function lancarFolha() {
-    if (!obraFolha) return;
-    const mes = mesAno();
+    if (!obraFolha || totalSelecionado === 0) return;
+    const mes      = mesAno();
+    const nomes    = colaboradoresAtivosComSalario
+      .filter((c) => selecionados[c.id])
+      .map((c) => c.nome.split(" ")[0])
+      .join(", ");
     await addLancamento(obraFolha, {
-      tipo:       "despesa",
-      categoria:  "Mão de obra",
-      descricao:  `Folha de pagamento — ${mes} (${ativos} colaborador${ativos !== 1 ? "es" : ""})`,
-      valor:      folha,
-      data:       new Date().toLocaleDateString("pt-BR"),
+      tipo:      "despesa",
+      categoria: "Mão de obra",
+      descricao: `Folha ${mes} — ${nomes}`,
+      valor:     totalSelecionado,
+      data:      new Date().toLocaleDateString("pt-BR"),
     });
     setFolhaModal(false);
     setObraFolha("");
-    mostrarToast(`✅ Folha de ${fmt(folha)} lançada no financeiro!`);
+    setSelecionados({});
+    mostrarToast(`✅ Folha de ${fmt(totalSelecionado)} lançada no financeiro!`);
   }
 
   const lista = colaboradores.filter((c) => {
@@ -220,36 +243,79 @@ export default function Equipe() {
       {folhaModal && (
         <Modal title="Lançar folha no Financeiro" onClose={() => setFolhaModal(false)}>
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <div style={{ background: C.darker, borderRadius: 10, padding: "14px 16px", border: `1px solid ${C.success}33` }}>
-              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1.5, color: C.success, marginBottom: 10 }}>RESUMO DA FOLHA</div>
-              {colaboradores.filter((c) => c.status === "Ativo" && c.salario).map((c) => (
-                <div key={c.id} style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 6 }}>
-                  <span style={{ color: C.muted }}>{c.nome} <span style={{ fontSize: 10 }}>· {c.especialidade}</span></span>
-                  <span style={{ fontWeight: 700 }}>{fmt(c.salario)}</span>
+
+            {/* Seleção de colaboradores */}
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted }}>SELECIONAR COLABORADORES</div>
+                <div style={{ display: "flex", gap: 10 }}>
+                  <button onClick={() => { const s = {}; colaboradoresAtivosComSalario.forEach(c => { s[c.id] = true; }); setSelecionados(s); }}
+                    style={{ fontSize: 11, color: C.red, background: "none", border: "none", cursor: "pointer", fontFamily: "inherit" }}>
+                    Todos
+                  </button>
+                  <button onClick={() => setSelecionados({})}
+                    style={{ fontSize: 11, color: C.muted, background: "none", border: "none", cursor: "pointer", fontFamily: "inherit" }}>
+                    Nenhum
+                  </button>
                 </div>
-              ))}
-              <div style={{ borderTop: `1px solid ${C.border}`, marginTop: 10, paddingTop: 10, display: "flex", justifyContent: "space-between", fontSize: 14 }}>
-                <span style={{ fontWeight: 700 }}>Total</span>
-                <span style={{ fontWeight: 900, color: C.success }}>{fmt(folha)}</span>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {colaboradoresAtivosComSalario.map((c) => (
+                  <label key={c.id} style={{
+                    display: "flex", alignItems: "center", justifyContent: "space-between",
+                    padding: "10px 14px", borderRadius: 8, cursor: "pointer",
+                    border: `1px solid ${selecionados[c.id] ? C.success + "66" : C.border}`,
+                    background: selecionados[c.id] ? C.success + "08" : "transparent",
+                    transition: "all .15s",
+                  }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <input
+                        type="checkbox"
+                        checked={!!selecionados[c.id]}
+                        onChange={() => toggleColab(c.id)}
+                        style={{ accentColor: C.success, width: 16, height: 16 }}
+                      />
+                      <div>
+                        <div style={{ fontSize: 13, fontWeight: 600 }}>{c.nome}</div>
+                        <div style={{ fontSize: 10, color: C.muted }}>{c.especialidade} · {c.cargo || "—"}</div>
+                      </div>
+                    </div>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: selecionados[c.id] ? C.success : C.muted }}>
+                      {fmt(c.salario)}
+                    </span>
+                  </label>
+                ))}
               </div>
             </div>
 
+            {/* Total selecionado */}
+            <div style={{ background: C.darker, borderRadius: 8, padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ fontSize: 12, color: C.muted }}>
+                {colaboradoresAtivosComSalario.filter(c => selecionados[c.id]).length} colaborador(es) selecionado(s)
+              </span>
+              <span style={{ fontSize: 18, fontWeight: 900, color: totalSelecionado > 0 ? C.success : C.muted }}>
+                {fmt(totalSelecionado)}
+              </span>
+            </div>
+
+            {/* Obra destino */}
             <div>
-              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 6 }}>LANÇAR NA OBRA</div>
+              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 6 }}>OBRA DESTINO</div>
               <Select
                 value={obraFolha}
                 onChange={setObraFolha}
                 options={obras.map((o) => ({ value: o.id, label: o.nome?.split("—")[0]?.trim() }))}
               />
-            </div>
-
-            <div style={{ background: "#4a9eff11", border: "1px solid #4a9eff33", borderRadius: 8, padding: "10px 14px", fontSize: 12, color: "#4a9eff" }}>
-              ✔ Será criado um lançamento de despesa "Mão de obra — {mesAno()}" no financeiro da obra selecionada.
+              <div style={{ fontSize: 11, color: C.muted, marginTop: 6 }}>
+                O mesmo colaborador pode ser lançado em obras diferentes no mesmo mês.
+              </div>
             </div>
 
             <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", paddingTop: 12, borderTop: `1px solid ${C.border}` }}>
               <Btn variant="ghost" onClick={() => setFolhaModal(false)}>Cancelar</Btn>
-              <Btn disabled={!obraFolha} onClick={lancarFolha}>💰 Confirmar lançamento</Btn>
+              <Btn disabled={!obraFolha || totalSelecionado === 0} onClick={lancarFolha}>
+                💰 Lançar {fmt(totalSelecionado)}
+              </Btn>
             </div>
           </div>
         </Modal>
@@ -266,7 +332,7 @@ export default function Equipe() {
           </div>
           <div style={{ display: "flex", gap: 8 }}>
             {folha > 0 && (
-              <button onClick={() => { setObraFolha(obras[0]?.id || ""); setFolhaModal(true); }} style={{
+              <button onClick={abrirFolhaModal} style={{
                 padding: "8px 16px", background: C.success + "18",
                 border: `1px solid ${C.success}44`, borderRadius: 8,
                 color: C.success, fontSize: 12, fontWeight: 700,
