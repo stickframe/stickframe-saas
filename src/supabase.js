@@ -64,8 +64,9 @@ export const db = {
   },
 
   async updateObra(id, updates) {
-    const { error } = await supabase.from('obras').update(updates).eq('id', id)
+    const { data, error } = await supabase.from('obras').update(updates).eq('id', id).select('*, clientes(nome)').single()
     if (error) throw error
+    return data
   },
 
   // ── FINANCEIRO ──────────────────────────────────────────────────────────────
