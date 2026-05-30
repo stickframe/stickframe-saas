@@ -8,8 +8,11 @@ import Select from "../components/ui/Select";
 import Badge from "../components/ui/Badge";
 import Modal from "../components/ui/Modal";
 
-const ICONE_TIPO = { pdf: "📄", imagem: "🖼️", outro: "📎" };
-const CATS       = ["Projeto", "Foto", "Documento", "Outro"];
+const ICONE_TIPO  = { pdf: "📄", imagem: "🖼️", outro: "📎" };
+const CATS        = ["Projeto", "Foto", "Documento", "Outro"];
+const DISCIPLINAS = ["Arquitetônico","Estrutural","Steel Frame","Elétrico","Hidráulico","AVAC","Fundação","Administrativo","Outro"];
+const STATUS_DOC  = ["Ativo","Em revisão","Aprovado","Obsoleto"];
+const STATUS_DOC_COR = { "Ativo": "#4a9eff", "Em revisão": "#b97a00", "Aprovado": "#2e9e5b", "Obsoleto": C.muted };
 const STATUS_OBRA = ["Planejamento", "Em andamento", "Pausada", "Concluída"];
 const STATUS_COR  = {
   "Em andamento": "#2e9e5b",
@@ -145,6 +148,10 @@ export default function GestaoObras() {
   const [dragOver,    setDragOver]    = useState(false);
   const [abaAtiva,    setAbaAtiva]    = useState("fases");
   const [catFiltro,   setCatFiltro]   = useState("Todos");
+  const [discFiltro,  setDiscFiltro]  = useState("Todos");
+  const [statusDocFiltro, setStatusDocFiltro] = useState("Todos");
+  const [faseFiltro,  setFaseFiltro]  = useState("Todos");
+  const [uploadMeta,  setUploadMeta]  = useState(null); // { files, disciplina, status_doc }
   const [toast,       setToast]       = useState(null);
   const [form,        setForm]        = useState(FORM_VAZIO);
   const [busca,       setBusca]       = useState("");
@@ -190,7 +197,12 @@ export default function GestaoObras() {
 
   const obra      = obras.find((o) => o.id === obraId) || null;
   const arqObra   = arquivos[obraId] || [];
-  const arqFiltro = catFiltro === "Todos" ? arqObra : arqObra.filter((a) => a.categoria === catFiltro);
+  const arqFiltro = arqObra.filter((a) =>
+    (catFiltro      === "Todos" || a.categoria  === catFiltro) &&
+    (discFiltro     === "Todos" || a.disciplina === discFiltro) &&
+    (statusDocFiltro=== "Todos" || a.status_doc === statusDocFiltro) &&
+    (faseFiltro     === "Todos" || a.fase       === faseFiltro)
+  );
 
   const obrasFiltradas = obras.filter((o) => {
     const matchBusca  = !busca || o.nome?.toLowerCase().includes(busca.toLowerCase()) || o.cliente?.toLowerCase().includes(busca.toLowerCase());
@@ -344,15 +356,27 @@ export default function GestaoObras() {
     setTimeout(() => win.print(), 400);
   }
 
-  async function handleFiles(files) {
-    const novos = Array.from(files).map((f) => ({
-      file:      f,
-      nome:      f.name,
-      tipo:      f.type.startsWith("image/") ? "imagem" : f.name.endsWith(".pdf") ? "pdf" : "outro",
-      tamanho:   (f.size / 1024 / 1024).toFixed(2) + " MB",
-      data:      new Date().toLocaleDateString("pt-BR"),
-      categoria: f.type.startsWith("image/") ? "Foto" : f.name.endsWith(".pdf") ? "Documento" : "Outro",
+  function handleFiles(files) {
+    const lista = Array.from(files);
+    if (!lista.length) return;
+    setUploadMeta({ files: lista, disciplina: "Outro", status_doc: "Ativo" });
+  }
+
+  async function confirmarUpload() {
+    if (!uploadMeta) return;
+    const { files, disciplina, status_doc } = uploadMeta;
+    const novos = files.map((f) => ({
+      file:       f,
+      nome:       f.name,
+      tipo:       f.type.startsWith("image/") ? "imagem" : f.name.endsWith(".pdf") ? "pdf" : "outro",
+      tamanho:    (f.size / 1024 / 1024).toFixed(2) + " MB",
+      data:       new Date().toLocaleDateString("pt-BR"),
+      categoria:  f.type.startsWith("image/") ? "Foto" : f.name.endsWith(".pdf") ? "Documento" : "Outro",
+      fase:       obra?.fase || null,
+      disciplina,
+      status_doc,
     }));
+    setUploadMeta(null);
     try {
       await addArquivos(obraId, novos);
       mostrarToast(`✅ ${novos.length} arquivo(s) enviado(s)!`);
@@ -372,6 +396,40 @@ export default function GestaoObras() {
           fontSize: 13, fontWeight: 600, boxShadow: "0 8px 32px #0006",
         }}>
           {toast}
+        </div>
+      )}
+
+      {/* Modal metadados de upload */}
+      {uploadMeta && (
+        <div style={{ position: "fixed", inset: 0, background: "#000a", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 14, padding: 28, width: 400 }}>
+            <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 4 }}>Classificar arquivos</div>
+            <div style={{ fontSize: 12, color: C.muted, marginBottom: 20 }}>
+              {uploadMeta.files.length} arquivo(s) · Fase atual: <strong>{obra?.fase}</strong>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 24 }}>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 6 }}>DISCIPLINA</div>
+                <Select
+                  value={uploadMeta.disciplina}
+                  onChange={(v) => setUploadMeta((m) => ({ ...m, disciplina: v }))}
+                  options={DISCIPLINAS.map((d) => ({ value: d, label: d }))}
+                />
+              </div>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 6 }}>STATUS DO DOCUMENTO</div>
+                <Select
+                  value={uploadMeta.status_doc}
+                  onChange={(v) => setUploadMeta((m) => ({ ...m, status_doc: v }))}
+                  options={STATUS_DOC.map((s) => ({ value: s, label: s }))}
+                />
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+              <button onClick={() => setUploadMeta(null)} style={{ padding: "9px 18px", borderRadius: 6, border: `1px solid ${C.border}`, background: "transparent", color: C.muted, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>Cancelar</button>
+              <button onClick={confirmarUpload} style={{ padding: "9px 18px", borderRadius: 6, border: "none", background: C.red, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>Enviar arquivos</button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -567,18 +625,29 @@ export default function GestaoObras() {
                       <div style={{ fontSize: 11, color: C.muted }}>PDF, imagens, planilhas — qualquer formato</div>
                     </label>
 
-                    <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
-                      {["Todos", ...CATS].map((c) => (
-                        <button key={c} onClick={() => setCatFiltro(c)} style={{
-                          padding: "5px 12px", borderRadius: 6, fontSize: 11,
-                          fontWeight: catFiltro === c ? 700 : 400,
-                          border: `1px solid ${catFiltro === c ? C.red : C.border}`,
-                          background: catFiltro === c ? C.red + "18" : "transparent",
-                          color: catFiltro === c ? C.text : C.muted,
-                          cursor: "pointer", fontFamily: "inherit",
-                        }}>{c}</button>
+                    {/* Filtros por categoria, disciplina, status_doc e fase */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16 }}>
+                      {[
+                        { label: "Categoria", opts: CATS, val: catFiltro, set: setCatFiltro },
+                        { label: "Disciplina", opts: DISCIPLINAS, val: discFiltro, set: setDiscFiltro },
+                        { label: "Status", opts: STATUS_DOC, val: statusDocFiltro, set: setStatusDocFiltro },
+                        { label: "Fase", opts: FASES, val: faseFiltro, set: setFaseFiltro },
+                      ].map(({ label, opts, val, set }) => (
+                        <div key={label} style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+                          <span style={{ fontSize: 10, fontWeight: 700, color: C.muted, letterSpacing: .5, minWidth: 62 }}>{label.toUpperCase()}</span>
+                          {["Todos", ...opts].map((o) => (
+                            <button key={o} onClick={() => set(o)} style={{
+                              padding: "3px 10px", borderRadius: 5, fontSize: 11,
+                              fontWeight: val === o ? 700 : 400,
+                              border: `1px solid ${val === o ? C.red : C.border}`,
+                              background: val === o ? C.red + "18" : "transparent",
+                              color: val === o ? C.text : C.muted,
+                              cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap",
+                            }}>{o}</button>
+                          ))}
+                        </div>
                       ))}
-                      <span style={{ marginLeft: "auto", fontSize: 11, color: C.muted, alignSelf: "center" }}>{arqFiltro.length} arquivo(s)</span>
+                      <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{arqFiltro.length} arquivo(s) encontrado(s)</div>
                     </div>
 
                     {arqFiltro.length === 0 ? (
@@ -588,11 +657,16 @@ export default function GestaoObras() {
                     ) : (
                       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                         {arqFiltro.map((a) => (
-                          <div key={a.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", background: C.darker, borderRadius: 8, border: `1px solid ${C.border}` }}>
-                            <span style={{ fontSize: 22, flexShrink: 0 }}>{ICONE_TIPO[a.tipo] || "📎"}</span>
+                          <div key={a.id} style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "12px 14px", background: C.darker, borderRadius: 8, border: `1px solid ${C.border}` }}>
+                            <span style={{ fontSize: 22, flexShrink: 0, marginTop: 2 }}>{ICONE_TIPO[a.tipo] || "📎"}</span>
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <div style={{ fontSize: 13, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.nome}</div>
-                              <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{a.categoria} · {a.tamanho} · {a.data}</div>
+                              <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{a.tamanho} · {a.data}</div>
+                              <div style={{ display: "flex", gap: 6, marginTop: 6, flexWrap: "wrap" }}>
+                                {a.disciplina && <span style={{ background: "#4a9eff18", color: "#4a9eff", border: "1px solid #4a9eff33", borderRadius: 4, padding: "1px 7px", fontSize: 10, fontWeight: 700 }}>{a.disciplina}</span>}
+                                {a.fase && <span style={{ background: "#98191518", color: "#981915", border: "1px solid #98191533", borderRadius: 4, padding: "1px 7px", fontSize: 10, fontWeight: 700 }}>{a.fase}</span>}
+                                {a.status_doc && <span style={{ background: (STATUS_DOC_COR[a.status_doc] || C.muted) + "18", color: STATUS_DOC_COR[a.status_doc] || C.muted, border: `1px solid ${(STATUS_DOC_COR[a.status_doc] || C.muted)}33`, borderRadius: 4, padding: "1px 7px", fontSize: 10, fontWeight: 700 }}>{a.status_doc}</span>}
+                              </div>
                             </div>
                             {a.url && (
                               <a href={a.url} target="_blank" rel="noreferrer" style={{
