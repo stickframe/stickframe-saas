@@ -200,109 +200,235 @@ function gerarPDF(o) {
 }
 
 // ─── Índices técnicos StickFrame (baseados em obras reais) ───────────────────
-const INDICES = {
-  residencial: {
-    label: "Residencial",
-    itens: [
-      { grupo: "Estrutura",   item: "Aço LSF (lista de corte LE230 / Z275)",      un: "kg",  coef: 31.25, precoUnit: 15.00 },
-      { grupo: "Estrutura",   item: "Acessórios estrutura (parafusos, conectores)", un: "vb",  coef: 0.15,  precoUnit: 15.00, sobreAco: true },
-      { grupo: "Vedação ext", item: "Placa Glasroc X 12,5mm (cimentícia ext.)",    un: "m²",  coef: 2.58,  precoUnit: 86.80 },
-      { grupo: "Vedação ext", item: "Membrana Typar (WRB)",                        un: "m²",  coef: 3.48,  precoUnit: 16.17 },
-      { grupo: "Vedação ext", item: "Massa Base Coat 20kg",                        un: "sc",  coef: 0.79,  precoUnit: 88.00 },
-      { grupo: "Vedação ext", item: "Tela fibra de vidro",                         un: "m²",  coef: 1.04,  precoUnit: 14.00 },
-      { grupo: "Isolamento",  item: "Lã de vidro 50mm (15m²/rl)",                 un: "m²",  coef: 3.75,  precoUnit: 16.00 },
-      { grupo: "Vedação int", item: "Placa Gesso ST 12,5mm (drywall interno)",     un: "m²",  coef: 3.28,  precoUnit: 17.13 },
-      { grupo: "Vedação int", item: "Placa Gesso RU 12,5mm (área molhada)",        un: "m²",  coef: 0.63,  precoUnit: 25.46, areaUmida: true },
-      { grupo: "Vedação int", item: "Massa junta drywall 25kg",                    un: "bd",  coef: 0.17,  precoUnit: 80.00 },
-      { grupo: "Vedação int", item: "Fita papel perfurada junta",                  un: "pc",  coef: 0.06,  precoUnit: 60.00 },
-      { grupo: "Forro",       item: "Perfil forro F530 3000mm",                    un: "pc",  coef: 0.63,  precoUnit: 15.00 },
-      { grupo: "Forro",       item: "Pendural REG F530",                           un: "pc",  coef: 1.38,  precoUnit: 1.60  },
-    ],
-  },
-  galpao: {
-    label: "Galpão / Comercial",
-    itens: [
-      { grupo: "Estrutura",   item: "Aço LSF + acessórios Smart Frame Z275",       un: "vb",  coef: 441.31, precoUnit: 1.00 },
-      { grupo: "Vedação ext", item: "Vedação externa Smart Glasroc",               un: "vb",  coef: 353.55, precoUnit: 1.00 },
-      { grupo: "Vedação int", item: "Vedação interna Performa",                    un: "vb",  coef: 59.83,  precoUnit: 1.00 },
-      { grupo: "Vedação int", item: "Vedação interna Performa RU (área molhada)",  un: "vb",  coef: 21.76,  precoUnit: 1.00, areaUmida: true },
-      { grupo: "Cobertura",   item: "Telha metálica sanduíche",                    un: "vb",  coef: 119.11, precoUnit: 1.00, opcional: true },
-    ],
-  },
-};
+// ─── Opções selecionáveis da calculadora ─────────────────────────────────────
+const FECHAMENTO_EXT_OPTS = [
+  { value: "glasroc",    label: "Glasroc X 12,5mm",    precoUnit: 86.80 },
+  { value: "cimenticia", label: "Placa cimentícia",     precoUnit: 65.00 },
+  { value: "osb",        label: "OSB 11mm",             precoUnit: 52.00 },
+];
+const VEDACAO_INT_OPTS = [
+  { value: "st",       label: "Placa Gesso ST 12,5mm",       precoUnit: 17.13 },
+  { value: "performa", label: "Placa Gesso Performa 12,5mm", precoUnit: 28.00 },
+];
+
+let _pid = 0;
+const newParede = () => ({ id: ++_pid, desc: "", comp: "" });
+
+function ListaParedes({ label, paredes, setParedes }) {
+  function add() { setParedes((p) => [...p, newParede()]); }
+  function remove(id) { setParedes((p) => p.filter((x) => x.id !== id)); }
+  function upd(id, field, val) { setParedes((p) => p.map((x) => x.id === id ? { ...x, [field]: val } : x)); }
+  const total = paredes.reduce((s, p) => s + (parseFloat(p.comp) || 0), 0);
+  return (
+    <div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+        <Label>{label}</Label>
+        <span style={{ fontSize: 11, color: C.muted }}>Total: <strong>{total.toFixed(2)} m</strong></span>
+      </div>
+      {paredes.map((p) => (
+        <div key={p.id} style={{ display: "flex", gap: 6, marginBottom: 6, alignItems: "center" }}>
+          <input value={p.desc} onChange={(e) => upd(p.id, "desc", e.target.value)} placeholder="Descrição (ex: Fachada Norte)"
+            style={{ flex: 2, background: C.surface, border: `1px solid ${C.border}`, borderRadius: 6, padding: "7px 10px", fontSize: 12, color: C.text, fontFamily: "inherit", outline: "none" }} />
+          <div style={{ display: "flex", alignItems: "center", gap: 4, flex: 1 }}>
+            <input type="number" min="0" step="0.01" value={p.comp} onChange={(e) => upd(p.id, "comp", e.target.value)} placeholder="Comp. (m)"
+              style={{ flex: 1, background: C.surface, border: `1px solid ${C.border}`, borderRadius: 6, padding: "7px 10px", fontSize: 12, color: C.text, fontFamily: "inherit", outline: "none" }} />
+            <span style={{ fontSize: 11, color: C.muted }}>m</span>
+          </div>
+          <button onClick={() => remove(p.id)} style={{ background: "none", border: "none", color: C.muted, cursor: "pointer", fontSize: 16, padding: "0 4px" }}>×</button>
+        </div>
+      ))}
+      <button onClick={add} style={{ background: "none", border: `1px dashed ${C.border}`, borderRadius: 6, padding: "6px 14px", fontSize: 12, color: C.muted, cursor: "pointer", fontFamily: "inherit", width: "100%" }}>
+        + Adicionar parede
+      </button>
+    </div>
+  );
+}
 
 function CalculadoraEstimativa({ onAplicar, onClose }) {
-  const [tipo,      setTipo]      = useState("residencial");
-  const [area,      setArea]      = useState(48);
-  const [areaUmida, setAreaUmida] = useState(8);
-  const [cobertura, setCobertura] = useState(false);
-  const [itens,     setItens]     = useState(null);
+  const [peDireito,    setPeDireito]    = useState(2.60);
+  const [paredesExt,   setParedesExt]   = useState([newParede()]);
+  const [paredesInt,   setParedesInt]   = useState([newParede()]);
+  const [areaPiso,     setAreaPiso]     = useState("");
+  const [areaMolhada,  setAreaMolhada]  = useState(8);
+  const [cobertura,    setCobertura]    = useState(false);
+  const [fechExt,      setFechExt]      = useState("glasroc");
+  const [vedInt,       setVedInt]       = useState("st");
+  const [itens,        setItens]        = useState(null);
+
+  const mlExt      = paredesExt.reduce((s, p) => s + (parseFloat(p.comp) || 0), 0);
+  const mlInt      = paredesInt.reduce((s, p) => s + (parseFloat(p.comp) || 0), 0);
+  const aParExt    = mlExt * peDireito;
+  const aParInt    = mlInt * peDireito;
+  const aParTotal  = aParExt + aParInt;
+  const aMolhWall  = areaMolhada * (peDireito / 2.6) * 4; // estimativa perímetro área molhada
+  const pisoVal    = parseFloat(areaPiso) || (mlExt > 0 ? (mlExt / 4) ** 2 : 0);
+
+  const fmtV = (v) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  const arred = (v) => Math.ceil(v * 100) / 100;
 
   function calcular() {
-    const template = INDICES[tipo];
-    const resultado = template.itens
-      .filter((i) => !i.opcional || (i.opcional && cobertura))
-      .map((i) => {
-        let qtd;
-        if (i.sobreAco) {
-          const aco = template.itens.find((x) => x.grupo === "Estrutura" && !x.sobreAco);
-          const pesoAco = (aco?.coef || 31.25) * area;
-          qtd = pesoAco * i.coef;
-        } else if (i.areaUmida) {
-          qtd = i.un === "vb" ? areaUmida * i.coef : areaUmida * i.coef;
-        } else {
-          qtd = i.un === "vb" ? area * i.coef : area * i.coef;
-        }
-        qtd = Math.ceil(qtd * 100) / 100;
-        const total = qtd * i.precoUnit;
-        return { ...i, qtd, total };
-      });
+    if (mlExt === 0) return;
+    const fechOpt = FECHAMENTO_EXT_OPTS.find((o) => o.value === fechExt);
+    const vedOpt  = VEDACAO_INT_OPTS.find((o) => o.value === vedInt);
+    const WASTE   = 1.10; // 10% perda
+
+    const resultado = [
+      // ── Estrutura ──────────────────────────────────────────────────────────
+      { grupo: "Estrutura", item: "Aço LSF LE230 / Z275 (lista de corte)", un: "kg",
+        qtd: arred(aParTotal * 12), precoUnit: 15.00 },
+      { grupo: "Estrutura", item: "Acessórios estrutura (parafusos, conectores)", un: "vb",
+        qtd: arred(aParTotal * 12 * 0.15), precoUnit: 15.00 },
+
+      // ── Vedação externa ────────────────────────────────────────────────────
+      { grupo: "Vedação externa", item: `${fechOpt.label} (fechamento externo)`, un: "m²",
+        qtd: arred(aParExt * WASTE), precoUnit: fechOpt.precoUnit },
+      { grupo: "Vedação externa", item: "Membrana hidrófuga (WRB)", un: "m²",
+        qtd: arred(aParExt * WASTE), precoUnit: 16.17 },
+      { grupo: "Vedação externa", item: "Tela de fibra de vidro — rolo 1m (juntas)", un: "m²",
+        qtd: arred(aParExt * 0.15), precoUnit: 14.00 },
+      { grupo: "Vedação externa", item: "Tela de fibra de vidro — rolo 20cm (cantos)", un: "m",
+        qtd: arred((mlExt * peDireito) / 3), precoUnit: 5.50 },
+      { grupo: "Vedação externa", item: "Massa Base Coat 20kg", un: "sc",
+        qtd: arred(aParExt / 30), precoUnit: 88.00 },
+
+      // ── Isolamento ─────────────────────────────────────────────────────────
+      { grupo: "Isolamento", item: "Lã de vidro 50mm", un: "m²",
+        qtd: arred(aParTotal * WASTE), precoUnit: 16.00 },
+
+      // ── Vedação interna ────────────────────────────────────────────────────
+      { grupo: "Vedação interna", item: `${vedOpt.label} — paredes secas (2 faces)`, un: "m²",
+        qtd: arred(aParInt * 2 * WASTE), precoUnit: vedOpt.precoUnit },
+      { grupo: "Vedação interna", item: "Placa Gesso RU 12,5mm — áreas molhadas (2 faces)", un: "m²",
+        qtd: arred(aMolhWall * 2 * WASTE), precoUnit: 25.46 },
+      { grupo: "Vedação interna", item: "Massa junta drywall 25kg", un: "bd",
+        qtd: arred((aParInt * 2 + aMolhWall * 2) / 60), precoUnit: 80.00 },
+      { grupo: "Vedação interna", item: "Fita papel perfurada (junta)", un: "pc",
+        qtd: arred((aParInt * 2 + aMolhWall * 2) / 150), precoUnit: 60.00 },
+
+      // ── Forro ──────────────────────────────────────────────────────────────
+      { grupo: "Forro", item: "Placa Gesso Leve 12,5mm (forro)", un: "m²",
+        qtd: arred(pisoVal * WASTE), precoUnit: 22.00 },
+      { grupo: "Forro", item: "Perfil forro F530 3000mm", un: "pc",
+        qtd: Math.ceil(pisoVal / 1.8 / 3), precoUnit: 15.00 },
+      { grupo: "Forro", item: "Pendural REG F530", un: "pc",
+        qtd: Math.ceil(pisoVal / 1.44), precoUnit: 1.60 },
+
+      // ── Cobertura (opcional) ───────────────────────────────────────────────
+      ...(cobertura ? [
+        { grupo: "Cobertura", item: "Telha metálica sanduíche", un: "m²",
+          qtd: arred(pisoVal * 1.15), precoUnit: 119.11 },
+      ] : []),
+    ].map((i) => ({ ...i, total: i.qtd * i.precoUnit }));
+
     setItens(resultado);
   }
 
   const totalGeral = itens ? itens.reduce((s, i) => s + i.total, 0) : 0;
-  const grupos = itens ? [...new Set(itens.map((i) => i.grupo))] : [];
-
-  const fmt = (v) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  const grupos     = itens ? [...new Set(itens.map((i) => i.grupo))] : [];
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      {/* Parâmetros */}
-      <div style={{ background: C.darker, borderRadius: 10, padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
-        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.red }}>PARÂMETROS DA OBRA</div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+
+      {/* ── Medidas do projeto ── */}
+      <div style={{ background: C.darker, borderRadius: 10, padding: 16, display: "flex", flexDirection: "column", gap: 14 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.red }}>MEDIDAS DO PROJETO</div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
           <div>
-            <Label required>Tipo de obra</Label>
-            <Select value={tipo} onChange={(v) => { setTipo(v); setItens(null); }}
-              options={Object.entries(INDICES).map(([k, v]) => ({ value: k, label: v.label }))} />
+            <Label required>Pé direito (m)</Label>
+            <input type="number" min="2" step="0.05" value={peDireito}
+              onChange={(e) => { setPeDireito(parseFloat(e.target.value) || 2.6); setItens(null); }}
+              style={{ width: "100%", background: C.surface, border: `1px solid ${C.border}`, borderRadius: 6, padding: "8px 10px", fontSize: 13, color: C.text, fontFamily: "inherit", outline: "none" }} />
           </div>
           <div>
-            <Label required>Área total (m²)</Label>
-            <Input type="number" min="1" value={area} onChange={(v) => { setArea(parseFloat(v) || 0); setItens(null); }} />
+            <Label>Área de piso (m²)</Label>
+            <input type="number" min="0" step="0.5" value={areaPiso} placeholder="Calculado auto"
+              onChange={(e) => { setAreaPiso(e.target.value); setItens(null); }}
+              style={{ width: "100%", background: C.surface, border: `1px solid ${C.border}`, borderRadius: 6, padding: "8px 10px", fontSize: 13, color: C.text, fontFamily: "inherit", outline: "none" }} />
           </div>
           <div>
-            <Label>Área molhada — banheiros/coz. (m²)</Label>
-            <Input type="number" min="0" value={areaUmida} onChange={(v) => { setAreaUmida(parseFloat(v) || 0); setItens(null); }} />
-          </div>
-          <div style={{ display: "flex", alignItems: "flex-end", paddingBottom: 2 }}>
-            <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, cursor: "pointer" }}>
-              <input type="checkbox" checked={cobertura} onChange={(e) => { setCobertura(e.target.checked); setItens(null); }} />
-              Incluir cobertura
-            </label>
+            <Label>Área molhada (m²)</Label>
+            <input type="number" min="0" step="0.5" value={areaMolhada}
+              onChange={(e) => { setAreaMolhada(parseFloat(e.target.value) || 0); setItens(null); }}
+              style={{ width: "100%", background: C.surface, border: `1px solid ${C.border}`, borderRadius: 6, padding: "8px 10px", fontSize: 13, color: C.text, fontFamily: "inherit", outline: "none" }} />
           </div>
         </div>
-        <button onClick={calcular} style={{
-          background: C.red, color: "#fff", border: "none", borderRadius: 8,
-          padding: "10px 0", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
-        }}>
-          ⚡ Calcular estimativo
-        </button>
+
+        <ListaParedes label="Paredes externas — comprimento de cada parede (m)" paredes={paredesExt} setParedes={(v) => { setParedesExt(v); setItens(null); }} />
+        <ListaParedes label="Paredes internas — comprimento de cada divisória (m)" paredes={paredesInt} setParedes={(v) => { setParedesInt(v); setItens(null); }} />
+
+        {/* Resumo das áreas calculadas */}
+        {mlExt > 0 && (
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            {[
+              ["Área parede ext", `${aParExt.toFixed(1)} m²`],
+              ["Área parede int", `${aParInt.toFixed(1)} m²`],
+              ["ML total", `${(mlExt + mlInt).toFixed(1)} m`],
+              ["Área piso", `${pisoVal.toFixed(1)} m²`],
+            ].map(([k, v]) => (
+              <div key={k} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 8, padding: "8px 14px", flex: 1, minWidth: 110 }}>
+                <div style={{ fontSize: 10, color: C.muted }}>{k}</div>
+                <div style={{ fontSize: 14, fontWeight: 800 }}>{v}</div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* Resultado */}
+      {/* ── Opções de materiais ── */}
+      <div style={{ background: C.darker, borderRadius: 10, padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.red }}>OPÇÕES DE MATERIAIS</div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          <div>
+            <Label>Fechamento externo</Label>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              {FECHAMENTO_EXT_OPTS.map((o) => (
+                <label key={o.value} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, cursor: "pointer" }}>
+                  <input type="radio" name="fechExt" checked={fechExt === o.value}
+                    onChange={() => { setFechExt(o.value); setItens(null); }} />
+                  {o.label}
+                  <span style={{ fontSize: 11, color: C.muted }}>{fmtV(o.precoUnit)}/m²</span>
+                </label>
+              ))}
+            </div>
+          </div>
+          <div>
+            <Label>Vedação interna — paredes secas</Label>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              {VEDACAO_INT_OPTS.map((o) => (
+                <label key={o.value} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, cursor: "pointer" }}>
+                  <input type="radio" name="vedInt" checked={vedInt === o.value}
+                    onChange={() => { setVedInt(o.value); setItens(null); }} />
+                  {o.label}
+                  <span style={{ fontSize: 11, color: C.muted }}>{fmtV(o.precoUnit)}/m²</span>
+                </label>
+              ))}
+            </div>
+            <div style={{ marginTop: 12 }}>
+              <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, cursor: "pointer" }}>
+                <input type="checkbox" checked={cobertura} onChange={(e) => { setCobertura(e.target.checked); setItens(null); }} />
+                Incluir cobertura (telha metálica sanduíche)
+              </label>
+            </div>
+          </div>
+        </div>
+        <div style={{ fontSize: 11, color: C.muted, padding: "6px 10px", background: C.surface, borderRadius: 6 }}>
+          ✓ Membrana hidrófuga · Massa Base Coat · Telas fibra vidro · Lã de vidro · Gesso RU (área molhada) · Gesso Leve (forro) — sempre incluídos
+        </div>
+      </div>
+
+      <button onClick={calcular} disabled={mlExt === 0} style={{
+        background: mlExt === 0 ? C.border : C.red, color: mlExt === 0 ? C.muted : "#fff",
+        border: "none", borderRadius: 8, padding: "12px 0", fontSize: 14, fontWeight: 700,
+        cursor: mlExt === 0 ? "not-allowed" : "pointer", fontFamily: "inherit",
+      }}>
+        {mlExt === 0 ? "Informe ao menos uma parede externa para calcular" : "⚡ Calcular estimativo"}
+      </button>
+
+      {/* ── Resultado ── */}
       {itens && (
         <>
-          <div style={{ maxHeight: 340, overflowY: "auto", border: `1px solid ${C.border}`, borderRadius: 10, overflow: "hidden" }}>
+          <div style={{ border: `1px solid ${C.border}`, borderRadius: 10, overflow: "hidden" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
               <thead>
                 <tr style={{ background: C.darker }}>
@@ -322,8 +448,8 @@ function CalculadoraEstimativa({ onAplicar, onClose }) {
                       <tr key={idx} style={{ borderBottom: `1px solid ${C.border}` }}>
                         <td style={{ padding: "7px 12px", color: C.text }}>{i.item}</td>
                         <td style={{ padding: "7px 8px", textAlign: "center", color: C.muted }}>{i.un}</td>
-                        <td style={{ padding: "7px 8px", textAlign: "right", color: C.text }}>{i.qtd % 1 === 0 ? i.qtd : i.qtd.toFixed(2)}</td>
-                        <td style={{ padding: "7px 12px", textAlign: "right", fontWeight: 600, color: C.text }}>{fmt(i.total)}</td>
+                        <td style={{ padding: "7px 8px", textAlign: "right" }}>{i.qtd % 1 === 0 ? i.qtd : i.qtd.toFixed(2)}</td>
+                        <td style={{ padding: "7px 12px", textAlign: "right", fontWeight: 600 }}>{fmtV(i.total)}</td>
                       </tr>
                     ))}
                   </>
@@ -332,18 +458,17 @@ function CalculadoraEstimativa({ onAplicar, onClose }) {
             </table>
           </div>
 
-          {/* Total + ações */}
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: C.darker, borderRadius: 10, padding: "14px 16px" }}>
             <div>
-              <div style={{ fontSize: 11, color: C.muted }}>Estimativo de materiais — {area} m²</div>
-              <div style={{ fontSize: 20, fontWeight: 900, color: C.red }}>{fmt(totalGeral)}</div>
-              <div style={{ fontSize: 11, color: C.muted }}>{fmt(totalGeral / area)}/m²</div>
+              <div style={{ fontSize: 11, color: C.muted }}>Estimativo de materiais · {pisoVal.toFixed(0)} m² piso · {(mlExt+mlInt).toFixed(0)} m paredes</div>
+              <div style={{ fontSize: 22, fontWeight: 900, color: C.red }}>{fmtV(totalGeral)}</div>
+              <div style={{ fontSize: 11, color: C.muted }}>{pisoVal > 0 ? `${fmtV(totalGeral / pisoVal)}/m²` : ""}</div>
             </div>
             <div style={{ display: "flex", gap: 8 }}>
               <button onClick={onClose} style={{ background: "none", border: `1px solid ${C.border}`, borderRadius: 8, padding: "9px 16px", fontSize: 12, cursor: "pointer", fontFamily: "inherit", color: C.muted }}>
                 Cancelar
               </button>
-              <button onClick={() => onAplicar(itens, totalGeral, area, tipo)} style={{ background: C.red, color: "#fff", border: "none", borderRadius: 8, padding: "9px 16px", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+              <button onClick={() => onAplicar(itens, totalGeral, pisoVal, "residencial")} style={{ background: C.red, color: "#fff", border: "none", borderRadius: 8, padding: "9px 16px", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
                 Aplicar ao orçamento →
               </button>
             </div>
@@ -531,7 +656,7 @@ export default function Orcamentos() {
         <Modal title="Novo orçamento" onClose={() => setModal(false)}>
           {estimativo && (
             <div style={{ background: C.red + "0d", border: `1px solid ${C.red}33`, borderRadius: 10, padding: "12px 16px", marginBottom: 16 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: C.red, marginBottom: 4 }}>⚡ Estimativo — {INDICES[estimativo.tipo]?.label} · {estimativo.area}m²</div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: C.red, marginBottom: 4 }}>⚡ Estimativo — {estimativo.tipo === "residencial" ? "Residencial" : "Galpão/Comercial"} · {estimativo.area}m²</div>
               <div style={{ fontSize: 12, color: C.muted }}>
                 {estimativo.itens.length} itens · Custo materiais: <strong style={{ color: C.text }}>{estimativo.totalGeral.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</strong>
                 <span style={{ marginLeft: 8 }}>· {(estimativo.totalGeral / estimativo.area).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}/m²</span>
@@ -655,7 +780,7 @@ export default function Orcamentos() {
         {estimativo && (
           <div style={{ background: C.red + "0d", border: `1px solid ${C.red}33`, borderRadius: 12, padding: "14px 18px", marginBottom: 16, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: C.red, marginBottom: 2 }}>⚡ Estimativo calculado — {INDICES[estimativo.tipo]?.label} · {estimativo.area}m²</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: C.red, marginBottom: 2 }}>⚡ Estimativo calculado — {estimativo.tipo === "residencial" ? "Residencial" : "Galpão/Comercial"} · {estimativo.area}m²</div>
               <div style={{ fontSize: 11, color: C.muted }}>{estimativo.itens.length} itens · Total materiais: <strong>{estimativo.totalGeral.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</strong></div>
             </div>
             <button onClick={() => setEstimativo(null)} style={{ background: "none", border: "none", color: C.muted, cursor: "pointer", fontSize: 18 }}>×</button>
