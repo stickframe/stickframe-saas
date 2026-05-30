@@ -21,23 +21,67 @@ const ACAO_CONFIG = {
   aprovado: { cor: "#2e9e5b", label: "Aprovado" },
 };
 
+// Tipos visíveis por perfil — diretor vê tudo
+const TIPOS_PERFIL = {
+  engenheiro: ["obra"],
+  comercial:  ["cliente", "orcamento"],
+  financeiro: ["financeiro", "contrato"],
+};
+
+const TITULO_PERFIL = {
+  engenheiro: "Histórico de Obras",
+  comercial:  "Histórico Comercial",
+  financeiro: "Histórico Financeiro",
+};
+
+const EMPTY_PERFIL = {
+  engenheiro: "Nenhuma atividade de obra encontrada.",
+  comercial:  "Nenhuma atividade comercial encontrada.",
+  financeiro: "Nenhuma atividade financeira encontrada.",
+};
+
 export default function Historico() {
   useModuleLoad("historico");
-  const historico    = useAppStore((s) => s.historico);
-  const [filtroTipo, setFiltroTipo] = useState("todos");
-  const [busca,      setBusca]      = useState("");
+  const historico = useAppStore((s) => s.historico);
+  const perfil    = useAppStore((s) => s.user?.perfil);
+  const userId    = useAppStore((s) => s.user?.uid);
 
-  const itens = historico
+  const tiposPermitidos = TIPOS_PERFIL[perfil] || null; // null = todos (diretor)
+
+  const [filtroTipo,  setFiltroTipo]  = useState("todos");
+  const [busca,       setBusca]       = useState("");
+  const [soMinhas,    setSoMinhas]    = useState(false); // toggle diretor
+
+  const titulo = TITULO_PERFIL[perfil] || "Histórico de Atividades";
+
+  const itensFiltrados = historico
+    .filter((h) => !tiposPermitidos || tiposPermitidos.includes(h.tipo))
+    .filter((h) => !soMinhas || h.usuario_id === userId)
     .filter((h) => filtroTipo === "todos" || h.tipo === filtroTipo)
-    .filter((h) => !busca || h.desc.toLowerCase().includes(busca.toLowerCase()))
+    .filter((h) => !busca || (h.descricao || h.desc || "").toLowerCase().includes(busca.toLowerCase()))
     .sort((a, b) => b.id - a.id);
 
-  const tipos = ["todos", "cliente", "orcamento", "contrato", "financeiro", "obra"];
+  const itens = itensFiltrados;
+  const tipos = ["todos", ...(tiposPermitidos || ["cliente", "orcamento", "contrato", "financeiro", "obra"])];
 
   return (
     <div>
-      <h2 style={{ fontSize: 22, fontWeight: 800, marginBottom: 4 }}>Histórico de Atividades</h2>
-      <p style={{ color: C.muted, fontSize: 13, marginBottom: 22 }}>{historico.length} registros no sistema</p>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4, flexWrap: "wrap", gap: 8 }}>
+        <h2 style={{ fontSize: 22, fontWeight: 800 }}>{titulo}</h2>
+        {!tiposPermitidos && (
+          <button onClick={() => setSoMinhas((v) => !v)} style={{
+            padding: "7px 14px", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
+            border: `1px solid ${soMinhas ? C.red : C.border}`,
+            background: soMinhas ? C.red + "18" : "transparent",
+            color: soMinhas ? C.red : C.muted,
+          }}>
+            {soMinhas ? "● Minhas atividades" : "○ Minhas atividades"}
+          </button>
+        )}
+      </div>
+      <p style={{ color: C.muted, fontSize: 13, marginBottom: 22 }}>
+        {itens.length} {itens.length !== historico.length ? `de ${historico.length} ` : ""}registro{itens.length !== 1 ? "s" : ""} no sistema
+      </p>
 
       <div style={{ display: "flex", gap: 10, marginBottom: 20, flexWrap: "wrap", alignItems: "center" }}>
         <div style={{ flex: 1, minWidth: 200 }}>
@@ -59,7 +103,7 @@ export default function Historico() {
 
       <div style={{ background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, overflow: "hidden" }}>
         {itens.length === 0 ? (
-          <div style={{ padding: 32, textAlign: "center", color: C.muted, fontSize: 13 }}>Nenhuma atividade encontrada.</div>
+          <div style={{ padding: 32, textAlign: "center", color: C.muted, fontSize: 13 }}>{EMPTY_PERFIL[perfil] || "Nenhuma atividade encontrada."}</div>
         ) : itens.map((h, i) => {
           const tc = TIPO_CONFIG[h.tipo] || { cor: C.muted, icone: "●", label: h.tipo };
           const ac = ACAO_CONFIG[h.acao] || { cor: C.muted, label: h.acao };

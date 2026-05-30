@@ -139,6 +139,7 @@ export default function Contratos() {
   const clientes       = useAppStore((s) => s.clientes);
   const obras          = useAppStore((s) => s.obras);
   const contratos      = useAppStore((s) => s.contratos);
+  const perfil         = useAppStore((s) => s.user?.perfil);
   const addContrato    = useAppStore((s) => s.addContrato);
   const updateContrato = useAppStore((s) => s.updateContrato);
   const deleteContrato = useAppStore((s) => s.deleteContrato);
@@ -293,6 +294,33 @@ export default function Contratos() {
           </div>
           <Btn onClick={abrirNovo}>+ Novo contrato</Btn>
         </div>
+
+        {/* Resumo financeiro — visível para perfil financeiro */}
+        {perfil === "financeiro" && contratos.length > 0 && (() => {
+          const porStatus = STATUS_OPTS.map((s) => {
+            const lista = contratos.filter((c) => c.status === s);
+            return { status: s, qtd: lista.length, valor: lista.reduce((sum, c) => sum + (c.valor || 0), 0) };
+          }).filter((s) => s.qtd > 0);
+          const totalCarteira = contratos.reduce((sum, c) => sum + (c.valor || 0), 0);
+          return (
+            <div style={{ marginBottom: 22 }}>
+              <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 10 }}>
+                {porStatus.map((s) => (
+                  <div key={s.status} style={{ background: C.surface, border: `1px solid ${C.border}`, borderTop: `3px solid ${statusColor(s.status)}`, borderRadius: 10, padding: "12px 16px", minWidth: 140, flex: 1 }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1, color: C.muted, textTransform: "uppercase", marginBottom: 6 }}>{s.status}</div>
+                    <div style={{ fontSize: 20, fontWeight: 800, color: statusColor(s.status) }}>{fmt(s.valor)}</div>
+                    <div style={{ fontSize: 11, color: C.muted, marginTop: 3 }}>{s.qtd} contrato{s.qtd !== 1 ? "s" : ""}</div>
+                  </div>
+                ))}
+                <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderTop: `3px solid ${C.text}`, borderRadius: 10, padding: "12px 16px", minWidth: 140, flex: 1 }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1, color: C.muted, textTransform: "uppercase", marginBottom: 6 }}>Total carteira</div>
+                  <div style={{ fontSize: 20, fontWeight: 800 }}>{fmt(totalCarteira)}</div>
+                  <div style={{ fontSize: 11, color: C.muted, marginTop: 3 }}>{contratos.length} contratos</div>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Empty state */}
         {contratos.length === 0 ? (

@@ -86,8 +86,12 @@ export default function DashboardComercial() {
     : followups.length > 0 ? followups : clientes.filter((c) => c.status !== "Fechado" && c.status !== "Recusado");
 
   async function marcarContatoFeito(cliente) {
-    await updateCliente(cliente.id, { proximo_contato: null });
-    mostrarToast(`✅ Follow-up de ${cliente.nome.split(" ")[0]} marcado como feito!`);
+    // Reagenda automaticamente para +7 dias
+    const proxData = new Date();
+    proxData.setDate(proxData.getDate() + 7);
+    const proxISO = proxData.toISOString().slice(0, 10);
+    await updateCliente(cliente.id, { proximo_contato: proxISO });
+    mostrarToast(`✅ Feito! Próximo contato com ${cliente.nome.split(" ")[0]} reagendado para ${proxData.toLocaleDateString("pt-BR")}`);
   }
 
   const saudacao = () => {

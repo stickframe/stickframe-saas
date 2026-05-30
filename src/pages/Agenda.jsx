@@ -47,7 +47,7 @@ function Label({ children, required }) {
 }
 
 // ─── Formulário de evento ────────────────────────────────────────────────────
-function FormEvento({ form, setForm, clientes, obras, onSave, onCancel }) {
+function FormEvento({ form, setForm, clientes, obras, tiposDisponiveis, onSave, onCancel }) {
   const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
 
   function handleClienteChange(v) {
@@ -74,7 +74,7 @@ function FormEvento({ form, setForm, clientes, obras, onSave, onCancel }) {
       <div>
         <Label>Tipo</Label>
         <Select value={form.tipo} onChange={(v) => setForm((f) => ({ ...f, tipo: v, cor: COR_TIPO_EVENTO[v] || C.red }))}
-          options={TIPOS_EVENTO.map((t) => ({ value: t, label: t }))} />
+          options={tiposDisponiveis.map((t) => ({ value: t, label: t }))} />
       </div>
 
       {/* Data + Hora */}
@@ -212,10 +212,32 @@ export default function Agenda() {
   useModuleLoad("eventos");
 
   const clientes    = useAppStore((s) => s.clientes);
-  const obras       = useAppStore((s) => s.obras);
-  const eventos     = useAppStore((s) => s.eventos);
+  const allObras    = useAppStore((s) => s.obras);
+  const alocacoes   = useAppStore((s) => s.alocacoes);
+  const perfil      = useAppStore((s) => s.user?.perfil);
+  const userId      = useAppStore((s) => s.user?.uid);
+  const allEventos  = useAppStore((s) => s.eventos);
   const addEvento   = useAppStore((s) => s.addEvento);
   const deleteEvento = useAppStore((s) => s.deleteEvento);
+
+  // Tipos de evento disponíveis por perfil
+  const TIPOS_PERFIL_AGENDA = {
+    engenheiro: ["Visita de obra", "Vistoria", "Medição"],
+    comercial:  ["Reunião com cliente", "Entrega de documentos", "Outro"],
+    financeiro: ["Reunião com cliente", "Entrega de documentos", "Outro"],
+  };
+  const tiposDisponiveis = TIPOS_PERFIL_AGENDA[perfil] || TIPOS_EVENTO;
+
+  // Filtra eventos e obras por perfil
+  const eventos = perfil && TIPOS_PERFIL_AGENDA[perfil]
+    ? allEventos.filter((e) => TIPOS_PERFIL_AGENDA[perfil].includes(e.tipo))
+    : allEventos;
+
+  // Engenheiro vê só obras onde está alocado
+  const obrasAlocadas = perfil === "engenheiro" && alocacoes?.length
+    ? allObras.filter((o) => alocacoes.some((a) => a.obra_id === o.id && a.colaborador_id === userId))
+    : allObras;
+  const obras = obrasAlocadas.length ? obrasAlocadas : allObras;
 
   const [modal,     setModal]     = useState(false);
   const [verEvento, setVerEvento] = useState(null);
@@ -291,7 +313,7 @@ export default function Agenda() {
         <Modal title="📅 Novo compromisso" onClose={() => setModal(false)}>
           <FormEvento
             form={form} setForm={setForm}
-            clientes={clientes} obras={obras}
+            clientes={clientes} obras={obras} tiposDisponiveis={tiposDisponiveis}
             onSave={salvar} onCancel={() => setModal(false)}
           />
         </Modal>

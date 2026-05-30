@@ -7,11 +7,18 @@ export default function Sidebar({ open }) {
   const activePage  = useAppStore((s) => s.activePage);
   const setActivePage = useAppStore((s) => s.setActivePage);
   const logout      = useAppStore((s) => s.logout);
+  const clientes    = useAppStore((s) => s.clientes);
   const [confirm, setConfirm] = useState(false);
 
   const perfil    = PERFIS[user?.perfil] || PERFIS.diretor;
   const navFiltro = NAV.filter((n) => perfil.paginas.includes(n.key));
   const active    = perfil.paginas.includes(activePage) ? activePage : "dashboard";
+
+  // Badge de follow-ups vencidos para perfil comercial
+  const hoje = new Date().toISOString().slice(0, 10);
+  const followupsVencidos = user?.perfil === "comercial"
+    ? clientes.filter((c) => c.proximo_contato && c.proximo_contato <= hoje && c.status !== "Fechado").length
+    : 0;
 
   return (
     <aside
@@ -52,7 +59,12 @@ export default function Sidebar({ open }) {
             }}
           >
             <span style={{ fontSize: 15, color: active === n.key ? C.red : C.muted }}>{n.icon}</span>
-            {n.label}
+            <span style={{ flex: 1 }}>{n.label}</span>
+            {n.key === "crm" && followupsVencidos > 0 && (
+              <span style={{ background: C.red, color: "#fff", borderRadius: 10, fontSize: 10, fontWeight: 700, padding: "1px 6px", minWidth: 18, textAlign: "center" }}>
+                {followupsVencidos}
+              </span>
+            )}
           </button>
         ))}
       </nav>
