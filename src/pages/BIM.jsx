@@ -47,10 +47,10 @@ function IFCViewer({ url, onElementClick }) {
         grids.create(world);
 
         // FragmentsManager deve ser inicializado antes do IfcLoader (API v3)
+        // Worker servido localmente via /public para evitar fetch do unpkg
         setMsg("Inicializando motor de fragmentos...");
         const fragments = components.get(OBC.FragmentsManager);
-        const workerUrl = await OBC.FragmentsManager.getWorker();
-        fragments.init(workerUrl);
+        fragments.init(`${window.location.origin}/fragments-worker.mjs`);
 
         const ifcLoader = components.get(OBC.IfcLoader);
         await ifcLoader.setup();
