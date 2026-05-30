@@ -145,6 +145,7 @@ export default function GestaoObras() {
   const deleteArquivo     = useAppStore((s) => s.deleteArquivo);
   const loadHistoricoObra = useAppStore((s) => s.loadHistoricoObra);
   const financeiro        = useAppStore((s) => s.financeiro);
+  const perfil            = useAppStore((s) => s.user?.perfil);
   const medicoes          = useAppStore((s) => s.medicoes);
   const diario            = useAppStore((s) => s.diario);
   const loadMedicoes      = useAppStore((s) => s.loadMedicoes);
@@ -857,12 +858,14 @@ export default function GestaoObras() {
                   )}
                   <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 8 }}>
                     <Btn variant="ghost" size="sm" fullWidth onClick={abrirEditar}>✏️ Editar obra</Btn>
-                    <button onClick={gerarRelatorio} style={{
-                      width: "100%", padding: "8px 0",
-                      background: "#2e9e5b22", border: "1px solid #2e9e5b44",
-                      borderRadius: 6, color: "#2e9e5b", fontSize: 12, fontWeight: 700,
-                      cursor: "pointer", fontFamily: "inherit",
-                    }}>📄 Relatório PDF</button>
+                    {perfil !== "engenheiro" && (
+                      <button onClick={gerarRelatorio} style={{
+                        width: "100%", padding: "8px 0",
+                        background: "#2e9e5b22", border: "1px solid #2e9e5b44",
+                        borderRadius: 6, color: "#2e9e5b", fontSize: 12, fontWeight: 700,
+                        cursor: "pointer", fontFamily: "inherit",
+                      }}>📄 Relatório PDF</button>
+                    )}
                     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                       <button onClick={copiarLinkPortal} style={{
                         width: "100%", padding: "8px 0",
