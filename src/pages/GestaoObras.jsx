@@ -141,6 +141,26 @@ export default function GestaoObras() {
     if (!obraId && obras.length > 0) setObraId(obras[0].id);
   }, [obras, obraId]);
 
+  async function gerarTokenPortal() {
+    const base = (obra.nome || "obra")
+      .toLowerCase()
+      .normalize("NFD").replace(/[̀-ͯ]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "")
+      .slice(0, 20);
+    const token = `${base}-${new Date().getFullYear()}`;
+    await updateObra(obraId, { token_portal: token });
+    mostrarToast("🔗 Token gerado!");
+  }
+
+  async function copiarLinkPortal() {
+    const token = obra.token_portal;
+    if (!token) { await gerarTokenPortal(); return; }
+    const url = `${window.location.origin}/portal/${token}`;
+    navigator.clipboard.writeText(url);
+    mostrarToast("🔗 Link do portal copiado!");
+  }
+
   function mostrarToast(msg) {
     setToast(msg);
     setTimeout(() => setToast(null), 3000);
@@ -452,16 +472,24 @@ export default function GestaoObras() {
                   )}
                   <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 8 }}>
                     <Btn variant="ghost" size="sm" fullWidth onClick={abrirEditar}>✏️ Editar obra</Btn>
-                    <button onClick={() => {
-                      const url = `${window.location.origin}/portal/${obra.id}`;
-                      navigator.clipboard.writeText(url);
-                      mostrarToast("🔗 Link do portal copiado!");
-                    }} style={{
-                      width: "100%", padding: "8px 0",
-                      background: "#4a9eff22", border: "1px solid #4a9eff44",
-                      borderRadius: 6, color: "#4a9eff", fontSize: 12, fontWeight: 700,
-                      cursor: "pointer", fontFamily: "inherit",
-                    }}>🔗 Link do portal</button>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                      <button onClick={copiarLinkPortal} style={{
+                        width: "100%", padding: "8px 0",
+                        background: "#4a9eff22", border: "1px solid #4a9eff44",
+                        borderRadius: 6, color: "#4a9eff", fontSize: 12, fontWeight: 700,
+                        cursor: "pointer", fontFamily: "inherit",
+                      }}>
+                        {obra.token_portal ? "🔗 Copiar link do portal" : "🔗 Gerar link do portal"}
+                      </button>
+                      {obra.token_portal && (
+                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                          <div style={{ fontSize: 10, color: "#4a9eff", background: "#4a9eff11", borderRadius: 4, padding: "3px 8px", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            /portal/{obra.token_portal}
+                          </div>
+                          <button onClick={gerarTokenPortal} title="Gerar novo token" style={{ background: "none", border: "none", cursor: "pointer", color: "#4a9eff66", fontSize: 12, padding: 2 }}>↺</button>
+                        </div>
+                      )}
+                    </div>
                     <button onClick={() => setConfirm(true)} style={{
                       width: "100%", padding: "8px 0",
                       background: C.danger + "22", border: `1px solid ${C.danger}44`,
