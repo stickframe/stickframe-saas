@@ -355,8 +355,9 @@ export default function GestaoObras() {
     const diarioHtml = diarioObra.length === 0 ? "<p style='color:#888;font-size:13px'>Nenhum registro no diário.</p>"
       : diarioObra.map((r) => `<div style="padding:8px 0;border-bottom:1px solid #eee"><div style="font-size:11px;color:#888;margin-bottom:4px">${r.data} · ${r.clima || ""} · ${r.turno || ""}</div><div style="font-size:13px">${r.atividades || ""}</div>${r.ocorrencias ? `<div style="background:#fff5f5;border-left:3px solid #981915;padding:5px 10px;margin-top:6px;font-size:12px;color:#555">⚠️ ${r.ocorrencias}</div>` : ""}</div>`).join("");
 
-    const fotos    = arqs.filter((a) => a.tipo === "imagem" && a.url);
-    const docsArqs = arqs.filter((a) => a.tipo !== "imagem");
+    const isImg    = (a) => a.tipo === "imagem" || a.categoria === "Foto" || /\.(jpe?g|png|gif|webp|heic)$/i.test(a.nome || "");
+    const fotos    = arqs.filter((a) => isImg(a) && a.url);
+    const docsArqs = arqs.filter((a) => !isImg(a));
 
     const fotosPorFase = FASES.map((fase) => {
       const imgs = fotos.filter((f) => f.fase === fase);
