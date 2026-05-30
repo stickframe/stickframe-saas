@@ -1,4 +1,4 @@
-import { listarClientes, criarCliente, atualizarCliente, deletarCliente } from "../../services/repositories/clienteRepository";
+import { listarClientes, criarCliente, atualizarCliente, deletarCliente, importarClientes } from "../../services/repositories/clienteRepository";
 
 export const createClienteSlice = (set, get) => ({
   clientes: [],
@@ -31,5 +31,12 @@ export const createClienteSlice = (set, get) => ({
     await deletarCliente(id);
     set((s) => ({ clientes: s.clientes.filter((x) => x.id !== id) }));
     get().registrar("cliente", "deletado", `Cliente ${c?.nome} removido`);
+  },
+
+  importClientes: async (lista) => {
+    const data = await importarClientes(lista);
+    set((s) => ({ clientes: [...s.clientes, ...data] }));
+    get().registrar("cliente", "criado", `${data.length} clientes importados via CSV`);
+    return data;
   },
 });
