@@ -3,6 +3,7 @@ import { C, PRECOS, FASES } from "../utils/constants";
 import { fmt } from "../utils/format";
 import { enviarWhatsApp, msgOrcamento } from "../services/whatsappService";
 import { sb } from "../services/supabase";
+import { inserirTemplate } from "../services/repositories/quantitativoRepository";
 import useAppStore from "../store/useAppStore";
 import { useModuleLoad } from "../hooks/useModuleLoad";
 import Btn from "../components/ui/Btn";
@@ -596,10 +597,28 @@ export default function Orcamentos() {
     setConverterOrc(o);
   }
 
+  // Mapeia grupo da calculadora → fase Steel Frame do quantitativo
+  const GRUPO_PARA_FASE = {
+    "Estrutura":       "Estrutura Steel Frame",
+    "Vedação externa": "Fechamentos",
+    "Vedação interna": "Fechamentos",
+    "Isolamento":      "Fechamentos",
+    "Forro":           "Acabamento",
+    "Cobertura":       "Entrega",
+  };
+  const GRUPO_PARA_CAT = {
+    "Estrutura":       "Estrutura",
+    "Vedação externa": "Vedação",
+    "Vedação interna": "Vedação",
+    "Isolamento":      "Vedação",
+    "Forro":           "Acabamento",
+    "Cobertura":       "Cobertura",
+  };
+
   async function confirmarConverter() {
     const o = converterOrc;
     const clienteSel = clientes.find((c) => c.id === o.cliente_id);
-    await addObra({
+    const obra = await addObra({
       nome:          obraForm.nome,
       cliente_id:    o.cliente_id,
       cliente:       o.cliente,
@@ -612,10 +631,31 @@ export default function Orcamentos() {
       prazo_inicio:  obraForm.prazo_inicio || null,
       prazo_fim:     obraForm.prazo_fim || null,
     });
+
+    // Se há estimativo da calculadora, importa para quantitativos da obra
+    if (estimativo?.itens?.length && obra?.id) {
+      try {
+        const rows = estimativo.itens.map((it) => ({
+          fase:           GRUPO_PARA_FASE[it.grupo] || "Fechamentos",
+          categoria:      GRUPO_PARA_CAT[it.grupo]  || "Vedação",
+          descricao:      it.item,
+          unidade:        it.un,
+          quantidade:     it.qtd,
+          custo_unitario: it.precoUnit,
+          observacoes:    "Importado da calculadora estimativa",
+        }));
+        await inserirTemplate(obra.id, rows);
+      } catch (e) {
+        console.warn("Erro ao importar estimativo para quantitativos:", e);
+      }
+    }
+
     updateOrcamento(o.id, { status: "Aprovado" });
     setConverterOrc(null);
-    mostrarToast("✅ Obra criada! Redirecionando...");
-    setTimeout(() => setActivePage("obras"), 1200);
+    mostrarToast(estimativo?.itens?.length
+      ? `✅ Obra criada com ${estimativo.itens.length} itens do estimativo nos quantitativos!`
+      : "✅ Obra criada! Redirecionando...");
+    setTimeout(() => setActivePage("obras"), 1500);
   }
   async function gerarLinkProposta(o) {
     try {
@@ -749,6 +789,12 @@ export default function Orcamentos() {
                 <Input type="date" value={obraForm.prazo_fim} onChange={(v) => setObraForm((f) => ({ ...f, prazo_fim: v }))} />
               </div>
             </div>
+
+            {estimativo?.itens?.length > 0 && (
+              <div style={{ background: C.red + "0d", border: `1px solid ${C.red}33`, borderRadius: 8, padding: "10px 14px", fontSize: 12, color: C.red }}>
+                ⚡ {estimativo.itens.length} itens da calculadora estimativa serão importados automaticamente para os Quantitativos desta obra.
+              </div>
+            )}
 
             <div style={{ background: "#4a9eff11", border: "1px solid #4a9eff33", borderRadius: 8, padding: "10px 14px", fontSize: 12, color: "#4a9eff" }}>
               ✔ O valor do contrato ({fmt(converterOrc.valor)}) será preenchido automaticamente no financeiro da obra.
