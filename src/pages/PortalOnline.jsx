@@ -96,7 +96,7 @@ export default function PortalOnline() {
             {outrasObras.map((o) => (
               <a
                 key={o.id}
-                href={`/portal/${o.portal_token}`}
+                href={`/portal/${o.token_portal}`}
                 style={{ padding: "10px 18px", borderBottom: "2px solid transparent", color: "#888", fontSize: 12, fontWeight: 600, whiteSpace: "nowrap", textDecoration: "none", display: "block" }}
                 onMouseEnter={(e) => { e.currentTarget.style.color = "#ccc"; e.currentTarget.style.borderBottomColor = "#444"; }}
                 onMouseLeave={(e) => { e.currentTarget.style.color = "#888"; e.currentTarget.style.borderBottomColor = "transparent"; }}
