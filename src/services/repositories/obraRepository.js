@@ -52,15 +52,48 @@ export async function aprovarMedicao(id) {
 export async function listarArquivos(obraId) {
   const { data, error } = await sb.from("arquivos").select("*").eq("obra_id", obraId).order("created_at", { ascending: false });
   if (error) throw error;
-  return data;
+  return (data || []).map((row) => ({
+    ...row,
+    url: row.storage_path
+      ? sb.storage.from("arquivos").getPublicUrl(row.storage_path).data.publicUrl
+      : null,
+    path: row.storage_path,
+  }));
 }
 export async function adicionarArquivos(obraId, arquivos, empresaId) {
-  const rows = arquivos.map((a) => ({ ...a, obra_id: obraId, empresa_id: empresaId }));
+  const rows = [];
+  for (const a of arquivos) {
+    let storagePath = null;
+    if (a.file) {
+      const ext  = a.file.name.split(".").pop();
+      storagePath = `${empresaId}/${obraId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error: upErr } = await sb.storage.from("arquivos").upload(storagePath, a.file, { upsert: false });
+      if (upErr) throw upErr;
+    }
+    rows.push({
+      obra_id:      obraId,
+      empresa_id:   empresaId,
+      nome:         a.nome,
+      tipo:         a.tipo,
+      tamanho:      a.tamanho,
+      data:         a.data,
+      categoria:    a.categoria,
+      storage_path: storagePath,
+    });
+  }
   const { data, error } = await sb.from("arquivos").insert(rows).select();
   if (error) throw error;
-  return data;
+  // Enriquecer com URL pública
+  return (data || []).map((row) => ({
+    ...row,
+    url: row.storage_path
+      ? sb.storage.from("arquivos").getPublicUrl(row.storage_path).data.publicUrl
+      : null,
+    path: row.storage_path,
+  }));
 }
-export async function deletarArquivo(id) {
+export async function deletarArquivo(id, storagePath) {
+  if (storagePath) await sb.storage.from("arquivos").remove([storagePath]);
   const { error } = await sb.from("arquivos").delete().eq("id", id);
   if (error) throw error;
 }

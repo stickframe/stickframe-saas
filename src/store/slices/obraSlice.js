@@ -123,8 +123,8 @@ export const createObraSlice = (set, get) => ({
     get().registrar("obra", "editado", `${novos.length} arquivo(s) adicionado(s) em ${o?.nome?.split("—")[0]?.trim()}`);
   },
 
-  deleteArquivo: async (obraId, arqId) => {
-    await deletarArquivo(arqId);
+  deleteArquivo: async (obraId, arqId, path) => {
+    await deletarArquivo(arqId, path);
     set((s) => ({ arquivos: { ...s.arquivos, [obraId]: s.arquivos[obraId].filter((a) => a.id !== arqId) } }));
   },
 
