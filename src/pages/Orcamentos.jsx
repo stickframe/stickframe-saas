@@ -65,7 +65,7 @@ function FormOrc({ form, setForm, clientes, onSave, onCancel, btnLabel }) {
       {/* Unidades + Área */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
         <div>
-          <Label required>Unidades (UH)</Label>
+          <Label>Unidades (UH)</Label>
           <Input
             type="number" min="1"
             value={form.unidades}
@@ -73,7 +73,7 @@ function FormOrc({ form, setForm, clientes, onSave, onCancel, btnLabel }) {
           />
         </div>
         <div>
-          <Label required>Área / UH (m²)</Label>
+          <Label required>Área (m²)</Label>
           <Input
             type="number" min="1"
             value={form.area}
@@ -107,10 +107,10 @@ function FormOrc({ form, setForm, clientes, onSave, onCancel, btnLabel }) {
         <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1.5, color: C.red, marginBottom: 12 }}>
           PRÉVIA DO ORÇAMENTO
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
+        <div style={{ display: "grid", gridTemplateColumns: form.unidades > 1 ? "1fr 1fr 1fr" : "1fr 1fr", gap: 10 }}>
           {[
             ["Valor / m²",  fmt(calc.valor_m2),    false],
-            ["Valor / UH",  fmt(calc.valor_uh),    false],
+            ...(form.unidades > 1 ? [["Valor / UH", fmt(calc.valor_uh), false]] : []),
             ["TOTAL",       fmt(calc.valor_total),  true ],
           ].map(([k, v, destaque]) => (
             <div key={k} style={{
@@ -125,7 +125,7 @@ function FormOrc({ form, setForm, clientes, onSave, onCancel, btnLabel }) {
           ))}
         </div>
         <div style={{ fontSize: 11, color: C.muted, marginTop: 10 }}>
-          {form.unidades} UH × {form.area} m² × {fmt(calc.valor_m2)}/m²
+          {form.unidades > 1 ? `${form.unidades} UH × ` : ""}{form.area} m² × {fmt(calc.valor_m2)}/m²
         </div>
       </div>
 
