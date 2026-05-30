@@ -27,6 +27,59 @@ function Linha({ label, valor, cor, bold }) {
   );
 }
 
+function gerarRelatorioDRE({ financeiro, obras, contratos, mesAtual }) {
+  const allLanc = Object.values(financeiro).flatMap((f) => f.lancamentos || []);
+  const totalRec  = allLanc.filter((l) => l.tipo === "receita").reduce((s, l) => s + (l.valor || 0), 0);
+  const totalDesp = allLanc.filter((l) => l.tipo === "despesa").reduce((s, l) => s + (l.valor || 0), 0);
+  const saldo     = totalRec - totalDesp;
+
+  const lancMes   = allLanc.filter((l) => (l.data || "").startsWith(mesAtual));
+  const recMes    = lancMes.filter((l) => l.tipo === "receita").reduce((s, l) => s + (l.valor || 0), 0);
+  const despMes   = lancMes.filter((l) => l.tipo === "despesa").reduce((s, l) => s + (l.valor || 0), 0);
+
+  const catDesp = {};
+  allLanc.filter((l) => l.tipo === "despesa").forEach((l) => {
+    const cat = l.categoria || "Outros";
+    catDesp[cat] = (catDesp[cat] || 0) + (l.valor || 0);
+  });
+
+  const f = (v) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  const linhasDRE = Object.entries(catDesp).sort((a, b) => b[1] - a[1])
+    .map(([cat, val]) => `<tr><td style="padding:6px 10px;border-bottom:1px solid #eee">${cat}</td><td style="padding:6px 10px;border-bottom:1px solid #eee;text-align:right;color:#c0392b">(${f(val)})</td></tr>`)
+    .join("");
+
+  const obrasLinhas = obras.map((o) => {
+    const fin  = financeiro[o.id] || { lancamentos: [] };
+    const rec  = fin.lancamentos.filter((l) => l.tipo === "receita").reduce((s, l) => s + (l.valor || 0), 0);
+    const desp = fin.lancamentos.filter((l) => l.tipo === "despesa").reduce((s, l) => s + (l.valor || 0), 0);
+    return `<tr><td style="padding:6px 10px;border-bottom:1px solid #eee">${o.nome?.split("—")[0]?.trim()}</td><td style="padding:6px 10px;border-bottom:1px solid #eee;text-align:right;color:#2e9e5b">${f(rec)}</td><td style="padding:6px 10px;border-bottom:1px solid #eee;text-align:right;color:#c0392b">(${f(desp)})</td><td style="padding:6px 10px;border-bottom:1px solid #eee;text-align:right;font-weight:700;color:${rec-desp>=0?"#2e9e5b":"#c0392b"}">${f(rec-desp)}</td></tr>`;
+  }).join("");
+
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Relatório Financeiro</title>
+  <style>body{font-family:Arial,sans-serif;padding:40px;color:#1a1a1a}h1{color:#981915;font-size:22px}h2{font-size:15px;margin-top:28px;border-bottom:2px solid #981915;padding-bottom:6px}table{width:100%;border-collapse:collapse;font-size:13px}.total{font-weight:700;background:#f5f5f5}.pos{color:#2e9e5b}.neg{color:#c0392b}@media print{body{padding:20px}}</style>
+  </head><body>
+  <h1>Relatório Financeiro — DRE</h1>
+  <p style="color:#6b7280;font-size:12px">Gerado em ${new Date().toLocaleDateString("pt-BR")} · Competência: ${mesAtual.slice(5,7)}/${mesAtual.slice(0,4)}</p>
+  <h2>Resultado do Mês (${mesAtual.slice(5,7)}/${mesAtual.slice(0,4)})</h2>
+  <table><tr class="total"><td style="padding:8px 10px">Receitas do mês</td><td style="padding:8px 10px;text-align:right" class="pos">${f(recMes)}</td></tr>
+  <tr class="total"><td style="padding:8px 10px">Despesas do mês</td><td style="padding:8px 10px;text-align:right" class="neg">(${f(despMes)})</td></tr>
+  <tr class="total"><td style="padding:8px 10px;font-weight:800">Resultado do mês</td><td style="padding:8px 10px;text-align:right;font-weight:800" class="${recMes-despMes>=0?"pos":"neg"}">${f(recMes-despMes)}</td></tr></table>
+  <h2>DRE Acumulado — Despesas por Categoria</h2>
+  <table><tr style="background:#f5f5f5;font-weight:700"><td style="padding:8px 10px">Categoria</td><td style="padding:8px 10px;text-align:right">Valor</td></tr>
+  <tr><td style="padding:6px 10px;border-bottom:1px solid #eee"><strong>Total Receitas</strong></td><td style="padding:6px 10px;border-bottom:1px solid #eee;text-align:right;color:#2e9e5b;font-weight:700">${f(totalRec)}</td></tr>
+  ${linhasDRE}
+  <tr style="background:#f5f5f5;font-weight:800"><td style="padding:8px 10px">Resultado Líquido</td><td style="padding:8px 10px;text-align:right;font-weight:800" class="${saldo>=0?"pos":"neg"}">${f(saldo)}</td></tr></table>
+  <h2>Por Obra</h2>
+  <table><tr style="background:#f5f5f5;font-weight:700"><td style="padding:8px 10px">Obra</td><td style="padding:8px 10px;text-align:right">Receitas</td><td style="padding:8px 10px;text-align:right">Despesas</td><td style="padding:8px 10px;text-align:right">Saldo</td></tr>
+  ${obrasLinhas}</table>
+  </body></html>`;
+
+  const win = window.open("", "_blank");
+  win.document.write(html);
+  win.document.close();
+  setTimeout(() => win.print(), 400);
+}
+
 export default function DashboardFinanceiro() {
   useModuleLoad("financeiro");
   useModuleLoad("obras");
@@ -80,11 +133,19 @@ export default function DashboardFinanceiro() {
   return (
     <div>
       {/* Header */}
-      <div style={{ marginBottom: 24 }}>
-        <h2 style={{ fontSize: 22, fontWeight: 800, marginBottom: 4 }}>
-          {saudacao}, {user?.nome?.split(" ")[0]} 👋
-        </h2>
-        <p style={{ color: C.muted, fontSize: 13 }}>Visão financeira consolidada da empresa</p>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
+        <div>
+          <h2 style={{ fontSize: 22, fontWeight: 800, marginBottom: 4 }}>
+            {saudacao}, {user?.nome?.split(" ")[0]} 👋
+          </h2>
+          <p style={{ color: C.muted, fontSize: 13 }}>Visão financeira consolidada da empresa</p>
+        </div>
+        <button onClick={() => gerarRelatorioDRE({ financeiro, obras, contratos, mesAtual })} style={{
+          background: C.red, color: "#fff", border: "none", borderRadius: 8,
+          padding: "10px 18px", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
+        }}>
+          📄 Relatório DRE
+        </button>
       </div>
 
       {/* KPIs principais */}
