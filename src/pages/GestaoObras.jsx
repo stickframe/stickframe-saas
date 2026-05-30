@@ -124,12 +124,13 @@ export default function GestaoObras() {
   const obras       = useAppStore((s) => s.obras);
   const clientes    = useAppStore((s) => s.clientes);
   const arquivos    = useAppStore((s) => s.arquivos);
-  const addObra     = useAppStore((s) => s.addObra);
-  const updateObra  = useAppStore((s) => s.updateObra);
-  const deleteObra  = useAppStore((s) => s.deleteObra);
-  const avancarFase = useAppStore((s) => s.avancarFase);
-  const addArquivos = useAppStore((s) => s.addArquivos);
-  const deleteArquivo = useAppStore((s) => s.deleteArquivo);
+  const addObra          = useAppStore((s) => s.addObra);
+  const updateObra       = useAppStore((s) => s.updateObra);
+  const deleteObra       = useAppStore((s) => s.deleteObra);
+  const avancarFase      = useAppStore((s) => s.avancarFase);
+  const addArquivos      = useAppStore((s) => s.addArquivos);
+  const deleteArquivo    = useAppStore((s) => s.deleteArquivo);
+  const loadHistoricoObra = useAppStore((s) => s.loadHistoricoObra);
 
   useModuleLoad("arquivos", obras[0]?.id);
 
@@ -143,11 +144,19 @@ export default function GestaoObras() {
   const [form,        setForm]        = useState(FORM_VAZIO);
   const [busca,       setBusca]       = useState("");
   const [statusFiltro, setStatusFiltro] = useState("Todos");
+  const [histObra,    setHistObra]    = useState([]);
+  const [histLoading, setHistLoading] = useState(false);
 
-  // Inicializa obraId quando obras carregarem
   useEffect(() => {
     if (!obraId && obras.length > 0) setObraId(obras[0].id);
   }, [obras, obraId]);
+
+  useEffect(() => {
+    if (abaAtiva === "historico" && obraId) {
+      setHistLoading(true);
+      loadHistoricoObra(obraId).then((d) => { setHistObra(d); setHistLoading(false); });
+    }
+  }, [abaAtiva, obraId]);
 
   async function gerarTokenPortal() {
     const base = (obra.nome || "obra")
@@ -392,7 +401,7 @@ export default function GestaoObras() {
               <div>
                 {/* Abas */}
                 <div style={{ display: "flex", borderBottom: `1px solid ${C.border}` }}>
-                  {[["fases", "📋 Fases da obra"], ["arquivos", "📁 Arquivos"]].map(([k, l]) => (
+                  {[["fases", "📋 Fases da obra"], ["arquivos", "📁 Arquivos"], ["historico", "🕑 Histórico"]].map(([k, l]) => (
                     <button key={k} onClick={() => setAbaAtiva(k)} style={{
                       padding: "10px 20px", background: "transparent", border: "none",
                       borderBottom: `2px solid ${abaAtiva === k ? C.red : "transparent"}`,
@@ -519,6 +528,40 @@ export default function GestaoObras() {
                         ))}
                       </div>
                     )}
+                  </div>
+                )}
+                {/* ABA HISTÓRICO */}
+                {abaAtiva === "historico" && (
+                  <div style={{ background: C.surface, borderRadius: "0 0 12px 12px", border: `1px solid ${C.border}`, borderTop: "none", padding: 22 }}>
+                    {histLoading ? (
+                      <div style={{ textAlign: "center", padding: "32px 0", color: C.muted, fontSize: 13 }}>Carregando...</div>
+                    ) : histObra.length === 0 ? (
+                      <div style={{ textAlign: "center", padding: "32px 0", color: C.muted, fontSize: 13 }}>Nenhuma alteração registrada nesta obra.</div>
+                    ) : histObra.map((h, i) => {
+                      const ACAO_COR = { criado: "#2e9e5b", editado: "#b97a00", deletado: "#c0392b", fase: "#4a9eff" };
+                      const cor = ACAO_COR[h.acao] || C.muted;
+                      return (
+                        <div key={h.id} style={{ display: "flex", gap: 14, paddingBottom: 16, marginBottom: 16, borderBottom: i < histObra.length - 1 ? `1px solid ${C.border}` : "none" }}>
+                          <div style={{ width: 32, height: 32, borderRadius: "50%", flexShrink: 0, background: cor + "22", border: `2px solid ${cor}44`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12 }}>
+                            {h.acao === "criado" ? "+" : h.acao === "fase" ? "▶" : h.acao === "deletado" ? "✕" : "✎"}
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 3 }}>{h.descricao}</div>
+                            <div style={{ fontSize: 11, color: C.muted, marginBottom: h.detalhes?.campos?.length ? 8 : 0 }}>
+                              {h.usuario} · {h.data} às {h.hora}
+                            </div>
+                            {h.detalhes?.campos?.map((c, j) => (
+                              <div key={j} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 11, marginTop: 4 }}>
+                                <span style={{ color: C.muted, minWidth: 80 }}>{c.campo}</span>
+                                <span style={{ background: "#f5e6e6", color: "#c0392b", borderRadius: 4, padding: "1px 8px", fontFamily: "monospace", maxWidth: 120, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.de}</span>
+                                <span style={{ color: C.muted }}>→</span>
+                                <span style={{ background: "#e6f5ec", color: "#2e9e5b", borderRadius: 4, padding: "1px 8px", fontFamily: "monospace", maxWidth: 120, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.para}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>

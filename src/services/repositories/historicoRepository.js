@@ -10,3 +10,8 @@ export async function adicionarHistorico(registro) {
   if (error) throw error;
   return data;
 }
+export async function listarHistoricoObra(obraId) {
+  const { data, error } = await sb.from("historico").select("*").eq("obra_id", obraId).order("created_at", { ascending: false }).limit(50);
+  if (error) throw error;
+  return data;
+}

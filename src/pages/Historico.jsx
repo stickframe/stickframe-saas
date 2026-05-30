@@ -71,8 +71,16 @@ export default function Historico() {
                   <span style={{ background: tc.cor + "22", color: tc.cor, border: `1px solid ${tc.cor}44`, borderRadius: 4, padding: "1px 8px", fontSize: 10, fontWeight: 700 }}>{tc.label}</span>
                   <span style={{ background: ac.cor + "22", color: ac.cor, border: `1px solid ${ac.cor}44`, borderRadius: 4, padding: "1px 8px", fontSize: 10, fontWeight: 700 }}>{ac.label}</span>
                 </div>
-                <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 3 }}>{h.desc}</div>
-                <div style={{ fontSize: 11, color: C.muted }}>Por <strong style={{ color: C.text }}>{h.usuario}</strong> · {h.data} às {h.hora}</div>
+                <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 3 }}>{h.descricao || h.desc}</div>
+                <div style={{ fontSize: 11, color: C.muted, marginBottom: h.detalhes?.campos?.length ? 8 : 0 }}>Por <strong style={{ color: C.text }}>{h.usuario}</strong> · {h.data} às {h.hora}</div>
+                {h.detalhes?.campos?.map((c, j) => (
+                  <div key={j} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 11, marginTop: 4 }}>
+                    <span style={{ color: C.muted, minWidth: 90 }}>{c.campo}</span>
+                    <span style={{ background: "#f5e6e6", color: "#c0392b", borderRadius: 4, padding: "1px 8px", fontFamily: "monospace", maxWidth: 150, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.de}</span>
+                    <span style={{ color: C.muted }}>→</span>
+                    <span style={{ background: "#e6f5ec", color: "#2e9e5b", borderRadius: 4, padding: "1px 8px", fontFamily: "monospace", maxWidth: 150, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.para}</span>
+                  </div>
+                ))}
               </div>
               <div style={{ flexShrink: 0, textAlign: "right" }}>
                 <div style={{ fontSize: 11, color: C.muted }}>{h.data}</div>
