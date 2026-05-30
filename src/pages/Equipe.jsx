@@ -3,6 +3,7 @@ import { C } from "../utils/constants";
 import { fmt } from "../utils/format";
 import useAppStore from "../store/useAppStore";
 import { useModuleLoad } from "../hooks/useModuleLoad";
+import { mesAno } from "../utils/date";
 import Btn from "../components/ui/Btn";
 import Input from "../components/ui/Input";
 import Select from "../components/ui/Select";
@@ -93,19 +94,24 @@ function FormColaborador({ form, setForm, onSave, onCancel, btnLabel }) {
 
 export default function Equipe() {
   useModuleLoad("colaboradores");
+  useModuleLoad("obras");
 
-  const colaboradores    = useAppStore((s) => s.colaboradores);
-  const addColaborador   = useAppStore((s) => s.addColaborador);
+  const colaboradores     = useAppStore((s) => s.colaboradores);
+  const addColaborador    = useAppStore((s) => s.addColaborador);
   const updateColaborador = useAppStore((s) => s.updateColaborador);
   const deleteColaborador = useAppStore((s) => s.deleteColaborador);
+  const obras             = useAppStore((s) => s.obras);
+  const addLancamento     = useAppStore((s) => s.addLancamento);
 
-  const [modal,   setModal]   = useState(null);
-  const [editId,  setEditId]  = useState(null);
-  const [confirm, setConfirm] = useState(null);
-  const [toast,   setToast]   = useState(null);
-  const [form,    setForm]    = useState(FORM_VAZIO);
-  const [busca,   setBusca]   = useState("");
-  const [statusF, setStatusF] = useState("Todos");
+  const [modal,      setModal]      = useState(null);
+  const [editId,     setEditId]     = useState(null);
+  const [confirm,    setConfirm]    = useState(null);
+  const [toast,      setToast]      = useState(null);
+  const [form,       setForm]       = useState(FORM_VAZIO);
+  const [busca,      setBusca]      = useState("");
+  const [statusF,    setStatusF]    = useState("Todos");
+  const [folhaModal, setFolhaModal] = useState(false);
+  const [obraFolha,  setObraFolha]  = useState("");
 
   function mostrarToast(msg) {
     setToast(msg);
@@ -143,6 +149,21 @@ export default function Equipe() {
     await deleteColaborador(confirm);
     setConfirm(null);
     mostrarToast("🗑 Colaborador removido.");
+  }
+
+  async function lancarFolha() {
+    if (!obraFolha) return;
+    const mes = mesAno();
+    await addLancamento(obraFolha, {
+      tipo:       "despesa",
+      categoria:  "Mão de obra",
+      descricao:  `Folha de pagamento — ${mes} (${ativos} colaborador${ativos !== 1 ? "es" : ""})`,
+      valor:      folha,
+      data:       new Date().toLocaleDateString("pt-BR"),
+    });
+    setFolhaModal(false);
+    setObraFolha("");
+    mostrarToast(`✅ Folha de ${fmt(folha)} lançada no financeiro!`);
   }
 
   const lista = colaboradores.filter((c) => {
@@ -195,7 +216,46 @@ export default function Equipe() {
       )}
 
       <div>
-        {/* Header */}
+        {/* Modal lançar folha */}
+      {folhaModal && (
+        <Modal title="Lançar folha no Financeiro" onClose={() => setFolhaModal(false)}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div style={{ background: C.darker, borderRadius: 10, padding: "14px 16px", border: `1px solid ${C.success}33` }}>
+              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1.5, color: C.success, marginBottom: 10 }}>RESUMO DA FOLHA</div>
+              {colaboradores.filter((c) => c.status === "Ativo" && c.salario).map((c) => (
+                <div key={c.id} style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 6 }}>
+                  <span style={{ color: C.muted }}>{c.nome} <span style={{ fontSize: 10 }}>· {c.especialidade}</span></span>
+                  <span style={{ fontWeight: 700 }}>{fmt(c.salario)}</span>
+                </div>
+              ))}
+              <div style={{ borderTop: `1px solid ${C.border}`, marginTop: 10, paddingTop: 10, display: "flex", justifyContent: "space-between", fontSize: 14 }}>
+                <span style={{ fontWeight: 700 }}>Total</span>
+                <span style={{ fontWeight: 900, color: C.success }}>{fmt(folha)}</span>
+              </div>
+            </div>
+
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 6 }}>LANÇAR NA OBRA</div>
+              <Select
+                value={obraFolha}
+                onChange={setObraFolha}
+                options={obras.map((o) => ({ value: o.id, label: o.nome?.split("—")[0]?.trim() }))}
+              />
+            </div>
+
+            <div style={{ background: "#4a9eff11", border: "1px solid #4a9eff33", borderRadius: 8, padding: "10px 14px", fontSize: 12, color: "#4a9eff" }}>
+              ✔ Será criado um lançamento de despesa "Mão de obra — {mesAno()}" no financeiro da obra selecionada.
+            </div>
+
+            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", paddingTop: 12, borderTop: `1px solid ${C.border}` }}>
+              <Btn variant="ghost" onClick={() => setFolhaModal(false)}>Cancelar</Btn>
+              <Btn disabled={!obraFolha} onClick={lancarFolha}>💰 Confirmar lançamento</Btn>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* Header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
           <div>
             <h2 style={{ fontSize: 22, fontWeight: 800 }}>Equipe</h2>
@@ -204,7 +264,19 @@ export default function Equipe() {
               {folha > 0 && <span style={{ marginLeft: 10, color: C.success, fontWeight: 600 }}>· Folha: {fmt(folha)}</span>}
             </p>
           </div>
-          <Btn onClick={abrirNovo}>+ Novo colaborador</Btn>
+          <div style={{ display: "flex", gap: 8 }}>
+            {folha > 0 && (
+              <button onClick={() => { setObraFolha(obras[0]?.id || ""); setFolhaModal(true); }} style={{
+                padding: "8px 16px", background: C.success + "18",
+                border: `1px solid ${C.success}44`, borderRadius: 8,
+                color: C.success, fontSize: 12, fontWeight: 700,
+                cursor: "pointer", fontFamily: "inherit",
+              }}>
+                💰 Lançar folha ({fmt(folha)})
+              </button>
+            )}
+            <Btn onClick={abrirNovo}>+ Novo colaborador</Btn>
+          </div>
         </div>
 
         {/* Filtros */}
