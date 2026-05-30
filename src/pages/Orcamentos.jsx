@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { C, PRECOS, FASES } from "../utils/constants";
 import { fmt } from "../utils/format";
 import { enviarWhatsApp, msgOrcamento } from "../services/whatsappService";
@@ -511,6 +511,17 @@ export default function Orcamentos() {
     try { return JSON.parse(localStorage.getItem("sf_estimativo") || "null"); } catch { return null; }
   });
   const [estimativoAberto, setEstimativoAberto] = useState(false);
+
+  // Detecta estimativo vindo da Calculadora SF (navega para esta página e escreve em localStorage)
+  useEffect(() => {
+    const salvo = (() => { try { return JSON.parse(localStorage.getItem("sf_estimativo") || "null"); } catch { return null; } })();
+    if (salvo && !estimativo) {
+      setEstimativoRaw(salvo);
+      if (salvo.area) setForm((f) => ({ ...f, area: salvo.area, padrao: salvo.tipo || f.padrao }));
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   function setEstimativo(val) {
     setEstimativoRaw(val);
     if (val) localStorage.setItem("sf_estimativo", JSON.stringify(val));
@@ -835,7 +846,7 @@ export default function Orcamentos() {
           <div style={{ background: C.red + "0d", border: `1px solid ${C.red}33`, borderRadius: 12, marginBottom: 16, overflow: "hidden" }}>
             <div style={{ padding: "14px 18px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div>
-                <div style={{ fontSize: 12, fontWeight: 700, color: C.red, marginBottom: 2 }}>⚡ Estimativo calculado — {estimativo.tipo === "residencial" ? "Residencial" : "Galpão/Comercial"} · {estimativo.area}m²</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: C.red, marginBottom: 2 }}>⚡ Estimativo calculado — {["residencial","galpão"].includes(estimativo.tipo) ? (estimativo.tipo === "residencial" ? "Residencial" : "Galpão") : estimativo.tipo || "Residencial"} · {estimativo.area}m²</div>
                 <div style={{ fontSize: 11, color: C.muted }}>{estimativo.itens.length} itens · Total materiais: <strong>{estimativo.totalGeral.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</strong></div>
               </div>
               <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
