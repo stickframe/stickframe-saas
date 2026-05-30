@@ -506,8 +506,15 @@ export default function Orcamentos() {
   const [form,         setForm]         = useState({ ...FORM_VAZIO, cliente_id: clientes[0]?.id || "" });
   const [converterOrc, setConverterOrc] = useState(null);
   const [calculadora,  setCalculadora]  = useState(false);
-  const [estimativo,   setEstimativo]   = useState(null);
+  const [estimativo, setEstimativoRaw] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("sf_estimativo") || "null"); } catch { return null; }
+  });
   const [estimativoAberto, setEstimativoAberto] = useState(false);
+  function setEstimativo(val) {
+    setEstimativoRaw(val);
+    if (val) localStorage.setItem("sf_estimativo", JSON.stringify(val));
+    else localStorage.removeItem("sf_estimativo");
+  }
   const [obraForm,   setObraForm]   = useState({ nome: "", prazo_inicio: "", prazo_fim: "" });
 
   function mostrarToast(msg) {
@@ -858,7 +865,7 @@ export default function Orcamentos() {
                       </div>
                       <div style={{ fontSize: 15, fontWeight: 700 }}>{o.cliente}</div>
                       <div style={{ fontSize: 11, color: C.muted, marginTop: 3 }}>
-                        {o.unidades} UH · {o.area} m²/und · {PRECOS[o.padrao]?.label || o.padrao} · {o.criado}
+                        {o.unidades > 1 ? `${o.unidades} UH · ${o.area} m²/und` : `${o.area} m²`} · {PRECOS[o.padrao]?.label || o.padrao} · {o.criado}
                       </div>
                     </div>
 
