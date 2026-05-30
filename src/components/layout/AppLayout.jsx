@@ -12,7 +12,14 @@ export default function AppLayout({ children }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [checkDone, setCheckDone] = useState(false);
-  const empresaId = useAppStore((s) => s.empresaId);
+  const empresaId  = useAppStore((s) => s.empresaId);
+  const perfil     = useAppStore((s) => s.user?.perfil);
+  const loadClientes = useAppStore((s) => s.loadClientes);
+
+  // Pré-carrega clientes para o badge de follow-up do perfil comercial
+  useEffect(() => {
+    if (perfil === "comercial" && empresaId) loadClientes();
+  }, [perfil, empresaId]);
 
   useEffect(() => {
     if (!empresaId) return;
