@@ -239,6 +239,7 @@ export default function Agenda() {
     : allObras;
   const obras = obrasAlocadas.length ? obrasAlocadas : allObras;
 
+
   const [modal,     setModal]     = useState(false);
   const [verEvento, setVerEvento] = useState(null);
   const [filtro,    setFiltro]    = useState("todos");
