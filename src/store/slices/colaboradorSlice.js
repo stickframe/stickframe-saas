@@ -1,7 +1,13 @@
-import { listarColaboradores, criarColaborador, atualizarColaborador, deletarColaborador } from "../../services/repositories/colaboradorRepository";
+import {
+  listarColaboradores, criarColaborador, atualizarColaborador, deletarColaborador,
+  listarAlocacoes, criarAlocacao, deletarAlocacao,
+  listarHoras, criarHoras, deletarHoras,
+} from "../../services/repositories/colaboradorRepository";
 
 export const createColaboradorSlice = (set, get) => ({
   colaboradores: [],
+  alocacoes:     [],
+  horasTrabalhadas: [],
 
   loadColaboradores: async () => {
     if (get().loaded.colaboradores) return;
@@ -30,5 +36,35 @@ export const createColaboradorSlice = (set, get) => ({
     await deletarColaborador(id);
     set((s) => ({ colaboradores: s.colaboradores.filter((x) => x.id !== id) }));
     get().registrar("colaborador", "deletado", `Colaborador ${c?.nome} removido`);
+  },
+
+  // ── Alocações ─────────────────────────────────────────────────────────────
+  loadAlocacoes: async () => {
+    const data = await listarAlocacoes();
+    set({ alocacoes: data });
+  },
+  addAlocacao: async (a) => {
+    const data = await criarAlocacao(a);
+    set((s) => ({ alocacoes: [data, ...s.alocacoes] }));
+    return data;
+  },
+  removeAlocacao: async (id) => {
+    await deletarAlocacao(id);
+    set((s) => ({ alocacoes: s.alocacoes.filter((x) => x.id !== id) }));
+  },
+
+  // ── Horas trabalhadas ──────────────────────────────────────────────────────
+  loadHorasTrabalhadas: async () => {
+    const data = await listarHoras();
+    set({ horasTrabalhadas: data });
+  },
+  addHorasTrabalhadas: async (h) => {
+    const data = await criarHoras(h);
+    set((s) => ({ horasTrabalhadas: [data, ...s.horasTrabalhadas] }));
+    return data;
+  },
+  removeHorasTrabalhadas: async (id) => {
+    await deletarHoras(id);
+    set((s) => ({ horasTrabalhadas: s.horasTrabalhadas.filter((x) => x.id !== id) }));
   },
 });
