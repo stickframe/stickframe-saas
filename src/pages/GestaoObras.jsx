@@ -236,16 +236,21 @@ export default function GestaoObras() {
     mostrarToast(`📋 Avançou para: ${novaFase}`);
   }
 
-  function handleFiles(files) {
+  async function handleFiles(files) {
     const novos = Array.from(files).map((f) => ({
-      id:        Date.now() + Math.random(),
+      file:      f,
       nome:      f.name,
       tipo:      f.type.startsWith("image/") ? "imagem" : f.name.endsWith(".pdf") ? "pdf" : "outro",
-      tamanho:   (f.size / 1024 / 1024).toFixed(1) + " MB",
+      tamanho:   (f.size / 1024 / 1024).toFixed(2) + " MB",
       data:      new Date().toLocaleDateString("pt-BR"),
-      categoria: f.name.endsWith(".pdf") ? "Documento" : "Foto",
+      categoria: f.type.startsWith("image/") ? "Foto" : f.name.endsWith(".pdf") ? "Documento" : "Outro",
     }));
-    addArquivos(obraId, novos);
+    try {
+      await addArquivos(obraId, novos);
+      mostrarToast(`✅ ${novos.length} arquivo(s) enviado(s)!`);
+    } catch (e) {
+      mostrarToast("❌ Erro ao enviar arquivo. Tente novamente.");
+    }
   }
 
   return (
@@ -481,7 +486,14 @@ export default function GestaoObras() {
                               <div style={{ fontSize: 13, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.nome}</div>
                               <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{a.categoria} · {a.tamanho} · {a.data}</div>
                             </div>
-                            <button onClick={() => deleteArquivo(obraId, a.id)} style={{
+                            {a.url && (
+                              <a href={a.url} target="_blank" rel="noreferrer" style={{
+                                background: "#4a9eff22", border: "1px solid #4a9eff44",
+                                borderRadius: 6, color: "#4a9eff", fontSize: 11, fontWeight: 700,
+                                padding: "4px 10px", textDecoration: "none", flexShrink: 0,
+                              }}>↓</a>
+                            )}
+                            <button onClick={() => deleteArquivo(obraId, a.id, a.path)} style={{
                               background: C.danger + "22", border: `1px solid ${C.danger}44`,
                               borderRadius: 6, color: C.danger, fontSize: 11, fontWeight: 700,
                               cursor: "pointer", padding: "4px 10px", fontFamily: "inherit", flexShrink: 0,
