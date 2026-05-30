@@ -210,6 +210,92 @@ export default function Dashboard() {
     { label: "Margem",       value: `${margem}%`,             sub: `saldo ${fmt(saldo)}`,                                                  accent: Number(margem) >= 20 ? C.success : C.warning, icon: "%" },
   ];
 
+  // ── Relatório executivo mensal ────────────────────────────────────────────
+  function gerarRelatorioMensal() {
+    const mes = mesAno();
+    const obrasAndamento = obras.filter((o) => o.status === "Em andamento");
+    const obrasConcluidas = obras.filter((o) => o.status === "Concluída");
+    const linhasObras = obrasAndamento.map((o) => {
+      const fin  = financeiro[o.id] || { lancamentos: [] };
+      const rec  = fin.lancamentos.filter((l) => l.tipo === "receita").reduce((a, l) => a + (l.valor || 0), 0);
+      const desp = fin.lancamentos.filter((l) => l.tipo === "despesa").reduce((a, l) => a + (l.valor || 0), 0);
+      return `<tr>
+        <td style="padding:8px 12px;border-bottom:1px solid #eee;font-weight:600">${o.nome}</td>
+        <td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:center">${o.fase || "—"}</td>
+        <td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:center">${o.progresso || 0}%</td>
+        <td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right;color:#2e9e5b">${fmt(rec)}</td>
+        <td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right;color:#981915">${fmt(desp)}</td>
+        <td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right;font-weight:700">${fmt(rec - desp)}</td>
+      </tr>`;
+    }).join("");
+    const win = window.open("", "_blank");
+    win.document.write(`<!DOCTYPE html><html><head>
+<meta charset="utf-8">
+<title>Relatório Executivo — ${mes}</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, sans-serif; color: #1a1a1a; padding: 40px; max-width: 900px; margin: auto; }
+  .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; padding-bottom: 20px; border-bottom: 3px solid #981915; }
+  .logo { font-size: 22px; font-weight: 900; color: #981915; letter-spacing: -0.5px; }
+  .logo span { font-weight: 300; }
+  .subtitle { font-size: 13px; color: #6b7280; margin-top: 4px; }
+  .title { font-size: 18px; font-weight: 700; color: #4b4b4b; }
+  .date-block { text-align: right; font-size: 12px; color: #6b7280; }
+  h2 { font-size: 13px; font-weight: 800; letter-spacing: 1.5px; color: #6b7280; text-transform: uppercase; margin: 28px 0 14px; }
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 8px; }
+  .kpi { background: #f9f9fb; border: 1px solid #e4e4ea; border-radius: 10px; padding: 14px 16px; }
+  .kpi-label { font-size: 10px; font-weight: 700; color: #6b7280; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+  .kpi-value { font-size: 20px; font-weight: 900; }
+  .kpi-sub { font-size: 11px; color: #6b7280; margin-top: 3px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; background: #fff; border: 1px solid #e4e4ea; border-radius: 10px; overflow: hidden; }
+  th { background: #f0f0f3; padding: 10px 12px; text-align: left; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: #6b7280; font-weight: 700; }
+  th.r { text-align: right; } th.c { text-align: center; }
+  .footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid #e4e4ea; font-size: 11px; color: #6b7280; text-align: center; }
+  @media print { body { padding: 20px; } }
+</style>
+</head><body>
+<div class="header">
+  <div>
+    <div class="logo">Stick<span>Frame</span></div>
+    <div class="subtitle">Gestão de Obras Steel Frame</div>
+  </div>
+  <div class="date-block">
+    <div class="title">Relatório Executivo Mensal</div>
+    <div>${mes}</div>
+    <div>Gerado em ${new Date().toLocaleDateString("pt-BR")} às ${new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</div>
+  </div>
+</div>
+
+<h2>Visão Geral</h2>
+<div class="kpis">
+  <div class="kpi"><div class="kpi-label">Obras Ativas</div><div class="kpi-value" style="color:#981915">${obrasAndamento.length}</div><div class="kpi-sub">${obrasConcluidas.length} concluídas</div></div>
+  <div class="kpi"><div class="kpi-label">Receita Total</div><div class="kpi-value" style="color:#2e9e5b">${fmt(totalRec)}</div><div class="kpi-sub">lançada no sistema</div></div>
+  <div class="kpi"><div class="kpi-label">Despesa Total</div><div class="kpi-value" style="color:#981915">${fmt(totalDesp)}</div><div class="kpi-sub">lançada no sistema</div></div>
+  <div class="kpi"><div class="kpi-label">Margem</div><div class="kpi-value" style="color:${Number(margem) >= 20 ? "#2e9e5b" : "#b97a00"}">${margem}%</div><div class="kpi-sub">saldo ${fmt(saldo)}</div></div>
+</div>
+<div class="kpis" style="margin-top:12px">
+  <div class="kpi"><div class="kpi-label">Orçamentos</div><div class="kpi-value">${orcamentos.length}</div><div class="kpi-sub">pipeline ${fmt(pipelineOrc)}</div></div>
+  <div class="kpi"><div class="kpi-label">Clientes</div><div class="kpi-value">${clientes.length}</div><div class="kpi-sub">${fechados} fechados</div></div>
+  <div class="kpi"><div class="kpi-label">Medições Pend.</div><div class="kpi-value" style="color:#b97a00">${medPendentes.length}</div><div class="kpi-sub">${fmt(valorPendente)} a receber</div></div>
+  <div class="kpi"><div class="kpi-label">Obras Atrasadas</div><div class="kpi-value" style="color:${atrasadas.length > 0 ? "#981915" : "#2e9e5b"}">${atrasadas.length}</div><div class="kpi-sub">${noPrazo.length} no prazo</div></div>
+</div>
+
+${obrasAndamento.length > 0 ? `
+<h2>Obras em Andamento</h2>
+<table>
+  <thead><tr>
+    <th>Obra</th><th class="c">Fase</th><th class="c">Progresso</th>
+    <th class="r">Receita</th><th class="r">Despesa</th><th class="r">Saldo</th>
+  </tr></thead>
+  <tbody>${linhasObras}</tbody>
+</table>` : ""}
+
+<div class="footer">StickFrame SaaS · Relatório gerado automaticamente · ${new Date().toLocaleDateString("pt-BR")}</div>
+</body></html>`);
+    win.document.close();
+    setTimeout(() => win.print(), 600);
+  }
+
   // ── Gráfico receita vs despesa por obra ───────────────────────────────────
   const graficoObras = obras.map((o) => {
     const fin  = financeiro[o.id] || { lancamentos: [] };
@@ -257,7 +343,16 @@ export default function Dashboard() {
           <h2 style={{ fontSize: 22, fontWeight: 800, marginBottom: 2 }}>Dashboard</h2>
           <p style={{ color: C.muted, fontSize: 13 }}>Visão consolidada — {mesAno()}</p>
         </div>
-        <div style={{ fontSize: 11, color: C.muted }}>Atualizado agora</div>
+        <button
+          onClick={gerarRelatorioMensal}
+          style={{
+            padding: "8px 18px", background: "#981915", border: "none",
+            borderRadius: 8, color: "#fff", fontWeight: 700,
+            fontSize: 12, cursor: "pointer", fontFamily: "inherit",
+          }}
+        >
+          📄 Relatório Mensal
+        </button>
       </div>
 
       {/* VGV — Funil financeiro */}
