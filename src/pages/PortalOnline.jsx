@@ -6,15 +6,17 @@ import { fmt } from "../utils/format";
 
 export default function PortalOnline() {
   const { token } = useParams();
-  const [obra,      setObra]    = useState(null);
-  const [financeiro,setFin]     = useState({ contrato: 0, lancamentos: [] });
-  const [diario,    setDiario]  = useState([]);
-  const [medicoes,  setMedicoes]= useState([]);
-  const [loading,   setLoading] = useState(true);
+  const [obra,       setObra]    = useState(null);
+  const [financeiro, setFin]     = useState({ contrato: 0, lancamentos: [] });
+  const [diario,     setDiario]  = useState([]);
+  const [medicoes,   setMedicoes]= useState([]);
+  const [outrasObras,setOutras]  = useState([]);
+  const [loading,    setLoading] = useState(true);
   const hoje = new Date().toLocaleDateString("pt-BR");
 
   useEffect(() => {
     if (!token) { setLoading(false); return; }
+    setLoading(true);
     (async () => {
       try {
         const { data, error } = await sb.rpc("get_portal_data", { p_token: token });
@@ -23,6 +25,7 @@ export default function PortalOnline() {
         setFin({ contrato: data.obra.contrato || 0, lancamentos: data.financeiro || [] });
         setDiario(data.diario || []);
         setMedicoes(data.medicoes || []);
+        setOutras(data.outras_obras || []);
       } finally {
         setLoading(false);
       }
@@ -81,6 +84,29 @@ export default function PortalOnline() {
         </div>
         <div style={{ fontSize: 10, color: "#444" }}>Atualizado em {hoje}</div>
       </div>
+
+      {/* Switcher: outras obras do mesmo cliente */}
+      {outrasObras.length > 0 && (
+        <div style={{ background: "#111", borderBottom: "1px solid #222", overflowX: "auto" }}>
+          <div style={{ display: "flex", gap: 0, minWidth: "max-content" }}>
+            {/* obra atual */}
+            <div style={{ padding: "10px 18px", borderBottom: "2px solid #981915", color: "#fff", fontSize: 12, fontWeight: 700, whiteSpace: "nowrap", cursor: "default" }}>
+              {obra.nome?.split("—")[0]?.trim()}
+            </div>
+            {outrasObras.map((o) => (
+              <a
+                key={o.id}
+                href={`/portal/${o.portal_token}`}
+                style={{ padding: "10px 18px", borderBottom: "2px solid transparent", color: "#888", fontSize: 12, fontWeight: 600, whiteSpace: "nowrap", textDecoration: "none", display: "block" }}
+                onMouseEnter={(e) => { e.currentTarget.style.color = "#ccc"; e.currentTarget.style.borderBottomColor = "#444"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.color = "#888"; e.currentTarget.style.borderBottomColor = "transparent"; }}
+              >
+                {o.nome?.split("—")[0]?.trim()}
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Hero */}
       <div style={{ background: "linear-gradient(135deg,#981915,#6e1210)", padding: "28px 20px", color: "#fff" }}>
