@@ -9,7 +9,7 @@ import Select from "../components/ui/Select";
 import Badge from "../components/ui/Badge";
 import Modal from "../components/ui/Modal";
 
-const ESPECIALIDADES = ["Steel Frame","Fundação","Elétrica","Hidráulica","Acabamento","Projeto","Administração","Outro"];
+const ESPECIALIDADES = ["Montador","Ajudante","Fundação","Elétrica","Hidráulica","Acabamento","Projeto","Administração","Outro"];
 const STATUS_OPTS    = ["Ativo","Férias","Afastado","Inativo"];
 const STATUS_COR     = { Ativo: "#2e9e5b", Férias: "#4a9eff", Afastado: "#c88a00", Inativo: C.muted };
 
@@ -24,7 +24,7 @@ function Label({ children, required }) {
 
 const FORM_VAZIO = {
   nome: "", cargo: "", email: "", telefone: "",
-  especialidade: "Steel Frame", status: "Ativo", salario: "", observacoes: "",
+  especialidade: "Montador", status: "Ativo", salario: "", observacoes: "",
 };
 
 function FormColaborador({ form, setForm, onSave, onCancel, btnLabel }) {
@@ -53,7 +53,7 @@ function FormColaborador({ form, setForm, onSave, onCancel, btnLabel }) {
         </div>
         <div>
           <Label>Telefone</Label>
-          <Input value={form.telefone} onChange={set("telefone")} placeholder="(11) 99999-9999" />
+          <Input value={form.telefone} onChange={set("telefone")} placeholder="+55 (11) 99999-9999" />
         </div>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
