@@ -1,4 +1,4 @@
-import { listarHistorico, adicionarHistorico } from "../../services/repositories/historicoRepository";
+import { listarHistorico, adicionarHistorico, listarHistoricoObra } from "../../services/repositories/historicoRepository";
 
 const nowBR = () => {
   const d = new Date();
@@ -19,15 +19,29 @@ export const createHistoricoSlice = (set, get) => ({
     }
   },
 
-  registrar: async (tipo, acao, desc) => {
+  registrar: async (tipo, acao, desc, obraId, detalhes) => {
     const { user } = get();
     const { data, hora } = nowBR();
-    const r = { tipo, acao, descricao: desc, usuario: user?.nome || "Sistema", data, hora, usuario_id: user?.uid };
+    const r = {
+      tipo, acao, descricao: desc,
+      usuario: user?.nome || "Sistema", data, hora, usuario_id: user?.uid,
+      obra_id: obraId || null,
+      detalhes: detalhes || null,
+    };
     try {
       const novo = await adicionarHistorico(r);
       if (novo) set((s) => ({ historico: [novo, ...s.historico] }));
     } catch (_) {
       // não quebra o fluxo se histórico falhar
+    }
+  },
+
+  loadHistoricoObra: async (obraId) => {
+    try {
+      const data = await listarHistoricoObra(obraId);
+      return data;
+    } catch (_) {
+      return [];
     }
   },
 });

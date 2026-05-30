@@ -26,11 +26,14 @@ export const createObraSlice = (set, get) => ({
   },
 
   avancarFase: async (obraId, novaFase, progresso) => {
+    const anterior = get().obras.find((x) => x.id === obraId);
     await atualizarFase(obraId, novaFase, progresso);
     set((s) => ({ obras: s.obras.map((o) => o.id === obraId ? { ...o, fase: novaFase, progresso } : o) }));
     const o = get().obras.find((x) => x.id === obraId);
     const nome = o?.nome?.split("—")[0]?.trim();
-    get().registrar("obra", "fase", `Obra ${nome} avançou para: ${novaFase}`);
+    get().registrar("obra", "fase", `Obra ${nome} avançou para: ${novaFase}`, obraId, {
+      campos: [{ campo: "Fase", de: anterior?.fase || "—", para: novaFase }],
+    });
     const uid = get().user?.uid;
     if (uid) criarNotificacao({ usuarioId: uid, titulo: `Fase avançada: ${novaFase}`, mensagem: `Obra ${nome} avançou para a fase "${novaFase}".`, tipo: "info" }).catch(() => {});
     if (o?.email_cliente) emailFaseAvancada({ obraEmail: o.email_cliente, obraNome: nome, fase: novaFase, progresso }).catch(() => {});
@@ -39,16 +42,23 @@ export const createObraSlice = (set, get) => ({
   addObra: async (obra) => {
     const data = await criarObra(obra);
     set((s) => ({ obras: [...s.obras, data] }));
-    get().registrar("obra", "criado", `Obra ${data.nome} cadastrada`);
+    get().registrar("obra", "criado", `Obra ${data.nome} cadastrada`, data.id);
     const uid = get().user?.uid;
     if (uid) criarNotificacao({ usuarioId: uid, titulo: "Nova obra cadastrada", mensagem: `A obra "${data.nome}" foi adicionada.`, tipo: "info" }).catch(() => {});
     return data;
   },
 
   updateObra: async (id, updates) => {
+    const anterior = get().obras.find((o) => o.id === id);
     const data = await atualizarObra(id, updates);
     set((s) => ({ obras: s.obras.map((o) => o.id === id ? data : o) }));
-    get().registrar("obra", "editado", `Obra ${data.nome} atualizada`);
+
+    const LABELS = { nome: "Nome", cliente: "Cliente", status: "Status", contrato: "Contrato (R$)", email_cliente: "Email do cliente", prazo_inicio: "Início", prazo_fim: "Entrega", fase: "Fase" };
+    const campos = Object.entries(LABELS)
+      .filter(([k]) => updates[k] !== undefined && String(updates[k] ?? "") !== String(anterior?.[k] ?? ""))
+      .map(([k, label]) => ({ campo: label, de: String(anterior?.[k] ?? "—") || "—", para: String(updates[k] ?? "—") || "—" }));
+
+    get().registrar("obra", "editado", `Obra ${data.nome} atualizada`, id, campos.length > 0 ? { campos } : null);
   },
 
   deleteObra: async (id) => {
