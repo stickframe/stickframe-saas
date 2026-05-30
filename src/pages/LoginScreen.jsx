@@ -5,11 +5,9 @@ import useAppStore from "../store/useAppStore";
 
 const LOGO = "https://gpzmglcxmbboxxogbibq.supabase.co/storage/v1/object/public/arquivos/logos/34ec14d3-02fc-4b0a-8040-67f7a739394d/logo.jpg?t=1780161932174";
 
-// Três variantes visuais para comparação
 const VARIANTES = [
   {
     id: "A",
-    label: "Opção A — Fundo escuro + logo centralizado",
     titulo: "Acesse sua conta",
     sub: "Entre com suas credenciais para continuar.",
     wrapStyle: {
@@ -37,12 +35,10 @@ const VARIANTES = [
     ),
     inputStyle: { background: "#0d1117", border: "1px solid #30363d", color: "#e6edf3" },
     labelColor: "#6e7681",
-    btnColor: C.red,
     rodapeColor: "#6e7681",
   },
   {
     id: "B",
-    label: "Opção B — Fundo com gradiente + logo lateral",
     titulo: "Entrar no sistema",
     sub: "Acesso restrito a usuários autorizados.",
     wrapStyle: {
@@ -74,12 +70,10 @@ const VARIANTES = [
     ),
     inputStyle: { background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff" },
     labelColor: "rgba(255,255,255,0.45)",
-    btnColor: C.red,
     rodapeColor: "rgba(255,255,255,0.25)",
   },
   {
     id: "C",
-    label: "Opção C — Fundo claro / clean",
     titulo: "Olá, faça seu login",
     sub: "Sistema de gestão Steel Frame.",
     wrapStyle: {
@@ -107,29 +101,23 @@ const VARIANTES = [
     ),
     inputStyle: { background: "#f9fafb", border: "1px solid #d1d5db", color: "#111" },
     labelColor: "#6b7280",
-    btnColor: C.red,
     rodapeColor: "#9ca3af",
   },
 ];
 
-function LoginForm({ variante, email, setEmail, senha, setSenha, show, setShow, erro, loading, handleLogin }) {
-  const v = variante;
+function LoginForm({ variante: v, email, setEmail, senha, setSenha, show, setShow, erro, loading, handleLogin }) {
   return (
     <div style={v.wrapStyle}>
       <div style={v.cardStyle}>
         {v.logoBlock}
-
         <h1 style={{ fontSize: 20, fontWeight: 800, marginBottom: 4, color: v.inputStyle.color }}>{v.titulo}</h1>
         <p style={{ fontSize: 13, color: v.labelColor, marginBottom: 24 }}>{v.sub}</p>
 
         <div style={{ marginBottom: 14 }}>
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: v.labelColor, marginBottom: 6 }}>E-MAIL</div>
-          <input
-            type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-            placeholder="seu@email.com.br"
-            onKeyDown={(e) => e.key === "Enter" && handleLogin()}
-            style={{ width: "100%", borderRadius: 8, padding: "11px 14px", fontSize: 14, outline: "none", fontFamily: "inherit", boxSizing: "border-box", ...v.inputStyle }}
-          />
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
+            placeholder="seu@email.com.br" onKeyDown={(e) => e.key === "Enter" && handleLogin()}
+            style={{ width: "100%", borderRadius: 8, padding: "11px 14px", fontSize: 14, outline: "none", fontFamily: "inherit", boxSizing: "border-box", ...v.inputStyle }} />
         </div>
 
         <div style={{ marginBottom: 20 }}>
@@ -137,11 +125,9 @@ function LoginForm({ variante, email, setEmail, senha, setSenha, show, setShow, 
             <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: v.labelColor }}>SENHA</span>
             <button onClick={() => setShow((x) => !x)} style={{ background: "none", border: "none", color: C.red, fontSize: 11, cursor: "pointer", fontFamily: "inherit" }}>{show ? "Ocultar" : "Mostrar"}</button>
           </div>
-          <input
-            type={show ? "text" : "password"} value={senha} onChange={(e) => setSenha(e.target.value)}
+          <input type={show ? "text" : "password"} value={senha} onChange={(e) => setSenha(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleLogin()}
-            style={{ width: "100%", borderRadius: 8, padding: "11px 14px", fontSize: 14, outline: "none", fontFamily: "inherit", boxSizing: "border-box", ...v.inputStyle }}
-          />
+            style={{ width: "100%", borderRadius: 8, padding: "11px 14px", fontSize: 14, outline: "none", fontFamily: "inherit", boxSizing: "border-box", ...v.inputStyle }} />
         </div>
 
         {erro && (
@@ -150,10 +136,8 @@ function LoginForm({ variante, email, setEmail, senha, setSenha, show, setShow, 
           </div>
         )}
 
-        <button
-          onClick={handleLogin} disabled={loading || !email || !senha}
-          style={{ width: "100%", padding: "14px 0", background: loading ? "#555" : v.btnColor, border: "none", borderRadius: 10, color: "#fff", fontSize: 15, fontWeight: 700, cursor: loading ? "not-allowed" : "pointer", fontFamily: "inherit", transition: "background .2s" }}
-        >
+        <button onClick={handleLogin} disabled={loading || !email || !senha}
+          style={{ width: "100%", padding: "14px 0", background: loading ? "#555" : C.red, border: "none", borderRadius: 10, color: "#fff", fontSize: 15, fontWeight: 700, cursor: loading ? "not-allowed" : "pointer", fontFamily: "inherit", transition: "background .2s" }}>
           {loading ? "Entrando..." : "Entrar no sistema →"}
         </button>
 
@@ -173,7 +157,7 @@ export default function LoginScreen() {
   const [erro,    setErro]    = useState("");
   const [loading, setLoading] = useState(false);
   const [show,    setShow]    = useState(false);
-  const [preview, setPreview] = useState(null); // null = seletor, "A"|"B"|"C" = variante
+  const [preview, setPreview] = useState(null);
 
   const handleLogin = async () => {
     if (!email || !senha) return;
@@ -188,7 +172,6 @@ export default function LoginScreen() {
     }
   };
 
-  // Modo preview de variante
   if (preview) {
     const v = VARIANTES.find((x) => x.id === preview);
     return (
@@ -199,9 +182,7 @@ export default function LoginScreen() {
               padding: "6px 16px", borderRadius: 6, fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "inherit", border: "none",
               background: preview === x.id ? C.red : "rgba(255,255,255,0.12)",
               color: preview === x.id ? "#fff" : "rgba(255,255,255,0.7)",
-            }}>
-              {x.id}
-            </button>
+            }}>{x.id}</button>
           ))}
           <button onClick={() => setPreview(null)} style={{ padding: "6px 14px", borderRadius: 6, fontSize: 12, cursor: "pointer", fontFamily: "inherit", border: "none", background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.5)" }}>
             ← Voltar
@@ -212,7 +193,6 @@ export default function LoginScreen() {
     );
   }
 
-  // Seletor de opções
   return (
     <div style={{ minHeight: "100vh", background: "#0d1117", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px 16px", gap: 24 }}>
       <div style={{ textAlign: "center", marginBottom: 8 }}>
@@ -225,9 +205,9 @@ export default function LoginScreen() {
           <button key={v.id} onClick={() => setPreview(v.id)} style={{
             padding: "14px 28px", borderRadius: 12, border: `1px solid ${C.red}44`,
             background: C.red + "12", color: "#fff", fontSize: 13, fontWeight: 700,
-            cursor: "pointer", fontFamily: "inherit", transition: "background .2s",
+            cursor: "pointer", fontFamily: "inherit",
           }}>
-            {v.label.replace(`Opção ${v.id} — `, `${v.id}: `)}
+            {v.id}: {v.titulo}
           </button>
         ))}
       </div>
