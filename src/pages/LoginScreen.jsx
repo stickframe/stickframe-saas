@@ -30,7 +30,7 @@ export default function LoginScreen() {
       <div style={{ position: "relative", width: "min(420px, 94vw)", background: C.surface, border: `1px solid ${C.border}`, borderRadius: 18, padding: "clamp(24px,5vw,40px)", boxShadow: "0 0 80px #00000088" }}>
         {/* Logo */}
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 28 }}>
-          <img src="/logo.png" style={{ width: 44, height: 44, borderRadius: 10, objectFit: "contain" }} alt="Logo" />
+          <img src="https://gpzmglcxmbboxxogbibq.supabase.co/storage/v1/object/public/arquivos/logos/34ec14d3-02fc-4b0a-8040-67f7a739394d/logo.jpg?t=1780161932174" style={{ width: 44, height: 44, borderRadius: 10, objectFit: "contain" }} alt="Logo" />
           <div>
             <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700, letterSpacing: 3, fontSize: 20 }}>
               <span style={{ color: C.graphite }}>STICK</span><span style={{ color: C.red }}>FRAME</span>
