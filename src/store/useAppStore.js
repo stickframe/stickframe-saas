@@ -10,6 +10,7 @@ import { createAgendaSlice }    from "./slices/agendaSlice";
 import { createHistoricoSlice }    from "./slices/historicoSlice";
 import { createColaboradorSlice }  from "./slices/colaboradorSlice";
 import { createVistoriaSlice }     from "./slices/vistoriaSlice";
+import { createBimSlice }          from "./slices/bimSlice";
 
 // ─── ESTADO BASE (loading + loaded + activePage) ─────────────────────────────
 const createBaseSlice = (set) => ({
@@ -44,6 +45,7 @@ const useAppStore = create(
       ...createHistoricoSlice(...a),
       ...createColaboradorSlice(...a),
       ...createVistoriaSlice(...a),
+      ...createBimSlice(...a),
     }),
     {
       name: "stickframe-storage",

@@ -22,6 +22,7 @@ const PortalOnline= lazy(() => import("./pages/PortalOnline"));
 const Equipe      = lazy(() => import("./pages/Equipe"));
 const Cronograma  = lazy(() => import("./pages/Cronograma"));
 const Vistorias   = lazy(() => import("./pages/Vistorias"));
+const BIM         = lazy(() => import("./pages/BIM"));
 
 const PAGES = {
   dashboard:  Dashboard,
@@ -37,6 +38,7 @@ const PAGES = {
   equipe:     Equipe,
   cronograma: Cronograma,
   vistorias:  Vistorias,
+  bim:        BIM,
 };
 
 function AuthenticatedApp() {
