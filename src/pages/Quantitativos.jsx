@@ -11,6 +11,7 @@ import {
   listarQuantitativos, criarQuantitativo, atualizarQuantitativo,
   deletarQuantitativo, inserirTemplate,
 } from "../services/repositories/quantitativoRepository";
+import { criarCotacao } from "../services/repositories/fornecedoresRepository";
 
 // ─── Templates Steel Frame por fase ──────────────────────────────────────────
 const UNIDADES = ["m²","m","m³","un","kg","vb","l","hrs","cj"];
@@ -95,8 +96,10 @@ const FORM_VAZIO = { fase: FASES[0], descricao: "", unidade: "m²", quantidade: 
 
 export default function Quantitativos() {
   useModuleLoad("obras");
+  useModuleLoad("fornecedores");
 
-  const obras = useAppStore((s) => s.obras);
+  const obras        = useAppStore((s) => s.obras);
+  const fornecedores = useAppStore((s) => s.fornecedores);
 
   const [obraId,    setObraId]    = useState("");
   const [faseFiltro,setFaseFiltro] = useState("Todas");
@@ -112,6 +115,8 @@ export default function Quantitativos() {
   const [confirm,   setConfirm]    = useState(null);
   const [templateModal, setTemplateModal] = useState(false);
   const [templateFases, setTemplateFases] = useState({});
+  const [cotarItem, setCotarItem]  = useState(null); // item a ser cotado
+  const [cotarForm, setCotarForm]  = useState({ fornecedor_id: "", valor: "", observacoes: "", atualizar_custo: true });
 
   const obra = obras.find((o) => o.id === obraId);
 
@@ -291,6 +296,27 @@ ${tabelaFases}
 
   const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
 
+  // ── Cotar com fornecedor ─────────────────────────────────────────────────
+  async function confirmarCotacao() {
+    if (!cotarForm.fornecedor_id || !cotarItem) return;
+    const valor = parseFloat(String(cotarForm.valor).replace(",", ".")) || null;
+    await criarCotacao({
+      fornecedor_id: cotarForm.fornecedor_id,
+      obra_id:       obraId || null,
+      descricao:     cotarItem.descricao,
+      valor,
+      status:        "Pendente",
+      observacoes:   cotarForm.observacoes || null,
+    });
+    if (cotarForm.atualizar_custo && valor) {
+      const updated = await atualizarQuantitativo(cotarItem.id, { custo_unitario: valor });
+      setItems((prev) => prev.map((i) => i.id === cotarItem.id ? updated : i));
+    }
+    setCotarItem(null);
+    setCotarForm({ fornecedor_id: "", valor: "", observacoes: "", atualizar_custo: true });
+    mostrarToast("✅ Cotação registrada" + (cotarForm.atualizar_custo && valor ? " e custo atualizado!" : "!"));
+  }
+
   return (
     <>
       {toast && (
@@ -386,6 +412,69 @@ ${tabelaFases}
                 onClick={aplicarTemplate}
               >
                 📥 Importar selecionados
+              </Btn>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* ── Modal Cotar com Fornecedor ── */}
+      {cotarItem && (
+        <Modal title="🏭 Cotar com Fornecedor" onClose={() => setCotarItem(null)}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <div style={{ background: C.darker, borderRadius: 8, padding: "10px 14px", fontSize: 13 }}>
+              <span style={{ color: C.muted }}>Item: </span>
+              <strong>{cotarItem.descricao}</strong>
+              <span style={{ color: C.muted, marginLeft: 8 }}>{cotarItem.unidade}</span>
+            </div>
+            <div>
+              <LabelF required>Fornecedor</LabelF>
+              <Select
+                value={cotarForm.fornecedor_id}
+                onChange={(v) => setCotarForm((f) => ({ ...f, fornecedor_id: v }))}
+                options={[
+                  { value: "", label: "— Selecione um fornecedor —" },
+                  ...fornecedores.filter((f) => f.status === "Ativo").map((f) => ({ value: f.id, label: `${f.nome} · ${f.especialidade}` })),
+                ]}
+              />
+              {fornecedores.length === 0 && (
+                <div style={{ fontSize: 11, color: C.warning, marginTop: 4 }}>
+                  ⚠️ Cadastre fornecedores no módulo Fornecedores primeiro.
+                </div>
+              )}
+            </div>
+            <div>
+              <LabelF>Valor unitário da cotação (R$)</LabelF>
+              <Input
+                type="number" min="0" step="0.01"
+                value={cotarForm.valor}
+                onChange={(v) => setCotarForm((f) => ({ ...f, valor: v }))}
+                placeholder="Deixe vazio para cotação em aberto"
+              />
+            </div>
+            <div>
+              <LabelF>Observações</LabelF>
+              <Input
+                value={cotarForm.observacoes}
+                onChange={(v) => setCotarForm((f) => ({ ...f, observacoes: v }))}
+                placeholder="Especificações para o fornecedor..."
+              />
+            </div>
+            {cotarForm.valor && (
+              <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", fontSize: 13 }}>
+                <input
+                  type="checkbox"
+                  checked={cotarForm.atualizar_custo}
+                  onChange={(e) => setCotarForm((f) => ({ ...f, atualizar_custo: e.target.checked }))}
+                  style={{ accentColor: C.red, width: 15, height: 15 }}
+                />
+                Atualizar custo unitário do item com este valor
+              </label>
+            )}
+            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", paddingTop: 12, borderTop: `1px solid ${C.border}` }}>
+              <Btn variant="ghost" onClick={() => setCotarItem(null)}>Cancelar</Btn>
+              <Btn disabled={!cotarForm.fornecedor_id} onClick={confirmarCotacao}>
+                🏭 Registrar cotação
               </Btn>
             </div>
           </div>
@@ -622,6 +711,10 @@ ${tabelaFases}
                               </td>
                               <td style={{ padding: "9px 8px", textAlign: "center" }}>
                                 <div style={{ display: "flex", gap: 4, justifyContent: "center" }}>
+                                  <button
+                                    title="Cotar com fornecedor"
+                                    onClick={() => { setCotarItem(item); setCotarForm({ fornecedor_id: "", valor: "", observacoes: "", atualizar_custo: true }); }}
+                                    style={{ background: "none", border: "none", cursor: "pointer", color: "#4a9eff", fontSize: 13, padding: 3 }}>🏭</button>
                                   <button onClick={() => {
                                     setEditId(item.id);
                                     setForm({ fase: item.fase, descricao: item.descricao, unidade: item.unidade, quantidade: String(item.quantidade), custo_unitario: String(item.custo_unitario), categoria: item.categoria || "Outros", observacoes: item.observacoes || "" });

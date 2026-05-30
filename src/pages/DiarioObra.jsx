@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { C, CLIMAS, TURNOS } from "../utils/constants";
 import useAppStore from "../store/useAppStore";
 import { useModuleLoad } from "../hooks/useModuleLoad";
+import { salvarDiarioOffline, getPendentesDiario, deletarPendente, contarPendentes } from "../utils/offlineDB";
 import Btn from "../components/ui/Btn";
 import Input from "../components/ui/Input";
 import Select from "../components/ui/Select";
@@ -240,16 +241,40 @@ export default function DiarioObra() {
   const diario    = useAppStore((s) => s.diario);
   const addDiario = useAppStore((s) => s.addDiario);
 
-  const [obraId, setObraId] = useState(null);
-  const [modal,  setModal]  = useState(false);
-  const [verReg, setVerReg] = useState(null);
-  const [form,   setForm]   = useState(FORM_VAZIO);
-  const [toast,  setToast]  = useState(null);
+  const [obraId,    setObraId]    = useState(null);
+  const [modal,     setModal]     = useState(false);
+  const [verReg,    setVerReg]    = useState(null);
+  const [form,      setForm]      = useState(FORM_VAZIO);
+  const [toast,     setToast]     = useState(null);
+  const [online,    setOnline]    = useState(navigator.onLine);
+  const [pendentes, setPendentes] = useState(0);
 
   // Inicializa obraId quando obras carregarem
   useEffect(() => {
     if (!obraId && obras.length > 0) setObraId(obras[0].id);
   }, [obras, obraId]);
+
+  // Detecta mudança de conectividade
+  useEffect(() => {
+    const goOnline  = () => { setOnline(true);  sincronizarPendentes(); };
+    const goOffline = () => setOnline(false);
+    window.addEventListener("online",  goOnline);
+    window.addEventListener("offline", goOffline);
+    contarPendentes().then(setPendentes);
+    return () => { window.removeEventListener("online", goOnline); window.removeEventListener("offline", goOffline); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const sincronizarPendentes = useCallback(async () => {
+    const pendentes = await getPendentesDiario();
+    for (const p of pendentes) {
+      try {
+        await addDiario(p.obraId, p.registro);
+        await deletarPendente(p.localId);
+      } catch { /* ignora falha de item individual */ }
+    }
+    setPendentes(await contarPendentes());
+  }, [addDiario]);
 
   // Carrega diário da obra selecionada
   useModuleLoad("diario", obraId);
@@ -264,8 +289,15 @@ export default function DiarioObra() {
     setModal(true);
   }
 
-  function salvar() {
-    // Envia apenas os campos que existem no banco (sem fotos/created — são campos de UI)
+  async function salvar() {
+    if (!online) {
+      await salvarDiarioOffline(obraId, form);
+      setPendentes((n) => n + 1);
+      setModal(false);
+      setForm(FORM_VAZIO);
+      mostrarToast("📴 Sem internet — salvo localmente. Será sincronizado ao reconectar.");
+      return;
+    }
     addDiario(obraId, form);
     setModal(false);
     setForm(FORM_VAZIO);
@@ -314,6 +346,35 @@ export default function DiarioObra() {
 
       <div>
         {/* Header */}
+        {/* Banner offline */}
+        {!online && (
+          <div style={{
+            background: "#b97a0018", border: "1px solid #b97a0055", borderRadius: 10,
+            padding: "12px 18px", marginBottom: 16, display: "flex", alignItems: "center", gap: 12,
+          }}>
+            <span style={{ fontSize: 20 }}>📴</span>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 13, color: "#b97a00" }}>Sem conexão com a internet</div>
+              <div style={{ fontSize: 12, color: C.muted }}>
+                Os registros serão salvos localmente e sincronizados automaticamente ao reconectar.
+                {pendentes > 0 && ` ${pendentes} registro(s) aguardando sync.`}
+              </div>
+            </div>
+          </div>
+        )}
+        {online && pendentes > 0 && (
+          <div style={{
+            background: C.success + "18", border: `1px solid ${C.success}44`, borderRadius: 10,
+            padding: "12px 18px", marginBottom: 16, display: "flex", alignItems: "center", gap: 12,
+          }}>
+            <span style={{ fontSize: 20 }}>🔄</span>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 700, fontSize: 13, color: C.success }}>Conexão restaurada</div>
+              <div style={{ fontSize: 12, color: C.muted }}>{pendentes} registro(s) offline sendo sincronizados…</div>
+            </div>
+          </div>
+        )}
+
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 22, flexWrap: "wrap", gap: 12 }}>
           <div>
             <h2 style={{ fontSize: 22, fontWeight: 800 }}>Diário de Obra</h2>
