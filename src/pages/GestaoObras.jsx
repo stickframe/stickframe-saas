@@ -288,6 +288,16 @@ export default function GestaoObras() {
     mostrarToast(`📋 Avançou para: ${novaFase}`);
   }
 
+  function retornar() {
+    if (!obra) return;
+    const i = FASES.indexOf(obra.fase);
+    if (i <= 0) return;
+    const novaFase  = FASES[i - 1];
+    const progresso = Math.round((i / FASES.length) * 100);
+    avancarFase(obra.id, novaFase, progresso);
+    mostrarToast(`↩ Retornou para: ${novaFase}`);
+  }
+
   async function gerarRelatorio() {
     if (!obra) return;
     mostrarToast("⏳ Gerando relatório...");
@@ -741,9 +751,12 @@ export default function GestaoObras() {
                 {/* Ações rápidas */}
                 <div style={{ background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, padding: 18 }}>
                   <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 12 }}>AÇÃO RÁPIDA</div>
-                  <Btn onClick={avancar} disabled={obra.fase === "Entrega"} fullWidth>
-                    {obra.fase === "Entrega" ? "✓ Fase concluída" : "Avançar fase →"}
-                  </Btn>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <Btn onClick={retornar} disabled={FASES.indexOf(obra.fase) <= 0} variant="ghost" size="sm" style={{ flex: 1 }}>← Retornar</Btn>
+                    <Btn onClick={avancar} disabled={obra.fase === "Entrega"} size="sm" style={{ flex: 1 }}>
+                      {obra.fase === "Entrega" ? "✓ Concluída" : "Avançar →"}
+                    </Btn>
+                  </div>
                   {obra.fase !== "Entrega" && (
                     <div style={{ fontSize: 11, color: C.muted, marginTop: 8 }}>
                       Próxima: {FASES[FASES.indexOf(obra.fase) + 1]}
