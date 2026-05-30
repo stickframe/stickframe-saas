@@ -22,8 +22,8 @@ const statusColor = (s) => STATUS_COR[s] || "#888";
 // ─── Label ───────────────────────────────────────────────────────────────────
 function Label({ children, required }) {
   return (
-    <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 6 }}>
-      {String(children).toUpperCase()}
+    <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 6, textTransform: "uppercase" }}>
+      {children}
       {required && <span style={{ color: C.danger, marginLeft: 2 }}>*</span>}
     </div>
   );
@@ -200,23 +200,33 @@ export default function GestaoObras() {
   }
 
   async function salvarNova() {
-    const data = await addObra({
-      ...form,
-      contrato:  Number(form.contrato) || 0,
-      progresso: 0,
-    });
-    setModal(null);
-    setObraId(data.id);
-    mostrarToast("✅ Obra cadastrada com sucesso!");
+    try {
+      const data = await addObra({
+        ...form,
+        cliente_id: form.cliente_id || null,
+        contrato:   Number(form.contrato) || 0,
+        progresso:  0,
+      });
+      setModal(null);
+      setObraId(data.id);
+      mostrarToast("✅ Obra cadastrada com sucesso!");
+    } catch (e) {
+      mostrarToast("❌ Erro ao cadastrar obra. Verifique os dados.");
+    }
   }
 
   async function salvarEdicao() {
-    await updateObra(obraId, {
-      ...form,
-      contrato: Number(form.contrato) || 0,
-    });
-    setModal(null);
-    mostrarToast("✅ Obra atualizada!");
+    try {
+      await updateObra(obraId, {
+        ...form,
+        cliente_id: form.cliente_id || null,
+        contrato:   Number(form.contrato) || 0,
+      });
+      setModal(null);
+      mostrarToast("✅ Obra atualizada!");
+    } catch (e) {
+      mostrarToast("❌ Erro ao salvar. Verifique os dados.");
+    }
   }
 
   async function executarDelete() {
