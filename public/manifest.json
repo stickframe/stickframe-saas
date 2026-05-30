@@ -1,0 +1,19 @@
+{
+  "name": "Stickframe Gestão",
+  "short_name": "Stickframe",
+  "description": "Sistema de gestão para construtoras de Steel Frame",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f0f0f3",
+  "theme_color": "#981915",
+  "orientation": "portrait-primary",
+  "icons": [
+    { "src": "/logo-transparente-122x122.png", "sizes": "122x122", "type": "image/png" },
+    { "src": "/logo.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Obras",      "url": "/",    "description": "Gestão de obras" },
+    { "name": "Financeiro", "url": "/",    "description": "Controle financeiro" }
+  ],
+  "categories": ["business", "productivity"]
+}
