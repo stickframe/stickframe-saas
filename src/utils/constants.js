@@ -26,6 +26,7 @@ export const NAV = [
   { key: "medicoes",   label: "Medições de Obra", icon: "📐" },
   { key: "diario",     label: "Diário de Obra",  icon: "📋" },
   { key: "vistorias",  label: "Vistorias & FVS", icon: "🔍" },
+  { key: "bim",        label: "BIM",             icon: "🧊" },
   { key: "financeiro", label: "Financeiro",       icon: "◉" },
   { key: "contratos",  label: "Contratos",        icon: "◑" },
   { key: "historico",  label: "Histórico",        icon: "◎" },
@@ -37,7 +38,7 @@ export const PERFIS = {
   diretor: {
     label: "Diretor",
     cor: C.red,
-    paginas: ["dashboard","agenda","crm","orcamentos","obras","cronograma","medicoes","diario","vistorias","financeiro","contratos","historico","equipe"],
+    paginas: ["dashboard","agenda","crm","orcamentos","obras","cronograma","medicoes","diario","vistorias","bim","financeiro","contratos","historico","equipe"],
   },
   comercial: {
     label: "Comercial",
@@ -47,7 +48,7 @@ export const PERFIS = {
   engenheiro: {
     label: "Engenheiro",
     cor: "#4a9eff",
-    paginas: ["dashboard","agenda","obras","cronograma","medicoes","diario","vistorias","historico"],
+    paginas: ["dashboard","agenda","obras","cronograma","medicoes","diario","vistorias","bim","historico"],
   },
   financeiro: {
     label: "Financeiro",
