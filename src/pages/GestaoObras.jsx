@@ -293,7 +293,7 @@ export default function GestaoObras() {
     if (!win) { mostrarToast("❌ Popup bloqueado. Permita popups para este site."); return; }
     win.document.write("<html><body style='font-family:sans-serif;padding:40px;color:#555'>⏳ Carregando...</body></html>");
     await Promise.all([loadMedicoes(obraId), loadDiario(obraId)]);
-    const fin  = (financeiro || []).filter((l) => l.obra_id === obraId);
+    const fin  = financeiro[obraId]?.lancamentos || [];
     const meds = medicoes[obraId] || [];
     const diarioObra = (diario[obraId] || []).slice(0, 10);
     const arqs = arqObra;
