@@ -213,9 +213,17 @@ export default function Agenda() {
 
   const clientes    = useAppStore((s) => s.clientes);
   const obras       = useAppStore((s) => s.obras);
-  const eventos     = useAppStore((s) => s.eventos);
+  const perfil      = useAppStore((s) => s.user?.perfil);
+  const userName    = useAppStore((s) => s.user?.nome);
+  const allEventos  = useAppStore((s) => s.eventos);
   const addEvento   = useAppStore((s) => s.addEvento);
   const deleteEvento = useAppStore((s) => s.deleteEvento);
+
+  // Engenheiro vê só eventos vinculados a obras (Visita de obra, Vistoria, Medição)
+  const TIPOS_ENG = ["Visita de obra", "Vistoria", "Medição"];
+  const eventos = perfil === "engenheiro"
+    ? allEventos.filter((e) => TIPOS_ENG.includes(e.tipo))
+    : allEventos;
 
   const [modal,     setModal]     = useState(false);
   const [verEvento, setVerEvento] = useState(null);
