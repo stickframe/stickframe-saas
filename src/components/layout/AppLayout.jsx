@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import Sidebar from "./Sidebar";
 import NotificacaoDropdown from "../notificacoes/NotificacaoDropdown";
+import CommandPalette from "../ui/CommandPalette";
 import { C } from "../../utils/constants";
 import { sb } from "../../services/supabase";
 import useAppStore from "../../store/useAppStore";
@@ -13,6 +14,7 @@ export default function AppLayout({ children }) {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [checkDone, setCheckDone] = useState(false);
   const empresaId  = useAppStore((s) => s.empresaId);
+  const setActivePage = useAppStore((s) => s.setActivePage);
   const perfil     = useAppStore((s) => s.user?.perfil);
   const loadClientes = useAppStore((s) => s.loadClientes);
 
@@ -52,6 +54,7 @@ export default function AppLayout({ children }) {
           {children}
         </main>
       </div>
+      <CommandPalette onNavigate={setActivePage} />
     </div>
   );
 }

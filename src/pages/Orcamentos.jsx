@@ -65,7 +65,7 @@ function FormOrc({ form, setForm, clientes, onSave, onCancel, btnLabel }) {
       {/* Unidades + Área */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
         <div>
-          <Label required>Unidades (UH)</Label>
+          <Label>Unidades (UH)</Label>
           <Input
             type="number" min="1"
             value={form.unidades}
@@ -73,7 +73,7 @@ function FormOrc({ form, setForm, clientes, onSave, onCancel, btnLabel }) {
           />
         </div>
         <div>
-          <Label required>Área / UH (m²)</Label>
+          <Label required>Área (m²)</Label>
           <Input
             type="number" min="1"
             value={form.area}
@@ -107,10 +107,10 @@ function FormOrc({ form, setForm, clientes, onSave, onCancel, btnLabel }) {
         <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1.5, color: C.red, marginBottom: 12 }}>
           PRÉVIA DO ORÇAMENTO
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
+        <div style={{ display: "grid", gridTemplateColumns: form.unidades > 1 ? "1fr 1fr 1fr" : "1fr 1fr", gap: 10 }}>
           {[
             ["Valor / m²",  fmt(calc.valor_m2),    false],
-            ["Valor / UH",  fmt(calc.valor_uh),    false],
+            ...(form.unidades > 1 ? [["Valor / UH", fmt(calc.valor_uh), false]] : []),
             ["TOTAL",       fmt(calc.valor_total),  true ],
           ].map(([k, v, destaque]) => (
             <div key={k} style={{
@@ -125,7 +125,7 @@ function FormOrc({ form, setForm, clientes, onSave, onCancel, btnLabel }) {
           ))}
         </div>
         <div style={{ fontSize: 11, color: C.muted, marginTop: 10 }}>
-          {form.unidades} UH × {form.area} m² × {fmt(calc.valor_m2)}/m²
+          {form.unidades > 1 ? `${form.unidades} UH × ` : ""}{form.area} m² × {fmt(calc.valor_m2)}/m²
         </div>
       </div>
 
@@ -506,7 +506,15 @@ export default function Orcamentos() {
   const [form,         setForm]         = useState({ ...FORM_VAZIO, cliente_id: clientes[0]?.id || "" });
   const [converterOrc, setConverterOrc] = useState(null);
   const [calculadora,  setCalculadora]  = useState(false);
-  const [estimativo,   setEstimativo]   = useState(null); // resultado da calculadora
+  const [estimativo, setEstimativoRaw] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("sf_estimativo") || "null"); } catch { return null; }
+  });
+  const [estimativoAberto, setEstimativoAberto] = useState(false);
+  function setEstimativo(val) {
+    setEstimativoRaw(val);
+    if (val) localStorage.setItem("sf_estimativo", JSON.stringify(val));
+    else localStorage.removeItem("sf_estimativo");
+  }
   const [obraForm,   setObraForm]   = useState({ nome: "", prazo_inicio: "", prazo_fim: "" });
 
   function mostrarToast(msg) {
@@ -778,12 +786,51 @@ export default function Orcamentos() {
 
         {/* Estimativo aplicado */}
         {estimativo && (
-          <div style={{ background: C.red + "0d", border: `1px solid ${C.red}33`, borderRadius: 12, padding: "14px 18px", marginBottom: 16, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: C.red, marginBottom: 2 }}>⚡ Estimativo calculado — {estimativo.tipo === "residencial" ? "Residencial" : "Galpão/Comercial"} · {estimativo.area}m²</div>
-              <div style={{ fontSize: 11, color: C.muted }}>{estimativo.itens.length} itens · Total materiais: <strong>{estimativo.totalGeral.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</strong></div>
+          <div style={{ background: C.red + "0d", border: `1px solid ${C.red}33`, borderRadius: 12, marginBottom: 16, overflow: "hidden" }}>
+            <div style={{ padding: "14px 18px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: C.red, marginBottom: 2 }}>⚡ Estimativo calculado — {estimativo.tipo === "residencial" ? "Residencial" : "Galpão/Comercial"} · {estimativo.area}m²</div>
+                <div style={{ fontSize: 11, color: C.muted }}>{estimativo.itens.length} itens · Total materiais: <strong>{estimativo.totalGeral.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</strong></div>
+              </div>
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <button onClick={() => setEstimativoAberto((v) => !v)} style={{ background: C.red + "18", border: `1px solid ${C.red}44`, borderRadius: 6, padding: "4px 10px", color: C.red, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+                  {estimativoAberto ? "▲ Ocultar" : "▼ Ver itens"}
+                </button>
+                <button onClick={() => { setEstimativo(null); setEstimativoAberto(false); }} style={{ background: "none", border: "none", color: C.muted, cursor: "pointer", fontSize: 18 }}>×</button>
+              </div>
             </div>
-            <button onClick={() => setEstimativo(null)} style={{ background: "none", border: "none", color: C.muted, cursor: "pointer", fontSize: 18 }}>×</button>
+            {estimativoAberto && (
+              <div style={{ borderTop: `1px solid ${C.red}22`, padding: "12px 18px" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                  <thead>
+                    <tr style={{ color: C.muted, fontWeight: 700, fontSize: 10, letterSpacing: 1 }}>
+                      <th style={{ textAlign: "left", paddingBottom: 8 }}>ITEM</th>
+                      <th style={{ textAlign: "right", paddingBottom: 8 }}>QTD</th>
+                      <th style={{ textAlign: "right", paddingBottom: 8 }}>UN</th>
+                      <th style={{ textAlign: "right", paddingBottom: 8 }}>UNIT.</th>
+                      <th style={{ textAlign: "right", paddingBottom: 8 }}>TOTAL</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {estimativo.itens.map((it, i) => (
+                      <tr key={i} style={{ borderTop: `1px solid ${C.border}` }}>
+                        <td style={{ padding: "6px 0", color: C.text }}>{it.item}</td>
+                        <td style={{ textAlign: "right", padding: "6px 0", fontFamily: "monospace" }}>{it.qtd.toFixed(2)}</td>
+                        <td style={{ textAlign: "right", padding: "6px 0", color: C.muted }}>{it.un}</td>
+                        <td style={{ textAlign: "right", padding: "6px 0", fontFamily: "monospace" }}>{it.precoUnit.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</td>
+                        <td style={{ textAlign: "right", padding: "6px 0", fontWeight: 700 }}>{it.total.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr style={{ borderTop: `2px solid ${C.red}44` }}>
+                      <td colSpan={4} style={{ paddingTop: 10, fontWeight: 700, fontSize: 12 }}>Total materiais</td>
+                      <td style={{ textAlign: "right", paddingTop: 10, fontWeight: 900, fontSize: 14, color: C.red }}>{estimativo.totalGeral.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            )}
           </div>
         )}
 
@@ -818,7 +865,7 @@ export default function Orcamentos() {
                       </div>
                       <div style={{ fontSize: 15, fontWeight: 700 }}>{o.cliente}</div>
                       <div style={{ fontSize: 11, color: C.muted, marginTop: 3 }}>
-                        {o.unidades} UH · {o.area} m²/und · {PRECOS[o.padrao]?.label || o.padrao} · {o.criado}
+                        {o.unidades > 1 ? `${o.unidades} UH · ${o.area} m²/und` : `${o.area} m²`} · {PRECOS[o.padrao]?.label || o.padrao} · {o.criado}
                       </div>
                     </div>
 
