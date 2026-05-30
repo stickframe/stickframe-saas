@@ -132,6 +132,69 @@ function FormEvento({ form, setForm, clientes, obras, onSave, onCancel }) {
   );
 }
 
+// ─── Calendário ──────────────────────────────────────────────────────────────
+const DIAS_SEMANA = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
+
+function CalendarioMes({ eventos, onDiaClick, mesRef }) {
+  const ano = mesRef.getFullYear();
+  const mes = mesRef.getMonth();
+  const hoje = new Date().toISOString().slice(0, 10);
+
+  const primeiroDia = new Date(ano, mes, 1).getDay();
+  const diasNoMes   = new Date(ano, mes + 1, 0).getDate();
+
+  const celulas = [];
+  for (let i = 0; i < primeiroDia; i++) celulas.push(null);
+  for (let d = 1; d <= diasNoMes; d++) celulas.push(d);
+
+  function isoDate(d) {
+    return `${ano}-${String(mes + 1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+  }
+
+  return (
+    <div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 1, marginBottom: 4 }}>
+        {DIAS_SEMANA.map((d) => (
+          <div key={d} style={{ textAlign: "center", fontSize: 10, color: C.muted, fontWeight: 700, padding: "4px 0" }}>{d}</div>
+        ))}
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 3 }}>
+        {celulas.map((d, i) => {
+          if (!d) return <div key={i} />;
+          const iso  = isoDate(d);
+          const evs  = eventos.filter((e) => toISO(e.data) === iso);
+          const isHj = iso === hoje;
+          return (
+            <div
+              key={i}
+              onClick={() => onDiaClick(iso, evs)}
+              style={{
+                minHeight: 52, borderRadius: 6, padding: "4px 6px",
+                border: `1px solid ${isHj ? C.red : C.border}`,
+                background: isHj ? C.red + "12" : evs.length ? C.darker : "transparent",
+                cursor: "pointer", position: "relative",
+              }}
+            >
+              <div style={{ fontSize: 11, fontWeight: isHj ? 800 : 400, color: isHj ? C.red : C.text }}>{d}</div>
+              {evs.slice(0, 2).map((e, j) => (
+                <div key={j} style={{
+                  fontSize: 9, fontWeight: 600, lineHeight: 1.2, marginTop: 2,
+                  color: e.cor || C.red, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+                }}>
+                  {e.hora} {e.titulo}
+                </div>
+              ))}
+              {evs.length > 2 && (
+                <div style={{ fontSize: 9, color: C.muted, marginTop: 1 }}>+{evs.length - 2} mais</div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ─── Agenda ──────────────────────────────────────────────────────────────────
 const hoje    = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
 
@@ -159,6 +222,9 @@ export default function Agenda() {
   const [filtro,    setFiltro]    = useState("todos");
   const [toast,     setToast]     = useState(null);
   const [form,      setForm]      = useState(FORM_VAZIO);
+  const [viewMode,  setViewMode]  = useState("lista"); // "lista" | "calendario"
+  const [mesRef,    setMesRef]    = useState(() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1); });
+  const [diaModal,  setDiaModal]  = useState(null); // { iso, eventos }
 
   function mostrarToast(msg) {
     setToast(msg);
@@ -286,8 +352,61 @@ export default function Agenda() {
               {temHoje && <span style={{ marginLeft: 8, background: C.red + "22", color: C.red, borderRadius: 4, padding: "1px 8px", fontSize: 11, fontWeight: 700 }}>● Hoje</span>}
             </p>
           </div>
-          <Btn onClick={abrirNovo}>+ Novo compromisso</Btn>
+          <div style={{ display: "flex", gap: 8 }}>
+            <div style={{ display: "flex", border: `1px solid ${C.border}`, borderRadius: 8, overflow: "hidden" }}>
+              {[["lista","☰ Lista"],["calendario","📅 Mês"]].map(([v, l]) => (
+                <button key={v} onClick={() => setViewMode(v)} style={{
+                  padding: "7px 14px", fontSize: 11, fontWeight: viewMode === v ? 700 : 400,
+                  background: viewMode === v ? C.red + "18" : "transparent",
+                  color: viewMode === v ? C.red : C.muted,
+                  border: "none", cursor: "pointer", fontFamily: "inherit",
+                }}>{l}</button>
+              ))}
+            </div>
+            <Btn onClick={abrirNovo}>+ Novo compromisso</Btn>
+          </div>
         </div>
+
+        {/* View calendário */}
+        {viewMode === "calendario" && (
+          <div style={{ background: C.surface, borderRadius: 12, padding: 20, border: `1px solid ${C.border}`, marginBottom: 20 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+              <button onClick={() => setMesRef(new Date(mesRef.getFullYear(), mesRef.getMonth() - 1, 1))}
+                style={{ background: "none", border: `1px solid ${C.border}`, borderRadius: 6, padding: "4px 12px", cursor: "pointer", color: C.muted, fontSize: 14 }}>‹</button>
+              <span style={{ fontWeight: 700, fontSize: 14 }}>
+                {MESES[mesRef.getMonth()]} {mesRef.getFullYear()}
+              </span>
+              <button onClick={() => setMesRef(new Date(mesRef.getFullYear(), mesRef.getMonth() + 1, 1))}
+                style={{ background: "none", border: `1px solid ${C.border}`, borderRadius: 6, padding: "4px 12px", cursor: "pointer", color: C.muted, fontSize: 14 }}>›</button>
+            </div>
+            <CalendarioMes
+              eventos={eventos}
+              mesRef={mesRef}
+              onDiaClick={(iso, evs) => {
+                if (evs.length === 1) setVerEvento(evs[0]);
+                else if (evs.length > 1) setDiaModal({ iso, eventos: evs });
+                else { setForm({ ...FORM_VAZIO, data: iso }); setModal(true); }
+              }}
+            />
+          </div>
+        )}
+
+        {/* Modal eventos do dia */}
+        {diaModal && (
+          <Modal title={`Compromissos — ${diaModal.iso.split("-").reverse().join("/")}`} onClose={() => setDiaModal(null)}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {diaModal.eventos.map((e) => (
+                <div key={e.id} onClick={() => { setVerEvento(e); setDiaModal(null); }} style={{
+                  padding: "12px 16px", borderRadius: 8, border: `1px solid ${C.border}`,
+                  borderLeft: `4px solid ${e.cor || C.red}`, cursor: "pointer",
+                }}>
+                  <div style={{ fontWeight: 700, fontSize: 13 }}>{e.titulo}</div>
+                  <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{e.hora} · {e.tipo}</div>
+                </div>
+              ))}
+            </div>
+          </Modal>
+        )}
 
         {/* Próximos eventos */}
         {proximos.length > 0 && (

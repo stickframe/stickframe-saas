@@ -117,6 +117,63 @@ export default function Financeiro() {
   const [form,   setForm]   = useState(FORM_VAZIO);
   const [toast,  setToast]  = useState(null);
 
+  function exportarRelatorio() {
+    const o   = obras.find((x) => x.id === obraId);
+    const fin = (obraId && financeiro[obraId]) || { lancamentos: [] };
+    const rec = fin.lancamentos.filter((l) => l.tipo === "receita").reduce((a, l) => a + (l.valor || 0), 0);
+    const dep = fin.lancamentos.filter((l) => l.tipo === "despesa").reduce((a, l) => a + (l.valor || 0), 0);
+    const rows = fin.lancamentos.map((l) => `
+      <tr>
+        <td>${l.data || "—"}</td>
+        <td>${l.tipo === "receita" ? "Receita" : "Despesa"}</td>
+        <td>${l.categoria || "—"}</td>
+        <td>${l.descricao || "—"}</td>
+        <td style="text-align:right;color:${l.tipo === "receita" ? "#2e9e5b" : "#c0392b"};font-weight:700">
+          ${l.tipo === "receita" ? "+" : "-"}R$ ${(l.valor || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+        </td>
+      </tr>`).join("");
+    const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+    <title>Relatório Financeiro — ${o?.nome || "Obra"}</title>
+    <style>
+      body { font-family: Arial, sans-serif; margin: 0; padding: 32px; color: #1a1a1a; }
+      .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 28px; padding-bottom: 16px; border-bottom: 3px solid #981915; }
+      .logo { font-size: 22px; font-weight: 900; letter-spacing: 3px; }
+      .logo span { color: #981915; }
+      .kpis { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-bottom: 28px; }
+      .kpi { background: #f0f0f3; border-radius: 8px; padding: 16px; }
+      .kpi .label { font-size: 11px; color: #6b7280; margin-bottom: 4px; }
+      .kpi .value { font-size: 20px; font-weight: 900; }
+      table { width: 100%; border-collapse: collapse; font-size: 13px; }
+      th { background: #f0f0f3; padding: 10px 12px; text-align: left; font-size: 11px; letter-spacing: 1px; color: #6b7280; }
+      td { padding: 10px 12px; border-bottom: 1px solid #e4e4ea; }
+      .footer { margin-top: 40px; text-align: center; font-size: 11px; color: #6b7280; }
+      @media print { body { padding: 16px; } }
+    </style></head><body>
+    <div class="header">
+      <div>
+        <div class="logo">STICK<span>FRAME</span></div>
+        <div style="font-size:11px;color:#6b7280;margin-top:3px">RELATÓRIO FINANCEIRO</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:15px;font-weight:800">${o?.nome?.split("—")[0]?.trim() || "—"}</div>
+        <div style="font-size:11px;color:#6b7280">${new Date().toLocaleDateString("pt-BR")}</div>
+      </div>
+    </div>
+    <div class="kpis">
+      <div class="kpi"><div class="label">RECEITAS</div><div class="value" style="color:#2e9e5b">R$ ${rec.toLocaleString("pt-BR",{minimumFractionDigits:2})}</div></div>
+      <div class="kpi"><div class="label">DESPESAS</div><div class="value" style="color:#c0392b">R$ ${dep.toLocaleString("pt-BR",{minimumFractionDigits:2})}</div></div>
+      <div class="kpi"><div class="label">SALDO</div><div class="value" style="color:${rec-dep>=0?"#2e9e5b":"#c0392b"}">R$ ${(rec-dep).toLocaleString("pt-BR",{minimumFractionDigits:2})}</div></div>
+    </div>
+    <table><thead><tr><th>DATA</th><th>TIPO</th><th>CATEGORIA</th><th>DESCRIÇÃO</th><th style="text-align:right">VALOR</th></tr></thead>
+    <tbody>${rows || '<tr><td colspan="5" style="text-align:center;color:#6b7280;padding:24px">Nenhum lançamento</td></tr>'}</tbody></table>
+    <div class="footer"><p>Stick Frame Sistemas Construtivos · stickframe.com.br</p></div>
+    </body></html>`;
+    const win = window.open("", "_blank");
+    win.document.write(html);
+    win.document.close();
+    win.onload = () => win.print();
+  }
+
   // Inicializa obraId quando obras carregarem (corrige race condition)
   useEffect(() => {
     if (!obraId && obras.length > 0) setObraId(obras[0].id);
@@ -207,6 +264,12 @@ export default function Financeiro() {
             <p style={{ color: C.muted, fontSize: 13, marginTop: 4 }}>Receitas, despesas e margem por obra</p>
           </div>
           <div style={{ display: "flex", gap: 10 }}>
+            <button onClick={exportarRelatorio} style={{
+              padding: "8px 16px", background: "#4a9eff22",
+              border: "1px solid #4a9eff44", borderRadius: 8,
+              color: "#4a9eff", fontSize: 12, fontWeight: 700,
+              cursor: "pointer", fontFamily: "inherit",
+            }}>📄 Exportar PDF</button>
             <Btn
               onClick={() => abrirModal("receita")}
               style={{ background: C.success + "22", border: `1px solid ${C.success}44`, color: C.success }}

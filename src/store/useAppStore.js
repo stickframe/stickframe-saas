@@ -7,7 +7,8 @@ import { createObraSlice }      from "./slices/obraSlice";
 import { createFinanceiroSlice} from "./slices/financeiroSlice";
 import { createContratoSlice }  from "./slices/contratoSlice";
 import { createAgendaSlice }    from "./slices/agendaSlice";
-import { createHistoricoSlice } from "./slices/historicoSlice";
+import { createHistoricoSlice }    from "./slices/historicoSlice";
+import { createColaboradorSlice }  from "./slices/colaboradorSlice";
 
 // ─── ESTADO BASE (loading + loaded + activePage) ─────────────────────────────
 const createBaseSlice = (set) => ({
@@ -17,14 +18,14 @@ const createBaseSlice = (set) => ({
   loading: {
     auth:false, clientes:false, obras:false, orcamentos:false,
     financeiro:false, contratos:false, diario:false, medicoes:false,
-    eventos:false, historico:false, arquivos:false,
+    eventos:false, historico:false, arquivos:false, colaboradores:false,
   },
   setLoading: (modulo, val) =>
     set((s) => ({ loading: { ...s.loading, [modulo]: val } })),
 
   loaded: {
     clientes:false, obras:false, orcamentos:false, financeiro:false,
-    contratos:false, diario:{}, medicoes:{}, eventos:false, historico:false, arquivos:{},
+    contratos:false, diario:{}, medicoes:{}, eventos:false, historico:false, arquivos:{}, colaboradores:false,
   },
 });
 
@@ -40,6 +41,7 @@ const useAppStore = create(
       ...createContratoSlice(...a),
       ...createAgendaSlice(...a),
       ...createHistoricoSlice(...a),
+      ...createColaboradorSlice(...a),
     }),
     {
       name: "stickframe-storage",

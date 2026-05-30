@@ -145,6 +145,59 @@ function FormOrc({ form, setForm, clientes, onSave, onCancel, btnLabel }) {
   );
 }
 
+// ─── Gerador de PDF ───────────────────────────────────────────────────────────
+function gerarPDF(o) {
+  const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+  <title>Orçamento ${o.ref}</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 40px; color: #1a1a1a; }
+    .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; padding-bottom: 20px; border-bottom: 3px solid #981915; }
+    .logo { font-size: 24px; font-weight: 900; letter-spacing: 3px; }
+    .logo span { color: #981915; }
+    .ref { font-size: 13px; color: #6b7280; margin-top: 4px; }
+    h2 { font-size: 18px; margin-bottom: 20px; color: #981915; }
+    .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e4e4ea; font-size: 14px; }
+    .row .label { color: #6b7280; }
+    .row .value { font-weight: 700; }
+    .total-box { background: #f0f0f3; border-radius: 10px; padding: 20px 24px; margin-top: 28px; display: flex; justify-content: space-between; align-items: center; }
+    .total-box .label { font-size: 13px; color: #6b7280; }
+    .total-box .value { font-size: 28px; font-weight: 900; color: #981915; }
+    .footer { margin-top: 48px; text-align: center; font-size: 11px; color: #6b7280; }
+    @media print { body { padding: 20px; } }
+  </style></head><body>
+  <div class="header">
+    <div>
+      <div class="logo">STICK<span>FRAME</span></div>
+      <div class="ref">SISTEMAS CONSTRUTIVOS</div>
+    </div>
+    <div style="text-align:right">
+      <div style="font-size:20px;font-weight:800">${o.ref}</div>
+      <div class="ref">${o.criado || new Date().toLocaleDateString("pt-BR")}</div>
+    </div>
+  </div>
+  <h2>Proposta de Orçamento</h2>
+  <div class="row"><span class="label">Cliente</span><span class="value">${o.cliente}</span></div>
+  <div class="row"><span class="label">Padrão construtivo</span><span class="value">${o.padrao}</span></div>
+  <div class="row"><span class="label">Unidades habitacionais</span><span class="value">${o.unidades} UH</span></div>
+  <div class="row"><span class="label">Área por unidade</span><span class="value">${o.area} m²</span></div>
+  <div class="row"><span class="label">Área total</span><span class="value">${o.unidades * o.area} m²</span></div>
+  <div class="row"><span class="label">Valor por m²</span><span class="value">R$ ${(o.valor / (o.unidades * o.area)).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></div>
+  <div class="row"><span class="label">Valor por UH</span><span class="value">R$ ${(o.valor / o.unidades).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></div>
+  <div class="total-box">
+    <div class="label">VALOR TOTAL DA PROPOSTA</div>
+    <div class="value">R$ ${o.valor.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</div>
+  </div>
+  <div class="footer">
+    <p>Stick Frame Sistemas Construtivos · stickframe.com.br</p>
+    <p>Este orçamento é válido por 30 dias a partir da data de emissão.</p>
+  </div>
+  </body></html>`;
+  const win = window.open("", "_blank");
+  win.document.write(html);
+  win.document.close();
+  win.onload = () => win.print();
+}
+
 // ─── Orçamentos principal ─────────────────────────────────────────────────────
 const FORM_VAZIO = {
   cliente_id: "",
@@ -354,6 +407,17 @@ export default function Orcamentos() {
                   {/* Ações */}
                   <div style={{ display: "flex", gap: 8, marginTop: 14, flexWrap: "wrap" }}>
                     <Btn variant="ghost" size="sm" onClick={() => abrirEditar(o)}>✏️ Editar</Btn>
+                    <button
+                      onClick={() => gerarPDF(o)}
+                      style={{
+                        padding: "6px 14px", background: "#4a9eff22",
+                        border: "1px solid #4a9eff44", borderRadius: 6,
+                        color: "#4a9eff", fontSize: 11, fontWeight: 700,
+                        cursor: "pointer", fontFamily: "inherit",
+                      }}
+                    >
+                      📄 PDF
+                    </button>
 
                     <Select
                       value={o.status}

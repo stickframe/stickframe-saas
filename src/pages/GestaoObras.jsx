@@ -127,14 +127,16 @@ export default function GestaoObras() {
 
   useModuleLoad("arquivos", obras[0]?.id);
 
-  const [obraId,    setObraId]    = useState(null);
-  const [modal,     setModal]     = useState(null); // "nova" | "editar"
-  const [confirm,   setConfirm]   = useState(false);
-  const [dragOver,  setDragOver]  = useState(false);
-  const [abaAtiva,  setAbaAtiva]  = useState("fases");
-  const [catFiltro, setCatFiltro] = useState("Todos");
-  const [toast,     setToast]     = useState(null);
-  const [form,      setForm]      = useState(FORM_VAZIO);
+  const [obraId,      setObraId]      = useState(null);
+  const [modal,       setModal]       = useState(null); // "nova" | "editar"
+  const [confirm,     setConfirm]     = useState(false);
+  const [dragOver,    setDragOver]    = useState(false);
+  const [abaAtiva,    setAbaAtiva]    = useState("fases");
+  const [catFiltro,   setCatFiltro]   = useState("Todos");
+  const [toast,       setToast]       = useState(null);
+  const [form,        setForm]        = useState(FORM_VAZIO);
+  const [busca,       setBusca]       = useState("");
+  const [statusFiltro, setStatusFiltro] = useState("Todos");
 
   // Inicializa obraId quando obras carregarem
   useEffect(() => {
@@ -169,6 +171,12 @@ export default function GestaoObras() {
   const obra      = obras.find((o) => o.id === obraId) || null;
   const arqObra   = arquivos[obraId] || [];
   const arqFiltro = catFiltro === "Todos" ? arqObra : arqObra.filter((a) => a.categoria === catFiltro);
+
+  const obrasFiltradas = obras.filter((o) => {
+    const matchBusca  = !busca || o.nome?.toLowerCase().includes(busca.toLowerCase()) || o.cliente?.toLowerCase().includes(busca.toLowerCase());
+    const matchStatus = statusFiltro === "Todos" || o.status === statusFiltro;
+    return matchBusca && matchStatus;
+  });
 
   function abrirNova() {
     setForm(FORM_VAZIO);
@@ -291,13 +299,40 @@ export default function GestaoObras() {
       )}
 
       {/* Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
         <div>
           <h2 style={{ fontSize: 22, fontWeight: 800 }}>Gestão de Obras</h2>
           <p style={{ color: C.muted, fontSize: 13, marginTop: 4 }}>{obras.length} projeto{obras.length !== 1 ? "s" : ""}</p>
         </div>
         <Btn onClick={abrirNova}>+ Nova obra</Btn>
       </div>
+
+      {/* Filtros */}
+      {obras.length > 0 && (
+        <div style={{ display: "flex", gap: 10, marginBottom: 14, flexWrap: "wrap", alignItems: "center" }}>
+          <input
+            value={busca}
+            onChange={(e) => setBusca(e.target.value)}
+            placeholder="Buscar obra ou cliente..."
+            style={{
+              flex: "1 1 200px", padding: "8px 14px", borderRadius: 8,
+              border: `1px solid ${C.border}`, background: C.surface,
+              color: C.text, fontSize: 12, outline: "none", fontFamily: "inherit",
+            }}
+          />
+          {["Todos", ...STATUS_OBRA].map((s) => (
+            <button key={s} onClick={() => setStatusFiltro(s)} style={{
+              padding: "7px 14px", borderRadius: 7, fontSize: 11, cursor: "pointer",
+              fontFamily: "inherit", fontWeight: statusFiltro === s ? 700 : 400,
+              border: `1px solid ${statusFiltro === s ? (STATUS_COR[s] || C.red) : C.border}`,
+              background: statusFiltro === s ? (STATUS_COR[s] || C.red) + "18" : "transparent",
+              color: statusFiltro === s ? (STATUS_COR[s] || C.text) : C.muted,
+            }}>
+              {s}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Empty state */}
       {obras.length === 0 ? (
@@ -310,8 +345,11 @@ export default function GestaoObras() {
       ) : (
         <>
           {/* Seletor de obra */}
-          <div style={{ display: "flex", gap: 8, margin: "16px 0", flexWrap: "wrap" }}>
-            {obras.map((o) => (
+          <div style={{ display: "flex", gap: 8, margin: "8px 0 16px", flexWrap: "wrap" }}>
+            {obrasFiltradas.length === 0 && (
+              <div style={{ fontSize: 13, color: C.muted, padding: "8px 0" }}>Nenhuma obra encontrada para os filtros selecionados.</div>
+            )}
+            {obrasFiltradas.map((o) => (
               <button key={o.id} onClick={() => setObraId(o.id)} style={{
                 padding: "8px 16px", borderRadius: 8,
                 border: `1px solid ${obraId === o.id ? C.red : C.border}`,
