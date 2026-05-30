@@ -258,7 +258,8 @@ export default function GestaoObras() {
       setModal(null);
       mostrarToast("✅ Obra atualizada!");
     } catch (e) {
-      mostrarToast("❌ Erro ao salvar. Verifique os dados.");
+      console.error("updateObra error:", e);
+      mostrarToast(`❌ Erro ao salvar: ${e?.message || "verifique os dados."}`);
     }
   }
 
