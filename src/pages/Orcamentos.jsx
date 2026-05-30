@@ -2,6 +2,7 @@ import { useState } from "react";
 import { C, PRECOS, FASES } from "../utils/constants";
 import { fmt } from "../utils/format";
 import { enviarWhatsApp, msgOrcamento } from "../services/whatsappService";
+import { sb } from "../services/supabase";
 import useAppStore from "../store/useAppStore";
 import { useModuleLoad } from "../hooks/useModuleLoad";
 import Btn from "../components/ui/Btn";
@@ -320,6 +321,21 @@ export default function Orcamentos() {
     mostrarToast("✅ Obra criada! Redirecionando...");
     setTimeout(() => setActivePage("obras"), 1200);
   }
+  async function gerarLinkProposta(o) {
+    try {
+      let token = o.proposta_token;
+      if (!token) {
+        token = crypto.randomUUID();
+        await updateOrcamento(o.id, { proposta_token: token });
+      }
+      const url = `${window.location.origin}/proposta/${token}`;
+      await navigator.clipboard.writeText(url);
+      mostrarToast("🔗 Link da proposta copiado!");
+    } catch {
+      mostrarToast("❌ Erro ao gerar link.");
+    }
+  }
+
   function executarDelete() {
     deleteOrcamento(confirm);
     setConfirm(null);
@@ -504,6 +520,17 @@ export default function Orcamentos() {
                       }}
                     >
                       📄 PDF
+                    </button>
+                    <button
+                      onClick={() => gerarLinkProposta(o)}
+                      style={{
+                        padding: "6px 14px", background: "#9b59b622",
+                        border: "1px solid #9b59b644", borderRadius: 6,
+                        color: "#9b59b6", fontSize: 11, fontWeight: 700,
+                        cursor: "pointer", fontFamily: "inherit",
+                      }}
+                    >
+                      {o.proposta_token ? "🔗 Copiar link" : "🔗 Gerar proposta"}
                     </button>
                     {o.status !== "Recusado" && (
                       <button

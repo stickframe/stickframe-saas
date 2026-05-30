@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { C } from "../utils/constants";
 import { fmt } from "../utils/format";
+import { mesAno } from "../utils/date";
 import useAppStore from "../store/useAppStore";
 import { useModuleLoad } from "../hooks/useModuleLoad";
-import { mesAno } from "../utils/date";
 import Btn from "../components/ui/Btn";
 import Input from "../components/ui/Input";
 import Select from "../components/ui/Select";
@@ -13,16 +13,32 @@ import Modal from "../components/ui/Modal";
 const ESPECIALIDADES = ["Montador","Ajudante","Fundação","Elétrica","Hidráulica","Acabamento","Projeto","Administração","Outro"];
 const STATUS_OPTS    = ["Ativo","Férias","Afastado","Inativo"];
 const STATUS_COR     = { Ativo: "#2e9e5b", Férias: "#4a9eff", Afastado: "#c88a00", Inativo: C.muted };
+const FUNCOES        = ["Montador","Mestre de obra","Pedreiro","Eletricista","Encanador","Pintor","Acabamento","Coordenador","Outro"];
 
-function Label({ children, required }) {
+function LabelField({ children, required }) {
   return (
-    <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 6 }}>
-      {String(children).toUpperCase()}
-      {required && <span style={{ color: C.danger, marginLeft: 2 }}>*</span>}
+    <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 6, textTransform: "uppercase" }}>
+      {children}{required && <span style={{ color: C.danger, marginLeft: 2 }}>*</span>}
     </div>
   );
 }
 
+// ─── Tab ─────────────────────────────────────────────────────────────────────
+function Tab({ label, active, onClick }) {
+  return (
+    <button onClick={onClick} style={{
+      padding: "8px 18px", fontSize: 12, fontWeight: active ? 700 : 400,
+      background: active ? C.red : "transparent",
+      color: active ? "#fff" : C.muted,
+      border: `1px solid ${active ? C.red : C.border}`,
+      borderRadius: 8, cursor: "pointer", fontFamily: "inherit", transition: "all .15s",
+    }}>
+      {label}
+    </button>
+  );
+}
+
+// ─── Formulário colaborador ───────────────────────────────────────────────────
 const FORM_VAZIO = {
   nome: "", cargo: "", email: "", telefone: "",
   especialidade: "Montador", status: "Ativo", salario: "", observacoes: "",
@@ -33,43 +49,43 @@ function FormColaborador({ form, setForm, onSave, onCancel, btnLabel }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
       <div>
-        <Label required>Nome</Label>
+        <LabelField required>Nome</LabelField>
         <Input value={form.nome} onChange={set("nome")} placeholder="Nome completo" />
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
         <div>
-          <Label>Cargo</Label>
+          <LabelField>Cargo</LabelField>
           <Input value={form.cargo} onChange={set("cargo")} placeholder="Ex: Mestre de obra" />
         </div>
         <div>
-          <Label>Especialidade</Label>
+          <LabelField>Especialidade</LabelField>
           <Select value={form.especialidade} onChange={set("especialidade")}
             options={ESPECIALIDADES.map((e) => ({ value: e, label: e }))} />
         </div>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
         <div>
-          <Label>E-mail</Label>
+          <LabelField>E-mail</LabelField>
           <Input value={form.email} onChange={set("email")} type="email" placeholder="email@exemplo.com" />
         </div>
         <div>
-          <Label>Telefone</Label>
+          <LabelField>Telefone</LabelField>
           <Input value={form.telefone} onChange={set("telefone")} placeholder="+55 (11) 99999-9999" />
         </div>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
         <div>
-          <Label>Salário / valor diária</Label>
+          <LabelField>Salário / valor diária (R$)</LabelField>
           <Input value={form.salario} onChange={set("salario")} type="number" min="0" placeholder="0,00" />
         </div>
         <div>
-          <Label>Status</Label>
+          <LabelField>Status</LabelField>
           <Select value={form.status} onChange={set("status")}
             options={STATUS_OPTS.map((s) => ({ value: s, label: s }))} />
         </div>
       </div>
       <div>
-        <Label>Observações</Label>
+        <LabelField>Observações</LabelField>
         <textarea
           value={form.observacoes}
           onChange={(e) => set("observacoes")(e.target.value)}
@@ -92,17 +108,27 @@ function FormColaborador({ form, setForm, onSave, onCancel, btnLabel }) {
   );
 }
 
+// ─── Componente principal ─────────────────────────────────────────────────────
 export default function Equipe() {
   useModuleLoad("colaboradores");
   useModuleLoad("obras");
 
-  const colaboradores     = useAppStore((s) => s.colaboradores);
-  const addColaborador    = useAppStore((s) => s.addColaborador);
-  const updateColaborador = useAppStore((s) => s.updateColaborador);
-  const deleteColaborador = useAppStore((s) => s.deleteColaborador);
-  const obras             = useAppStore((s) => s.obras);
-  const addLancamento     = useAppStore((s) => s.addLancamento);
+  const colaboradores       = useAppStore((s) => s.colaboradores);
+  const addColaborador      = useAppStore((s) => s.addColaborador);
+  const updateColaborador   = useAppStore((s) => s.updateColaborador);
+  const deleteColaborador   = useAppStore((s) => s.deleteColaborador);
+  const obras               = useAppStore((s) => s.obras);
+  const addLancamento       = useAppStore((s) => s.addLancamento);
+  const alocacoes           = useAppStore((s) => s.alocacoes);
+  const loadAlocacoes       = useAppStore((s) => s.loadAlocacoes);
+  const addAlocacao         = useAppStore((s) => s.addAlocacao);
+  const removeAlocacao      = useAppStore((s) => s.removeAlocacao);
+  const horasTrabalhadas    = useAppStore((s) => s.horasTrabalhadas);
+  const loadHorasTrabalhadas = useAppStore((s) => s.loadHorasTrabalhadas);
+  const addHorasTrabalhadas = useAppStore((s) => s.addHorasTrabalhadas);
+  const removeHorasTrabalhadas = useAppStore((s) => s.removeHorasTrabalhadas);
 
+  const [tab,        setTab]        = useState("equipe");
   const [modal,      setModal]      = useState(null);
   const [editId,     setEditId]     = useState(null);
   const [confirm,    setConfirm]    = useState(null);
@@ -110,25 +136,41 @@ export default function Equipe() {
   const [form,       setForm]       = useState(FORM_VAZIO);
   const [busca,      setBusca]      = useState("");
   const [statusF,    setStatusF]    = useState("Todos");
-  const [folhaModal,  setFolhaModal]  = useState(false);
-  const [obraFolha,   setObraFolha]   = useState("");
-  const [selecionados, setSelecionados] = useState({}); // { [colaboradorId]: true }
+
+  // Folha
+  const [folhaModal,   setFolhaModal]   = useState(false);
+  const [obraFolha,    setObraFolha]    = useState("");
+  const [selecionados, setSelecionados] = useState({});
+
+  // Alocação
+  const [alocModal,  setAlocModal]  = useState(false);
+  const [alocForm,   setAlocForm]   = useState({ colaborador_id: "", obra_id: "", funcao: "Montador", data_inicio: "", data_fim: "" });
+  const [alocFiltroObra, setAlocFiltroObra] = useState("");
+
+  // Horas
+  const [horaModal,  setHoraModal]  = useState(false);
+  const [horaForm,   setHoraForm]   = useState({ colaborador_id: "", obra_id: "", data: "", horas: "", descricao: "" });
+  const [horaFiltroColaborador, setHoraFiltroColaborador] = useState("");
+  const [horaFiltroObra, setHoraFiltroObra] = useState("");
+
+  useEffect(() => {
+    loadAlocacoes();
+    loadHorasTrabalhadas();
+  }, [loadAlocacoes, loadHorasTrabalhadas]);
 
   function mostrarToast(msg) {
     setToast(msg);
     setTimeout(() => setToast(null), 3000);
   }
 
-  function abrirNovo() {
-    setForm(FORM_VAZIO);
-    setModal("novo");
-  }
+  // ── Equipe CRUD ──────────────────────────────────────────────────────────
+  function abrirNovo() { setForm(FORM_VAZIO); setModal("novo"); }
 
   function abrirEditar(c) {
     setEditId(c.id);
     setForm({
       nome: c.nome || "", cargo: c.cargo || "", email: c.email || "",
-      telefone: c.telefone || "", especialidade: c.especialidade || "Steel Frame",
+      telefone: c.telefone || "", especialidade: c.especialidade || "Montador",
       status: c.status || "Ativo", salario: c.salario || "", observacoes: c.observacoes || "",
     });
     setModal("editar");
@@ -152,6 +194,12 @@ export default function Equipe() {
     mostrarToast("🗑 Colaborador removido.");
   }
 
+  // ── Folha ────────────────────────────────────────────────────────────────
+  const colaboradoresAtivosComSalario = colaboradores.filter((c) => c.status === "Ativo" && c.salario);
+  const totalSelecionado = colaboradoresAtivosComSalario
+    .filter((c) => selecionados[c.id])
+    .reduce((a, c) => a + (c.salario || 0), 0);
+
   function abrirFolhaModal() {
     const iniciais = {};
     colaboradoresAtivosComSalario.forEach((c) => { iniciais[c.id] = true; });
@@ -160,43 +208,85 @@ export default function Equipe() {
     setFolhaModal(true);
   }
 
-  const colaboradoresAtivosComSalario = colaboradores.filter((c) => c.status === "Ativo" && c.salario);
-  const totalSelecionado = colaboradoresAtivosComSalario
-    .filter((c) => selecionados[c.id])
-    .reduce((a, c) => a + (c.salario || 0), 0);
-
-  function toggleColab(id) {
-    setSelecionados((prev) => ({ ...prev, [id]: !prev[id] }));
-  }
-
   async function lancarFolha() {
     if (!obraFolha || totalSelecionado === 0) return;
-    const mes      = mesAno();
-    const nomes    = colaboradoresAtivosComSalario
+    const nomes = colaboradoresAtivosComSalario
       .filter((c) => selecionados[c.id])
       .map((c) => c.nome.split(" ")[0])
       .join(", ");
     await addLancamento(obraFolha, {
-      tipo:      "despesa",
-      categoria: "Mão de obra",
-      descricao: `Folha ${mes} — ${nomes}`,
-      valor:     totalSelecionado,
-      data:      new Date().toLocaleDateString("pt-BR"),
+      tipo: "despesa", categoria: "Mão de obra",
+      descricao: `Folha ${mesAno()} — ${nomes}`,
+      valor: totalSelecionado,
+      data: new Date().toLocaleDateString("pt-BR"),
     });
     setFolhaModal(false);
-    setObraFolha("");
-    setSelecionados({});
-    mostrarToast(`✅ Folha de ${fmt(totalSelecionado)} lançada no financeiro!`);
+    mostrarToast(`✅ Folha de ${fmt(totalSelecionado)} lançada!`);
   }
 
-  const lista = colaboradores.filter((c) => {
-    const matchBusca  = !busca || c.nome?.toLowerCase().includes(busca.toLowerCase()) || c.cargo?.toLowerCase().includes(busca.toLowerCase());
-    const matchStatus = statusF === "Todos" || c.status === statusF;
-    return matchBusca && matchStatus;
+  // ── Alocações ─────────────────────────────────────────────────────────────
+  async function salvarAlocacao() {
+    if (!alocForm.colaborador_id || !alocForm.obra_id) return;
+    await addAlocacao({
+      colaborador_id: alocForm.colaborador_id,
+      obra_id:        alocForm.obra_id,
+      funcao:         alocForm.funcao,
+      data_inicio:    alocForm.data_inicio || null,
+      data_fim:       alocForm.data_fim    || null,
+    });
+    setAlocModal(false);
+    setAlocForm({ colaborador_id: "", obra_id: "", funcao: "Montador", data_inicio: "", data_fim: "" });
+    mostrarToast("✅ Alocação registrada!");
+  }
+
+  const alocacoesFiltradas = alocFiltroObra
+    ? alocacoes.filter((a) => a.obra_id === alocFiltroObra)
+    : alocacoes;
+
+  // ── Horas ─────────────────────────────────────────────────────────────────
+  async function salvarHoras() {
+    if (!horaForm.colaborador_id || !horaForm.obra_id || !horaForm.horas) return;
+    await addHorasTrabalhadas({
+      colaborador_id: horaForm.colaborador_id,
+      obra_id:        horaForm.obra_id,
+      data:           horaForm.data || new Date().toISOString().split("T")[0],
+      horas:          Number(horaForm.horas),
+      descricao:      horaForm.descricao,
+    });
+    setHoraModal(false);
+    setHoraForm({ colaborador_id: "", obra_id: "", data: "", horas: "", descricao: "" });
+    mostrarToast("✅ Horas registradas!");
+  }
+
+  const horasFiltradas = horasTrabalhadas.filter((h) => {
+    const matchC = !horaFiltroColaborador || h.colaborador_id === horaFiltroColaborador;
+    const matchO = !horaFiltroObra        || h.obra_id        === horaFiltroObra;
+    return matchC && matchO;
   });
 
-  const ativos  = colaboradores.filter((c) => c.status === "Ativo").length;
-  const folha   = colaboradores.filter((c) => c.status === "Ativo" && c.salario).reduce((a, c) => a + (c.salario || 0), 0);
+  // Custo de horas: horas × (salario_diario / 8 horas)
+  function custoPorHoras(colaboradorId, horasQtd) {
+    const c = colaboradores.find((x) => x.id === colaboradorId);
+    if (!c?.salario) return 0;
+    return (c.salario / 8) * horasQtd;
+  }
+
+  const totalHorasFiltradas = horasFiltradas.reduce((a, h) => a + Number(h.horas), 0);
+  const totalCustoFiltrado  = horasFiltradas.reduce((a, h) => a + custoPorHoras(h.colaborador_id, Number(h.horas)), 0);
+
+  // ── KPIs ──────────────────────────────────────────────────────────────────
+  const ativos = colaboradores.filter((c) => c.status === "Ativo").length;
+  const folha  = colaboradores.filter((c) => c.status === "Ativo" && c.salario).reduce((a, c) => a + (c.salario || 0), 0);
+
+  const lista = colaboradores.filter((c) => {
+    const matchB = !busca || c.nome?.toLowerCase().includes(busca.toLowerCase()) || c.cargo?.toLowerCase().includes(busca.toLowerCase());
+    const matchS = statusF === "Todos" || c.status === statusF;
+    return matchB && matchS;
+  });
+
+  // helpers
+  const nomeColab = (id) => colaboradores.find((c) => c.id === id)?.nome || id;
+  const nomeObra  = (id) => obras.find((o) => o.id === id)?.nome?.split("—")[0]?.trim() || id;
 
   return (
     <>
@@ -209,6 +299,7 @@ export default function Equipe() {
         }}>{toast}</div>
       )}
 
+      {/* ── Modais colaborador ── */}
       {(modal === "novo" || modal === "editar") && (
         <Modal title={modal === "novo" ? "Novo colaborador" : "Editar colaborador"} onClose={() => setModal(null)}>
           <FormColaborador
@@ -230,33 +321,25 @@ export default function Equipe() {
               <Btn variant="ghost" onClick={() => setConfirm(null)}>Cancelar</Btn>
               <button onClick={executarDelete} style={{
                 padding: "10px 24px", background: C.danger, border: "none",
-                borderRadius: 6, color: "#fff", fontWeight: 700,
-                fontSize: 13, cursor: "pointer", fontFamily: "inherit",
+                borderRadius: 6, color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "inherit",
               }}>Remover</button>
             </div>
           </div>
         </div>
       )}
 
-      <div>
-        {/* Modal lançar folha */}
+      {/* ── Modal folha ── */}
       {folhaModal && (
         <Modal title="Lançar folha no Financeiro" onClose={() => setFolhaModal(false)}>
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-
-            {/* Seleção de colaboradores */}
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted }}>SELECIONAR COLABORADORES</div>
+                <LabelField>Selecionar colaboradores</LabelField>
                 <div style={{ display: "flex", gap: 10 }}>
                   <button onClick={() => { const s = {}; colaboradoresAtivosComSalario.forEach(c => { s[c.id] = true; }); setSelecionados(s); }}
-                    style={{ fontSize: 11, color: C.red, background: "none", border: "none", cursor: "pointer", fontFamily: "inherit" }}>
-                    Todos
-                  </button>
+                    style={{ fontSize: 11, color: C.red, background: "none", border: "none", cursor: "pointer", fontFamily: "inherit" }}>Todos</button>
                   <button onClick={() => setSelecionados({})}
-                    style={{ fontSize: 11, color: C.muted, background: "none", border: "none", cursor: "pointer", fontFamily: "inherit" }}>
-                    Nenhum
-                  </button>
+                    style={{ fontSize: 11, color: C.muted, background: "none", border: "none", cursor: "pointer", fontFamily: "inherit" }}>Nenhum</button>
                 </div>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -266,62 +349,126 @@ export default function Equipe() {
                     padding: "10px 14px", borderRadius: 8, cursor: "pointer",
                     border: `1px solid ${selecionados[c.id] ? C.success + "66" : C.border}`,
                     background: selecionados[c.id] ? C.success + "08" : "transparent",
-                    transition: "all .15s",
                   }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <input
-                        type="checkbox"
-                        checked={!!selecionados[c.id]}
-                        onChange={() => toggleColab(c.id)}
-                        style={{ accentColor: C.success, width: 16, height: 16 }}
-                      />
+                      <input type="checkbox" checked={!!selecionados[c.id]}
+                        onChange={() => setSelecionados((p) => ({ ...p, [c.id]: !p[c.id] }))}
+                        style={{ accentColor: C.success, width: 16, height: 16 }} />
                       <div>
                         <div style={{ fontSize: 13, fontWeight: 600 }}>{c.nome}</div>
                         <div style={{ fontSize: 10, color: C.muted }}>{c.especialidade} · {c.cargo || "—"}</div>
                       </div>
                     </div>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: selecionados[c.id] ? C.success : C.muted }}>
-                      {fmt(c.salario)}
-                    </span>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: selecionados[c.id] ? C.success : C.muted }}>{fmt(c.salario)}</span>
                   </label>
                 ))}
               </div>
             </div>
-
-            {/* Total selecionado */}
             <div style={{ background: C.darker, borderRadius: 8, padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ fontSize: 12, color: C.muted }}>
-                {colaboradoresAtivosComSalario.filter(c => selecionados[c.id]).length} colaborador(es) selecionado(s)
-              </span>
-              <span style={{ fontSize: 18, fontWeight: 900, color: totalSelecionado > 0 ? C.success : C.muted }}>
-                {fmt(totalSelecionado)}
-              </span>
+              <span style={{ fontSize: 12, color: C.muted }}>{colaboradoresAtivosComSalario.filter(c => selecionados[c.id]).length} selecionado(s)</span>
+              <span style={{ fontSize: 18, fontWeight: 900, color: totalSelecionado > 0 ? C.success : C.muted }}>{fmt(totalSelecionado)}</span>
             </div>
-
-            {/* Obra destino */}
             <div>
-              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 6 }}>OBRA DESTINO</div>
-              <Select
-                value={obraFolha}
-                onChange={setObraFolha}
-                options={obras.map((o) => ({ value: o.id, label: o.nome?.split("—")[0]?.trim() }))}
-              />
-              <div style={{ fontSize: 11, color: C.muted, marginTop: 6 }}>
-                O mesmo colaborador pode ser lançado em obras diferentes no mesmo mês.
-              </div>
+              <LabelField>Obra destino</LabelField>
+              <Select value={obraFolha} onChange={setObraFolha}
+                options={obras.map((o) => ({ value: o.id, label: o.nome?.split("—")[0]?.trim() }))} />
             </div>
-
             <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", paddingTop: 12, borderTop: `1px solid ${C.border}` }}>
               <Btn variant="ghost" onClick={() => setFolhaModal(false)}>Cancelar</Btn>
-              <Btn disabled={!obraFolha || totalSelecionado === 0} onClick={lancarFolha}>
-                💰 Lançar {fmt(totalSelecionado)}
+              <Btn disabled={!obraFolha || totalSelecionado === 0} onClick={lancarFolha}>💰 Lançar {fmt(totalSelecionado)}</Btn>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* ── Modal alocação ── */}
+      {alocModal && (
+        <Modal title="Nova alocação" onClose={() => setAlocModal(false)}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <div>
+              <LabelField required>Colaborador</LabelField>
+              <Select value={alocForm.colaborador_id}
+                onChange={(v) => setAlocForm((f) => ({ ...f, colaborador_id: v }))}
+                options={colaboradores.filter(c => c.status === "Ativo").map((c) => ({ value: c.id, label: c.nome }))} />
+            </div>
+            <div>
+              <LabelField required>Obra</LabelField>
+              <Select value={alocForm.obra_id}
+                onChange={(v) => setAlocForm((f) => ({ ...f, obra_id: v }))}
+                options={obras.map((o) => ({ value: o.id, label: o.nome?.split("—")[0]?.trim() }))} />
+            </div>
+            <div>
+              <LabelField>Função na obra</LabelField>
+              <Select value={alocForm.funcao}
+                onChange={(v) => setAlocForm((f) => ({ ...f, funcao: v }))}
+                options={FUNCOES.map((f) => ({ value: f, label: f }))} />
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <div>
+                <LabelField>Início previsto</LabelField>
+                <Input type="date" value={alocForm.data_inicio}
+                  onChange={(v) => setAlocForm((f) => ({ ...f, data_inicio: v }))} />
+              </div>
+              <div>
+                <LabelField>Término previsto</LabelField>
+                <Input type="date" value={alocForm.data_fim}
+                  onChange={(v) => setAlocForm((f) => ({ ...f, data_fim: v }))} />
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", paddingTop: 12, borderTop: `1px solid ${C.border}` }}>
+              <Btn variant="ghost" onClick={() => setAlocModal(false)}>Cancelar</Btn>
+              <Btn disabled={!alocForm.colaborador_id || !alocForm.obra_id} onClick={salvarAlocacao}>Salvar alocação</Btn>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* ── Modal horas ── */}
+      {horaModal && (
+        <Modal title="Registrar horas" onClose={() => setHoraModal(false)}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <div>
+              <LabelField required>Colaborador</LabelField>
+              <Select value={horaForm.colaborador_id}
+                onChange={(v) => setHoraForm((f) => ({ ...f, colaborador_id: v }))}
+                options={colaboradores.map((c) => ({ value: c.id, label: c.nome }))} />
+            </div>
+            <div>
+              <LabelField required>Obra</LabelField>
+              <Select value={horaForm.obra_id}
+                onChange={(v) => setHoraForm((f) => ({ ...f, obra_id: v }))}
+                options={obras.map((o) => ({ value: o.id, label: o.nome?.split("—")[0]?.trim() }))} />
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <div>
+                <LabelField required>Data</LabelField>
+                <Input type="date" value={horaForm.data}
+                  onChange={(v) => setHoraForm((f) => ({ ...f, data: v }))} />
+              </div>
+              <div>
+                <LabelField required>Horas trabalhadas</LabelField>
+                <Input type="number" min="0.5" step="0.5" value={horaForm.horas} placeholder="Ex: 8"
+                  onChange={(v) => setHoraForm((f) => ({ ...f, horas: v }))} />
+              </div>
+            </div>
+            <div>
+              <LabelField>Descrição / atividade</LabelField>
+              <Input value={horaForm.descricao} onChange={(v) => setHoraForm((f) => ({ ...f, descricao: v }))}
+                placeholder="Ex: Montagem de painéis — bloco A" />
+            </div>
+            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", paddingTop: 12, borderTop: `1px solid ${C.border}` }}>
+              <Btn variant="ghost" onClick={() => setHoraModal(false)}>Cancelar</Btn>
+              <Btn disabled={!horaForm.colaborador_id || !horaForm.obra_id || !horaForm.horas} onClick={salvarHoras}>
+                ⏱ Registrar
               </Btn>
             </div>
           </div>
         </Modal>
       )}
 
-      {/* Header */}
+      {/* ── Layout ── */}
+      <div>
+        {/* Header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
           <div>
             <h2 style={{ fontSize: 22, fontWeight: 800 }}>Equipe</h2>
@@ -331,7 +478,7 @@ export default function Equipe() {
             </p>
           </div>
           <div style={{ display: "flex", gap: 8 }}>
-            {folha > 0 && (
+            {tab === "equipe" && folha > 0 && (
               <button onClick={abrirFolhaModal} style={{
                 padding: "8px 16px", background: C.success + "18",
                 border: `1px solid ${C.success}44`, borderRadius: 8,
@@ -341,89 +488,281 @@ export default function Equipe() {
                 💰 Lançar folha ({fmt(folha)})
               </button>
             )}
-            <Btn onClick={abrirNovo}>+ Novo colaborador</Btn>
+            {tab === "equipe"   && <Btn onClick={abrirNovo}>+ Novo colaborador</Btn>}
+            {tab === "alocacoes" && <Btn onClick={() => setAlocModal(true)}>+ Nova alocação</Btn>}
+            {tab === "horas"    && <Btn onClick={() => setHoraModal(true)}>+ Registrar horas</Btn>}
           </div>
         </div>
 
-        {/* Filtros */}
-        {colaboradores.length > 0 && (
-          <div style={{ display: "flex", gap: 10, marginBottom: 18, flexWrap: "wrap", alignItems: "center" }}>
-            <input
-              value={busca}
-              onChange={(e) => setBusca(e.target.value)}
-              placeholder="Buscar por nome ou cargo..."
-              style={{
-                flex: "1 1 200px", padding: "8px 14px", borderRadius: 8,
-                border: `1px solid ${C.border}`, background: C.surface,
-                color: C.text, fontSize: 12, outline: "none", fontFamily: "inherit",
-              }}
-            />
-            {["Todos", ...STATUS_OPTS].map((s) => (
-              <button key={s} onClick={() => setStatusF(s)} style={{
-                padding: "7px 14px", borderRadius: 7, fontSize: 11, cursor: "pointer",
-                fontFamily: "inherit", fontWeight: statusF === s ? 700 : 400,
-                border: `1px solid ${statusF === s ? (STATUS_COR[s] || C.red) : C.border}`,
-                background: statusF === s ? (STATUS_COR[s] || C.red) + "18" : "transparent",
-                color: statusF === s ? (STATUS_COR[s] || C.text) : C.muted,
-              }}>{s}</button>
-            ))}
+        {/* Tabs */}
+        <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
+          <Tab label="👷 Equipe"     active={tab === "equipe"}    onClick={() => setTab("equipe")} />
+          <Tab label="📋 Alocações"  active={tab === "alocacoes"} onClick={() => setTab("alocacoes")} />
+          <Tab label="⏱ Horas"      active={tab === "horas"}     onClick={() => setTab("horas")} />
+        </div>
+
+        {/* ══ Tab: Equipe ══ */}
+        {tab === "equipe" && (
+          <>
+            {colaboradores.length > 0 && (
+              <div style={{ display: "flex", gap: 10, marginBottom: 18, flexWrap: "wrap", alignItems: "center" }}>
+                <input
+                  value={busca} onChange={(e) => setBusca(e.target.value)}
+                  placeholder="Buscar por nome ou cargo..."
+                  style={{
+                    flex: "1 1 200px", padding: "8px 14px", borderRadius: 8,
+                    border: `1px solid ${C.border}`, background: C.surface,
+                    color: C.text, fontSize: 12, outline: "none", fontFamily: "inherit",
+                  }}
+                />
+                {["Todos", ...STATUS_OPTS].map((s) => (
+                  <button key={s} onClick={() => setStatusF(s)} style={{
+                    padding: "7px 14px", borderRadius: 7, fontSize: 11, cursor: "pointer",
+                    fontFamily: "inherit", fontWeight: statusF === s ? 700 : 400,
+                    border: `1px solid ${statusF === s ? (STATUS_COR[s] || C.red) : C.border}`,
+                    background: statusF === s ? (STATUS_COR[s] || C.red) + "18" : "transparent",
+                    color: statusF === s ? (STATUS_COR[s] || C.text) : C.muted,
+                  }}>{s}</button>
+                ))}
+              </div>
+            )}
+
+            {colaboradores.length === 0 ? (
+              <div style={{ background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, padding: "60px 0", textAlign: "center" }}>
+                <div style={{ fontSize: 36, marginBottom: 12 }}>👷</div>
+                <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 8 }}>Nenhum colaborador cadastrado</div>
+                <div style={{ fontSize: 13, color: C.muted, marginBottom: 24 }}>Cadastre sua equipe para controlar disponibilidade e custos.</div>
+                <Btn onClick={abrirNovo}>+ Cadastrar primeiro colaborador</Btn>
+              </div>
+            ) : lista.length === 0 ? (
+              <div style={{ textAlign: "center", padding: "40px 0", color: C.muted, fontSize: 13 }}>Nenhum resultado para os filtros aplicados.</div>
+            ) : (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 14 }}>
+                {lista.map((c) => {
+                  const alocAtivas = alocacoes.filter((a) => a.colaborador_id === c.id);
+                  return (
+                    <div key={c.id} style={{
+                      background: C.surface, borderRadius: 12, padding: "18px 20px",
+                      border: `1px solid ${C.border}`, borderTop: `3px solid ${STATUS_COR[c.status] || C.muted}`,
+                    }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
+                        <div>
+                          <div style={{ fontSize: 15, fontWeight: 800 }}>{c.nome}</div>
+                          <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>{c.cargo || "—"} · {c.especialidade}</div>
+                        </div>
+                        <Badge label={c.status} color={STATUS_COR[c.status] || C.muted} />
+                      </div>
+
+                      <div style={{ display: "flex", flexDirection: "column", gap: 5, marginBottom: 12 }}>
+                        {c.email    && <div style={{ fontSize: 12, color: C.muted }}>✉ {c.email}</div>}
+                        {c.telefone && <div style={{ fontSize: 12, color: C.muted }}>📞 {c.telefone}</div>}
+                        {c.salario  && <div style={{ fontSize: 12, color: C.success, fontWeight: 700 }}>💰 {fmt(c.salario)}</div>}
+                      </div>
+
+                      {alocAtivas.length > 0 && (
+                        <div style={{ marginBottom: 12 }}>
+                          {alocAtivas.slice(0, 2).map((a) => (
+                            <div key={a.id} style={{
+                              fontSize: 11, padding: "4px 8px", borderRadius: 5, marginBottom: 4,
+                              background: C.red + "12", color: C.red, fontWeight: 600,
+                            }}>
+                              ◆ {nomeObra(a.obra_id)} {a.funcao ? `· ${a.funcao}` : ""}
+                            </div>
+                          ))}
+                          {alocAtivas.length > 2 && (
+                            <div style={{ fontSize: 10, color: C.muted }}>+{alocAtivas.length - 2} obra(s)</div>
+                          )}
+                        </div>
+                      )}
+
+                      {c.observacoes && (
+                        <div style={{ fontSize: 11, color: C.muted, background: C.darker, borderRadius: 6, padding: "8px 10px", marginBottom: 12, lineHeight: 1.5 }}>
+                          {c.observacoes}
+                        </div>
+                      )}
+
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <Btn variant="ghost" size="sm" onClick={() => abrirEditar(c)}>✏️ Editar</Btn>
+                        <button onClick={() => setConfirm(c.id)} style={{
+                          padding: "6px 12px", background: C.danger + "22",
+                          border: `1px solid ${C.danger}44`, borderRadius: 6,
+                          color: C.danger, fontSize: 11, fontWeight: 700,
+                          cursor: "pointer", fontFamily: "inherit",
+                        }}>🗑</button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* ══ Tab: Alocações ══ */}
+        {tab === "alocacoes" && (
+          <div>
+            {/* Filtro por obra */}
+            <div style={{ display: "flex", gap: 8, marginBottom: 16, alignItems: "center", flexWrap: "wrap" }}>
+              <span style={{ fontSize: 11, color: C.muted, fontWeight: 700 }}>FILTRAR OBRA:</span>
+              <button
+                onClick={() => setAlocFiltroObra("")}
+                style={{
+                  padding: "6px 14px", borderRadius: 7, fontSize: 11, cursor: "pointer", fontFamily: "inherit",
+                  fontWeight: !alocFiltroObra ? 700 : 400,
+                  border: `1px solid ${!alocFiltroObra ? C.red : C.border}`,
+                  background: !alocFiltroObra ? C.red + "18" : "transparent",
+                  color: !alocFiltroObra ? C.red : C.muted,
+                }}
+              >Todas</button>
+              {obras.map((o) => (
+                <button key={o.id} onClick={() => setAlocFiltroObra(o.id)} style={{
+                  padding: "6px 14px", borderRadius: 7, fontSize: 11, cursor: "pointer", fontFamily: "inherit",
+                  fontWeight: alocFiltroObra === o.id ? 700 : 400,
+                  border: `1px solid ${alocFiltroObra === o.id ? C.red : C.border}`,
+                  background: alocFiltroObra === o.id ? C.red + "18" : "transparent",
+                  color: alocFiltroObra === o.id ? C.red : C.muted,
+                }}>{o.nome?.split("—")[0]?.trim()}</button>
+              ))}
+            </div>
+
+            {alocacoesFiltradas.length === 0 ? (
+              <div style={{ background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, padding: "50px 0", textAlign: "center" }}>
+                <div style={{ fontSize: 32, marginBottom: 12 }}>📋</div>
+                <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 8 }}>Nenhuma alocação registrada</div>
+                <div style={{ fontSize: 12, color: C.muted, marginBottom: 20 }}>Aloque colaboradores às obras para controlar a equipe por projeto.</div>
+                <Btn onClick={() => setAlocModal(true)}>+ Nova alocação</Btn>
+              </div>
+            ) : (
+              <div style={{ background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, overflow: "hidden" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                  <thead>
+                    <tr style={{ background: C.darker }}>
+                      <th style={{ padding: "10px 16px", textAlign: "left", fontSize: 10, fontWeight: 700, letterSpacing: 1, color: C.muted, textTransform: "uppercase" }}>Colaborador</th>
+                      <th style={{ padding: "10px 16px", textAlign: "left", fontSize: 10, fontWeight: 700, letterSpacing: 1, color: C.muted, textTransform: "uppercase" }}>Obra</th>
+                      <th style={{ padding: "10px 16px", textAlign: "left", fontSize: 10, fontWeight: 700, letterSpacing: 1, color: C.muted, textTransform: "uppercase" }}>Função</th>
+                      <th style={{ padding: "10px 16px", textAlign: "left", fontSize: 10, fontWeight: 700, letterSpacing: 1, color: C.muted, textTransform: "uppercase" }}>Período</th>
+                      <th style={{ padding: "10px 8px", width: 40 }}></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {alocacoesFiltradas.map((a, i) => (
+                      <tr key={a.id} style={{ borderTop: i > 0 ? `1px solid ${C.border}` : "none" }}>
+                        <td style={{ padding: "12px 16px", fontWeight: 600 }}>{nomeColab(a.colaborador_id)}</td>
+                        <td style={{ padding: "12px 16px", color: C.red, fontWeight: 600 }}>◆ {nomeObra(a.obra_id)}</td>
+                        <td style={{ padding: "12px 16px", color: C.muted }}>{a.funcao || "—"}</td>
+                        <td style={{ padding: "12px 16px", color: C.muted, fontSize: 12 }}>
+                          {a.data_inicio ? new Date(a.data_inicio + "T00:00").toLocaleDateString("pt-BR") : "—"}
+                          {" → "}
+                          {a.data_fim    ? new Date(a.data_fim    + "T00:00").toLocaleDateString("pt-BR") : "em aberto"}
+                        </td>
+                        <td style={{ padding: "12px 8px" }}>
+                          <button onClick={() => removeAlocacao(a.id)} style={{
+                            background: "none", border: "none", cursor: "pointer",
+                            color: C.muted, fontSize: 14, padding: 4,
+                          }}>🗑</button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         )}
 
-        {/* Empty state */}
-        {colaboradores.length === 0 ? (
-          <div style={{ background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, padding: "60px 0", textAlign: "center" }}>
-            <div style={{ fontSize: 36, marginBottom: 12 }}>👷</div>
-            <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 8 }}>Nenhum colaborador cadastrado</div>
-            <div style={{ fontSize: 13, color: C.muted, marginBottom: 24 }}>Cadastre sua equipe para controlar disponibilidade e custos.</div>
-            <Btn onClick={abrirNovo}>+ Cadastrar primeiro colaborador</Btn>
-          </div>
-        ) : lista.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "40px 0", color: C.muted, fontSize: 13 }}>Nenhum resultado para os filtros aplicados.</div>
-        ) : (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 14 }}>
-            {lista.map((c) => (
-              <div key={c.id} style={{
-                background: C.surface, borderRadius: 12, padding: "18px 20px",
-                border: `1px solid ${C.border}`, borderTop: `3px solid ${STATUS_COR[c.status] || C.muted}`,
-              }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
-                  <div>
-                    <div style={{ fontSize: 15, fontWeight: 800 }}>{c.nome}</div>
-                    <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>{c.cargo || "—"} · {c.especialidade}</div>
-                  </div>
-                  <Badge label={c.status} color={STATUS_COR[c.status] || C.muted} />
+        {/* ══ Tab: Horas ══ */}
+        {tab === "horas" && (
+          <div>
+            {/* KPIs */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 20 }}>
+              {[
+                { label: "Total de horas", value: `${totalHorasFiltradas.toFixed(1)} h`, sub: "no filtro atual", accent: "#4a9eff" },
+                { label: "Custo estimado", value: fmt(totalCustoFiltrado), sub: "baseado na diária", accent: C.red },
+                { label: "Lançamentos", value: String(horasFiltradas.length), sub: "registros de horas", accent: C.success },
+              ].map((k) => (
+                <div key={k.label} style={{ background: C.surface, borderRadius: 10, padding: "14px 16px", border: `1px solid ${C.border}`, borderTop: `3px solid ${k.accent}` }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1, color: C.muted, textTransform: "uppercase", marginBottom: 6 }}>{k.label}</div>
+                  <div style={{ fontSize: 20, fontWeight: 900 }}>{k.value}</div>
+                  <div style={{ fontSize: 11, color: C.muted, marginTop: 3 }}>{k.sub}</div>
                 </div>
+              ))}
+            </div>
 
-                <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 14 }}>
-                  {c.email && (
-                    <div style={{ fontSize: 12, color: C.muted }}>✉ {c.email}</div>
-                  )}
-                  {c.telefone && (
-                    <div style={{ fontSize: 12, color: C.muted }}>📞 {c.telefone}</div>
-                  )}
-                  {c.salario && (
-                    <div style={{ fontSize: 12, color: C.success, fontWeight: 700 }}>💰 {fmt(c.salario)}</div>
-                  )}
-                </div>
+            {/* Filtros */}
+            <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
+              <select
+                value={horaFiltroColaborador}
+                onChange={(e) => setHoraFiltroColaborador(e.target.value)}
+                style={{
+                  padding: "8px 12px", borderRadius: 8, border: `1px solid ${C.border}`,
+                  background: C.surface, color: C.text, fontSize: 12, fontFamily: "inherit",
+                }}
+              >
+                <option value="">Todos os colaboradores</option>
+                {colaboradores.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
+              </select>
+              <select
+                value={horaFiltroObra}
+                onChange={(e) => setHoraFiltroObra(e.target.value)}
+                style={{
+                  padding: "8px 12px", borderRadius: 8, border: `1px solid ${C.border}`,
+                  background: C.surface, color: C.text, fontSize: 12, fontFamily: "inherit",
+                }}
+              >
+                <option value="">Todas as obras</option>
+                {obras.map((o) => <option key={o.id} value={o.id}>{o.nome?.split("—")[0]?.trim()}</option>)}
+              </select>
+            </div>
 
-                {c.observacoes && (
-                  <div style={{ fontSize: 11, color: C.muted, background: C.darker, borderRadius: 6, padding: "8px 10px", marginBottom: 12, lineHeight: 1.5 }}>
-                    {c.observacoes}
-                  </div>
-                )}
-
-                <div style={{ display: "flex", gap: 8 }}>
-                  <Btn variant="ghost" size="sm" onClick={() => abrirEditar(c)}>✏️ Editar</Btn>
-                  <button onClick={() => setConfirm(c.id)} style={{
-                    padding: "6px 12px", background: C.danger + "22",
-                    border: `1px solid ${C.danger}44`, borderRadius: 6,
-                    color: C.danger, fontSize: 11, fontWeight: 700,
-                    cursor: "pointer", fontFamily: "inherit",
-                  }}>🗑</button>
-                </div>
+            {horasFiltradas.length === 0 ? (
+              <div style={{ background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, padding: "50px 0", textAlign: "center" }}>
+                <div style={{ fontSize: 32, marginBottom: 12 }}>⏱</div>
+                <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 8 }}>Nenhuma hora registrada</div>
+                <div style={{ fontSize: 12, color: C.muted, marginBottom: 20 }}>Registre as horas trabalhadas por colaborador e obra.</div>
+                <Btn onClick={() => setHoraModal(true)}>+ Registrar horas</Btn>
               </div>
-            ))}
+            ) : (
+              <div style={{ background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, overflow: "hidden" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                  <thead>
+                    <tr style={{ background: C.darker }}>
+                      <th style={{ padding: "10px 16px", textAlign: "left", fontSize: 10, fontWeight: 700, letterSpacing: 1, color: C.muted, textTransform: "uppercase" }}>Data</th>
+                      <th style={{ padding: "10px 16px", textAlign: "left", fontSize: 10, fontWeight: 700, letterSpacing: 1, color: C.muted, textTransform: "uppercase" }}>Colaborador</th>
+                      <th style={{ padding: "10px 16px", textAlign: "left", fontSize: 10, fontWeight: 700, letterSpacing: 1, color: C.muted, textTransform: "uppercase" }}>Obra</th>
+                      <th style={{ padding: "10px 16px", textAlign: "left", fontSize: 10, fontWeight: 700, letterSpacing: 1, color: C.muted, textTransform: "uppercase" }}>Atividade</th>
+                      <th style={{ padding: "10px 16px", textAlign: "right", fontSize: 10, fontWeight: 700, letterSpacing: 1, color: C.muted, textTransform: "uppercase" }}>Horas</th>
+                      <th style={{ padding: "10px 16px", textAlign: "right", fontSize: 10, fontWeight: 700, letterSpacing: 1, color: C.muted, textTransform: "uppercase" }}>Custo</th>
+                      <th style={{ padding: "10px 8px", width: 40 }}></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {horasFiltradas.map((h, i) => {
+                      const custo = custoPorHoras(h.colaborador_id, Number(h.horas));
+                      return (
+                        <tr key={h.id} style={{ borderTop: i > 0 ? `1px solid ${C.border}` : "none" }}>
+                          <td style={{ padding: "12px 16px", color: C.muted, fontSize: 12, whiteSpace: "nowrap" }}>
+                            {h.data ? new Date(h.data + "T00:00").toLocaleDateString("pt-BR") : "—"}
+                          </td>
+                          <td style={{ padding: "12px 16px", fontWeight: 600 }}>{nomeColab(h.colaborador_id)}</td>
+                          <td style={{ padding: "12px 16px", color: C.red, fontWeight: 600 }}>◆ {nomeObra(h.obra_id)}</td>
+                          <td style={{ padding: "12px 16px", color: C.muted }}>{h.descricao || "—"}</td>
+                          <td style={{ padding: "12px 16px", textAlign: "right", fontWeight: 700 }}>{Number(h.horas).toFixed(1)} h</td>
+                          <td style={{ padding: "12px 16px", textAlign: "right", fontWeight: 700, color: custo > 0 ? C.red : C.muted }}>
+                            {custo > 0 ? fmt(custo) : "—"}
+                          </td>
+                          <td style={{ padding: "12px 8px" }}>
+                            <button onClick={() => removeHorasTrabalhadas(h.id)} style={{
+                              background: "none", border: "none", cursor: "pointer",
+                              color: C.muted, fontSize: 14, padding: 4,
+                            }}>🗑</button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         )}
       </div>

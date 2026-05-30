@@ -18,11 +18,14 @@ const DiarioObra  = lazy(() => import("./pages/DiarioObra"));
 const Financeiro  = lazy(() => import("./pages/Financeiro"));
 const Contratos   = lazy(() => import("./pages/Contratos"));
 const Historico   = lazy(() => import("./pages/Historico"));
-const PortalOnline= lazy(() => import("./pages/PortalOnline"));
+const PortalOnline   = lazy(() => import("./pages/PortalOnline"));
+const PropostaOnline = lazy(() => import("./pages/PropostaOnline"));
 const Equipe      = lazy(() => import("./pages/Equipe"));
 const Cronograma  = lazy(() => import("./pages/Cronograma"));
 const Vistorias   = lazy(() => import("./pages/Vistorias"));
-const BIM         = lazy(() => import("./pages/BIM"));
+const BIM           = lazy(() => import("./pages/BIM"));
+const Quantitativos  = lazy(() => import("./pages/Quantitativos"));
+const Configuracoes  = lazy(() => import("./pages/Configuracoes"));
 
 const PAGES = {
   dashboard:  Dashboard,
@@ -38,7 +41,9 @@ const PAGES = {
   equipe:     Equipe,
   cronograma: Cronograma,
   vistorias:  Vistorias,
-  bim:        BIM,
+  bim:           BIM,
+  quantitativos:  Quantitativos,
+  configuracoes:  Configuracoes,
 };
 
 function AuthenticatedApp() {
@@ -76,7 +81,8 @@ export default function App() {
     <BrowserRouter>
       <Suspense fallback={<LoadingScreen />}>
         <Routes>
-          <Route path="/portal/:token" element={<PortalOnline />} />
+          <Route path="/portal/:token"   element={<PortalOnline />} />
+          <Route path="/proposta/:token" element={<PropostaOnline />} />
           <Route path="/login" element={<LoginScreen />} />
           <Route path="/*" element={
             <RequireAuth>
