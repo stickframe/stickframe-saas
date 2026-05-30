@@ -118,11 +118,13 @@ export default function Dashboard() {
   useModuleLoad("orcamentos");
   useModuleLoad("obras");
   useModuleLoad("financeiro");
+  useModuleLoad("contratos");
 
   const clientes    = useAppStore((s) => s.clientes);
   const orcamentos  = useAppStore((s) => s.orcamentos);
   const obras       = useAppStore((s) => s.obras);
   const financeiro  = useAppStore((s) => s.financeiro);
+  const contratos   = useAppStore((s) => s.contratos);
   const medicoes    = useAppStore((s) => s.medicoes);
   const loadMedicoes = useAppStore((s) => s.loadMedicoes);
 
@@ -141,6 +143,49 @@ export default function Dashboard() {
   const pipelineOrc = orcamentos
     .filter((o) => !["Recusado"].includes(o.status))
     .reduce((a, o) => a + (o.valor || 0), 0);
+
+  // ── VGV — funil financeiro completo ──────────────────────────────────────
+  const vgvFunil = [
+    {
+      label:   "Pipeline CRM",
+      sublabel: "leads + negociações",
+      valor:   clientes.filter((c) => c.status !== "Fechado").reduce((a, c) => a + (c.valor || 0), 0),
+      count:   clientes.filter((c) => c.status !== "Fechado").length,
+      color:   "#4a9eff",
+    },
+    {
+      label:   "Orçamentos",
+      sublabel: "em aberto + aprovados",
+      valor:   orcamentos.filter((o) => o.status !== "Recusado").reduce((a, o) => a + (o.valor || 0), 0),
+      count:   orcamentos.filter((o) => o.status !== "Recusado").length,
+      color:   C.warning,
+    },
+    {
+      label:   "Contratos",
+      sublabel: "assinados",
+      valor:   contratos.reduce((a, c) => a + (c.valor || 0), 0),
+      count:   contratos.length,
+      color:   "#9b59b6",
+    },
+    {
+      label:   "Obras em execução",
+      sublabel: "valor contratado",
+      valor:   obras.filter((o) => o.status === "Em andamento").reduce((a, o) => a + (o.contrato || 0), 0),
+      count:   obras.filter((o) => o.status === "Em andamento").length,
+      color:   C.red,
+    },
+    {
+      label:   "Obras concluídas",
+      sublabel: "receita realizada",
+      valor:   obras.filter((o) => o.status === "Concluída").reduce((a, o) => {
+        const fin = financeiro[o.id] || { lancamentos: [] };
+        return a + fin.lancamentos.filter((l) => l.tipo === "receita").reduce((s, l) => s + (l.valor || 0), 0);
+      }, 0),
+      count:   obras.filter((o) => o.status === "Concluída").length,
+      color:   C.success,
+    },
+  ];
+  const vgvTotal = vgvFunil.reduce((a, f) => a + f.valor, 0);
 
   // ── Medições pendentes ────────────────────────────────────────────────────
   const allMedicoes     = Object.values(medicoes).flat();
@@ -213,6 +258,45 @@ export default function Dashboard() {
           <p style={{ color: C.muted, fontSize: 13 }}>Visão consolidada — {mesAno()}</p>
         </div>
         <div style={{ fontSize: 11, color: C.muted }}>Atualizado agora</div>
+      </div>
+
+      {/* VGV — Funil financeiro */}
+      <div style={{ background: C.surface, borderRadius: 14, padding: "20px 24px", border: `1px solid ${C.border}`, marginBottom: 20, borderTop: `3px solid ${C.red}` }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 18, flexWrap: "wrap", gap: 8 }}>
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.5, color: C.muted }}>VGV — VALOR GERAL DE VENDAS</div>
+            <div style={{ fontSize: 28, fontWeight: 900, color: C.text, marginTop: 4 }}>{fmt(vgvTotal)}</div>
+            <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>soma de todo o pipeline até as obras concluídas</div>
+          </div>
+          <div style={{ textAlign: "right" }}>
+            <div style={{ fontSize: 11, color: C.muted }}>Receita realizada</div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: C.success }}>{fmt(totalRec)}</div>
+            <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{totalRec > 0 && vgvTotal > 0 ? `${((totalRec / vgvTotal) * 100).toFixed(0)}% do VGV` : "—"}</div>
+          </div>
+        </div>
+
+        {/* Barra de funil */}
+        <div style={{ display: "flex", gap: 3, height: 10, borderRadius: 5, overflow: "hidden", marginBottom: 14 }}>
+          {vgvFunil.map((f, i) => {
+            const pct = vgvTotal > 0 ? (f.valor / vgvTotal) * 100 : 0;
+            if (pct < 1) return null;
+            return (
+              <div key={i} style={{ width: `${pct}%`, background: f.color, minWidth: 4, transition: "width .4s ease" }} />
+            );
+          })}
+          {vgvTotal === 0 && <div style={{ flex: 1, background: C.darker }} />}
+        </div>
+
+        {/* Etapas */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 8 }}>
+          {vgvFunil.map((f, i) => (
+            <div key={i} style={{ borderLeft: `3px solid ${f.color}`, paddingLeft: 10 }}>
+              <div style={{ fontSize: 9, fontWeight: 700, color: f.color, letterSpacing: 1, marginBottom: 2 }}>{f.label.toUpperCase()}</div>
+              <div style={{ fontSize: 14, fontWeight: 800, color: C.text }}>{fmt(f.valor)}</div>
+              <div style={{ fontSize: 10, color: C.muted }}>{f.count} {f.count === 1 ? "item" : "itens"}</div>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* KPIs */}
