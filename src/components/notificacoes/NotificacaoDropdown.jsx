@@ -57,7 +57,7 @@ export default function NotificacaoDropdown() {
       {aberto && (
         <>
           <div style={{ position: "fixed", inset: 0, zIndex: 98 }} onClick={() => setAberto(false)} />
-          <div style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, width: 360, background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12, zIndex: 99, boxShadow: "0 8px 32px #00000022", overflow: "hidden" }}>
+          <div style={{ position: "absolute", top: "calc(100% + 8px)", left: "50%", transform: "translateX(-50%)", width: 360, background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12, zIndex: 99, boxShadow: "0 8px 32px #00000022", overflow: "hidden" }}>
 
             <div style={{ padding: "14px 18px", borderBottom: `1px solid ${C.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <span style={{ fontSize: 13, fontWeight: 700, color: C.text }}>Notificações</span>
