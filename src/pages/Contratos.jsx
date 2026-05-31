@@ -515,8 +515,8 @@ export default function Contratos() {
 
                       <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
                         {[
-                          ["Unidades", `${c.unidades} UH`],
-                          ["Área/UH",  `${c.area} m²`],
+                          ["Unidades", `${c.unidades}`],
+                          ["Área",     `${c.area} m²`],
                           ["Padrão",   c.padrao],
                           ["Prazo",    c.prazo],
                         ].map(([k, v]) => (
