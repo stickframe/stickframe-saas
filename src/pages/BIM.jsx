@@ -376,6 +376,7 @@ function Field({ label, children }) {
 
 // ─── Página BIM ───────────────────────────────────────────────────────────────
 export default function BIM() {
+  const { toast, mostrarToast } = useToast();
   useModuleLoad("obras");
   const obras                = useAppStore((s) => s.obras);
   const bimModelos           = useAppStore((s) => s.bimModelos);

@@ -208,6 +208,7 @@ const FORM_VAZIO = {
 };
 
 export default function Agenda() {
+  const { toast, mostrarToast } = useToast();
   useModuleLoad("clientes");
   useModuleLoad("obras");
   useModuleLoad("eventos");
