@@ -1,7 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { C } from "../utils/constants";
 import useAppStore from "../store/useAppStore";
 import * as XLSX from "xlsx";
+import {
+  listarRetalhos, registrarRetalho, marcarUsado,
+} from "../services/repositories/retalhosRepository";
 
 // ─── Insumos por m² de área construída ───────────────────────────────────────
 // grupo = chave usada pelo módulo de Orçamentos (sf_estimativo)
@@ -62,12 +65,18 @@ export default function Calculadora() {
   const [resultado, setResultado] = useState(null);
 
   // Otimização de corte
+  const obras = useAppStore((s) => s.obras);
+
   const [tamBarra,      setTamBarra]      = useState(6000);
   const [tamC90,        setTamC90]        = useState(2800);
   const [tamC140,       setTamC140]       = useState(600);
+  const [obraId,        setObraId]        = useState("");
   const [otimizacao,    setOtimizacao]    = useState(null);
   const [verTodas,      setVerTodas]      = useState({});
   const [cortadas,      setCortadas]      = useState({});
+  const [desvioReal,    setDesvioReal]    = useState({});  // { [profNome]: barrasReais }
+  const [retalhos,      setRetalhos]      = useState([]);
+  const [salvandoRet,   setSalvandoRet]   = useState(null); // barraKey sendo salva
 
   // Persistência do progresso de corte em localStorage
   const cortesKey = resultado ? `sf_cortes_${resultado.area}_${resultado.pavs}` : null;
@@ -82,6 +91,35 @@ export default function Calculadora() {
       if (cortesKey) localStorage.setItem(cortesKey, JSON.stringify(next));
       return next;
     });
+  }
+
+  const recarregarRetalhos = useCallback(() => {
+    listarRetalhos(["Montante C 90", "Montante C 140"])
+      .then(setRetalhos)
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => { recarregarRetalhos(); }, [recarregarRetalhos]);
+
+  async function handleRegistrarRetalho(barra, tipoLabel) {
+    const key = `${tipoLabel}_${barra.id}`;
+    setSalvandoRet(key);
+    try {
+      await registrarRetalho({
+        tipo_perfil:    tipoLabel,
+        comprimento_mm: barra.sobra,
+        obra_id:        obraId || null,
+        observacoes:    `Otimizador — ${resultado?.area}m² ${resultado?.padrao}`,
+      });
+      recarregarRetalhos();
+    } finally {
+      setSalvandoRet(null);
+    }
+  }
+
+  async function handleUsarRetalho(id) {
+    await marcarUsado(id);
+    recarregarRetalhos();
   }
 
   function calcular() {
@@ -143,16 +181,32 @@ export default function Calculadora() {
     const c140item = resultado.items.find((i) => i.nome.includes("C 140"));
     const guiaItem = resultado.items.find((i) => i.nome.includes("Guia U"));
 
+    // Retalhos disponíveis por tipo
+    const retC90  = retalhos.filter((r) => r.tipo_perfil === "Montante C 90");
+    const retC140 = retalhos.filter((r) => r.tipo_perfil === "Montante C 140");
+
+    function pecasCobertas(tamPeca, retalhosDisponiveis) {
+      // Conta quantas peças podem ser extraídas dos retalhos disponíveis
+      return retalhosDisponiveis.reduce((total, r) => total + Math.floor(r.comprimento_mm / tamPeca), 0);
+    }
+
     const grupos = [];
-    if (c90item  && tamC90  > 0 && tamC90  <= tamBarra) {
-      const barras = otimizarCorte([{ label: "Montante C 90",  comprimento: tamC90,  quantidade: c90item.qtd,  cor: C.red     }], tamBarra);
-      const uso = c90item.qtd * tamC90;
-      grupos.push({ nome: c90item.nome, cor: C.red,     barras, uso, bruto: barras.length * tamBarra, apr: (uso / (barras.length * tamBarra)) * 100 });
+
+    if (c90item && tamC90 > 0 && tamC90 <= tamBarra) {
+      const cobertas  = Math.min(pecasCobertas(tamC90, retC90), c90item.qtd);
+      const qtdNova   = c90item.qtd - cobertas;
+      const barras    = qtdNova > 0 ? otimizarCorte([{ label: "Montante C 90",  comprimento: tamC90,  quantidade: qtdNova,       cor: C.red     }], tamBarra) : [];
+      const uso       = qtdNova * tamC90;
+      const bruto     = barras.length * tamBarra || 1;
+      grupos.push({ tipoLabel: "Montante C 90",  nome: c90item.nome,  cor: C.red,     barras, uso, bruto, apr: barras.length ? (uso / bruto) * 100 : 100, cobertas, qtdTotal: c90item.qtd });
     }
     if (c140item && tamC140 > 0 && tamC140 <= tamBarra) {
-      const barras = otimizarCorte([{ label: "Montante C 140", comprimento: tamC140, quantidade: c140item.qtd, cor: "#e07020" }], tamBarra);
-      const uso = c140item.qtd * tamC140;
-      grupos.push({ nome: c140item.nome, cor: "#e07020", barras, uso, bruto: barras.length * tamBarra, apr: (uso / (barras.length * tamBarra)) * 100 });
+      const cobertas  = Math.min(pecasCobertas(tamC140, retC140), c140item.qtd);
+      const qtdNova   = c140item.qtd - cobertas;
+      const barras    = qtdNova > 0 ? otimizarCorte([{ label: "Montante C 140", comprimento: tamC140, quantidade: qtdNova,       cor: "#e07020" }], tamBarra) : [];
+      const uso       = qtdNova * tamC140;
+      const bruto     = barras.length * tamBarra || 1;
+      grupos.push({ tipoLabel: "Montante C 140", nome: c140item.nome, cor: "#e07020", barras, uso, bruto, apr: barras.length ? (uso / bruto) * 100 : 100, cobertas, qtdTotal: c140item.qtd });
     }
     let guia = null;
     if (guiaItem) {
@@ -163,6 +217,7 @@ export default function Calculadora() {
     setOtimizacao({ grupos, guia });
     setVerTodas({});
     setCortadas({});
+    setDesvioReal({});
   }
 
   const totalGeral = resultado?.items.reduce((s, i) => s + i.total, 0) || 0;
@@ -351,33 +406,65 @@ export default function Calculadora() {
 
             {/* Configuração */}
             <div style={{ padding: "14px 20px", borderBottom: `1px solid ${C.border}`, background: "#fcfcfc", display: "flex", gap: 12, flexWrap: "wrap", alignItems: "flex-end" }}>
-              {[
-                { label: "BARRA PADRÃO", tipo: "select", value: tamBarra, onChange: (v) => { setTamBarra(Number(v)); setOtimizacao(null); },
-                  options: [[6000,"6.000 mm (6m)"],[12000,"12.000 mm (12m)"],[3000,"3.000 mm (3m)"]] },
-              ].map(({ label, value, onChange, options }) => (
-                <div key={label}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 5 }}>{label}</div>
-                  <select value={value} onChange={(e) => onChange(e.target.value)}
-                    style={{ padding: "8px 12px", borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 13, fontFamily: "inherit", background: "#fff" }}>
-                    {options.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-                  </select>
-                </div>
-              ))}
-              {[
-                { label: "MONTANTE C 90 (mm/pç)", value: tamC90, onChange: (v) => { setTamC90(Number(v)); setOtimizacao(null); } },
-                { label: "MONTANTE C 140 (mm/pç)", value: tamC140, onChange: (v) => { setTamC140(Number(v)); setOtimizacao(null); } },
-              ].map(({ label, value, onChange }) => (
-                <div key={label}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 5 }}>{label}</div>
-                  <input type="number" value={value} min={100} max={tamBarra} onChange={(e) => onChange(e.target.value)}
-                    style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 13, fontFamily: "inherit", width: 110 }} />
-                </div>
-              ))}
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 5 }}>BARRA PADRÃO</div>
+                <select value={tamBarra} onChange={(e) => { setTamBarra(Number(e.target.value)); setOtimizacao(null); }}
+                  style={{ padding: "8px 12px", borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 13, fontFamily: "inherit", background: "#fff" }}>
+                  <option value={6000}>6.000 mm (6m)</option>
+                  <option value={12000}>12.000 mm (12m)</option>
+                  <option value={3000}>3.000 mm (3m)</option>
+                </select>
+              </div>
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 5 }}>MONTANTE C 90 (mm/pç)</div>
+                <input type="number" value={tamC90} min={100} max={tamBarra} onChange={(e) => { setTamC90(Number(e.target.value)); setOtimizacao(null); }}
+                  style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 13, fontFamily: "inherit", width: 110 }} />
+              </div>
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 5 }}>MONTANTE C 140 (mm/pç)</div>
+                <input type="number" value={tamC140} min={100} max={tamBarra} onChange={(e) => { setTamC140(Number(e.target.value)); setOtimizacao(null); }}
+                  style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 13, fontFamily: "inherit", width: 110 }} />
+              </div>
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 5 }}>OBRA (origem dos retalhos)</div>
+                <select value={obraId} onChange={(e) => setObraId(e.target.value)}
+                  style={{ padding: "8px 12px", borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 13, fontFamily: "inherit", background: "#fff", maxWidth: 200 }}>
+                  <option value="">Sem vínculo</option>
+                  {obras.map((o) => <option key={o.id} value={o.id}>{o.nome}</option>)}
+                </select>
+              </div>
               <button onClick={calcularOtimizacao} style={{
                 padding: "9px 22px", background: C.red, color: "#fff", border: "none",
                 borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
               }}>🔧 Calcular</button>
             </div>
+
+            {/* Banco de Retalhos disponíveis */}
+            {retalhos.length > 0 && (
+              <div style={{ padding: "12px 20px", borderBottom: `1px solid ${C.border}`, background: "#f0faf4" }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: C.success, letterSpacing: 1, marginBottom: 8, textTransform: "uppercase" }}>
+                  📦 Banco de Retalhos — {retalhos.length} peça{retalhos.length !== 1 ? "s" : ""} disponível{retalhos.length !== 1 ? "is" : ""}
+                </div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                  {retalhos.map((r) => (
+                    <div key={r.id} style={{
+                      display: "flex", alignItems: "center", gap: 8,
+                      padding: "5px 10px", background: "#fff", border: `1px solid ${C.success}44`,
+                      borderRadius: 8, fontSize: 12,
+                    }}>
+                      <span style={{ fontWeight: 700, color: C.success }}>{fmtMm(r.comprimento_mm)}</span>
+                      <span style={{ color: C.muted }}>{r.tipo_perfil}</span>
+                      {r.obras?.nome && <span style={{ fontSize: 10, color: C.muted }}>· {r.obras.nome}</span>}
+                      <button onClick={() => handleUsarRetalho(r.id)} style={{
+                        padding: "2px 8px", background: C.success, color: "#fff",
+                        border: "none", borderRadius: 5, fontSize: 10, fontWeight: 700,
+                        cursor: "pointer", fontFamily: "inherit",
+                      }}>Usar</button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Resultados — cards mobile-first */}
             {otimizacao && (
@@ -387,6 +474,8 @@ export default function Calculadora() {
                   const sobraTotal  = prof.barras.reduce((s, b) => s + b.sobra, 0);
                   const numCortadas = prof.barras.filter((b) => cortadas[`${prof.nome}_${b.id}`]).length;
                   const corApr      = prof.apr >= 90 ? C.success : prof.apr >= 75 ? "#d97706" : C.danger;
+                  const barrasReais = Number(desvioReal[prof.nome] || 0);
+                  const desvio      = barrasReais > 0 ? ((barrasReais - prof.barras.length) / prof.barras.length) * 100 : null;
                   return (
                     <div key={prof.nome} style={{ marginBottom: 28 }}>
 
@@ -407,6 +496,22 @@ export default function Calculadora() {
                         </div>
                       </div>
 
+                      {/* Retalhos aproveitados */}
+                      {prof.cobertas > 0 && (
+                        <div style={{
+                          padding: "7px 14px", background: "#f0faf4",
+                          borderLeft: "1px solid #ddd", borderRight: "1px solid #ddd",
+                          fontSize: 11, fontWeight: 700, color: C.success,
+                        }}>
+                          📦 {prof.cobertas} peça{prof.cobertas !== 1 ? "s" : ""} coberta{prof.cobertas !== 1 ? "s" : ""} por retalhos
+                          &nbsp;·&nbsp;
+                          <span style={{ fontWeight: 400, color: "#555" }}>
+                            {prof.barras.length} barra{prof.barras.length !== 1 ? "s" : ""} novas necessárias
+                            (de {prof.qtdTotal} peças, {prof.cobertas} do estoque)
+                          </span>
+                        </div>
+                      )}
+
                       {/* Barra de progresso das cortadas */}
                       <div style={{
                         height: 6, background: "#e5e5e5",
@@ -415,7 +520,7 @@ export default function Calculadora() {
                       }}>
                         <div style={{
                           height: "100%", background: C.success,
-                          width: `${(numCortadas / prof.barras.length) * 100}%`,
+                          width: prof.barras.length ? `${(numCortadas / prof.barras.length) * 100}%` : "100%",
                           transition: "width .3s ease",
                         }} />
                       </div>
@@ -427,10 +532,39 @@ export default function Calculadora() {
                         fontSize: 11, color: C.muted, display: "flex", justifyContent: "space-between",
                       }}>
                         <span>{numCortadas} de {prof.barras.length} cortadas</span>
-                        {numCortadas === prof.barras.length && (
+                        {numCortadas === prof.barras.length && prof.barras.length > 0 && (
                           <span style={{ fontWeight: 700, color: C.success }}>✅ Concluído!</span>
                         )}
                       </div>
+
+                      {/* Alerta de Desvio */}
+                      {numCortadas === prof.barras.length && prof.barras.length > 0 && (
+                        <div style={{ padding: "10px 14px", borderLeft: "1px solid #ddd", borderRight: "1px solid #ddd", background: desvio !== null && desvio >= 15 ? "#fff1f1" : "#fff" }}>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, marginBottom: 6 }}>
+                            ⚠️ ALERTA DE DESVIO — barras efetivamente usadas na obra:
+                          </div>
+                          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                            <input
+                              type="number" min={0} placeholder={`Previsto: ${prof.barras.length}`}
+                              value={desvioReal[prof.nome] || ""}
+                              onChange={(e) => setDesvioReal((d) => ({ ...d, [prof.nome]: e.target.value }))}
+                              style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${desvio !== null && desvio >= 15 ? C.danger : C.border}`, fontSize: 14, fontWeight: 700, width: 100, fontFamily: "inherit" }}
+                            />
+                            <span style={{ fontSize: 12, color: C.muted }}>barras reais</span>
+                            {desvio !== null && (
+                              <div style={{
+                                flex: 1, padding: "7px 12px", borderRadius: 8, fontSize: 12, fontWeight: 700,
+                                background: desvio >= 15 ? C.danger + "15" : desvio >= 5 ? "#fef3c7" : C.success + "15",
+                                color:      desvio >= 15 ? C.danger        : desvio >= 5 ? "#92400e"   : C.success,
+                                borderLeft: `3px solid ${desvio >= 15 ? C.danger : desvio >= 5 ? "#d97706" : C.success}`,
+                              }}>
+                                {desvio > 0 ? `▲ +${desvio.toFixed(1)}% acima do planejado` : desvio < 0 ? `▼ ${Math.abs(desvio).toFixed(1)}% abaixo (ótimo!)` : "✅ Sem desvio"}
+                                {desvio >= 15 && <div style={{ fontSize: 11, fontWeight: 400, marginTop: 3 }}>Investigar: erro de medição, retrabalho ou furto de material?</div>}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
 
                       {/* Cards de barra */}
                       <div style={{ border: "1px solid #ddd", borderTop: "none", borderRadius: "0 0 10px 10px", overflow: "hidden" }}>
@@ -512,6 +646,23 @@ export default function Calculadora() {
                               }}>
                                 {isCortada ? "✅ Cortada — toque para desfazer" : "Marcar como Cortada"}
                               </button>
+
+                              {/* Registrar retalho de sobra */}
+                              {isCortada && b.sobra >= 400 && (
+                                <button
+                                  onClick={() => handleRegistrarRetalho(b, prof.tipoLabel)}
+                                  disabled={salvandoRet === key}
+                                  style={{
+                                    marginTop: 6, width: "100%", padding: "9px 0",
+                                    background: "transparent",
+                                    border: `1px dashed ${C.success}`,
+                                    borderRadius: 8, cursor: salvandoRet === key ? "default" : "pointer",
+                                    fontFamily: "inherit", fontSize: 12, fontWeight: 700,
+                                    color: C.success, opacity: salvandoRet === key ? 0.6 : 1,
+                                  }}>
+                                  {salvandoRet === key ? "Salvando…" : `📦 Registrar retalho de ${fmtMm(b.sobra)} no banco`}
+                                </button>
+                              )}
                             </div>
                           );
                         })}
