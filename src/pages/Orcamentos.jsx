@@ -1067,7 +1067,7 @@ export default function Orcamentos() {
                     // Find or create cliente from lead
                     let clienteId = p.cliente_id;
                     if (!clienteId) {
-                      const existing = clientes.find((c) => c.contato === p.contato || c.nome === p.nome_cliente);
+                      const existing = clientes.find((c) => c.contato === p.contato || c.nome === p.nome);
                       clienteId = existing?.id || clientes[0]?.id || "";
                     }
                     // Pre-fill new orçamento with lead data
