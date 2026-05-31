@@ -3,6 +3,9 @@ import { CUB_ESTADOS, PADROES_SF, SISTEMAS_SF } from "../utils/insumosSF";
 import { C } from "../utils/constants";
 import useAppStore from "../store/useAppStore";
 import { listarPrecosVivos } from "../services/repositories/precosRepository";
+import { criarOrcamento } from "../services/repositories/orcamentoRepository";
+
+const LS_KEY = "sf_orcamento_tecnico_v1";
 
 const fmtBRL = (v) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 const fmtN   = (v, d = 2) => Number(v).toLocaleString("pt-BR", { minimumFractionDigits: d, maximumFractionDigits: d });
@@ -152,31 +155,49 @@ function SistemaRow({ s, aberto, toggle }) {
 export default function OrcamentoTecnico() {
   const setActivePage = useAppStore((s) => s.setActivePage);
 
-  const [estado, setEstado]         = useState("SP");
-  const [cubManual, setCubManual]   = useState("");
-  const [area, setArea]             = useState("");
-  const [areaMolhada, setAreaMolhada] = useState("");
-  const [pavimentos, setPavimentos] = useState("1");
-  const [padrao, setPadrao]         = useState("Padrão");
-  const [incluiMO, setIncluiMO]     = useState(true);
+  // ── Restaura form do localStorage ──────────────────────────────────────────
+  const savedForm = (() => { try { return JSON.parse(localStorage.getItem(LS_KEY) || "{}"); } catch { return {}; } })();
+
+  const [estado, setEstado]         = useState(savedForm.estado     ?? "SP");
+  const [cubManual, setCubManual]   = useState(savedForm.cubManual  ?? "");
+  const [area, setArea]             = useState(savedForm.area       ?? "");
+  const [areaMolhada, setAreaMolhada] = useState(savedForm.areaMolhada ?? "");
+  const [pavimentos, setPavimentos] = useState(savedForm.pavimentos ?? "1");
+  const [padrao, setPadrao]         = useState(savedForm.padrao     ?? "Padrão");
+  const [incluiMO, setIncluiMO]     = useState(savedForm.incluiMO  ?? true);
   const [abertos, setAbertos]       = useState({});
   const [resultado, setResultado]   = useState(null);
   const [toast, setToast]           = useState(null);
+  const [modalSalvar, setModalSalvar] = useState(false);
+  const [formSalvar, setFormSalvar]   = useState({ cliente: "", validade_dias: 30, observacoes: "" });
+  const [salvando, setSalvando]       = useState(false);
 
   const [selecoes, setSelecoes] = useState(() => {
+    const saved = savedForm.selecoes || {};
     const d = {};
-    SISTEMAS_SF.forEach((s) => { if (s.opcoes) d[s.id] = s.opcoes[0].id; });
+    SISTEMAS_SF.forEach((s) => { if (s.opcoes) d[s.id] = saved[s.id] || s.opcoes[0].id; });
     return d;
   });
 
   const [habilitados, setHabilitados] = useState(() => {
+    const saved = savedForm.habilitados || {};
     const d = {};
     SISTEMAS_SF.forEach((s) => {
-      d[s.id] = s.obrigatorio ||
+      if (s.id in saved) d[s.id] = saved[s.id];
+      else d[s.id] = s.obrigatorio ||
         ["impermeabilizacao","eletrica","hidraulica","esquadrias","revestimentos"].includes(s.id);
     });
     return d;
   });
+
+  // Persiste form no localStorage sempre que mudar
+  useEffect(() => {
+    try {
+      localStorage.setItem(LS_KEY, JSON.stringify({
+        estado, cubManual, area, areaMolhada, pavimentos, padrao, incluiMO, selecoes, habilitados,
+      }));
+    } catch { /* storage cheia */ }
+  }, [estado, cubManual, area, areaMolhada, pavimentos, padrao, incluiMO, selecoes, habilitados]);
 
   const [usarPrecosVivos, setUsarPrecosVivos] = useState(true);
   const [precosVivos, setPrecosVivos]         = useState({});
@@ -254,6 +275,55 @@ export default function OrcamentoTecnico() {
       incluiMO,
     });
     setAbertos({});
+  };
+
+  const salvarComoOrcamento = async () => {
+    if (!resultado) return;
+    setSalvando(true);
+    try {
+      const ref = `OT-${new Date().getFullYear()}-${String(Date.now()).slice(-4)}`;
+      await criarOrcamento({
+        ref,
+        cliente: formSalvar.cliente || "—",
+        area: resultado.area,
+        padrao: resultado.padrao,
+        valor: resultado.totalGeral,
+        status: "Em elaboração",
+        criado: new Date().toLocaleDateString("pt-BR"),
+        validade_dias: formSalvar.validade_dias || 30,
+        observacoes_proposta: formSalvar.observacoes || null,
+        // campos novos
+        estado: resultado.estado,
+        cub: resultado.cub,
+        area_molhada: resultado.areaMolhada,
+        inclui_mo: resultado.incluiMO,
+        total_materiais: resultado.totalMateriais,
+        total_mo: resultado.totalMO,
+        origem: "orcamento_tecnico",
+        composicao_tecnica: resultado.breakdown.map((s) => ({
+          sistema: s.label,
+          opcao: s.opcaoLabel,
+          totalMat: s.totalMat,
+          totalMO: s.totalMO,
+          itens: s.itensCalc.map((i) => ({
+            nome: i.nome, un: i.un,
+            qtd: parseFloat(i.qtd.toFixed(3)),
+            preco: i.precoUsado ?? i.preco,
+            total: parseFloat(i.total.toFixed(2)),
+            aoVivo: !!i.precoVivo,
+          })),
+        })),
+      });
+      setModalSalvar(false);
+      setToast("Orçamento salvo com sucesso!");
+      setTimeout(() => setToast(null), 3000);
+      setActivePage("orcamentos");
+    } catch (e) {
+      setToast("Erro ao salvar: " + e.message);
+      setTimeout(() => setToast(null), 4000);
+    } finally {
+      setSalvando(false);
+    }
   };
 
   const exportarExcel = async () => {
@@ -471,18 +541,17 @@ export default function OrcamentoTecnico() {
 
             {/* action buttons */}
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <button onClick={() => setModalSalvar(true)} style={{
+                padding: "9px 18px", background: C.red, color: "#fff",
+                border: "none", borderRadius: 7, fontSize: 13, fontWeight: 700, cursor: "pointer",
+              }}>
+                💾 Salvar como Orçamento
+              </button>
               <button onClick={exportarExcel} style={{
                 padding: "9px 18px", background: C.success, color: "#fff",
                 border: "none", borderRadius: 7, fontSize: 13, fontWeight: 600, cursor: "pointer",
               }}>
                 📥 Exportar Excel
-              </button>
-              <button onClick={() => setActivePage("orcamentos")} style={{
-                padding: "9px 18px", background: C.surface, color: C.text,
-                border: `1px solid ${C.border}`, borderRadius: 7, fontSize: 13,
-                fontWeight: 600, cursor: "pointer",
-              }}>
-                📋 Ir para Orçamentos
               </button>
               <button onClick={() => setResultado(null)} style={{
                 padding: "9px 18px", background: C.surface, color: C.muted,
@@ -539,6 +608,87 @@ export default function OrcamentoTecnico() {
           </div>
         )}
       </div>
+
+      {/* Modal: Salvar como Orçamento */}
+      {modalSalvar && resultado && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 500,
+          display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ background: "#fff", borderRadius: 12, width: "min(460px, 94vw)",
+            padding: 28, boxShadow: "0 8px 32px rgba(0,0,0,0.25)" }}>
+            <div style={{ fontWeight: 800, fontSize: 17, marginBottom: 4 }}>💾 Salvar como Orçamento</div>
+            <div style={{ fontSize: 12, color: C.muted, marginBottom: 20 }}>
+              {resultado.area} m² · {resultado.padrao} · {fmtBRL(resultado.totalGeral)}
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <div>
+                <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: C.graphite, marginBottom: 5 }}>
+                  Cliente / Nome do orçamento
+                </label>
+                <input
+                  type="text"
+                  placeholder="ex: João Silva — Residência 48m²"
+                  value={formSalvar.cliente}
+                  onChange={(e) => setFormSalvar((p) => ({ ...p, cliente: e.target.value }))}
+                  style={{ ...inputSt, fontSize: 14 }}
+                  autoFocus
+                />
+              </div>
+              <div>
+                <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: C.graphite, marginBottom: 5 }}>
+                  Validade (dias)
+                </label>
+                <input
+                  type="number"
+                  value={formSalvar.validade_dias}
+                  onChange={(e) => setFormSalvar((p) => ({ ...p, validade_dias: Number(e.target.value) }))}
+                  style={inputSt}
+                />
+              </div>
+              <div>
+                <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: C.graphite, marginBottom: 5 }}>
+                  Observações (opcional)
+                </label>
+                <textarea
+                  rows={3}
+                  value={formSalvar.observacoes}
+                  onChange={(e) => setFormSalvar((p) => ({ ...p, observacoes: e.target.value }))}
+                  placeholder="Condições comerciais, escopo, etc."
+                  style={{ ...inputSt, resize: "vertical" }}
+                />
+              </div>
+
+              {/* Resumo */}
+              <div style={{ background: C.dark, borderRadius: 8, padding: "12px 14px", fontSize: 12 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+                  <span style={{ color: C.muted }}>Materiais</span>
+                  <span style={{ fontWeight: 700, textAlign: "right" }}>{fmtBRL(resultado.totalMateriais)}</span>
+                  {resultado.incluiMO && <>
+                    <span style={{ color: C.muted }}>Mão de obra</span>
+                    <span style={{ fontWeight: 700, textAlign: "right", color: "#2563eb" }}>{fmtBRL(resultado.totalMO)}</span>
+                  </>}
+                  <span style={{ color: C.text, fontWeight: 700 }}>Total geral</span>
+                  <span style={{ fontWeight: 800, textAlign: "right", color: C.red, fontSize: 14 }}>{fmtBRL(resultado.totalGeral)}</span>
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 20 }}>
+              <button onClick={() => setModalSalvar(false)} style={{
+                padding: "9px 20px", background: "none", border: `1px solid ${C.border}`,
+                borderRadius: 7, cursor: "pointer", fontSize: 13,
+              }}>Cancelar</button>
+              <button onClick={salvarComoOrcamento} disabled={salvando} style={{
+                padding: "9px 24px", background: C.red, color: "#fff",
+                border: "none", borderRadius: 7, fontSize: 13, fontWeight: 700,
+                cursor: salvando ? "wait" : "pointer", opacity: salvando ? 0.7 : 1,
+              }}>
+                {salvando ? "Salvando…" : "Salvar e abrir"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* toast */}
       {toast && (
