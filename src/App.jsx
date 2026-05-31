@@ -19,7 +19,8 @@ const Financeiro  = lazy(() => import("./pages/Financeiro"));
 const Contratos   = lazy(() => import("./pages/Contratos"));
 const Historico   = lazy(() => import("./pages/Historico"));
 const PortalOnline   = lazy(() => import("./pages/PortalOnline"));
-const PropostaOnline = lazy(() => import("./pages/PropostaOnline"));
+const PropostaOnline  = lazy(() => import("./pages/PropostaOnline"));
+const ContratoOnline  = lazy(() => import("./pages/ContratoOnline"));
 const Equipe      = lazy(() => import("./pages/Equipe"));
 const Cronograma  = lazy(() => import("./pages/Cronograma"));
 const Vistorias   = lazy(() => import("./pages/Vistorias"));
@@ -88,7 +89,8 @@ export default function App() {
       <Suspense fallback={<LoadingScreen />}>
         <Routes>
           <Route path="/portal/:token"   element={<PortalOnline />} />
-          <Route path="/proposta/:token" element={<PropostaOnline />} />
+          <Route path="/proposta/:token"  element={<PropostaOnline />} />
+          <Route path="/contrato/:token" element={<ContratoOnline />} />
           <Route path="/login" element={<LoginScreen />} />
           <Route path="/*" element={
             <RequireAuth>
