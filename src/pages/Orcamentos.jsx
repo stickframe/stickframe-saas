@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { sb, getEmpresaId } from "../services/supabase";
 import { LOGO_STICKFRAME } from "../utils/cdn";
 import { useToast } from "../hooks/useToast";
 import { printHtml } from "../utils/printHtml";
@@ -675,10 +676,23 @@ export default function Orcamentos() {
   const [form,         setForm]         = useState({ ...FORM_VAZIO, cliente_id: clientes[0]?.id || "" });
   const [converterOrc, setConverterOrc] = useState(null);
   const [calculadora,  setCalculadora]  = useState(false);
+  const [preOrcamentos, setPreOrcamentos] = useState([]);
   const [estimativo, setEstimativoRaw] = useState(() => {
     try { return JSON.parse(localStorage.getItem("sf_estimativo") || "null"); } catch { return null; }
   });
   const [estimativoAberto, setEstimativoAberto] = useState(false);
+
+  // Carrega pré-orçamentos novos
+  useEffect(() => {
+    const empId = getEmpresaId();
+    if (!empId) return;
+    sb.from("pre_orcamentos")
+      .select("*")
+      .eq("empresa_id", empId)
+      .eq("status", "Novo")
+      .order("created_at", { ascending: false })
+      .then(({ data }) => setPreOrcamentos(data || []));
+  }, []);
 
   // Detecta estimativo vindo da Calculadora SF (navega para esta página e escreve em localStorage)
   useEffect(() => {
@@ -1005,6 +1019,49 @@ export default function Orcamentos() {
             <Btn onClick={abrirNovo}>+ Novo orçamento</Btn>
           </div>
         </div>
+
+        {/* Pré-orçamentos da calculadora */}
+        {preOrcamentos.length > 0 && (
+          <div style={{ background: "#2e9e5b11", border: "1px solid #2e9e5b44", borderRadius: 12, padding: "16px 20px", marginBottom: 20 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 800, color: "#2e9e5b" }}>🔔 {preOrcamentos.length} pré-orçamento(s) novo(s)</div>
+                <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>Leads da calculadora aguardando sua análise</div>
+              </div>
+            </div>
+            {preOrcamentos.map((p) => (
+              <div key={p.id} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 8, padding: "12px 16px", marginBottom: 8, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700 }}>{p.nome}</div>
+                  <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>
+                    {p.area}m² · {p.padrao} · {p.pavimentos} · {p.cidade || "—"}
+                  </div>
+                  <div style={{ fontSize: 11, color: "#2e9e5b", marginTop: 2, fontWeight: 700 }}>
+                    R$ {Number(p.valor_min).toLocaleString("pt-BR")} – R$ {Number(p.valor_max).toLocaleString("pt-BR")}
+                  </div>
+                  <div style={{ fontSize: 10, color: C.muted, marginTop: 2 }}>
+                    {new Date(p.created_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })} · {p.contato}
+                  </div>
+                </div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button onClick={async () => {
+                    await sb.from("pre_orcamentos").update({ status: "Analisado" }).eq("id", p.id);
+                    setPreOrcamentos((prev) => prev.filter((x) => x.id !== p.id));
+                  }} style={{ background: "#2e9e5b22", border: "1px solid #2e9e5b44", borderRadius: 6, color: "#2e9e5b", fontSize: 11, fontWeight: 700, padding: "6px 12px", cursor: "pointer", fontFamily: "inherit" }}>
+                    ✓ Analisar
+                  </button>
+                  <button onClick={() => {
+                    const num = (p.contato || "").replace(/\D/g, "");
+                    const msg = `Olá ${p.nome}! 👋\n\nRecebi sua simulação de Steel Frame (${p.area}m² · ${p.padrao}).\n\nVou preparar uma proposta detalhada para você. Posso entrar em contato agora?\n\nStick Frame · Santo André/SP`;
+                    window.open(`https://wa.me/${num.startsWith("55") ? num : "55" + num}?text=${encodeURIComponent(msg)}`, "_blank");
+                  }} style={{ background: "#25D36622", border: "1px solid #25D36644", borderRadius: 6, color: "#25D366", fontSize: 11, fontWeight: 700, padding: "6px 12px", cursor: "pointer", fontFamily: "inherit" }}>
+                    📲 WhatsApp
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Estimativo aplicado */}
         {estimativo && (

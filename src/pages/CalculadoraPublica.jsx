@@ -80,6 +80,7 @@ export default function CalculadoraPublica() {
     setSendError("");
     setSending(true);
     try {
+      const sfValor = area * PAVIMENTOS[pavimentos] * STEEL_FRAME[padrao];
       const { error } = await sb.rpc("captar_lead_publico", {
         p_nome: nome,
         p_contato: whatsapp,
@@ -88,8 +89,22 @@ export default function CalculadoraPublica() {
         p_padrao: padrao,
         p_valor_estimado: sfMidValue,
         p_origem: "Calculadora",
+        p_pavimentos: pavimentos,
+        p_valor_min: Math.round(sfValor * 0.92),
+        p_valor_max: Math.round(sfValor * 1.12),
       });
       if (error) throw error;
+
+      // Open WhatsApp notification to empresa owner
+      try {
+        const msg = `🔔 *Novo lead via Calculadora!*\n\n👤 *${nome}*\n📱 ${whatsapp}\n📍 ${cidade || "—"}\n\n🏗️ *Projeto:*\n• Área: ${area}m² · ${pavimentos}\n• Padrão: ${padrao}\n• Estimativa: R$ ${Math.round(sfValor * 0.92).toLocaleString("pt-BR")} – R$ ${Math.round(sfValor * 1.12).toLocaleString("pt-BR")}\n\nAcesse o sistema para responder: https://stickframe.com.br`;
+        const { data: waNum } = await sb.rpc("get_empresa_whatsapp_alertas");
+        const numLimpo = (waNum || "").replace(/\D/g, "");
+        if (numLimpo) {
+          window.open(`https://wa.me/${numLimpo.startsWith("55") ? numLimpo : "55" + numLimpo}?text=${encodeURIComponent(msg)}`, "_blank");
+        }
+      } catch (_) { /* WhatsApp notification is non-critical */ }
+
       setStep("success");
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {
