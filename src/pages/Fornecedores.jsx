@@ -7,7 +7,7 @@ import { useToast } from "../hooks/useToast";
 import { listarTodasCotacoes } from "../services/repositories/fornecedoresRepository";
 import {
   listarMonitorados, adicionarMonitor, atualizarPrecoMonitor,
-  removerMonitor, scrapePreco,
+  removerMonitor, scrapePreco, listarHistoricoPreco,
 } from "../services/repositories/precosRepository";
 import { SISTEMAS_SF } from "../utils/insumosSF";
 import Btn from "../components/ui/Btn";
@@ -24,6 +24,73 @@ const TODOS_INSUMOS = SISTEMAS_SF.flatMap((s) => {
 const fmtBRL = (v) => v?.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) ?? "—";
 const fmtData = (d) => d ? new Date(d).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" }) : "—";
 
+// ─── Gráfico de histórico de preço ───────────────────────────────────────────
+function GraficoHistorico({ monitorId, nome }) {
+  const [hist, setHist] = useState(null);
+  useEffect(() => {
+    listarHistoricoPreco(monitorId, 90)
+      .then(setHist)
+      .catch(() => setHist([]));
+  }, [monitorId]);
+
+  if (hist === null) return <div style={{ padding: "12px 0", color: C.muted, fontSize: 12 }}>Carregando…</div>;
+  if (hist.length === 0) return (
+    <div style={{ padding: "12px 0", color: C.muted, fontSize: 12, textAlign: "center" }}>
+      Sem histórico ainda — o gráfico será preenchido a cada atualização diária automática.
+    </div>
+  );
+
+  const precos = hist.map((h) => Number(h.preco));
+  const datas  = hist.map((h) => h.data_captura);
+  const min = Math.min(...precos);
+  const max = Math.max(...precos);
+  const range = max - min || 1;
+  const W = 100, H = 60;
+  const pts = precos.map((p, i) => {
+    const x = precos.length === 1 ? W / 2 : (i / (precos.length - 1)) * W;
+    const y = H - ((p - min) / range) * (H * 0.8) - H * 0.1;
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  });
+  const area = `M ${pts.join(" L ")} L ${W},${H} L 0,${H} Z`;
+  const varPct = precos.length > 1 ? ((precos[precos.length - 1] - precos[0]) / precos[0]) * 100 : 0;
+  const cor = varPct > 0 ? "#dc2626" : varPct < 0 ? "#16a34a" : C.muted;
+
+  return (
+    <div style={{ padding: "14px 0" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+        <div style={{ fontSize: 11, color: C.muted }}>
+          {hist.length} registros · {datas[0]} → {datas[datas.length - 1]}
+        </div>
+        <div style={{ display: "flex", gap: 16, fontSize: 12 }}>
+          <span style={{ color: C.muted }}>Mín: <strong>{fmtBRL(min)}</strong></span>
+          <span style={{ color: C.muted }}>Máx: <strong>{fmtBRL(max)}</strong></span>
+          <span style={{ color: cor, fontWeight: 700 }}>{varPct > 0 ? "▲" : varPct < 0 ? "▼" : "—"} {Math.abs(varPct).toFixed(1)}% no período</span>
+        </div>
+      </div>
+      <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: 80, display: "block" }} preserveAspectRatio="none">
+        <defs>
+          <linearGradient id={`hg-${monitorId}`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={cor} stopOpacity=".25" />
+            <stop offset="100%" stopColor={cor} stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        <path d={area} fill={`url(#hg-${monitorId})`} />
+        <polyline points={pts.join(" ")} fill="none" stroke={cor} strokeWidth="1.5" strokeLinejoin="round" />
+        {precos.map((p, i) => {
+          const x = precos.length === 1 ? W / 2 : (i / (precos.length - 1)) * W;
+          const y = H - ((p - min) / range) * (H * 0.8) - H * 0.1;
+          return <circle key={i} cx={x.toFixed(1)} cy={y.toFixed(1)} r="1.8" fill={cor} />;
+        })}
+      </svg>
+      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 9, color: C.muted, marginTop: 2 }}>
+        {hist.length <= 8 ? datas.map((d, i) => <span key={i}>{d.slice(5)}</span>) : (
+          [datas[0], datas[Math.floor(datas.length / 2)], datas[datas.length - 1]].map((d, i) => <span key={i}>{d.slice(5)}</span>)
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── Monitor de Preços de Mercado ────────────────────────────────────────────
 function MonitorPrecos() {
   const [itens, setItens]     = useState([]);
@@ -35,6 +102,7 @@ function MonitorPrecos() {
   const [form, setForm]       = useState({ nome_produto: "", url: "", insumo_ref: "" });
   const [salvando, setSalvando] = useState(false);
   const [toast, setToast]     = useState(null);
+  const [grafItem, setGrafItem] = useState(null);
   const urlRef = useRef();
 
   const load = () => {
@@ -186,7 +254,7 @@ function MonitorPrecos() {
               </tr>
             </thead>
             <tbody>
-              {itens.map((item, i) => (
+              {itens.map((item, i) => (<>
                 <tr key={item.id} style={{ borderTop: `1px solid ${C.border}`, background: i % 2 ? "#fafafa" : "#fff" }}>
                   <td style={{ ...tdSt, maxWidth: 220 }}>
                     <div style={{ fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
@@ -225,6 +293,13 @@ function MonitorPrecos() {
                   <td style={{ ...tdSt, textAlign: "center" }}>
                     <div style={{ display: "flex", gap: 6, justifyContent: "center" }}>
                       <button
+                        onClick={() => setGrafItem(grafItem === item.id ? null : item.id)}
+                        title="Ver histórico de preço"
+                        style={{ padding: "4px 8px", fontSize: 13, background: grafItem === item.id ? "#eff6ff" : "none", border: `1px solid ${grafItem === item.id ? "#93c5fd" : C.border}`, borderRadius: 5, cursor: "pointer" }}
+                      >
+                        📊
+                      </button>
+                      <button
                         onClick={() => sincronizar(item)}
                         disabled={syncing[item.id]}
                         title="Sincronizar preço agora"
@@ -242,7 +317,14 @@ function MonitorPrecos() {
                     </div>
                   </td>
                 </tr>
-              ))}
+                {grafItem === item.id && (
+                  <tr key={`graf-${item.id}`} style={{ background: "#f8faff" }}>
+                    <td colSpan={7} style={{ padding: "0 20px 10px" }}>
+                      <GraficoHistorico monitorId={item.id} nome={item.nome_produto} />
+                    </td>
+                  </tr>
+                )}
+              </>))}
             </tbody>
           </table>
         </div>

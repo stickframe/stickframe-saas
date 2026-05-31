@@ -52,6 +52,20 @@ export async function listarPrecosVivos() {
   return map;
 }
 
+// Histórico de preço de um produto (últimos N dias)
+export async function listarHistoricoPreco(monitorId, dias = 60) {
+  const desde = new Date();
+  desde.setDate(desde.getDate() - dias);
+  const { data, error } = await sb
+    .from("historico_precos")
+    .select("preco, data_captura")
+    .eq("monitor_id", monitorId)
+    .gte("data_captura", desde.toISOString().split("T")[0])
+    .order("data_captura", { ascending: true });
+  if (error) throw error;
+  return data || [];
+}
+
 // Chama a Edge Function de scraping
 export async function scrapePreco(url) {
   const { data, error } = await sb.functions.invoke("scrape-preco", { body: { url } });
