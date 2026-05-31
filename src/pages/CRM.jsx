@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback, memo } from "react";
+const CRM_LEAD_KEY = "sf_crm_lead";
 import { C } from "../utils/constants";
 import { fmt } from "../utils/format";
 import { enviarWhatsApp, msgCliente } from "../services/whatsappService";
@@ -285,6 +286,12 @@ export default function CRM() {
   const clientes       = useAppStore((s) => s.clientes);
   const addCliente     = useAppStore((s) => s.addCliente);
   const updateCliente  = useAppStore((s) => s.updateCliente);
+  const setActivePage  = useAppStore((s) => s.setActivePage);
+
+  function abrirOrcamentoTecnico(c) {
+    localStorage.setItem(CRM_LEAD_KEY, JSON.stringify({ id: c.id, nome: c.nome, area: c.unidades ? null : null }));
+    setActivePage("orcamento_tecnico");
+  }
   const deleteCliente  = useAppStore((s) => s.deleteCliente);
   const importClientes = useAppStore((s) => s.importClientes);
 
@@ -809,7 +816,19 @@ export default function CRM() {
               )}
             </div>
 
-            <div style={{ display: "flex", gap: 8, marginTop: 18 }}>
+            <button
+              onClick={() => abrirOrcamentoTecnico(cliente)}
+              style={{
+                marginTop: 16, width: "100%", padding: "10px 0",
+                background: C.red, border: "none",
+                borderRadius: 7, color: "#fff", fontSize: 13,
+                fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
+              }}
+            >
+              🔩 Gerar Orçamento Técnico
+            </button>
+
+            <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
               <Btn variant="ghost" size="sm" onClick={() => abrirEditar(cliente)} fullWidth>✏️ Editar</Btn>
               <button onClick={() => setConfirm(true)} style={{
                 flex: 1, padding: "7px 0",

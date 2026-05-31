@@ -161,8 +161,11 @@ function SistemaRow({ s, aberto, toggle, precosEditados, onPrecoEdit }) {
 }
 
 // ─── main component ───────────────────────────────────────────────────────────
+const CRM_LEAD_KEY = "sf_crm_lead";
+
 export default function OrcamentoTecnico() {
-  const setActivePage = useAppStore((s) => s.setActivePage);
+  const setActivePage  = useAppStore((s) => s.setActivePage);
+  const updateCliente  = useAppStore((s) => s.updateCliente);
 
   // ── Restaura form do localStorage ──────────────────────────────────────────
   const savedForm = (() => { try { return JSON.parse(localStorage.getItem(LS_KEY) || "{}"); } catch { return {}; } })();
@@ -227,6 +230,21 @@ export default function OrcamentoTecnico() {
       .then(setPrecosVivos)
       .catch(() => {})
       .finally(() => setLoadingPrecos(false));
+  }, []);
+
+  // Lê contexto do CRM (lead selecionado) e pré-preenche
+  const [crmLead, setCrmLead] = useState(null);
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(CRM_LEAD_KEY);
+      if (raw) {
+        const lead = JSON.parse(raw);
+        setCrmLead(lead);
+        setFormSalvar((f) => ({ ...f, cliente: lead.nome || f.cliente }));
+        localStorage.removeItem(CRM_LEAD_KEY);
+      }
+    } catch { /* ignore */ }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const cubEfetivo = parseN(cubManual) || CUB_ESTADOS[estado]?.cub || 2340;
@@ -527,8 +545,13 @@ export default function OrcamentoTecnico() {
           })),
         })),
       });
+      // Atualiza status do lead no CRM se veio de lá
+      if (crmLead?.id) {
+        try { await updateCliente(crmLead.id, { status: "Proposta enviada" }); } catch { /* non-fatal */ }
+        setCrmLead(null);
+      }
       setModalSalvar(false);
-      mostrarToast("Orçamento salvo com sucesso!");
+      mostrarToast("Orçamento salvo! Cliente atualizado no CRM.");
       setActivePage("orcamentos");
     } catch (e) {
       mostrarToast("Erro ao salvar: " + e.message);
@@ -1088,6 +1111,17 @@ export default function OrcamentoTecnico() {
             Composição completa de insumos Steel Frame — preços regionais via CUB
           </p>
         </div>
+
+        {crmLead && (
+          <div style={{ background: "#b91c1c15", border: "1px solid #b91c1c44", borderRadius: 8, padding: "10px 14px", display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ fontSize: 18 }}>🔗</span>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 11, color: C.red, fontWeight: 700 }}>VIA CRM</div>
+              <div style={{ fontSize: 13, fontWeight: 700 }}>{crmLead.nome}</div>
+            </div>
+            <button onClick={() => setCrmLead(null)} style={{ background: "none", border: "none", color: C.muted, cursor: "pointer", fontSize: 16 }}>×</button>
+          </div>
+        )}
 
         {/* Localização */}
         <Card title="📍 Localização e CUB">
