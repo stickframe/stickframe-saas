@@ -347,6 +347,23 @@ ${obrasAndamento.length > 0 ? `
     color: C.red,
   })).filter((d) => d.value > 0);
 
+  // ── Rentabilidade por obra ────────────────────────────────────────────────
+  const rentabilidade = obras
+    .filter((o) => o.contrato > 0)
+    .map((o) => {
+      const fin  = financeiro[o.id] || { lancamentos: [] };
+      const rec  = fin.lancamentos.filter((l) => l.tipo === "receita").reduce((a, l) => a + (l.valor || 0), 0);
+      const desp = fin.lancamentos.filter((l) => l.tipo === "despesa").reduce((a, l) => a + (l.valor || 0), 0);
+      const saldoObra   = rec - desp;
+      const margemReal  = rec > 0 ? (saldoObra / rec) * 100 : 0;
+      const pctRecebido = o.contrato > 0 ? (rec / o.contrato) * 100 : 0;
+      const gapPagamento = (o.progresso || 0) - pctRecebido;
+      return { ...o, rec, desp, saldoObra, margemReal, pctRecebido, gapPagamento };
+    })
+    .sort((a, b) => a.margemReal - b.margemReal);
+
+  const inadimplentes = rentabilidade.filter((o) => o.gapPagamento > 25 && o.status !== "Concluída");
+
   return (
     <div>
       {/* Header */}
@@ -559,6 +576,105 @@ ${obrasAndamento.length > 0 ? `
           )}
         </div>
       </div>
+
+      {/* Alerta de Inadimplência */}
+      {inadimplentes.length > 0 && (
+        <div style={{ background: "#fff5f5", border: "1px solid #fca5a5", borderRadius: 12, padding: 20 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+            <span style={{ fontSize: 18 }}>⚠️</span>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 800, color: "#991b1b" }}>
+                Atenção: {inadimplentes.length} obra{inadimplentes.length > 1 ? "s" : ""} com pagamento atrasado em relação ao progresso
+              </div>
+              <div style={{ fontSize: 11, color: "#b91c1c", marginTop: 2 }}>
+                Progresso da obra supera % recebido em mais de 25 pontos
+              </div>
+            </div>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {inadimplentes.map((o) => (
+              <div key={o.id} style={{ background: "#fff", border: "1px solid #fca5a5", borderRadius: 8, padding: "12px 16px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 700 }}>{o.nome}</div>
+                    <div style={{ fontSize: 11, color: "#888", marginTop: 2 }}>{o.fase} · {o.status}</div>
+                  </div>
+                  <span style={{ background: "#fee2e2", color: "#991b1b", borderRadius: 6, fontSize: 11, fontWeight: 700, padding: "3px 10px" }}>
+                    +{o.gapPagamento.toFixed(0)}% gap
+                  </span>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, fontSize: 11 }}>
+                  <div>
+                    <div style={{ color: "#888", marginBottom: 2 }}>Progresso</div>
+                    <div style={{ fontWeight: 700, color: "#1a1a1a" }}>{o.progresso || 0}%</div>
+                  </div>
+                  <div>
+                    <div style={{ color: "#888", marginBottom: 2 }}>% Pago</div>
+                    <div style={{ fontWeight: 700, color: "#991b1b" }}>{o.pctRecebido.toFixed(0)}%</div>
+                  </div>
+                  <div>
+                    <div style={{ color: "#888", marginBottom: 2 }}>Recebido</div>
+                    <div style={{ fontWeight: 700, color: "#2e9e5b" }}>{fmt(o.rec)}</div>
+                  </div>
+                </div>
+                <div style={{ marginTop: 8 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: "#888", marginBottom: 3 }}>
+                    <span>Pago</span><span style={{ color: "#991b1b" }}>Progresso {o.progresso}% / Pago {o.pctRecebido.toFixed(0)}%</span>
+                  </div>
+                  <div style={{ position: "relative", height: 8, background: "#fee2e2", borderRadius: 4, overflow: "visible" }}>
+                    <div style={{ height: 8, width: `${Math.min(o.pctRecebido, 100)}%`, background: "#2e9e5b", borderRadius: 4 }} />
+                    <div style={{ position: "absolute", top: 0, left: `${Math.min(o.progresso, 100)}%`, height: 8, width: 2, background: "#991b1b", transform: "translateX(-1px)" }} title={`Progresso: ${o.progresso}%`} />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Rentabilidade por obra */}
+      {rentabilidade.length > 0 && (
+        <div style={{ background: C.surface, borderRadius: 12, padding: 20, border: `1px solid ${C.border}` }}>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 16 }}>RENTABILIDADE POR OBRA</div>
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+              <thead>
+                <tr style={{ background: C.darker }}>
+                  {["Obra", "Contrato", "Receita", "Despesa", "Saldo", "Margem", "% Pago", "Situação"].map((h) => (
+                    <th key={h} style={{ padding: "8px 12px", textAlign: h === "Obra" ? "left" : "right", fontWeight: 700, fontSize: 11, color: C.muted, whiteSpace: "nowrap" }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {rentabilidade.map((o, i) => {
+                  const margemColor = o.margemReal >= 20 ? C.success : o.margemReal >= 10 ? C.warning : C.danger;
+                  const situacao = o.gapPagamento > 25 ? { label: "⚠ Atrasado", color: "#991b1b", bg: "#fee2e2" }
+                    : o.margemReal < 0 ? { label: "📉 Negativo", color: C.danger, bg: "#fff0f0" }
+                    : o.margemReal >= 20 ? { label: "✓ Saudável", color: C.success, bg: "#f0fff4" }
+                    : { label: "⚡ Atenção", color: C.warning, bg: "#fffbeb" };
+                  return (
+                    <tr key={o.id} style={{ borderBottom: `1px solid ${C.border}`, background: i % 2 ? C.darker : "transparent" }}>
+                      <td style={{ padding: "10px 12px", fontWeight: 600, maxWidth: 180 }}>
+                        <div style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{o.nome?.split("—")[0]?.trim()}</div>
+                        <div style={{ fontSize: 10, color: C.muted, marginTop: 1 }}>{o.fase}</div>
+                      </td>
+                      <td style={{ padding: "10px 12px", textAlign: "right" }}>{fmt(o.contrato)}</td>
+                      <td style={{ padding: "10px 12px", textAlign: "right", color: C.success, fontWeight: 600 }}>{fmt(o.rec)}</td>
+                      <td style={{ padding: "10px 12px", textAlign: "right", color: C.danger }}>{fmt(o.desp)}</td>
+                      <td style={{ padding: "10px 12px", textAlign: "right", fontWeight: 700, color: o.saldoObra >= 0 ? C.success : C.danger }}>{fmt(o.saldoObra)}</td>
+                      <td style={{ padding: "10px 12px", textAlign: "right", fontWeight: 800, color: margemColor }}>{o.margemReal.toFixed(1)}%</td>
+                      <td style={{ padding: "10px 12px", textAlign: "right" }}>{o.pctRecebido.toFixed(0)}%</td>
+                      <td style={{ padding: "10px 12px", textAlign: "right" }}>
+                        <span style={{ background: situacao.bg, color: situacao.color, borderRadius: 6, padding: "2px 8px", fontSize: 10, fontWeight: 700 }}>{situacao.label}</span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* Progresso das obras */}
       <div style={{ background: C.surface, borderRadius: 12, padding: 20, border: `1px solid ${C.border}` }}>
