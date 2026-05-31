@@ -667,6 +667,7 @@ export default function Orcamentos() {
   const updateOrcamento = useAppStore((s) => s.updateOrcamento);
   const deleteOrcamento = useAppStore((s) => s.deleteOrcamento);
   const addObra         = useAppStore((s) => s.addObra);
+  const addLancamento   = useAppStore((s) => s.addLancamento);
   const setActivePage   = useAppStore((s) => s.setActivePage);
 
   const [modal,        setModal]        = useState(false);
@@ -841,6 +842,24 @@ export default function Orcamentos() {
     }
 
     updateOrcamento(o.id, { status: "Aprovado" });
+
+    // Auto-generate financial installments: 30% entrada / 40% meio / 30% entrega
+    if (obra?.id && o.valor > 0) {
+      const hoje = new Date();
+      const addDays = (d) => { const dt = new Date(hoje); dt.setDate(dt.getDate() + d); return dt.toISOString().split("T")[0]; };
+      const prazoMeio = obraForm.prazo_inicio && obraForm.prazo_fim
+        ? new Date((new Date(obraForm.prazo_inicio).getTime() + new Date(obraForm.prazo_fim).getTime()) / 2).toISOString().split("T")[0]
+        : addDays(60);
+      const parcelas = [
+        { descricao: "30% Entrada — " + o.cliente, valor: Math.round(o.valor * 0.30 * 100) / 100, tipo: "receita", categoria: "Contrato", data_vencimento: addDays(7), status: "A receber" },
+        { descricao: "40% Meio de obra — " + o.cliente, valor: Math.round(o.valor * 0.40 * 100) / 100, tipo: "receita", categoria: "Contrato", data_vencimento: prazoMeio, status: "A receber" },
+        { descricao: "30% Entrega — " + o.cliente, valor: Math.round(o.valor * 0.30 * 100) / 100, tipo: "receita", categoria: "Contrato", data_vencimento: obraForm.prazo_fim || addDays(120), status: "A receber" },
+      ];
+      for (const p of parcelas) {
+        try { await addLancamento(obra.id, p); } catch (_) {}
+      }
+    }
+
     setConverterOrc(null);
     mostrarToast(estimativo?.itens?.length
       ? `✅ Obra criada com ${estimativo.itens.length} itens do estimativo nos quantitativos!`
@@ -1045,6 +1064,21 @@ export default function Orcamentos() {
                 </div>
                 <div style={{ display: "flex", gap: 8 }}>
                   <button onClick={async () => {
+                    // Find or create cliente from lead
+                    let clienteId = p.cliente_id;
+                    if (!clienteId) {
+                      const existing = clientes.find((c) => c.contato === p.contato || c.nome === p.nome_cliente);
+                      clienteId = existing?.id || clientes[0]?.id || "";
+                    }
+                    // Pre-fill new orçamento with lead data
+                    setForm({
+                      ...FORM_VAZIO,
+                      cliente_id: clienteId,
+                      area: p.area_m2 || p.area || 48,
+                      padrao: p.padrao || "Padrão",
+                      unidades: 1,
+                    });
+                    setModal("novo");
                     await sb.from("pre_orcamentos").update({ status: "Analisado" }).eq("id", p.id);
                     setPreOrcamentos((prev) => prev.filter((x) => x.id !== p.id));
                   }} style={{ background: "#2e9e5b22", border: "1px solid #2e9e5b44", borderRadius: 6, color: "#2e9e5b", fontSize: 11, fontWeight: 700, padding: "6px 12px", cursor: "pointer", fontFamily: "inherit" }}>
