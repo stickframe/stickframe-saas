@@ -572,30 +572,52 @@ export default function MonitorPrecos() {
 
             {/* Mapear insumo */}
             <div>
-              <label style={{ fontSize: 11, fontWeight: 700, color: C.muted, display: "block", marginBottom: 6, textTransform: "uppercase", letterSpacing: 1 }}>
-                Mapear para insumo do Orçamento Técnico <span style={{ fontWeight: 400 }}>(opcional)</span>
+              <label style={{ fontSize: 11, fontWeight: 700, color: C.muted, display: "block", marginBottom: 8, textTransform: "uppercase", letterSpacing: 1 }}>
+                Mapear para insumo do Orçamento Técnico
               </label>
-              <select
-                value={form.insumo_ref}
-                onChange={(e) => { set("insumo_ref")(e.target.value); if (e.target.value !== "__custom__") setInsumoCustom(""); }}
-                style={{ width: "100%", padding: "9px 12px", borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 13, outline: "none", fontFamily: "inherit", background: "#fff", color: C.text }}
-              >
-                <option value="">— Não mapear —</option>
-                {INSUMOS_LISTA.map((nome) => (
-                  <option key={nome} value={nome}>{nome}</option>
+              {/* Seletor de modo */}
+              <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
+                {[
+                  { v: "",         label: "Não mapear" },
+                  { v: "__lista__", label: "📋 Da lista" },
+                  { v: "__custom__", label: "✏️ Personalizado" },
+                ].map(({ v, label }) => (
+                  <button key={v} onClick={() => { set("insumo_ref")(v); setInsumoCustom(""); }} style={{
+                    flex: 1, padding: "7px 10px", borderRadius: 8, fontSize: 12, fontWeight: 700,
+                    cursor: "pointer", fontFamily: "inherit",
+                    border: `2px solid ${form.insumo_ref === v || (v === "__lista__" && form.insumo_ref !== "" && form.insumo_ref !== "__custom__") ? C.red : C.border}`,
+                    background: form.insumo_ref === v || (v === "__lista__" && form.insumo_ref !== "" && form.insumo_ref !== "__custom__") ? C.red + "12" : "transparent",
+                    color: form.insumo_ref === v || (v === "__lista__" && form.insumo_ref !== "" && form.insumo_ref !== "__custom__") ? C.red : C.muted,
+                  }}>{label}</button>
                 ))}
-                <option value="__custom__">✏️ Digitar nome personalizado...</option>
-              </select>
+              </div>
+
+              {/* Dropdown da lista */}
+              {(form.insumo_ref === "__lista__" || (form.insumo_ref !== "" && form.insumo_ref !== "__custom__")) && (
+                <select
+                  value={form.insumo_ref === "__lista__" ? "" : form.insumo_ref}
+                  onChange={(e) => set("insumo_ref")(e.target.value || "__lista__")}
+                  style={{ width: "100%", padding: "9px 12px", borderRadius: 8, border: `1px solid ${C.red}`, fontSize: 13, outline: "none", fontFamily: "inherit", background: "#fff", color: C.text }}
+                >
+                  <option value="">— Selecione o insumo —</option>
+                  {INSUMOS_LISTA.map((nome) => (
+                    <option key={nome} value={nome}>{nome}</option>
+                  ))}
+                </select>
+              )}
+
+              {/* Campo livre personalizado */}
               {form.insumo_ref === "__custom__" && (
                 <input
                   value={insumoCustom}
                   onChange={(e) => setInsumoCustom(e.target.value)}
-                  placeholder="Digite o nome do insumo personalizado"
+                  placeholder="Ex: Glasroc X 12,5mm, Massa Basecoat 20kg..."
                   autoFocus
-                  style={{ marginTop: 8, width: "100%", padding: "9px 12px", borderRadius: 8, border: `1px solid ${C.red}`, fontSize: 13, outline: "none", fontFamily: "inherit", background: "#fff", boxSizing: "border-box" }}
+                  style={{ width: "100%", padding: "9px 12px", borderRadius: 8, border: `2px solid ${C.red}`, fontSize: 13, outline: "none", fontFamily: "inherit", background: "#fff", boxSizing: "border-box" }}
                 />
               )}
-              <div style={{ fontSize: 11, color: C.muted, marginTop: 4 }}>
+
+              <div style={{ fontSize: 11, color: C.muted, marginTop: 6 }}>
                 Quando mapeado, o Orçamento Técnico usará o preço ao vivo deste produto
               </div>
             </div>
