@@ -2,7 +2,7 @@ import { useState } from "react";
 import { sb } from "../services/supabase";
 
 // Pricing constants
-const STEEL_FRAME = { "Econômico": 2800, "Padrão": 3500, "Alto Padrão": 4800 };
+const STEEL_FRAME = { "Econômico": 2800, "Padrão": 3500, "Alto Padrão": 5200 };
 const ALVENARIA   = { "Econômico": 2200, "Padrão": 2900, "Alto Padrão": 4200 };
 const PAVIMENTOS  = { "Térreo": 1, "2 pavimentos": 1.85, "3 pavimentos": 2.65 };
 
