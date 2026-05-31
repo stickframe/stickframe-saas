@@ -29,39 +29,64 @@ function statusColor(s) { return STATUS_COR[s] || C.muted; }
 function calcularScore(c) {
   const hoje = new Date().toISOString().split("T")[0];
   let pts = 0;
+  const breakdown = [];
 
-  // Status (40pts)
-  if (c.status === "Fechado" || c.status === "Em execução") pts += 40;
-  else if (c.status === "Em negociação")                    pts += 25;
-  else if (c.status === "Proposta enviada")                 pts += 20;
-  else                                                       pts += 5;
+  // Status (35pts)
+  if (c.status === "Fechado" || c.status === "Em execução") { pts += 35; breakdown.push({ label: "Status", pts: 35, max: 35 }); }
+  else if (c.status === "Em negociação")                    { pts += 25; breakdown.push({ label: "Status", pts: 25, max: 35 }); }
+  else if (c.status === "Proposta enviada")                 { pts += 18; breakdown.push({ label: "Status", pts: 18, max: 35 }); }
+  else                                                      { pts += 5;  breakdown.push({ label: "Status", pts: 5,  max: 35 }); }
 
   // Valor estimado (25pts)
   const v = c.valor || 0;
-  if (v > 500000)      pts += 25;
-  else if (v > 200000) pts += 20;
-  else if (v > 100000) pts += 15;
-  else if (v > 0)      pts += 8;
+  let vPts = 0;
+  if (v > 500000) vPts = 25; else if (v > 200000) vPts = 20; else if (v > 100000) vPts = 15; else if (v > 0) vPts = 8;
+  pts += vPts; breakdown.push({ label: "Valor", pts: vPts, max: 25 });
 
-  // Follow-up recente (20pts)
+  // Área informada (10pts)
+  let aPts = 0;
+  if (c.area_m2 > 0) aPts = 10;
+  pts += aPts; breakdown.push({ label: "Área m²", pts: aPts, max: 10 });
+
+  // Follow-up (15pts)
+  let fPts = 0;
   if (c.proximo_contato) {
-    if (c.proximo_contato >= hoje)               pts += 20;
+    if (c.proximo_contato >= hoje) fPts = 15;
     else {
-      const diasPassados = Math.round((new Date(hoje) - new Date(c.proximo_contato)) / 86400000);
-      if (diasPassados <= 7)  pts += 10;
-      else if (diasPassados <= 30) pts += 4;
+      const d = Math.round((new Date(hoje) - new Date(c.proximo_contato)) / 86400000);
+      if (d <= 7) fPts = 8; else if (d <= 30) fPts = 3;
     }
   }
+  pts += fPts; breakdown.push({ label: "Follow-up", pts: fPts, max: 15 });
 
-  // Dados de contato (15pts)
-  if (c.contato) pts += 10;
-  if (c.email)   pts += 5;
+  // Origem qualificada (5pts)
+  let oPts = 0;
+  if (c.origem === "Indicação") oPts = 5; else if (c.origem === "Google" || c.origem === "Site") oPts = 3;
+  pts += oPts; breakdown.push({ label: "Origem", pts: oPts, max: 5 });
+
+  // Dados de contato (10pts)
+  let cPts = 0;
+  if (c.contato) cPts += 6;
+  if (c.email)   cPts += 4;
+  pts += cPts; breakdown.push({ label: "Contato", pts: cPts, max: 10 });
 
   const score = Math.min(pts, 100);
-  if (score >= 70) return { score, label: "🔥 Quente", cor: "#c0392b", bg: "#fdecea" };
-  if (score >= 40) return { score, label: "🟡 Morno",  cor: "#c88a00", bg: "#fff8e1" };
-  return               { score, label: "❄️ Frio",   cor: "#4a9eff", bg: "#e8f4ff" };
+  if (score >= 70) return { score, label: "🔥 Quente", cor: "#c0392b", bg: "#fdecea", breakdown };
+  if (score >= 40) return { score, label: "🟡 Morno",  cor: "#c88a00", bg: "#fff8e1", breakdown };
+  return               { score, label: "❄️ Frio",   cor: "#4a9eff", bg: "#e8f4ff", breakdown };
 }
+
+// ─── Templates WhatsApp ───────────────────────────────────────────────────────
+const WA_TEMPLATES = [
+  { id: "primeiro_contato", label: "1º Contato", icon: "👋",
+    msg: (c) => `Olá ${c.nome}! 👋\n\nVi que você tem interesse em construção em *Steel Frame*.\n\nSomos a *Stick Frame Sistemas Construtivos* — especialistas em sistemas estruturais metálicos. Podemos conversar sobre seu projeto?\n\nStick Frame · Santo André/SP` },
+  { id: "follow_up", label: "Follow-up", icon: "🔁",
+    msg: (c) => `Olá ${c.nome}! 👋\n\nPassando para dar continuidade ao nosso contato sobre seu projeto de construção.\n\nTem alguma dúvida ou posso ajudar com mais informações?\n\nStick Frame · Santo André/SP` },
+  { id: "proposta", label: "Proposta", icon: "📋",
+    msg: (c) => `Olá ${c.nome}! 👋\n\nEnviamos a proposta comercial do seu projeto. Já teve chance de analisar?\n\nEstou à disposição para esclarecer qualquer dúvida sobre valores, prazo ou sistema construtivo.\n\nStick Frame · Santo André/SP` },
+  { id: "fechamento", label: "Fechamento", icon: "🤝",
+    msg: (c) => `Olá ${c.nome}! 👋\n\nGostaria de dar um retorno sobre nossa proposta — podemos agendar uma conversa rápida para fechar os detalhes do seu projeto?\n\nStick Frame · Santo André/SP` },
+];
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 function fmtTel(v) {
@@ -208,7 +233,7 @@ const FormCliente = memo(function FormCliente({ form, setForm, onSave, onCancel,
 
       {/* OPORTUNIDADE */}
       <Secao titulo="Oportunidade" />
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 12 }}>
         <div>
           <Label>Status</Label>
           <Select
@@ -227,6 +252,10 @@ const FormCliente = memo(function FormCliente({ form, setForm, onSave, onCancel,
             min="0"
           />
           {erros.unidades && <div style={{ fontSize: 11, color: C.danger, marginTop: 4 }}>{erros.unidades}</div>}
+        </div>
+        <div>
+          <Label>Área (m²)</Label>
+          <Input value={form.area_m2 || ""} onChange={(v) => set("area_m2")(v.replace(/\D/g, ""))} placeholder="150" type="number" min="0" />
         </div>
         <div>
           <Label>Valor estimado</Label>
@@ -277,7 +306,7 @@ const FormCliente = memo(function FormCliente({ form, setForm, onSave, onCancel,
 // ─── CRM principal ───────────────────────────────────────────────────────────
 const FORM_VAZIO = {
   nome: "", cidade: "", contato: "", email: "", origem: "Indicação",
-  status: "Lead", unidades: "", valor: 0, valorDisplay: "", observacoes: "",
+  status: "Lead", unidades: "", area_m2: "", valor: 0, valorDisplay: "", observacoes: "",
   proximo_contato: "", responsavel: "",
 };
 
@@ -295,6 +324,9 @@ export default function CRM() {
   const deleteCliente  = useAppStore((s) => s.deleteCliente);
   const importClientes = useAppStore((s) => s.importClientes);
 
+  const addEvento      = useAppStore((s) => s.addEvento);
+  const empresa        = useAppStore((s) => s.empresa);
+
   const [view,       setView]       = useState("funnel"); // "funnel" | "list"
   const [modal,      setModal]      = useState(false);
   const [sel,        setSel]        = useState(null);
@@ -304,6 +336,9 @@ export default function CRM() {
   const [csvModal,   setCsvModal]   = useState(false);
   const [csvPreview, setCsvPreview] = useState([]);
   const [csvErro,    setCsvErro]    = useState("");
+  const [waModal,    setWaModal]    = useState(null); // cliente para WA modal
+  const [scoreModal, setScoreModal] = useState(null); // cliente para score detail
+  const [seqLoading, setSeqLoading] = useState(false);
 
   const cliente = useMemo(() => clientes.find((c) => c.id === sel), [clientes, sel]);
   const { toast, mostrarToast } = useToast();
@@ -347,6 +382,7 @@ export default function CRM() {
       observacoes:     c.observacoes || "",
       proximo_contato: c.proximo_contato || "",
       responsavel:     c.responsavel || "",
+      area_m2:         c.area_m2 ? String(c.area_m2) : "",
     });
     setModal("editar");
   }
@@ -359,6 +395,7 @@ export default function CRM() {
       await addCliente({
         ...payload,
         unidades: parseInt(form.unidades) || 0,
+        area_m2:  parseFloat(form.area_m2) || null,
         valor:    form.valor || 0,
       });
       setModal(false);
@@ -378,6 +415,7 @@ export default function CRM() {
       await updateCliente(sel, {
         ...payload,
         unidades: parseInt(form.unidades) || 0,
+        area_m2:  parseFloat(form.area_m2) || null,
         valor:    form.valor || 0,
       });
       setModal(false);
@@ -394,6 +432,48 @@ export default function CRM() {
     setSel(null);
     setConfirm(false);
     mostrarToast("🗑 Cliente removido.");
+  }
+
+  async function criarSequenciaFollowUp(c) {
+    setSeqLoading(true);
+    try {
+      const hoje = new Date();
+      const dias = [3, 7, 15];
+      const titulos = [
+        `Follow-up D+3 — ${c.nome}`,
+        `Follow-up D+7 — ${c.nome}`,
+        `Follow-up D+15 — ${c.nome}`,
+      ];
+      const obs = [
+        "Verificar interesse inicial e tirar dúvidas sobre Steel Frame.",
+        "Apresentar cases e reforçar diferenciais. Perguntar sobre prazo.",
+        "Proposta ainda em análise? Oferecer reunião ou visita técnica.",
+      ];
+      for (let i = 0; i < dias.length; i++) {
+        const dt = new Date(hoje);
+        dt.setDate(dt.getDate() + dias[i]);
+        const dataStr = dt.toISOString().split("T")[0];
+        await addEvento({
+          titulo: titulos[i],
+          tipo: "Follow-up",
+          data: dataStr,
+          hora: "09:00",
+          cliente: c.nome,
+          cliente_id: c.id,
+          obs: obs[i],
+          cor: "#981915",
+        });
+      }
+      // Atualiza próximo contato para D+3
+      const d3 = new Date(hoje);
+      d3.setDate(d3.getDate() + 3);
+      await updateCliente(c.id, { proximo_contato: d3.toISOString().split("T")[0], follow_seq_ativa: true });
+      mostrarToast("✅ Sequência D+3, D+7, D+15 criada na agenda!");
+    } catch (e) {
+      mostrarToast("❌ Erro ao criar sequência: " + e.message);
+    } finally {
+      setSeqLoading(false);
+    }
   }
 
   function sanitizar(s) {
@@ -783,6 +863,66 @@ export default function CRM() {
         </div>
 
         {/* Painel lateral (Detalhes do Cliente) só aparece na Lista */}
+        {/* Modal WhatsApp Templates */}
+        {waModal && (
+          <div style={{ position: "fixed", inset: 0, background: "#000a", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 14, padding: 28, width: 420, maxWidth: "95vw" }}>
+              <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 4 }}>📲 WhatsApp — {waModal.nome}</div>
+              <div style={{ fontSize: 12, color: C.muted, marginBottom: 20 }}>Escolha o template de mensagem:</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {WA_TEMPLATES.map((t) => (
+                  <button key={t.id} onClick={() => { enviarWhatsApp(waModal.contato, t.msg(waModal)); setWaModal(null); }}
+                    style={{
+                      background: C.darker, border: `1px solid ${C.border}`, borderRadius: 8,
+                      padding: "12px 16px", textAlign: "left", cursor: "pointer", fontFamily: "inherit",
+                    }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 3 }}>{t.icon} {t.label}</div>
+                    <div style={{ fontSize: 11, color: C.muted, lineHeight: 1.5, whiteSpace: "pre-wrap" }}>
+                      {t.msg(waModal).slice(0, 80)}...
+                    </div>
+                  </button>
+                ))}
+              </div>
+              <div style={{ marginTop: 16, textAlign: "right" }}>
+                <Btn variant="ghost" onClick={() => setWaModal(null)}>Cancelar</Btn>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal Score Detalhado */}
+        {scoreModal && (() => {
+          const s = calcularScore(scoreModal);
+          return (
+            <div style={{ position: "fixed", inset: 0, background: "#000a", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 14, padding: 28, width: 380, maxWidth: "95vw" }}>
+                <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 4 }}>Score — {scoreModal.nome}</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
+                  <div style={{ fontSize: 36, fontWeight: 900, color: s.cor }}>{s.score}</div>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: s.cor }}>{s.label}</div>
+                    <div style={{ fontSize: 11, color: C.muted }}>de 100 pontos</div>
+                  </div>
+                </div>
+                {s.breakdown.map((b) => (
+                  <div key={b.label} style={{ marginBottom: 10 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, marginBottom: 3 }}>
+                      <span style={{ color: C.muted }}>{b.label}</span>
+                      <span style={{ fontWeight: 700, color: b.pts === b.max ? "#2e9e5b" : C.text }}>{b.pts}/{b.max}</span>
+                    </div>
+                    <div style={{ height: 5, background: C.dark, borderRadius: 3, overflow: "hidden" }}>
+                      <div style={{ height: 5, width: `${(b.pts / b.max) * 100}%`, background: b.pts === b.max ? "#2e9e5b" : s.cor, borderRadius: 3 }} />
+                    </div>
+                  </div>
+                ))}
+                <div style={{ marginTop: 16, textAlign: "right" }}>
+                  <Btn variant="ghost" onClick={() => setScoreModal(null)}>Fechar</Btn>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+
         {cliente && view === "list" && (
           <div style={{ background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, padding: 22, height: "fit-content" }}>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 14 }}>
@@ -793,33 +933,64 @@ export default function CRM() {
               <button onClick={() => setSel(null)} style={{ background: "none", border: "none", color: C.muted, fontSize: 20, cursor: "pointer" }}>×</button>
             </div>
 
-            <Badge label={cliente.status} color={statusColor(cliente.status)} />
+            {/* Score badge */}
+            {(() => {
+              const s = calcularScore(cliente);
+              return (
+                <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 6 }}>
+                  <Badge label={cliente.status} color={statusColor(cliente.status)} />
+                  <button onClick={() => setScoreModal(cliente)} style={{
+                    background: s.bg, border: `1px solid ${s.cor}44`, borderRadius: 6,
+                    padding: "3px 10px", fontSize: 11, fontWeight: 700, color: s.cor,
+                    cursor: "pointer", fontFamily: "inherit",
+                  }}>
+                    {s.label} · {s.score}pts
+                  </button>
+                </div>
+              );
+            })()}
 
-            <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 10 }}>
+            <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 9 }}>
               {[
-                ["Telefone",   cliente.contato    || "—"],
-                ["E-mail",     cliente.email       || "—"],
-                ["Origem",     cliente.origem      || "—"],
+                ["Telefone",      cliente.contato    || "—"],
+                ["E-mail",        cliente.email       || "—"],
+                ["Origem",        cliente.origem      || "—"],
                 ["Próx. Contato", cliente.proximo_contato ? new Date(cliente.proximo_contato + "T12:00:00").toLocaleDateString("pt-BR") : "—"],
-                ["Unidades",   cliente.unidades   ? `${cliente.unidades} UH` : "—"],
-                ["Valor est.", cliente.valor      ? fmt(cliente.valor) : "—"],
+                ["Unidades",      cliente.unidades   ? `${cliente.unidades} UH` : "—"],
+                ["Área",          cliente.area_m2    ? `${cliente.area_m2} m²` : "—"],
+                ["Valor est.",    cliente.valor      ? fmt(cliente.valor) : "—"],
+                ["Responsável",   cliente.responsavel || "—"],
               ].map(([k, v]) => (
-                <div key={k} style={{ display: "flex", justifyContent: "space-between", borderBottom: `1px solid ${C.border}`, paddingBottom: 9 }}>
+                <div key={k} style={{ display: "flex", justifyContent: "space-between", borderBottom: `1px solid ${C.border}`, paddingBottom: 8 }}>
                   <span style={{ fontSize: 12, color: C.muted }}>{k}</span>
-                  <span style={{ fontSize: 13, fontWeight: 600 }}>{v}</span>
+                  <span style={{ fontSize: 12, fontWeight: 600 }}>{v}</span>
                 </div>
               ))}
               {cliente.observacoes && (
-                <div style={{ fontSize: 12, color: C.muted, marginTop: 4, fontStyle: "italic", lineHeight: 1.5 }}>
+                <div style={{ fontSize: 12, color: C.muted, fontStyle: "italic", lineHeight: 1.5 }}>
                   "{cliente.observacoes}"
                 </div>
               )}
             </div>
 
+            {/* Sequência follow-up */}
+            <button
+              onClick={() => criarSequenciaFollowUp(cliente)}
+              disabled={seqLoading}
+              style={{
+                marginTop: 14, width: "100%", padding: "9px 0",
+                background: "#4a9eff22", border: "1px solid #4a9eff44",
+                borderRadius: 6, color: "#4a9eff", fontSize: 12,
+                fontWeight: 700, cursor: seqLoading ? "wait" : "pointer", fontFamily: "inherit",
+              }}
+            >
+              {seqLoading ? "Criando..." : "📅 Sequência D+3 / D+7 / D+15"}
+            </button>
+
             <button
               onClick={() => abrirOrcamentoTecnico(cliente)}
               style={{
-                marginTop: 16, width: "100%", padding: "10px 0",
+                marginTop: 8, width: "100%", padding: "10px 0",
                 background: C.red, border: "none",
                 borderRadius: 7, color: "#fff", fontSize: 13,
                 fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
@@ -842,7 +1013,7 @@ export default function CRM() {
 
             {cliente.contato && (
               <button
-                onClick={() => enviarWhatsApp(cliente.contato, msgCliente(cliente))}
+                onClick={() => setWaModal(cliente)}
                 style={{
                   marginTop: 8, width: "100%", padding: "9px 0",
                   background: "#25D36622", border: "1px solid #25D36644",
