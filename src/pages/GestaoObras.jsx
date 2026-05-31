@@ -10,6 +10,7 @@ import Select from "../components/ui/Select";
 import Badge from "../components/ui/Badge";
 import Modal from "../components/ui/Modal";
 import { listarQuantitativos } from "../services/repositories/quantitativoRepository";
+import { emailAlertaObraAtrasada } from "../services/emailService";
 
 const ICONE_TIPO  = { pdf: "📄", imagem: "🖼️", outro: "📎" };
 const CATS        = ["Projeto", "Foto", "Documento", "Outro"];
@@ -836,6 +837,21 @@ export default function GestaoObras() {
                     </div>
                   ))}
                 </div>
+                <button
+                  onClick={async () => {
+                    const empresa = useAppStore.getState().empresa;
+                    const emailDest = empresa?.email || "";
+                    if (!emailDest) { mostrarToast("Configure o e-mail da empresa nas configurações.", true); return; }
+                    for (const o of atrasadas) {
+                      const diasAtraso = Math.ceil((new Date() - new Date(o.prazo_fim + "T00:00")) / 86400000);
+                      await emailAlertaObraAtrasada({ nomeObra: o.nome, prazoFim: o.prazo_fim, diasAtraso, email: o.email_cliente || emailDest });
+                    }
+                    mostrarToast(`📧 ${atrasadas.length} alerta(s) enviado(s)`);
+                  }}
+                  style={{ marginTop: 10, width: "100%", padding: "7px 0", background: C.danger + "22", border: `1px solid ${C.danger}44`, borderRadius: 6, color: C.danger, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}
+                >
+                  📧 Enviar alertas
+                </button>
               </div>
             )}
             {emRisco.length > 0 && (
@@ -1052,6 +1068,99 @@ export default function GestaoObras() {
                             </div>
                           ))}
                         </div>
+                      )}
+                    </div>
+                  );
+                })()}
+
+                {/* ABA FLUXO */}
+                {abaAtiva === "fluxo" && (() => {
+                  const fmtC = (v) => Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+                  const lans = financeiro[obraId]?.lancamentos || [];
+
+                  // Group by YYYY-MM
+                  const byMonth = {};
+                  lans.forEach((l) => {
+                    const key = (l.data || "").slice(0, 7);
+                    if (!key) return;
+                    if (!byMonth[key]) byMonth[key] = { rec: 0, desp: 0 };
+                    if (l.tipo === "receita") byMonth[key].rec += l.valor || 0;
+                    else byMonth[key].desp += l.valor || 0;
+                  });
+
+                  const meses = Object.keys(byMonth).sort().slice(-12);
+                  let saldoAcc = 0;
+                  const rows = meses.map((m) => {
+                    const { rec, desp } = byMonth[m];
+                    saldoAcc += rec - desp;
+                    const [ano, mes] = m.split("-");
+                    const label = `${["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"][Number(mes)-1]}/${ano.slice(2)}`;
+                    return { key: m, label, rec, desp, saldo: saldoAcc };
+                  });
+
+                  const maxVal = Math.max(...rows.map((r) => Math.max(r.rec, r.desp)), 1);
+                  const chartH = 140;
+                  const barW = rows.length > 0 ? Math.floor(480 / rows.length / 2) - 2 : 20;
+
+                  return (
+                    <div style={{ background: C.surface, borderRadius: "0 0 12px 12px", border: `1px solid ${C.border}`, borderTop: "none", padding: 22 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 16 }}>📈 Fluxo de Caixa Mensal</div>
+
+                      {rows.length === 0 ? (
+                        <div style={{ textAlign: "center", padding: "32px 0", color: C.muted, fontSize: 13 }}>Nenhum lançamento registrado.</div>
+                      ) : (
+                        <>
+                          {/* SVG bar chart */}
+                          <div style={{ overflowX: "auto", marginBottom: 20 }}>
+                            <svg viewBox={`0 0 ${Math.max(rows.length * (barW * 2 + 6) + 20, 400)} ${chartH + 30}`}
+                              style={{ width: "100%", minWidth: 360, height: chartH + 30 }}>
+                              {rows.map((r, i) => {
+                                const x = i * (barW * 2 + 6) + 10;
+                                const recH = (r.rec / maxVal) * (chartH - 20);
+                                const despH = (r.desp / maxVal) * (chartH - 20);
+                                return (
+                                  <g key={r.key}>
+                                    <rect x={x} y={chartH - recH} width={barW} height={recH} fill="#2e9e5b" rx="2" opacity="0.85" />
+                                    <rect x={x + barW + 2} y={chartH - despH} width={barW} height={despH} fill={C.red} rx="2" opacity="0.85" />
+                                    <text x={x + barW} y={chartH + 14} textAnchor="middle" fontSize="8" fill={C.muted}>{r.label}</text>
+                                  </g>
+                                );
+                              })}
+                              <line x1="8" y1={chartH} x2="100%" y2={chartH} stroke={C.border} strokeWidth="1" />
+                            </svg>
+                          </div>
+                          <div style={{ display: "flex", gap: 16, fontSize: 11, marginBottom: 16 }}>
+                            <span><span style={{ display: "inline-block", width: 10, height: 10, background: "#2e9e5b", borderRadius: 2, marginRight: 4 }} />Receita</span>
+                            <span><span style={{ display: "inline-block", width: 10, height: 10, background: C.red, borderRadius: 2, marginRight: 4 }} />Despesa</span>
+                          </div>
+
+                          {/* Table */}
+                          <div style={{ overflowX: "auto" }}>
+                            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                              <thead>
+                                <tr style={{ background: C.darker }}>
+                                  {["Mês", "Receitas", "Despesas", "Resultado", "Saldo Acum."].map((h) => (
+                                    <th key={h} style={{ padding: "8px 12px", textAlign: "right", fontWeight: 700, fontSize: 11, color: C.muted, whiteSpace: "nowrap", textAlign: h === "Mês" ? "left" : "right" }}>{h}</th>
+                                  ))}
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {rows.map((r, i) => {
+                                  const res = r.rec - r.desp;
+                                  return (
+                                    <tr key={r.key} style={{ borderBottom: `1px solid ${C.border}`, background: i % 2 ? C.darker : "transparent" }}>
+                                      <td style={{ padding: "8px 12px", fontWeight: 600 }}>{r.label}</td>
+                                      <td style={{ padding: "8px 12px", textAlign: "right", color: "#2e9e5b" }}>{fmtC(r.rec)}</td>
+                                      <td style={{ padding: "8px 12px", textAlign: "right", color: C.danger }}>{fmtC(r.desp)}</td>
+                                      <td style={{ padding: "8px 12px", textAlign: "right", fontWeight: 700, color: res >= 0 ? "#2e9e5b" : C.danger }}>{fmtC(res)}</td>
+                                      <td style={{ padding: "8px 12px", textAlign: "right", fontWeight: 700, color: r.saldo >= 0 ? "#2e9e5b" : C.danger }}>{fmtC(r.saldo)}</td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          </div>
+                        </>
                       )}
                     </div>
                   );

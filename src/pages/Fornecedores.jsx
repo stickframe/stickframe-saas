@@ -9,6 +9,7 @@ import {
   listarMonitorados, adicionarMonitor, atualizarPrecoMonitor,
   removerMonitor, scrapePreco, listarHistoricoPreco,
 } from "../services/repositories/precosRepository";
+import { emailAlertaPreco } from "../services/emailService";
 import { SISTEMAS_SF } from "../utils/insumosSF";
 import Btn from "../components/ui/Btn";
 import Input from "../components/ui/Input";
@@ -103,7 +104,9 @@ function MonitorPrecos() {
   const [salvando, setSalvando] = useState(false);
   const [toast, setToast]     = useState(null);
   const [grafItem, setGrafItem] = useState(null);
+  const [alertThreshold, setAlertThreshold] = useState(5);
   const urlRef = useRef();
+  const empresa = useAppStore((s) => s.empresa);
 
   const load = () => {
     setLoading(true);
@@ -174,6 +177,23 @@ function MonitorPrecos() {
           erro_msg: null,
         });
         showToast(`${item.nome_produto}: ${fmtBRL(r.preco)}`);
+        // Send email alert if price rose above threshold
+        if (item.preco_atual && r.preco > item.preco_atual) {
+          const variacao = ((r.preco - item.preco_atual) / item.preco_atual) * 100;
+          if (variacao >= alertThreshold) {
+            const emailDest = empresa?.email;
+            if (emailDest) {
+              emailAlertaPreco({
+                nomeProduto: item.nome_produto,
+                precoAnterior: item.preco_atual,
+                precoAtual: r.preco,
+                variacao: variacao.toFixed(1),
+                loja: item.loja,
+                email: emailDest,
+              }).catch(() => {});
+            }
+          }
+        }
       } else {
         await atualizarPrecoMonitor(item.id, { status: "Erro", erro_msg: r?.error || "Preço não encontrado" });
         showToast(r?.error || "Preço não encontrado", true);
@@ -212,7 +232,19 @@ function MonitorPrecos() {
             Cole a URL de qualquer produto e o sistema captura o preço automaticamente
           </p>
         </div>
-        <div style={{ display: "flex", gap: 8 }}>
+        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: C.muted }}>
+            <span>Alertar se subir mais de</span>
+            <input
+              type="number"
+              min="1"
+              max="100"
+              value={alertThreshold}
+              onChange={(e) => setAlertThreshold(Number(e.target.value))}
+              style={{ width: 52, padding: "5px 8px", border: `1px solid ${C.border}`, borderRadius: 6, fontSize: 12, background: "transparent", color: C.text, textAlign: "center" }}
+            />
+            <span>%</span>
+          </div>
           {itens.length > 0 && (
             <button onClick={sincronizarTodos} style={{
               padding: "9px 16px", background: "#f0f9ff", border: `1px solid #bae6fd`,

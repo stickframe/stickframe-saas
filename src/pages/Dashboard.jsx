@@ -788,6 +788,77 @@ ${obrasAndamento.length > 0 ? `
         </div>
       )}
 
+      {/* DRE Simplificado */}
+      {(() => {
+        const [drePeriodo, setDrePeriodo] = useState("mes");
+        const fmtD = (v) => Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+        const agora = new Date();
+        const periodos = {
+          mes:  { label: "Este mês",        meses: 1  },
+          tri:  { label: "Últimos 3 meses", meses: 3  },
+          sem:  { label: "Últimos 6 meses", meses: 6  },
+          ano:  { label: "Este ano",        meses: 12 },
+        };
+        const { meses } = periodos[drePeriodo];
+        const limite = new Date(agora.getFullYear(), agora.getMonth() - meses + 1, 1);
+
+        const lans = Object.values(financeiro).flatMap((f) => f.lancamentos || [])
+          .filter((l) => l.data && new Date(l.data + "T00:00") >= limite);
+
+        const recBruta = lans.filter((l) => l.tipo === "receita").reduce((a, l) => a + (l.valor || 0), 0);
+        const CUSTOS_DIRETOS = ["Materiais", "Mão de obra", "Equipamentos", "Transporte"];
+        const custosDiretos = lans.filter((l) => l.tipo === "despesa" && CUSTOS_DIRETOS.includes(l.categoria)).reduce((a, l) => a + (l.valor || 0), 0);
+        const lucroBruto = recBruta - custosDiretos;
+        const despOp = lans.filter((l) => l.tipo === "despesa" && !CUSTOS_DIRETOS.includes(l.categoria)).reduce((a, l) => a + (l.valor || 0), 0);
+        const resultado = lucroBruto - despOp;
+        const margem = recBruta > 0 ? ((resultado / recBruta) * 100).toFixed(1) : "—";
+
+        const linhas = [
+          { label: "Receita Bruta",          valor: recBruta,      cor: C.success, bold: true, indent: 0 },
+          { label: "(−) Custos Diretos",      valor: -custosDiretos, cor: C.danger,  bold: false, indent: 1 },
+          { label: "(=) Lucro Bruto",         valor: lucroBruto,    cor: lucroBruto >= 0 ? C.success : C.danger, bold: true, indent: 0 },
+          { label: "(−) Despesas Operacionais", valor: -despOp,     cor: C.danger,  bold: false, indent: 1 },
+          { label: "(=) Resultado Líquido",   valor: resultado,     cor: resultado >= 0 ? C.success : C.danger, bold: true, indent: 0, margem: true },
+        ];
+
+        return (
+          <div style={{ background: C.surface, borderRadius: 12, padding: 20, border: `1px solid ${C.border}` }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted }}>DRE SIMPLIFICADO</div>
+              <div style={{ display: "flex", gap: 6 }}>
+                {Object.entries(periodos).map(([k, p]) => (
+                  <button key={k} onClick={() => setDrePeriodo(k)} style={{
+                    padding: "4px 10px", borderRadius: 6, fontSize: 11, cursor: "pointer",
+                    fontFamily: "inherit", fontWeight: drePeriodo === k ? 700 : 400,
+                    border: `1px solid ${drePeriodo === k ? C.red : C.border}`,
+                    background: drePeriodo === k ? C.red + "18" : "transparent",
+                    color: drePeriodo === k ? C.text : C.muted,
+                  }}>{p.label}</button>
+                ))}
+              </div>
+            </div>
+            <div style={{ maxWidth: 480 }}>
+              {linhas.map((l, i) => (
+                <div key={i} style={{
+                  display: "flex", justifyContent: "space-between", alignItems: "center",
+                  padding: "9px 0", borderBottom: i < linhas.length - 1 ? `1px solid ${C.border}` : "none",
+                  paddingLeft: l.indent ? 16 : 0,
+                }}>
+                  <span style={{ fontSize: 12, fontWeight: l.bold ? 700 : 400, color: l.bold ? C.text : C.muted }}>{l.label}</span>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <span style={{ fontSize: 13, fontWeight: l.bold ? 800 : 500, color: l.cor }}>{fmtD(Math.abs(l.valor))}</span>
+                    {l.margem && margem !== "—" && (
+                      <span style={{ fontSize: 11, background: resultado >= 0 ? C.success + "22" : C.danger + "22", color: resultado >= 0 ? C.success : C.danger, borderRadius: 5, padding: "2px 8px", fontWeight: 700 }}>{margem}%</span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Progresso das obras */}
       <div style={{ background: C.surface, borderRadius: 12, padding: 20, border: `1px solid ${C.border}` }}>
         <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 16 }}>PROGRESSO DAS OBRAS</div>
