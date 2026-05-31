@@ -598,6 +598,196 @@ export default function OrcamentoTecnico() {
     const r = resultado;
     const LOGO = LOGO_STICKFRAME;
     const dataHoje = new Date().toLocaleDateString("pt-BR");
+    const validadeDias = formSalvar.validade_dias || 30;
+    const validadeDate = new Date(); validadeDate.setDate(validadeDate.getDate() + validadeDias);
+    const numProposta  = `${new Date().getFullYear()}/${String(Date.now()).slice(-4).padStart(4,"0")}`;
+    const cliente      = formSalvar.cliente || "—";
+    const prazo        = r.prazoMeses ? `${r.prazoMeses} meses` : "A definir";
+    const sinal        = r.precoVenda * 0.10;
+
+    // Escopo — monta linha por sistema habilitado
+    const escopoRows = r.breakdown.map((s, i) => `
+      <tr style="border-bottom:1px solid #e5e7eb">
+        <td style="padding:12px 14px;color:#6b7280;font-size:13px;vertical-align:top">${String(i+1).padStart(2,"0")}</td>
+        <td style="padding:12px 14px;vertical-align:top">
+          <div style="font-weight:700;font-size:13px">${s.label}</div>
+          <div style="font-size:12px;color:#6b7280;margin-top:2px">${s.opcaoLabel || "Padrão"}</div>
+        </td>
+        <td style="padding:12px 14px;font-size:13px;color:#374151;vertical-align:top">${s.descricaoEscopo || "Conforme especificação técnica do projeto."}</td>
+      </tr>`).join("");
+
+    // Composição do valor
+    const totalUnid = r.precoVenda;
+    const m2 = r.m2Venda;
+
+    // Condições de pagamento
+    const pgtoRows = `
+      <tr style="border-bottom:1px solid #e5e7eb">
+        <td style="padding:12px 14px;font-weight:700;font-size:13px">Sinal / Mobiliza&ccedil;&atilde;o</td>
+        <td style="padding:12px 14px;font-weight:700;color:#b91c1c;font-size:13px">${fmtBRL(sinal)}</td>
+        <td style="padding:12px 14px;font-size:13px;color:#374151">Pagamento antes do in&iacute;cio da obra, destinado &agrave; compra de materiais e mobiliza&ccedil;&atilde;o da equipe</td>
+      </tr>
+      <tr style="border-bottom:1px solid #e5e7eb">
+        <td style="padding:12px 14px;font-weight:700;font-size:13px">Saldo</td>
+        <td style="padding:12px 14px;font-weight:700;color:#b91c1c;font-size:13px">${fmtBRL(r.precoVenda - sinal)}</td>
+        <td style="padding:12px 14px;font-size:13px;color:#374151">Conforme medi&ccedil;&otilde;es das etapas de evolu&ccedil;&atilde;o de obra</td>
+      </tr>
+      <tr style="background:#b91c1c">
+        <td style="padding:12px 14px;font-weight:700;color:#fff;font-size:13px">Total do Contrato</td>
+        <td style="padding:12px 14px;font-weight:700;color:#fff;font-size:14px">${fmtBRL(r.precoVenda)}</td>
+        <td style="padding:12px 14px;color:#fecaca;font-size:12px">Sinal de ${fmtBRL(sinal)} + saldo conforme medi&ccedil;&otilde;es</td>
+      </tr>`;
+
+    const obsCliente = formSalvar.observacoes ? `<li>${formSalvar.observacoes}</li>` : "";
+
+    const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+    <title>Proposta Comercial ${numProposta} — Stickframe</title>
+    <style>
+      *{box-sizing:border-box}
+      body{font-family:Arial,Helvetica,sans-serif;color:#1a1a1a;margin:0;padding:0;background:#fff}
+      @media print{@page{margin:15mm 14mm}body{padding:0}.no-print{display:none}}
+      table{border-collapse:collapse;width:100%}
+    </style></head>
+    <body style="padding:36px 44px;max-width:860px;margin:auto">
+
+      <!-- CABEÇALHO TOPO -->
+      <div style="background:#1a1a1a;color:#fff;padding:8px 16px;font-size:11px;margin-bottom:0;letter-spacing:.5px">
+        Stick Frame &middot; Proposta Comercial &middot; Steel Frame &middot; ${cliente}
+      </div>
+
+      <!-- HEADER LOGO + NÚMERO -->
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;padding:20px 0 18px;border-bottom:2px solid #e5e7eb;margin-bottom:28px">
+        <img src="${LOGO}" style="width:54px;height:54px;object-fit:contain;border-radius:8px">
+        <div style="text-align:right">
+          <div style="font-size:11px;letter-spacing:2px;color:#6b7280;font-weight:700">PROPOSTA COMERCIAL</div>
+          <div style="font-size:22px;font-weight:800;color:#b91c1c">N&ordm; ${numProposta}</div>
+          <div style="font-size:10px;color:#6b7280;margin-top:2px">DATA DE EMISS&Atilde;O</div>
+          <div style="font-size:13px;font-weight:700">${dataHoje}</div>
+        </div>
+      </div>
+
+      <!-- IDENTIFICAÇÃO DO PROJETO -->
+      <div style="font-size:11px;font-weight:700;letter-spacing:2px;color:#374151;text-transform:uppercase;margin-bottom:14px">Identifica&ccedil;&atilde;o do Projeto</div>
+      <table style="margin-bottom:32px;font-size:13px">
+        <tr><td style="padding:7px 0;color:#6b7280;width:160px">Cliente</td><td style="padding:7px 0;font-weight:600">${cliente}</td></tr>
+        <tr><td style="padding:7px 0;color:#6b7280">Projeto</td><td style="padding:7px 0">Resid&ecirc;ncia em Sistema Steel Frame &mdash; ${r.area} m&sup2;</td></tr>
+        <tr><td style="padding:7px 0;color:#6b7280">Sistema</td><td style="padding:7px 0">Steel Frame &mdash; A&ccedil;o Engenheirado (${r.padrao})</td></tr>
+        <tr><td style="padding:7px 0;color:#6b7280">&Aacute;rea Total</td><td style="padding:7px 0">${r.area} m&sup2;</td></tr>
+        <tr><td style="padding:7px 0;color:#6b7280">Data do Or&ccedil;amento</td><td style="padding:7px 0">${dataHoje}</td></tr>
+        <tr><td style="padding:7px 0;color:#6b7280">Validade</td><td style="padding:7px 0">${validadeDias} dias</td></tr>
+      </table>
+
+      <!-- ESCOPO DOS SERVIÇOS -->
+      <div style="font-size:11px;font-weight:700;letter-spacing:2px;color:#374151;text-transform:uppercase;margin-bottom:14px">Escopo dos Servi&ccedil;os</div>
+      <table style="margin-bottom:32px;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden">
+        <thead>
+          <tr style="background:#1a1a1a;color:#fff">
+            <th style="padding:10px 14px;text-align:left;font-size:11px;width:36px">#</th>
+            <th style="padding:10px 14px;text-align:left;font-size:11px;width:180px">Item</th>
+            <th style="padding:10px 14px;text-align:left;font-size:11px">Descri&ccedil;&atilde;o</th>
+          </tr>
+        </thead>
+        <tbody>${escopoRows}</tbody>
+      </table>
+
+      <!-- COMPOSIÇÃO DO VALOR -->
+      <div style="font-size:11px;font-weight:700;letter-spacing:2px;color:#374151;text-transform:uppercase;margin-bottom:14px">Composi&ccedil;&atilde;o do Valor</div>
+      <table style="margin-bottom:8px;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden">
+        <thead>
+          <tr style="background:#1a1a1a;color:#fff">
+            <th style="padding:10px 14px;text-align:left;font-size:11px">Descri&ccedil;&atilde;o</th>
+            <th style="padding:10px 14px;text-align:right;font-size:11px">Qtde</th>
+            <th style="padding:10px 14px;text-align:right;font-size:11px">Unid.</th>
+            <th style="padding:10px 14px;text-align:right;font-size:11px">R$/m&sup2;</th>
+            <th style="padding:10px 14px;text-align:right;font-size:11px">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom:1px solid #e5e7eb">
+            <td style="padding:14px;font-size:13px">
+              <div style="font-weight:600">Sistema Steel Frame completo</div>
+              <div style="font-size:11px;color:#6b7280;margin-top:2px">Estrutura + fechamentos + cobertura + instala&ccedil;&otilde;es</div>
+            </td>
+            <td style="padding:14px;text-align:right;font-size:13px">${r.area}</td>
+            <td style="padding:14px;text-align:right;font-size:13px">m&sup2;</td>
+            <td style="padding:14px;text-align:right;font-size:13px">${fmtBRL(m2)}</td>
+            <td style="padding:14px;text-align:right;font-size:14px;font-weight:800;color:#b91c1c">${fmtBRL(totalUnid)}</td>
+          </tr>
+        </tbody>
+      </table>
+      <div style="text-align:right;font-size:13px;color:#374151;margin-bottom:32px">
+        <strong>Valor total do contrato: ${fmtBRL(totalUnid)}</strong>
+      </div>
+
+      <!-- CONDIÇÕES DE PAGAMENTO (página 2) -->
+      <div style="page-break-before:always"></div>
+
+      <div style="font-size:11px;font-weight:700;letter-spacing:2px;color:#374151;text-transform:uppercase;margin-bottom:14px">Condi&ccedil;&otilde;es de Pagamento</div>
+      <table style="margin-bottom:32px;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden">
+        <thead>
+          <tr style="background:#1a1a1a;color:#fff">
+            <th style="padding:10px 14px;text-align:left;font-size:11px">Parcela</th>
+            <th style="padding:10px 14px;text-align:left;font-size:11px">Valor</th>
+            <th style="padding:10px 14px;text-align:left;font-size:11px">Condi&ccedil;&atilde;o</th>
+          </tr>
+        </thead>
+        <tbody>${pgtoRows}</tbody>
+      </table>
+
+      <!-- PRAZO -->
+      <div style="font-size:11px;font-weight:700;letter-spacing:2px;color:#374151;text-transform:uppercase;margin-bottom:14px">Prazo de Execu&ccedil;&atilde;o</div>
+      <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:16px 20px;margin-bottom:32px;font-size:13px;color:#374151">
+        Prazo estimado de execu&ccedil;&atilde;o: <strong>${prazo}</strong>, podendo ser prorrogado mediante aditivo contratual.
+      </div>
+
+      <!-- OBSERVAÇÕES -->
+      <div style="font-size:11px;font-weight:700;letter-spacing:2px;color:#374151;text-transform:uppercase;margin-bottom:14px">Observa&ccedil;&otilde;es Gerais</div>
+      <ul style="font-size:13px;color:#374151;line-height:2;margin:0 0 40px;padding-left:20px">
+        <li>Proposta v&aacute;lida por ${validadeDias} dias a partir de ${dataHoje}.</li>
+        <li>Valores baseados no CUB ${r.estado} &mdash; R$ ${r.cub.toLocaleString("pt-BR")}/m&sup2;.</li>
+        <li>Valores sujeitos a confirma&ccedil;&atilde;o mediante vistoria do terreno.</li>
+        <li>N&atilde;o inclui m&oacute;veis planejados e paisagismo.</li>
+        ${obsCliente}
+      </ul>
+
+      <!-- ACEITE -->
+      <div style="font-size:11px;font-weight:700;letter-spacing:2px;color:#374151;text-transform:uppercase;margin-bottom:24px">Aceite da Proposta</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:60px;margin-bottom:60px">
+        <div style="text-align:center">
+          <div style="border-top:1px solid #374151;padding-top:10px;font-size:13px;font-weight:700">${cliente}</div>
+          <div style="font-size:12px;color:#6b7280">Contratante</div>
+        </div>
+        <div style="text-align:center">
+          <div style="border-top:1px solid #374151;padding-top:10px;font-size:13px;font-weight:700">Stick Frame Sistemas Construtivos Ltda.</div>
+          <div style="font-size:12px;color:#6b7280">CNPJ 49.458.905/0001-07 &mdash; Contratada</div>
+        </div>
+      </div>
+
+      <!-- RODAPÉ -->
+      <div style="background:#1a1a1a;color:#fff;padding:14px 20px;border-radius:6px;font-size:11px;display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <strong>Stick Frame Sistemas Construtivos Ltda.</strong><br>
+          CNPJ 49.458.905/0001-07 &middot; Rua Trento, 52 &mdash; Santo Andr&eacute; / SP<br>
+          (11) 98985-9995 &middot; contato@stickframe.com.br &middot; www.stickframe.com.br
+        </div>
+        <div style="text-align:right">
+          <div style="color:#9ca3af">Validade desta proposta</div>
+          <div style="color:#ef4444;font-size:16px;font-weight:800">${validadeDias} dias</div>
+          <div style="color:#9ca3af">N&ordm; ${numProposta}</div>
+        </div>
+      </div>
+
+    </body></html>`;
+
+    printHtml(html, "proposta-comercial");
+  };
+
+  // exportarPropostaCliente_LEGADO — mantido para compatibilidade
+  const exportarPropostaClienteLegado = () => {
+    if (!resultado) return;
+    const r = resultado;
+    const LOGO = LOGO_STICKFRAME;
+    const dataHoje = new Date().toLocaleDateString("pt-BR");
     const validade = new Date(); validade.setDate(validade.getDate() + 30);
 
     const fasesRows = r.breakdown.map((s) => {
