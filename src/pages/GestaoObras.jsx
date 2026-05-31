@@ -101,6 +101,15 @@ function FormObra({ form, setForm, clientes, onSave, onCancel, btnLabel }) {
         <Input value={form.contrato} onChange={set("contrato")} type="number" min="0" placeholder="0" />
       </div>
 
+      {/* Retenção de garantia */}
+      <div>
+        <Label>Retenção de garantia (%)</Label>
+        <Input value={form.retencao_pct ?? 5} onChange={set("retencao_pct")} type="number" min="0" max="20" placeholder="5" />
+        <div style={{ fontSize: 11, color: C.muted, marginTop: 4 }}>
+          % do contrato retido até a entrega (padrão 5%)
+        </div>
+      </div>
+
       {/* Email do cliente */}
       <div>
         <Label>Email do cliente <span style={{ fontSize: 10, color: C.muted, fontWeight: 400 }}>(para notificações automáticas)</span></Label>
@@ -130,7 +139,7 @@ function FormObra({ form, setForm, clientes, onSave, onCancel, btnLabel }) {
 const FORM_VAZIO = {
   nome: "", cliente_id: "", cliente: "", email_cliente: "",
   status: "Planejamento", fase: "Projeto executivo",
-  prazo_inicio: "", prazo_fim: "", contrato: 0, progresso: 0,
+  prazo_inicio: "", prazo_fim: "", contrato: 0, progresso: 0, retencao_pct: 5,
 };
 
 export default function GestaoObras() {
@@ -243,6 +252,7 @@ export default function GestaoObras() {
       prazo_fim:     obra.prazo_fim    || "",
       contrato:      obra.contrato || 0,
       progresso:     obra.progresso || 0,
+      retencao_pct:  obra.retencao_pct ?? 5,
     });
     setModal("editar");
   }
@@ -277,6 +287,7 @@ export default function GestaoObras() {
         prazo_fim:     form.prazo_fim    || null,
         contrato:      Number(form.contrato) || 0,
         progresso,
+        retencao_pct:  Number(form.retencao_pct) || 0,
       });
       setModal(null);
       mostrarToast("✅ Obra atualizada!");
@@ -1028,6 +1039,25 @@ export default function GestaoObras() {
                         ))}
                       </div>
 
+                      {/* Retenção de garantia */}
+                      {obra.retencao_pct > 0 && contrato > 0 && (() => {
+                        const retencao = contrato * (Number(obra.retencao_pct) / 100);
+                        const retLiberada = obra.status === "Concluída";
+                        return (
+                          <div style={{ background: retLiberada ? "#2e9e5b11" : "#b97a0011", border: `1px solid ${retLiberada ? "#2e9e5b44" : "#b97a0044"}`, borderRadius: 8, padding: "12px 16px", marginBottom: 20 }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                              <div>
+                                <div style={{ fontSize: 11, fontWeight: 700, color: retLiberada ? "#2e9e5b" : "#b97a00", letterSpacing: 1, marginBottom: 3 }}>
+                                  {retLiberada ? "✓ RETENÇÃO LIBERADA" : "🔒 RETENÇÃO DE GARANTIA"}
+                                </div>
+                                <div style={{ fontSize: 12, color: C.muted }}>{obra.retencao_pct}% do contrato · {retLiberada ? "Obra concluída" : "Liberado na entrega"}</div>
+                              </div>
+                              <div style={{ fontSize: 20, fontWeight: 900, color: retLiberada ? "#2e9e5b" : "#b97a00" }}>{fmtC(retencao)}</div>
+                            </div>
+                          </div>
+                        );
+                      })()}
+
                       {/* Barra de execução orçamentária */}
                       {contrato > 0 && (
                         <div style={{ marginBottom: 24 }}>
@@ -1057,7 +1087,14 @@ export default function GestaoObras() {
                               <span style={{ fontSize: 18 }}>{l.tipo === "receita" ? "📥" : "📤"}</span>
                               <div>
                                 <div style={{ fontSize: 12, fontWeight: 600 }}>{l.descricao || "—"}</div>
-                                <div style={{ fontSize: 11, color: C.muted }}>{l.categoria || l.tipo} · {l.data ? new Date(l.data + "T00:00").toLocaleDateString("pt-BR") : "—"}</div>
+                                <div style={{ fontSize: 11, color: C.muted }}>
+                                  {l.categoria || l.tipo} · {l.data ? new Date(l.data + "T00:00").toLocaleDateString("pt-BR") : "—"}
+                                  {l.data_vencimento && (
+                                    <span style={{ marginLeft: 6, color: new Date(l.data_vencimento + "T00:00") < new Date() && l.status !== "Pago" && l.status !== "Recebido" ? C.danger : C.muted }}>
+                                      · venc. {new Date(l.data_vencimento + "T00:00").toLocaleDateString("pt-BR")}
+                                    </span>
+                                  )}
+                                </div>
                               </div>
                               <span style={{ fontSize: 13, fontWeight: 700, color: l.tipo === "receita" ? "#2e9e5b" : C.danger }}>
                                 {l.tipo === "receita" ? "+" : "−"}{fmtC(l.valor)}
@@ -1411,6 +1448,7 @@ export default function GestaoObras() {
                     ["Início",    obra.prazo_inicio ? new Date(obra.prazo_inicio + "T00:00").toLocaleDateString("pt-BR") : "—"],
                     ["Entrega",   obra.prazo_fim    ? new Date(obra.prazo_fim    + "T00:00").toLocaleDateString("pt-BR") : "—"],
                     ["Concluído", `${obra.progresso}%`],
+                    ["Retenção",  obra.retencao_pct ? `${obra.retencao_pct}%` : "—"],
                     ["Arquivos",  `${arqObra.length} arquivo(s)`],
                   ].map(([k, v]) => (
                     <div key={k} style={{ display: "flex", justifyContent: "space-between", borderBottom: `1px solid ${C.border}`, paddingBottom: 9, marginBottom: 9 }}>

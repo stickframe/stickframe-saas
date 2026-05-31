@@ -5,6 +5,8 @@ import { fmt } from "../utils/format";
 import { mesAno } from "../utils/date";
 import useAppStore from "../store/useAppStore";
 import { useModuleLoad } from "../hooks/useModuleLoad";
+import { useToast } from "../hooks/useToast";
+import { emailAlertaInadimplencia } from "../services/emailService";
 
 const DashboardComercial   = lazy(() => import("./DashboardComercial"));
 const DashboardEngenheiro  = lazy(() => import("./DashboardEngenheiro"));
@@ -139,6 +141,8 @@ function DashboardDiretor() {
   const financeiro  = useAppStore((s) => s.financeiro);
   const contratos   = useAppStore((s) => s.contratos);
   const medicoes    = useAppStore((s) => s.medicoes);
+  const empresa     = useAppStore((s) => s.empresa);
+  const { toast: toastInadimpl, mostrarToast: toastMsg } = useToast();
   const loadMedicoes = useAppStore((s) => s.loadMedicoes);
 
   // Carrega medições de todas as obras
@@ -373,6 +377,11 @@ ${obrasAndamento.length > 0 ? `
 
   return (
     <div>
+      {toastInadimpl && (
+        <div style={{ position: "fixed", bottom: 28, left: "50%", transform: "translateX(-50%)", zIndex: 9999, background: "#1a1a1a", color: "#fff", border: "1px solid #444", borderRadius: 10, padding: "12px 20px", fontSize: 13, fontWeight: 600, boxShadow: "0 8px 32px #0006" }}>
+          {toastInadimpl}
+        </div>
+      )}
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 24 }}>
         <div>
@@ -692,16 +701,40 @@ ${obrasAndamento.length > 0 ? `
       {/* Alerta de Inadimplência */}
       {inadimplentes.length > 0 && (
         <div style={{ background: "#fff5f5", border: "1px solid #fca5a5", borderRadius: 12, padding: 20 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-            <span style={{ fontSize: 18 }}>⚠️</span>
-            <div>
-              <div style={{ fontSize: 13, fontWeight: 800, color: "#991b1b" }}>
-                Atenção: {inadimplentes.length} obra{inadimplentes.length > 1 ? "s" : ""} com pagamento atrasado em relação ao progresso
-              </div>
-              <div style={{ fontSize: 11, color: "#b91c1c", marginTop: 2 }}>
-                Progresso da obra supera % recebido em mais de 25 pontos
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 14 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span style={{ fontSize: 18 }}>⚠️</span>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 800, color: "#991b1b" }}>
+                  Atenção: {inadimplentes.length} obra{inadimplentes.length > 1 ? "s" : ""} com pagamento atrasado em relação ao progresso
+                </div>
+                <div style={{ fontSize: 11, color: "#b91c1c", marginTop: 2 }}>
+                  Progresso da obra supera % recebido em mais de 25 pontos
+                </div>
               </div>
             </div>
+            <button
+              onClick={async () => {
+                const hoje = new Date().toISOString().slice(0, 10);
+                const vencidos = Object.values(financeiro).flatMap((f) => {
+                  const obraObj = obras.find((o) => f.lancamentos?.length && financeiro[o.id] === f);
+                  return (f.lancamentos || []).filter((l) =>
+                    l.data_vencimento && l.data_vencimento < hoje && l.status !== "Pago" && l.status !== "Recebido"
+                  ).map((l) => ({ ...l, obra: obraObj?.nome || "—" }));
+                });
+                if (!empresa?.email) { toastMsg("❌ Email da empresa não configurado"); return; }
+                if (vencidos.length === 0) { toastMsg("Nenhum lançamento vencido encontrado"); return; }
+                try {
+                  await emailAlertaInadimplencia({ email: empresa.email, lancamentos: vencidos });
+                  toastMsg("✅ Alerta enviado!");
+                } catch (e) {
+                  toastMsg(`❌ Erro ao enviar: ${e?.message}`);
+                }
+              }}
+              style={{ padding: "7px 14px", background: "#fee2e2", border: "1px solid #fca5a5", borderRadius: 8, color: "#991b1b", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap" }}
+            >
+              📧 Enviar alerta por email
+            </button>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {inadimplentes.map((o) => (

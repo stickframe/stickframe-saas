@@ -121,6 +121,35 @@ export async function emailAlertaObraAtrasada({ nomeObra, prazoFim, diasAtraso, 
   });
 }
 
+export async function emailAlertaInadimplencia({ email, lancamentos }) {
+  const linhas = lancamentos.map((l) =>
+    `<tr>
+      <td>${l.descricao || "—"}</td>
+      <td>${l.data_vencimento ? new Date(l.data_vencimento + "T00:00").toLocaleDateString("pt-BR") : "—"}</td>
+      <td style="color:#c0392b;font-weight:700">R$ ${Number(l.valor).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</td>
+      <td>${l.obra || "—"}</td>
+    </tr>`
+  ).join("");
+
+  const corpo = `
+    <p style="font-size:15px;margin-bottom:20px">Os seguintes lançamentos estão <strong style="color:#c0392b">vencidos e em aberto</strong>:</p>
+    <table style="width:100%;border-collapse:collapse;font-size:13px">
+      <thead><tr style="background:#f5f5f5">
+        <th style="padding:8px;text-align:left">Descrição</th>
+        <th style="padding:8px;text-align:left">Vencimento</th>
+        <th style="padding:8px;text-align:left">Valor</th>
+        <th style="padding:8px;text-align:left">Obra</th>
+      </tr></thead>
+      <tbody>${linhas}</tbody>
+    </table>
+  `;
+  return enviarEmail({
+    to: email,
+    subject: `⚠️ ${lancamentos.length} lançamento(s) vencido(s) — StickFrame`,
+    html: templateBase("Alerta de Inadimplência", corpo),
+  });
+}
+
 export async function emailNovoOrcamento({ clienteEmail, clienteNome, valor, padrao }) {
   const valorFmt = `R$ ${Number(valor).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
   await enviarEmail({

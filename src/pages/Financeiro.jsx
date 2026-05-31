@@ -90,6 +90,15 @@ function FormLancamento({ tipo, form, setForm, onSave, onCancel }) {
         />
       </div>
 
+      <div>
+        <Label>Data de vencimento</Label>
+        <Input
+          value={form.data_vencimento || ""}
+          onChange={set("data_vencimento")}
+          type="date"
+        />
+      </div>
+
       <div style={{
         display: "flex", gap: 10, justifyContent: "flex-end",
         marginTop: 4, paddingTop: 12, borderTop: `1px solid ${C.border}`,
@@ -104,7 +113,7 @@ function FormLancamento({ tipo, form, setForm, onSave, onCancel }) {
 }
 
 // ─── Financeiro ───────────────────────────────────────────────────────────────
-const FORM_VAZIO = { categoria: "Materiais", valor: "", data: "", descricao: "" };
+const FORM_VAZIO = { categoria: "Materiais", valor: "", data: "", descricao: "", data_vencimento: "" };
 
 export default function Financeiro() {
   useModuleLoad("obras");
