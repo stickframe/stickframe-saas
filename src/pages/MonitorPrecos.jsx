@@ -185,6 +185,29 @@ export default function MonitorPrecos() {
     return { media, altas, baixas, erros, total: itens.length };
   }, [itens]);
 
+  // ─── Comparação entre lojas (mesmo insumo_ref) ───────────────────────────────
+  const comparacaoLojas = useMemo(() => {
+    // Agrupa por insumo_ref os itens que têm preço
+    const grupos = {};
+    itens.forEach((i) => {
+      if (!i.insumo_ref || !i.preco_atual) return;
+      if (!grupos[i.insumo_ref]) grupos[i.insumo_ref] = [];
+      grupos[i.insumo_ref].push(i);
+    });
+    // Para grupos com 2+ lojas, marca o mais barato e calcula diferença
+    const info = {}; // id -> { melhor: bool, pct: number }
+    Object.values(grupos).forEach((grupo) => {
+      if (grupo.length < 2) return;
+      const sorted = [...grupo].sort((a, b) => a.preco_atual - b.preco_atual);
+      const minPreco = sorted[0].preco_atual;
+      sorted.forEach((item, idx) => {
+        const pct = ((item.preco_atual - minPreco) / minPreco) * 100;
+        info[item.id] = { melhor: idx === 0, pct };
+      });
+    });
+    return info;
+  }, [itens]);
+
   // ─── Filtro + busca ──────────────────────────────────────────────────────────
   const lista = useMemo(() => {
     let r = itens;
@@ -318,12 +341,26 @@ export default function MonitorPrecos() {
             </thead>
             <tbody>
               {lista.map((item) => {
-                const vr = variacao(item.preco_atual, item.preco_anterior);
-                const isErr = item.status === "Erro";
+                const vr     = variacao(item.preco_atual, item.preco_anterior);
+                const isErr  = item.status === "Erro";
+                const cmp    = comparacaoLojas[item.id];
+                const rowBg  = isErr ? "#fff7ed" : cmp?.melhor ? "#f0fdf4" : "transparent";
                 return (
-                  <tr key={item.id} style={{ borderBottom: `1px solid ${C.border}`, background: isErr ? "#fff7ed" : "transparent" }}>
+                  <tr key={item.id} style={{ borderBottom: `1px solid ${C.border}`, background: rowBg }}>
                     <td style={{ padding: "14px 16px" }}>
-                      <div style={{ fontWeight: 700, fontSize: 14, color: C.text }}>{item.nome_produto}</div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                        <span style={{ fontWeight: 700, fontSize: 14, color: C.text }}>{item.nome_produto}</span>
+                        {cmp?.melhor && (
+                          <span style={{ background: "#16a34a18", color: "#16a34a", border: "1px solid #16a34a33", borderRadius: 6, padding: "2px 8px", fontSize: 11, fontWeight: 700, whiteSpace: "nowrap" }}>
+                            💡 Melhor preço
+                          </span>
+                        )}
+                        {cmp && !cmp.melhor && (
+                          <span style={{ background: "#dc262618", color: "#dc2626", border: "1px solid #dc262633", borderRadius: 6, padding: "2px 8px", fontSize: 11, fontWeight: 700, whiteSpace: "nowrap" }}>
+                            +{cmp.pct.toFixed(0)}% mais caro
+                          </span>
+                        )}
+                      </div>
                       {item.loja && <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>{item.loja}</div>}
                       {item.url && (
                         <a href={item.url} target="_blank" rel="noreferrer" style={{ fontSize: 11, color: "#4a9eff", textDecoration: "none" }}>
@@ -331,7 +368,7 @@ export default function MonitorPrecos() {
                         </a>
                       )}
                     </td>
-                    <td style={{ padding: "14px 16px", fontSize: 15, fontWeight: 800, color: isErr ? C.muted : C.text }}>
+                    <td style={{ padding: "14px 16px", fontSize: 15, fontWeight: 800, color: isErr ? C.muted : cmp?.melhor ? "#16a34a" : C.text }}>
                       {isErr ? <span style={{ color: "#b97a00", fontSize: 12 }}>⚠️ Erro na captura</span> : fmtR(item.preco_atual)}
                     </td>
                     <td style={{ padding: "14px 16px", fontSize: 13, color: C.muted }}>{fmtR(item.preco_anterior)}</td>
@@ -341,20 +378,13 @@ export default function MonitorPrecos() {
                     <td style={{ padding: "14px 16px" }}>
                       <div style={{ display: "flex", gap: 8 }}>
                         {item.url && (
-                          <button
-                            onClick={() => atualizar(item)}
-                            disabled={scraping === item.id}
-                            title="Atualizar preço via scraping"
-                            style={{ padding: "5px 10px", borderRadius: 6, border: `1px solid ${C.border}`, background: "transparent", cursor: "pointer", fontSize: 13, color: C.muted }}
-                          >
+                          <button onClick={() => atualizar(item)} disabled={scraping === item.id} title="Atualizar preço via scraping"
+                            style={{ padding: "5px 10px", borderRadius: 6, border: `1px solid ${C.border}`, background: "transparent", cursor: "pointer", fontSize: 13, color: C.muted }}>
                             {scraping === item.id ? "..." : "↺"}
                           </button>
                         )}
-                        <button
-                          onClick={() => remover(item.id)}
-                          title="Remover"
-                          style={{ padding: "5px 10px", borderRadius: 6, border: `1px solid ${C.border}`, background: "transparent", cursor: "pointer", fontSize: 13, color: C.danger }}
-                        >
+                        <button onClick={() => remover(item.id)} title="Remover"
+                          style={{ padding: "5px 10px", borderRadius: 6, border: `1px solid ${C.border}`, background: "transparent", cursor: "pointer", fontSize: 13, color: C.danger }}>
                           ×
                         </button>
                       </div>
