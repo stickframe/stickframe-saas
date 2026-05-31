@@ -23,7 +23,7 @@ export default function Sidebar({ open }) {
   return (
     <aside
       className={`sidebar-desktop${open ? " open" : ""}`}
-      style={{ width: 220, minHeight: "100vh", background: C.darker, borderRight: `1px solid ${C.border}`, display: "flex", flexDirection: "column", flexShrink: 0 }}
+      style={{ width: 220, height: "100vh", background: C.darker, borderRight: `1px solid ${C.border}`, display: "flex", flexDirection: "column", flexShrink: 0, overflow: "hidden" }}
     >
       {/* Logo */}
       <div style={{ padding: "22px 20px 18px", borderBottom: `1px solid ${C.border}` }}>
@@ -39,7 +39,7 @@ export default function Sidebar({ open }) {
       </div>
 
       {/* Nav */}
-      <nav style={{ flex: 1, padding: "12px 0" }}>
+      <nav style={{ flex: 1, padding: "12px 0", overflowY: "auto" }}>
         {navFiltro.map((n) => (
           <button
             key={n.key}
