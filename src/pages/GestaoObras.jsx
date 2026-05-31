@@ -8,6 +8,7 @@ import Input from "../components/ui/Input";
 import Select from "../components/ui/Select";
 import Badge from "../components/ui/Badge";
 import Modal from "../components/ui/Modal";
+import { listarQuantitativos } from "../services/repositories/quantitativoRepository";
 
 const ICONE_TIPO  = { pdf: "📄", imagem: "🖼️", outro: "📎" };
 const CATS        = ["Projeto", "Foto", "Documento", "Outro"];
@@ -151,6 +152,8 @@ export default function GestaoObras() {
   const diario            = useAppStore((s) => s.diario);
   const loadMedicoes      = useAppStore((s) => s.loadMedicoes);
   const loadDiario        = useAppStore((s) => s.loadDiario);
+  const vistorias         = useAppStore((s) => s.vistorias);
+  const loadVistorias     = useAppStore((s) => s.loadVistorias);
 
   useModuleLoad("arquivos", obras[0]?.id);
 
@@ -311,119 +314,227 @@ export default function GestaoObras() {
     mostrarToast(`📋 Avançou para: ${novaFase}`);
   }
 
-  function retornar() {
+  async function gerarDossie() {
     if (!obra) return;
-    const i = FASES.indexOf(obra.fase);
-    if (i <= 0) return;
-    const novaFase  = FASES[i - 1];
-    const progresso = Math.round((i / FASES.length) * 100);
-    avancarFase(obra.id, novaFase, progresso);
-    mostrarToast(`↩ Retornou para: ${novaFase}`);
-  }
+    mostrarToast("⏳ Gerando dossiê...");
+    await Promise.all([loadMedicoes(obraId), loadDiario(obraId), loadVistorias(obraId)]);
+    const quants = await listarQuantitativos(obraId).catch(() => []);
 
-  async function gerarRelatorio() {
-    if (!obra) return;
-    mostrarToast("⏳ Gerando relatório...");
-    const win = window.open("", "_blank");
-    if (!win) { mostrarToast("❌ Popup bloqueado. Permita popups para este site."); return; }
-    win.document.write("<html><body style='font-family:sans-serif;padding:40px;color:#555'>⏳ Carregando...</body></html>");
-    await Promise.all([loadMedicoes(obraId), loadDiario(obraId)]);
-    const fin  = financeiro[obraId]?.lancamentos || [];
-    const meds = medicoes[obraId] || [];
-    const diarioObra = (diario[obraId] || []).slice(0, 10);
-    const arqs = arqObra;
-    const fmt  = (v) => (v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    const fin        = (financeiro[obraId]?.lancamentos || []);
+    const meds       = medicoes[obraId] || [];
+    const diarioObra = (diario[obraId] || []);
+    const vists      = vistorias[obraId] || [];
+    const arqs       = arqObra;
+
+    const fmtR = (v) => (v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
     const receitas  = fin.filter((l) => l.tipo === "receita").reduce((a, l) => a + (l.valor || 0), 0);
     const despesas  = fin.filter((l) => l.tipo === "despesa").reduce((a, l) => a + (l.valor || 0), 0);
     const resultado = receitas - despesas;
-    const hoje = new Date().toLocaleDateString("pt-BR");
+    const hoje      = new Date().toLocaleDateString("pt-BR");
+    const faseIdx   = FASES.indexOf(obra.fase);
+    const progresso = obra.progresso || 0;
+    const totalQuant = quants.reduce((a, q) => a + (Number(q.quantidade) * Number(q.custo_unitario)), 0);
 
-    const faseIdx = FASES.indexOf(obra.fase);
-    const fasesHtml = FASES.map((f, i) => {
-      const done = i < faseIdx, curr = i === faseIdx;
-      return `<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid #eee">
-        <div style="width:20px;height:20px;border-radius:50%;background:${done ? "#2e9e5b" : curr ? "#981915" : "#ddd"};display:flex;align-items:center;justify-content:center;font-size:9px;color:#fff;font-weight:700;flex-shrink:0">${done ? "✓" : i + 1}</div>
-        <span style="font-size:13px;color:${done ? "#2e9e5b" : curr ? "#1a1a1a" : "#aaa"};font-weight:${curr ? 700 : 400}">${f}${curr ? ' <span style="background:#981915;color:#fff;border-radius:8px;padding:1px 8px;font-size:9px;margin-left:6px">ATUAL</span>' : ""}</span>
+    // ── Barra de progresso SVG ────────────────────────────────────────────────
+    const barraProgresso = (pct, cor = "#981915") =>
+      `<div style="background:#eee;border-radius:4px;height:8px;margin-top:4px">
+        <div style="width:${Math.min(pct,100)}%;height:8px;background:${cor};border-radius:4px"></div>
       </div>`;
-    }).join("");
 
-    const medsHtml = meds.length === 0 ? "<p style='color:#888;font-size:13px'>Nenhuma medição registrada.</p>"
-      : meds.map((m) => `<tr><td>${m.numero}</td><td>${m.descricao || "—"}</td><td>${fmt(m.valor)}</td><td><span style="color:${m.status === "Aprovada" ? "#2e9e5b" : "#b97a00"}">${m.status}</span></td></tr>`).join("");
+    // ── Fases ─────────────────────────────────────────────────────────────────
+    const fasesHtml = `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:8px">
+      ${FASES.map((f, i) => {
+        const done = i < faseIdx, curr = i === faseIdx;
+        const bg = done ? "#2e9e5b" : curr ? "#981915" : "#e5e7eb";
+        const tc = done || curr ? "#fff" : "#9ca3af";
+        return `<div style="background:${bg};border-radius:8px;padding:8px 10px;text-align:center">
+          <div style="font-size:9px;font-weight:700;color:${tc};letter-spacing:.5px">${done ? "✓ " : curr ? "▶ " : ""}${f}</div>
+        </div>`;
+      }).join("")}
+    </div>`;
 
-    const finHtml = fin.length === 0 ? "<p style='color:#888;font-size:13px'>Nenhum lançamento registrado.</p>"
-      : fin.map((l) => `<tr><td>${l.data || "—"}</td><td>${l.descricao || "—"}</td><td>${l.categoria || "—"}</td><td style="color:${l.tipo === "receita" ? "#2e9e5b" : "#c0392b"}">${l.tipo === "receita" ? "+" : "-"}${fmt(l.valor)}</td></tr>`).join("");
-
-    const diarioHtml = diarioObra.length === 0 ? "<p style='color:#888;font-size:13px'>Nenhum registro no diário.</p>"
-      : diarioObra.map((r) => `<div style="padding:8px 0;border-bottom:1px solid #eee"><div style="font-size:11px;color:#888;margin-bottom:4px">${r.data} · ${r.clima || ""} · ${r.turno || ""}</div><div style="font-size:13px">${r.atividades || ""}</div>${r.ocorrencias ? `<div style="background:#fff5f5;border-left:3px solid #981915;padding:5px 10px;margin-top:6px;font-size:12px;color:#555">⚠️ ${r.ocorrencias}</div>` : ""}</div>`).join("");
-
-    const isImg    = (a) => a.tipo === "imagem" || a.categoria === "Foto" || /\.(jpe?g|png|gif|webp|heic)$/i.test(a.nome || "");
-    const fotos    = arqs.filter((a) => isImg(a) && a.url);
-    const docsArqs = arqs.filter((a) => !isImg(a));
-
-    const fotosPorFase = FASES.map((fase) => {
-      const imgs = fotos.filter((f) => f.fase === fase);
-      if (!imgs.length) return "";
-      return `<div style="margin-bottom:16px">
-        <div style="font-size:10px;font-weight:700;letter-spacing:1px;color:#981915;margin-bottom:8px;text-transform:uppercase">${fase}</div>
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
-          ${imgs.map((f) => `<img src="${f.url}" alt="${f.nome}" style="width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:6px;border:1px solid #eee">`).join("")}
-        </div>
+    // ── KPIs capa ─────────────────────────────────────────────────────────────
+    const kpi = (label, value, cor = "#1a1a1a") =>
+      `<div style="background:#f9fafb;border-radius:10px;padding:14px 18px;border:1px solid #e5e7eb">
+        <div style="font-size:10px;color:#9ca3af;letter-spacing:1px;margin-bottom:6px">${label}</div>
+        <div style="font-size:20px;font-weight:900;color:${cor}">${value}</div>
       </div>`;
-    }).join("");
-    const fotosSemFase = fotos.filter((f) => !f.fase);
-    const fotosSemFaseHtml = fotosSemFase.length ? `<div style="margin-bottom:16px">
-      <div style="font-size:10px;font-weight:700;letter-spacing:1px;color:#981915;margin-bottom:8px;text-transform:uppercase">Sem fase</div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
-        ${fotosSemFase.map((f) => `<img src="${f.url}" alt="${f.nome}" style="width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:6px;border:1px solid #eee">`).join("")}
-      </div>
-    </div>` : "";
 
-    const arqHtml = docsArqs.length === 0 ? "<p style='color:#888;font-size:13px'>Nenhum documento.</p>"
-      : docsArqs.map((a) => `<div style="font-size:12px;padding:4px 0;border-bottom:1px solid #eee">${a.nome} <span style="color:#888">· ${a.categoria} · ${a.tamanho}</span></div>`).join("");
+    // ── Medições ──────────────────────────────────────────────────────────────
+    const medsHtml = meds.length === 0
+      ? "<p style='color:#9ca3af;font-size:13px;padding:12px 0'>Nenhuma medição registrada.</p>"
+      : `<table><thead><tr><th>Nº</th><th>Descrição</th><th>Valor</th><th>Status</th></tr></thead><tbody>
+          ${meds.map((m) => `<tr>
+            <td>${m.numero || "—"}</td>
+            <td>${m.descricao || "—"}</td>
+            <td>${fmtR(m.valor)}</td>
+            <td><span style="color:${m.status === "Aprovada" ? "#2e9e5b" : "#b97a00"};font-weight:700">${m.status}</span></td>
+          </tr>`).join("")}
+        </tbody></table>`;
 
-    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Relatório — ${obra.nome}</title>
+    // ── Financeiro ────────────────────────────────────────────────────────────
+    const finHtml = fin.length === 0
+      ? "<p style='color:#9ca3af;font-size:13px;padding:12px 0'>Nenhum lançamento registrado.</p>"
+      : `<table><thead><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th>Valor</th></tr></thead><tbody>
+          ${fin.map((l) => `<tr>
+            <td>${l.data || "—"}</td>
+            <td>${l.descricao || "—"}</td>
+            <td>${l.categoria || "—"}</td>
+            <td style="color:${l.tipo === "receita" ? "#2e9e5b" : "#c0392b"};font-weight:600">${l.tipo === "receita" ? "+" : "−"}${fmtR(l.valor)}</td>
+          </tr>`).join("")}
+        </tbody></table>`;
+
+
+    // ── Vistorias ─────────────────────────────────────────────────────────────
+    const vistsHtml = vists.length === 0
+      ? "<p style='color:#9ca3af;font-size:13px;padding:12px 0'>Nenhuma vistoria registrada.</p>"
+      : `<table><thead><tr><th>Tipo</th><th>Fase</th><th>Data</th><th>Responsável</th><th>Resultado</th><th>Conformidade</th></tr></thead><tbody>
+          ${vists.map((v) => {
+            const cor = v.resultado === "Aprovado" ? "#2e9e5b" : v.resultado === "Reprovado" ? "#c0392b" : "#b97a00";
+            return `<tr>
+              <td>${v.tipo || "—"}</td>
+              <td>${v.fase || "—"}</td>
+              <td>${v.data || "—"}</td>
+              <td>${v.responsavel || "—"}</td>
+              <td><span style="color:${cor};font-weight:700">${v.resultado || "—"}</span></td>
+              <td>${v.conformidade != null ? `${v.conformidade}%` : "—"}</td>
+            </tr>`;
+          }).join("")}
+        </tbody></table>`;
+
+    // ── Quantitativos ─────────────────────────────────────────────────────────
+    const quantsHtml = quants.length === 0
+      ? "<p style='color:#9ca3af;font-size:13px;padding:12px 0'>Nenhum item no quantitativo.</p>"
+      : `<table><thead><tr><th>Fase</th><th>Descrição</th><th>Qtd</th><th>Un</th><th>Custo Unit.</th><th>Total</th></tr></thead><tbody>
+          ${quants.map((q) => `<tr>
+            <td style="font-size:11px;color:#6b7280">${q.fase || "—"}</td>
+            <td>${q.descricao || "—"}</td>
+            <td>${Number(q.quantidade).toFixed(2)}</td>
+            <td>${q.unidade || "—"}</td>
+            <td>${fmtR(q.custo_unitario)}</td>
+            <td style="font-weight:700">${fmtR(Number(q.quantidade) * Number(q.custo_unitario))}</td>
+          </tr>`).join("")}
+          <tr style="background:#f9fafb">
+            <td colspan="5" style="font-weight:700;text-align:right;padding-right:12px">TOTAL MATERIAIS</td>
+            <td style="font-weight:900;color:#981915">${fmtR(totalQuant)}</td>
+          </tr>
+        </tbody></table>`;
+
+    // ── Diário ────────────────────────────────────────────────────────────────
+    const diarioHtml = diarioObra.length === 0
+      ? "<p style='color:#9ca3af;font-size:13px;padding:12px 0'>Nenhum registro no diário.</p>"
+      : diarioObra.map((r) => `
+          <div style="padding:10px 0;border-bottom:1px solid #e5e7eb">
+            <div style="font-size:11px;color:#9ca3af;margin-bottom:4px">${r.data || "—"} · ${r.clima || ""} · ${r.turno || ""}</div>
+            <div style="font-size:13px">${r.atividades || ""}</div>
+            ${r.ocorrencias ? `<div style="background:#fff5f5;border-left:3px solid #981915;padding:6px 12px;margin-top:6px;font-size:12px;color:#555">⚠ ${r.ocorrencias}</div>` : ""}
+          </div>`).join("");
+
+    // ── Arquivos ──────────────────────────────────────────────────────────────
+    const arqHtml = arqs.length === 0
+      ? "<p style='color:#9ca3af;font-size:13px;padding:12px 0'>Nenhum arquivo.</p>"
+      : arqs.map((a) => `<div style="font-size:12px;padding:5px 0;border-bottom:1px solid #e5e7eb">${a.nome} <span style="color:#9ca3af">· ${a.categoria} · ${a.tamanho}</span></div>`).join("");
+
+    const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8">
+    <title>Dossiê — ${obra.nome}</title>
     <style>
-      *{box-sizing:border-box;margin:0;padding:0}body{font-family:'Segoe UI',Arial,sans-serif;color:#1a1a1a;padding:32px;max-width:900px;margin:0 auto}
-      h1{font-size:22px;font-weight:800;margin-bottom:4px}h2{font-size:14px;font-weight:700;letter-spacing:1px;color:#981915;margin:24px 0 12px;text-transform:uppercase;border-bottom:2px solid #981915;padding-bottom:6px}
-      table{width:100%;border-collapse:collapse;font-size:13px}th{text-align:left;padding:8px;background:#f5f5f5;font-size:11px;letter-spacing:.5px}td{padding:8px;border-bottom:1px solid #eee}
-      .kpi{display:inline-block;background:#f5f5f5;border-radius:8px;padding:10px 18px;margin-right:10px;margin-bottom:10px;text-align:center}
-      .kpi-v{font-size:18px;font-weight:800}.kpi-l{font-size:10px;color:#888;letter-spacing:.5px;margin-top:2px}
-      @media print{body{padding:16px}h2{margin-top:16px}}
+      *{box-sizing:border-box;margin:0;padding:0}
+      body{font-family:'Segoe UI',Arial,sans-serif;color:#1a1a1a;background:#fff}
+      .page{padding:40px;max-width:960px;margin:0 auto}
+      h2{font-size:13px;font-weight:800;letter-spacing:1.5px;color:#981915;margin:32px 0 14px;text-transform:uppercase;border-bottom:2px solid #981915;padding-bottom:8px;display:flex;align-items:center;gap:8px}
+      table{width:100%;border-collapse:collapse;font-size:12px;margin-top:4px}
+      th{text-align:left;padding:9px 10px;background:#f3f4f6;font-size:10px;letter-spacing:.8px;color:#6b7280;font-weight:700}
+      td{padding:9px 10px;border-bottom:1px solid #e5e7eb;vertical-align:top}
+      .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:8px}
+      .capa{background:linear-gradient(135deg,#0d1117 0%,#1a0505 100%);color:#fff;padding:48px 40px;border-radius:0}
+      .badge{display:inline-block;border-radius:20px;padding:3px 10px;font-size:10px;font-weight:700}
+      @media print{
+        body{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+        .page{padding:20px}
+        h2{margin:20px 0 10px}
+        .no-break{page-break-inside:avoid}
+      }
     </style></head><body>
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px">
-      <div>
-        <div style="font-size:10px;letter-spacing:2px;color:#981915;margin-bottom:6px">STICKFRAME · RELATÓRIO DE OBRA</div>
-        <h1>${obra.nome}</h1>
-        <div style="font-size:13px;color:#555;margin-top:6px">Cliente: <strong>${obra.cliente || "—"}</strong> &nbsp;·&nbsp; Status: <strong>${obra.status}</strong> &nbsp;·&nbsp; Progresso: <strong>${obra.progresso || 0}%</strong></div>
-        ${obra.prazo_inicio || obra.prazo_fim ? `<div style="font-size:12px;color:#888;margin-top:4px">Início: ${obra.prazo_inicio ? new Date(obra.prazo_inicio + "T00:00").toLocaleDateString("pt-BR") : "—"} &nbsp;·&nbsp; Entrega: ${obra.prazo_fim ? new Date(obra.prazo_fim + "T00:00").toLocaleDateString("pt-BR") : "—"}</div>` : ""}
+
+    <!-- CAPA -->
+    <div class="capa">
+      <div style="font-size:10px;letter-spacing:3px;color:#981915;margin-bottom:16px;font-weight:700">STICKFRAME · DOSSIÊ DE OBRA</div>
+      <div style="font-size:32px;font-weight:900;line-height:1.1;margin-bottom:12px">${obra.nome}</div>
+      <div style="font-size:14px;color:rgba(255,255,255,0.6);margin-bottom:32px">
+        Cliente: <strong style="color:#fff">${obra.cliente || "—"}</strong>
+        &nbsp;·&nbsp; Status: <strong style="color:#fff">${obra.status}</strong>
+        ${obra.prazo_fim ? `&nbsp;·&nbsp; Entrega: <strong style="color:#fff">${new Date(obra.prazo_fim + "T00:00").toLocaleDateString("pt-BR")}</strong>` : ""}
       </div>
-      <div style="text-align:right;font-size:11px;color:#888">Gerado em ${hoje}</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">
+        ${[
+          ["PROGRESSO", `${progresso}%`, progresso >= 80 ? "#2e9e5b" : "#981915"],
+          ["CONTRATO", fmtR(obra.contrato), "#fff"],
+          ["MEDIÇÕES", String(meds.length), "#fff"],
+          ["VISTORIAS", String(vists.length), "#fff"],
+        ].map(([l, v, c]) => `<div style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:14px 16px">
+          <div style="font-size:9px;color:rgba(255,255,255,0.45);letter-spacing:1.5px;margin-bottom:6px">${l}</div>
+          <div style="font-size:22px;font-weight:900;color:${c}">${v}</div>
+        </div>`).join("")}
+      </div>
+      <div style="margin-top:20px;font-size:11px;color:rgba(255,255,255,0.3)">Gerado em ${hoje} · Stick Frame Sistemas Construtivos · Santo André/SP</div>
     </div>
 
-    <h2>Resumo Financeiro</h2>
-    <div>
-      ${[["Contrato", fmt(obra.contrato)], ["Receitas", fmt(receitas)], ["Despesas", fmt(despesas)], ["Resultado", fmt(resultado)]].map(([l, v]) => `<div class="kpi"><div class="kpi-v">${v}</div><div class="kpi-l">${l.toUpperCase()}</div></div>`).join("")}
+    <div class="page">
+
+      <!-- RESUMO EXECUTIVO -->
+      <h2>📊 Resumo Executivo</h2>
+      <div class="kpi-grid">
+        ${kpi("VALOR DO CONTRATO", fmtR(obra.contrato))}
+        ${kpi("RECEITAS", fmtR(receitas), "#2e9e5b")}
+        ${kpi("DESPESAS", fmtR(despesas), "#c0392b")}
+        ${kpi("RESULTADO", fmtR(resultado), resultado >= 0 ? "#2e9e5b" : "#c0392b")}
+      </div>
+      <div style="margin-top:10px">
+        <div style="font-size:11px;color:#6b7280;margin-bottom:4px">Progresso físico — ${progresso}%</div>
+        ${barraProgresso(progresso)}
+      </div>
+
+      <!-- FASES -->
+      <h2>🏗 Fases da Obra</h2>
+      ${fasesHtml}
+      <div style="font-size:12px;color:#6b7280;margin-top:6px">Fase atual: <strong style="color:#981915">${obra.fase || FASES[0]}</strong></div>
+
+      <!-- VISTORIAS -->
+      <h2>🔍 Vistorias & FVS (${vists.length})</h2>
+      ${vistsHtml}
+
+      <!-- MEDIÇÕES -->
+      <h2>📐 Medições (${meds.length})</h2>
+      ${medsHtml}
+
+      <!-- QUANTITATIVOS -->
+      <h2>📋 Quantitativos de Materiais (${quants.length} itens)</h2>
+      ${quantsHtml}
+
+      <!-- FINANCEIRO -->
+      <h2>💰 Lançamentos Financeiros (${fin.length})</h2>
+      ${finHtml}
+
+      <!-- DIÁRIO -->
+      <h2>📓 Diário de Obra (${diarioObra.length} registros)</h2>
+      ${diarioHtml}
+
+      <!-- ARQUIVOS -->
+      <h2>📁 Documentos & Arquivos (${arqs.length})</h2>
+      ${arqHtml}
+
+      <div style="margin-top:40px;padding-top:16px;border-top:1px solid #e5e7eb;font-size:11px;color:#9ca3af;text-align:center">
+        Stick Frame Sistemas Construtivos · Santo André/SP · Documento gerado em ${hoje}
+      </div>
     </div>
 
-    <h2>Etapas da Obra</h2>${fasesHtml}
-
-    <h2>Medições</h2>
-    ${meds.length > 0 ? `<table><tr><th>Nº</th><th>Descrição</th><th>Valor</th><th>Status</th></tr>${medsHtml}</table>` : medsHtml}
-
-    <h2>Lançamentos Financeiros</h2>
-    ${fin.length > 0 ? `<table><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th>Valor</th></tr>${finHtml}</table>` : finHtml}
-
-    <h2>Diário de Obra (últimos 10)</h2>${diarioHtml}
-
-    ${fotos.length > 0 ? `<h2>Fotos por Fase (${fotos.length})</h2>${fotosPorFase}${fotosSemFaseHtml}` : ""}
-
-    ${docsArqs.length > 0 ? `<h2>Documentos (${docsArqs.length})</h2>${arqHtml}` : ""}
     </body></html>`;
 
     win.document.open();
     win.document.write(html);
     win.document.close();
-    setTimeout(() => win.print(), 400);
+    setTimeout(() => win.print(), 600);
   }
 
   function handleFiles(files) {
@@ -868,14 +979,13 @@ export default function GestaoObras() {
                   )}
                   <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 8 }}>
                     <Btn variant="ghost" size="sm" fullWidth onClick={abrirEditar}>✏️ Editar obra</Btn>
-                    {perfil !== "engenheiro" && (
-                      <button onClick={gerarRelatorio} style={{
-                        width: "100%", padding: "8px 0",
-                        background: "#2e9e5b22", border: "1px solid #2e9e5b44",
-                        borderRadius: 6, color: "#2e9e5b", fontSize: 12, fontWeight: 700,
-                        cursor: "pointer", fontFamily: "inherit",
-                      }}>📄 Relatório PDF</button>
-                    )}
+                    <button onClick={gerarDossie} style={{
+                      width: "100%", padding: "8px 0",
+                      background: "#2e9e5b22", border: "1px solid #2e9e5b44",
+                      borderRadius: 6, color: "#2e9e5b", fontSize: 12, fontWeight: 700,
+                      cursor: "pointer", fontFamily: "inherit",
+                    }}>📄 Dossiê de Obra</button>
+
                     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                       <button onClick={copiarLinkPortal} style={{
                         width: "100%", padding: "8px 0",
