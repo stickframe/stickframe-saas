@@ -32,8 +32,11 @@ export const NAV = [
   { key: "contratos",  label: "Contratos",        icon: "◑" },
   { key: "historico",  label: "Histórico",        icon: "◎" },
   { key: "fornecedores",  label: "Fornecedores",    icon: "🏭" },
+  { key: "monitor_precos",label: "Monitor Preços",  icon: "📈" },
   { key: "calculadora",       label: "Calculadora SF",    icon: "📐" },
   { key: "orcamento_tecnico", label: "Orçamento Técnico", icon: "🧮" },
+  { key: "equipamentos",      label: "Equipamentos",      icon: "🔧" },
+  { key: "checklists",        label: "Checklist SF",      icon: "✅" },
   { key: "equipe",        label: "Equipe",          icon: "👷" },
   { key: "configuracoes", label: "Configurações",   icon: "⚙️" },
 ];
@@ -43,7 +46,7 @@ export const PERFIS = {
   diretor: {
     label: "Diretor",
     cor: C.red,
-    paginas: ["dashboard","agenda","crm","orcamentos","obras","cronograma","medicoes","diario","vistorias","bim","quantitativos","financeiro","contratos","historico","fornecedores","calculadora","orcamento_tecnico","equipe","configuracoes"],
+    paginas: ["dashboard","agenda","crm","orcamentos","obras","cronograma","medicoes","diario","vistorias","bim","quantitativos","financeiro","contratos","historico","fornecedores","monitor_precos","calculadora","orcamento_tecnico","equipamentos","checklists","equipe","configuracoes"],
   },
   comercial: {
     label: "Comercial",
@@ -55,13 +58,13 @@ export const PERFIS = {
     label: "Engenheiro",
     cor: "#4a9eff",
     // Foco em entrega: sem CRM, financeiro global ou pipeline comercial
-    paginas: ["dashboard","obras","cronograma","medicoes","diario","vistorias","bim","quantitativos","fornecedores","calculadora","orcamento_tecnico","historico","configuracoes"],
+    paginas: ["dashboard","obras","cronograma","medicoes","diario","vistorias","bim","quantitativos","fornecedores","monitor_precos","calculadora","orcamento_tecnico","equipamentos","checklists","historico","configuracoes"],
   },
   financeiro: {
     label: "Financeiro",
     cor: C.success,
     // Foco em números: sem obras operacionais ou CRM
-    paginas: ["dashboard","financeiro","contratos","historico","configuracoes"],
+    paginas: ["dashboard","financeiro","contratos","historico","monitor_precos","configuracoes"],
   },
 };
 

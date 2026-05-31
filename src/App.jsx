@@ -30,6 +30,10 @@ const Configuracoes  = lazy(() => import("./pages/Configuracoes"));
 const Fornecedores   = lazy(() => import("./pages/Fornecedores"));
 const Calculadora       = lazy(() => import("./pages/Calculadora"));
 const OrcamentoTecnico  = lazy(() => import("./pages/OrcamentoTecnico"));
+const MonitorPrecos     = lazy(() => import("./pages/MonitorPrecos"));
+const Equipamentos      = lazy(() => import("./pages/Equipamentos"));
+const Checklists        = lazy(() => import("./pages/Checklists"));
+const QRObra            = lazy(() => import("./pages/QRObra"));
 
 const PAGES = {
   dashboard:  Dashboard,
@@ -51,6 +55,9 @@ const PAGES = {
   fornecedores:      Fornecedores,
   calculadora:       Calculadora,
   orcamento_tecnico: OrcamentoTecnico,
+  monitor_precos: MonitorPrecos,
+  equipamentos:   Equipamentos,
+  checklists:     Checklists,
 };
 
 function AuthenticatedApp() {
@@ -91,6 +98,7 @@ export default function App() {
           <Route path="/portal/:token"   element={<PortalOnline />} />
           <Route path="/proposta/:token"  element={<PropostaOnline />} />
           <Route path="/contrato/:token" element={<ContratoOnline />} />
+          <Route path="/qr/obra/:obraId" element={<QRObra />} />
           <Route path="/login" element={<LoginScreen />} />
           <Route path="/*" element={
             <RequireAuth>

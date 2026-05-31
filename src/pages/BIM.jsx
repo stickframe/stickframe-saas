@@ -404,6 +404,7 @@ export default function BIM() {
     if (obraId) { loadBimModelos(obraId); loadBimApontamentos(obraId); }
   }, [obraId]);
 
+
   const modelos  = bimModelos[obraId] || [];
   const todosApt = bimApontamentos[obraId] || [];
   const apts = todosApt.filter((a) =>
