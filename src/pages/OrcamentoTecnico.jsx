@@ -173,16 +173,14 @@ export default function OrcamentoTecnico() {
   const [incluiMO, setIncluiMO]     = useState(savedForm.incluiMO  ?? true);
   const [bdi, setBdi]               = useState(savedForm.bdi        ?? 25);
   const [prazoMeses, setPrazoMeses] = useState(savedForm.prazoMeses ?? "");
-  const [abertos, setAbertos]           = useState({});
-  const [resultado, setResultado]       = useState(null);
-  const [comparativo, setComparativo]   = useState(null);
-  const [precosEditados, setPrecosEditados] = useState({});
-  const [modalSalvar, setModalSalvar]   = useState(false);
-  const [formSalvar, setFormSalvar]     = useState({ cliente: "", validade_dias: 30, observacoes: "" });
-  const [salvando, setSalvando]         = useState(false);
-  const [modalFinanc, setModalFinanc]   = useState(false);
-  const [financForm, setFinancForm]     = useState({ entrada: 20, prazo: 120, taxa: 1.0 });
-  const [toast, setToast]               = useState(null);
+  const [abertos, setAbertos]       = useState({});
+  const [resultado, setResultado]   = useState(null);
+  const [comparativo, setComparativo] = useState(null);
+  const [toast, setToast]           = useState(null);
+  const [modalSalvar, setModalSalvar] = useState(false);
+  const [formSalvar, setFormSalvar]   = useState({ cliente: "", validade_dias: 30, observacoes: "" });
+  const [salvando, setSalvando]       = useState(false);
+
 
 
   const [selecoes, setSelecoes] = useState(() => {
@@ -573,166 +571,6 @@ export default function OrcamentoTecnico() {
     setTimeout(() => win.print(), 600);
   };
 
-  const calcFinanciamento = () => {
-    if (!resultado) return null;
-    const total = resultado.precoVenda;
-    const entrada = total * (financForm.entrada / 100);
-    const financiado = total - entrada;
-    const n = financForm.prazo;
-    const i = financForm.taxa / 100;
-    // Price (parcela fixa)
-    const parcelaPrice = financiado * (i * Math.pow(1 + i, n)) / (Math.pow(1 + i, n) - 1);
-    const totalPrice = entrada + parcelaPrice * n;
-    const jurosPrice = totalPrice - total;
-    // SAC (amortização constante)
-    const amort = financiado / n;
-    const primeiroSAC = amort + financiado * i;
-    const ultimoSAC   = amort + (financiado / n) * i;
-    const totalSAC    = entrada + (primeiroSAC + ultimoSAC) / 2 * n;
-    const jurosSAC    = totalSAC - total;
-    return { total, entrada, financiado, n, i, parcelaPrice, totalPrice, jurosPrice, primeiroSAC, ultimoSAC, totalSAC, jurosSAC };
-  };
-
-  const exportarPropostaCliente = () => {
-    if (!resultado) return;
-    const r = resultado;
-    const LOGO = "https://gpzmglcxmbboxxogbibq.supabase.co/storage/v1/object/public/arquivos/logos/34ec14d3-02fc-4b0a-8040-67f7a739394d/logo.jpg?t=1780161932174";
-    const dataHoje = new Date().toLocaleDateString("pt-BR");
-    const validade = new Date(); validade.setDate(validade.getDate() + 30);
-
-    const fasesRows = r.breakdown.map((s) => {
-      const total = s.totalMat + s.totalMO;
-      const pct = ((total / r.totalGeral) * 100).toFixed(1);
-      return `<tr style="border-bottom:1px solid #eee">
-        <td style="padding:10px 14px">${s.icon} ${s.label}</td>
-        <td style="padding:10px 14px;color:#666;font-size:12px">${s.opcaoLabel || "Padrão"}</td>
-        <td style="padding:10px 14px;text-align:right;font-weight:600">${fmtBRL(total)}</td>
-        <td style="padding:10px 14px;text-align:right;color:#888;font-size:12px">${pct}%</td>
-      </tr>`;
-    }).join("");
-
-    const cronoHtml = r.cronograma.length ? `
-      <h3 style="margin:32px 0 14px;font-size:15px;color:#1a1a1a">📅 Plano de Desembolso Estimado</h3>
-      <table style="width:100%;border-collapse:collapse;font-size:13px">
-        <thead><tr style="background:#981915;color:#fff">
-          <th style="padding:8px 12px;text-align:left">Mês</th>
-          <th style="padding:8px 12px;text-align:right">Valor Previsto</th>
-          <th style="padding:8px 12px;text-align:right">% do Total</th>
-        </tr></thead>
-        <tbody>
-          ${r.cronograma.map((m, i) => `<tr style="background:${i%2?"#f9f9f9":"#fff"};border-bottom:1px solid #eee">
-            <td style="padding:8px 12px">Mês ${m.mes}</td>
-            <td style="padding:8px 12px;text-align:right;font-weight:600">${fmtBRL(m.valor)}</td>
-            <td style="padding:8px 12px;text-align:right;color:#666">${(m.pct*100).toFixed(1)}%</td>
-          </tr>`).join("")}
-        </tbody>
-      </table>` : "";
-
-    const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
-    <title>Proposta Comercial — Stickframe</title>
-    <style>
-      body{font-family:Arial,sans-serif;color:#1a1a1a;margin:0;padding:0;background:#fff}
-      @media print{@page{margin:20mm 18mm}.no-print{display:none}}
-      h3{color:#981915}
-    </style></head>
-    <body style="padding:40px 48px;max-width:820px;margin:auto">
-
-      <!-- CABEÇALHO -->
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;padding-bottom:20px;border-bottom:3px solid #981915;margin-bottom:32px">
-        <div style="display:flex;align-items:center;gap:14px">
-          <img src="${LOGO}" style="width:56px;height:56px;border-radius:12px;object-fit:contain">
-          <div>
-            <div style="font-size:24px;font-weight:800;letter-spacing:1px">STICK<span style="color:#981915">FRAME</span></div>
-            <div style="font-size:10px;color:#888;letter-spacing:2px;margin-top:2px">SISTEMAS CONSTRUTIVOS</div>
-          </div>
-        </div>
-        <div style="text-align:right">
-          <div style="font-size:20px;font-weight:700;color:#981915">PROPOSTA COMERCIAL</div>
-          <div style="font-size:12px;color:#666;margin-top:4px">Data: ${dataHoje}</div>
-          <div style="font-size:12px;color:#666">Validade: ${validade.toLocaleDateString("pt-BR")}</div>
-        </div>
-      </div>
-
-      <!-- DESTAQUE DO VALOR -->
-      <div style="background:linear-gradient(135deg,#981915,#c0392b);color:#fff;border-radius:12px;padding:28px 32px;margin-bottom:28px;text-align:center">
-        <div style="font-size:13px;letter-spacing:2px;opacity:0.85;margin-bottom:8px">INVESTIMENTO TOTAL</div>
-        <div style="font-size:42px;font-weight:800;letter-spacing:-1px">${fmtBRL(r.precoVenda)}</div>
-        <div style="font-size:14px;opacity:0.85;margin-top:6px">${fmtBRL(r.m2Venda)}/m² · ${r.area} m² · Padrão ${r.padrao}</div>
-      </div>
-
-      <!-- DADOS DA OBRA -->
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:28px">
-        <div style="border:1px solid #eee;border-radius:8px;padding:14px">
-          <div style="font-size:10px;color:#888;margin-bottom:4px;text-transform:uppercase;letter-spacing:1px">Área Total</div>
-          <div style="font-size:18px;font-weight:700">${r.area} m²</div>
-        </div>
-        <div style="border:1px solid #eee;border-radius:8px;padding:14px">
-          <div style="font-size:10px;color:#888;margin-bottom:4px;text-transform:uppercase;letter-spacing:1px">Padrão Construtivo</div>
-          <div style="font-size:18px;font-weight:700">${r.padrao}</div>
-        </div>
-        <div style="border:1px solid #eee;border-radius:8px;padding:14px">
-          <div style="font-size:10px;color:#888;margin-bottom:4px;text-transform:uppercase;letter-spacing:1px">Prazo Estimado</div>
-          <div style="font-size:18px;font-weight:700">${r.prazoMeses ? r.prazoMeses + " meses" : "A definir"}</div>
-        </div>
-      </div>
-
-      <!-- COMPOSIÇÃO POR FASE -->
-      <h3 style="margin:0 0 14px;font-size:16px">🏗 Composição por Sistema Construtivo</h3>
-      <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:28px">
-        <thead><tr style="background:#1a1a1a;color:#fff">
-          <th style="padding:10px 14px;text-align:left">Sistema</th>
-          <th style="padding:10px 14px;text-align:left">Especificação</th>
-          <th style="padding:10px 14px;text-align:right">Valor</th>
-          <th style="padding:10px 14px;text-align:right">%</th>
-        </tr></thead>
-        <tbody>${fasesRows}</tbody>
-        <tfoot>
-          <tr style="background:#f4f4f4;font-weight:700">
-            <td colspan="2" style="padding:12px 14px">Custo Direto de Obra</td>
-            <td style="padding:12px 14px;text-align:right">${fmtBRL(r.totalGeral)}</td>
-            <td style="padding:12px 14px;text-align:right">100%</td>
-          </tr>
-          <tr style="background:#981915;color:#fff;font-weight:700;font-size:15px">
-            <td colspan="2" style="padding:14px">Preço de Venda (inclui BDI ${r.bdi}%)</td>
-            <td colspan="2" style="padding:14px;text-align:right">${fmtBRL(r.precoVenda)}</td>
-          </tr>
-        </tfoot>
-      </table>
-
-      ${cronoHtml}
-
-      <!-- CONDIÇÕES -->
-      <div style="margin-top:32px;border:1px solid #eee;border-radius:8px;padding:20px">
-        <h4 style="margin:0 0 12px;font-size:14px;color:#981915">📋 Condições Comerciais</h4>
-        <ul style="margin:0;padding-left:18px;font-size:13px;color:#444;line-height:1.8">
-          <li>Proposta válida por 30 dias a partir de ${dataHoje}</li>
-          <li>Valores sujeitos a confirmação mediante vistoria do terreno</li>
-          <li>Forma de pagamento a definir em contrato</li>
-          <li>Inclui projeto, materiais Steel Frame, mão de obra e instalações conforme escopo</li>
-          <li>Preços baseados no CUB ${r.estado} — R$ ${r.cub.toLocaleString("pt-BR")}/m²</li>
-        </ul>
-      </div>
-
-      <!-- ASSINATURA -->
-      <div style="margin-top:48px;display:grid;grid-template-columns:1fr 1fr;gap:40px">
-        <div style="border-top:1px solid #ccc;padding-top:12px;text-align:center;font-size:12px;color:#666">
-          Stickframe Sistemas Construtivos<br>Responsável Técnico
-        </div>
-        <div style="border-top:1px solid #ccc;padding-top:12px;text-align:center;font-size:12px;color:#666">
-          Cliente<br>Data: ___/___/______
-        </div>
-      </div>
-
-      <div style="margin-top:24px;font-size:10px;color:#bbb;text-align:center">
-        Stickframe Sistemas Construtivos · Santo André/SP · Gerado em ${dataHoje}
-      </div>
-    </body></html>`;
-
-    const win = window.open("", "_blank");
-    win.document.write(html);
-    win.document.close();
-    setTimeout(() => win.print(), 600);
-  };
 
 
   const exportarExcel = async () => {
@@ -1036,12 +874,6 @@ export default function OrcamentoTecnico() {
               </button>
             </div>
 
-            {/* aviso ajuste de preços */}
-            {Object.keys(precosEditados).length > 0 && (
-              <div style={{ background: "#fefce8", border: "1px solid #eab308", borderRadius: 8, padding: "9px 14px", fontSize: 12, color: "#713f12", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span>✏️ {Object.keys(precosEditados).length} preço(s) ajustado(s) manualmente. Clique em <strong>Calcular Orçamento</strong> para atualizar os totais.</span>
-              </div>
-            )}
 
 
             {/* comparativo de padrões */}
