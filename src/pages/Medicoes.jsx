@@ -101,14 +101,14 @@ export default function Medicoes() {
             { label: "Total medido",   value: fmt(totalMedido),       color: C.red },
             { label: "Total aprovado", value: fmt(totalAprovado),     color: C.success },
           ].map((k, i) => (
-            <div key={i} style={{ background: C.surface, borderRadius: 10, padding: "16px 18px", border: `1px solid ${C.border}`, borderTop: `3px solid ${k.color}` }}>
+            <div key={i} style={{ background: C.surface, borderRadius: 14, padding: "16px 18px", border: `1px solid ${C.border}`, borderTop: `3px solid ${k.color}` }}>
               <div style={{ fontSize: 10, color: C.muted, letterSpacing: 1, marginBottom: 8 }}>{k.label.toUpperCase()}</div>
               <div style={{ fontSize: 18, fontWeight: 800, color: k.color === C.border ? C.text : k.color }}>{k.value}</div>
             </div>
           ))}
         </div>
 
-        <div style={{ background: C.surface, borderRadius: 10, padding: "16px 20px", border: `1px solid ${C.border}`, marginBottom: 20 }}>
+        <div style={{ background: C.surface, borderRadius: 14, padding: "16px 20px", border: `1px solid ${C.border}`, marginBottom: 20 }}>
           <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 8 }}>
             <span style={{ color: C.muted }}>Progresso financeiro medido</span>
             <span style={{ fontWeight: 700 }}>{pctMedido}% do contrato</span>
@@ -119,13 +119,13 @@ export default function Medicoes() {
         </div>
 
         {lista.length === 0 ? (
-          <div style={{ background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, padding: "48px 0", textAlign: "center" }}>
+          <div style={{ background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", border: `1px solid ${C.border}`, padding: "48px 0", textAlign: "center" }}>
             <div style={{ fontSize: 32, marginBottom: 12 }}>📐</div>
             <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 6 }}>Nenhuma medição registrada</div>
             <div style={{ fontSize: 13, color: C.muted }}>Clique em "+ Nova medição" para começar.</div>
           </div>
         ) : (
-          <div style={{ background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, overflow: "hidden" }}>
+          <div style={{ background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", border: `1px solid ${C.border}`, overflow: "hidden" }}>
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr style={{ borderBottom: `2px solid ${C.red}22` }}>

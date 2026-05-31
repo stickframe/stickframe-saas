@@ -231,7 +231,7 @@ export default function Calculadora() {
 
       {/* ── Formulário ── */}
       <div style={{
-        background: "#fff", borderRadius: 12, border: `1px solid ${C.border}`,
+        background: "#fff", borderRadius: 16, border: `1px solid ${C.border}`,
         padding: "22px 26px", marginBottom: 24,
         display: "grid", gridTemplateColumns: "1fr 1fr 1fr auto", gap: 16, alignItems: "flex-end",
       }}>
@@ -333,7 +333,7 @@ export default function Calculadora() {
             const subtotal = items.reduce((s, i) => s + i.total, 0);
             if (!items.length) return null;
             return (
-              <div key={cat} style={{ background: "#fff", borderRadius: 12, border: `1px solid ${C.border}`, marginBottom: 14, overflow: "hidden" }}>
+              <div key={cat} style={{ background: "#fff", borderRadius: 16, border: `1px solid ${C.border}`, marginBottom: 14, overflow: "hidden" }}>
                 <div style={{
                   padding: "11px 20px", background: C.dark,
                   borderBottom: `1px solid ${C.border}`,
@@ -371,7 +371,7 @@ export default function Calculadora() {
           })}
 
           <div style={{
-            background: "#fff", borderRadius: 12, border: `2px solid ${C.red}33`,
+            background: "#fff", borderRadius: 16, border: `2px solid ${C.red}33`,
             padding: "18px 24px", display: "flex", justifyContent: "space-between", alignItems: "center",
             marginBottom: 16,
           }}>
@@ -395,7 +395,7 @@ export default function Calculadora() {
           </p>
 
           {/* ── Otimizador de Corte ── */}
-          <div style={{ background: "#fff", borderRadius: 12, border: `1px solid ${C.border}`, overflow: "hidden", marginTop: 8 }}>
+          <div style={{ background: "#fff", borderRadius: 16, border: `1px solid ${C.border}`, overflow: "hidden", marginTop: 8 }}>
             {/* Header */}
             <div style={{ padding: "13px 20px", background: C.dark, borderBottom: `1px solid ${C.border}` }}>
               <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: 1.5, color: C.graphite, textTransform: "uppercase" }}>🔧 Otimização de Corte</div>

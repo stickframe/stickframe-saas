@@ -17,7 +17,7 @@ const FUNIL_COR = {
 function KpiCard({ label, value, sub, accent, icon }) {
   return (
     <div style={{
-      background: "#fff", borderRadius: 12, padding: "16px 18px",
+      background: "#fff", borderRadius: 16, padding: "16px 18px",
       border: `1px solid ${C.border}`, borderTop: `3px solid ${accent}`,
     }}>
       <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1, color: C.muted, textTransform: "uppercase", marginBottom: 8 }}>
@@ -194,7 +194,7 @@ export default function DashboardComercial() {
       </div>
 
       {/* Lista de leads/follow-ups */}
-      <div style={{ background: "#fff", borderRadius: 12, border: `1px solid ${C.border}`, overflow: "hidden" }}>
+      <div style={{ background: "#fff", borderRadius: 16, border: `1px solid ${C.border}`, overflow: "hidden" }}>
         <div style={{
           padding: "12px 18px", borderBottom: `1px solid ${C.border}`,
           display: "flex", justifyContent: "space-between", alignItems: "center",

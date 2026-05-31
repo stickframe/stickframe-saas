@@ -520,7 +520,7 @@ export default function BIM() {
           ["Alta prioridade", stats.alta,    "#c0392b"],
           ["Resolvidos",    stats.resolvidos,"#2e9e5b"],
         ].map(([l, v, cor]) => (
-          <div key={l} style={{ background: C.surface, borderRadius: 10, border: `1px solid ${C.border}`, padding: "14px 18px" }}>
+          <div key={l} style={{ background: C.surface, borderRadius: 14, border: `1px solid ${C.border}`, padding: "14px 18px" }}>
             <div style={{ fontSize: 24, fontWeight: 800, color: cor }}>{v}</div>
             <div style={{ fontSize: 11, color: C.muted, marginTop: 3 }}>{l}</div>
           </div>

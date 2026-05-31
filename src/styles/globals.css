@@ -9,7 +9,7 @@
 }
 
 body {
-  background: #f0f0f3;
+  background: #f5f6f8;
   color: #1a1a1a;
   font-family: 'DM Sans', sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -23,7 +23,7 @@ select:focus {
 
 /* Scrollbar */
 ::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: #f0f0f3; }
+::-webkit-scrollbar-track { background: #f5f6f8; }
 ::-webkit-scrollbar-thumb { background: #dcdce4; border-radius: 3px; }
 
 /* Layout principal */
@@ -58,6 +58,15 @@ select:focus {
   flex: 1;
   padding: 34px 38px;
   overflow: auto;
+  background: #f5f6f8;
+}
+
+/* Card padrão — borderRadius 16, shadow leve, sem border */
+.sf-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .hamburger {

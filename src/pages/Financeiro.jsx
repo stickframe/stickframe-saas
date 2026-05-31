@@ -374,7 +374,7 @@ export default function Financeiro() {
             { label: "Margem real", value: fmtPct(margem * 100), color: margem > 0 ? C.success : C.danger, sub: saldo >= 0 ? `saldo +${fmt(saldo)}` : `saldo ${fmt(saldo)}` },
           ].map((k, i) => (
             <div key={i} style={{
-              background: C.surface, borderRadius: 10, padding: "16px 18px",
+              background: C.surface, borderRadius: 14, padding: "16px 18px",
               border: `1px solid ${C.border}`, borderTop: `3px solid ${k.color}`,
             }}>
               <div style={{ fontSize: 10, color: C.muted, letterSpacing: 1, marginBottom: 8 }}>{k.label.toUpperCase()}</div>
@@ -385,7 +385,7 @@ export default function Financeiro() {
         </div>
 
         {/* Barra de recebimento */}
-        <div style={{ background: C.surface, borderRadius: 10, padding: "18px 20px", border: `1px solid ${C.border}`, marginBottom: 20 }}>
+        <div style={{ background: C.surface, borderRadius: 14, padding: "18px 20px", border: `1px solid ${C.border}`, marginBottom: 20 }}>
           <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 10 }}>
             <span style={{ color: C.muted }}>Progresso de recebimento</span>
             <span style={{ fontWeight: 700 }}>{fmt(receitas)} <span style={{ color: C.muted, fontWeight: 400 }}>de {fmt(fin.contrato)}</span></span>
@@ -406,7 +406,7 @@ export default function Financeiro() {
 
         {/* Análise de Desvio */}
         {fin.contrato > 0 && (
-          <div style={{ background: C.surface, borderRadius: 12, padding: "20px 24px", border: `1px solid ${C.border}`, marginBottom: 20 }}>
+          <div style={{ background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", padding: "20px 24px", border: `1px solid ${C.border}`, marginBottom: 20 }}>
             <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 16 }}>ANÁLISE DE DESVIO</div>
 
             {/* Dupla barra: progresso físico vs financeiro */}
@@ -553,7 +553,7 @@ export default function Financeiro() {
         <div style={{ display: "grid", gridTemplateColumns: "300px 1fr", gap: 18 }}>
 
           {/* Desvio por categoria */}
-          <div style={{ background: C.surface, borderRadius: 10, padding: 20, border: `1px solid ${C.border}` }}>
+          <div style={{ background: C.surface, borderRadius: 14, padding: 20, border: `1px solid ${C.border}` }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
               <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted }}>DESVIO POR CATEGORIA</div>
               <button onClick={abrirEditOrc} style={{
@@ -617,7 +617,7 @@ export default function Financeiro() {
           </div>
 
           {/* Extrato */}
-          <div style={{ background: C.surface, borderRadius: 10, border: `1px solid ${C.border}`, overflow: "hidden" }}>
+          <div style={{ background: C.surface, borderRadius: 14, border: `1px solid ${C.border}`, overflow: "hidden" }}>
             <div style={{ padding: "16px 20px", borderBottom: `1px solid ${C.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted }}>EXTRATO DE LANÇAMENTOS</div>
               <span style={{ fontSize: 11, color: C.muted }}>{fin.lancamentos.length} registro{fin.lancamentos.length !== 1 ? "s" : ""}</span>

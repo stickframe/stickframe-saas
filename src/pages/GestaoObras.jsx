@@ -1005,7 +1005,7 @@ export default function GestaoObras() {
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
 
                 {/* Ações rápidas */}
-                <div style={{ background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, padding: 18 }}>
+                <div style={{ background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", border: `1px solid ${C.border}`, padding: 18 }}>
                   <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 12 }}>AÇÃO RÁPIDA</div>
                   <div style={{ display: "flex", gap: 8 }}>
                     <Btn onClick={retornar} disabled={FASES.indexOf(obra.fase) <= 0} variant="ghost" size="sm" style={{ flex: 1 }}>← Retornar</Btn>
@@ -1062,7 +1062,7 @@ export default function GestaoObras() {
                 </div>
 
                 {/* Resumo */}
-                <div style={{ background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, padding: 18 }}>
+                <div style={{ background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", border: `1px solid ${C.border}`, padding: 18 }}>
                   <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 14 }}>RESUMO</div>
                   {[
                     ["Status",    obra.status],

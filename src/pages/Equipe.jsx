@@ -523,7 +523,7 @@ export default function Equipe() {
             )}
 
             {colaboradores.length === 0 ? (
-              <div style={{ background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, padding: "60px 0", textAlign: "center" }}>
+              <div style={{ background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", border: `1px solid ${C.border}`, padding: "60px 0", textAlign: "center" }}>
                 <div style={{ fontSize: 36, marginBottom: 12 }}>👷</div>
                 <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 8 }}>Nenhum colaborador cadastrado</div>
                 <div style={{ fontSize: 13, color: C.muted, marginBottom: 24 }}>Cadastre sua equipe para controlar disponibilidade e custos.</div>
@@ -537,7 +537,7 @@ export default function Equipe() {
                   const alocAtivas = alocacoes.filter((a) => a.colaborador_id === c.id);
                   return (
                     <div key={c.id} style={{
-                      background: C.surface, borderRadius: 12, padding: "18px 20px",
+                      background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", padding: "18px 20px",
                       border: `1px solid ${C.border}`, borderTop: `3px solid ${STATUS_COR[c.status] || C.muted}`,
                     }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
@@ -621,14 +621,14 @@ export default function Equipe() {
             </div>
 
             {alocacoesFiltradas.length === 0 ? (
-              <div style={{ background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, padding: "50px 0", textAlign: "center" }}>
+              <div style={{ background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", border: `1px solid ${C.border}`, padding: "50px 0", textAlign: "center" }}>
                 <div style={{ fontSize: 32, marginBottom: 12 }}>📋</div>
                 <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 8 }}>Nenhuma alocação registrada</div>
                 <div style={{ fontSize: 12, color: C.muted, marginBottom: 20 }}>Aloque colaboradores às obras para controlar a equipe por projeto.</div>
                 <Btn onClick={() => setAlocModal(true)}>+ Nova alocação</Btn>
               </div>
             ) : (
-              <div style={{ background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, overflow: "hidden" }}>
+              <div style={{ background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", border: `1px solid ${C.border}`, overflow: "hidden" }}>
                 <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
                   <thead>
                     <tr style={{ background: C.darker }}>
@@ -675,7 +675,7 @@ export default function Equipe() {
                 { label: "Custo estimado", value: fmt(totalCustoFiltrado), sub: "baseado na diária", accent: C.red },
                 { label: "Lançamentos", value: String(horasFiltradas.length), sub: "registros de horas", accent: C.success },
               ].map((k) => (
-                <div key={k.label} style={{ background: C.surface, borderRadius: 10, padding: "14px 16px", border: `1px solid ${C.border}`, borderTop: `3px solid ${k.accent}` }}>
+                <div key={k.label} style={{ background: C.surface, borderRadius: 14, padding: "14px 16px", border: `1px solid ${C.border}`, borderTop: `3px solid ${k.accent}` }}>
                   <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1, color: C.muted, textTransform: "uppercase", marginBottom: 6 }}>{k.label}</div>
                   <div style={{ fontSize: 20, fontWeight: 900 }}>{k.value}</div>
                   <div style={{ fontSize: 11, color: C.muted, marginTop: 3 }}>{k.sub}</div>
@@ -710,14 +710,14 @@ export default function Equipe() {
             </div>
 
             {horasFiltradas.length === 0 ? (
-              <div style={{ background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, padding: "50px 0", textAlign: "center" }}>
+              <div style={{ background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", border: `1px solid ${C.border}`, padding: "50px 0", textAlign: "center" }}>
                 <div style={{ fontSize: 32, marginBottom: 12 }}>⏱</div>
                 <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 8 }}>Nenhuma hora registrada</div>
                 <div style={{ fontSize: 12, color: C.muted, marginBottom: 20 }}>Registre as horas trabalhadas por colaborador e obra.</div>
                 <Btn onClick={() => setHoraModal(true)}>+ Registrar horas</Btn>
               </div>
             ) : (
-              <div style={{ background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, overflow: "hidden" }}>
+              <div style={{ background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", border: `1px solid ${C.border}`, overflow: "hidden" }}>
                 <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
                   <thead>
                     <tr style={{ background: C.darker }}>

@@ -350,7 +350,7 @@ export default function Vistorias() {
           ["Aprovadas",          stats.aprovados, "#2e9e5b"],
           ["Reprovadas",         stats.nc, "#c0392b"],
         ].map(([l, v, cor]) => (
-          <div key={l} style={{ background: C.surface, borderRadius: 10, border: `1px solid ${C.border}`, padding: "14px 18px" }}>
+          <div key={l} style={{ background: C.surface, borderRadius: 14, border: `1px solid ${C.border}`, padding: "14px 18px" }}>
             <div style={{ fontSize: 22, fontWeight: 800, color: cor }}>{v}</div>
             <div style={{ fontSize: 11, color: C.muted, marginTop: 3 }}>{l}</div>
           </div>
@@ -383,7 +383,7 @@ export default function Vistorias() {
             const ncCount = (v.itens || []).filter((i) => i.resultado === "Não Conforme").length;
             const cor = RES_COR[v.resultado] || C.muted;
             return (
-              <div key={v.id} style={{ background: C.surface, borderRadius: 12, border: `1px solid ${v.resultado === "Reprovado" ? "#f5c6c6" : C.border}`, padding: "16px 20px", display: "flex", alignItems: "center", gap: 16 }}>
+              <div key={v.id} style={{ background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", border: `1px solid ${v.resultado === "Reprovado" ? "#f5c6c6" : C.border}`, padding: "16px 20px", display: "flex", alignItems: "center", gap: 16 }}>
                 <div style={{ width: 44, height: 44, borderRadius: 10, background: cor + "20", border: `2px solid ${cor}44`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0 }}>
                   {v.resultado === "Aprovado" ? "✓" : v.resultado === "Reprovado" ? "✕" : v.resultado === "Aprovado com ressalvas" ? "⚠" : "⏳"}
                 </div>

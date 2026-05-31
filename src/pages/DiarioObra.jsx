@@ -401,7 +401,7 @@ export default function DiarioObra() {
         {/* Info da obra */}
         {obra && (
           <div style={{
-            background: C.surface, borderRadius: 10,
+            background: C.surface, borderRadius: 14,
             border: `1px solid ${C.border}`, padding: "14px 20px",
             marginBottom: 20, display: "flex", gap: 24, alignItems: "center", flexWrap: "wrap",
           }}>
@@ -422,7 +422,7 @@ export default function DiarioObra() {
         {/* Lista de registros */}
         {registros.length === 0 ? (
           <div style={{
-            background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`,
+            background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", border: `1px solid ${C.border}`,
             padding: "56px 0", textAlign: "center",
           }}>
             <div style={{ fontSize: 36, marginBottom: 12 }}>📋</div>
@@ -434,7 +434,7 @@ export default function DiarioObra() {
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {registros.map((r) => (
               <div key={r.id} style={{
-                background: C.surface, borderRadius: 12,
+                background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
                 border: `1px solid ${r.ocorrencias ? C.red + "44" : C.border}`,
                 overflow: "hidden",
               }}>

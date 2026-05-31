@@ -102,7 +102,7 @@ export default function Historico() {
         </div>
       </div>
 
-      <div style={{ background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, overflow: "hidden" }}>
+      <div style={{ background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", border: `1px solid ${C.border}`, overflow: "hidden" }}>
         {itens.length === 0 ? (
           <div style={{ padding: 32, textAlign: "center", color: C.muted, fontSize: 13 }}>{EMPTY_PERFIL[perfil] || "Nenhuma atividade encontrada."}</div>
         ) : itens.map((h, i) => {

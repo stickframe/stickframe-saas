@@ -889,7 +889,7 @@ export default function Orcamentos() {
         {/* Lista */}
         {orcamentos.length === 0 ? (
           <div style={{
-            background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`,
+            background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", border: `1px solid ${C.border}`,
             padding: 48, textAlign: "center", color: C.muted,
           }}>
             <div style={{ fontSize: 32, marginBottom: 12 }}>◻</div>
@@ -902,7 +902,7 @@ export default function Orcamentos() {
               const clienteOrc = clientes.find((c) => c.id === o.cliente_id);
               return (
                 <div key={o.id} style={{
-                  background: C.surface, borderRadius: 12,
+                  background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
                   border: `1px solid ${C.border}`, padding: "16px 20px",
                   transition: "border-color .15s",
                 }}>
