@@ -185,6 +185,7 @@ export default function OrcamentoTecnico() {
   const [toast, setToast]               = useState(null);
 
 
+
   const [selecoes, setSelecoes] = useState(() => {
     const saved = savedForm.selecoes || {};
     const d = {};
@@ -735,6 +736,7 @@ export default function OrcamentoTecnico() {
   };
 
 
+
   const exportarExcel = async () => {
     if (!resultado) return;
     try {
@@ -1042,6 +1044,7 @@ export default function OrcamentoTecnico() {
                 <span>✏️ {Object.keys(precosEditados).length} preço(s) ajustado(s) manualmente. Clique em <strong>Calcular Orçamento</strong> para atualizar os totais.</span>
               </div>
             )}
+
 
 
             {/* comparativo de padrões */}
