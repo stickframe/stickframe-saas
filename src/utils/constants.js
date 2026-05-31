@@ -32,7 +32,8 @@ export const NAV = [
   { key: "contratos",  label: "Contratos",        icon: "◑" },
   { key: "historico",  label: "Histórico",        icon: "◎" },
   { key: "fornecedores",  label: "Fornecedores",    icon: "🏭" },
-  { key: "calculadora",  label: "Calculadora SF",  icon: "📐" },
+  { key: "calculadora",       label: "Calculadora SF",    icon: "📐" },
+  { key: "orcamento_tecnico", label: "Orçamento Técnico", icon: "🧮" },
   { key: "equipe",        label: "Equipe",          icon: "👷" },
   { key: "configuracoes", label: "Configurações",   icon: "⚙️" },
 ];
@@ -42,7 +43,7 @@ export const PERFIS = {
   diretor: {
     label: "Diretor",
     cor: C.red,
-    paginas: ["dashboard","agenda","crm","orcamentos","obras","cronograma","medicoes","diario","vistorias","bim","quantitativos","financeiro","contratos","historico","fornecedores","calculadora","equipe","configuracoes"],
+    paginas: ["dashboard","agenda","crm","orcamentos","obras","cronograma","medicoes","diario","vistorias","bim","quantitativos","financeiro","contratos","historico","fornecedores","calculadora","orcamento_tecnico","equipe","configuracoes"],
   },
   comercial: {
     label: "Comercial",
@@ -54,7 +55,7 @@ export const PERFIS = {
     label: "Engenheiro",
     cor: "#4a9eff",
     // Foco em entrega: sem CRM, financeiro global ou pipeline comercial
-    paginas: ["dashboard","obras","cronograma","medicoes","diario","vistorias","bim","quantitativos","fornecedores","calculadora","historico","configuracoes"],
+    paginas: ["dashboard","obras","cronograma","medicoes","diario","vistorias","bim","quantitativos","fornecedores","calculadora","orcamento_tecnico","historico","configuracoes"],
   },
   financeiro: {
     label: "Financeiro",

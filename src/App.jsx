@@ -27,7 +27,8 @@ const BIM           = lazy(() => import("./pages/BIM"));
 const Quantitativos  = lazy(() => import("./pages/Quantitativos"));
 const Configuracoes  = lazy(() => import("./pages/Configuracoes"));
 const Fornecedores   = lazy(() => import("./pages/Fornecedores"));
-const Calculadora    = lazy(() => import("./pages/Calculadora"));
+const Calculadora       = lazy(() => import("./pages/Calculadora"));
+const OrcamentoTecnico  = lazy(() => import("./pages/OrcamentoTecnico"));
 
 const PAGES = {
   dashboard:  Dashboard,
@@ -46,8 +47,9 @@ const PAGES = {
   bim:           BIM,
   quantitativos:  Quantitativos,
   configuracoes:  Configuracoes,
-  fornecedores:   Fornecedores,
-  calculadora:    Calculadora,
+  fornecedores:      Fornecedores,
+  calculadora:       Calculadora,
+  orcamento_tecnico: OrcamentoTecnico,
 };
 
 function AuthenticatedApp() {
