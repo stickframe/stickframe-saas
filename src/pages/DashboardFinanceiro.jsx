@@ -1,4 +1,5 @@
 import { C } from "../utils/constants";
+import { printHtml } from "../utils/printHtml";
 import { fmt } from "../utils/format";
 import useAppStore from "../store/useAppStore";
 import { useModuleLoad } from "../hooks/useModuleLoad";
@@ -74,10 +75,7 @@ function gerarRelatorioDRE({ financeiro, obras, contratos, mesAtual }) {
   ${obrasLinhas}</table>
   </body></html>`;
 
-  const win = window.open("", "_blank");
-  win.document.write(html);
-  win.document.close();
-  setTimeout(() => win.print(), 400);
+  printHtml(html, "relatorio-financeiro");
 }
 
 export default function DashboardFinanceiro() {

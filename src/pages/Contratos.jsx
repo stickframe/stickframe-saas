@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useToast } from "../hooks/useToast";
 import { buscarEmpresa } from "../services/repositories/empresaRepository";
+import { printHtml } from "../utils/printHtml";
 import { C, PRECOS } from "../utils/constants";
 import { fmt } from "../utils/format";
 import { enviarWhatsApp, msgContrato } from "../services/whatsappService";
@@ -114,8 +115,7 @@ function gerarPDFContrato(c, emp) {
   <script>window.onload=()=>window.print()</script>
   </body></html>`;
 
-  const win = window.open("", "_blank");
-  if (win) { win.document.write(html); win.document.close(); }
+  printHtml(html, `contrato-${c.ref || "contrato"}`);
 }
 
 // ─── Status ──────────────────────────────────────────────────────────────────

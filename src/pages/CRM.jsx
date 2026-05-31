@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, memo } from "react";
+import { useState, useMemo, memo } from "react";
 import { C } from "../utils/constants";
 import { fmt } from "../utils/format";
 import { enviarWhatsApp, msgCliente } from "../services/whatsappService";

@@ -1,4 +1,5 @@
 import { useEffect, lazy, Suspense } from "react";
+import { printHtml } from "../utils/printHtml";
 import { C, CATEGORIAS_DESPESA, FASES } from "../utils/constants";
 import { fmt } from "../utils/format";
 import { mesAno } from "../utils/date";
@@ -240,8 +241,7 @@ function DashboardDiretor() {
         <td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right;font-weight:700">${fmt(rec - desp)}</td>
       </tr>`;
     }).join("");
-    const win = window.open("", "_blank");
-    win.document.write(`<!DOCTYPE html><html><head>
+    const html = `<!DOCTYPE html><html><head>
 <meta charset="utf-8">
 <title>Relatório Executivo — ${mes}</title>
 <style>
@@ -303,9 +303,8 @@ ${obrasAndamento.length > 0 ? `
 </table>` : ""}
 
 <div class="footer">StickFrame SaaS · Relatório gerado automaticamente · ${new Date().toLocaleDateString("pt-BR")}</div>
-</body></html>`);
-    win.document.close();
-    setTimeout(() => win.print(), 600);
+</body></html>`;
+    printHtml(html, `relatorio-executivo-${mes}`);
   }
 
   // ── Gráfico receita vs despesa por obra ───────────────────────────────────

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useToast } from "../hooks/useToast";
 import { C } from "../utils/constants";
 import { fmt } from "../utils/format";
 import useAppStore from "../store/useAppStore";
@@ -62,7 +63,7 @@ export default function Equipamentos() {
   const [form,     setForm]     = useState(FORM_VAZIO);
   const [filtro,   setFiltro]   = useState("Todos");
   const [busca,    setBusca]    = useState("");
-  const [toast,    setToast]    = useState(null);
+  const { toast, mostrarToast } = useToast();
 
   useEffect(() => { carregar(); }, []);
 
@@ -76,11 +77,6 @@ export default function Equipamentos() {
     } finally {
       setLoading(false);
     }
-  }
-
-  function mostrarToast(msg) {
-    setToast(msg);
-    setTimeout(() => setToast(null), 3000);
   }
 
   const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));

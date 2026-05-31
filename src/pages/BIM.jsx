@@ -1,4 +1,5 @@
 import * as Sentry from "@sentry/react";
+import { printHtml } from "../utils/printHtml";
 import { useState, useEffect, useRef } from "react";
 import { useToast } from "../hooks/useToast";
 import { C, FASES } from "../utils/constants";
@@ -80,8 +81,7 @@ function exportarRelatorioApontamentos(apts, obraNome) {
   <script>window.onload=()=>window.print()</script>
   </body></html>`;
 
-  const win = window.open("", "_blank");
-  if (win) { win.document.write(html); win.document.close(); }
+  printHtml(html, `bim-apontamentos-${obraNome.replace(/\s+/g, "-").toLowerCase()}`);
 }
 
 // ─── Viewer IFC ───────────────────────────────────────────────────────────────

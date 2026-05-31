@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { printHtml } from "../utils/printHtml";
 import { useToast } from "../hooks/useToast";
 import { C, CATEGORIAS_RECEITA, CATEGORIAS_DESPESA } from "../utils/constants";
 import { fmt, fmtPct } from "../utils/format";
@@ -173,10 +174,7 @@ export default function Financeiro() {
     <tbody>${rows || '<tr><td colspan="5" style="text-align:center;color:#6b7280;padding:24px">Nenhum lançamento</td></tr>'}</tbody></table>
     <div class="footer"><p>Stick Frame Sistemas Construtivos · stickframe.com.br</p></div>
     </body></html>`;
-    const win = window.open("", "_blank");
-    win.document.write(html);
-    win.document.close();
-    win.onload = () => win.print();
+    printHtml(html, "lancamentos-financeiros");
   }
 
   // Inicializa obraId quando obras carregarem (corrige race condition)

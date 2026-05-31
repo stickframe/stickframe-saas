@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useToast } from "../hooks/useToast";
 import { C, FASES } from "../utils/constants";
 import useAppStore from "../store/useAppStore";
 import { useModuleLoad } from "../hooks/useModuleLoad";
@@ -98,7 +99,7 @@ export default function Checklists() {
   const [itens,    setItens]    = useState({}); // { "etapa|item": { status, obs } }
   const [loading,  setLoading]  = useState(false);
   const [saving,   setSaving]   = useState(null); // item key being saved
-  const [toast,    setToast]    = useState(null);
+  const { toast, mostrarToast } = useToast();
 
   const obraOpts = [
     { value: "", label: "— Selecione a obra —" },
@@ -147,11 +148,6 @@ export default function Checklists() {
     } finally {
       setSaving(null);
     }
-  }
-
-  function mostrarToast(msg) {
-    setToast(msg);
-    setTimeout(() => setToast(null), 3000);
   }
 
   // Progresso total por etapa
