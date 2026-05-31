@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { sb } from "../services/supabase";
 import { FASES } from "../utils/constants";
@@ -14,9 +14,19 @@ export default function PortalOnline() {
   const [outrasObras,setOutras]  = useState([]);
   const [fotos,      setFotos]   = useState([]);
   const [vistorias,  setVistorias] = useState([]);
+  const [mensagens,  setMensagens] = useState([]);
   const [empresa,    setEmpresa] = useState(null);
+  const [documentos, setDocumentos] = useState([]);
+  const [docUploading, setDocUploading] = useState(false);
+  const [sigNome,    setSigNome] = useState("");
+  const [sigEnv,     setSigEnv] = useState(false);
+  const canvasRef = useRef(null);
+  const isDrawing = useRef(false);
   const [fotoAberta, setFotoAberta] = useState(null);
   const [loading,    setLoading] = useState(true);
+  const [chatNome,   setChatNome] = useState("");
+  const [chatMsg,    setChatMsg] = useState("");
+  const [chatEnv,    setChatEnv] = useState(false);
   const hoje = new Date().toLocaleDateString("pt-BR");
 
   useEffect(() => {
@@ -34,6 +44,8 @@ export default function PortalOnline() {
         setFotos(data.fotos || []);
         setVistorias(data.vistorias || []);
         setEmpresa(data.empresa || null);
+        setMensagens(data.mensagens || []);
+        setDocumentos(data.documentos || []);
       } finally {
         setLoading(false);
       }
@@ -197,9 +209,19 @@ export default function PortalOnline() {
                 </div>
                 <div style={{ textAlign: "right" }}>
                   <div style={{ fontSize: 13, fontWeight: 800, color: m.status === "Aprovada" ? "#2e9e5b" : "#b97a00" }}>{fmt(m.valor)}</div>
-                  <div style={{ fontSize: 9, fontWeight: 700, color: m.status === "Aprovada" ? "#2e9e5b" : "#b97a00", marginTop: 2 }}>
-                    {m.status === "Aprovada" ? "✓ Aprovada" : "⏳ Pendente"}
-                  </div>
+                  {m.status === "Aprovada" ? (
+                    <div style={{ fontSize: 9, fontWeight: 700, color: "#2e9e5b", marginTop: 2 }}>✓ Aprovada</div>
+                  ) : (
+                    <button
+                      onClick={async () => {
+                        const { error } = await sb.rpc("portal_aprovar_medicao", { p_token: token, p_medicao_id: m.id });
+                        if (!error) setMedicoes((prev) => prev.map((x) => x.id === m.id ? { ...x, status: "Aprovada" } : x));
+                      }}
+                      style={{ marginTop: 4, background: "#2e9e5b", color: "#fff", border: "none", borderRadius: 6, padding: "4px 12px", fontSize: 10, fontWeight: 700, cursor: "pointer" }}
+                    >
+                      Aprovar ✓
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
@@ -347,6 +369,219 @@ export default function PortalOnline() {
             <button onClick={() => setFotoAberta(null)}
               style={{ position: "absolute", top: 16, right: 16, background: "rgba(255,255,255,0.15)", border: "none", color: "#fff", fontSize: 22, width: 40, height: 40, borderRadius: "50%", cursor: "pointer" }}>✕</button>
           </div>
+        )}
+
+        {/* Chat com a empresa */}
+        <Card title="Mensagens">
+          {mensagens.length === 0 && (
+            <div style={{ fontSize: 12, color: "#aaa", textAlign: "center", padding: "12px 0" }}>Nenhuma mensagem ainda. Envie uma abaixo.</div>
+          )}
+          <div style={{ maxHeight: 320, overflowY: "auto", marginBottom: 12 }}>
+            {mensagens.map((m, i) => {
+              const isClient = m.autor === "cliente";
+              return (
+                <div key={m.id || i} style={{ display: "flex", justifyContent: isClient ? "flex-end" : "flex-start", marginBottom: 8 }}>
+                  <div style={{
+                    maxWidth: "78%", background: isClient ? "#981915" : "#f0f0f0",
+                    color: isClient ? "#fff" : "#222", borderRadius: isClient ? "12px 12px 3px 12px" : "12px 12px 12px 3px",
+                    padding: "8px 12px", fontSize: 12, lineHeight: 1.5,
+                  }}>
+                    {!isClient && <div style={{ fontSize: 9, fontWeight: 700, color: "#981915", marginBottom: 3 }}>{m.nome || "Equipe"}</div>}
+                    <div>{m.mensagem}</div>
+                    <div style={{ fontSize: 9, opacity: .6, marginTop: 4, textAlign: "right" }}>
+                      {m.created_at ? new Date(m.created_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : ""}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <div style={{ borderTop: "1px solid #f0f0f0", paddingTop: 12 }}>
+            <input
+              value={chatNome}
+              onChange={(e) => setChatNome(e.target.value)}
+              placeholder="Seu nome"
+              style={{ width: "100%", border: "1px solid #ddd", borderRadius: 8, padding: "8px 12px", fontSize: 12, marginBottom: 8, outline: "none" }}
+            />
+            <textarea
+              value={chatMsg}
+              onChange={(e) => setChatMsg(e.target.value)}
+              placeholder="Escreva sua mensagem..."
+              rows={3}
+              style={{ width: "100%", border: "1px solid #ddd", borderRadius: 8, padding: "8px 12px", fontSize: 12, marginBottom: 8, resize: "vertical", outline: "none" }}
+            />
+            <button
+              disabled={chatEnv || !chatNome.trim() || !chatMsg.trim()}
+              onClick={async () => {
+                setChatEnv(true);
+                const { error } = await sb.rpc("portal_enviar_mensagem", { p_token: token, p_nome: chatNome.trim(), p_mensagem: chatMsg.trim() });
+                if (!error) {
+                  setMensagens((prev) => [...prev, { autor: "cliente", nome: chatNome.trim(), mensagem: chatMsg.trim(), created_at: new Date().toISOString() }]);
+                  setChatMsg("");
+                }
+                setChatEnv(false);
+              }}
+              style={{ width: "100%", background: chatEnv || !chatNome.trim() || !chatMsg.trim() ? "#ccc" : "#981915", color: "#fff", border: "none", borderRadius: 8, padding: "10px", fontSize: 13, fontWeight: 700, cursor: chatEnv ? "wait" : "pointer" }}
+            >
+              {chatEnv ? "Enviando..." : "Enviar mensagem"}
+            </button>
+          </div>
+        </Card>
+
+        {/* Documentos */}
+        <Card title="Documentos">
+          {documentos.length === 0 && (
+            <div style={{ fontSize: 12, color: "#aaa", textAlign: "center", padding: "8px 0 12px" }}>Nenhum documento ainda.</div>
+          )}
+          {documentos.map((doc, i) => (
+            <div key={doc.id || i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: "1px solid #f5f5f5" }}>
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 700 }}>{doc.nome}</div>
+                <div style={{ fontSize: 10, color: "#888" }}>{doc.tamanho} · {doc.created_at ? new Date(doc.created_at).toLocaleDateString("pt-BR") : ""}</div>
+              </div>
+              <a href={storageUrl(doc.storage_path)} target="_blank" rel="noreferrer"
+                style={{ background: "#981915", color: "#fff", border: "none", borderRadius: 6, padding: "4px 12px", fontSize: 10, fontWeight: 700, textDecoration: "none" }}>
+                ⬇ Baixar
+              </a>
+            </div>
+          ))}
+          <div style={{ marginTop: 14, borderTop: "1px solid #f0f0f0", paddingTop: 12 }}>
+            <div style={{ fontSize: 11, color: "#888", marginBottom: 8 }}>Enviar documento</div>
+            <input type="file" disabled={docUploading}
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                setDocUploading(true);
+                try {
+                  const ts = Date.now();
+                  const path = `portal/${token}/${ts}-${file.name}`;
+                  const { error: upErr } = await sb.storage.from("arquivos").upload(path, file);
+                  if (upErr) { alert("Erro no upload: " + upErr.message); return; }
+                  const formatSize = file.size > 1024 * 1024
+                    ? `${(file.size / (1024 * 1024)).toFixed(1)} MB`
+                    : `${(file.size / 1024).toFixed(0)} KB`;
+                  const { error: rpcErr } = await sb.rpc("portal_registrar_documento", {
+                    p_token: token, p_nome: file.name, p_storage_path: path, p_tamanho: formatSize,
+                  });
+                  if (rpcErr) { alert("Erro ao registrar: " + rpcErr.message); return; }
+                  setDocumentos((prev) => [...prev, { nome: file.name, storage_path: path, tamanho: formatSize, created_at: new Date().toISOString() }]);
+                  e.target.value = "";
+                } finally {
+                  setDocUploading(false);
+                }
+              }}
+              style={{ width: "100%", fontSize: 12, padding: "8px", border: "1px solid #ddd", borderRadius: 8, background: "#fafafa" }}
+            />
+            {docUploading && <div style={{ fontSize: 11, color: "#981915", marginTop: 6 }}>Enviando...</div>}
+          </div>
+        </Card>
+
+        {/* Assinatura Digital */}
+        {!obra.assinatura_data && (
+          <Card title="Assinatura Digital">
+            <div style={{ fontSize: 12, color: "#555", marginBottom: 14 }}>
+              Assine abaixo para confirmar o acompanhamento desta obra.
+            </div>
+            <input
+              value={sigNome}
+              onChange={(e) => setSigNome(e.target.value)}
+              placeholder="Seu nome completo"
+              style={{ width: "100%", border: "1px solid #ddd", borderRadius: 8, padding: "8px 12px", fontSize: 12, marginBottom: 10, outline: "none" }}
+            />
+            <div style={{ border: "1px solid #ddd", borderRadius: 8, background: "#fafafa", marginBottom: 10, overflow: "hidden", touchAction: "none" }}>
+              <canvas ref={canvasRef} width={400} height={150} style={{ display: "block", width: "100%", cursor: "crosshair" }}
+                onMouseDown={(e) => {
+                  isDrawing.current = true;
+                  const r = e.currentTarget.getBoundingClientRect();
+                  const sx = e.currentTarget.width / r.width;
+                  const sy = e.currentTarget.height / r.height;
+                  const ctx = canvasRef.current.getContext("2d");
+                  ctx.beginPath(); ctx.moveTo((e.clientX - r.left) * sx, (e.clientY - r.top) * sy);
+                }}
+                onMouseMove={(e) => {
+                  if (!isDrawing.current) return;
+                  const r = e.currentTarget.getBoundingClientRect();
+                  const sx = e.currentTarget.width / r.width;
+                  const sy = e.currentTarget.height / r.height;
+                  const ctx = canvasRef.current.getContext("2d");
+                  ctx.lineWidth = 2; ctx.lineCap = "round"; ctx.strokeStyle = "#1a1a1a";
+                  ctx.lineTo((e.clientX - r.left) * sx, (e.clientY - r.top) * sy); ctx.stroke();
+                }}
+                onMouseUp={() => { isDrawing.current = false; }}
+                onMouseLeave={() => { isDrawing.current = false; }}
+                onTouchStart={(e) => {
+                  e.preventDefault(); isDrawing.current = true;
+                  const r = e.currentTarget.getBoundingClientRect();
+                  const sx = e.currentTarget.width / r.width;
+                  const sy = e.currentTarget.height / r.height;
+                  const t = e.touches[0];
+                  const ctx = canvasRef.current.getContext("2d");
+                  ctx.beginPath(); ctx.moveTo((t.clientX - r.left) * sx, (t.clientY - r.top) * sy);
+                }}
+                onTouchMove={(e) => {
+                  e.preventDefault();
+                  if (!isDrawing.current) return;
+                  const r = e.currentTarget.getBoundingClientRect();
+                  const sx = e.currentTarget.width / r.width;
+                  const sy = e.currentTarget.height / r.height;
+                  const t = e.touches[0];
+                  const ctx = canvasRef.current.getContext("2d");
+                  ctx.lineWidth = 2; ctx.lineCap = "round"; ctx.strokeStyle = "#1a1a1a";
+                  ctx.lineTo((t.clientX - r.left) * sx, (t.clientY - r.top) * sy); ctx.stroke();
+                }}
+                onTouchEnd={() => { isDrawing.current = false; }}
+              />
+            </div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button onClick={() => {
+                const ctx = canvasRef.current.getContext("2d");
+                ctx.clearRect(0, 0, 400, 150);
+              }} style={{ flex: 1, padding: "9px 0", background: "#f0f0f0", border: "1px solid #ddd", borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+                Limpar
+              </button>
+              <button disabled={sigEnv || !sigNome.trim()} onClick={async () => {
+                const canvas = canvasRef.current;
+                const dataUrl = canvas.toDataURL("image/png");
+                // Check if canvas is blank
+                const blank = document.createElement("canvas");
+                blank.width = canvas.width; blank.height = canvas.height;
+                if (dataUrl === blank.toDataURL("image/png")) { alert("Por favor, desenhe sua assinatura."); return; }
+                setSigEnv(true);
+                try {
+                  const res = await fetch(dataUrl);
+                  const blob = await res.blob();
+                  const path = `assinaturas/${token}.png`;
+                  const { error: upErr } = await sb.storage.from("arquivos").upload(path, blob, { upsert: true, contentType: "image/png" });
+                  if (upErr) { alert("Erro no upload: " + upErr.message); return; }
+                  const assinaturaUrl = storageUrl(path);
+                  const { error: rpcErr } = await sb.rpc("portal_assinar", {
+                    p_token: token, p_nome: sigNome.trim(), p_assinatura_url: assinaturaUrl,
+                  });
+                  if (rpcErr) { alert("Erro ao assinar: " + rpcErr.message); return; }
+                  setObra((prev) => ({ ...prev, assinatura_data: new Date().toISOString(), assinatura_nome: sigNome.trim() }));
+                } finally {
+                  setSigEnv(false);
+                }
+              }} style={{ flex: 2, padding: "9px 0", background: sigEnv || !sigNome.trim() ? "#ccc" : "#981915", color: "#fff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: sigEnv ? "wait" : "pointer" }}>
+                {sigEnv ? "Assinando..." : "✍ Assinar"}
+              </button>
+            </div>
+          </Card>
+        )}
+        {obra.assinatura_data && (
+          <Card title="Assinatura Digital">
+            <div style={{ background: "#dcfce7", border: "1px solid #86efac", borderRadius: 8, padding: "12px 16px", display: "flex", alignItems: "center", gap: 10 }}>
+              <span style={{ fontSize: 20 }}>✓</span>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#166534" }}>
+                  Assinado por {obra.assinatura_nome}
+                </div>
+                <div style={{ fontSize: 11, color: "#166534", opacity: .8 }}>
+                  {new Date(obra.assinatura_data).toLocaleString("pt-BR")}
+                </div>
+              </div>
+            </div>
+          </Card>
         )}
 
         {/* Contato */}

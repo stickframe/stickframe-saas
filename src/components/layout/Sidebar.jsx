@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { C, NAV, PERFIS } from "../../utils/constants";
 import useAppStore from "../../store/useAppStore";
+import { sb, getEmpresaId } from "../../services/supabase";
 import { LOGO_STICKFRAME } from "../../utils/cdn";
 
 export default function Sidebar({ open, onClose }) {
@@ -14,6 +15,17 @@ export default function Sidebar({ open, onClose }) {
   const perfil    = PERFIS[user?.perfil] || PERFIS.diretor;
   const navFiltro = NAV.filter((n) => perfil.paginas.includes(n.key));
   const active    = perfil.paginas.includes(activePage) ? activePage : "dashboard";
+
+  const [preOrcCount, setPreOrcCount] = useState(0);
+  useEffect(() => {
+    const empId = getEmpresaId();
+    if (!empId) return;
+    sb.from("pre_orcamentos")
+      .select("id", { count: "exact", head: true })
+      .eq("empresa_id", empId)
+      .eq("status", "Novo")
+      .then(({ count }) => setPreOrcCount(count || 0));
+  }, []);
 
   // Badge de follow-ups vencidos para perfil comercial
   const hoje = new Date().toISOString().slice(0, 10);
@@ -64,6 +76,11 @@ export default function Sidebar({ open, onClose }) {
             {n.key === "crm" && followupsVencidos > 0 && (
               <span style={{ background: C.red, color: "#fff", borderRadius: 10, fontSize: 10, fontWeight: 700, padding: "1px 6px", minWidth: 18, textAlign: "center" }}>
                 {followupsVencidos}
+              </span>
+            )}
+            {n.key === "orcamentos" && preOrcCount > 0 && (
+              <span style={{ background: "#2e9e5b", color: "#fff", borderRadius: 10, fontSize: 10, fontWeight: 700, padding: "1px 6px", minWidth: 18, textAlign: "center" }}>
+                {preOrcCount}
               </span>
             )}
           </button>

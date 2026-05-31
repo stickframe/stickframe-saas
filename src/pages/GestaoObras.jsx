@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
 import { useToast } from "../hooks/useToast";
-import { printHtml } from "../utils/printHtml";
 import { C, FASES } from "../utils/constants";
 import { exportarObrasExcel } from "../utils/exportExcel";
 import useAppStore from "../store/useAppStore";
@@ -11,6 +10,8 @@ import Select from "../components/ui/Select";
 import Badge from "../components/ui/Badge";
 import Modal from "../components/ui/Modal";
 import { listarQuantitativos } from "../services/repositories/quantitativoRepository";
+import { emailAlertaObraAtrasada } from "../services/emailService";
+import { listarCheckinsDia } from "../services/repositories/checkinRepository";
 
 const ICONE_TIPO  = { pdf: "📄", imagem: "🖼️", outro: "📎" };
 const CATS        = ["Projeto", "Foto", "Documento", "Outro"];
@@ -101,6 +102,15 @@ function FormObra({ form, setForm, clientes, onSave, onCancel, btnLabel }) {
         <Input value={form.contrato} onChange={set("contrato")} type="number" min="0" placeholder="0" />
       </div>
 
+      {/* Retenção de garantia */}
+      <div>
+        <Label>Retenção de garantia (%)</Label>
+        <Input value={form.retencao_pct ?? 5} onChange={set("retencao_pct")} type="number" min="0" max="20" placeholder="5" />
+        <div style={{ fontSize: 11, color: C.muted, marginTop: 4 }}>
+          % do contrato retido até a entrega (padrão 5%)
+        </div>
+      </div>
+
       {/* Email do cliente */}
       <div>
         <Label>Email do cliente <span style={{ fontSize: 10, color: C.muted, fontWeight: 400 }}>(para notificações automáticas)</span></Label>
@@ -130,7 +140,7 @@ function FormObra({ form, setForm, clientes, onSave, onCancel, btnLabel }) {
 const FORM_VAZIO = {
   nome: "", cliente_id: "", cliente: "", email_cliente: "",
   status: "Planejamento", fase: "Projeto executivo",
-  prazo_inicio: "", prazo_fim: "", contrato: 0, progresso: 0,
+  prazo_inicio: "", prazo_fim: "", contrato: 0, progresso: 0, retencao_pct: 5,
 };
 
 export default function GestaoObras() {
@@ -179,6 +189,8 @@ export default function GestaoObras() {
   const [checklistMarcados, setChecklistMarcados] = useState({});
   const [fotoAmpliada, setFotoAmpliada] = useState(null);
   const [qrModal,      setQrModal]      = useState(false);
+  const [checkinsHoje, setCheckinsHoje] = useState([]);
+  const [checkinsVis,  setCheckinsVis]  = useState(false);
 
   useEffect(() => {
     if (!obraId && obras.length > 0) setObraId(obras[0].id);
@@ -244,6 +256,7 @@ export default function GestaoObras() {
       prazo_fim:     obra.prazo_fim    || "",
       contrato:      obra.contrato || 0,
       progresso:     obra.progresso || 0,
+      retencao_pct:  obra.retencao_pct ?? 5,
     });
     setModal("editar");
   }
@@ -278,6 +291,7 @@ export default function GestaoObras() {
         prazo_fim:     form.prazo_fim    || null,
         contrato:      Number(form.contrato) || 0,
         progresso,
+        retencao_pct:  Number(form.retencao_pct) || 0,
       });
       setModal(null);
       mostrarToast("✅ Obra atualizada!");
@@ -541,6 +555,124 @@ export default function GestaoObras() {
     printHtml(html, `dossie-${obra.nome.replace(/\s+/g, "-").toLowerCase()}`);
   }
 
+  async function gerarRelatorioObra() {
+    if (!obra) return;
+    mostrarToast("⏳ Gerando relatório...");
+    await loadMedicoes(obraId);
+
+    const lans = financeiro[obraId]?.lancamentos || [];
+    const meds = medicoes[obraId] || [];
+    const contrato = Number(obra.contrato) || 0;
+    const receitas = lans.filter((l) => l.tipo === "receita").reduce((a, l) => a + (l.valor || 0), 0);
+    const despesas = lans.filter((l) => l.tipo === "despesa").reduce((a, l) => a + (l.valor || 0), 0);
+    const margem = contrato > 0 ? (((contrato - despesas) / contrato) * 100).toFixed(1) : "—";
+    const hoje = new Date().toLocaleDateString("pt-BR");
+    const fmtR = (v) => (v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+    // Prazo info
+    const inicio = obra.prazo_inicio ? new Date(obra.prazo_inicio + "T00:00").toLocaleDateString("pt-BR") : "—";
+    const fim = obra.prazo_fim ? new Date(obra.prazo_fim + "T00:00").toLocaleDateString("pt-BR") : "—";
+    const diasRestantes = obra.prazo_fim
+      ? Math.ceil((new Date(obra.prazo_fim + "T00:00") - new Date()) / 86400000)
+      : null;
+
+    // Cash flow — sorted lancamentos with running balance
+    const lansOrdenados = [...lans].sort((a, b) => (a.data || "").localeCompare(b.data || ""));
+    let saldoAcc = 0;
+    const cashFlowRows = lansOrdenados.map((l) => {
+      saldoAcc += l.tipo === "receita" ? (l.valor || 0) : -(l.valor || 0);
+      return `<tr>
+        <td>${l.data ? new Date(l.data + "T00:00").toLocaleDateString("pt-BR") : "—"}</td>
+        <td>${l.descricao || "—"}</td>
+        <td style="color:${l.tipo === "receita" ? "#2e9e5b" : "#dc2626"};font-weight:600">${l.tipo === "receita" ? "+" : "−"}${fmtR(l.valor)}</td>
+        <td style="font-weight:700;color:${saldoAcc >= 0 ? "#2e9e5b" : "#dc2626"}">${fmtR(saldoAcc)}</td>
+      </tr>`;
+    }).join("");
+
+    // Medições table
+    const medsRows = meds.map((m) => `<tr>
+      <td>${m.numero || "—"}</td>
+      <td>${m.descricao || "—"}</td>
+      <td>${fmtR(m.valor)}</td>
+      <td style="color:${m.status === "Aprovada" ? "#2e9e5b" : "#b97a00"};font-weight:700">${m.status}</td>
+    </tr>`).join("");
+
+    const htmlContent = `
+      <div style="max-width:900px;margin:0 auto;padding:40px">
+        <!-- Header -->
+        <div style="border-bottom:3px solid #981915;padding-bottom:20px;margin-bottom:24px">
+          <div style="font-size:10px;font-weight:800;letter-spacing:2px;color:#981915;margin-bottom:8px">STICKFRAME · RELATÓRIO DE OBRA</div>
+          <h1 style="font-size:26px;font-weight:900;margin:0 0 6px">${obra.nome}</h1>
+          <div style="font-size:13px;color:#6b7280">Cliente: <strong>${obra.cliente || "—"}</strong> &nbsp;·&nbsp; Gerado em: <strong>${hoje}</strong></div>
+        </div>
+
+        <!-- KPIs -->
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:28px">
+          ${[
+            ["CONTRATO TOTAL", fmtR(contrato), "#1a1a1a"],
+            ["RECEITAS", fmtR(receitas), "#2e9e5b"],
+            ["DESPESAS", fmtR(despesas), "#dc2626"],
+            ["MARGEM ESTIMADA", margem !== "—" ? margem + "%" : "—", Number(margem) > 20 ? "#2e9e5b" : "#b97a00"],
+            ["PROGRESSO", `${obra.progresso || 0}%`, "#981915"],
+            ["FASE ATUAL", obra.fase || "—", "#1a1a1a"],
+          ].map(([l, v, c]) => `<div style="background:#f9fafb;border-radius:10px;padding:14px 18px;border:1px solid #e5e7eb">
+            <div style="font-size:10px;color:#9ca3af;letter-spacing:1px;margin-bottom:6px">${l}</div>
+            <div style="font-size:20px;font-weight:900;color:${c}">${v}</div>
+          </div>`).join("")}
+        </div>
+
+        <!-- Prazo -->
+        <h2 style="font-size:13px;font-weight:800;letter-spacing:1px;color:#981915;margin:24px 0 12px;text-transform:uppercase;border-bottom:1px solid #e5e7eb;padding-bottom:8px">⏱ Prazo</h2>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px">
+          <div style="background:#f9fafb;border-radius:8px;padding:12px 16px;border:1px solid #e5e7eb"><div style="font-size:10px;color:#9ca3af;margin-bottom:4px">INÍCIO</div><div style="font-weight:700">${inicio}</div></div>
+          <div style="background:#f9fafb;border-radius:8px;padding:12px 16px;border:1px solid #e5e7eb"><div style="font-size:10px;color:#9ca3af;margin-bottom:4px">ENTREGA PREVISTA</div><div style="font-weight:700">${fim}</div></div>
+          <div style="background:${diasRestantes != null && diasRestantes < 0 ? "#fef2f2" : "#f9fafb"};border-radius:8px;padding:12px 16px;border:1px solid ${diasRestantes != null && diasRestantes < 0 ? "#fca5a5" : "#e5e7eb"}">
+            <div style="font-size:10px;color:#9ca3af;margin-bottom:4px">DIAS RESTANTES</div>
+            <div style="font-weight:700;color:${diasRestantes != null && diasRestantes < 0 ? "#dc2626" : "#1a1a1a"}">${diasRestantes != null ? (diasRestantes < 0 ? `${Math.abs(diasRestantes)} dias de atraso` : `${diasRestantes} dias`) : "—"}</div>
+          </div>
+        </div>
+
+        <!-- Cash Flow -->
+        <h2 style="font-size:13px;font-weight:800;letter-spacing:1px;color:#981915;margin:24px 0 12px;text-transform:uppercase;border-bottom:1px solid #e5e7eb;padding-bottom:8px">💰 Fluxo de Caixa</h2>
+        ${lans.length === 0 ? "<p style='color:#9ca3af;font-size:13px'>Nenhum lançamento registrado.</p>" : `
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead><tr style="background:#f3f4f6">
+            <th style="padding:8px 10px;text-align:left;font-size:10px;color:#6b7280;letter-spacing:.8px">DATA</th>
+            <th style="padding:8px 10px;text-align:left;font-size:10px;color:#6b7280;letter-spacing:.8px">DESCRIÇÃO</th>
+            <th style="padding:8px 10px;text-align:left;font-size:10px;color:#6b7280;letter-spacing:.8px">VALOR</th>
+            <th style="padding:8px 10px;text-align:left;font-size:10px;color:#6b7280;letter-spacing:.8px">SALDO ACUMULADO</th>
+          </tr></thead>
+          <tbody>${cashFlowRows}</tbody>
+        </table>`}
+
+        <!-- Medições -->
+        <h2 style="font-size:13px;font-weight:800;letter-spacing:1px;color:#981915;margin:28px 0 12px;text-transform:uppercase;border-bottom:1px solid #e5e7eb;padding-bottom:8px">📐 Medições (${meds.length})</h2>
+        ${meds.length === 0 ? "<p style='color:#9ca3af;font-size:13px'>Nenhuma medição registrada.</p>" : `
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead><tr style="background:#f3f4f6">
+            <th style="padding:8px 10px;text-align:left;font-size:10px;color:#6b7280;letter-spacing:.8px">Nº</th>
+            <th style="padding:8px 10px;text-align:left;font-size:10px;color:#6b7280;letter-spacing:.8px">DESCRIÇÃO</th>
+            <th style="padding:8px 10px;text-align:left;font-size:10px;color:#6b7280;letter-spacing:.8px">VALOR</th>
+            <th style="padding:8px 10px;text-align:left;font-size:10px;color:#6b7280;letter-spacing:.8px">STATUS</th>
+          </tr></thead>
+          <tbody>${medsRows}</tbody>
+        </table>`}
+
+        <div style="margin-top:40px;padding-top:14px;border-top:1px solid #e5e7eb;font-size:11px;color:#9ca3af;text-align:center">
+          Stick Frame Sistemas Construtivos · Santo André/SP · Relatório gerado em ${hoje}
+        </div>
+      </div>`;
+
+    const w = window.open("", "_blank");
+    w.document.write(`<!DOCTYPE html><html><head><title>Relatório — ${obra.nome}</title><style>
+      body { font-family: Arial, sans-serif; font-size: 12px; color: #1a1a1a; margin: 0; }
+      @media print { @page { margin: 20mm; } }
+      table td, table th { border-bottom: 1px solid #e5e7eb; }
+    </style></head><body>${htmlContent}</body></html>`);
+    w.document.close();
+    setTimeout(() => { w.print(); }, 400);
+  }
+
   function handleFiles(files) {
     const lista = Array.from(files);
     if (!lista.length) return;
@@ -671,6 +803,35 @@ export default function GestaoObras() {
         </div>
       </div>
 
+      {/* Dashboard de métricas */}
+      {obras.length > 0 && (() => {
+        const fmtC = (v) => Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+        const ativas    = obras.filter((o) => o.status === "Em andamento");
+        const concluidas = obras.filter((o) => o.status === "Concluída");
+        const valorTotal = obras.filter((o) => o.status !== "Concluída").reduce((s, o) => s + (Number(o.contrato) || 0), 0);
+        const progMedio = ativas.length > 0 ? Math.round(ativas.reduce((s, o) => s + (o.progresso || 0), 0) / ativas.length) : 0;
+        const totalDespesas = obras.reduce((s, o) => {
+          const lans = financeiro[o.id]?.lancamentos || [];
+          return s + lans.filter((l) => l.tipo === "despesa").reduce((a, l) => a + (l.valor || 0), 0);
+        }, 0);
+        return (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px,1fr))", gap: 12, marginBottom: 20 }}>
+            {[
+              { label: "Em andamento", value: ativas.length, sub: `${concluidas.length} concluída(s)`, color: "#2e9e5b" },
+              { label: "Carteira ativa", value: fmtC(valorTotal), sub: "valor dos contratos ativos", color: C.red },
+              { label: "Progresso médio", value: `${progMedio}%`, sub: "obras em andamento", color: "#4a9eff" },
+              { label: "Custo lançado", value: fmtC(totalDespesas), sub: "despesas registradas", color: "#b97a00" },
+            ].map((m) => (
+              <div key={m.label} style={{ background: C.surface, border: `1px solid ${C.border}`, borderTop: `3px solid ${m.color}`, borderRadius: 10, padding: "14px 16px" }}>
+                <div style={{ fontSize: 11, color: C.muted, marginBottom: 4 }}>{m.label}</div>
+                <div style={{ fontSize: 18, fontWeight: 800, color: m.color }}>{m.value}</div>
+                <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{m.sub}</div>
+              </div>
+            ))}
+          </div>
+        );
+      })()}
+
       {/* Painel de Atrasos */}
       {(() => {
         const hojeStr = new Date().toISOString().split("T")[0];
@@ -698,6 +859,21 @@ export default function GestaoObras() {
                     </div>
                   ))}
                 </div>
+                <button
+                  onClick={async () => {
+                    const empresa = useAppStore.getState().empresa;
+                    const emailDest = empresa?.email || "";
+                    if (!emailDest) { mostrarToast("Configure o e-mail da empresa nas configurações.", true); return; }
+                    for (const o of atrasadas) {
+                      const diasAtraso = Math.ceil((new Date() - new Date(o.prazo_fim + "T00:00")) / 86400000);
+                      await emailAlertaObraAtrasada({ nomeObra: o.nome, prazoFim: o.prazo_fim, diasAtraso, email: o.email_cliente || emailDest });
+                    }
+                    mostrarToast(`📧 ${atrasadas.length} alerta(s) enviado(s)`);
+                  }}
+                  style={{ marginTop: 10, width: "100%", padding: "7px 0", background: C.danger + "22", border: `1px solid ${C.danger}44`, borderRadius: 6, color: C.danger, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}
+                >
+                  📧 Enviar alertas
+                </button>
               </div>
             )}
             {emRisco.length > 0 && (
@@ -782,7 +958,7 @@ export default function GestaoObras() {
               <div>
                 {/* Abas */}
                 <div style={{ display: "flex", borderBottom: `1px solid ${C.border}` }}>
-                  {[["fases", "📋 Fases da obra"], ["fotos", "📷 Fotos"], ["arquivos", "📁 Arquivos"], ["historico", "🕑 Histórico"]].map(([k, l]) => (
+                  {[["fases", "📋 Fases"], ["financeiro", "💰 Financeiro"], ["fluxo", "📈 Fluxo"], ["cronograma", "📅 Cronograma"], ["fotos", "📷 Fotos"], ["arquivos", "📁 Arquivos"], ["historico", "🕑 Histórico"]].map(([k, l]) => (
                     <button key={k} onClick={() => setAbaAtiva(k)} style={{
                       padding: "10px 20px", background: "transparent", border: "none",
                       borderBottom: `2px solid ${abaAtiva === k ? C.red : "transparent"}`,
@@ -842,6 +1018,263 @@ export default function GestaoObras() {
                     })}
                   </div>
                 )}
+
+                {/* ABA FINANCEIRO */}
+                {abaAtiva === "financeiro" && (() => {
+                  const fmtC = (v) => Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+                  const lans = financeiro[obraId]?.lancamentos || [];
+                  const meds = medicoes[obraId] || [];
+                  const contrato = Number(obra.contrato) || 0;
+                  const receitas = lans.filter((l) => l.tipo === "receita").reduce((a, l) => a + (l.valor || 0), 0);
+                  const despesas = lans.filter((l) => l.tipo === "despesa").reduce((a, l) => a + (l.valor || 0), 0);
+                  const medAprov = meds.filter((m) => m.status === "Aprovada").reduce((a, m) => a + (m.valor || 0), 0);
+                  const saldo = receitas - despesas;
+                  const margem = contrato > 0 ? ((contrato - despesas) / contrato) * 100 : null;
+                  const executado = contrato > 0 ? (despesas / contrato) * 100 : 0;
+                  return (
+                    <div style={{ background: C.surface, borderRadius: "0 0 12px 12px", border: `1px solid ${C.border}`, borderTop: "none", padding: 22 }}>
+                      {/* KPIs */}
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(130px,1fr))", gap: 10, marginBottom: 24 }}>
+                        {[
+                          { label: "Valor contratado", value: fmtC(contrato), color: C.text },
+                          { label: "Receitas lançadas", value: fmtC(receitas), color: "#2e9e5b" },
+                          { label: "Despesas lançadas", value: fmtC(despesas), color: C.danger },
+                          { label: "Saldo", value: fmtC(saldo), color: saldo >= 0 ? "#2e9e5b" : C.danger },
+                          ...(margem !== null ? [{ label: "Margem estimada", value: `${margem.toFixed(1)}%`, color: margem > 20 ? "#2e9e5b" : margem > 0 ? "#b97a00" : C.danger }] : []),
+                          ...(medAprov > 0 ? [{ label: "Medições aprovadas", value: fmtC(medAprov), color: "#4a9eff" }] : []),
+                        ].map((k) => (
+                          <div key={k.label} style={{ background: C.darker, borderRadius: 8, padding: "12px 14px", borderTop: `3px solid ${k.color}` }}>
+                            <div style={{ fontSize: 11, color: C.muted, marginBottom: 4 }}>{k.label}</div>
+                            <div style={{ fontSize: 16, fontWeight: 800, color: k.color }}>{k.value}</div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Retenção de garantia */}
+                      {obra.retencao_pct > 0 && contrato > 0 && (() => {
+                        const retencao = contrato * (Number(obra.retencao_pct) / 100);
+                        const retLiberada = obra.status === "Concluída";
+                        return (
+                          <div style={{ background: retLiberada ? "#2e9e5b11" : "#b97a0011", border: `1px solid ${retLiberada ? "#2e9e5b44" : "#b97a0044"}`, borderRadius: 8, padding: "12px 16px", marginBottom: 20 }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                              <div>
+                                <div style={{ fontSize: 11, fontWeight: 700, color: retLiberada ? "#2e9e5b" : "#b97a00", letterSpacing: 1, marginBottom: 3 }}>
+                                  {retLiberada ? "✓ RETENÇÃO LIBERADA" : "🔒 RETENÇÃO DE GARANTIA"}
+                                </div>
+                                <div style={{ fontSize: 12, color: C.muted }}>{obra.retencao_pct}% do contrato · {retLiberada ? "Obra concluída" : "Liberado na entrega"}</div>
+                              </div>
+                              <div style={{ fontSize: 20, fontWeight: 900, color: retLiberada ? "#2e9e5b" : "#b97a00" }}>{fmtC(retencao)}</div>
+                            </div>
+                          </div>
+                        );
+                      })()}
+
+                      {/* Barra de execução orçamentária */}
+                      {contrato > 0 && (
+                        <div style={{ marginBottom: 24 }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: C.muted, marginBottom: 6 }}>
+                            <span>Execução orçamentária</span>
+                            <span style={{ fontWeight: 700, color: executado > 100 ? C.danger : C.text }}>{executado.toFixed(1)}% do contrato</span>
+                          </div>
+                          <div style={{ height: 10, background: C.dark, borderRadius: 6, overflow: "hidden" }}>
+                            <div style={{ height: 10, width: `${Math.min(executado, 100)}%`, background: executado > 90 ? C.danger : executado > 70 ? "#b97a00" : "#2e9e5b", borderRadius: 6, transition: "width .5s" }} />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Lista de lançamentos */}
+                      <div style={{ fontSize: 12, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 10, textTransform: "uppercase" }}>
+                        Lançamentos da obra ({lans.length})
+                      </div>
+                      {lans.length === 0 ? (
+                        <div style={{ textAlign: "center", padding: "24px 0", color: C.muted, fontSize: 13 }}>
+                          Nenhum lançamento financeiro registrado para esta obra.<br />
+                          <span style={{ fontSize: 11 }}>Acesse o módulo Financeiro para lançar receitas e despesas.</span>
+                        </div>
+                      ) : (
+                        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                          {[...lans].sort((a, b) => (b.data || "").localeCompare(a.data || "")).map((l) => (
+                            <div key={l.id} style={{ display: "grid", gridTemplateColumns: "auto 1fr auto auto", gap: 10, alignItems: "center", padding: "9px 12px", background: C.darker, borderRadius: 8, borderLeft: `3px solid ${l.tipo === "receita" ? "#2e9e5b" : C.danger}` }}>
+                              <span style={{ fontSize: 18 }}>{l.tipo === "receita" ? "📥" : "📤"}</span>
+                              <div>
+                                <div style={{ fontSize: 12, fontWeight: 600 }}>{l.descricao || "—"}</div>
+                                <div style={{ fontSize: 11, color: C.muted }}>
+                                  {l.categoria || l.tipo} · {l.data ? new Date(l.data + "T00:00").toLocaleDateString("pt-BR") : "—"}
+                                  {l.data_vencimento && (
+                                    <span style={{ marginLeft: 6, color: new Date(l.data_vencimento + "T00:00") < new Date() && l.status !== "Pago" && l.status !== "Recebido" ? C.danger : C.muted }}>
+                                      · venc. {new Date(l.data_vencimento + "T00:00").toLocaleDateString("pt-BR")}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                              <span style={{ fontSize: 13, fontWeight: 700, color: l.tipo === "receita" ? "#2e9e5b" : C.danger }}>
+                                {l.tipo === "receita" ? "+" : "−"}{fmtC(l.valor)}
+                              </span>
+                              <span style={{ fontSize: 10, padding: "2px 6px", borderRadius: 4, background: l.status === "Pago" || l.status === "Recebido" ? "#2e9e5b22" : "#b97a0022", color: l.status === "Pago" || l.status === "Recebido" ? "#2e9e5b" : "#b97a00" }}>
+                                {l.status || "—"}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+
+                {/* ABA FLUXO */}
+                {abaAtiva === "fluxo" && (() => {
+                  const fmtC = (v) => Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+                  const lans = financeiro[obraId]?.lancamentos || [];
+
+                  // Group by YYYY-MM
+                  const byMonth = {};
+                  lans.forEach((l) => {
+                    const key = (l.data || "").slice(0, 7);
+                    if (!key) return;
+                    if (!byMonth[key]) byMonth[key] = { rec: 0, desp: 0 };
+                    if (l.tipo === "receita") byMonth[key].rec += l.valor || 0;
+                    else byMonth[key].desp += l.valor || 0;
+                  });
+
+                  const meses = Object.keys(byMonth).sort().slice(-12);
+                  let saldoAcc = 0;
+                  const rows = meses.map((m) => {
+                    const { rec, desp } = byMonth[m];
+                    saldoAcc += rec - desp;
+                    const [ano, mes] = m.split("-");
+                    const label = `${["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"][Number(mes)-1]}/${ano.slice(2)}`;
+                    return { key: m, label, rec, desp, saldo: saldoAcc };
+                  });
+
+                  const maxVal = Math.max(...rows.map((r) => Math.max(r.rec, r.desp)), 1);
+                  const chartH = 140;
+                  const barW = rows.length > 0 ? Math.floor(480 / rows.length / 2) - 2 : 20;
+
+                  return (
+                    <div style={{ background: C.surface, borderRadius: "0 0 12px 12px", border: `1px solid ${C.border}`, borderTop: "none", padding: 22 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 16 }}>📈 Fluxo de Caixa Mensal</div>
+
+                      {rows.length === 0 ? (
+                        <div style={{ textAlign: "center", padding: "32px 0", color: C.muted, fontSize: 13 }}>Nenhum lançamento registrado.</div>
+                      ) : (
+                        <>
+                          {/* SVG bar chart */}
+                          <div style={{ overflowX: "auto", marginBottom: 20 }}>
+                            <svg viewBox={`0 0 ${Math.max(rows.length * (barW * 2 + 6) + 20, 400)} ${chartH + 30}`}
+                              style={{ width: "100%", minWidth: 360, height: chartH + 30 }}>
+                              {rows.map((r, i) => {
+                                const x = i * (barW * 2 + 6) + 10;
+                                const recH = (r.rec / maxVal) * (chartH - 20);
+                                const despH = (r.desp / maxVal) * (chartH - 20);
+                                return (
+                                  <g key={r.key}>
+                                    <rect x={x} y={chartH - recH} width={barW} height={recH} fill="#2e9e5b" rx="2" opacity="0.85" />
+                                    <rect x={x + barW + 2} y={chartH - despH} width={barW} height={despH} fill={C.red} rx="2" opacity="0.85" />
+                                    <text x={x + barW} y={chartH + 14} textAnchor="middle" fontSize="8" fill={C.muted}>{r.label}</text>
+                                  </g>
+                                );
+                              })}
+                              <line x1="8" y1={chartH} x2="100%" y2={chartH} stroke={C.border} strokeWidth="1" />
+                            </svg>
+                          </div>
+                          <div style={{ display: "flex", gap: 16, fontSize: 11, marginBottom: 16 }}>
+                            <span><span style={{ display: "inline-block", width: 10, height: 10, background: "#2e9e5b", borderRadius: 2, marginRight: 4 }} />Receita</span>
+                            <span><span style={{ display: "inline-block", width: 10, height: 10, background: C.red, borderRadius: 2, marginRight: 4 }} />Despesa</span>
+                          </div>
+
+                          {/* Table */}
+                          <div style={{ overflowX: "auto" }}>
+                            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                              <thead>
+                                <tr style={{ background: C.darker }}>
+                                  {["Mês", "Receitas", "Despesas", "Resultado", "Saldo Acum."].map((h) => (
+                                    <th key={h} style={{ padding: "8px 12px", textAlign: "right", fontWeight: 700, fontSize: 11, color: C.muted, whiteSpace: "nowrap", textAlign: h === "Mês" ? "left" : "right" }}>{h}</th>
+                                  ))}
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {rows.map((r, i) => {
+                                  const res = r.rec - r.desp;
+                                  return (
+                                    <tr key={r.key} style={{ borderBottom: `1px solid ${C.border}`, background: i % 2 ? C.darker : "transparent" }}>
+                                      <td style={{ padding: "8px 12px", fontWeight: 600 }}>{r.label}</td>
+                                      <td style={{ padding: "8px 12px", textAlign: "right", color: "#2e9e5b" }}>{fmtC(r.rec)}</td>
+                                      <td style={{ padding: "8px 12px", textAlign: "right", color: C.danger }}>{fmtC(r.desp)}</td>
+                                      <td style={{ padding: "8px 12px", textAlign: "right", fontWeight: 700, color: res >= 0 ? "#2e9e5b" : C.danger }}>{fmtC(res)}</td>
+                                      <td style={{ padding: "8px 12px", textAlign: "right", fontWeight: 700, color: r.saldo >= 0 ? "#2e9e5b" : C.danger }}>{fmtC(r.saldo)}</td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  );
+                })()}
+
+                {/* ABA CRONOGRAMA */}
+                {abaAtiva === "cronograma" && (() => {
+                  const inicio = obra.prazo_inicio ? new Date(obra.prazo_inicio) : new Date();
+                  const fim    = obra.prazo_fim    ? new Date(obra.prazo_fim)    : new Date(inicio.getTime() + 180 * 86400000);
+                  const totalDias = Math.ceil((fim - inicio) / 86400000) || 1;
+                  const diasPorFase = Math.floor(totalDias / FASES.length) || 1;
+                  const faseIdx = FASES.indexOf(obra.fase);
+                  const hoje = new Date();
+
+                  return (
+                    <div style={{ background: C.surface, borderRadius: "0 0 12px 12px", border: `1px solid ${C.border}`, borderTop: "none", padding: 22 }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 16 }}>
+                        {obra.prazo_inicio ? new Date(obra.prazo_inicio + "T00:00").toLocaleDateString("pt-BR") : "—"} → {obra.prazo_fim ? new Date(obra.prazo_fim + "T00:00").toLocaleDateString("pt-BR") : "—"} · {totalDias} dias
+                      </div>
+
+                      {FASES.map((fase, i) => {
+                        const faseInicio = new Date(inicio.getTime() + i * diasPorFase * 86400000);
+                        const faseFim    = new Date(inicio.getTime() + (i + 1) * diasPorFase * 86400000);
+                        const done = i < faseIdx;
+                        const curr = i === faseIdx;
+                        const pctStart = (i * diasPorFase / totalDias) * 100;
+                        const pctWidth = (diasPorFase / totalDias) * 100;
+                        let phasePct = done ? 100 : curr ? Math.min(100, Math.max(0, Math.round(((hoje - faseInicio) / (faseFim - faseInicio)) * 100))) : 0;
+
+                        return (
+                          <div key={fase} style={{ marginBottom: 12 }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, marginBottom: 4 }}>
+                              <span style={{ color: done ? C.success : curr ? C.text : C.muted, fontWeight: curr ? 700 : 400 }}>
+                                {done ? "✓ " : curr ? "▶ " : ""}{fase}
+                              </span>
+                              <span style={{ color: C.muted, fontSize: 10 }}>
+                                {faseInicio.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })} – {faseFim.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}
+                              </span>
+                            </div>
+                            <div style={{ height: 20, background: C.dark, borderRadius: 4, overflow: "hidden", position: "relative" }}>
+                              <div style={{
+                                position: "absolute", left: `${pctStart}%`, width: `${pctWidth}%`, height: "100%",
+                                background: done ? "#2e9e5b33" : curr ? "#98191533" : C.darker,
+                                border: `1px solid ${done ? "#2e9e5b" : curr ? C.red : C.border}`, borderRadius: 4,
+                              }}>
+                                <div style={{ height: "100%", width: `${phasePct}%`, background: done ? "#2e9e5b" : C.red, borderRadius: "4px 0 0 4px" }} />
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+
+                      {obra.prazo_inicio && (() => {
+                        const pctHoje = Math.min(100, Math.max(0, ((hoje - inicio) / (fim - inicio)) * 100));
+                        return (
+                          <div style={{ position: "relative", height: 20, marginTop: 8 }}>
+                            <div style={{ position: "absolute", left: `${pctHoje}%`, top: 0, bottom: 0, width: 2, background: "#ffd700" }} />
+                            <div style={{ position: "absolute", left: `${pctHoje}%`, top: 0, fontSize: 9, color: "#ffd700", whiteSpace: "nowrap", transform: "translateX(-50%)" }}>
+                              ◆ Hoje
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  );
+                })()}
 
                 {/* ABA FOTOS */}
                 {abaAtiva === "fotos" && (
@@ -1038,12 +1471,48 @@ export default function GestaoObras() {
                       cursor: "pointer", fontFamily: "inherit",
                     }}>📄 Dossiê de Obra</button>
 
+                    <button onClick={gerarRelatorioObra} style={{
+                      width: "100%", padding: "8px 0",
+                      background: "#0f766e22", border: "1px solid #0f766e44",
+                      borderRadius: 6, color: "#0f766e", fontSize: 12, fontWeight: 700,
+                      cursor: "pointer", fontFamily: "inherit",
+                    }}>📊 Relatório de Obra</button>
+
                     <button onClick={() => setQrModal(true)} style={{
                       width: "100%", padding: "8px 0",
                       background: "#9b59b622", border: "1px solid #9b59b644",
                       borderRadius: 6, color: "#9b59b6", fontSize: 12, fontWeight: 700,
                       cursor: "pointer", fontFamily: "inherit",
                     }}>📱 QR Code Check-in</button>
+
+                    <button onClick={async () => {
+                      if (checkinsVis) { setCheckinsVis(false); return; }
+                      const list = await listarCheckinsDia(obraId).catch(() => []);
+                      setCheckinsHoje(list);
+                      setCheckinsVis(true);
+                    }} style={{
+                      width: "100%", padding: "8px 0",
+                      background: "#0f766e22", border: "1px solid #0f766e44",
+                      borderRadius: 6, color: "#0f766e", fontSize: 12, fontWeight: 700,
+                      cursor: "pointer", fontFamily: "inherit",
+                    }}>👷 Ver check-ins de hoje</button>
+                    {checkinsVis && (
+                      <div style={{ background: C.darker, border: `1px solid ${C.border}`, borderRadius: 8, padding: 10, marginTop: 2 }}>
+                        {checkinsHoje.length === 0 ? (
+                          <div style={{ fontSize: 11, color: C.muted, textAlign: "center" }}>Nenhum check-in hoje.</div>
+                        ) : checkinsHoje.map((c) => (
+                          <div key={c.id} style={{ display: "flex", justifyContent: "space-between", borderBottom: `1px solid ${C.border}`, paddingBottom: 6, marginBottom: 6, fontSize: 11 }}>
+                            <div>
+                              <div style={{ fontWeight: 700, color: C.text }}>{c.nome_operario}</div>
+                              <div style={{ color: C.muted }}>{c.funcao || "—"}</div>
+                            </div>
+                            <div style={{ color: C.muted, fontSize: 10 }}>
+                              {c.created_at ? new Date(c.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : ""}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
 
                     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                       <button onClick={copiarLinkPortal} style={{
@@ -1081,6 +1550,7 @@ export default function GestaoObras() {
                     ["Início",    obra.prazo_inicio ? new Date(obra.prazo_inicio + "T00:00").toLocaleDateString("pt-BR") : "—"],
                     ["Entrega",   obra.prazo_fim    ? new Date(obra.prazo_fim    + "T00:00").toLocaleDateString("pt-BR") : "—"],
                     ["Concluído", `${obra.progresso}%`],
+                    ["Retenção",  obra.retencao_pct ? `${obra.retencao_pct}%` : "—"],
                     ["Arquivos",  `${arqObra.length} arquivo(s)`],
                   ].map(([k, v]) => (
                     <div key={k} style={{ display: "flex", justifyContent: "space-between", borderBottom: `1px solid ${C.border}`, paddingBottom: 9, marginBottom: 9 }}>

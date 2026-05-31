@@ -3,10 +3,12 @@ import { C } from "../utils/constants";
 import { fmt } from "../utils/format";
 import useAppStore from "../store/useAppStore";
 import { useModuleLoad } from "../hooks/useModuleLoad";
+import { useToast } from "../hooks/useToast";
 import Btn from "../components/ui/Btn";
 import Input from "../components/ui/Input";
 import Badge from "../components/ui/Badge";
 import Modal from "../components/ui/Modal";
+import { gerarCobrancaAsaas } from "../services/repositories/obraRepository";
 
 export default function Medicoes() {
   const obras        = useAppStore((s) => s.obras);
@@ -31,6 +33,11 @@ export default function Medicoes() {
   const FORM_VAZIO = { descricao: "", percentual: "", valor: "", data: "", obs: "" };
   const [form, setForm] = useState(FORM_VAZIO);
   const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
+  const { toast, mostrarToast } = useToast();
+  const [asaasModal, setAsaasModal] = useState(null); // null | medicao object
+  const [cpfCnpjCliente, setCpfCnpjCliente] = useState("");
+  const defaultVencimento = () => { const d = new Date(); d.setDate(d.getDate() + 30); return d.toISOString().slice(0, 10); };
+  const [vencimentoAsaas, setVencimentoAsaas] = useState(defaultVencimento);
 
   const obra  = obras.find((o) => o.id === obraId) || obras[0];
   const lista = medicoes[obraId] || [];
@@ -57,8 +64,55 @@ export default function Medicoes() {
     setPagina(0);
   };
 
+  async function gerarBoleto() {
+    if (!asaasModal) return;
+    try {
+      await gerarCobrancaAsaas(asaasModal.id, {
+        nomeCliente: obra?.cliente || "Cliente",
+        cpfCnpj: cpfCnpjCliente,
+        valor: Number(asaasModal.valor),
+        descricao: `Medição #${asaasModal.numero} — ${asaasModal.descricao}`,
+        dataVencimento: vencimentoAsaas,
+      });
+      setAsaasModal(null);
+      setCpfCnpjCliente("");
+      mostrarToast("✅ Boleto gerado via Asaas!");
+    } catch (e) {
+      mostrarToast(`❌ Erro: ${e?.message || "falha ao gerar boleto"}`);
+    }
+  }
+
   return (
     <>
+      {toast && (
+        <div style={{ position: "fixed", bottom: 28, left: "50%", transform: "translateX(-50%)", zIndex: 9999, background: C.darker, color: C.text, border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 20px", fontSize: 13, fontWeight: 600, boxShadow: "0 8px 32px #0006" }}>
+          {toast}
+        </div>
+      )}
+
+      {asaasModal && (
+        <Modal title={`Gerar cobrança — Medição #${asaasModal.numero}`} onClose={() => setAsaasModal(null)}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 6 }}>CPF/CNPJ DO CLIENTE</div>
+              <Input value={cpfCnpjCliente} onChange={(v) => setCpfCnpjCliente(v)} placeholder="000.000.000-00 ou 00.000.000/0001-00" />
+            </div>
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 6 }}>DATA DE VENCIMENTO</div>
+              <Input type="date" value={vencimentoAsaas} onChange={(v) => setVencimentoAsaas(v)} />
+            </div>
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 6 }}>VALOR DA MEDIÇÃO</div>
+              <div style={{ fontSize: 18, fontWeight: 800 }}>{fmt(asaasModal.valor)}</div>
+            </div>
+            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", paddingTop: 12, borderTop: `1px solid ${C.border}` }}>
+              <Btn variant="ghost" onClick={() => setAsaasModal(null)}>Cancelar</Btn>
+              <Btn disabled={!cpfCnpjCliente || !vencimentoAsaas} onClick={gerarBoleto}>Gerar Boleto via Asaas</Btn>
+            </div>
+          </div>
+        </Modal>
+      )}
+
       {modal && (
         <Modal title="Nova medição" onClose={() => setModal(false)}>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -143,9 +197,15 @@ export default function Medicoes() {
                     <td style={{ padding: "13px 16px", fontSize: 13 }}>{m.percentual}%</td>
                     <td style={{ padding: "13px 16px", fontSize: 13, fontWeight: 700 }}>{fmt(m.valor)}</td>
                     <td style={{ padding: "13px 16px" }}><Badge label={m.status} color={m.status === "Aprovada" ? C.success : C.warning} /></td>
-                    <td style={{ padding: "13px 16px" }}>
+                    <td style={{ padding: "13px 16px", display: "flex", gap: 6, alignItems: "center" }}>
                       {m.status === "Pendente" && (
                         <button onClick={() => aprovarMedicao(obraId, m.id)} style={{ padding: "5px 12px", background: C.success + "22", border: `1px solid ${C.success}44`, borderRadius: 6, color: C.success, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>✓ Aprovar</button>
+                      )}
+                      {m.status !== "Pago" && (
+                        <button onClick={() => { setAsaasModal(m); setVencimentoAsaas(defaultVencimento()); }} style={{ padding: "5px 10px", background: "#1a56db22", border: "1px solid #1a56db44", borderRadius: 6, color: "#1a56db", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>💳 Cobrança</button>
+                      )}
+                      {m.link_pagamento && (
+                        <a href={m.link_pagamento} target="_blank" rel="noreferrer" style={{ padding: "5px 8px", background: C.border, border: `1px solid ${C.border}`, borderRadius: 6, color: C.text, fontSize: 12, textDecoration: "none" }} title="Abrir link de pagamento">🔗</a>
                       )}
                     </td>
                   </tr>

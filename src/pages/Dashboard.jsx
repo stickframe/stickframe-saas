@@ -1,10 +1,12 @@
-import { useEffect, lazy, Suspense } from "react";
-import { printHtml } from "../utils/printHtml";
+import { useEffect, useState, lazy, Suspense } from "react";
+import { listarMonitorados } from "../services/repositories/precosRepository";
 import { C, CATEGORIAS_DESPESA, FASES } from "../utils/constants";
 import { fmt } from "../utils/format";
 import { mesAno } from "../utils/date";
 import useAppStore from "../store/useAppStore";
 import { useModuleLoad } from "../hooks/useModuleLoad";
+import { useToast } from "../hooks/useToast";
+import { emailAlertaInadimplencia } from "../services/emailService";
 
 const DashboardComercial   = lazy(() => import("./DashboardComercial"));
 const DashboardEngenheiro  = lazy(() => import("./DashboardEngenheiro"));
@@ -139,12 +141,20 @@ function DashboardDiretor() {
   const financeiro  = useAppStore((s) => s.financeiro);
   const contratos   = useAppStore((s) => s.contratos);
   const medicoes    = useAppStore((s) => s.medicoes);
+  const empresa     = useAppStore((s) => s.empresa);
+  const { toast: toastInadimpl, mostrarToast: toastMsg } = useToast();
   const loadMedicoes = useAppStore((s) => s.loadMedicoes);
 
   // Carrega medições de todas as obras
   useEffect(() => {
     obras.forEach((o) => loadMedicoes(o.id));
   }, [obras, loadMedicoes]);
+
+  // Carrega preços monitorados para o widget de preços em alta
+  const [precosMon, setPrecosMon] = useState([]);
+  useEffect(() => {
+    listarMonitorados().then(setPrecosMon).catch(() => {});
+  }, []);
 
   // ── Cálculos financeiros ────────────────────────────────────────────────
   const allLancamentos = Object.values(financeiro).flatMap((f) => f.lancamentos || []);
@@ -365,6 +375,11 @@ ${obrasAndamento.length > 0 ? `
 
   return (
     <div>
+      {toastInadimpl && (
+        <div style={{ position: "fixed", bottom: 28, left: "50%", transform: "translateX(-50%)", zIndex: 9999, background: "#1a1a1a", color: "#fff", border: "1px solid #444", borderRadius: 10, padding: "12px 20px", fontSize: 13, fontWeight: 600, boxShadow: "0 8px 32px #0006" }}>
+          {toastInadimpl}
+        </div>
+      )}
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 24 }}>
         <div>
@@ -576,19 +591,148 @@ ${obrasAndamento.length > 0 ? `
         </div>
       </div>
 
+      {/* Agenda do dia + Preços em alta */}
+      {(() => {
+        const hojeStr = new Date().toISOString().split("T")[0];
+
+        // Agenda: follow-ups do CRM com prazo hoje ou atrasado
+        const followUps = clientes.filter((c) =>
+          c.proximo_contato && c.proximo_contato <= hojeStr &&
+          c.status !== "Fechado" && c.status !== "Em execução"
+        ).sort((a, b) => a.proximo_contato.localeCompare(b.proximo_contato));
+
+        // Preços em alta: top 5 maiores variações positivas
+        const emAlta = precosMon
+          .filter((p) => p.preco_atual && p.preco_anterior && p.preco_atual > p.preco_anterior)
+          .map((p) => ({ ...p, var: ((p.preco_atual - p.preco_anterior) / p.preco_anterior) * 100 }))
+          .sort((a, b) => b.var - a.var)
+          .slice(0, 6);
+
+        const emBaixa = precosMon
+          .filter((p) => p.preco_atual && p.preco_anterior && p.preco_atual < p.preco_anterior)
+          .map((p) => ({ ...p, var: ((p.preco_atual - p.preco_anterior) / p.preco_anterior) * 100 }))
+          .sort((a, b) => a.var - b.var)
+          .slice(0, 4);
+
+        if (followUps.length === 0 && emAlta.length === 0 && emBaixa.length === 0) return null;
+
+        return (
+          <div className="two-col" style={{ marginBottom: 16 }}>
+            {/* Agenda do dia */}
+            <div style={{ background: C.surface, borderRadius: 12, padding: 20, border: `1px solid ${C.border}` }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted }}>📅 AGENDA DO DIA</div>
+                {followUps.length > 0 && (
+                  <span style={{ background: C.danger + "22", color: C.danger, borderRadius: 10, fontSize: 10, fontWeight: 700, padding: "2px 8px" }}>
+                    {followUps.length} pendente{followUps.length > 1 ? "s" : ""}
+                  </span>
+                )}
+              </div>
+              {followUps.length === 0 ? (
+                <div style={{ textAlign: "center", padding: "24px 0", color: C.muted, fontSize: 12 }}>
+                  <div style={{ fontSize: 24, marginBottom: 8 }}>✅</div>
+                  Nenhum follow-up pendente para hoje
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {followUps.map((c) => {
+                    const atrasado = c.proximo_contato < hojeStr;
+                    return (
+                      <div key={c.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 12px", background: atrasado ? C.danger + "0e" : C.darker, borderRadius: 8, borderLeft: `3px solid ${atrasado ? C.danger : C.warning}` }}>
+                        <span style={{ fontSize: 18 }}>{atrasado ? "⚠️" : "📞"}</span>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 13, fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.nome}</div>
+                          <div style={{ fontSize: 11, color: C.muted }}>
+                            {c.status} · {c.contato || c.email || "—"}
+                          </div>
+                        </div>
+                        <div style={{ textAlign: "right", flexShrink: 0 }}>
+                          <div style={{ fontSize: 10, color: atrasado ? C.danger : C.warning, fontWeight: 700 }}>
+                            {atrasado ? "Atrasado" : "Hoje"}
+                          </div>
+                          <div style={{ fontSize: 10, color: C.muted }}>
+                            {new Date(c.proximo_contato + "T12:00:00").toLocaleDateString("pt-BR")}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Preços em alta / baixa */}
+            <div style={{ background: C.surface, borderRadius: 12, padding: 20, border: `1px solid ${C.border}` }}>
+              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 16 }}>📈 MONITOR DE PREÇOS</div>
+              {emAlta.length === 0 && emBaixa.length === 0 ? (
+                <div style={{ textAlign: "center", padding: "24px 0", color: C.muted, fontSize: 12 }}>
+                  <div style={{ fontSize: 24, marginBottom: 8 }}>📊</div>
+                  Nenhuma variação registrada ainda
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {emAlta.map((p) => (
+                    <div key={p.id} style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 8, alignItems: "center", padding: "7px 10px", background: "#fef2f2", borderRadius: 7, borderLeft: "3px solid #dc2626" }}>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontSize: 12, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.nome_produto}</div>
+                        <div style={{ fontSize: 10, color: C.muted }}>{p.loja || "—"} · R$ {Number(p.preco_anterior).toLocaleString("pt-BR", { minimumFractionDigits: 2 })} → R$ {Number(p.preco_atual).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</div>
+                      </div>
+                      <span style={{ fontSize: 12, fontWeight: 800, color: "#dc2626", flexShrink: 0 }}>+{p.var.toFixed(1)}%</span>
+                    </div>
+                  ))}
+                  {emBaixa.map((p) => (
+                    <div key={p.id} style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 8, alignItems: "center", padding: "7px 10px", background: "#f0fdf4", borderRadius: 7, borderLeft: "3px solid #16a34a" }}>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontSize: 12, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.nome_produto}</div>
+                        <div style={{ fontSize: 10, color: C.muted }}>{p.loja || "—"}</div>
+                      </div>
+                      <span style={{ fontSize: 12, fontWeight: 800, color: "#16a34a", flexShrink: 0 }}>{p.var.toFixed(1)}%</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Alerta de Inadimplência */}
       {inadimplentes.length > 0 && (
-        <div style={{ background: "#fff5f5", border: "1px solid #fca5a5", borderRadius: 16, padding: 20 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-            <span style={{ fontSize: 18 }}>⚠️</span>
-            <div>
-              <div style={{ fontSize: 13, fontWeight: 800, color: "#991b1b" }}>
-                Atenção: {inadimplentes.length} obra{inadimplentes.length > 1 ? "s" : ""} com pagamento atrasado em relação ao progresso
-              </div>
-              <div style={{ fontSize: 11, color: "#b91c1c", marginTop: 2 }}>
-                Progresso da obra supera % recebido em mais de 25 pontos
+        <div style={{ background: "#fff5f5", border: "1px solid #fca5a5", borderRadius: 12, padding: 20 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 14 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span style={{ fontSize: 18 }}>⚠️</span>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 800, color: "#991b1b" }}>
+                  Atenção: {inadimplentes.length} obra{inadimplentes.length > 1 ? "s" : ""} com pagamento atrasado em relação ao progresso
+                </div>
+                <div style={{ fontSize: 11, color: "#b91c1c", marginTop: 2 }}>
+                  Progresso da obra supera % recebido em mais de 25 pontos
+                </div>
               </div>
             </div>
+            <button
+              onClick={async () => {
+                const hoje = new Date().toISOString().slice(0, 10);
+                const vencidos = Object.values(financeiro).flatMap((f) => {
+                  const obraObj = obras.find((o) => f.lancamentos?.length && financeiro[o.id] === f);
+                  return (f.lancamentos || []).filter((l) =>
+                    l.data_vencimento && l.data_vencimento < hoje && l.status !== "Pago" && l.status !== "Recebido"
+                  ).map((l) => ({ ...l, obra: obraObj?.nome || "—" }));
+                });
+                if (!empresa?.email) { toastMsg("❌ Email da empresa não configurado"); return; }
+                if (vencidos.length === 0) { toastMsg("Nenhum lançamento vencido encontrado"); return; }
+                try {
+                  await emailAlertaInadimplencia({ email: empresa.email, lancamentos: vencidos });
+                  toastMsg("✅ Alerta enviado!");
+                } catch (e) {
+                  toastMsg(`❌ Erro ao enviar: ${e?.message}`);
+                }
+              }}
+              style={{ padding: "7px 14px", background: "#fee2e2", border: "1px solid #fca5a5", borderRadius: 8, color: "#991b1b", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap" }}
+            >
+              📧 Enviar alerta por email
+            </button>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {inadimplentes.map((o) => (
@@ -674,6 +818,77 @@ ${obrasAndamento.length > 0 ? `
           </div>
         </div>
       )}
+
+      {/* DRE Simplificado */}
+      {(() => {
+        const [drePeriodo, setDrePeriodo] = useState("mes");
+        const fmtD = (v) => Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+        const agora = new Date();
+        const periodos = {
+          mes:  { label: "Este mês",        meses: 1  },
+          tri:  { label: "Últimos 3 meses", meses: 3  },
+          sem:  { label: "Últimos 6 meses", meses: 6  },
+          ano:  { label: "Este ano",        meses: 12 },
+        };
+        const { meses } = periodos[drePeriodo];
+        const limite = new Date(agora.getFullYear(), agora.getMonth() - meses + 1, 1);
+
+        const lans = Object.values(financeiro).flatMap((f) => f.lancamentos || [])
+          .filter((l) => l.data && new Date(l.data + "T00:00") >= limite);
+
+        const recBruta = lans.filter((l) => l.tipo === "receita").reduce((a, l) => a + (l.valor || 0), 0);
+        const CUSTOS_DIRETOS = ["Materiais", "Mão de obra", "Equipamentos", "Transporte"];
+        const custosDiretos = lans.filter((l) => l.tipo === "despesa" && CUSTOS_DIRETOS.includes(l.categoria)).reduce((a, l) => a + (l.valor || 0), 0);
+        const lucroBruto = recBruta - custosDiretos;
+        const despOp = lans.filter((l) => l.tipo === "despesa" && !CUSTOS_DIRETOS.includes(l.categoria)).reduce((a, l) => a + (l.valor || 0), 0);
+        const resultado = lucroBruto - despOp;
+        const margem = recBruta > 0 ? ((resultado / recBruta) * 100).toFixed(1) : "—";
+
+        const linhas = [
+          { label: "Receita Bruta",          valor: recBruta,      cor: C.success, bold: true, indent: 0 },
+          { label: "(−) Custos Diretos",      valor: -custosDiretos, cor: C.danger,  bold: false, indent: 1 },
+          { label: "(=) Lucro Bruto",         valor: lucroBruto,    cor: lucroBruto >= 0 ? C.success : C.danger, bold: true, indent: 0 },
+          { label: "(−) Despesas Operacionais", valor: -despOp,     cor: C.danger,  bold: false, indent: 1 },
+          { label: "(=) Resultado Líquido",   valor: resultado,     cor: resultado >= 0 ? C.success : C.danger, bold: true, indent: 0, margem: true },
+        ];
+
+        return (
+          <div style={{ background: C.surface, borderRadius: 12, padding: 20, border: `1px solid ${C.border}` }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted }}>DRE SIMPLIFICADO</div>
+              <div style={{ display: "flex", gap: 6 }}>
+                {Object.entries(periodos).map(([k, p]) => (
+                  <button key={k} onClick={() => setDrePeriodo(k)} style={{
+                    padding: "4px 10px", borderRadius: 6, fontSize: 11, cursor: "pointer",
+                    fontFamily: "inherit", fontWeight: drePeriodo === k ? 700 : 400,
+                    border: `1px solid ${drePeriodo === k ? C.red : C.border}`,
+                    background: drePeriodo === k ? C.red + "18" : "transparent",
+                    color: drePeriodo === k ? C.text : C.muted,
+                  }}>{p.label}</button>
+                ))}
+              </div>
+            </div>
+            <div style={{ maxWidth: 480 }}>
+              {linhas.map((l, i) => (
+                <div key={i} style={{
+                  display: "flex", justifyContent: "space-between", alignItems: "center",
+                  padding: "9px 0", borderBottom: i < linhas.length - 1 ? `1px solid ${C.border}` : "none",
+                  paddingLeft: l.indent ? 16 : 0,
+                }}>
+                  <span style={{ fontSize: 12, fontWeight: l.bold ? 700 : 400, color: l.bold ? C.text : C.muted }}>{l.label}</span>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <span style={{ fontSize: 13, fontWeight: l.bold ? 800 : 500, color: l.cor }}>{fmtD(Math.abs(l.valor))}</span>
+                    {l.margem && margem !== "—" && (
+                      <span style={{ fontSize: 11, background: resultado >= 0 ? C.success + "22" : C.danger + "22", color: resultado >= 0 ? C.success : C.danger, borderRadius: 5, padding: "2px 8px", fontWeight: 700 }}>{margem}%</span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Progresso das obras */}
       <div style={{ background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", padding: 20, border: `1px solid ${C.border}` }}>

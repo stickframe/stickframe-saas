@@ -100,6 +100,27 @@ export async function deletarArquivo(id, storagePath) {
   const { error } = await sb.from("arquivos").delete().eq("id", id);
   if (error) throw error;
 }
+export async function gerarCobrancaAsaas(medicaoId, { nomeCliente, cpfCnpj, valor, descricao, dataVencimento }) {
+  const { data, error } = await sb.functions.invoke("asaas-cobranca", {
+    body: { nomeCliente, cpfCnpj, valor, descricao, dataVencimento, medicaoId },
+  });
+  if (error) throw error;
+  // Save back to medicao
+  await sb.from("medicoes").update({
+    asaas_id: data.asaas_id,
+    link_pagamento: data.link_pagamento,
+    asaas_status: data.status,
+    data_vencimento: dataVencimento,
+  }).eq("id", medicaoId);
+  return data;
+}
+
+export async function atualizarVencimentoMedicao(id, data_vencimento) {
+  const { data, error } = await sb.from("medicoes").update({ data_vencimento }).eq("id", id).select().single();
+  if (error) throw error;
+  return data;
+}
+
 export function subscribeObras(callback) {
   return sb.channel("obras-rt").on("postgres_changes", { event: "*", schema: "public", table: "obras" }, callback).subscribe();
 }

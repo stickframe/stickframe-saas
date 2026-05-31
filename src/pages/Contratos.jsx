@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useToast } from "../hooks/useToast";
 import { buscarEmpresa } from "../services/repositories/empresaRepository";
-import { printHtml } from "../utils/printHtml";
 import { C, PRECOS } from "../utils/constants";
 import { fmt } from "../utils/format";
 import { enviarWhatsApp, msgContrato } from "../services/whatsappService";

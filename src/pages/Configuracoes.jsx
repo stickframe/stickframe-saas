@@ -61,8 +61,7 @@ export default function Configuracoes() {
 
   // Empresa
   const [empresa, setEmpresa] = useState({
-    nome: "", cnpj: "", cidade: "", telefone: "", email: "", segmento: "", site: "", logo_url: "",
-    email_alertas_precos: "", alerta_variacao_pct: 5,
+    nome: "", cnpj: "", cidade: "", telefone: "", email: "", segmento: "", site: "", logo_url: "", whatsapp_alertas: "",
   });
   const [logoPreview, setLogoPreview] = useState(null);
   const [logoFile,    setLogoFile]    = useState(null);
@@ -88,10 +87,9 @@ export default function Configuracoes() {
         telefone: data.telefone  || "",
         email:    data.email     || "",
         segmento: data.segmento  || "",
-        site:     data.site      || "",
-        logo_url: data.logo_url  || "",
-        email_alertas_precos: data.email_alertas_precos || "",
-        alerta_variacao_pct:  data.alerta_variacao_pct  ?? 5,
+        site:             data.site             || "",
+        logo_url:         data.logo_url         || "",
+        whatsapp_alertas: data.whatsapp_alertas || "",
       });
     }).catch(() => {});
     listarUsuariosEmpresa().then((data) => { if (data) setUsuarios(data); }).catch(() => {});
@@ -123,9 +121,8 @@ export default function Configuracoes() {
         email:    empresa.email     || null,
         segmento: empresa.segmento  || null,
         site:     empresa.site      || null,
-        logo_url:             logoUrl                        || null,
-        email_alertas_precos: empresa.email_alertas_precos   || null,
-        alerta_variacao_pct:  Number(empresa.alerta_variacao_pct) || 5,
+        logo_url:         logoUrl           || null,
+        whatsapp_alertas: empresa.whatsapp_alertas || null,
       });
       setEmpresa((f) => ({ ...f, logo_url: logoUrl }));
       setLogoFile(null);
@@ -272,6 +269,11 @@ export default function Configuracoes() {
                   <LabelF>Site</LabelF>
                   <Input value={empresa.site} onChange={(v) => setEmpresa((f) => ({ ...f, site: v }))} placeholder="www.empresa.com.br" />
                 </div>
+              </div>
+              <div>
+                <LabelF>WhatsApp para alertas de leads</LabelF>
+                <Input value={empresa.whatsapp_alertas} onChange={(v) => setEmpresa((f) => ({ ...f, whatsapp_alertas: v }))} placeholder="Ex: 5511989859995" />
+                <div style={{ fontSize: 11, color: C.muted, marginTop: 4 }}>Número que receberá notificações automáticas quando um lead preencher a calculadora. Formato: DDI + DDD + número (ex: 5511999999999).</div>
               </div>
             </div>
           </Card>

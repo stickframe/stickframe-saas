@@ -1,5 +1,4 @@
 import * as Sentry from "@sentry/react";
-import { printHtml } from "../utils/printHtml";
 import { useState, useEffect, useRef } from "react";
 import { useToast } from "../hooks/useToast";
 import { C, FASES } from "../utils/constants";

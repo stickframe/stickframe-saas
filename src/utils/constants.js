@@ -39,6 +39,7 @@ export const NAV = [
   { key: "equipamentos",      label: "Equipamentos",      icon: "🔧" },
   { key: "checklists",        label: "Checklist SF",      icon: "✅" },
   { key: "equipe",        label: "Equipe",          icon: "👷" },
+  { key: "inteligencia",  label: "🧠 Inteligência",  icon: "🧠", perfis: ["diretor", "engenheiro"] },
   { key: "configuracoes", label: "Configurações",   icon: "⚙️" },
 ];
 
@@ -47,7 +48,7 @@ export const PERFIS = {
   diretor: {
     label: "Diretor",
     cor: C.red,
-    paginas: ["dashboard","agenda","crm","orcamentos","obras","cronograma","medicoes","diario","vistorias","bim","quantitativos","financeiro","contratos","historico","fornecedores","monitor_precos","calculadora","orcamento_tecnico","equipamentos","checklists","equipe","configuracoes"],
+    paginas: ["dashboard","agenda","crm","orcamentos","obras","cronograma","medicoes","diario","vistorias","bim","quantitativos","financeiro","contratos","historico","fornecedores","monitor_precos","calculadora","orcamento_tecnico","equipamentos","checklists","equipe","inteligencia","configuracoes"],
   },
   comercial: {
     label: "Comercial",
@@ -59,7 +60,7 @@ export const PERFIS = {
     label: "Engenheiro",
     cor: "#4a9eff",
     // Foco em entrega: sem CRM, financeiro global ou pipeline comercial
-    paginas: ["dashboard","obras","cronograma","medicoes","diario","vistorias","bim","quantitativos","fornecedores","monitor_precos","calculadora","orcamento_tecnico","equipamentos","checklists","historico","configuracoes"],
+    paginas: ["dashboard","obras","cronograma","medicoes","diario","vistorias","bim","quantitativos","fornecedores","monitor_precos","calculadora","orcamento_tecnico","equipamentos","checklists","historico","inteligencia","configuracoes"],
   },
   financeiro: {
     label: "Financeiro",
