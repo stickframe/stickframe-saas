@@ -279,7 +279,6 @@ export default function GestaoObras() {
       setModal(null);
       mostrarToast("✅ Obra atualizada!");
     } catch (e) {
-      console.error("updateObra error:", e);
       mostrarToast(`❌ Erro ao salvar: ${e?.message || "verifique os dados."}`);
     }
   }
@@ -823,7 +822,7 @@ export default function GestaoObras() {
                                 aspectRatio: "4/3", background: C.darker, position: "relative",
                               }}>
                                 {f.url
-                                  ? <img src={f.url} alt={f.nome} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                                  ? <img src={f.url} alt={f.nome} width="320" height="240" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                                   : <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", fontSize: 28 }}>🖼️</div>
                                 }
                               </div>
@@ -1078,7 +1077,7 @@ export default function GestaoObras() {
           display: "flex", alignItems: "center", justifyContent: "center",
           zIndex: 9999, cursor: "pointer",
         }}>
-          <img src={fotoAmpliada.url} alt={fotoAmpliada.nome} style={{
+          <img src={fotoAmpliada.url} alt={fotoAmpliada.nome} width="1200" height="900" style={{
             maxWidth: "90vw", maxHeight: "88vh", objectFit: "contain", borderRadius: 8,
           }} />
           <div style={{ position: "absolute", top: 18, right: 22, color: "#fff", fontSize: 24, fontWeight: 700 }}>✕</div>

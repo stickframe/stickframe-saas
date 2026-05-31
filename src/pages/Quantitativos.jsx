@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useToast } from "../hooks/useToast";
+import { printHtml } from "../utils/printHtml";
 import { C, FASES } from "../utils/constants";
 import { fmt } from "../utils/format";
 import useAppStore from "../store/useAppStore";
@@ -246,8 +247,7 @@ export default function Quantitativos() {
         </div>`;
     }).join("");
 
-    const win = window.open("", "_blank");
-    win.document.write(`<!DOCTYPE html><html><head>
+    const html = `<!DOCTYPE html><html><head>
 <meta charset="utf-8">
 <title>Quantitativos — ${obra?.nome || "Obra"}</title>
 <style>* { box-sizing: border-box; margin: 0; padding: 0; } body { font-family: -apple-system, sans-serif; color: #1a1a1a; padding: 32px; max-width: 960px; margin: auto; } @media print { body { padding: 16px; } }</style>
@@ -269,9 +269,8 @@ ${tabelaFases}
   <span style="font-size:13px;color:#6b7280">${filtrados.length} itens · ${obra?.area ? `${Number(obra.area) * Number(obra.unidades || 1)} m² total` : ""}</span>
   <span style="font-size:20px;font-weight:900">${totalGeral.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</span>
 </div>
-</body></html>`);
-    win.document.close();
-    setTimeout(() => win.print(), 500);
+</body></html>`;
+    printHtml(html, `quantitativos-${obra?.nome?.split("—")[0]?.trim() || "obra"}`);
   }
 
   // ── Filtros e cálculos ────────────────────────────────────────────────────

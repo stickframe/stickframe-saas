@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useToast } from "../hooks/useToast";
+import { printHtml } from "../utils/printHtml";
 import { CUB_ESTADOS, PADROES_SF, SISTEMAS_SF } from "../utils/insumosSF";
 import { C } from "../utils/constants";
 import { LOGO_STICKFRAME } from "../utils/cdn";
@@ -568,10 +569,7 @@ export default function OrcamentoTecnico() {
       </div>
     </body></html>`;
 
-    const win = window.open("", "_blank");
-    win.document.write(html);
-    win.document.close();
-    setTimeout(() => win.print(), 600);
+    printHtml(html, "orcamento-tecnico");
   };
 
   const calcFinanciamento = () => {
@@ -729,10 +727,7 @@ export default function OrcamentoTecnico() {
       </div>
     </body></html>`;
 
-    const win = window.open("", "_blank");
-    win.document.write(html);
-    win.document.close();
-    setTimeout(() => win.print(), 600);
+    printHtml(html, "orcamento-tecnico");
   };
 
 

@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/react";
 import { useState, useEffect, useRef } from "react";
 import { useToast } from "../hooks/useToast";
 import { C, FASES } from "../utils/constants";
@@ -165,7 +166,7 @@ function IFCViewer({ url, onElementClick }) {
     return () => {
       destroyed = true;
       if (viewerRef.current) {
-        try { viewerRef.current.components.dispose(); } catch (_) {}
+        try { viewerRef.current.components.dispose(); } catch (disposeErr) { Sentry.captureException(disposeErr); }
         viewerRef.current = null;
       }
     };
