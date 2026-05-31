@@ -9,7 +9,11 @@
       "mcp__a5a69f48-5aaa-426d-9f3d-9d336c39d902__apply_migration",
       "mcp__a5a69f48-5aaa-426d-9f3d-9d336c39d902__list_projects",
       "mcp__a5a69f48-5aaa-426d-9f3d-9d336c39d902__get_edge_function",
-      "mcp__a5a69f48-5aaa-426d-9f3d-9d336c39d902__deploy_edge_function"
+      "mcp__a5a69f48-5aaa-426d-9f3d-9d336c39d902__deploy_edge_function",
+      "Bash(cp /root/.claude/uploads/450e42eb-c673-4492-b082-7e59a98494b3/f697b7bf-resumostickframe.html /home/user/stickframe-saas/public/resumo-stickframe.html)",
+      "Bash(git -C /home/user/stickframe-saas add public/resumo-stickframe.html)",
+      "Bash(git -C /home/user/stickframe-saas commit -m \"docs: add resumo-stickframe.html to public folder\")",
+      "Bash(git -C /home/user/stickframe-saas push -u origin claude/hopeful-planck-kdTbe)"
     ]
   }
 }
