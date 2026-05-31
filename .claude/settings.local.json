@@ -4,7 +4,9 @@
       "Bash(npm install *)",
       "Bash(git add *)",
       "Bash(git commit *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "mcp__a5a69f48-5aaa-426d-9f3d-9d336c39d902__execute_sql",
+      "mcp__a5a69f48-5aaa-426d-9f3d-9d336c39d902__apply_migration"
     ]
   }
 }

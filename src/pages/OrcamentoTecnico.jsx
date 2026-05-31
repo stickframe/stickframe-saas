@@ -184,6 +184,7 @@ export default function OrcamentoTecnico() {
   const [financForm, setFinancForm]     = useState({ entrada: 20, prazo: 120, taxa: 1.0 });
   const [toast, setToast]               = useState(null);
 
+
   const [selecoes, setSelecoes] = useState(() => {
     const saved = savedForm.selecoes || {};
     const d = {};
@@ -733,6 +734,7 @@ export default function OrcamentoTecnico() {
     setTimeout(() => win.print(), 600);
   };
 
+
   const exportarExcel = async () => {
     if (!resultado) return;
     try {
@@ -1025,6 +1027,7 @@ export default function OrcamentoTecnico() {
                   ↺ Limpar ajustes de preço
                 </button>
               )}
+
               <button onClick={() => setResultado(null)} style={{
                 padding: "9px 18px", background: C.surface, color: C.muted,
                 border: `1px solid ${C.border}`, borderRadius: 7, fontSize: 13, cursor: "pointer",
@@ -1039,6 +1042,7 @@ export default function OrcamentoTecnico() {
                 <span>✏️ {Object.keys(precosEditados).length} preço(s) ajustado(s) manualmente. Clique em <strong>Calcular Orçamento</strong> para atualizar os totais.</span>
               </div>
             )}
+
 
             {/* comparativo de padrões */}
             {comparativo && (
