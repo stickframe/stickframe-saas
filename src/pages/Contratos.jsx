@@ -1,18 +1,25 @@
 import { useState } from "react";
-import { buscarEmpresa } from "../services/repositories/empresaRepository";
 import { C, PRECOS } from "../utils/constants";
 import { fmt } from "../utils/format";
 import { enviarWhatsApp, msgContrato } from "../services/whatsappService";
+import { buscarEmpresa } from "../services/repositories/empresaRepository";
+import useAppStore from "../store/useAppStore";
+import { useModuleLoad } from "../hooks/useModuleLoad";
+import Btn from "../components/ui/Btn";
+import Input from "../components/ui/Input";
+import Select from "../components/ui/Select";
+import Badge from "../components/ui/Badge";
+import Modal from "../components/ui/Modal";
 
-// ─── PDF do contrato ──────────────────────────────────────────────────────────
+// ─── Geração de PDF ──────────────────────────────────────────────────────────
 function gerarPDFContrato(c, emp) {
   const fases = [
-    { nome: "Projeto executivo", pct: 8 },
-    { nome: "Fundação", pct: 12 },
-    { nome: "Estrutura Steel Frame", pct: 35 },
-    { nome: "Fechamentos e painéis", pct: 20 },
+    { nome: "Projeto executivo",                   pct: 8  },
+    { nome: "Fundação",                            pct: 12 },
+    { nome: "Estrutura Steel Frame",               pct: 35 },
+    { nome: "Fechamentos e painéis",               pct: 20 },
     { nome: "Instalações elétricas e hidráulicas", pct: 12 },
-    { nome: "Acabamento e entrega", pct: 13 },
+    { nome: "Acabamento e entrega",                pct: 13 },
   ];
   const hoje = new Date().toLocaleDateString("pt-BR");
   const fmtV = (v) => "R$ " + Number(v).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -26,9 +33,8 @@ function gerarPDFContrato(c, emp) {
 
   const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700;800&display=swap');
     *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:'DM Sans',Arial,sans-serif;background:#fff;color:#1a1a1a;font-size:13px}
+    body{font-family:Arial,sans-serif;background:#fff;color:#1a1a1a;font-size:13px}
     .header{background:#1a1a1a;padding:18px 32px;display:flex;justify-content:space-between;align-items:center}
     .hero{background:linear-gradient(135deg,#981915,#6e1210);padding:24px 32px;color:#fff}
     .body{padding:24px 32px}
@@ -36,8 +42,7 @@ function gerarPDFContrato(c, emp) {
     .label{font-size:10px;font-weight:700;letter-spacing:1px;color:#888;text-transform:uppercase;margin-bottom:10px}
     table{width:100%;border-collapse:collapse}
     th{text-align:left;padding:6px 8px;font-size:10px;font-weight:700;color:#888;letter-spacing:.5px;border-bottom:2px solid #f0f0f0}
-    th.r{text-align:right}
-    td{border-bottom:1px solid #f5f5f5}
+    th.r{text-align:right} td{border-bottom:1px solid #f5f5f5}
     .footer{background:#f9f9f9;border-top:1px solid #eee;padding:16px 32px;font-size:10px;color:#888;text-align:center}
     .assinatura{margin-top:32px;display:grid;grid-template-columns:1fr 1fr;gap:40px}
     .assbox{border-top:2px solid #1a1a1a;padding-top:8px}
@@ -53,7 +58,6 @@ function gerarPDFContrato(c, emp) {
       <div>Emitido em ${c.data || hoje}</div>
     </div>
   </div>
-
   <div class="hero">
     <div style="font-size:9px;letter-spacing:2px;opacity:.7;margin-bottom:6px">CONTRATO DE PRESTAÇÃO DE SERVIÇOS</div>
     <div style="font-size:22px;font-weight:800;margin-bottom:4px">Construção em Steel Frame</div>
@@ -66,96 +70,52 @@ function gerarPDFContrato(c, emp) {
         </div>`).join("")}
     </div>
   </div>
-
   <div class="body">
     <div style="text-align:center;border:2px solid #981915;border-radius:10px;padding:18px;margin-bottom:16px">
       <div style="font-size:10px;font-weight:700;letter-spacing:1px;color:#888;margin-bottom:6px">VALOR TOTAL DO CONTRATO</div>
       <div style="font-size:36px;font-weight:800;color:#981915">${fmtV(c.valor)}</div>
       <div style="font-size:12px;color:#888;margin-top:4px">${c.unidades > 1 ? `${fmtV(c.valor / c.unidades)}/unid.` : `${fmtV(c.valor / (c.area || 1))}/m²`}</div>
     </div>
-
     <div class="card">
       <div class="label">Objeto do Contrato</div>
       <p style="color:#444;line-height:1.8;margin-bottom:10px">
-        O presente instrumento tem por objeto a prestação de serviços de construção em sistema <strong>Steel Frame</strong>
-        para a obra <strong>${c.obra || "especificada nas plantas executivas"}</strong>, pelo valor global de
-        <strong style="color:#981915">${fmtV(c.valor)}</strong>, conforme especificações técnicas acordadas entre as partes.
-      </p>
-      <p style="color:#444;line-height:1.8">
-        A execução abrangerá projeto executivo, fornecimento de materiais, mão de obra especializada e entrega
-        no prazo de <strong>${c.prazo || "conforme cronograma acordado"}</strong>, incluindo todas as etapas descritas abaixo.
+        Prestação de serviços de construção em sistema <strong>Steel Frame</strong>
+        para a obra <strong>${c.obra || "especificada nas plantas executivas"}</strong>,
+        pelo valor global de <strong style="color:#981915">${fmtV(c.valor)}</strong>.
       </p>
     </div>
-
     <div class="card">
       <div class="label">Cronograma Físico-Financeiro</div>
-      <table>
-        <thead><tr>
-          <th style="width:32px">#</th>
-          <th>Fase</th>
-          <th class="r">%</th>
-          <th class="r">Valor</th>
-        </tr></thead>
-        <tbody>${linhasFase}
-          <tr style="background:#f9f9f9">
-            <td colspan="2" style="padding:12px 8px;font-weight:700">Total</td>
-            <td style="padding:12px 8px;text-align:right;font-weight:700">100%</td>
-            <td style="padding:12px 8px;text-align:right;font-weight:800;color:#981915;font-size:14px">${fmtV(c.valor)}</td>
-          </tr>
-        </tbody>
-      </table>
+      <table><thead><tr><th style="width:32px">#</th><th>Fase</th><th class="r">%</th><th class="r">Valor</th></tr></thead>
+      <tbody>${linhasFase}
+        <tr style="background:#f9fafb">
+          <td colspan="2" style="padding:12px 8px;font-weight:700">Total</td>
+          <td style="padding:12px 8px;text-align:right;font-weight:700">100%</td>
+          <td style="padding:12px 8px;text-align:right;font-weight:800;color:#981915;font-size:14px">${fmtV(c.valor)}</td>
+        </tr>
+      </tbody></table>
     </div>
-
     <div class="card">
       <div class="label">Condições Gerais</div>
-      ${[
-        ["Reajuste", "Os valores são fixos e não sofrerão reajuste durante a execução, salvo aditivos formalizados por escrito."],
-        ["Responsabilidade técnica", "A construtora assume responsabilidade técnica pela execução, com ART registrada no CREA/CAU."],
-        ["Garantia", "Os serviços executados têm garantia de 5 anos para estrutura e 1 ano para acabamentos, conforme NBR 17170."],
-        ["Pagamentos", "Os pagamentos serão realizados conforme cronograma físico-financeiro, mediante medição aprovada."],
-        ["Rescisão", "Em caso de rescisão por qualquer das partes, serão devidos os valores proporcionais ao serviço executado."],
-      ].map(([t, d]) => `
-        <div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #f5f5f5">
-          <div style="font-size:12px;font-weight:700;margin-bottom:3px">${t}</div>
-          <div style="font-size:12px;color:#666;line-height:1.7">${d}</div>
-        </div>`).join("")}
+      ${[["Garantia","5 anos para estrutura e 1 ano para acabamentos (NBR 17170)."],
+         ["Responsabilidade","ART registrada no CREA/CAU pelo responsável técnico."],
+         ["Reajuste","Valores fixos, salvo aditivos formalizados por escrito."],
+         ["Foro","${emp?.cidade || 'local do contrato'}"]]
+        .map(([t,d]) => `<div style="margin-bottom:10px"><strong style="font-size:12px">${t}:</strong> <span style="color:#666">${d}</span></div>`).join("")}
     </div>
-
-    ${c.assinatura_nome ? `
-    <div class="card" style="background:#f0fdf4;border-color:#86efac">
-      <div class="label">Assinatura Digital Registrada</div>
-      <div style="font-size:13px"><strong>${c.assinatura_nome}</strong></div>
-      <div style="font-size:12px;color:#888;margin-top:4px">${c.assinatura_data ? new Date(c.assinatura_data).toLocaleString("pt-BR") : ""}</div>
-    </div>` : `
     <div class="assinatura">
-      <div class="assbox">
-        <div style="font-size:11px;color:#888;margin-top:6px">Contratante — ${c.cliente}</div>
-      </div>
-      <div class="assbox">
-        <div style="font-size:11px;color:#888;margin-top:6px">${emp?.nome || "Stick Frame Sistemas Construtivos"}</div>
-      </div>
+      <div class="assbox"><div style="font-size:11px;color:#888;margin-top:6px">Contratante — ${c.cliente}</div></div>
+      <div class="assbox"><div style="font-size:11px;color:#888;margin-top:6px">${emp?.nome || "Stick Frame Sistemas Construtivos"}</div></div>
     </div>
     <div style="margin-top:16px;font-size:10px;color:#aaa;text-align:center">Local e data: ________________________, ____/____/______</div>
-    `}
   </div>
-
-  <div class="footer">
-    ${emp?.nome || "Stick Frame Sistemas Construtivos"} · ${emp?.email || ""} · ${emp?.site || "stickframe.com.br"}<br>
-    Contrato ${c.ref} · Emitido em ${hoje}
-  </div>
+  <div class="footer">${emp?.nome || "Stick Frame"} · ${emp?.email || ""} · Contrato ${c.ref} · ${hoje}</div>
   <script>window.onload=()=>window.print()</script>
   </body></html>`;
 
   const win = window.open("", "_blank");
   if (win) { win.document.write(html); win.document.close(); }
 }
-import useAppStore from "../store/useAppStore";
-import { useModuleLoad } from "../hooks/useModuleLoad";
-import Btn from "../components/ui/Btn";
-import Input from "../components/ui/Input";
-import Select from "../components/ui/Select";
-import Badge from "../components/ui/Badge";
-import Modal from "../components/ui/Modal";
 
 // ─── Status ──────────────────────────────────────────────────────────────────
 const STATUS_OPTS = ["Aguardando", "Assinado", "Em execução", "Encerrado", "Cancelado"];
@@ -229,22 +189,7 @@ function FormContrato({ form, setForm, clientes, obras, onSave, onCancel, btnLab
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
         <div>
           <Label required>Valor total (R$)</Label>
-          <input
-            inputMode="numeric"
-            value={form.valor
-              ? "R$ " + Number(String(form.valor).replace(/\D/g, "") || 0).toLocaleString("pt-BR")
-              : ""}
-            onChange={(e) => {
-              const raw = e.target.value.replace(/\D/g, "");
-              set("valor")(raw ? String(Number(raw)) : "");
-            }}
-            placeholder="R$ 0"
-            style={{
-              width: "100%", padding: "10px 12px", borderRadius: 8,
-              border: `1px solid ${C.border}`, background: C.bg,
-              color: C.text, fontSize: 14, fontFamily: "inherit", outline: "none",
-            }}
-          />
+          <Input type="number" min="0" value={form.valor} onChange={set("valor")} placeholder="0" />
         </div>
         <div>
           <Label>Prazo de entrega</Label>
@@ -255,11 +200,11 @@ function FormContrato({ form, setForm, clientes, obras, onSave, onCancel, btnLab
       {/* Unidades + Área */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
         <div>
-          <Label>Unidades</Label>
+          <Label>Unidades (UH)</Label>
           <Input type="number" min="1" value={form.unidades} onChange={set("unidades")} />
         </div>
         <div>
-          <Label>Área (m²)</Label>
+          <Label>Área/UH (m²)</Label>
           <Input type="number" min="1" value={form.area} onChange={set("area")} />
         </div>
         <div>
@@ -311,7 +256,6 @@ export default function Contratos() {
   const [confirm, setConfirm] = useState(null);
   const [toast,   setToast]   = useState(null);
   const [form,    setForm]    = useState(FORM_VAZIO);
-
 
   function mostrarToast(msg) {
     setToast(msg);
@@ -515,8 +459,8 @@ export default function Contratos() {
 
                       <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
                         {[
-                          ["Unidades", `${c.unidades}`],
-                          ["Área",     `${c.area} m²`],
+                          ["Unidades", `${c.unidades} UH`],
+                          ["Área/UH",  `${c.area} m²`],
                           ["Padrão",   c.padrao],
                           ["Prazo",    c.prazo],
                         ].map(([k, v]) => (
@@ -557,19 +501,6 @@ export default function Contratos() {
                           color: C.red, fontSize: 12, fontWeight: 700,
                           cursor: "pointer", fontFamily: "inherit", width: "100%",
                         }}>📄 Gerar PDF</button>
-                        {c.contrato_token && (
-                          <button onClick={() => {
-                            const url = `${window.location.origin}/contrato/${c.contrato_token}`;
-                            navigator.clipboard.writeText(url).then(() => mostrarToast("🔗 Link de assinatura copiado!"));
-                          }} style={{
-                            padding: "8px 0", background: "#6366f122",
-                            border: "1px solid #6366f144", borderRadius: 6,
-                            color: "#6366f1", fontSize: 12, fontWeight: 700,
-                            cursor: "pointer", fontFamily: "inherit", width: "100%",
-                          }}>
-                            {c.assinatura_nome ? "✅ Assinado" : "🔗 Link p/ assinar"}
-                          </button>
-                        )}
                         {cl?.contato && (
                           <button onClick={() => enviarWhatsApp(cl.contato, msgContrato(c))} style={{
                             padding: "8px 0", background: "#25D36622",

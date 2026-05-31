@@ -176,6 +176,7 @@ export default function GestaoObras() {
   const [checklistModal,   setChecklistModal]   = useState(false);
   const [checklistMarcados, setChecklistMarcados] = useState({});
   const [fotoAmpliada, setFotoAmpliada] = useState(null);
+  const [qrModal,      setQrModal]      = useState(false);
 
   useEffect(() => {
     if (!obraId && obras.length > 0) setObraId(obras[0].id);
@@ -667,6 +668,54 @@ export default function GestaoObras() {
         </div>
       </div>
 
+      {/* Painel de Atrasos */}
+      {(() => {
+        const hojeStr = new Date().toISOString().split("T")[0];
+        const seteDias = new Date();
+        seteDias.setDate(seteDias.getDate() + 7);
+        const seteDiasStr = seteDias.toISOString().split("T")[0];
+
+        const atrasadas = obras.filter(o => o.prazo_fim && o.prazo_fim < hojeStr && o.status !== "Concluída" && o.status !== "Pausada");
+        const emRisco = obras.filter(o => o.prazo_fim && o.prazo_fim >= hojeStr && o.prazo_fim <= seteDiasStr && o.status !== "Concluída" && o.status !== "Pausada");
+
+        if (atrasadas.length === 0 && emRisco.length === 0) return null;
+
+        return (
+          <div style={{ display: "flex", gap: 16, marginBottom: 20, flexWrap: "wrap" }}>
+            {atrasadas.length > 0 && (
+              <div style={{ flex: 1, background: C.danger + "18", border: `1px solid ${C.danger}44`, borderRadius: 10, padding: 16 }}>
+                <div style={{ fontSize: 12, fontWeight: 800, color: C.danger, display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontSize: 18 }}>⚠️</span> OBRAS ATRASADAS ({atrasadas.length})
+                </div>
+                <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 6 }}>
+                  {atrasadas.map(o => (
+                    <div key={o.id} onClick={() => setObraId(o.id)} style={{ display: "flex", justifyContent: "space-between", fontSize: 13, cursor: "pointer", padding: "4px 8px", borderRadius: 6, background: C.surface, border: `1px solid ${C.border}` }}>
+                      <span style={{ fontWeight: 600 }}>{o.nome.split("—")[0].trim()}</span>
+                      <span style={{ color: C.danger, fontWeight: 700 }}>Prazo: {new Date(o.prazo_fim + "T00:00").toLocaleDateString("pt-BR")}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {emRisco.length > 0 && (
+              <div style={{ flex: 1, background: "#b97a0018", border: `1px solid #b97a0044`, borderRadius: 10, padding: 16 }}>
+                <div style={{ fontSize: 12, fontWeight: 800, color: "#b97a00", display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontSize: 18 }}>⏱️</span> CRONOGRAMA EM RISCO ({emRisco.length})
+                </div>
+                <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 6 }}>
+                  {emRisco.map(o => (
+                    <div key={o.id} onClick={() => setObraId(o.id)} style={{ display: "flex", justifyContent: "space-between", fontSize: 13, cursor: "pointer", padding: "4px 8px", borderRadius: 6, background: C.surface, border: `1px solid ${C.border}` }}>
+                      <span style={{ fontWeight: 600 }}>{o.nome.split("—")[0].trim()}</span>
+                      <span style={{ color: "#b97a00", fontWeight: 700 }}>Prazo: {new Date(o.prazo_fim + "T00:00").toLocaleDateString("pt-BR")}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })()}
+
       {/* Filtros */}
       {obras.length > 0 && (
         <div style={{ display: "flex", gap: 10, marginBottom: 14, flexWrap: "wrap", alignItems: "center" }}>
@@ -986,6 +1035,13 @@ export default function GestaoObras() {
                       cursor: "pointer", fontFamily: "inherit",
                     }}>📄 Dossiê de Obra</button>
 
+                    <button onClick={() => setQrModal(true)} style={{
+                      width: "100%", padding: "8px 0",
+                      background: "#9b59b622", border: "1px solid #9b59b644",
+                      borderRadius: 6, color: "#9b59b6", fontSize: 12, fontWeight: 700,
+                      cursor: "pointer", fontFamily: "inherit",
+                    }}>📱 QR Code Check-in</button>
+
                     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                       <button onClick={copiarLinkPortal} style={{
                         width: "100%", padding: "8px 0",
@@ -1069,6 +1125,37 @@ export default function GestaoObras() {
                 <Btn variant="ghost" onClick={() => setChecklistModal(false)}>Cancelar</Btn>
                 <Btn disabled={!todosMarcados} onClick={confirmarAvancar}>
                   Avançar para {proxima} →
+                </Btn>
+              </div>
+            </div>
+          </Modal>
+        );
+      })()}
+
+      {/* Modal QR Code check-in */}
+      {qrModal && obra && (() => {
+        const url = `${window.location.origin}/qr/obra/${obra.id}`;
+        const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(url)}&bgcolor=ffffff&color=981915&margin=10`;
+        return (
+          <Modal title="QR Code — Check-in de Obra" onClose={() => setQrModal(false)}>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
+              <div style={{ fontWeight: 600, fontSize: 14, color: C.text, textAlign: "center" }}>{obra.nome}</div>
+              <div style={{ fontSize: 12, color: C.muted, textAlign: "center" }}>
+                Operários escaneiam este QR para registrar presença no canteiro
+              </div>
+              <img src={qrSrc} alt="QR Code" style={{ width: 220, height: 220, borderRadius: 12, border: `1px solid ${C.border}` }} />
+              <div style={{
+                background: C.dark, borderRadius: 8, padding: "8px 14px",
+                fontSize: 11, color: C.muted, wordBreak: "break-all", textAlign: "center",
+              }}>
+                {url}
+              </div>
+              <div style={{ display: "flex", gap: 8, width: "100%" }}>
+                <Btn variant="ghost" fullWidth onClick={() => { navigator.clipboard.writeText(url); mostrarToast("📋 Link copiado!"); }}>
+                  Copiar link
+                </Btn>
+                <Btn fullWidth onClick={() => window.open(url, "_blank")}>
+                  Abrir página
                 </Btn>
               </div>
             </div>
