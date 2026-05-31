@@ -521,9 +521,9 @@ export default function CalculadoraPublica() {
                   <input
                     className="calc-input"
                     type="tel"
-                    placeholder="(11) 99999-9999"
+                    placeholder="Ex: (11) 99999-9999 ou +1 555 000-0000"
                     value={whatsapp}
-                    onChange={(e) => setWhatsapp(applyPhoneMask(e.target.value))}
+                    onChange={(e) => setWhatsapp(e.target.value)}
                     required
                   />
 
