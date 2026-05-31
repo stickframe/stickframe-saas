@@ -27,7 +27,7 @@ const PADROES = [
 ];
 
 function formatBRL(value) {
-  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }).format(value);
+  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value);
 }
 
 function applyPhoneMask(value) {
