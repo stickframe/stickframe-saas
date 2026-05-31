@@ -120,7 +120,7 @@ export default function ContratoOnline() {
           <div style={{ fontSize: 42, fontWeight: 800, color: "#981915", lineHeight: 1 }}>{fmt(c.valor)}</div>
           {c.unidades > 1 && (
             <div style={{ fontSize: 13, color: "#888", marginTop: 8 }}>
-              {c.unidades} unidades · {c.area} m²/UH · {fmt(c.valor / c.unidades)}/UH
+              {c.unidades} unidades · {c.area} m² · {fmt(c.valor / c.unidades)}/unid.
             </div>
           )}
           {c.unidades <= 1 && c.area > 0 && (

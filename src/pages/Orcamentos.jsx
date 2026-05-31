@@ -66,7 +66,7 @@ function FormOrc({ form, setForm, clientes, onSave, onCancel, btnLabel }) {
       {/* Unidades + Área */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
         <div>
-          <Label>Unidades (UH)</Label>
+          <Label>Unidades</Label>
           <Input
             type="number" min="1"
             value={form.unidades}
@@ -111,7 +111,7 @@ function FormOrc({ form, setForm, clientes, onSave, onCancel, btnLabel }) {
         <div style={{ display: "grid", gridTemplateColumns: form.unidades > 1 ? "1fr 1fr 1fr" : "1fr 1fr", gap: 10 }}>
           {[
             ["Valor / m²",  fmt(calc.valor_m2),    false],
-            ...(form.unidades > 1 ? [["Valor / UH", fmt(calc.valor_uh), false]] : []),
+            ...(form.unidades > 1 ? [["Valor / unid.", fmt(calc.valor_uh), false]] : []),
             ["TOTAL",       fmt(calc.valor_total),  true ],
           ].map(([k, v, destaque]) => (
             <div key={k} style={{
@@ -126,7 +126,7 @@ function FormOrc({ form, setForm, clientes, onSave, onCancel, btnLabel }) {
           ))}
         </div>
         <div style={{ fontSize: 11, color: C.muted, marginTop: 10 }}>
-          {form.unidades > 1 ? `${form.unidades} UH × ` : ""}{form.area} m² × {fmt(calc.valor_m2)}/m²
+          {form.unidades > 1 ? `${form.unidades} × ` : ""}{form.area} m² × {fmt(calc.valor_m2)}/m²
         </div>
       </div>
 
@@ -180,11 +180,11 @@ function gerarPDF(o) {
   <h2>Proposta de Orçamento</h2>
   <div class="row"><span class="label">Cliente</span><span class="value">${o.cliente}</span></div>
   <div class="row"><span class="label">Padrão construtivo</span><span class="value">${o.padrao}</span></div>
-  <div class="row"><span class="label">Unidades habitacionais</span><span class="value">${o.unidades} UH</span></div>
+  <div class="row"><span class="label">Unidades</span><span class="value">${o.unidades}</span></div>
   <div class="row"><span class="label">Área por unidade</span><span class="value">${o.area} m²</span></div>
   <div class="row"><span class="label">Área total</span><span class="value">${o.unidades * o.area} m²</span></div>
   <div class="row"><span class="label">Valor por m²</span><span class="value">R$ ${(o.valor / (o.unidades * o.area)).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></div>
-  <div class="row"><span class="label">Valor por UH</span><span class="value">R$ ${(o.valor / o.unidades).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></div>
+  <div class="row"><span class="label">Valor por unidade</span><span class="value">R$ ${(o.valor / o.unidades).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></div>
   <div class="total-box">
     <div class="label">VALOR TOTAL DA PROPOSTA</div>
     <div class="value">R$ ${o.valor.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</div>
@@ -922,7 +922,7 @@ export default function Orcamentos() {
                       </div>
                       <div style={{ fontSize: 15, fontWeight: 700 }}>{o.cliente}</div>
                       <div style={{ fontSize: 11, color: C.muted, marginTop: 3 }}>
-                        {o.unidades > 1 ? `${o.unidades} UH · ${o.area} m²/und` : `${o.area} m²`} · {PRECOS[o.padrao]?.label || o.padrao} · {o.criado}
+                        {o.unidades > 1 ? `${o.unidades} unid. · ${o.area} m²` : `${o.area} m²`} · {PRECOS[o.padrao]?.label || o.padrao} · {o.criado}
                       </div>
                     </div>
 
@@ -930,7 +930,7 @@ export default function Orcamentos() {
                     <div style={{ textAlign: "right", flexShrink: 0 }}>
                       <div style={{ fontSize: 18, fontWeight: 800 }}>{fmt(o.valor)}</div>
                       <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>
-                        {o.unidades > 1 ? `${fmt(o.valor / o.unidades)} / UH` : `${fmt(o.valor / o.area)}/m²`}
+                        {o.unidades > 1 ? `${fmt(o.valor / o.unidades)} / unid.` : `${fmt(o.valor / o.area)}/m²`}
                       </div>
                     </div>
                   </div>
