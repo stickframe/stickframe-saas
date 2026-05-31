@@ -14,9 +14,13 @@ export default function PortalOnline() {
   const [outrasObras,setOutras]  = useState([]);
   const [fotos,      setFotos]   = useState([]);
   const [vistorias,  setVistorias] = useState([]);
+  const [mensagens,  setMensagens] = useState([]);
   const [empresa,    setEmpresa] = useState(null);
   const [fotoAberta, setFotoAberta] = useState(null);
   const [loading,    setLoading] = useState(true);
+  const [chatNome,   setChatNome] = useState("");
+  const [chatMsg,    setChatMsg] = useState("");
+  const [chatEnv,    setChatEnv] = useState(false);
   const hoje = new Date().toLocaleDateString("pt-BR");
 
   useEffect(() => {
@@ -34,6 +38,7 @@ export default function PortalOnline() {
         setFotos(data.fotos || []);
         setVistorias(data.vistorias || []);
         setEmpresa(data.empresa || null);
+        setMensagens(data.mensagens || []);
       } finally {
         setLoading(false);
       }
@@ -197,9 +202,19 @@ export default function PortalOnline() {
                 </div>
                 <div style={{ textAlign: "right" }}>
                   <div style={{ fontSize: 13, fontWeight: 800, color: m.status === "Aprovada" ? "#2e9e5b" : "#b97a00" }}>{fmt(m.valor)}</div>
-                  <div style={{ fontSize: 9, fontWeight: 700, color: m.status === "Aprovada" ? "#2e9e5b" : "#b97a00", marginTop: 2 }}>
-                    {m.status === "Aprovada" ? "✓ Aprovada" : "⏳ Pendente"}
-                  </div>
+                  {m.status === "Aprovada" ? (
+                    <div style={{ fontSize: 9, fontWeight: 700, color: "#2e9e5b", marginTop: 2 }}>✓ Aprovada</div>
+                  ) : (
+                    <button
+                      onClick={async () => {
+                        const { error } = await sb.rpc("portal_aprovar_medicao", { p_token: token, p_medicao_id: m.id });
+                        if (!error) setMedicoes((prev) => prev.map((x) => x.id === m.id ? { ...x, status: "Aprovada" } : x));
+                      }}
+                      style={{ marginTop: 4, background: "#2e9e5b", color: "#fff", border: "none", borderRadius: 6, padding: "4px 12px", fontSize: 10, fontWeight: 700, cursor: "pointer" }}
+                    >
+                      Aprovar ✓
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
@@ -348,6 +363,63 @@ export default function PortalOnline() {
               style={{ position: "absolute", top: 16, right: 16, background: "rgba(255,255,255,0.15)", border: "none", color: "#fff", fontSize: 22, width: 40, height: 40, borderRadius: "50%", cursor: "pointer" }}>✕</button>
           </div>
         )}
+
+        {/* Chat com a empresa */}
+        <Card title="Mensagens">
+          {mensagens.length === 0 && (
+            <div style={{ fontSize: 12, color: "#aaa", textAlign: "center", padding: "12px 0" }}>Nenhuma mensagem ainda. Envie uma abaixo.</div>
+          )}
+          <div style={{ maxHeight: 320, overflowY: "auto", marginBottom: 12 }}>
+            {mensagens.map((m, i) => {
+              const isClient = m.autor === "cliente";
+              return (
+                <div key={m.id || i} style={{ display: "flex", justifyContent: isClient ? "flex-end" : "flex-start", marginBottom: 8 }}>
+                  <div style={{
+                    maxWidth: "78%", background: isClient ? "#981915" : "#f0f0f0",
+                    color: isClient ? "#fff" : "#222", borderRadius: isClient ? "12px 12px 3px 12px" : "12px 12px 12px 3px",
+                    padding: "8px 12px", fontSize: 12, lineHeight: 1.5,
+                  }}>
+                    {!isClient && <div style={{ fontSize: 9, fontWeight: 700, color: "#981915", marginBottom: 3 }}>{m.nome || "Equipe"}</div>}
+                    <div>{m.mensagem}</div>
+                    <div style={{ fontSize: 9, opacity: .6, marginTop: 4, textAlign: "right" }}>
+                      {m.created_at ? new Date(m.created_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : ""}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <div style={{ borderTop: "1px solid #f0f0f0", paddingTop: 12 }}>
+            <input
+              value={chatNome}
+              onChange={(e) => setChatNome(e.target.value)}
+              placeholder="Seu nome"
+              style={{ width: "100%", border: "1px solid #ddd", borderRadius: 8, padding: "8px 12px", fontSize: 12, marginBottom: 8, outline: "none" }}
+            />
+            <textarea
+              value={chatMsg}
+              onChange={(e) => setChatMsg(e.target.value)}
+              placeholder="Escreva sua mensagem..."
+              rows={3}
+              style={{ width: "100%", border: "1px solid #ddd", borderRadius: 8, padding: "8px 12px", fontSize: 12, marginBottom: 8, resize: "vertical", outline: "none" }}
+            />
+            <button
+              disabled={chatEnv || !chatNome.trim() || !chatMsg.trim()}
+              onClick={async () => {
+                setChatEnv(true);
+                const { error } = await sb.rpc("portal_enviar_mensagem", { p_token: token, p_nome: chatNome.trim(), p_mensagem: chatMsg.trim() });
+                if (!error) {
+                  setMensagens((prev) => [...prev, { autor: "cliente", nome: chatNome.trim(), mensagem: chatMsg.trim(), created_at: new Date().toISOString() }]);
+                  setChatMsg("");
+                }
+                setChatEnv(false);
+              }}
+              style={{ width: "100%", background: chatEnv || !chatNome.trim() || !chatMsg.trim() ? "#ccc" : "#981915", color: "#fff", border: "none", borderRadius: 8, padding: "10px", fontSize: 13, fontWeight: 700, cursor: chatEnv ? "wait" : "pointer" }}
+            >
+              {chatEnv ? "Enviando..." : "Enviar mensagem"}
+            </button>
+          </div>
+        </Card>
 
         {/* Contato */}
         <div style={{ background: "#1A1A1A", borderRadius: 14, padding: "20px", marginBottom: 12, textAlign: "center" }}>
