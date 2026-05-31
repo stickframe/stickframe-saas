@@ -383,6 +383,113 @@ export default function OrcamentoTecnico() {
     setComparativo(cenarios);
   };
 
+  // Calcula para uma opção diferente de um sistema específico (mantém todo o resto)
+  const calcularParaOpcao = (sistemaId, opcaoId) => {
+    const areaNum = parseN(area);
+    if (areaNum <= 0) return null;
+    const areaMolhadaNum = parseN(areaMolhada) || areaNum * 0.15;
+    const sistemasAtivos = SISTEMAS_SF.filter((s) => habilitados[s.id]);
+    let totalMat = 0, totalMO2 = 0;
+    for (const sistema of sistemasAtivos) {
+      const selOpcaoId = sistema.id === sistemaId ? opcaoId : selecoes[sistema.id];
+      const opcaoSel = sistema.opcoes?.find((o) => o.id === selOpcaoId) || sistema.opcoes?.[0];
+      const itensBase = opcaoSel ? opcaoSel.itens : sistema.itens;
+      const aplicaFatorOpcao = opcaoSel?.aplicaFatorPadrao ?? false;
+      const areaUsada = sistema.usaAreaMolhada ? areaMolhadaNum : areaNum;
+      for (const item of itensBase) {
+        const fator = item.aplicaFatorPadrao || aplicaFatorOpcao ? fatorPadrao : 1;
+        const qtd = item.base * areaUsada * fator;
+        const vivo = usarPrecosVivos && precosVivos[item.nome];
+        const preco = vivo ? vivo.preco_atual : item.preco;
+        totalMat += qtd * preco;
+      }
+      if (incluiMO) totalMO2 += sistema.mao_obra_cub * cubEfetivo * areaNum;
+    }
+    const total = totalMat + totalMO2;
+    return { total, totalMat, totalMO: totalMO2, m2: total / areaNum, precoVenda: total * (1 + bdi / 100), m2Venda: total * (1 + bdi / 100) / areaNum };
+  };
+
+  const [comparativoVersoes, setComparativoVersoes] = useState(null);
+
+  const gerarComparativoVersoes = () => {
+    const estSistema = SISTEMAS_SF.find((s) => s.id === "estrutura");
+    if (!estSistema?.opcoes) return;
+    const base = resultado;
+    const versoes = estSistema.opcoes.map((opcao) => {
+      const calc = calcularParaOpcao("estrutura", opcao.id);
+      if (!calc) return null;
+      const diffTotal = calc.precoVenda - base.precoVenda;
+      const diffPct   = (diffTotal / base.precoVenda) * 100;
+      const isAtual   = selecoes["estrutura"] === opcao.id;
+      return { opcaoId: opcao.id, opcaoLabel: opcao.label, ...calc, diffTotal, diffPct, isAtual };
+    }).filter(Boolean);
+    setComparativoVersoes(versoes);
+  };
+
+  const exportarComparativoPDF = () => {
+    if (!comparativoVersoes || !resultado) return;
+    const dataHoje = new Date().toLocaleDateString("pt-BR");
+    const cliente = formSalvar.cliente || "—";
+    const rows = comparativoVersoes.map((v) => {
+      const cor = v.isAtual ? "#b91c1c" : v.diffTotal > 0 ? "#b45309" : v.diffTotal < 0 ? "#166534" : "#374151";
+      const diffTxt = v.isAtual ? "versão atual" : v.diffTotal > 0 ? `+${fmtBRL(v.diffTotal)} (+${v.diffPct.toFixed(1)}%)` : `${fmtBRL(v.diffTotal)} (${v.diffPct.toFixed(1)}%)`;
+      return `<tr style="border-bottom:1px solid #e5e7eb;background:${v.isAtual ? "#fef2f2" : "#fff"}">
+        <td style="padding:12px 14px;font-weight:${v.isAtual ? 700 : 400};font-size:13px">${v.isAtual ? "► " : ""}${v.opcaoLabel}</td>
+        <td style="padding:12px 14px;text-align:right;font-size:13px">${fmtBRL(v.totalMat)}</td>
+        ${resultado.incluiMO ? `<td style="padding:12px 14px;text-align:right;font-size:13px;color:#2563eb">${fmtBRL(v.totalMO)}</td>` : ""}
+        <td style="padding:12px 14px;text-align:right;font-size:13px">${fmtBRL(v.total)}</td>
+        <td style="padding:12px 14px;text-align:right;font-size:13px">${fmtBRL(v.m2)}</td>
+        <td style="padding:12px 14px;text-align:right;font-size:14px;font-weight:700;color:#166534">${fmtBRL(v.precoVenda)}</td>
+        <td style="padding:12px 14px;text-align:right;font-size:13px;color:${cor};font-weight:600">${diffTxt}</td>
+      </tr>`;
+    }).join("");
+    const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+    <title>Comparativo de Versões — Stickframe</title>
+    <style>*{box-sizing:border-box}body{font-family:Arial,Helvetica,sans-serif;color:#1a1a1a;margin:0;padding:0}
+    @media print{@page{margin:15mm 14mm}body{padding:0}}table{border-collapse:collapse;width:100%}</style>
+    </head><body style="padding:36px 44px;max-width:920px;margin:auto">
+    <div style="background:#1a1a1a;color:#fff;padding:8px 16px;font-size:11px;margin-bottom:0;letter-spacing:.5px">
+      Stick Frame · Comparativo de Versões de Estrutura · ${cliente}
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;padding:20px 0 18px;border-bottom:2px solid #e5e7eb;margin-bottom:28px">
+      <img src="${LOGO_STICKFRAME}" style="width:54px;height:54px;object-fit:contain;border-radius:8px">
+      <div style="text-align:right">
+        <div style="font-size:11px;letter-spacing:2px;color:#6b7280;font-weight:700">COMPARATIVO DE VERSÕES</div>
+        <div style="font-size:20px;font-weight:800;color:#b91c1c">Opções de Estrutura</div>
+        <div style="font-size:10px;color:#6b7280;margin-top:2px">DATA</div>
+        <div style="font-size:13px;font-weight:700">${dataHoje}</div>
+      </div>
+    </div>
+    <div style="font-size:11px;font-weight:700;letter-spacing:2px;color:#374151;text-transform:uppercase;margin-bottom:14px">Identificação</div>
+    <table style="margin-bottom:28px;font-size:13px">
+      <tr><td style="padding:6px 0;color:#6b7280;width:160px">Cliente</td><td style="padding:6px 0;font-weight:600">${cliente}</td></tr>
+      <tr><td style="padding:6px 0;color:#6b7280">Área</td><td style="padding:6px 0">${resultado.area} m²</td></tr>
+      <tr><td style="padding:6px 0;color:#6b7280">Padrão</td><td style="padding:6px 0">${resultado.padrao}</td></tr>
+      <tr><td style="padding:6px 0;color:#6b7280">CUB ${resultado.estado}</td><td style="padding:6px 0">R$ ${resultado.cub.toLocaleString("pt-BR")}/m²</td></tr>
+      <tr><td style="padding:6px 0;color:#6b7280">BDI</td><td style="padding:6px 0">${bdi}%</td></tr>
+    </table>
+    <div style="font-size:11px;font-weight:700;letter-spacing:2px;color:#374151;text-transform:uppercase;margin-bottom:14px">Comparativo de Opções de Estrutura</div>
+    <table style="border:1px solid #e5e7eb;border-radius:8px;overflow:hidden">
+      <thead>
+        <tr style="background:#1a1a1a;color:#fff">
+          <th style="padding:10px 14px;text-align:left;font-size:11px">Versão</th>
+          <th style="padding:10px 14px;text-align:right;font-size:11px">Materiais</th>
+          ${resultado.incluiMO ? '<th style="padding:10px 14px;text-align:right;font-size:11px">MO</th>' : ""}
+          <th style="padding:10px 14px;text-align:right;font-size:11px">Custo Direto</th>
+          <th style="padding:10px 14px;text-align:right;font-size:11px">R$/m²</th>
+          <th style="padding:10px 14px;text-align:right;font-size:11px">Preço Venda (BDI ${bdi}%)</th>
+          <th style="padding:10px 14px;text-align:right;font-size:11px">Diferença</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <div style="background:#1a1a1a;color:#fff;padding:14px 20px;border-radius:6px;font-size:11px;margin-top:40px">
+      <strong>Stick Frame Sistemas Construtivos Ltda.</strong> · CNPJ 49.458.905/0001-07 · contato@stickframe.com.br
+    </div>
+    </body></html>`;
+    printHtml(html, "comparativo-versoes");
+  };
+
   const salvarComoOrcamento = async () => {
     if (!resultado) return;
     setSalvando(true);
@@ -1191,6 +1298,12 @@ export default function OrcamentoTecnico() {
               }}>
                 ⚖️ Comparar Padrões
               </button>
+              <button onClick={gerarComparativoVersoes} style={{
+                padding: "9px 18px", background: "#0f766e", color: "#fff",
+                border: "none", borderRadius: 7, fontSize: 13, fontWeight: 600, cursor: "pointer",
+              }}>
+                🔩 Comparar Espessuras
+              </button>
               <button onClick={() => setModalFinanc(true)} style={{
                 padding: "9px 18px", background: "#0891b2", color: "#fff",
                 border: "none", borderRadius: 7, fontSize: 13, fontWeight: 600, cursor: "pointer",
@@ -1265,6 +1378,58 @@ export default function OrcamentoTecnico() {
                           <td style={{ ...tdSt, textAlign: "right" }}>{fmtBRL(c.m2Venda)}</td>
                         </tr>
                       ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* comparativo de versões de estrutura */}
+            {comparativoVersoes && (
+              <div style={{ background: C.surface, borderRadius: 10, border: `1px solid ${C.border}`, overflow: "hidden" }}>
+                <div style={{ padding: "12px 18px", borderBottom: `1px solid ${C.border}`, fontWeight: 700, fontSize: 14, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span>🔩 Comparativo de Espessuras de Estrutura</span>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <button onClick={exportarComparativoPDF} style={{ background: "#0f766e", color: "#fff", border: "none", borderRadius: 5, padding: "4px 12px", fontSize: 12, cursor: "pointer" }}>📄 PDF</button>
+                    <button onClick={() => setComparativoVersoes(null)} style={{ background: "none", border: "none", color: C.muted, cursor: "pointer", fontSize: 12 }}>✕ fechar</button>
+                  </div>
+                </div>
+                <div style={{ overflowX: "auto" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                    <thead>
+                      <tr style={{ background: C.darker }}>
+                        <th style={thSt}>Versão</th>
+                        <th style={{ ...thSt, textAlign: "right" }}>Materiais</th>
+                        {resultado.incluiMO && <th style={{ ...thSt, textAlign: "right" }}>MO</th>}
+                        <th style={{ ...thSt, textAlign: "right" }}>Custo Direto</th>
+                        <th style={{ ...thSt, textAlign: "right" }}>R$/m²</th>
+                        <th style={{ ...thSt, textAlign: "right" }}>Preço Venda (BDI {bdi}%)</th>
+                        <th style={{ ...thSt, textAlign: "right" }}>Diferença</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {comparativoVersoes.map((v) => {
+                        const corDiff = v.isAtual ? C.red : v.diffTotal > 0 ? "#b45309" : v.diffTotal < 0 ? "#166534" : C.muted;
+                        const diffTxt = v.isAtual
+                          ? "versão atual"
+                          : v.diffTotal > 0
+                            ? `+${fmtBRL(v.diffTotal)} (+${v.diffPct.toFixed(1)}%)`
+                            : `${fmtBRL(v.diffTotal)} (${v.diffPct.toFixed(1)}%)`;
+                        return (
+                          <tr key={v.opcaoId} style={{ background: v.isAtual ? C.red + "12" : "transparent", fontWeight: v.isAtual ? 700 : 400 }}>
+                            <td style={tdSt}>
+                              {v.isAtual && <span style={{ color: C.red, marginRight: 4 }}>►</span>}
+                              {v.opcaoLabel}
+                            </td>
+                            <td style={{ ...tdSt, textAlign: "right" }}>{fmtBRL(v.totalMat)}</td>
+                            {resultado.incluiMO && <td style={{ ...tdSt, textAlign: "right", color: "#2563eb" }}>{fmtBRL(v.totalMO)}</td>}
+                            <td style={{ ...tdSt, textAlign: "right" }}>{fmtBRL(v.total)}</td>
+                            <td style={{ ...tdSt, textAlign: "right" }}>{fmtBRL(v.m2)}</td>
+                            <td style={{ ...tdSt, textAlign: "right", color: C.success, fontWeight: 700 }}>{fmtBRL(v.precoVenda)}</td>
+                            <td style={{ ...tdSt, textAlign: "right", color: corDiff, fontWeight: 600 }}>{diffTxt}</td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
