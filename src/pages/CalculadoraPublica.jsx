@@ -58,6 +58,7 @@ export default function CalculadoraPublica() {
   // Contact
   const [nome, setNome] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
+  const [email, setEmail] = useState("");
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState("");
 
@@ -84,6 +85,7 @@ export default function CalculadoraPublica() {
       const { error } = await sb.rpc("captar_lead_publico", {
         p_nome: nome,
         p_contato: whatsapp,
+        p_email: email || null,
         p_cidade: cidade || null,
         p_area: area,
         p_padrao: padrao,
@@ -523,6 +525,15 @@ export default function CalculadoraPublica() {
                     value={whatsapp}
                     onChange={(e) => setWhatsapp(applyPhoneMask(e.target.value))}
                     required
+                  />
+
+                  <label className="calc-label">E-mail <span style={{color:"#888",fontWeight:400}}>(opcional)</span></label>
+                  <input
+                    className="calc-input"
+                    type="email"
+                    placeholder="seu@email.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                   />
 
                   {sendError && <p className="error-msg">{sendError}</p>}
