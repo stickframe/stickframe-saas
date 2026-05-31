@@ -229,7 +229,22 @@ function FormContrato({ form, setForm, clientes, obras, onSave, onCancel, btnLab
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
         <div>
           <Label required>Valor total (R$)</Label>
-          <Input type="number" min="0" value={form.valor} onChange={set("valor")} placeholder="0" />
+          <input
+            inputMode="numeric"
+            value={form.valor
+              ? "R$ " + Number(String(form.valor).replace(/\D/g, "") || 0).toLocaleString("pt-BR")
+              : ""}
+            onChange={(e) => {
+              const raw = e.target.value.replace(/\D/g, "");
+              set("valor")(raw ? String(Number(raw)) : "");
+            }}
+            placeholder="R$ 0"
+            style={{
+              width: "100%", padding: "10px 12px", borderRadius: 8,
+              border: `1px solid ${C.border}`, background: C.bg,
+              color: C.text, fontSize: 14, fontFamily: "inherit", outline: "none",
+            }}
+          />
         </div>
         <div>
           <Label>Prazo de entrega</Label>
