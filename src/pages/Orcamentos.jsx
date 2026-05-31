@@ -856,7 +856,7 @@ export default function Orcamentos() {
         { descricao: "30% Entrega — " + o.cliente, valor: Math.round(o.valor * 0.30 * 100) / 100, tipo: "receita", categoria: "Contrato", data_vencimento: obraForm.prazo_fim || addDays(120), status: "A receber" },
       ];
       for (const p of parcelas) {
-        try { await addLancamento(obra.id, p); } catch (_) {}
+        try { await addLancamento(obra.id, p); } catch (e) { console.error("Lançamento erro:", e); }
       }
     }
 
