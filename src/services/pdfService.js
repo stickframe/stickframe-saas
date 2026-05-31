@@ -176,12 +176,12 @@ export function gerarContratoPDF(contrato) {
       <div class="field"><div class="field-label">Data</div><div class="field-val">${contrato.data}</div></div>
     </div>
     <h2>Objeto</h2>
-    <div class="clausula"><strong>Cláusula 1ª.</strong> Construção de <strong>${contrato.unidades} unidades habitacionais</strong> em Steel Frame, área de <strong>${contrato.area} m²/UH</strong> (total: ${contrato.unidades * contrato.area} m²), padrão <strong>${contrato.padrao}</strong>, conforme projeto executivo, no empreendimento <strong>${contrato.obra}</strong>.</div>
+    <div class="clausula"><strong>Cláusula 1ª.</strong> Construção de <strong>${contrato.unidades} unidade(s)</strong> em Steel Frame, área de <strong>${contrato.area} m²</strong> cada (total: ${contrato.unidades * contrato.area} m²), padrão <strong>${contrato.padrao}</strong>, conforme projeto executivo, no empreendimento <strong>${contrato.obra}</strong>.</div>
     <h2>Valor e Pagamento</h2>
     <div class="valor-box">
       <div style="font-size:10px;color:#888;margin-bottom:4px;">VALOR TOTAL DO CONTRATO</div>
       <div class="valor-total">${fmt(contrato.valor)}</div>
-      <div style="font-size:10px;color:#888;margin-top:4px;">${fmt(contrato.valor / contrato.unidades)}/UH · ${fmt(contrato.valor / (contrato.unidades * contrato.area))}/m²</div>
+      <div style="font-size:10px;color:#888;margin-top:4px;">${fmt(contrato.valor / contrato.unidades)}/unid. · ${fmt(contrato.valor / (contrato.unidades * contrato.area))}/m²</div>
     </div>
     <div class="pgto-grid">
       <div class="pgto-item"><div class="pgto-pct">30%</div><div class="pgto-desc">Na assinatura</div><div class="pgto-val">${v30}</div></div>

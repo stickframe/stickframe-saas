@@ -59,7 +59,7 @@ function gerarPDFContrato(c, emp) {
     <div style="font-size:22px;font-weight:800;margin-bottom:4px">Construção em Steel Frame</div>
     <div style="font-size:13px;opacity:.85">Cliente: <strong>${c.cliente}</strong></div>
     <div style="display:flex;gap:12px;margin-top:16px;flex-wrap:wrap">
-      ${[["Padrão", c.padrao], ["Unidades", c.unidades + " UH"], ["Área/UH", c.area + " m²"], ["Prazo", c.prazo || "—"]].map(([l, v]) =>
+      ${[["Padrão", c.padrao], ["Unidades", c.unidades], ["Área", c.area + " m²"], ["Prazo", c.prazo || "—"]].map(([l, v]) =>
         `<div style="background:rgba(255,255,255,.15);border-radius:8px;padding:10px 14px;border:1px solid rgba(255,255,255,.2)">
           <div style="font-size:9px;opacity:.7;margin-bottom:3px">${l.toUpperCase()}</div>
           <div style="font-size:14px;font-weight:800">${v}</div>
@@ -71,7 +71,7 @@ function gerarPDFContrato(c, emp) {
     <div style="text-align:center;border:2px solid #981915;border-radius:10px;padding:18px;margin-bottom:16px">
       <div style="font-size:10px;font-weight:700;letter-spacing:1px;color:#888;margin-bottom:6px">VALOR TOTAL DO CONTRATO</div>
       <div style="font-size:36px;font-weight:800;color:#981915">${fmtV(c.valor)}</div>
-      <div style="font-size:12px;color:#888;margin-top:4px">${c.unidades > 1 ? `${fmtV(c.valor / c.unidades)}/UH` : `${fmtV(c.valor / (c.area || 1))}/m²`}</div>
+      <div style="font-size:12px;color:#888;margin-top:4px">${c.unidades > 1 ? `${fmtV(c.valor / c.unidades)}/unid.` : `${fmtV(c.valor / (c.area || 1))}/m²`}</div>
     </div>
 
     <div class="card">
@@ -255,11 +255,11 @@ function FormContrato({ form, setForm, clientes, obras, onSave, onCancel, btnLab
       {/* Unidades + Área */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
         <div>
-          <Label>Unidades (UH)</Label>
+          <Label>Unidades</Label>
           <Input type="number" min="1" value={form.unidades} onChange={set("unidades")} />
         </div>
         <div>
-          <Label>Área/UH (m²)</Label>
+          <Label>Área (m²)</Label>
           <Input type="number" min="1" value={form.area} onChange={set("area")} />
         </div>
         <div>

@@ -8,7 +8,7 @@ export function enviarWhatsApp(telefone, mensagem) {
 }
 
 export function msgOrcamento(o) {
-  return `Olá ${o.cliente}! 👋\n\nSegue a proposta da *Stick Frame Sistemas Construtivos*:\n\n📋 *Ref:* ${o.ref}\n🏗️ *Projeto:* ${o.unidades} UH · ${o.area} m²/und · ${PRECOS[o.padrao]?.label || "Padrão"}\n💰 *Valor total:* ${fmt(o.valor)}\n💰 *Valor/UH:* ${fmt(o.valor / o.unidades)}\n\nPara dúvidas ou aprovação, entre em contato!\n\nStick Frame Sistemas Construtivos\nSanto André/SP`;
+  return `Olá ${o.cliente}! 👋\n\nSegue a proposta da *Stick Frame Sistemas Construtivos*:\n\n📋 *Ref:* ${o.ref}\n🏗️ *Projeto:* ${o.unidades} unid. · ${o.area} m² · ${PRECOS[o.padrao]?.label || "Padrão"}\n💰 *Valor total:* ${fmt(o.valor)}\n💰 *Valor/unid.:* ${fmt(o.valor / o.unidades)}\n\nPara dúvidas ou aprovação, entre em contato!\n\nStick Frame Sistemas Construtivos\nSanto André/SP`;
 }
 
 export function msgContrato(c) {

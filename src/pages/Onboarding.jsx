@@ -317,7 +317,7 @@ export default function Onboarding({ onComplete }) {
                   options={Object.keys(PRECOS).map((p) => ({ value: p, label: p }))} />
               </div>
               <div>
-                <LabelF>Área/UH (m²)</LabelF>
+                <LabelF>Área (m²)</LabelF>
                 <Input type="number" min="20" value={obra.area} onChange={(v) => setObra((f) => ({ ...f, area: v }))} />
               </div>
               <div>

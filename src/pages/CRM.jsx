@@ -162,7 +162,7 @@ function FormCliente({ form, setForm, onSave, onCancel, btnLabel }) {
           />
         </div>
         <div>
-          <Label>Unidades (UH)</Label>
+          <Label>Unidades</Label>
           <Input
             value={form.unidades}
             onChange={(v) => set("unidades")(v.replace(/\D/g, ""))}
@@ -496,7 +496,7 @@ export default function CRM() {
               <table style={{ width: "100%", borderCollapse: "collapse" }}>
                 <thead>
                   <tr style={{ borderBottom: `2px solid ${C.red}22` }}>
-                    {["Cliente", "Cidade", "Contato", "UH", "Valor", "Status", ""].map((h) => (
+                    {["Cliente", "Cidade", "Contato", "Unid.", "Valor", "Status", ""].map((h) => (
                       <th key={h} style={{ padding: "11px 15px", textAlign: "left", fontSize: 10, letterSpacing: 1.2, color: C.muted, fontWeight: 700 }}>
                         {h.toUpperCase()}
                       </th>
@@ -547,7 +547,7 @@ export default function CRM() {
               {[
                 ["Telefone",   cliente.contato    || "—"],
                 ["E-mail",     cliente.email       || "—"],
-                ["Unidades",   cliente.unidades   ? `${cliente.unidades} UH` : "—"],
+                ["Unidades",   cliente.unidades   ? `${cliente.unidades}` : "—"],
                 ["Valor est.", cliente.valor      ? fmt(cliente.valor) : "—"],
               ].map(([k, v]) => (
                 <div key={k} style={{ display: "flex", justifyContent: "space-between", borderBottom: `1px solid ${C.border}`, paddingBottom: 9 }}>
