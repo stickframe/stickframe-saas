@@ -67,11 +67,11 @@ function GraficoLinha({ data, height = 80, color = C.red }) {
         {data.map((d, i) => {
           const x = (i / (data.length - 1)) * w;
           const y = h - (d.value / max) * (h * 0.85);
-          return <circle key={i} cx={x} cy={y} r="3" fill={color} />;
+          return <circle key={d.label ?? i} cx={x} cy={y} r="3" fill={color} />;
         })}
       </svg>
       <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4 }}>
-        {data.map((d, i) => <span key={i} style={{ fontSize: 9, color: C.muted }}>{d.label}</span>)}
+        {data.map((d, i) => <span key={d.label ?? i} style={{ fontSize: 9, color: C.muted }}>{d.label}</span>)}
       </div>
     </div>
   );
@@ -425,7 +425,7 @@ ${obrasAndamento.length > 0 ? `
 
       {/* KPIs */}
       <div className="kpi-grid-6" style={{ marginBottom: 20 }}>
-        {kpis.map((k, i) => <KpiCard key={i} {...k} />)}
+        {kpis.map((k) => <KpiCard key={k.label} {...k} />)}
       </div>
 
       {/* KPIs secundários */}

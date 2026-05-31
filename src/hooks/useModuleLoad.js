@@ -1,19 +1,20 @@
 import { useEffect } from "react";
 import useAppStore from "../store/useAppStore";
 
-/**
- * Hook que carrega dados de um módulo na primeira vez que a página abre.
- * Cada página chama seu próprio hook — nada carrega antes de ser necessário.
- *
- * Uso:
- *   useModuleLoad("clientes") → chama store.loadClientes()
- *   useModuleLoad("financeiro") → chama store.loadFinanceiro()
- *   useModuleLoad("diario", obraId) → chama store.loadDiario(obraId)
- */
+const MODULOS_VALIDOS = new Set([
+  "clientes", "fornecedores", "obras", "contratos", "orcamentos",
+  "financeiro", "cotacoes", "diario", "medicoes", "arquivos",
+  "notificacoes", "atividades",
+]);
+
 export function useModuleLoad(modulo, id = null) {
   const store = useAppStore();
 
   useEffect(() => {
+    if (!MODULOS_VALIDOS.has(modulo)) {
+      console.warn(`[useModuleLoad] módulo desconhecido: "${modulo}"`);
+      return;
+    }
     const fnName = `load${modulo.charAt(0).toUpperCase()}${modulo.slice(1)}`;
     if (typeof store[fnName] === "function") {
       store[fnName](id);
@@ -21,9 +22,5 @@ export function useModuleLoad(modulo, id = null) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [modulo, id]);
 
-  return {
-    loading: id
-      ? (store.loading[modulo] || false)
-      : (store.loading[modulo] || false),
-  };
+  return { loading: store.loading[modulo] || false };
 }

@@ -1,5 +1,8 @@
+import * as Sentry from "@sentry/react";
 import { useState, useEffect, useRef } from "react";
+import { useToast } from "../hooks/useToast";
 import { C, FASES } from "../utils/constants";
+import { bimUrl } from "../utils/cdn";
 import useAppStore from "../store/useAppStore";
 import { useModuleLoad } from "../hooks/useModuleLoad";
 
@@ -135,7 +138,9 @@ function IFCViewer({ url, onElementClick }) {
         await ifcLoader.setup();
 
         setMsg("Carregando modelo IFC...");
-        const resp  = await fetch(url);
+        const controller = new AbortController();
+        const resp  = await fetch(url, { signal: controller.signal });
+        if (destroyed) { controller.abort(); components.dispose(); return; }
         const buff  = await resp.arrayBuffer();
         const model = await ifcLoader.load(new Uint8Array(buff));
         world.scene.three.add(model);
@@ -161,7 +166,7 @@ function IFCViewer({ url, onElementClick }) {
     return () => {
       destroyed = true;
       if (viewerRef.current) {
-        try { viewerRef.current.components.dispose(); } catch (_) {}
+        try { viewerRef.current.components.dispose(); } catch (disposeErr) { Sentry.captureException(disposeErr); }
         viewerRef.current = null;
       }
     };
@@ -392,7 +397,6 @@ export default function BIM() {
   const [filtroStatus, setFiltroStatus] = useState("Todos");
   const [filtroPrio,   setFiltroPrio]   = useState("Todos");
   const [filtroDisciplina, setFiltroDisciplina] = useState("Todas");
-  const [toast,        setToast]        = useState(null);
   const [elementoSelecionado, setElementoSelecionado] = useState(null);
 
   useEffect(() => { if (!obraId && obras.length > 0) setObraId(obras[0].id); }, [obras, obraId]);
@@ -400,7 +404,6 @@ export default function BIM() {
     if (obraId) { loadBimModelos(obraId); loadBimApontamentos(obraId); }
   }, [obraId]);
 
-  function mostrarToast(msg) { setToast(msg); setTimeout(() => setToast(null), 3500); }
 
   const modelos  = bimModelos[obraId] || [];
   const todosApt = bimApontamentos[obraId] || [];
@@ -428,7 +431,7 @@ export default function BIM() {
   const obraAtual = obras.find((o) => o.id === obraId);
 
   function abrirModelo(m) {
-    const url = `https://gpzmglcxmbboxxogbibq.supabase.co/storage/v1/object/public/bim/${m.storage_path}`;
+    const url = bimUrl(m.storage_path);
     setModeloUrl(url);
     setModeloNome(m.nome);
     setAba("viewer");

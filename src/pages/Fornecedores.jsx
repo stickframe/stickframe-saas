@@ -1,7 +1,9 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { C } from "../utils/constants";
 import useAppStore from "../store/useAppStore";
 import { useModuleLoad } from "../hooks/useModuleLoad";
+import { useToast } from "../hooks/useToast";
 import { listarTodasCotacoes } from "../services/repositories/fornecedoresRepository";
 import {
   listarMonitorados, adicionarMonitor, atualizarPrecoMonitor,
@@ -226,12 +228,13 @@ function MonitorPrecos() {
                         onClick={() => sincronizar(item)}
                         disabled={syncing[item.id]}
                         title="Sincronizar preço agora"
+                        aria-label="Sincronizar preço agora"
                         style={{ padding: "4px 8px", fontSize: 13, background: "none", border: `1px solid ${C.border}`,
                           borderRadius: 5, cursor: "pointer", opacity: syncing[item.id] ? 0.5 : 1 }}
                       >
                         {syncing[item.id] ? "…" : "🔄"}
                       </button>
-                      <button onClick={() => remover(item.id)} title="Remover"
+                      <button onClick={() => remover(item.id)} title="Remover" aria-label="Remover produto monitorado"
                         style={{ padding: "4px 8px", fontSize: 13, background: "none", border: `1px solid ${C.border}`,
                           borderRadius: 5, cursor: "pointer", color: C.danger }}>
                         🗑
@@ -509,6 +512,49 @@ function IndicePrecos() {
   );
 }
 
+function VirtualFornList({ lista, sel, onSelect }) {
+  const parentRef = useRef(null);
+  const virtualizer = useVirtualizer({
+    count: lista.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 72,
+    overscan: 5,
+  });
+
+  return (
+    <div ref={parentRef} style={{ flex: 1, overflowY: "auto" }}>
+      <div style={{ height: virtualizer.getTotalSize(), position: "relative" }}>
+        {virtualizer.getVirtualItems().map((vItem) => {
+          const f = lista[vItem.index];
+          const isSelected = sel?.id === f.id;
+          return (
+            <div
+              key={f.id}
+              onClick={() => onSelect(f)}
+              style={{
+                position: "absolute", top: vItem.start, width: "100%",
+                padding: "12px 16px", cursor: "pointer", boxSizing: "border-box",
+                borderBottom: `1px solid ${C.border}`,
+                background: isSelected ? C.red + "10" : "#fff",
+                borderLeft: isSelected ? `3px solid ${C.red}` : "3px solid transparent",
+              }}
+            >
+              <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 3 }}>{f.nome}</div>
+              <div style={{ fontSize: 11, color: C.muted, display: "flex", gap: 8 }}>
+                <span>{f.especialidade}</span>
+                {f.cidade && <span>· {f.cidade}</span>}
+                <span style={{ marginLeft: "auto", color: STATUS_COR[f.status] || C.muted, fontWeight: 700 }}>
+                  {f.status}
+                </span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 const ESPECIALIDADES = [
   "Aço / Steel Frame", "Concreto / Fundação", "Elétrica", "Hidráulica",
   "Gesso / Drywall", "OSB / Madeira", "Cimentícia / Fachada", "Ferragens",
@@ -549,12 +595,11 @@ export default function Fornecedores() {
   const [form,       setForm]       = useState(FORM_FORN);
   const [formCot,    setFormCot]    = useState(FORM_COT);
   const [cotSel,     setCotSel]     = useState(null);
-  const [toast,      setToast]      = useState(null);
+  const [isSaving,   setIsSaving]   = useState(false);
+  const { toast, mostrarToast } = useToast();
 
-  const set  = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
-  const setC = (k) => (v) => setFormCot((f) => ({ ...f, [k]: v }));
-
-  function mostrarToast(msg) { setToast(msg); setTimeout(() => setToast(null), 3000); }
+  const set  = useCallback((k) => (v) => setForm((f) => ({ ...f, [k]: v })), []);
+  const setC = useCallback((k) => (v) => setFormCot((f) => ({ ...f, [k]: v })), []);
 
   function abrirFornecedor(f) {
     setSel(f);
@@ -563,6 +608,7 @@ export default function Fornecedores() {
   }
 
   async function salvarFornecedor() {
+    setIsSaving(true);
     try {
       if (modal === "novo-forn") {
         const data = await addFornecedor(form);
@@ -576,6 +622,8 @@ export default function Fornecedores() {
       setModal(null);
     } catch (e) {
       mostrarToast("❌ " + e.message);
+    } finally {
+      setIsSaving(false);
     }
   }
 
@@ -587,6 +635,7 @@ export default function Fornecedores() {
   }
 
   async function salvarCotacao() {
+    setIsSaving(true);
     try {
       const payload = {
         ...formCot,
@@ -604,15 +653,17 @@ export default function Fornecedores() {
       setModal(null);
     } catch (e) {
       mostrarToast("❌ " + e.message);
+    } finally {
+      setIsSaving(false);
     }
   }
 
-  const listaFiltrada = fornecedores.filter((f) => {
+  const listaFiltrada = useMemo(() => fornecedores.filter((f) => {
     const ok = f.nome?.toLowerCase().includes(busca.toLowerCase()) ||
                f.especialidade?.toLowerCase().includes(busca.toLowerCase());
     const okEsp = filtroEsp === "Todos" || f.especialidade === filtroEsp;
     return ok && okEsp;
-  });
+  }), [fornecedores, busca, filtroEsp]);
 
   const cotsSel = sel ? (cotacoes[sel.id] || []) : [];
 
@@ -675,37 +726,8 @@ export default function Fornecedores() {
           </select>
         </div>
 
-        {/* Lista */}
-        <div style={{ flex: 1, overflowY: "auto" }}>
-          {listaFiltrada.length === 0 && (
-            <div style={{ padding: 32, textAlign: "center", color: C.muted, fontSize: 13 }}>
-              Nenhum fornecedor encontrado.
-            </div>
-          )}
-          {listaFiltrada.map((f) => (
-            <div
-              key={f.id}
-              onClick={() => abrirFornecedor(f)}
-              style={{
-                padding: "14px 16px", cursor: "pointer",
-                borderBottom: `1px solid ${C.border}`,
-                background: sel?.id === f.id ? C.dark : "#fff",
-                transition: "background .15s",
-              }}
-            >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>{f.nome}</div>
-                <span style={{
-                  fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 10,
-                  background: (STATUS_COR[f.status] || C.muted) + "22",
-                  color: STATUS_COR[f.status] || C.muted,
-                }}>{f.status}</span>
-              </div>
-              <div style={{ fontSize: 12, color: C.muted }}>{f.especialidade}</div>
-              {f.cidade && <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{f.cidade}{f.estado ? ` — ${f.estado}` : ""}</div>}
-            </div>
-          ))}
-        </div>
+        {/* Lista virtualizada */}
+        <VirtualFornList lista={listaFiltrada} sel={sel} onSelect={abrirFornecedor} />
       </div>
 
       {/* ── Painel direito ──────────────────────────────────────────────────── */}
@@ -877,8 +899,8 @@ export default function Fornecedores() {
             <div><Label>Observações</Label><Input value={form.observacoes} onChange={set("observacoes")} placeholder="Notas internas" /></div>
             <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", paddingTop: 12, borderTop: `1px solid ${C.border}` }}>
               <Btn variant="ghost" onClick={() => setModal(null)}>Cancelar</Btn>
-              <Btn disabled={!form.nome} onClick={salvarFornecedor}>
-                {modal === "novo-forn" ? "Cadastrar" : "Salvar"}
+              <Btn disabled={!form.nome || isSaving} onClick={salvarFornecedor}>
+                {isSaving ? "Salvando…" : modal === "novo-forn" ? "Cadastrar" : "Salvar"}
               </Btn>
             </div>
           </div>
@@ -906,8 +928,8 @@ export default function Fornecedores() {
             <div><Label>Observações</Label><Input value={formCot.observacoes} onChange={setC("observacoes")} /></div>
             <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", paddingTop: 12, borderTop: `1px solid ${C.border}` }}>
               <Btn variant="ghost" onClick={() => setModal(null)}>Cancelar</Btn>
-              <Btn disabled={!formCot.descricao} onClick={salvarCotacao}>
-                {modal === "nova-cot" ? "Registrar" : "Salvar"}
+              <Btn disabled={!formCot.descricao || isSaving} onClick={salvarCotacao}>
+                {isSaving ? "Salvando…" : modal === "nova-cot" ? "Registrar" : "Salvar"}
               </Btn>
             </div>
           </div>

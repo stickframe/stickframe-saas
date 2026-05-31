@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { useToast } from "../hooks/useToast";
 import { C, CATEGORIAS_RECEITA, CATEGORIAS_DESPESA } from "../utils/constants";
 import { fmt, fmtPct } from "../utils/format";
 import { exportarFinanceiroExcel } from "../utils/exportExcel";
@@ -117,7 +118,7 @@ export default function Financeiro() {
   const [obraId,      setObraId]      = useState(null);
   const [modal,       setModal]       = useState(null); // "receita" | "despesa"
   const [form,        setForm]        = useState(FORM_VAZIO);
-  const [toast,       setToast]       = useState(null);
+  const { toast, mostrarToast } = useToast();
   const [editOrc,     setEditOrc]     = useState(false); // editar orçamento por categoria
   const [orcForm,     setOrcForm]     = useState({});    // { [categoria]: valor }
 
@@ -183,10 +184,7 @@ export default function Financeiro() {
     if (!obraId && obras.length > 0) setObraId(obras[0].id);
   }, [obras, obraId]);
 
-  function mostrarToast(msg) {
-    setToast(msg);
-    setTimeout(() => setToast(null), 3000);
-  }
+
 
   function abrirModal(tipo) {
     const catPadrao = tipo === "receita" ? "Entrada contrato" : "Materiais";
@@ -207,30 +205,42 @@ export default function Financeiro() {
   const obra = obras.find((o) => o.id === obraId) || null;
   const fin  = (obraId && financeiro[obraId]) || { contrato: 0, lancamentos: [] };
 
-  const receitas = fin.lancamentos.filter((l) => l.tipo === "receita").reduce((a, l) => a + (l.valor || 0), 0);
-  const despesas = fin.lancamentos.filter((l) => l.tipo === "despesa").reduce((a, l) => a + (l.valor || 0), 0);
-  const saldo    = receitas - despesas;
-  const margem   = receitas > 0 ? saldo / receitas : 0;
-  const aReceber = Math.max((fin.contrato || 0) - receitas, 0);
-  const pctRec   = fin.contrato > 0 ? Math.min(receitas / fin.contrato, 1) : 0;
+  const {
+    receitas, despesas, saldo, margem, aReceber, pctRec, porCategoria, desvioCategoria,
+  } = useMemo(() => {
+    const lancamentos = fin.lancamentos;
+    const rec = lancamentos.filter((l) => l.tipo === "receita").reduce((a, l) => a + (l.valor || 0), 0);
+    const desp = lancamentos.filter((l) => l.tipo === "despesa").reduce((a, l) => a + (l.valor || 0), 0);
+    const sld = rec - desp;
+    const orcCats = obra?.orcamento_categorias || {};
 
-  const porCategoria = CATEGORIAS_DESPESA.map((cat) => ({
-    label: cat.split(" ")[0],
-    value: fin.lancamentos.filter((l) => l.tipo === "despesa" && l.categoria === cat).reduce((a, l) => a + (l.valor || 0), 0),
-    color: C.red,
-  })).filter((d) => d.value > 0);
+    const despPorCat = {};
+    lancamentos.filter((l) => l.tipo === "despesa").forEach((l) => {
+      despPorCat[l.categoria] = (despPorCat[l.categoria] || 0) + (l.valor || 0);
+    });
+
+    return {
+      receitas: rec,
+      despesas: desp,
+      saldo: sld,
+      margem: rec > 0 ? sld / rec : 0,
+      aReceber: Math.max((fin.contrato || 0) - rec, 0),
+      pctRec: fin.contrato > 0 ? Math.min(rec / fin.contrato, 1) : 0,
+      porCategoria: CATEGORIAS_DESPESA
+        .map((cat) => ({ label: cat.split(" ")[0], value: despPorCat[cat] || 0, color: C.red }))
+        .filter((d) => d.value > 0),
+      desvioCategoria: CATEGORIAS_DESPESA.map((cat) => {
+        const realizado = despPorCat[cat] || 0;
+        const previsto  = Number(orcCats[cat] || 0);
+        const desvio    = realizado - previsto;
+        return { cat, realizado, previsto, desvio, pct: previsto > 0 ? (desvio / previsto) * 100 : null };
+      }).filter((d) => d.realizado > 0 || d.previsto > 0),
+    };
+  }, [fin.lancamentos, fin.contrato, obra?.orcamento_categorias]);
 
   // ── Orçamento por categoria ────────────────────────────────────────────────
   const orcCats = obra?.orcamento_categorias || {};
   const temOrcCats = Object.values(orcCats).some((v) => Number(v) > 0);
-
-  const desvioCategoria = CATEGORIAS_DESPESA.map((cat) => {
-    const realizado  = fin.lancamentos.filter((l) => l.tipo === "despesa" && l.categoria === cat).reduce((a, l) => a + (l.valor || 0), 0);
-    const previsto   = Number(orcCats[cat] || 0);
-    const desvio     = realizado - previsto;
-    const pct        = previsto > 0 ? (desvio / previsto) * 100 : null;
-    return { cat, realizado, previsto, desvio, pct };
-  }).filter((d) => d.realizado > 0 || d.previsto > 0);
 
   async function salvarOrcCats() {
     const parsed = {};

@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import { sb } from "../services/supabase";
 import { FASES } from "../utils/constants";
 import { fmt } from "../utils/format";
+import { LOGO_STICKFRAME, storageUrl } from "../utils/cdn";
 
 export default function PortalOnline() {
   const { token } = useParams();
@@ -81,7 +82,7 @@ export default function PortalOnline() {
       {/* Header */}
       <div style={{ background: "#1A1A1A", padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <img src={empresa?.logo_url || "https://gpzmglcxmbboxxogbibq.supabase.co/storage/v1/object/public/arquivos/logos/34ec14d3-02fc-4b0a-8040-67f7a739394d/logo.jpg?t=1780161932174"} style={{ width: 32, height: 32, borderRadius: 7, objectFit: "contain" }} alt="Logo" />
+          <img src={empresa?.logo_url || LOGO_STICKFRAME} style={{ width: 32, height: 32, borderRadius: 7, objectFit: "contain" }} alt="Logo da empresa" />
           <div>
             <div style={{ fontSize: 14, fontWeight: 800, letterSpacing: 2, color: "#fff" }}>
               <span style={{ color: "#555" }}>STICK</span><span style={{ color: "#981915" }}>FRAME</span>
@@ -276,13 +277,13 @@ export default function PortalOnline() {
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6 }}>
                   {imgs.map((f) => {
                     const url = f.storage_path
-                      ? `https://gpzmglcxmbboxxogbibq.supabase.co/storage/v1/object/public/arquivos/${f.storage_path}`
+                      ? storageUrl(f.storage_path)
                       : null;
                     if (!url) return null;
                     return (
                       <div key={f.id} onClick={() => setFotoAberta(url)}
                         style={{ aspectRatio: "1", borderRadius: 8, overflow: "hidden", cursor: "pointer", background: "#f0f0f0" }}>
-                        <img src={url} alt={f.nome} style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                        <img src={url} alt={f.nome || "Imagem da obra"} style={{ width: "100%", height: "100%", objectFit: "cover" }}
                           onError={(e) => { e.target.parentElement.style.display = "none"; }} />
                       </div>
                     );

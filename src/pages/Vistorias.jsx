@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useToast } from "../hooks/useToast";
 import { C, FASES } from "../utils/constants";
 import useAppStore from "../store/useAppStore";
 import { useModuleLoad } from "../hooks/useModuleLoad";
@@ -277,17 +278,16 @@ export default function Vistorias() {
   const addVistoria   = useAppStore((s) => s.addVistoria);
   const deleteVistoria = useAppStore((s) => s.deleteVistoria);
 
+    const { toast, mostrarToast } = useToast();
+
   const [obraId,  setObraId]  = useState(null);
   const [modal,   setModal]   = useState(false);
   const [verV,    setVerV]    = useState(null);
   const [filtroR, setFiltroR] = useState("Todos");
   const [filtroF, setFiltroF] = useState("Todos");
-  const [toast,   setToast]   = useState(null);
 
   useEffect(() => { if (!obraId && obras.length > 0) setObraId(obras[0].id); }, [obras, obraId]);
   useEffect(() => { if (obraId) loadVistorias(obraId); }, [obraId]);
-
-  function mostrarToast(msg) { setToast(msg); setTimeout(() => setToast(null), 3000); }
 
   const lista = (vistorias[obraId] || []).filter((v) =>
     (filtroR === "Todos" || v.resultado === filtroR) &&

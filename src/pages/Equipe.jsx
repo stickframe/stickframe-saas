@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useToast } from "../hooks/useToast";
 import { C } from "../utils/constants";
 import { fmt } from "../utils/format";
 import { mesAno } from "../utils/date";
@@ -132,7 +133,6 @@ export default function Equipe() {
   const [modal,      setModal]      = useState(null);
   const [editId,     setEditId]     = useState(null);
   const [confirm,    setConfirm]    = useState(null);
-  const [toast,      setToast]      = useState(null);
   const [form,       setForm]       = useState(FORM_VAZIO);
   const [busca,      setBusca]      = useState("");
   const [statusF,    setStatusF]    = useState("Todos");
@@ -157,11 +157,6 @@ export default function Equipe() {
     loadAlocacoes();
     loadHorasTrabalhadas();
   }, [loadAlocacoes, loadHorasTrabalhadas]);
-
-  function mostrarToast(msg) {
-    setToast(msg);
-    setTimeout(() => setToast(null), 3000);
-  }
 
   // ── Equipe CRUD ──────────────────────────────────────────────────────────
   function abrirNovo() { setForm(FORM_VAZIO); setModal("novo"); }

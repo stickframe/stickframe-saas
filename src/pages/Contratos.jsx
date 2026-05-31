@@ -1,8 +1,9 @@
 import { useState } from "react";
+import { useToast } from "../hooks/useToast";
+import { buscarEmpresa } from "../services/repositories/empresaRepository";
 import { C, PRECOS } from "../utils/constants";
 import { fmt } from "../utils/format";
 import { enviarWhatsApp, msgContrato } from "../services/whatsappService";
-import { buscarEmpresa } from "../services/repositories/empresaRepository";
 import useAppStore from "../store/useAppStore";
 import { useModuleLoad } from "../hooks/useModuleLoad";
 import Btn from "../components/ui/Btn";
@@ -189,7 +190,22 @@ function FormContrato({ form, setForm, clientes, obras, onSave, onCancel, btnLab
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
         <div>
           <Label required>Valor total (R$)</Label>
-          <Input type="number" min="0" value={form.valor} onChange={set("valor")} placeholder="0" />
+          <input
+            inputMode="numeric"
+            value={form.valor
+              ? "R$ " + Number(String(form.valor).replace(/\D/g, "") || 0).toLocaleString("pt-BR")
+              : ""}
+            onChange={(e) => {
+              const raw = e.target.value.replace(/\D/g, "");
+              set("valor")(raw ? String(Number(raw)) : "");
+            }}
+            placeholder="R$ 0"
+            style={{
+              width: "100%", padding: "10px 12px", borderRadius: 8,
+              border: `1px solid ${C.border}`, background: C.bg,
+              color: C.text, fontSize: 14, fontFamily: "inherit", outline: "none",
+            }}
+          />
         </div>
         <div>
           <Label>Prazo de entrega</Label>
@@ -200,11 +216,11 @@ function FormContrato({ form, setForm, clientes, obras, onSave, onCancel, btnLab
       {/* Unidades + Área */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
         <div>
-          <Label>Unidades (UH)</Label>
+          <Label>Unidades</Label>
           <Input type="number" min="1" value={form.unidades} onChange={set("unidades")} />
         </div>
         <div>
-          <Label>Área/UH (m²)</Label>
+          <Label>Área (m²)</Label>
           <Input type="number" min="1" value={form.area} onChange={set("area")} />
         </div>
         <div>
@@ -254,13 +270,9 @@ export default function Contratos() {
   const [modal,   setModal]   = useState(null); // "novo" | "editar"
   const [editId,  setEditId]  = useState(null);
   const [confirm, setConfirm] = useState(null);
-  const [toast,   setToast]   = useState(null);
+  const { toast, mostrarToast } = useToast();
   const [form,    setForm]    = useState(FORM_VAZIO);
 
-  function mostrarToast(msg) {
-    setToast(msg);
-    setTimeout(() => setToast(null), 3000);
-  }
 
   function abrirNovo() {
     setForm({ ...FORM_VAZIO, cliente_id: clientes[0]?.id || "", cliente: clientes[0]?.nome || "" });
@@ -459,8 +471,8 @@ export default function Contratos() {
 
                       <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
                         {[
-                          ["Unidades", `${c.unidades} UH`],
-                          ["Área/UH",  `${c.area} m²`],
+                          ["Unidades", `${c.unidades}`],
+                          ["Área",     `${c.area} m²`],
                           ["Padrão",   c.padrao],
                           ["Prazo",    c.prazo],
                         ].map(([k, v]) => (

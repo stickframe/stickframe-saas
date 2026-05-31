@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
+import { useToast } from "../hooks/useToast";
+import { printHtml } from "../utils/printHtml";
 import { CUB_ESTADOS, PADROES_SF, SISTEMAS_SF } from "../utils/insumosSF";
 import { C } from "../utils/constants";
+import { LOGO_STICKFRAME } from "../utils/cdn";
 import useAppStore from "../store/useAppStore";
 import { listarPrecosVivos } from "../services/repositories/precosRepository";
 import { criarOrcamento } from "../services/repositories/orcamentoRepository";
@@ -163,6 +166,7 @@ export default function OrcamentoTecnico() {
 
   // ── Restaura form do localStorage ──────────────────────────────────────────
   const savedForm = (() => { try { return JSON.parse(localStorage.getItem(LS_KEY) || "{}"); } catch { return {}; } })();
+  const { toast, mostrarToast } = useToast();
 
   const [estado, setEstado]         = useState(savedForm.estado     ?? "SP");
   const [cubManual, setCubManual]   = useState(savedForm.cubManual  ?? "");
@@ -182,7 +186,7 @@ export default function OrcamentoTecnico() {
   const [salvando, setSalvando]         = useState(false);
   const [modalFinanc, setModalFinanc]   = useState(false);
   const [financForm, setFinancForm]     = useState({ entrada: 20, prazo: 120, taxa: 1.0 });
-  const [toast, setToast]               = useState(null);
+
 
 
 
@@ -417,12 +421,10 @@ export default function OrcamentoTecnico() {
         })),
       });
       setModalSalvar(false);
-      setToast("Orçamento salvo com sucesso!");
-      setTimeout(() => setToast(null), 3000);
+      mostrarToast("Orçamento salvo com sucesso!");
       setActivePage("orcamentos");
     } catch (e) {
-      setToast("Erro ao salvar: " + e.message);
-      setTimeout(() => setToast(null), 4000);
+      mostrarToast("Erro ao salvar: " + e.message);
     } finally {
       setSalvando(false);
     }
@@ -431,7 +433,7 @@ export default function OrcamentoTecnico() {
   const exportarPDF = () => {
     if (!resultado) return;
     const r = resultado;
-    const LOGO = "https://gpzmglcxmbboxxogbibq.supabase.co/storage/v1/object/public/arquivos/logos/34ec14d3-02fc-4b0a-8040-67f7a739394d/logo.jpg?t=1780161932174";
+    const LOGO = LOGO_STICKFRAME;
     const dataHoje = new Date().toLocaleDateString("pt-BR");
 
     const sistemasRows = r.breakdown.map((s) => `
@@ -568,10 +570,7 @@ export default function OrcamentoTecnico() {
       </div>
     </body></html>`;
 
-    const win = window.open("", "_blank");
-    win.document.write(html);
-    win.document.close();
-    setTimeout(() => win.print(), 600);
+    printHtml(html, "orcamento-tecnico");
   };
 
   const calcFinanciamento = () => {
@@ -597,7 +596,7 @@ export default function OrcamentoTecnico() {
   const exportarPropostaCliente = () => {
     if (!resultado) return;
     const r = resultado;
-    const LOGO = "https://gpzmglcxmbboxxogbibq.supabase.co/storage/v1/object/public/arquivos/logos/34ec14d3-02fc-4b0a-8040-67f7a739394d/logo.jpg?t=1780161932174";
+    const LOGO = LOGO_STICKFRAME;
     const dataHoje = new Date().toLocaleDateString("pt-BR");
     const validade = new Date(); validade.setDate(validade.getDate() + 30);
 
@@ -729,10 +728,7 @@ export default function OrcamentoTecnico() {
       </div>
     </body></html>`;
 
-    const win = window.open("", "_blank");
-    win.document.write(html);
-    win.document.close();
-    setTimeout(() => win.print(), 600);
+    printHtml(html, "orcamento-tecnico");
   };
 
 
@@ -778,14 +774,10 @@ export default function OrcamentoTecnico() {
 
       XLSX.writeFile(wb, `orcamento_tecnico_${resultado.area}m2_${resultado.estado}.xlsx`);
     } catch {
-      showToast("Erro ao exportar Excel");
+      mostrarToast("Erro ao exportar Excel");
     }
   };
 
-  const showToast = (msg) => {
-    setToast(msg);
-    setTimeout(() => setToast(null), 3000);
-  };
 
   return (
     <div style={{ display: "flex", gap: 20, padding: "20px 24px", minHeight: "100vh",

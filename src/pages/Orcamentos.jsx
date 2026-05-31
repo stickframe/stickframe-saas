@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { useToast } from "../hooks/useToast";
+import { printHtml } from "../utils/printHtml";
 import { C, PRECOS, FASES } from "../utils/constants";
 import { fmt } from "../utils/format";
 import { enviarWhatsApp, msgOrcamento } from "../services/whatsappService";
@@ -193,10 +195,7 @@ function gerarPDF(o) {
     <p>Este orçamento é válido por 30 dias a partir da data de emissão.</p>
   </div>
   </body></html>`;
-  const win = window.open("", "_blank");
-  win.document.write(html);
-  win.document.close();
-  win.onload = () => win.print();
+  printHtml(html, `orcamento-${o?.ref || "proposta"}`);
 }
 
 // ─── Índices técnicos StickFrame (baseados em obras reais) ───────────────────
@@ -502,7 +501,7 @@ export default function Orcamentos() {
   const [modal,        setModal]        = useState(false);
   const [editId,       setEditId]       = useState(null);
   const [confirm,      setConfirm]      = useState(null);
-  const [toast,        setToast]        = useState(null);
+  const { toast, mostrarToast } = useToast();
   const [form,         setForm]         = useState({ ...FORM_VAZIO, cliente_id: clientes[0]?.id || "" });
   const [converterOrc, setConverterOrc] = useState(null);
   const [calculadora,  setCalculadora]  = useState(false);
@@ -528,10 +527,7 @@ export default function Orcamentos() {
   }
   const [obraForm,   setObraForm]   = useState({ nome: "", prazo_inicio: "", prazo_fim: "" });
 
-  function mostrarToast(msg) {
-    setToast(msg);
-    setTimeout(() => setToast(null), 3000);
-  }
+
 
   function abrirNovo() {
     setForm({ ...FORM_VAZIO, cliente_id: clientes[0]?.id || "" });
@@ -656,7 +652,7 @@ export default function Orcamentos() {
         }));
         await inserirTemplate(obra.id, rows);
       } catch (e) {
-        console.warn("Erro ao importar estimativo para quantitativos:", e);
+        mostrarToast(`⚠️ Não foi possível importar itens para Quantitativos: ${e?.message || e}`);
       }
     }
 

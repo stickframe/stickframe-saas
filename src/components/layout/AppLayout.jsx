@@ -3,7 +3,7 @@ import Sidebar from "./Sidebar";
 import NotificacaoDropdown from "../notificacoes/NotificacaoDropdown";
 import CommandPalette from "../ui/CommandPalette";
 import { C, NAV } from "../../utils/constants";
-import { sb } from "../../services/supabase";
+import { buscarEmpresa } from "../../services/repositories/empresaRepository";
 import useAppStore from "../../store/useAppStore";
 import { lazy, Suspense } from "react";
 
@@ -27,8 +27,8 @@ export default function AppLayout({ children }) {
 
   useEffect(() => {
     if (!empresaId) return;
-    sb.from("empresas").select("onboarding_completo").eq("id", empresaId).single()
-      .then(({ data }) => {
+    buscarEmpresa()
+      .then((data) => {
         if (data && !data.onboarding_completo) setShowOnboarding(true);
         setCheckDone(true);
       })

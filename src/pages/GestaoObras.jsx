@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { useToast } from "../hooks/useToast";
 import { C, FASES } from "../utils/constants";
 import { exportarObrasExcel } from "../utils/exportExcel";
 import useAppStore from "../store/useAppStore";
@@ -167,7 +168,6 @@ export default function GestaoObras() {
   const [statusDocFiltro, setStatusDocFiltro] = useState("Todos");
   const [faseFiltro,  setFaseFiltro]  = useState("Todos");
   const [uploadMeta,  setUploadMeta]  = useState(null); // { files, disciplina, status_doc }
-  const [toast,       setToast]       = useState(null);
   const [form,        setForm]        = useState(FORM_VAZIO);
   const [busca,       setBusca]       = useState("");
   const [statusFiltro, setStatusFiltro] = useState("Todos");
@@ -209,11 +209,6 @@ export default function GestaoObras() {
     mostrarToast("🔗 Link do portal copiado!");
   }
 
-  function mostrarToast(msg) {
-    setToast(msg);
-    setTimeout(() => setToast(null), 3000);
-  }
-
   const obra      = obras.find((o) => o.id === obraId) || null;
   const arqObra   = arquivos[obraId] || [];
   const arqFiltro = arqObra.filter((a) =>
@@ -223,11 +218,11 @@ export default function GestaoObras() {
     (faseFiltro     === "Todos" || a.fase       === faseFiltro)
   );
 
-  const obrasFiltradas = obras.filter((o) => {
+  const obrasFiltradas = useMemo(() => obras.filter((o) => {
     const matchBusca  = !busca || o.nome?.toLowerCase().includes(busca.toLowerCase()) || o.cliente?.toLowerCase().includes(busca.toLowerCase());
     const matchStatus = statusFiltro === "Todos" || o.status === statusFiltro;
     return matchBusca && matchStatus;
-  });
+  }), [obras, busca, statusFiltro]);
 
   function abrirNova() {
     setForm(FORM_VAZIO);
@@ -285,7 +280,6 @@ export default function GestaoObras() {
       setModal(null);
       mostrarToast("✅ Obra atualizada!");
     } catch (e) {
-      console.error("updateObra error:", e);
       mostrarToast(`❌ Erro ao salvar: ${e?.message || "verifique os dados."}`);
     }
   }
@@ -877,7 +871,7 @@ export default function GestaoObras() {
                                 aspectRatio: "4/3", background: C.darker, position: "relative",
                               }}>
                                 {f.url
-                                  ? <img src={f.url} alt={f.nome} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                                  ? <img src={f.url} alt={f.nome} width="320" height="240" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                                   : <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", fontSize: 28 }}>🖼️</div>
                                 }
                               </div>
@@ -1170,7 +1164,7 @@ export default function GestaoObras() {
           display: "flex", alignItems: "center", justifyContent: "center",
           zIndex: 9999, cursor: "pointer",
         }}>
-          <img src={fotoAmpliada.url} alt={fotoAmpliada.nome} style={{
+          <img src={fotoAmpliada.url} alt={fotoAmpliada.nome} width="1200" height="900" style={{
             maxWidth: "90vw", maxHeight: "88vh", objectFit: "contain", borderRadius: 8,
           }} />
           <div style={{ position: "absolute", top: 18, right: 22, color: "#fff", fontSize: 24, fontWeight: 700 }}>✕</div>

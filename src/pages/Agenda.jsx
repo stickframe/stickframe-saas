@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useToast } from "../hooks/useToast";
 import { C, TIPOS_EVENTO, COR_TIPO_EVENTO } from "../utils/constants";
 import useAppStore from "../store/useAppStore";
 import { useModuleLoad } from "../hooks/useModuleLoad";
@@ -243,16 +244,10 @@ export default function Agenda() {
   const [modal,     setModal]     = useState(false);
   const [verEvento, setVerEvento] = useState(null);
   const [filtro,    setFiltro]    = useState("todos");
-  const [toast,     setToast]     = useState(null);
   const [form,      setForm]      = useState(FORM_VAZIO);
   const [viewMode,  setViewMode]  = useState("lista"); // "lista" | "calendario"
   const [mesRef,    setMesRef]    = useState(() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1); });
   const [diaModal,  setDiaModal]  = useState(null); // { iso, eventos }
-
-  function mostrarToast(msg) {
-    setToast(msg);
-    setTimeout(() => setToast(null), 3000);
-  }
 
   function abrirNovo() {
     setForm({ ...FORM_VAZIO, data: new Date().toISOString().slice(0, 10) });

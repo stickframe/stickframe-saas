@@ -2,8 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { C } from "../utils/constants";
 import useAppStore from "../store/useAppStore";
-
-const LOGO = "https://gpzmglcxmbboxxogbibq.supabase.co/storage/v1/object/public/arquivos/logos/34ec14d3-02fc-4b0a-8040-67f7a739394d/logo.jpg?t=1780161932174";
+import { LOGO_STICKFRAME as LOGO } from "../utils/cdn";
 
 export default function LoginScreen() {
   const login    = useAppStore((s) => s.login);

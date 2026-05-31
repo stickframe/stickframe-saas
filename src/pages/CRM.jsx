@@ -1,9 +1,10 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback, memo } from "react";
 import { C } from "../utils/constants";
 import { fmt } from "../utils/format";
 import { enviarWhatsApp, msgCliente } from "../services/whatsappService";
 import useAppStore from "../store/useAppStore";
 import { useModuleLoad } from "../hooks/useModuleLoad";
+import { useToast } from "../hooks/useToast";
 import Btn from "../components/ui/Btn";
 import Input from "../components/ui/Input";
 import Select from "../components/ui/Select";
@@ -122,7 +123,7 @@ function Secao({ titulo }) {
 }
 
 // ─── Formulário (fora do componente para não re-montar a cada render) ─────────
-function FormCliente({ form, setForm, onSave, onCancel, btnLabel }) {
+const FormCliente = memo(function FormCliente({ form, setForm, onSave, onCancel, btnLabel, disabled }) {
   const [erros, setErros] = useState({});
   const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
 
@@ -147,6 +148,7 @@ function FormCliente({ form, setForm, onSave, onCancel, btnLabel }) {
           value={form[key]}
           onChange={set(key)}
           placeholder={placeholder}
+          hasError={!!erros[key]}
           {...extra}
         />
         {erros[key] && (
@@ -215,7 +217,7 @@ function FormCliente({ form, setForm, onSave, onCancel, btnLabel }) {
           />
         </div>
         <div>
-          <Label>Unidades (UH)</Label>
+          <Label>Unidades</Label>
           <Input
             value={form.unidades}
             onChange={(v) => set("unidades")(v.replace(/\D/g, ""))}
@@ -265,11 +267,11 @@ function FormCliente({ form, setForm, onSave, onCancel, btnLabel }) {
       {/* AÇÕES */}
       <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 4, paddingTop: 12, borderTop: `1px solid ${C.border}` }}>
         <Btn variant="ghost" onClick={onCancel}>Cancelar</Btn>
-        <Btn disabled={!form.nome.trim()} onClick={handleSave}>{btnLabel}</Btn>
+        <Btn disabled={!form.nome.trim() || disabled} onClick={handleSave}>{btnLabel}</Btn>
       </div>
     </div>
   );
-}
+});
 
 // ─── CRM principal ───────────────────────────────────────────────────────────
 const FORM_VAZIO = {
@@ -290,47 +292,34 @@ export default function CRM() {
   const [modal,      setModal]      = useState(false);
   const [sel,        setSel]        = useState(null);
   const [confirm,    setConfirm]    = useState(false);
-  const [toast,      setToast]      = useState(null);
+  const [isSaving,   setIsSaving]   = useState(false);
   const [form,       setForm]       = useState(FORM_VAZIO);
   const [csvModal,   setCsvModal]   = useState(false);
   const [csvPreview, setCsvPreview] = useState([]);
   const [csvErro,    setCsvErro]    = useState("");
 
-  const cliente = clientes.find((c) => c.id === sel);
+  const cliente = useMemo(() => clientes.find((c) => c.id === sel), [clientes, sel]);
+  const { toast, mostrarToast } = useToast();
   const hojeStr = new Date().toISOString().split("T")[0];
 
-  // Métricas
   const stats = useMemo(() => {
     let convertidos = 0;
     let total = 0;
-    const porOrigem = {}; 
+    const porOrigem = {};
     let followUpsPendentes = 0;
-
     clientes.forEach(c => {
       total++;
       const isConvertido = c.status === "Fechado" || c.status === "Em execução";
       if (isConvertido) convertidos++;
-      
       const orig = c.origem || "Outros";
       if (!porOrigem[orig]) porOrigem[orig] = { total: 0, convertidos: 0 };
       porOrigem[orig].total++;
       if (isConvertido) porOrigem[orig].convertidos++;
-
-      if (c.proximo_contato && !isConvertido) {
-        if (c.proximo_contato <= hojeStr) {
-          followUpsPendentes++;
-        }
-      }
+      if (c.proximo_contato && !isConvertido && c.proximo_contato <= hojeStr) followUpsPendentes++;
     });
-
     const taxa = total === 0 ? 0 : Math.round((convertidos / total) * 100);
     return { total, convertidos, taxa, porOrigem, followUpsPendentes };
   }, [clientes, hojeStr]);
-
-  function mostrarToast(msg) {
-    setToast(msg);
-    setTimeout(() => setToast(null), 3000);
-  }
 
   function abrirNovo() {
     setForm(FORM_VAZIO);
@@ -355,28 +344,42 @@ export default function CRM() {
     setModal("editar");
   }
 
-  function salvarNovo() {
-    // eslint-disable-next-line no-unused-vars
-    const { valorDisplay, ...payload } = form;
-    addCliente({
-      ...payload,
-      unidades: parseInt(form.unidades) || 0,
-      valor:    form.valor || 0,
-    });
-    setModal(false);
-    mostrarToast("✅ Cliente cadastrado com sucesso!");
+  async function salvarNovo() {
+    setIsSaving(true);
+    try {
+      // eslint-disable-next-line no-unused-vars
+      const { valorDisplay, ...payload } = form;
+      await addCliente({
+        ...payload,
+        unidades: parseInt(form.unidades) || 0,
+        valor:    form.valor || 0,
+      });
+      setModal(false);
+      mostrarToast("✅ Cliente cadastrado com sucesso!");
+    } catch (e) {
+      mostrarToast("❌ " + e.message);
+    } finally {
+      setIsSaving(false);
+    }
   }
 
-  function salvarEdicao() {
-    // eslint-disable-next-line no-unused-vars
-    const { valorDisplay, ...payload } = form;
-    updateCliente(sel, {
-      ...payload,
-      unidades: parseInt(form.unidades) || 0,
-      valor:    form.valor || 0,
-    });
-    setModal(false);
-    mostrarToast("✅ Cliente atualizado!");
+  async function salvarEdicao() {
+    setIsSaving(true);
+    try {
+      // eslint-disable-next-line no-unused-vars
+      const { valorDisplay, ...payload } = form;
+      await updateCliente(sel, {
+        ...payload,
+        unidades: parseInt(form.unidades) || 0,
+        valor:    form.valor || 0,
+      });
+      setModal(false);
+      mostrarToast("✅ Cliente atualizado!");
+    } catch (e) {
+      mostrarToast("❌ " + e.message);
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   function deletar() {
@@ -384,6 +387,10 @@ export default function CRM() {
     setSel(null);
     setConfirm(false);
     mostrarToast("🗑 Cliente removido.");
+  }
+
+  function sanitizar(s) {
+    return String(s ?? "").replace(/[<>"'&]/g, (c) => ({ "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#x27;", "&": "&amp;" }[c]));
   }
 
   function parsearCSV(texto) {
@@ -400,12 +407,12 @@ export default function CRM() {
     if (iNome === -1) { setCsvErro("Coluna 'nome' não encontrada no CSV."); return; }
     
     const dados = linhas.slice(1).filter((l) => l[iNome]?.trim()).map((l) => ({
-      nome:    l[iNome]    || "",
-      email:   iEmail   >= 0 ? l[iEmail]   || "" : "",
-      contato: iContato >= 0 ? l[iContato] || "" : "",
-      cidade:  iCidade  >= 0 ? l[iCidade]  || "" : "",
-      origem:  iOrigem  >= 0 ? l[iOrigem]  || "Outros" : "Outros",
-      status:  iStatus  >= 0 ? l[iStatus]  || "Lead" : "Lead",
+      nome:    sanitizar(l[iNome]    || ""),
+      email:   sanitizar(iEmail   >= 0 ? l[iEmail]   || "" : ""),
+      contato: sanitizar(iContato >= 0 ? l[iContato] || "" : ""),
+      cidade:  sanitizar(iCidade  >= 0 ? l[iCidade]  || "" : ""),
+      origem:  iOrigem  >= 0 ? sanitizar(l[iOrigem] || "Outros") : "Outros",
+      status:  STATUS_OPTS.includes(l[iStatus]) ? l[iStatus] : "Lead",
       valor: 0, unidades: 0, observacoes: "",
     }));
     if (dados.length === 0) { setCsvErro("Nenhum dado válido encontrado."); return; }
@@ -452,7 +459,8 @@ export default function CRM() {
           <FormCliente
             form={form} setForm={setForm}
             onSave={salvarNovo} onCancel={() => setModal(false)}
-            btnLabel="Salvar cliente"
+            btnLabel={isSaving ? "Salvando…" : "Salvar cliente"}
+            disabled={isSaving}
           />
         </Modal>
       )}
@@ -461,7 +469,8 @@ export default function CRM() {
           <FormCliente
             form={form} setForm={setForm}
             onSave={salvarEdicao} onCancel={() => setModal(false)}
-            btnLabel="Salvar alterações"
+            btnLabel={isSaving ? "Salvando…" : "Salvar alterações"}
+            disabled={isSaving}
           />
         </Modal>
       )}
@@ -569,7 +578,7 @@ export default function CRM() {
           <div style={{ fontSize: 26, fontWeight: 800, color: stats.taxa > 20 ? C.green : C.text, marginTop: 4 }}>{stats.taxa}%</div>
           <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>{stats.convertidos} convertidos de {stats.total} leads</div>
         </div>
-        
+
         <div style={{ flex: "2 1 300px", background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, padding: 16 }}>
           <div style={{ fontSize: 11, color: C.muted, fontWeight: 700, letterSpacing: 1 }}>CONVERSÃO POR ORIGEM</div>
           <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>

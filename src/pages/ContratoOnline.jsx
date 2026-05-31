@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { sb } from "../services/supabase";
 import { fmt } from "../utils/format";
+import { LOGO_STICKFRAME } from "../utils/cdn";
 
 export default function ContratoOnline() {
   const { token } = useParams();
@@ -53,7 +54,7 @@ export default function ContratoOnline() {
 
   const { contrato: c, empresa: emp } = dados;
   const jaAssinado = !!c.assinatura_nome || assinado;
-  const logoUrl = emp?.logo_url || "https://gpzmglcxmbboxxogbibq.supabase.co/storage/v1/object/public/logos/stickframe-logo.png";
+  const logoUrl = emp?.logo_url || LOGO_STICKFRAME;
 
   const fases = [
     { nome: "Projeto executivo", pct: 8 },
