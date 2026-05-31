@@ -1,7 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import { C, PERFIS } from "../utils/constants";
-import { sb } from "../services/supabase";
 import useAppStore from "../store/useAppStore";
+import {
+  buscarEmpresa, atualizarEmpresa, uploadLogoEmpresa,
+  listarUsuariosEmpresa, atualizarPerfil, trocarSenha,
+} from "../services/repositories/empresaRepository";
 import Btn from "../components/ui/Btn";
 import Input from "../components/ui/Input";
 import Select from "../components/ui/Select";
@@ -76,21 +79,19 @@ export default function Configuracoes() {
   // ── Carrega dados ─────────────────────────────────────────────────────────
   useEffect(() => {
     if (!empresaId) return;
-    sb.from("empresas").select("*").eq("id", empresaId).single()
-      .then(({ data }) => {
-        if (data) setEmpresa({
-          nome:      data.nome      || "",
-          cnpj:      data.cnpj      || "",
-          cidade:    data.cidade    || "",
-          telefone:  data.telefone  || "",
-          email:     data.email     || "",
-          segmento:  data.segmento  || "",
-          site:      data.site      || "",
-          logo_url:  data.logo_url  || "",
-        });
+    buscarEmpresa().then((data) => {
+      if (data) setEmpresa({
+        nome:     data.nome      || "",
+        cnpj:     data.cnpj      || "",
+        cidade:   data.cidade    || "",
+        telefone: data.telefone  || "",
+        email:    data.email     || "",
+        segmento: data.segmento  || "",
+        site:     data.site      || "",
+        logo_url: data.logo_url  || "",
       });
-    sb.from("usuarios").select("*").eq("empresa_id", empresaId).order("nome")
-      .then(({ data }) => { if (data) setUsuarios(data); });
+    }).catch(() => {});
+    listarUsuariosEmpresa().then((data) => { if (data) setUsuarios(data); }).catch(() => {});
   }, [empresaId]);
 
   useEffect(() => {
@@ -105,31 +106,22 @@ export default function Configuracoes() {
     setLogoPreview(URL.createObjectURL(file));
   }
 
-  async function uploadLogo() {
-    if (!logoFile) return empresa.logo_url;
-    const ext  = logoFile.name.split(".").pop();
-    const path = `logos/${empresaId}/logo.${ext}`;
-    await sb.storage.from("arquivos").upload(path, logoFile, { upsert: true });
-    const { data } = sb.storage.from("arquivos").getPublicUrl(path);
-    return data.publicUrl + `?t=${Date.now()}`;
-  }
-
   // ── Salvar empresa ────────────────────────────────────────────────────────
   async function salvarEmpresa() {
     if (!empresa.nome) return;
     setSaving(true);
     try {
-      const logoUrl = await uploadLogo();
-      await sb.from("empresas").update({
-        nome:      empresa.nome,
-        cnpj:      empresa.cnpj      || null,
-        cidade:    empresa.cidade    || null,
-        telefone:  empresa.telefone  || null,
-        email:     empresa.email     || null,
-        segmento:  empresa.segmento  || null,
-        site:      empresa.site      || null,
-        logo_url:  logoUrl           || null,
-      }).eq("id", empresaId);
+      const logoUrl = logoFile ? await uploadLogoEmpresa(logoFile) : empresa.logo_url;
+      await atualizarEmpresa({
+        nome:     empresa.nome,
+        cnpj:     empresa.cnpj      || null,
+        cidade:   empresa.cidade    || null,
+        telefone: empresa.telefone  || null,
+        email:    empresa.email     || null,
+        segmento: empresa.segmento  || null,
+        site:     empresa.site      || null,
+        logo_url: logoUrl           || null,
+      });
       setEmpresa((f) => ({ ...f, logo_url: logoUrl }));
       setLogoFile(null);
       mostrarToast("✅ Dados da empresa salvos!");
@@ -143,7 +135,7 @@ export default function Configuracoes() {
     if (!user?.uid) return;
     setSaving(true);
     try {
-      await sb.from("usuarios").update({ nome: perfil.nome, cargo: perfil.cargo }).eq("id", user.uid);
+      await atualizarPerfil(user.uid, { nome: perfil.nome, cargo: perfil.cargo });
       mostrarToast("✅ Perfil atualizado!");
     } catch (e) {
       mostrarToast("❌ Erro: " + e.message, true);
@@ -151,13 +143,12 @@ export default function Configuracoes() {
   }
 
   // ── Trocar senha ──────────────────────────────────────────────────────────
-  async function trocarSenha() {
+  async function handleTrocarSenha() {
     if (!senhaForm.nova || senhaForm.nova !== senhaForm.confirmar) return;
     if (senhaForm.nova.length < 6) { mostrarToast("❌ Senha deve ter ao menos 6 caracteres.", true); return; }
     setSaving(true);
     try {
-      const { error } = await sb.auth.updateUser({ password: senhaForm.nova });
-      if (error) throw error;
+      await trocarSenha(senhaForm.nova);
       setSenhaForm({ nova: "", confirmar: "" });
       mostrarToast("✅ Senha alterada com sucesso!");
     } catch (e) {
@@ -386,7 +377,7 @@ export default function Configuracoes() {
               )}
 
               <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                <Btn disabled={!senhaOk || saving} onClick={trocarSenha}>
+                <Btn disabled={!senhaOk || saving} onClick={handleTrocarSenha}>
                   {saving ? "Alterando…" : "🔒 Alterar senha"}
                 </Btn>
               </div>

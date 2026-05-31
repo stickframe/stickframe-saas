@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { sb } from "../services/supabase";
+import { buscarEmpresa } from "../services/repositories/empresaRepository";
 import { C, PRECOS } from "../utils/constants";
 import { fmt } from "../utils/format";
 import { enviarWhatsApp, msgContrato } from "../services/whatsappService";
@@ -311,7 +311,7 @@ export default function Contratos() {
   const [confirm, setConfirm] = useState(null);
   const [toast,   setToast]   = useState(null);
   const [form,    setForm]    = useState(FORM_VAZIO);
-  const empresaId             = useAppStore((s) => s.empresaId);
+
 
   function mostrarToast(msg) {
     setToast(msg);
@@ -549,10 +549,7 @@ export default function Contratos() {
                         <Btn variant="ghost" size="sm" fullWidth onClick={() => abrirEditar(c)}>✏️ Editar</Btn>
                         <button onClick={async () => {
                           let emp = null;
-                          if (empresaId) {
-                            const { data } = await sb.from("empresas").select("nome,email,site,logo_url").eq("id", empresaId).single();
-                            emp = data;
-                          }
+                          try { emp = await buscarEmpresa(); } catch (_) {}
                           gerarPDFContrato(c, emp);
                         }} style={{
                           padding: "8px 0", background: C.red + "22",

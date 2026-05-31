@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { C, PRECOS, FASES } from "../utils/constants";
 import { fmt } from "../utils/format";
 import { enviarWhatsApp, msgOrcamento } from "../services/whatsappService";
-import { sb } from "../services/supabase";
 import { inserirTemplate } from "../services/repositories/quantitativoRepository";
 import useAppStore from "../store/useAppStore";
 import { useModuleLoad } from "../hooks/useModuleLoad";
