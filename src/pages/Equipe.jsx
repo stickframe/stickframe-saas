@@ -111,6 +111,7 @@ function FormColaborador({ form, setForm, onSave, onCancel, btnLabel }) {
 
 // ─── Componente principal ─────────────────────────────────────────────────────
 export default function Equipe() {
+  const { toast, mostrarToast } = useToast();
   useModuleLoad("colaboradores");
   useModuleLoad("obras");
 
