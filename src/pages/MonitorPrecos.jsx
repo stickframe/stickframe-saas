@@ -8,6 +8,8 @@ import {
   atualizarPrecoMonitor,
   removerMonitor,
   scrapePreco,
+  scraperCategoria,
+  importarMonitores,
 } from "../services/repositories/precosRepository";
 import Btn from "../components/ui/Btn";
 import Input from "../components/ui/Input";
@@ -72,6 +74,13 @@ function StatusBadge({ v }) {
 // ─── Formulário de novo item ──────────────────────────────────────────────────
 const FORM_VAZIO = { nome_produto: "", url: "", loja: "", insumo_ref: "", alerta_pct: "10" };
 
+const CATEGORIAS_RAPIDAS = [
+  { label: "Steel Framing",   url: "https://www.espacosmart.com.br/tudo-para-steel-framing" },
+  { label: "Telhado Shingle", url: "https://www.espacosmart.com.br/tudo-para-telhado-shingle" },
+  { label: "Drywall",         url: "https://www.espacosmart.com.br/tudo-para-drywall" },
+  { label: "Revestimentos",   url: "https://www.espacosmart.com.br/tudo-para-revestimentos" },
+];
+
 export default function MonitorPrecos() {
   const empresaId = useAppStore((s) => s.empresaId);
   const { toast, mostrarToast } = useToast();
@@ -81,9 +90,16 @@ export default function MonitorPrecos() {
   const [modal,    setModal]    = useState(false);
   const [form,     setForm]     = useState(FORM_VAZIO);
   const [salvando, setSalvando] = useState(false);
-  const [scraping, setScraping] = useState(null); // id do item sendo atualizado
+  const [scraping, setScraping] = useState(null);
   const [busca,    setBusca]    = useState("");
-  const [filtro,   setFiltro]   = useState("Todos"); // Todos | Alta | Baixa | Estável | Erro
+  const [filtro,   setFiltro]   = useState("Todos");
+
+  const [importModal,        setImportModal]        = useState(false);
+  const [importUrl,          setImportUrl]          = useState("");
+  const [importLoading,      setImportLoading]      = useState(false);
+  const [importProdutos,     setImportProdutos]     = useState([]);
+  const [importSelecionados, setImportSelecionados] = useState({});
+  const [importando,         setImportando]         = useState(false);
 
   useEffect(() => { if (empresaId) carregar(); }, [empresaId]);
 
@@ -182,6 +198,50 @@ export default function MonitorPrecos() {
 
   const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
 
+  // ─── Import categoria ─────────────────────────────────────────────────────
+  async function buscarCategoria() {
+    if (!importUrl.trim()) return;
+    setImportLoading(true);
+    setImportProdutos([]);
+    setImportSelecionados({});
+    try {
+      const res = await scraperCategoria(importUrl.trim());
+      if (res?.status === "ok" && res.produtos?.length > 0) {
+        setImportProdutos(res.produtos);
+        const sel = {};
+        res.produtos.forEach((_, i) => { sel[i] = true; });
+        setImportSelecionados(sel);
+        mostrarToast(`✅ ${res.produtos.length} produtos encontrados!`);
+      } else {
+        mostrarToast("⚠️ Nenhum produto encontrado. Verifique a URL.");
+      }
+    } catch (e) {
+      mostrarToast("❌ Erro: " + e.message);
+    } finally {
+      setImportLoading(false);
+    }
+  }
+
+  async function confirmarImport() {
+    const selecionados = importProdutos.filter((_, i) => importSelecionados[i]);
+    if (!selecionados.length) return;
+    setImportando(true);
+    try {
+      await importarMonitores(selecionados);
+      mostrarToast(`✅ ${selecionados.length} itens importados!`);
+      setImportModal(false);
+      setImportProdutos([]);
+      setImportUrl("");
+      carregar();
+    } catch (e) {
+      mostrarToast("❌ " + e.message);
+    } finally {
+      setImportando(false);
+    }
+  }
+
+  const totalSelecionado = Object.values(importSelecionados).filter(Boolean).length;
+
   return (
     <div style={{ padding: 24, background: C.dark, minHeight: "100vh" }}>
       {/* Header */}
@@ -192,6 +252,11 @@ export default function MonitorPrecos() {
         </div>
         <div style={{ display: "flex", gap: 8 }}>
           <Btn variant="ghost" onClick={carregar}>↺ Atualizar</Btn>
+          <button onClick={() => { setImportModal(true); setImportProdutos([]); setImportUrl(""); }} style={{
+            padding: "9px 16px", borderRadius: 8, border: `1px solid ${C.border}`,
+            background: "#fff", color: C.text, fontSize: 13, fontWeight: 700,
+            cursor: "pointer", fontFamily: "inherit",
+          }}>📦 Importar categoria</button>
           <Btn onClick={() => setModal(true)}>+ Adicionar item</Btn>
         </div>
       </div>
@@ -307,6 +372,98 @@ export default function MonitorPrecos() {
         <div style={{ position: "fixed", bottom: 24, left: "50%", transform: "translateX(-50%)", background: "#1a1a1a", color: "#fff", padding: "12px 24px", borderRadius: 10, fontSize: 14, fontWeight: 600, zIndex: 9999, boxShadow: "0 4px 20px rgba(0,0,0,.2)" }}>
           {toast}
         </div>
+      )}
+
+      {/* Modal importar categoria */}
+      {importModal && (
+        <Modal title="📦 Importar categoria" onClose={() => setImportModal(false)}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 16, minWidth: 540 }}>
+
+            {/* Categorias rápidas */}
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Categorias Espaço Smart</div>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                {CATEGORIAS_RAPIDAS.map((c) => (
+                  <button key={c.url} onClick={() => setImportUrl(c.url)} style={{
+                    padding: "6px 14px", borderRadius: 20, border: `1px solid ${importUrl === c.url ? C.red : C.border}`,
+                    background: importUrl === c.url ? C.red + "18" : "transparent",
+                    color: importUrl === c.url ? C.red : C.muted,
+                    fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
+                  }}>{c.label}</button>
+                ))}
+              </div>
+            </div>
+
+            {/* URL manual */}
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>URL da categoria</div>
+              <div style={{ display: "flex", gap: 8 }}>
+                <input
+                  value={importUrl}
+                  onChange={(e) => setImportUrl(e.target.value)}
+                  placeholder="https://www.espacosmart.com.br/..."
+                  style={{ flex: 1, padding: "9px 14px", borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 13, outline: "none", fontFamily: "inherit", background: C.dark }}
+                />
+                <button onClick={buscarCategoria} disabled={importLoading || !importUrl.trim()} style={{
+                  padding: "9px 18px", borderRadius: 8, border: "none",
+                  background: C.red, color: "#fff", fontSize: 13, fontWeight: 700,
+                  cursor: importLoading ? "wait" : "pointer", fontFamily: "inherit", whiteSpace: "nowrap",
+                }}>
+                  {importLoading ? "Buscando..." : "🔍 Buscar"}
+                </button>
+              </div>
+            </div>
+
+            {/* Lista de produtos encontrados */}
+            {importProdutos.length > 0 && (
+              <div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 1 }}>
+                    {importProdutos.length} produtos encontrados
+                  </div>
+                  <div style={{ display: "flex", gap: 10 }}>
+                    <button onClick={() => { const s = {}; importProdutos.forEach((_, i) => { s[i] = true; }); setImportSelecionados(s); }}
+                      style={{ fontSize: 11, color: C.red, background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", fontWeight: 700 }}>Todos</button>
+                    <button onClick={() => setImportSelecionados({})}
+                      style={{ fontSize: 11, color: C.muted, background: "none", border: "none", cursor: "pointer", fontFamily: "inherit" }}>Nenhum</button>
+                  </div>
+                </div>
+                <div style={{ maxHeight: 320, overflowY: "auto", display: "flex", flexDirection: "column", gap: 4 }}>
+                  {importProdutos.map((p, i) => (
+                    <label key={i} onClick={() => setImportSelecionados((prev) => ({ ...prev, [i]: !prev[i] }))} style={{
+                      display: "flex", alignItems: "center", gap: 10, padding: "10px 12px",
+                      borderRadius: 8, cursor: "pointer",
+                      border: `1px solid ${importSelecionados[i] ? C.red + "44" : C.border}`,
+                      background: importSelecionados[i] ? C.red + "06" : "transparent",
+                    }}>
+                      <div style={{
+                        width: 18, height: 18, borderRadius: 4, flexShrink: 0,
+                        border: `2px solid ${importSelecionados[i] ? C.red : C.border}`,
+                        background: importSelecionados[i] ? C.red : "transparent",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                      }}>
+                        {importSelecionados[i] && <span style={{ color: "#fff", fontSize: 11 }}>✓</span>}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 13, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.nome_produto}</div>
+                        <div style={{ fontSize: 11, color: C.muted }}>{p.loja}{p.preco_atual ? ` · ${fmtR(p.preco_atual)}` : ""}</div>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", paddingTop: 8, borderTop: `1px solid ${C.border}` }}>
+              <Btn variant="ghost" onClick={() => setImportModal(false)}>Cancelar</Btn>
+              {importProdutos.length > 0 && (
+                <Btn disabled={totalSelecionado === 0 || importando} onClick={confirmarImport}>
+                  {importando ? "Importando..." : `✅ Importar ${totalSelecionado} itens`}
+                </Btn>
+              )}
+            </div>
+          </div>
+        </Modal>
       )}
 
       {/* Modal novo item */}

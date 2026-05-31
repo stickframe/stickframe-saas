@@ -52,9 +52,34 @@ export async function listarPrecosVivos() {
   return map;
 }
 
-// Chama a Edge Function de scraping
+// Chama a Edge Function de scraping de produto individual
 export async function scrapePreco(url) {
   const { data, error } = await sb.functions.invoke("scrape-preco", { body: { url } });
   if (error) throw error;
-  return data; // { preco, loja, nome_produto, status, error? }
+  return data;
+}
+
+// Chama a Edge Function de scraping de categoria (retorna lista de produtos)
+export async function scraperCategoria(url) {
+  const { data, error } = await sb.functions.invoke("scrape-categoria", { body: { url } });
+  if (error) throw error;
+  return data; // { status, total, produtos: [{ nome_produto, url, loja, preco_atual }] }
+}
+
+// Insere múltiplos itens de uma vez (import de categoria)
+export async function importarMonitores(itens) {
+  const empresaId = getEmpresaId();
+  const rows = itens.map((i) => ({
+    empresa_id:   empresaId,
+    nome_produto: i.nome_produto,
+    url:          i.url || null,
+    loja:         i.loja || null,
+    preco_atual:  i.preco_atual || null,
+    data_captura: i.preco_atual ? new Date().toISOString() : null,
+    status:       "Ativo",
+    alerta_pct:   10,
+  }));
+  const { data, error } = await sb.from(T).insert(rows).select();
+  if (error) throw error;
+  return data;
 }
