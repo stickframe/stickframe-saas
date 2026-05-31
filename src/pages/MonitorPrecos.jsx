@@ -75,10 +75,14 @@ function StatusBadge({ v }) {
 const FORM_VAZIO = { nome_produto: "", url: "", loja: "", insumo_ref: "", alerta_pct: "10" };
 
 const CATEGORIAS_RAPIDAS = [
-  { label: "Steel Framing",   url: "https://www.espacosmart.com.br/tudo-para-steel-framing" },
-  { label: "Telhado Shingle", url: "https://www.espacosmart.com.br/tudo-para-telhado-shingle" },
-  { label: "Drywall",         url: "https://www.espacosmart.com.br/tudo-para-drywall" },
-  { label: "Revestimentos",   url: "https://www.espacosmart.com.br/tudo-para-revestimentos" },
+  { label: "Perfis Steel Frame",    url: "https://www.espacosmart.com.br/steel-framing/perfil-de-steel-framing?category-1=steel-framing&fuzzy=0&operator=and&category-2=perfil-de-steel-framing&facets=category-1%2Cfuzzy%2Coperator%2Ccategory-2&sort=score_desc&page=0" },
+  { label: "Acessórios SF",         url: "https://www.espacosmart.com.br/steel-framing/perfil-de-steel-framing?category-1=steel-framing&fuzzy=0&operator=and&category-2=acessorios-de-steel-frame&facets=category-1%2Cfuzzy%2Coperator%2Ccategory-2&sort=score_desc&page=0" },
+  { label: "Acessórios Drywall",    url: "https://www.espacosmart.com.br/steel-framing/perfil-de-steel-framing?category-1=steel-framing&fuzzy=0&operator=and&category-2=acessorios-para-drywall&facets=category-1%2Cfuzzy%2Coperator%2Ccategory-2&sort=score_desc&page=0" },
+  { label: "Glasroc X",             url: "https://www.espacosmart.com.br/steel-framing/perfil-de-steel-framing?category-1=steel-framing&fuzzy=0&operator=and&category-2=glasroc-x&facets=category-1%2Cfuzzy%2Coperator%2Ccategory-2&sort=score_desc&page=0" },
+  { label: "Membrana",              url: "https://www.espacosmart.com.br/steel-framing/perfil-de-steel-framing?category-1=steel-framing&fuzzy=0&operator=and&category-2=membrana&facets=category-1%2Cfuzzy%2Coperator%2Ccategory-2&sort=score_desc&page=0" },
+  { label: "Siding Vinílico",       url: "https://www.espacosmart.com.br/steel-framing/perfil-de-steel-framing?category-1=steel-framing&fuzzy=0&operator=and&category-2=siding-vinilico&facets=category-1%2Cfuzzy%2Coperator%2Ccategory-2&sort=score_desc&page=0" },
+  { label: "Smart Side",            url: "https://www.espacosmart.com.br/steel-framing/perfil-de-steel-framing?category-1=steel-framing&fuzzy=0&operator=and&category-2=smart-side&facets=category-1%2Cfuzzy%2Coperator%2Ccategory-2&sort=score_desc&page=0" },
+  { label: "Todos SF",              url: "https://www.espacosmart.com.br/steel-framing/perfil-de-steel-framing?category-1=steel-framing&fuzzy=0&operator=and&category-2=acessorios&category-2=acessorios-de-steel-frame&category-2=acessorios-para-drywall&category-2=glasroc-x&category-2=membrana&category-2=perfil-de-steel-framing&category-2=siding-vinilico&category-2=smart-side&category-2=steel-frame-modular&facets=category-1%2Cfuzzy%2Coperator%2Ccategory-2&sort=score_desc&page=0" },
 ];
 
 export default function MonitorPrecos() {
