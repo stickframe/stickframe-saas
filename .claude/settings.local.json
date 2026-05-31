@@ -7,7 +7,10 @@
       "Bash(git push *)",
       "mcp__a5a69f48-5aaa-426d-9f3d-9d336c39d902__execute_sql",
       "mcp__a5a69f48-5aaa-426d-9f3d-9d336c39d902__apply_migration",
-      "mcp__a5a69f48-5aaa-426d-9f3d-9d336c39d902__list_projects"
+      "mcp__a5a69f48-5aaa-426d-9f3d-9d336c39d902__list_projects",
+      "mcp__a5a69f48-5aaa-426d-9f3d-9d336c39d902__list_edge_functions",
+      "mcp__a5a69f48-5aaa-426d-9f3d-9d336c39d902__get_edge_function",
+      "mcp__a5a69f48-5aaa-426d-9f3d-9d336c39d902__deploy_edge_function"
     ]
   }
 }
