@@ -64,7 +64,7 @@ function SummaryCard({ label, value, sub, color, large }) {
   );
 }
 
-function SistemaRow({ s, aberto, toggle }) {
+function SistemaRow({ s, aberto, toggle, precosEditados, onPrecoEdit }) {
   const total = s.totalMat + s.totalMO;
   return (
     <div style={{ borderBottom: `1px solid ${C.border}` }}>
@@ -101,42 +101,48 @@ function SistemaRow({ s, aberto, toggle }) {
                 <th style={thSt}>Insumo</th>
                 <th style={{ ...thSt, width: 48, textAlign: "center" }}>Un</th>
                 <th style={{ ...thSt, width: 80, textAlign: "right" }}>Qtd</th>
-                <th style={{ ...thSt, width: 88, textAlign: "right" }}>Unit R$</th>
+                <th style={{ ...thSt, width: 110, textAlign: "right" }}>Unit R$ ✏️</th>
                 <th style={{ ...thSt, width: 108, textAlign: "right" }}>Total R$</th>
               </tr>
             </thead>
             <tbody>
-              {s.itensCalc.map((item, i) => (
-                <tr key={i} style={{ borderBottom: `1px solid ${C.border}`, background: item.precoVivo ? "#f0fdf4" : i % 2 ? "#f4f4f8" : "#fff" }}>
-                  <td style={tdSt}>
-                    {item.nome}
-                    {item.precoVivo && (
-                      <span title={`Preço ao vivo: ${item.lojaVivo || "monitorado"}`}
-                        style={{ marginLeft: 6, fontSize: 10, background: "#dcfce7", color: "#166534",
-                          padding: "1px 5px", borderRadius: 4, fontWeight: 700 }}>
-                        🔴 ao vivo
-                      </span>
-                    )}
-                  </td>
-                  <td style={{ ...tdSt, textAlign: "center", color: C.muted }}>{item.un}</td>
-                  <td style={{ ...tdSt, textAlign: "right" }}>{fmtN(item.qtd)}</td>
-                  <td style={{ ...tdSt, textAlign: "right" }}>
-                    {fmtN(item.precoUsado ?? item.preco)}
-                    {item.precoVivo && item.preco !== item.precoUsado && (
-                      <div style={{ fontSize: 10, color: C.muted, textDecoration: "line-through" }}>{fmtN(item.preco)}</div>
-                    )}
-                  </td>
-                  <td style={{ ...tdSt, textAlign: "right", fontWeight: 600 }}>{fmtN(item.total)}</td>
-                </tr>
-              ))}
+              {s.itensCalc.map((item, i) => {
+                const key = `${s.id}_${i}`;
+                const editado = precosEditados?.[key];
+                const precoExib = editado ?? item.precoUsado ?? item.preco;
+                return (
+                  <tr key={i} style={{ borderBottom: `1px solid ${C.border}`, background: editado ? "#fefce8" : item.precoVivo ? "#f0fdf4" : i % 2 ? "#f4f4f8" : "#fff" }}>
+                    <td style={tdSt}>
+                      {item.nome}
+                      {item.precoVivo && !editado && (
+                        <span style={{ marginLeft: 6, fontSize: 10, background: "#dcfce7", color: "#166534", padding: "1px 5px", borderRadius: 4, fontWeight: 700 }}>🔴 ao vivo</span>
+                      )}
+                      {editado && <span style={{ marginLeft: 6, fontSize: 10, background: "#fef08a", color: "#713f12", padding: "1px 5px", borderRadius: 4, fontWeight: 700 }}>✏️ ajustado</span>}
+                    </td>
+                    <td style={{ ...tdSt, textAlign: "center", color: C.muted }}>{item.un}</td>
+                    <td style={{ ...tdSt, textAlign: "right" }}>{fmtN(item.qtd)}</td>
+                    <td style={{ ...tdSt, textAlign: "right", padding: "4px 6px" }}>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={editado ?? (item.precoUsado ?? item.preco)}
+                        onChange={(e) => onPrecoEdit?.(key, parseFloat(e.target.value) || 0)}
+                        onClick={(e) => e.stopPropagation()}
+                        style={{ width: 80, padding: "3px 6px", border: `1px solid ${editado ? "#eab308" : C.border}`, borderRadius: 4, fontSize: 12, textAlign: "right", background: editado ? "#fefce8" : "#fff" }}
+                      />
+                      {item.precoVivo && item.preco !== item.precoUsado && !editado && (
+                        <div style={{ fontSize: 10, color: C.muted, textDecoration: "line-through" }}>{fmtN(item.preco)}</div>
+                      )}
+                    </td>
+                    <td style={{ ...tdSt, textAlign: "right", fontWeight: 600 }}>{fmtN(item.qtd * precoExib)}</td>
+                  </tr>
+                );
+              })}
               {s.totalMO > 0 && (
                 <tr style={{ background: "#dbeafe" }}>
-                  <td style={{ ...tdSt, fontStyle: "italic", color: "#1d4ed8" }} colSpan={4}>
-                    Mão de obra (fração CUB regional)
-                  </td>
-                  <td style={{ ...tdSt, textAlign: "right", fontWeight: 700, color: "#1d4ed8" }}>
-                    {fmtN(s.totalMO)}
-                  </td>
+                  <td style={{ ...tdSt, fontStyle: "italic", color: "#1d4ed8" }} colSpan={4}>Mão de obra (fração CUB regional)</td>
+                  <td style={{ ...tdSt, textAlign: "right", fontWeight: 700, color: "#1d4ed8" }}>{fmtN(s.totalMO)}</td>
                 </tr>
               )}
               <tr style={{ background: C.darker, fontWeight: 700 }}>
@@ -167,13 +173,16 @@ export default function OrcamentoTecnico() {
   const [incluiMO, setIncluiMO]     = useState(savedForm.incluiMO  ?? true);
   const [bdi, setBdi]               = useState(savedForm.bdi        ?? 25);
   const [prazoMeses, setPrazoMeses] = useState(savedForm.prazoMeses ?? "");
-  const [abertos, setAbertos]       = useState({});
-  const [resultado, setResultado]   = useState(null);
-  const [comparativo, setComparativo] = useState(null);
-  const [toast, setToast]           = useState(null);
-  const [modalSalvar, setModalSalvar] = useState(false);
-  const [formSalvar, setFormSalvar]   = useState({ cliente: "", validade_dias: 30, observacoes: "" });
-  const [salvando, setSalvando]       = useState(false);
+  const [abertos, setAbertos]           = useState({});
+  const [resultado, setResultado]       = useState(null);
+  const [comparativo, setComparativo]   = useState(null);
+  const [precosEditados, setPrecosEditados] = useState({});
+  const [modalSalvar, setModalSalvar]   = useState(false);
+  const [formSalvar, setFormSalvar]     = useState({ cliente: "", validade_dias: 30, observacoes: "" });
+  const [salvando, setSalvando]         = useState(false);
+  const [modalFinanc, setModalFinanc]   = useState(false);
+  const [financForm, setFinancForm]     = useState({ entrada: 20, prazo: 120, taxa: 1.0 });
+  const [toast, setToast]               = useState(null);
 
   const [selecoes, setSelecoes] = useState(() => {
     const saved = savedForm.selecoes || {};
@@ -236,11 +245,13 @@ export default function OrcamentoTecnico() {
       const areaUsada = sistema.usaAreaMolhada ? areaMolhadaNum : areaNum;
 
       let totalSistema = 0;
-      const itensCalc = itensBase.map((item) => {
+      const itensCalc = itensBase.map((item, itemIdx) => {
         const fator = item.aplicaFatorPadrao || aplicaFatorOpcao ? fatorPadrao : 1;
         const qtd   = item.base * areaUsada * fator;
         const vivo  = usarPrecosVivos && precosVivos[item.nome];
-        const precoUsado = vivo ? vivo.preco_atual : item.preco;
+        const precoBase = vivo ? vivo.preco_atual : item.preco;
+        const editKey = `${sistema.id}_${itemIdx}`;
+        const precoUsado = precosEditados[editKey] ?? precoBase;
         const total = qtd * precoUsado;
         totalSistema += total;
         return { ...item, qtd, total, precoUsado, precoVivo: vivo ? vivo.preco_atual : null, lojaVivo: vivo?.loja };
@@ -561,6 +572,167 @@ export default function OrcamentoTecnico() {
     setTimeout(() => win.print(), 600);
   };
 
+  const calcFinanciamento = () => {
+    if (!resultado) return null;
+    const total = resultado.precoVenda;
+    const entrada = total * (financForm.entrada / 100);
+    const financiado = total - entrada;
+    const n = financForm.prazo;
+    const i = financForm.taxa / 100;
+    // Price (parcela fixa)
+    const parcelaPrice = financiado * (i * Math.pow(1 + i, n)) / (Math.pow(1 + i, n) - 1);
+    const totalPrice = entrada + parcelaPrice * n;
+    const jurosPrice = totalPrice - total;
+    // SAC (amortização constante)
+    const amort = financiado / n;
+    const primeiroSAC = amort + financiado * i;
+    const ultimoSAC   = amort + (financiado / n) * i;
+    const totalSAC    = entrada + (primeiroSAC + ultimoSAC) / 2 * n;
+    const jurosSAC    = totalSAC - total;
+    return { total, entrada, financiado, n, i, parcelaPrice, totalPrice, jurosPrice, primeiroSAC, ultimoSAC, totalSAC, jurosSAC };
+  };
+
+  const exportarPropostaCliente = () => {
+    if (!resultado) return;
+    const r = resultado;
+    const LOGO = "https://gpzmglcxmbboxxogbibq.supabase.co/storage/v1/object/public/arquivos/logos/34ec14d3-02fc-4b0a-8040-67f7a739394d/logo.jpg?t=1780161932174";
+    const dataHoje = new Date().toLocaleDateString("pt-BR");
+    const validade = new Date(); validade.setDate(validade.getDate() + 30);
+
+    const fasesRows = r.breakdown.map((s) => {
+      const total = s.totalMat + s.totalMO;
+      const pct = ((total / r.totalGeral) * 100).toFixed(1);
+      return `<tr style="border-bottom:1px solid #eee">
+        <td style="padding:10px 14px">${s.icon} ${s.label}</td>
+        <td style="padding:10px 14px;color:#666;font-size:12px">${s.opcaoLabel || "Padrão"}</td>
+        <td style="padding:10px 14px;text-align:right;font-weight:600">${fmtBRL(total)}</td>
+        <td style="padding:10px 14px;text-align:right;color:#888;font-size:12px">${pct}%</td>
+      </tr>`;
+    }).join("");
+
+    const cronoHtml = r.cronograma.length ? `
+      <h3 style="margin:32px 0 14px;font-size:15px;color:#1a1a1a">📅 Plano de Desembolso Estimado</h3>
+      <table style="width:100%;border-collapse:collapse;font-size:13px">
+        <thead><tr style="background:#981915;color:#fff">
+          <th style="padding:8px 12px;text-align:left">Mês</th>
+          <th style="padding:8px 12px;text-align:right">Valor Previsto</th>
+          <th style="padding:8px 12px;text-align:right">% do Total</th>
+        </tr></thead>
+        <tbody>
+          ${r.cronograma.map((m, i) => `<tr style="background:${i%2?"#f9f9f9":"#fff"};border-bottom:1px solid #eee">
+            <td style="padding:8px 12px">Mês ${m.mes}</td>
+            <td style="padding:8px 12px;text-align:right;font-weight:600">${fmtBRL(m.valor)}</td>
+            <td style="padding:8px 12px;text-align:right;color:#666">${(m.pct*100).toFixed(1)}%</td>
+          </tr>`).join("")}
+        </tbody>
+      </table>` : "";
+
+    const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+    <title>Proposta Comercial — Stickframe</title>
+    <style>
+      body{font-family:Arial,sans-serif;color:#1a1a1a;margin:0;padding:0;background:#fff}
+      @media print{@page{margin:20mm 18mm}.no-print{display:none}}
+      h3{color:#981915}
+    </style></head>
+    <body style="padding:40px 48px;max-width:820px;margin:auto">
+
+      <!-- CABEÇALHO -->
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;padding-bottom:20px;border-bottom:3px solid #981915;margin-bottom:32px">
+        <div style="display:flex;align-items:center;gap:14px">
+          <img src="${LOGO}" style="width:56px;height:56px;border-radius:12px;object-fit:contain">
+          <div>
+            <div style="font-size:24px;font-weight:800;letter-spacing:1px">STICK<span style="color:#981915">FRAME</span></div>
+            <div style="font-size:10px;color:#888;letter-spacing:2px;margin-top:2px">SISTEMAS CONSTRUTIVOS</div>
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:20px;font-weight:700;color:#981915">PROPOSTA COMERCIAL</div>
+          <div style="font-size:12px;color:#666;margin-top:4px">Data: ${dataHoje}</div>
+          <div style="font-size:12px;color:#666">Validade: ${validade.toLocaleDateString("pt-BR")}</div>
+        </div>
+      </div>
+
+      <!-- DESTAQUE DO VALOR -->
+      <div style="background:linear-gradient(135deg,#981915,#c0392b);color:#fff;border-radius:12px;padding:28px 32px;margin-bottom:28px;text-align:center">
+        <div style="font-size:13px;letter-spacing:2px;opacity:0.85;margin-bottom:8px">INVESTIMENTO TOTAL</div>
+        <div style="font-size:42px;font-weight:800;letter-spacing:-1px">${fmtBRL(r.precoVenda)}</div>
+        <div style="font-size:14px;opacity:0.85;margin-top:6px">${fmtBRL(r.m2Venda)}/m² · ${r.area} m² · Padrão ${r.padrao}</div>
+      </div>
+
+      <!-- DADOS DA OBRA -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:28px">
+        <div style="border:1px solid #eee;border-radius:8px;padding:14px">
+          <div style="font-size:10px;color:#888;margin-bottom:4px;text-transform:uppercase;letter-spacing:1px">Área Total</div>
+          <div style="font-size:18px;font-weight:700">${r.area} m²</div>
+        </div>
+        <div style="border:1px solid #eee;border-radius:8px;padding:14px">
+          <div style="font-size:10px;color:#888;margin-bottom:4px;text-transform:uppercase;letter-spacing:1px">Padrão Construtivo</div>
+          <div style="font-size:18px;font-weight:700">${r.padrao}</div>
+        </div>
+        <div style="border:1px solid #eee;border-radius:8px;padding:14px">
+          <div style="font-size:10px;color:#888;margin-bottom:4px;text-transform:uppercase;letter-spacing:1px">Prazo Estimado</div>
+          <div style="font-size:18px;font-weight:700">${r.prazoMeses ? r.prazoMeses + " meses" : "A definir"}</div>
+        </div>
+      </div>
+
+      <!-- COMPOSIÇÃO POR FASE -->
+      <h3 style="margin:0 0 14px;font-size:16px">🏗 Composição por Sistema Construtivo</h3>
+      <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:28px">
+        <thead><tr style="background:#1a1a1a;color:#fff">
+          <th style="padding:10px 14px;text-align:left">Sistema</th>
+          <th style="padding:10px 14px;text-align:left">Especificação</th>
+          <th style="padding:10px 14px;text-align:right">Valor</th>
+          <th style="padding:10px 14px;text-align:right">%</th>
+        </tr></thead>
+        <tbody>${fasesRows}</tbody>
+        <tfoot>
+          <tr style="background:#f4f4f4;font-weight:700">
+            <td colspan="2" style="padding:12px 14px">Custo Direto de Obra</td>
+            <td style="padding:12px 14px;text-align:right">${fmtBRL(r.totalGeral)}</td>
+            <td style="padding:12px 14px;text-align:right">100%</td>
+          </tr>
+          <tr style="background:#981915;color:#fff;font-weight:700;font-size:15px">
+            <td colspan="2" style="padding:14px">Preço de Venda (inclui BDI ${r.bdi}%)</td>
+            <td colspan="2" style="padding:14px;text-align:right">${fmtBRL(r.precoVenda)}</td>
+          </tr>
+        </tfoot>
+      </table>
+
+      ${cronoHtml}
+
+      <!-- CONDIÇÕES -->
+      <div style="margin-top:32px;border:1px solid #eee;border-radius:8px;padding:20px">
+        <h4 style="margin:0 0 12px;font-size:14px;color:#981915">📋 Condições Comerciais</h4>
+        <ul style="margin:0;padding-left:18px;font-size:13px;color:#444;line-height:1.8">
+          <li>Proposta válida por 30 dias a partir de ${dataHoje}</li>
+          <li>Valores sujeitos a confirmação mediante vistoria do terreno</li>
+          <li>Forma de pagamento a definir em contrato</li>
+          <li>Inclui projeto, materiais Steel Frame, mão de obra e instalações conforme escopo</li>
+          <li>Preços baseados no CUB ${r.estado} — R$ ${r.cub.toLocaleString("pt-BR")}/m²</li>
+        </ul>
+      </div>
+
+      <!-- ASSINATURA -->
+      <div style="margin-top:48px;display:grid;grid-template-columns:1fr 1fr;gap:40px">
+        <div style="border-top:1px solid #ccc;padding-top:12px;text-align:center;font-size:12px;color:#666">
+          Stickframe Sistemas Construtivos<br>Responsável Técnico
+        </div>
+        <div style="border-top:1px solid #ccc;padding-top:12px;text-align:center;font-size:12px;color:#666">
+          Cliente<br>Data: ___/___/______
+        </div>
+      </div>
+
+      <div style="margin-top:24px;font-size:10px;color:#bbb;text-align:center">
+        Stickframe Sistemas Construtivos · Santo André/SP · Gerado em ${dataHoje}
+      </div>
+    </body></html>`;
+
+    const win = window.open("", "_blank");
+    win.document.write(html);
+    win.document.close();
+    setTimeout(() => win.print(), 600);
+  };
+
   const exportarExcel = async () => {
     if (!resultado) return;
     try {
@@ -833,6 +1005,26 @@ export default function OrcamentoTecnico() {
               }}>
                 ⚖️ Comparar Padrões
               </button>
+              <button onClick={() => setModalFinanc(true)} style={{
+                padding: "9px 18px", background: "#0891b2", color: "#fff",
+                border: "none", borderRadius: 7, fontSize: 13, fontWeight: 600, cursor: "pointer",
+              }}>
+                🏦 Simular Financiamento
+              </button>
+              <button onClick={exportarPropostaCliente} style={{
+                padding: "9px 18px", background: "#c88a00", color: "#fff",
+                border: "none", borderRadius: 7, fontSize: 13, fontWeight: 600, cursor: "pointer",
+              }}>
+                📋 Proposta para Cliente
+              </button>
+              {Object.keys(precosEditados).length > 0 && (
+                <button onClick={() => { setPrecosEditados({}); calcular(); }} style={{
+                  padding: "9px 18px", background: "#f59e0b", color: "#fff",
+                  border: "none", borderRadius: 7, fontSize: 13, cursor: "pointer",
+                }}>
+                  ↺ Limpar ajustes de preço
+                </button>
+              )}
               <button onClick={() => setResultado(null)} style={{
                 padding: "9px 18px", background: C.surface, color: C.muted,
                 border: `1px solid ${C.border}`, borderRadius: 7, fontSize: 13, cursor: "pointer",
@@ -840,6 +1032,13 @@ export default function OrcamentoTecnico() {
                 ↺ Recalcular
               </button>
             </div>
+
+            {/* aviso ajuste de preços */}
+            {Object.keys(precosEditados).length > 0 && (
+              <div style={{ background: "#fefce8", border: "1px solid #eab308", borderRadius: 8, padding: "9px 14px", fontSize: 12, color: "#713f12", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span>✏️ {Object.keys(precosEditados).length} preço(s) ajustado(s) manualmente. Clique em <strong>Calcular Orçamento</strong> para atualizar os totais.</span>
+              </div>
+            )}
 
             {/* comparativo de padrões */}
             {comparativo && (
@@ -940,6 +1139,8 @@ export default function OrcamentoTecnico() {
                   s={s}
                   aberto={!!abertos[s.id]}
                   toggle={() => setAbertos((p) => ({ ...p, [s.id]: !p[s.id] }))}
+                  precosEditados={precosEditados}
+                  onPrecoEdit={(key, val) => setPrecosEditados((p) => ({ ...p, [key]: val }))}
                 />
               ))}
               {/* rodapé total */}
@@ -1036,6 +1237,101 @@ export default function OrcamentoTecnico() {
           </div>
         </div>
       )}
+
+      {/* Modal: Simulador de Financiamento */}
+      {modalFinanc && resultado && (() => {
+        const fin = calcFinanciamento();
+        return (
+          <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", zIndex: 600, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ background: "#fff", borderRadius: 14, width: "min(520px, 95vw)", padding: 28, boxShadow: "0 12px 40px rgba(0,0,0,0.3)", maxHeight: "90vh", overflowY: "auto" }}>
+              <div style={{ fontWeight: 800, fontSize: 18, marginBottom: 4 }}>🏦 Simulador de Financiamento</div>
+              <div style={{ fontSize: 12, color: "#666", marginBottom: 20 }}>Preço de venda: <strong>{fmtBRL(resultado.precoVenda)}</strong></div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 20 }}>
+                <div>
+                  <label style={{ fontSize: 11, fontWeight: 700, color: "#666", display: "block", marginBottom: 5 }}>ENTRADA (%)</label>
+                  <input type="number" min="0" max="100" value={financForm.entrada}
+                    onChange={(e) => setFinancForm((p) => ({ ...p, entrada: Number(e.target.value) }))}
+                    style={inputSt} />
+                  <div style={{ fontSize: 11, color: "#888", marginTop: 3 }}>{fmtBRL(fin.entrada)}</div>
+                </div>
+                <div>
+                  <label style={{ fontSize: 11, fontWeight: 700, color: "#666", display: "block", marginBottom: 5 }}>PRAZO (meses)</label>
+                  <input type="number" min="12" max="420" step="12" value={financForm.prazo}
+                    onChange={(e) => setFinancForm((p) => ({ ...p, prazo: Number(e.target.value) }))}
+                    style={inputSt} />
+                  <div style={{ fontSize: 11, color: "#888", marginTop: 3 }}>{(financForm.prazo / 12).toFixed(0)} anos</div>
+                </div>
+                <div>
+                  <label style={{ fontSize: 11, fontWeight: 700, color: "#666", display: "block", marginBottom: 5 }}>TAXA a.m. (%)</label>
+                  <input type="number" min="0.1" max="5" step="0.1" value={financForm.taxa}
+                    onChange={(e) => setFinancForm((p) => ({ ...p, taxa: Number(e.target.value) }))}
+                    style={inputSt} />
+                  <div style={{ fontSize: 11, color: "#888", marginTop: 3 }}>{(Math.pow(1 + financForm.taxa / 100, 12) - 1).toFixed(2)}% a.a.</div>
+                </div>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+                {/* Price */}
+                <div style={{ border: "2px solid #2563eb", borderRadius: 10, padding: 16 }}>
+                  <div style={{ fontWeight: 700, fontSize: 13, color: "#2563eb", marginBottom: 10 }}>Sistema PRICE (parcela fixa)</div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 13 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between" }}>
+                      <span style={{ color: "#666" }}>Entrada</span><strong>{fmtBRL(fin.entrada)}</strong>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between" }}>
+                      <span style={{ color: "#666" }}>Financiado</span><strong>{fmtBRL(fin.financiado)}</strong>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 15, borderTop: "1px solid #eee", paddingTop: 8, marginTop: 4 }}>
+                      <span style={{ color: "#2563eb", fontWeight: 700 }}>Parcela fixa</span>
+                      <strong style={{ color: "#2563eb", fontSize: 16 }}>{fmtBRL(fin.parcelaPrice)}</strong>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between" }}>
+                      <span style={{ color: "#666" }}>Total pago</span><strong>{fmtBRL(fin.totalPrice)}</strong>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", color: "#e11d48" }}>
+                      <span>Juros totais</span><strong>{fmtBRL(fin.jurosPrice)}</strong>
+                    </div>
+                  </div>
+                </div>
+                {/* SAC */}
+                <div style={{ border: "2px solid #2e9e5b", borderRadius: 10, padding: 16 }}>
+                  <div style={{ fontWeight: 700, fontSize: 13, color: "#2e9e5b", marginBottom: 10 }}>Sistema SAC (parcela decrescente)</div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 13 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between" }}>
+                      <span style={{ color: "#666" }}>Entrada</span><strong>{fmtBRL(fin.entrada)}</strong>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between" }}>
+                      <span style={{ color: "#666" }}>Financiado</span><strong>{fmtBRL(fin.financiado)}</strong>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 15, borderTop: "1px solid #eee", paddingTop: 8, marginTop: 4 }}>
+                      <span style={{ color: "#2e9e5b", fontWeight: 700 }}>1ª parcela</span>
+                      <strong style={{ color: "#2e9e5b", fontSize: 16 }}>{fmtBRL(fin.primeiroSAC)}</strong>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between" }}>
+                      <span style={{ color: "#666" }}>Última parcela</span><strong>{fmtBRL(fin.ultimoSAC)}</strong>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between" }}>
+                      <span style={{ color: "#666" }}>Total pago</span><strong>{fmtBRL(fin.totalSAC)}</strong>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", color: "#e11d48" }}>
+                      <span>Juros totais</span><strong>{fmtBRL(fin.jurosSAC)}</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ marginTop: 16, background: "#f0fdf4", border: "1px solid #86efac", borderRadius: 8, padding: "10px 14px", fontSize: 12, color: "#166534" }}>
+                💡 O SAC gera juros totais {fmtBRL(fin.jurosPrice - fin.jurosSAC)} menores que o Price, mas a primeira parcela é maior.
+              </div>
+
+              <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 20 }}>
+                <button onClick={() => setModalFinanc(false)} style={{ padding: "9px 24px", background: C.red, color: "#fff", border: "none", borderRadius: 7, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Fechar</button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* toast */}
       {toast && (
