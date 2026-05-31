@@ -134,6 +134,7 @@ const FORM_VAZIO = {
 };
 
 export default function GestaoObras() {
+  const { toast, mostrarToast } = useToast();
   useModuleLoad("obras");
   useModuleLoad("clientes");
   useModuleLoad("financeiro");
@@ -298,6 +299,16 @@ export default function GestaoObras() {
     if (i >= FASES.length - 1) return;
     setChecklistMarcados({});
     setChecklistModal(true);
+  }
+
+  function retornar() {
+    if (!obra) return;
+    const i = FASES.indexOf(obra.fase);
+    if (i <= 0) return;
+    const novaFase  = FASES[i - 1];
+    const progresso = Math.round((i / FASES.length) * 100);
+    avancarFase(obra.id, novaFase, progresso);
+    mostrarToast(`↩ Retornou para: ${novaFase}`);
   }
 
   function confirmarAvancar() {
