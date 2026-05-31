@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import Sidebar from "./Sidebar";
 import NotificacaoDropdown from "../notificacoes/NotificacaoDropdown";
 import CommandPalette from "../ui/CommandPalette";
-import { C } from "../../utils/constants";
+import { C, NAV } from "../../utils/constants";
 import { sb } from "../../services/supabase";
 import useAppStore from "../../store/useAppStore";
 import { lazy, Suspense } from "react";
@@ -15,7 +15,9 @@ export default function AppLayout({ children }) {
   const [checkDone, setCheckDone] = useState(false);
   const empresaId  = useAppStore((s) => s.empresaId);
   const setActivePage = useAppStore((s) => s.setActivePage);
+  const activePage = useAppStore((s) => s.activePage);
   const perfil     = useAppStore((s) => s.user?.perfil);
+  const activeLabel = NAV.find((n) => n.key === activePage)?.label || "";
   const loadClientes = useAppStore((s) => s.loadClientes);
 
   // Pré-carrega clientes para o badge de follow-up do perfil comercial
@@ -44,10 +46,13 @@ export default function AppLayout({ children }) {
       {menuOpen && (
         <div className="mobile-overlay" onClick={() => setMenuOpen(false)} />
       )}
-      <Sidebar open={menuOpen} />
+      <Sidebar open={menuOpen} onClose={() => setMenuOpen(false)} />
       <div className="main-area">
         <div className="topbar">
-          <button className="hamburger" onClick={() => setMenuOpen((v) => !v)}>☰</button>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <button className="hamburger" onClick={() => setMenuOpen((v) => !v)}>☰</button>
+            <span className="topbar-page-title">{activeLabel}</span>
+          </div>
           <NotificacaoDropdown />
         </div>
         <main className="main-content">

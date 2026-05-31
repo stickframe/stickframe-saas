@@ -2,7 +2,7 @@ import { useState } from "react";
 import { C, NAV, PERFIS } from "../../utils/constants";
 import useAppStore from "../../store/useAppStore";
 
-export default function Sidebar({ open }) {
+export default function Sidebar({ open, onClose }) {
   const user        = useAppStore((s) => s.user);
   const activePage  = useAppStore((s) => s.activePage);
   const setActivePage = useAppStore((s) => s.setActivePage);
@@ -23,7 +23,7 @@ export default function Sidebar({ open }) {
   return (
     <aside
       className={`sidebar-desktop${open ? " open" : ""}`}
-      style={{ width: 220, minHeight: "100vh", background: C.darker, borderRight: `1px solid ${C.border}`, display: "flex", flexDirection: "column", flexShrink: 0 }}
+      style={{ width: 220, height: "100vh", background: C.darker, borderRight: `1px solid ${C.border}`, display: "flex", flexDirection: "column", flexShrink: 0, overflow: "hidden" }}
     >
       {/* Logo */}
       <div style={{ padding: "22px 20px 18px", borderBottom: `1px solid ${C.border}` }}>
@@ -39,11 +39,11 @@ export default function Sidebar({ open }) {
       </div>
 
       {/* Nav */}
-      <nav style={{ flex: 1, padding: "12px 0" }}>
+      <nav style={{ flex: 1, padding: "12px 0", overflowY: "auto" }}>
         {navFiltro.map((n) => (
           <button
             key={n.key}
-            onClick={() => setActivePage(n.key)}
+            onClick={() => { setActivePage(n.key); onClose?.(); }}
             style={{
               display: "flex", alignItems: "center", gap: 12, width: "100%",
               padding: "11px 20px",
