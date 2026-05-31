@@ -1,4 +1,5 @@
-import { useEffect, lazy, Suspense } from "react";
+import { useEffect, useState, lazy, Suspense } from "react";
+import { listarMonitorados } from "../services/repositories/precosRepository";
 import { C, CATEGORIAS_DESPESA, FASES } from "../utils/constants";
 import { fmt } from "../utils/format";
 import { mesAno } from "../utils/date";
@@ -144,6 +145,12 @@ function DashboardDiretor() {
   useEffect(() => {
     obras.forEach((o) => loadMedicoes(o.id));
   }, [obras, loadMedicoes]);
+
+  // Carrega preços monitorados para o widget de preços em alta
+  const [precosMon, setPrecosMon] = useState([]);
+  useEffect(() => {
+    listarMonitorados().then(setPrecosMon).catch(() => {});
+  }, []);
 
   // ── Cálculos financeiros ────────────────────────────────────────────────
   const allLancamentos = Object.values(financeiro).flatMap((f) => f.lancamentos || []);
@@ -576,6 +583,111 @@ ${obrasAndamento.length > 0 ? `
           )}
         </div>
       </div>
+
+      {/* Agenda do dia + Preços em alta */}
+      {(() => {
+        const hojeStr = new Date().toISOString().split("T")[0];
+
+        // Agenda: follow-ups do CRM com prazo hoje ou atrasado
+        const followUps = clientes.filter((c) =>
+          c.proximo_contato && c.proximo_contato <= hojeStr &&
+          c.status !== "Fechado" && c.status !== "Em execução"
+        ).sort((a, b) => a.proximo_contato.localeCompare(b.proximo_contato));
+
+        // Preços em alta: top 5 maiores variações positivas
+        const emAlta = precosMon
+          .filter((p) => p.preco_atual && p.preco_anterior && p.preco_atual > p.preco_anterior)
+          .map((p) => ({ ...p, var: ((p.preco_atual - p.preco_anterior) / p.preco_anterior) * 100 }))
+          .sort((a, b) => b.var - a.var)
+          .slice(0, 6);
+
+        const emBaixa = precosMon
+          .filter((p) => p.preco_atual && p.preco_anterior && p.preco_atual < p.preco_anterior)
+          .map((p) => ({ ...p, var: ((p.preco_atual - p.preco_anterior) / p.preco_anterior) * 100 }))
+          .sort((a, b) => a.var - b.var)
+          .slice(0, 4);
+
+        if (followUps.length === 0 && emAlta.length === 0 && emBaixa.length === 0) return null;
+
+        return (
+          <div className="two-col" style={{ marginBottom: 16 }}>
+            {/* Agenda do dia */}
+            <div style={{ background: C.surface, borderRadius: 12, padding: 20, border: `1px solid ${C.border}` }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted }}>📅 AGENDA DO DIA</div>
+                {followUps.length > 0 && (
+                  <span style={{ background: C.danger + "22", color: C.danger, borderRadius: 10, fontSize: 10, fontWeight: 700, padding: "2px 8px" }}>
+                    {followUps.length} pendente{followUps.length > 1 ? "s" : ""}
+                  </span>
+                )}
+              </div>
+              {followUps.length === 0 ? (
+                <div style={{ textAlign: "center", padding: "24px 0", color: C.muted, fontSize: 12 }}>
+                  <div style={{ fontSize: 24, marginBottom: 8 }}>✅</div>
+                  Nenhum follow-up pendente para hoje
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {followUps.map((c) => {
+                    const atrasado = c.proximo_contato < hojeStr;
+                    return (
+                      <div key={c.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 12px", background: atrasado ? C.danger + "0e" : C.darker, borderRadius: 8, borderLeft: `3px solid ${atrasado ? C.danger : C.warning}` }}>
+                        <span style={{ fontSize: 18 }}>{atrasado ? "⚠️" : "📞"}</span>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 13, fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.nome}</div>
+                          <div style={{ fontSize: 11, color: C.muted }}>
+                            {c.status} · {c.contato || c.email || "—"}
+                          </div>
+                        </div>
+                        <div style={{ textAlign: "right", flexShrink: 0 }}>
+                          <div style={{ fontSize: 10, color: atrasado ? C.danger : C.warning, fontWeight: 700 }}>
+                            {atrasado ? "Atrasado" : "Hoje"}
+                          </div>
+                          <div style={{ fontSize: 10, color: C.muted }}>
+                            {new Date(c.proximo_contato + "T12:00:00").toLocaleDateString("pt-BR")}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Preços em alta / baixa */}
+            <div style={{ background: C.surface, borderRadius: 12, padding: 20, border: `1px solid ${C.border}` }}>
+              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 16 }}>📈 MONITOR DE PREÇOS</div>
+              {emAlta.length === 0 && emBaixa.length === 0 ? (
+                <div style={{ textAlign: "center", padding: "24px 0", color: C.muted, fontSize: 12 }}>
+                  <div style={{ fontSize: 24, marginBottom: 8 }}>📊</div>
+                  Nenhuma variação registrada ainda
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {emAlta.map((p) => (
+                    <div key={p.id} style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 8, alignItems: "center", padding: "7px 10px", background: "#fef2f2", borderRadius: 7, borderLeft: "3px solid #dc2626" }}>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontSize: 12, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.nome_produto}</div>
+                        <div style={{ fontSize: 10, color: C.muted }}>{p.loja || "—"} · R$ {Number(p.preco_anterior).toLocaleString("pt-BR", { minimumFractionDigits: 2 })} → R$ {Number(p.preco_atual).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</div>
+                      </div>
+                      <span style={{ fontSize: 12, fontWeight: 800, color: "#dc2626", flexShrink: 0 }}>+{p.var.toFixed(1)}%</span>
+                    </div>
+                  ))}
+                  {emBaixa.map((p) => (
+                    <div key={p.id} style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 8, alignItems: "center", padding: "7px 10px", background: "#f0fdf4", borderRadius: 7, borderLeft: "3px solid #16a34a" }}>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontSize: 12, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.nome_produto}</div>
+                        <div style={{ fontSize: 10, color: C.muted }}>{p.loja || "—"}</div>
+                      </div>
+                      <span style={{ fontSize: 12, fontWeight: 800, color: "#16a34a", flexShrink: 0 }}>{p.var.toFixed(1)}%</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Alerta de Inadimplência */}
       {inadimplentes.length > 0 && (
