@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { C, NAV, PERFIS } from "../../utils/constants";
 import useAppStore from "../../store/useAppStore";
+import { LOGO_STICKFRAME } from "../../utils/cdn";
 
 export default function Sidebar({ open, onClose }) {
   const user        = useAppStore((s) => s.user);
@@ -28,7 +29,7 @@ export default function Sidebar({ open, onClose }) {
       {/* Logo */}
       <div style={{ padding: "22px 20px 18px", borderBottom: `1px solid ${C.border}` }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <img src="https://gpzmglcxmbboxxogbibq.supabase.co/storage/v1/object/public/arquivos/logos/34ec14d3-02fc-4b0a-8040-67f7a739394d/logo.jpg?t=1780161932174" style={{ width: 34, height: 34, borderRadius: 8, flexShrink: 0, objectFit: "contain" }} alt="Logo" />
+          <img src={LOGO_STICKFRAME} style={{ width: 34, height: 34, borderRadius: 8, flexShrink: 0, objectFit: "contain" }} alt="Logo StickFrame" />
           <div>
             <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700, letterSpacing: 2.5, fontSize: 15, lineHeight: 1 }}>
               <span style={{ color: C.graphite }}>STICK</span><span style={{ color: C.red }}>FRAME</span>

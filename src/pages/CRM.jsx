@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { C } from "../utils/constants";
 import { fmt } from "../utils/format";
 import { enviarWhatsApp, msgCliente } from "../services/whatsappService";
 import useAppStore from "../store/useAppStore";
 import { useModuleLoad } from "../hooks/useModuleLoad";
+import { useToast } from "../hooks/useToast";
 import Btn from "../components/ui/Btn";
 import Input from "../components/ui/Input";
 import Select from "../components/ui/Select";
@@ -82,7 +83,7 @@ function Secao({ titulo }) {
 }
 
 // ─── Formulário (fora do componente para não re-montar a cada render) ─────────
-function FormCliente({ form, setForm, onSave, onCancel, btnLabel }) {
+function FormCliente({ form, setForm, onSave, onCancel, btnLabel, disabled }) {
   const [erros, setErros] = useState({});
   const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
 
@@ -212,7 +213,7 @@ function FormCliente({ form, setForm, onSave, onCancel, btnLabel }) {
       {/* AÇÕES */}
       <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 4, paddingTop: 12, borderTop: `1px solid ${C.border}` }}>
         <Btn variant="ghost" onClick={onCancel}>Cancelar</Btn>
-        <Btn disabled={!form.nome.trim()} onClick={handleSave}>{btnLabel}</Btn>
+        <Btn disabled={!form.nome.trim() || disabled} onClick={handleSave}>{btnLabel}</Btn>
       </div>
     </div>
   );
@@ -236,18 +237,14 @@ export default function CRM() {
   const [modal,      setModal]      = useState(false);
   const [sel,        setSel]        = useState(null);
   const [confirm,    setConfirm]    = useState(false);
-  const [toast,      setToast]      = useState(null);
+  const [isSaving,   setIsSaving]   = useState(false);
   const [form,       setForm]       = useState(FORM_VAZIO);
   const [csvModal,   setCsvModal]   = useState(false);
   const [csvPreview, setCsvPreview] = useState([]);
   const [csvErro,    setCsvErro]    = useState("");
 
-  const cliente = clientes.find((c) => c.id === sel);
-
-  function mostrarToast(msg) {
-    setToast(msg);
-    setTimeout(() => setToast(null), 3000);
-  }
+  const cliente = useMemo(() => clientes.find((c) => c.id === sel), [clientes, sel]);
+  const { toast, mostrarToast } = useToast();
 
   function abrirNovo() {
     setForm(FORM_VAZIO);
@@ -271,28 +268,42 @@ export default function CRM() {
     setModal("editar");
   }
 
-  function salvarNovo() {
-    // eslint-disable-next-line no-unused-vars
-    const { valorDisplay, ...payload } = form;
-    addCliente({
-      ...payload,
-      unidades: parseInt(form.unidades) || 0,
-      valor:    form.valor || 0,
-    });
-    setModal(false);
-    mostrarToast("✅ Cliente cadastrado com sucesso!");
+  async function salvarNovo() {
+    setIsSaving(true);
+    try {
+      // eslint-disable-next-line no-unused-vars
+      const { valorDisplay, ...payload } = form;
+      await addCliente({
+        ...payload,
+        unidades: parseInt(form.unidades) || 0,
+        valor:    form.valor || 0,
+      });
+      setModal(false);
+      mostrarToast("✅ Cliente cadastrado com sucesso!");
+    } catch (e) {
+      mostrarToast("❌ " + e.message);
+    } finally {
+      setIsSaving(false);
+    }
   }
 
-  function salvarEdicao() {
-    // eslint-disable-next-line no-unused-vars
-    const { valorDisplay, ...payload } = form;
-    updateCliente(sel, {
-      ...payload,
-      unidades: parseInt(form.unidades) || 0,
-      valor:    form.valor || 0,
-    });
-    setModal(false);
-    mostrarToast("✅ Cliente atualizado!");
+  async function salvarEdicao() {
+    setIsSaving(true);
+    try {
+      // eslint-disable-next-line no-unused-vars
+      const { valorDisplay, ...payload } = form;
+      await updateCliente(sel, {
+        ...payload,
+        unidades: parseInt(form.unidades) || 0,
+        valor:    form.valor || 0,
+      });
+      setModal(false);
+      mostrarToast("✅ Cliente atualizado!");
+    } catch (e) {
+      mostrarToast("❌ " + e.message);
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   function deletar() {
@@ -300,6 +311,10 @@ export default function CRM() {
     setSel(null);
     setConfirm(false);
     mostrarToast("🗑 Cliente removido.");
+  }
+
+  function sanitizar(s) {
+    return String(s ?? "").replace(/[<>"'&]/g, (c) => ({ "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#x27;", "&": "&amp;" }[c]));
   }
 
   function parsearCSV(texto) {
@@ -313,11 +328,11 @@ export default function CRM() {
     const iStatus  = col(["status"]);
     if (iNome === -1) { setCsvErro("Coluna 'nome' não encontrada no CSV."); return; }
     const dados = linhas.slice(1).filter((l) => l[iNome]?.trim()).map((l) => ({
-      nome:    l[iNome]    || "",
-      email:   iEmail   >= 0 ? l[iEmail]   || "" : "",
-      contato: iContato >= 0 ? l[iContato] || "" : "",
-      cidade:  iCidade  >= 0 ? l[iCidade]  || "" : "",
-      status:  iStatus  >= 0 ? l[iStatus]  || "Lead" : "Lead",
+      nome:    sanitizar(l[iNome]    || ""),
+      email:   sanitizar(iEmail   >= 0 ? l[iEmail]   || "" : ""),
+      contato: sanitizar(iContato >= 0 ? l[iContato] || "" : ""),
+      cidade:  sanitizar(iCidade  >= 0 ? l[iCidade]  || "" : ""),
+      status:  STATUS_OPTS.includes(l[iStatus]) ? l[iStatus] : "Lead",
       valor: 0, unidades: 0, observacoes: "",
     }));
     if (dados.length === 0) { setCsvErro("Nenhum dado válido encontrado."); return; }
@@ -364,7 +379,8 @@ export default function CRM() {
           <FormCliente
             form={form} setForm={setForm}
             onSave={salvarNovo} onCancel={() => setModal(false)}
-            btnLabel="Salvar cliente"
+            btnLabel={isSaving ? "Salvando…" : "Salvar cliente"}
+            disabled={isSaving}
           />
         </Modal>
       )}
@@ -373,7 +389,8 @@ export default function CRM() {
           <FormCliente
             form={form} setForm={setForm}
             onSave={salvarEdicao} onCancel={() => setModal(false)}
-            btnLabel="Salvar alterações"
+            btnLabel={isSaving ? "Salvando…" : "Salvar alterações"}
+            disabled={isSaving}
           />
         </Modal>
       )}
@@ -487,10 +504,14 @@ export default function CRM() {
 
           <div style={{ background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, overflow: "hidden" }}>
             {clientes.length === 0 ? (
-              <div style={{ padding: 48, textAlign: "center", color: C.muted }}>
-                <div style={{ fontSize: 32, marginBottom: 12 }}>◈</div>
-                <div style={{ fontSize: 14, fontWeight: 600 }}>Nenhum cliente ainda</div>
-                <div style={{ fontSize: 12, marginTop: 4 }}>Clique em "+ Novo cliente" para começar</div>
+              <div style={{ padding: 56, textAlign: "center", color: C.muted }}>
+                <div style={{ fontSize: 40, marginBottom: 14 }}>👥</div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: C.text, marginBottom: 6 }}>Nenhum cliente cadastrado</div>
+                <div style={{ fontSize: 13, marginBottom: 20 }}>Adicione clientes ou importe uma planilha CSV</div>
+                <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
+                  <Btn variant="ghost" onClick={() => { setCsvPreview([]); setCsvErro(""); setCsvModal(true); }}>⬆ Importar CSV</Btn>
+                  <Btn onClick={abrirNovo}>+ Novo cliente</Btn>
+                </div>
               </div>
             ) : (
               <table style={{ width: "100%", borderCollapse: "collapse" }}>

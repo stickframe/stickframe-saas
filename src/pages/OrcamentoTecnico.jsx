@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { CUB_ESTADOS, PADROES_SF, SISTEMAS_SF } from "../utils/insumosSF";
 import { C } from "../utils/constants";
+import { LOGO_STICKFRAME } from "../utils/cdn";
 import useAppStore from "../store/useAppStore";
 import { listarPrecosVivos } from "../services/repositories/precosRepository";
 import { criarOrcamento } from "../services/repositories/orcamentoRepository";
@@ -431,7 +432,7 @@ export default function OrcamentoTecnico() {
   const exportarPDF = () => {
     if (!resultado) return;
     const r = resultado;
-    const LOGO = "https://gpzmglcxmbboxxogbibq.supabase.co/storage/v1/object/public/arquivos/logos/34ec14d3-02fc-4b0a-8040-67f7a739394d/logo.jpg?t=1780161932174";
+    const LOGO = LOGO_STICKFRAME;
     const dataHoje = new Date().toLocaleDateString("pt-BR");
 
     const sistemasRows = r.breakdown.map((s) => `
@@ -597,7 +598,7 @@ export default function OrcamentoTecnico() {
   const exportarPropostaCliente = () => {
     if (!resultado) return;
     const r = resultado;
-    const LOGO = "https://gpzmglcxmbboxxogbibq.supabase.co/storage/v1/object/public/arquivos/logos/34ec14d3-02fc-4b0a-8040-67f7a739394d/logo.jpg?t=1780161932174";
+    const LOGO = LOGO_STICKFRAME;
     const dataHoje = new Date().toLocaleDateString("pt-BR");
     const validade = new Date(); validade.setDate(validade.getDate() + 30);
 

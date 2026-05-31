@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useToast } from "../hooks/useToast";
 import { C, PRECOS, FASES } from "../utils/constants";
 import { fmt } from "../utils/format";
 import { enviarWhatsApp, msgOrcamento } from "../services/whatsappService";
@@ -502,7 +503,7 @@ export default function Orcamentos() {
   const [modal,        setModal]        = useState(false);
   const [editId,       setEditId]       = useState(null);
   const [confirm,      setConfirm]      = useState(null);
-  const [toast,        setToast]        = useState(null);
+  const { toast, mostrarToast } = useToast();
   const [form,         setForm]         = useState({ ...FORM_VAZIO, cliente_id: clientes[0]?.id || "" });
   const [converterOrc, setConverterOrc] = useState(null);
   const [calculadora,  setCalculadora]  = useState(false);
@@ -528,10 +529,7 @@ export default function Orcamentos() {
   }
   const [obraForm,   setObraForm]   = useState({ nome: "", prazo_inicio: "", prazo_fim: "" });
 
-  function mostrarToast(msg) {
-    setToast(msg);
-    setTimeout(() => setToast(null), 3000);
-  }
+
 
   function abrirNovo() {
     setForm({ ...FORM_VAZIO, cliente_id: clientes[0]?.id || "" });

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { C, FASES } from "../utils/constants";
+import { bimUrl } from "../utils/cdn";
 import useAppStore from "../store/useAppStore";
 import { useModuleLoad } from "../hooks/useModuleLoad";
 
@@ -428,7 +429,7 @@ export default function BIM() {
   const obraAtual = obras.find((o) => o.id === obraId);
 
   function abrirModelo(m) {
-    const url = `https://gpzmglcxmbboxxogbibq.supabase.co/storage/v1/object/public/bim/${m.storage_path}`;
+    const url = bimUrl(m.storage_path);
     setModeloUrl(url);
     setModeloNome(m.nome);
     setAba("viewer");

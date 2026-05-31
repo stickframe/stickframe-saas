@@ -1,8 +1,9 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { C } from "../utils/constants";
 import useAppStore from "../store/useAppStore";
 import { useModuleLoad } from "../hooks/useModuleLoad";
+import { useToast } from "../hooks/useToast";
 import { listarTodasCotacoes } from "../services/repositories/fornecedoresRepository";
 import {
   listarMonitorados, adicionarMonitor, atualizarPrecoMonitor,
@@ -227,12 +228,13 @@ function MonitorPrecos() {
                         onClick={() => sincronizar(item)}
                         disabled={syncing[item.id]}
                         title="Sincronizar preço agora"
+                        aria-label="Sincronizar preço agora"
                         style={{ padding: "4px 8px", fontSize: 13, background: "none", border: `1px solid ${C.border}`,
                           borderRadius: 5, cursor: "pointer", opacity: syncing[item.id] ? 0.5 : 1 }}
                       >
                         {syncing[item.id] ? "…" : "🔄"}
                       </button>
-                      <button onClick={() => remover(item.id)} title="Remover"
+                      <button onClick={() => remover(item.id)} title="Remover" aria-label="Remover produto monitorado"
                         style={{ padding: "4px 8px", fontSize: 13, background: "none", border: `1px solid ${C.border}`,
                           borderRadius: 5, cursor: "pointer", color: C.danger }}>
                         🗑
@@ -593,12 +595,11 @@ export default function Fornecedores() {
   const [form,       setForm]       = useState(FORM_FORN);
   const [formCot,    setFormCot]    = useState(FORM_COT);
   const [cotSel,     setCotSel]     = useState(null);
-  const [toast,      setToast]      = useState(null);
+  const [isSaving,   setIsSaving]   = useState(false);
+  const { toast, mostrarToast } = useToast();
 
-  const set  = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
-  const setC = (k) => (v) => setFormCot((f) => ({ ...f, [k]: v }));
-
-  function mostrarToast(msg) { setToast(msg); setTimeout(() => setToast(null), 3000); }
+  const set  = useCallback((k) => (v) => setForm((f) => ({ ...f, [k]: v })), []);
+  const setC = useCallback((k) => (v) => setFormCot((f) => ({ ...f, [k]: v })), []);
 
   function abrirFornecedor(f) {
     setSel(f);
@@ -607,6 +608,7 @@ export default function Fornecedores() {
   }
 
   async function salvarFornecedor() {
+    setIsSaving(true);
     try {
       if (modal === "novo-forn") {
         const data = await addFornecedor(form);
@@ -620,6 +622,8 @@ export default function Fornecedores() {
       setModal(null);
     } catch (e) {
       mostrarToast("❌ " + e.message);
+    } finally {
+      setIsSaving(false);
     }
   }
 
@@ -631,6 +635,7 @@ export default function Fornecedores() {
   }
 
   async function salvarCotacao() {
+    setIsSaving(true);
     try {
       const payload = {
         ...formCot,
@@ -648,15 +653,17 @@ export default function Fornecedores() {
       setModal(null);
     } catch (e) {
       mostrarToast("❌ " + e.message);
+    } finally {
+      setIsSaving(false);
     }
   }
 
-  const listaFiltrada = fornecedores.filter((f) => {
+  const listaFiltrada = useMemo(() => fornecedores.filter((f) => {
     const ok = f.nome?.toLowerCase().includes(busca.toLowerCase()) ||
                f.especialidade?.toLowerCase().includes(busca.toLowerCase());
     const okEsp = filtroEsp === "Todos" || f.especialidade === filtroEsp;
     return ok && okEsp;
-  });
+  }), [fornecedores, busca, filtroEsp]);
 
   const cotsSel = sel ? (cotacoes[sel.id] || []) : [];
 
@@ -892,8 +899,8 @@ export default function Fornecedores() {
             <div><Label>Observações</Label><Input value={form.observacoes} onChange={set("observacoes")} placeholder="Notas internas" /></div>
             <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", paddingTop: 12, borderTop: `1px solid ${C.border}` }}>
               <Btn variant="ghost" onClick={() => setModal(null)}>Cancelar</Btn>
-              <Btn disabled={!form.nome} onClick={salvarFornecedor}>
-                {modal === "novo-forn" ? "Cadastrar" : "Salvar"}
+              <Btn disabled={!form.nome || isSaving} onClick={salvarFornecedor}>
+                {isSaving ? "Salvando…" : modal === "novo-forn" ? "Cadastrar" : "Salvar"}
               </Btn>
             </div>
           </div>
@@ -921,8 +928,8 @@ export default function Fornecedores() {
             <div><Label>Observações</Label><Input value={formCot.observacoes} onChange={setC("observacoes")} /></div>
             <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", paddingTop: 12, borderTop: `1px solid ${C.border}` }}>
               <Btn variant="ghost" onClick={() => setModal(null)}>Cancelar</Btn>
-              <Btn disabled={!formCot.descricao} onClick={salvarCotacao}>
-                {modal === "nova-cot" ? "Registrar" : "Salvar"}
+              <Btn disabled={!formCot.descricao || isSaving} onClick={salvarCotacao}>
+                {isSaving ? "Salvando…" : modal === "nova-cot" ? "Registrar" : "Salvar"}
               </Btn>
             </div>
           </div>

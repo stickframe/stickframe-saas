@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useToast } from "../hooks/useToast";
 import { buscarEmpresa } from "../services/repositories/empresaRepository";
 import { C, PRECOS } from "../utils/constants";
 import { fmt } from "../utils/format";
@@ -309,14 +310,9 @@ export default function Contratos() {
   const [modal,   setModal]   = useState(null); // "novo" | "editar"
   const [editId,  setEditId]  = useState(null);
   const [confirm, setConfirm] = useState(null);
-  const [toast,   setToast]   = useState(null);
+  const { toast, mostrarToast } = useToast();
   const [form,    setForm]    = useState(FORM_VAZIO);
 
-
-  function mostrarToast(msg) {
-    setToast(msg);
-    setTimeout(() => setToast(null), 3000);
-  }
 
   function abrirNovo() {
     setForm({ ...FORM_VAZIO, cliente_id: clientes[0]?.id || "", cliente: clientes[0]?.nome || "" });
