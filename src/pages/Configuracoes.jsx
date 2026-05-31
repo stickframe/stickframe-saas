@@ -62,6 +62,7 @@ export default function Configuracoes() {
   // Empresa
   const [empresa, setEmpresa] = useState({
     nome: "", cnpj: "", cidade: "", telefone: "", email: "", segmento: "", site: "", logo_url: "",
+    email_alertas_precos: "", alerta_variacao_pct: 5,
   });
   const [logoPreview, setLogoPreview] = useState(null);
   const [logoFile,    setLogoFile]    = useState(null);
@@ -89,6 +90,8 @@ export default function Configuracoes() {
         segmento: data.segmento  || "",
         site:     data.site      || "",
         logo_url: data.logo_url  || "",
+        email_alertas_precos: data.email_alertas_precos || "",
+        alerta_variacao_pct:  data.alerta_variacao_pct  ?? 5,
       });
     }).catch(() => {});
     listarUsuariosEmpresa().then((data) => { if (data) setUsuarios(data); }).catch(() => {});
@@ -120,7 +123,9 @@ export default function Configuracoes() {
         email:    empresa.email     || null,
         segmento: empresa.segmento  || null,
         site:     empresa.site      || null,
-        logo_url: logoUrl           || null,
+        logo_url:             logoUrl                        || null,
+        email_alertas_precos: empresa.email_alertas_precos   || null,
+        alerta_variacao_pct:  Number(empresa.alerta_variacao_pct) || 5,
       });
       setEmpresa((f) => ({ ...f, logo_url: logoUrl }));
       setLogoFile(null);
@@ -268,6 +273,24 @@ export default function Configuracoes() {
                   <Input value={empresa.site} onChange={(v) => setEmpresa((f) => ({ ...f, site: v }))} placeholder="www.empresa.com.br" />
                 </div>
               </div>
+            </div>
+          </Card>
+
+          {/* Alertas de preço */}
+          <Card>
+            <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 16 }}>📈 Alertas de Variação de Preços</div>
+            <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 14 }}>
+              <div>
+                <LabelF>E-mail para receber alertas</LabelF>
+                <Input type="email" value={empresa.email_alertas_precos} onChange={(v) => setEmpresa((f) => ({ ...f, email_alertas_precos: v }))} placeholder="andre@stickframe.com.br" />
+              </div>
+              <div>
+                <LabelF>Alertar quando variar mais de (%)</LabelF>
+                <Input type="number" min="1" max="50" value={empresa.alerta_variacao_pct} onChange={(v) => setEmpresa((f) => ({ ...f, alerta_variacao_pct: v }))} placeholder="5" />
+              </div>
+            </div>
+            <div style={{ fontSize: 12, color: C.muted, marginTop: 8 }}>
+              Você receberá um email diariamente quando algum produto monitorado variar mais do que esse percentual.
             </div>
           </Card>
 
