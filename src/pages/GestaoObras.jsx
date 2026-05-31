@@ -11,6 +11,7 @@ import Badge from "../components/ui/Badge";
 import Modal from "../components/ui/Modal";
 import { listarQuantitativos } from "../services/repositories/quantitativoRepository";
 import { emailAlertaObraAtrasada } from "../services/emailService";
+import { listarCheckinsDia } from "../services/repositories/checkinRepository";
 
 const ICONE_TIPO  = { pdf: "📄", imagem: "🖼️", outro: "📎" };
 const CATS        = ["Projeto", "Foto", "Documento", "Outro"];
@@ -187,6 +188,8 @@ export default function GestaoObras() {
   const [checklistMarcados, setChecklistMarcados] = useState({});
   const [fotoAmpliada, setFotoAmpliada] = useState(null);
   const [qrModal,      setQrModal]      = useState(false);
+  const [checkinsHoje, setCheckinsHoje] = useState([]);
+  const [checkinsVis,  setCheckinsVis]  = useState(false);
 
   useEffect(() => {
     if (!obraId && obras.length > 0) setObraId(obras[0].id);
@@ -1203,6 +1206,68 @@ export default function GestaoObras() {
                   );
                 })()}
 
+                {/* ABA CRONOGRAMA */}
+                {abaAtiva === "cronograma" && (() => {
+                  const inicio = obra.prazo_inicio ? new Date(obra.prazo_inicio) : new Date();
+                  const fim    = obra.prazo_fim    ? new Date(obra.prazo_fim)    : new Date(inicio.getTime() + 180 * 86400000);
+                  const totalDias = Math.ceil((fim - inicio) / 86400000) || 1;
+                  const diasPorFase = Math.floor(totalDias / FASES.length) || 1;
+                  const faseIdx = FASES.indexOf(obra.fase);
+                  const hoje = new Date();
+
+                  return (
+                    <div style={{ background: C.surface, borderRadius: "0 0 12px 12px", border: `1px solid ${C.border}`, borderTop: "none", padding: 22 }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 16 }}>
+                        {obra.prazo_inicio ? new Date(obra.prazo_inicio + "T00:00").toLocaleDateString("pt-BR") : "—"} → {obra.prazo_fim ? new Date(obra.prazo_fim + "T00:00").toLocaleDateString("pt-BR") : "—"} · {totalDias} dias
+                      </div>
+
+                      {FASES.map((fase, i) => {
+                        const faseInicio = new Date(inicio.getTime() + i * diasPorFase * 86400000);
+                        const faseFim    = new Date(inicio.getTime() + (i + 1) * diasPorFase * 86400000);
+                        const done = i < faseIdx;
+                        const curr = i === faseIdx;
+                        const pctStart = (i * diasPorFase / totalDias) * 100;
+                        const pctWidth = (diasPorFase / totalDias) * 100;
+                        let phasePct = done ? 100 : curr ? Math.min(100, Math.max(0, Math.round(((hoje - faseInicio) / (faseFim - faseInicio)) * 100))) : 0;
+
+                        return (
+                          <div key={fase} style={{ marginBottom: 12 }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, marginBottom: 4 }}>
+                              <span style={{ color: done ? C.success : curr ? C.text : C.muted, fontWeight: curr ? 700 : 400 }}>
+                                {done ? "✓ " : curr ? "▶ " : ""}{fase}
+                              </span>
+                              <span style={{ color: C.muted, fontSize: 10 }}>
+                                {faseInicio.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })} – {faseFim.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}
+                              </span>
+                            </div>
+                            <div style={{ height: 20, background: C.dark, borderRadius: 4, overflow: "hidden", position: "relative" }}>
+                              <div style={{
+                                position: "absolute", left: `${pctStart}%`, width: `${pctWidth}%`, height: "100%",
+                                background: done ? "#2e9e5b33" : curr ? "#98191533" : C.darker,
+                                border: `1px solid ${done ? "#2e9e5b" : curr ? C.red : C.border}`, borderRadius: 4,
+                              }}>
+                                <div style={{ height: "100%", width: `${phasePct}%`, background: done ? "#2e9e5b" : C.red, borderRadius: "4px 0 0 4px" }} />
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+
+                      {obra.prazo_inicio && (() => {
+                        const pctHoje = Math.min(100, Math.max(0, ((hoje - inicio) / (fim - inicio)) * 100));
+                        return (
+                          <div style={{ position: "relative", height: 20, marginTop: 8 }}>
+                            <div style={{ position: "absolute", left: `${pctHoje}%`, top: 0, bottom: 0, width: 2, background: "#ffd700" }} />
+                            <div style={{ position: "absolute", left: `${pctHoje}%`, top: 0, fontSize: 9, color: "#ffd700", whiteSpace: "nowrap", transform: "translateX(-50%)" }}>
+                              ◆ Hoje
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  );
+                })()}
+
                 {/* ABA FOTOS */}
                 {abaAtiva === "fotos" && (
                   <div style={{ background: C.surface, borderRadius: "0 0 12px 12px", border: `1px solid ${C.border}`, borderTop: "none", padding: 22 }}>
@@ -1411,6 +1476,35 @@ export default function GestaoObras() {
                       borderRadius: 6, color: "#9b59b6", fontSize: 12, fontWeight: 700,
                       cursor: "pointer", fontFamily: "inherit",
                     }}>📱 QR Code Check-in</button>
+
+                    <button onClick={async () => {
+                      if (checkinsVis) { setCheckinsVis(false); return; }
+                      const list = await listarCheckinsDia(obraId).catch(() => []);
+                      setCheckinsHoje(list);
+                      setCheckinsVis(true);
+                    }} style={{
+                      width: "100%", padding: "8px 0",
+                      background: "#0f766e22", border: "1px solid #0f766e44",
+                      borderRadius: 6, color: "#0f766e", fontSize: 12, fontWeight: 700,
+                      cursor: "pointer", fontFamily: "inherit",
+                    }}>👷 Ver check-ins de hoje</button>
+                    {checkinsVis && (
+                      <div style={{ background: C.darker, border: `1px solid ${C.border}`, borderRadius: 8, padding: 10, marginTop: 2 }}>
+                        {checkinsHoje.length === 0 ? (
+                          <div style={{ fontSize: 11, color: C.muted, textAlign: "center" }}>Nenhum check-in hoje.</div>
+                        ) : checkinsHoje.map((c) => (
+                          <div key={c.id} style={{ display: "flex", justifyContent: "space-between", borderBottom: `1px solid ${C.border}`, paddingBottom: 6, marginBottom: 6, fontSize: 11 }}>
+                            <div>
+                              <div style={{ fontWeight: 700, color: C.text }}>{c.nome_operario}</div>
+                              <div style={{ color: C.muted }}>{c.funcao || "—"}</div>
+                            </div>
+                            <div style={{ color: C.muted, fontSize: 10 }}>
+                              {c.created_at ? new Date(c.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : ""}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
 
                     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                       <button onClick={copiarLinkPortal} style={{
