@@ -15,7 +15,7 @@ export async function listarMonitorados() {
 export async function adicionarMonitor({ nome_produto, url, insumo_ref, loja }) {
   const { data, error } = await sb
     .from(T)
-    .insert({ nome_produto, url, insumo_ref: insumo_ref || null, loja: loja || null, empresa_id: getEmpresaId() })
+    .insert({ nome_produto, url: url || null, insumo_ref: insumo_ref || null, loja: loja || null, empresa_id: getEmpresaId(), status: "Ativo" })
     .select()
     .single();
   if (error) throw error;
@@ -77,7 +77,6 @@ export async function importarMonitores(itens) {
     preco_atual:  i.preco_atual || null,
     data_captura: i.preco_atual ? new Date().toISOString() : null,
     status:       "Ativo",
-    alerta_pct:   10,
   }));
   const { data, error } = await sb.from(T).insert(rows).select();
   if (error) throw error;
