@@ -34,6 +34,7 @@ const MonitorPrecos     = lazy(() => import("./pages/MonitorPrecos"));
 const Equipamentos      = lazy(() => import("./pages/Equipamentos"));
 const Checklists        = lazy(() => import("./pages/Checklists"));
 const QRObra            = lazy(() => import("./pages/QRObra"));
+const Inteligencia      = lazy(() => import("./pages/Inteligencia"));
 
 const PAGES = {
   dashboard:  Dashboard,
@@ -58,6 +59,7 @@ const PAGES = {
   monitor_precos: MonitorPrecos,
   equipamentos:   Equipamentos,
   checklists:     Checklists,
+  inteligencia:   Inteligencia,
 };
 
 function AuthenticatedApp() {

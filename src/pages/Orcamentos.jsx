@@ -199,6 +199,68 @@ function gerarPDF(o) {
   printHtml(html, `orcamento-${o?.ref || "proposta"}`);
 }
 
+// ─── Contrato PDF ─────────────────────────────────────────────────────────────
+function gerarContratoHTML(o) {
+  const hoje = new Date().toLocaleDateString("pt-BR");
+  const html = `<!DOCTYPE html><html><head><title>Contrato</title><style>
+    body { font-family: Arial, sans-serif; font-size: 12px; line-height: 1.6; color: #1a1a1a; max-width: 800px; margin: 0 auto; padding: 40px; }
+    h1 { font-size: 18px; text-align: center; margin-bottom: 4px; }
+    h2 { font-size: 13px; margin-top: 24px; margin-bottom: 8px; border-bottom: 1px solid #ddd; padding-bottom: 4px; }
+    .header { text-align: center; margin-bottom: 32px; border-bottom: 2px solid #981915; padding-bottom: 16px; }
+    .kv { display: flex; gap: 8px; margin-bottom: 6px; }
+    .kv span:first-child { font-weight: bold; min-width: 140px; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 11px; }
+    th { background: #981915; color: #fff; padding: 6px 10px; text-align: left; }
+    td { padding: 6px 10px; border-bottom: 1px solid #eee; }
+    .assinatura { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 60px; }
+    .ass-box { border-top: 1px solid #333; padding-top: 8px; text-align: center; font-size: 11px; }
+    @media print { @page { margin: 20mm; } }
+  </style></head><body>
+    <div class="header">
+      <div style="font-size:10px;letter-spacing:2px;color:#981915;margin-bottom:4px">STICK FRAME SISTEMAS CONSTRUTIVOS</div>
+      <h1>CONTRATO DE PRESTAÇÃO DE SERVIÇOS</h1>
+      <div style="font-size:11px;color:#666">Ref: ${o.ref} · ${hoje}</div>
+    </div>
+
+    <h2>1. PARTES</h2>
+    <div class="kv"><span>Contratado:</span><span>Stick Frame Sistemas Construtivos Ltda · Santo André/SP</span></div>
+    <div class="kv"><span>Contratante:</span><span>${o.cliente}</span></div>
+
+    <h2>2. OBJETO</h2>
+    <p>Fornecimento e montagem de sistema estrutural em Steel Frame para ${o.unidades} unidade(s) habitacional(is) com área total de ${o.area} m², conforme projeto executivo aprovado.</p>
+
+    <h2>3. VALOR E CONDIÇÕES DE PAGAMENTO</h2>
+    <table>
+      <thead><tr><th>Etapa</th><th>%</th><th>Valor</th><th>Condição</th></tr></thead>
+      <tbody>
+        <tr><td>Sinal / Assinatura</td><td>30%</td><td>${fmt(o.valor * 0.3)}</td><td>Na assinatura do contrato</td></tr>
+        <tr><td>Estrutura montada</td><td>40%</td><td>${fmt(o.valor * 0.4)}</td><td>Conclusão da estrutura</td></tr>
+        <tr><td>Saldo final</td><td>30%</td><td>${fmt(o.valor * 0.3)}</td><td>Na entrega da obra</td></tr>
+        <tr><td><strong>Total</strong></td><td><strong>100%</strong></td><td><strong>${fmt(o.valor)}</strong></td><td></td></tr>
+      </tbody>
+    </table>
+
+    <h2>4. PRAZO</h2>
+    <p>Prazo estimado de execução: conforme cronograma físico-financeiro a ser aprovado pelas partes. A Stick Frame não se responsabiliza por atrasos decorrentes de fatores externos (clima, fornecedores, aprovações de projeto).</p>
+
+    <h2>5. GARANTIA</h2>
+    <p>A estrutura em Steel Frame possui garantia de 5 (cinco) anos contra defeitos de fabricação e montagem, conforme ABNT NBR 15575.</p>
+
+    <h2>6. DISPOSIÇÕES GERAIS</h2>
+    <p>Fica eleito o foro da Comarca de Santo André/SP para dirimir quaisquer controvérsias oriundas deste contrato.</p>
+
+    <div class="assinatura">
+      <div class="ass-box">Stick Frame Sistemas Construtivos<br>Contratado</div>
+      <div class="ass-box">${o.cliente}<br>Contratante</div>
+    </div>
+  </body></html>`;
+
+  const w = window.open("", "_blank");
+  w.document.write(html);
+  w.document.close();
+  setTimeout(() => w.print(), 400);
+}
+
 // ─── Proposta Comercial PDF profissional ─────────────────────────────────────
 function gerarPropostaComercialPDF(o) {
   const fmtBRL = (v) => Number(v).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -1062,6 +1124,17 @@ export default function Orcamentos() {
                       }}
                     >
                       📋 Proposta Comercial
+                    </button>
+                    <button
+                      onClick={() => gerarContratoHTML(o)}
+                      style={{
+                        padding: "6px 14px", background: "#7c3aed22",
+                        border: "1px solid #7c3aed44", borderRadius: 6,
+                        color: "#7c3aed", fontSize: 11, fontWeight: 700,
+                        cursor: "pointer", fontFamily: "inherit",
+                      }}
+                    >
+                      📝 Gerar Contrato
                     </button>
                     <button
                       onClick={() => gerarLinkProposta(o)}
