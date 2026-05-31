@@ -11,6 +11,9 @@ export default function PortalOnline() {
   const [diario,     setDiario]  = useState([]);
   const [medicoes,   setMedicoes]= useState([]);
   const [outrasObras,setOutras]  = useState([]);
+  const [fotos,      setFotos]   = useState([]);
+  const [vistorias,  setVistorias] = useState([]);
+  const [fotoAberta, setFotoAberta] = useState(null);
   const [loading,    setLoading] = useState(true);
   const hoje = new Date().toLocaleDateString("pt-BR");
 
@@ -26,6 +29,8 @@ export default function PortalOnline() {
         setDiario(data.diario || []);
         setMedicoes(data.medicoes || []);
         setOutras(data.outras_obras || []);
+        setFotos(data.fotos || []);
+        setVistorias(data.vistorias || []);
       } finally {
         setLoading(false);
       }
@@ -74,7 +79,7 @@ export default function PortalOnline() {
       {/* Header */}
       <div style={{ background: "#1A1A1A", padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ width: 32, height: 32, background: "linear-gradient(135deg,#414141 50%,#981915 50%)", borderRadius: 7, border: "1px solid #333" }} />
+          <img src="https://gpzmglcxmbboxxogbibq.supabase.co/storage/v1/object/public/arquivos/logos/34ec14d3-02fc-4b0a-8040-67f7a739394d/logo.jpg?t=1780161932174" style={{ width: 32, height: 32, borderRadius: 7, objectFit: "contain" }} alt="Logo" />
           <div>
             <div style={{ fontSize: 14, fontWeight: 800, letterSpacing: 2, color: "#fff" }}>
               <span style={{ color: "#555" }}>STICK</span><span style={{ color: "#981915" }}>FRAME</span>
@@ -250,6 +255,95 @@ export default function PortalOnline() {
               </div>
             ))}
           </Card>
+        )}
+
+        {/* Fotos da obra */}
+        {fotos.length > 0 && (
+          <Card title={`Fotos da Obra (${fotos.length})`}>
+            {/* Agrupar por fase */}
+            {Object.entries(
+              fotos.reduce((acc, f) => {
+                const fase = f.fase || "Geral";
+                if (!acc[fase]) acc[fase] = [];
+                acc[fase].push(f);
+                return acc;
+              }, {})
+            ).map(([fase, imgs]) => (
+              <div key={fase} style={{ marginBottom: 14 }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: "#888", letterSpacing: 1, marginBottom: 8 }}>{fase.toUpperCase()}</div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6 }}>
+                  {imgs.map((f) => {
+                    const url = f.storage_path
+                      ? `https://gpzmglcxmbboxxogbibq.supabase.co/storage/v1/object/public/arquivos/${f.storage_path}`
+                      : null;
+                    if (!url) return null;
+                    return (
+                      <div key={f.id} onClick={() => setFotoAberta(url)}
+                        style={{ aspectRatio: "1", borderRadius: 8, overflow: "hidden", cursor: "pointer", background: "#f0f0f0" }}>
+                        <img src={url} alt={f.nome} style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                          onError={(e) => { e.target.parentElement.style.display = "none"; }} />
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </Card>
+        )}
+
+        {/* Vistorias */}
+        {vistorias.length > 0 && (
+          <Card title="Vistorias e Inspeções">
+            {vistorias.map((v, i) => {
+              const aprovada = v.resultado === "Aprovado";
+              const reprovada = v.resultado === "Reprovado";
+              const itens = Array.isArray(v.itens) ? v.itens : [];
+              const totalItens = itens.length;
+              const confItens = itens.filter((it) => it.conforme).length;
+              const pct = totalItens > 0 ? Math.round((confItens / totalItens) * 100) : null;
+              return (
+                <div key={v.id || i} style={{ paddingBottom: 14, marginBottom: 14, borderBottom: i < vistorias.length - 1 ? "1px solid #f5f5f5" : "none" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 700 }}>{v.servico || v.tipo}</div>
+                      <div style={{ fontSize: 10, color: "#888", marginTop: 2 }}>{v.fase} · {v.data} · {v.responsavel}</div>
+                    </div>
+                    <span style={{
+                      padding: "3px 10px", borderRadius: 10, fontSize: 10, fontWeight: 700,
+                      background: aprovada ? "#dcfce7" : reprovada ? "#fee2e2" : "#fff7ed",
+                      color: aprovada ? "#166534" : reprovada ? "#991b1b" : "#92400e",
+                    }}>
+                      {aprovada ? "✓ Aprovado" : reprovada ? "✗ Reprovado" : v.resultado || "Pendente"}
+                    </span>
+                  </div>
+                  {pct !== null && (
+                    <div style={{ marginBottom: 6 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: "#888", marginBottom: 3 }}>
+                        <span>Conformidade</span><span style={{ fontWeight: 700, color: aprovada ? "#2e9e5b" : "#b97a00" }}>{pct}%</span>
+                      </div>
+                      <Bar val={pct} color={aprovada ? "linear-gradient(90deg,#2e9e5b,#1a7a40)" : "linear-gradient(90deg,#f59e0b,#d97706)"} />
+                    </div>
+                  )}
+                  {v.observacoes && (
+                    <div style={{ background: "#f9f9f9", borderRadius: 6, padding: "8px 10px", fontSize: 12, color: "#555", lineHeight: 1.5 }}>
+                      {v.observacoes}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </Card>
+        )}
+
+        {/* Lightbox de foto */}
+        {fotoAberta && (
+          <div onClick={() => setFotoAberta(null)}
+            style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.92)", zIndex: 999, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+            <img src={fotoAberta} alt="Foto ampliada"
+              style={{ maxWidth: "100%", maxHeight: "90vh", borderRadius: 10, objectFit: "contain" }} />
+            <button onClick={() => setFotoAberta(null)}
+              style={{ position: "absolute", top: 16, right: 16, background: "rgba(255,255,255,0.15)", border: "none", color: "#fff", fontSize: 22, width: 40, height: 40, borderRadius: "50%", cursor: "pointer" }}>✕</button>
+          </div>
         )}
 
         {/* Contato */}
