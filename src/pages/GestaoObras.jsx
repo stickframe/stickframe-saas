@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useToast } from "../hooks/useToast";
+import { printHtml } from "../utils/printHtml";
 import { C, FASES } from "../utils/constants";
 import { exportarObrasExcel } from "../utils/exportExcel";
 import useAppStore from "../store/useAppStore";
@@ -526,10 +527,7 @@ export default function GestaoObras() {
 
     </body></html>`;
 
-    win.document.open();
-    win.document.write(html);
-    win.document.close();
-    setTimeout(() => win.print(), 600);
+    printHtml(html, `dossie-${obra.nome.replace(/\s+/g, "-").toLowerCase()}`);
   }
 
   function handleFiles(files) {
