@@ -662,6 +662,35 @@ export default function GestaoObras() {
         </div>
       </div>
 
+      {/* Dashboard de métricas */}
+      {obras.length > 0 && (() => {
+        const fmtC = (v) => Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+        const ativas    = obras.filter((o) => o.status === "Em andamento");
+        const concluidas = obras.filter((o) => o.status === "Concluída");
+        const valorTotal = obras.filter((o) => o.status !== "Concluída").reduce((s, o) => s + (Number(o.contrato) || 0), 0);
+        const progMedio = ativas.length > 0 ? Math.round(ativas.reduce((s, o) => s + (o.progresso || 0), 0) / ativas.length) : 0;
+        const totalDespesas = obras.reduce((s, o) => {
+          const lans = financeiro[o.id]?.lancamentos || [];
+          return s + lans.filter((l) => l.tipo === "despesa").reduce((a, l) => a + (l.valor || 0), 0);
+        }, 0);
+        return (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px,1fr))", gap: 12, marginBottom: 20 }}>
+            {[
+              { label: "Em andamento", value: ativas.length, sub: `${concluidas.length} concluída(s)`, color: "#2e9e5b" },
+              { label: "Carteira ativa", value: fmtC(valorTotal), sub: "valor dos contratos ativos", color: C.red },
+              { label: "Progresso médio", value: `${progMedio}%`, sub: "obras em andamento", color: "#4a9eff" },
+              { label: "Custo lançado", value: fmtC(totalDespesas), sub: "despesas registradas", color: "#b97a00" },
+            ].map((m) => (
+              <div key={m.label} style={{ background: C.surface, border: `1px solid ${C.border}`, borderTop: `3px solid ${m.color}`, borderRadius: 10, padding: "14px 16px" }}>
+                <div style={{ fontSize: 11, color: C.muted, marginBottom: 4 }}>{m.label}</div>
+                <div style={{ fontSize: 18, fontWeight: 800, color: m.color }}>{m.value}</div>
+                <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{m.sub}</div>
+              </div>
+            ))}
+          </div>
+        );
+      })()}
+
       {/* Painel de Atrasos */}
       {(() => {
         const hojeStr = new Date().toISOString().split("T")[0];
@@ -773,7 +802,7 @@ export default function GestaoObras() {
               <div>
                 {/* Abas */}
                 <div style={{ display: "flex", borderBottom: `1px solid ${C.border}` }}>
-                  {[["fases", "📋 Fases da obra"], ["fotos", "📷 Fotos"], ["arquivos", "📁 Arquivos"], ["historico", "🕑 Histórico"]].map(([k, l]) => (
+                  {[["fases", "📋 Fases"], ["financeiro", "💰 Financeiro"], ["fotos", "📷 Fotos"], ["arquivos", "📁 Arquivos"], ["historico", "🕑 Histórico"]].map(([k, l]) => (
                     <button key={k} onClick={() => setAbaAtiva(k)} style={{
                       padding: "10px 20px", background: "transparent", border: "none",
                       borderBottom: `2px solid ${abaAtiva === k ? C.red : "transparent"}`,
@@ -833,6 +862,82 @@ export default function GestaoObras() {
                     })}
                   </div>
                 )}
+
+                {/* ABA FINANCEIRO */}
+                {abaAtiva === "financeiro" && (() => {
+                  const fmtC = (v) => Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+                  const lans = financeiro[obraId]?.lancamentos || [];
+                  const meds = medicoes[obraId] || [];
+                  const contrato = Number(obra.contrato) || 0;
+                  const receitas = lans.filter((l) => l.tipo === "receita").reduce((a, l) => a + (l.valor || 0), 0);
+                  const despesas = lans.filter((l) => l.tipo === "despesa").reduce((a, l) => a + (l.valor || 0), 0);
+                  const medAprov = meds.filter((m) => m.status === "Aprovada").reduce((a, m) => a + (m.valor || 0), 0);
+                  const saldo = receitas - despesas;
+                  const margem = contrato > 0 ? ((contrato - despesas) / contrato) * 100 : null;
+                  const executado = contrato > 0 ? (despesas / contrato) * 100 : 0;
+                  return (
+                    <div style={{ background: C.surface, borderRadius: "0 0 12px 12px", border: `1px solid ${C.border}`, borderTop: "none", padding: 22 }}>
+                      {/* KPIs */}
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(130px,1fr))", gap: 10, marginBottom: 24 }}>
+                        {[
+                          { label: "Valor contratado", value: fmtC(contrato), color: C.text },
+                          { label: "Receitas lançadas", value: fmtC(receitas), color: "#2e9e5b" },
+                          { label: "Despesas lançadas", value: fmtC(despesas), color: C.danger },
+                          { label: "Saldo", value: fmtC(saldo), color: saldo >= 0 ? "#2e9e5b" : C.danger },
+                          ...(margem !== null ? [{ label: "Margem estimada", value: `${margem.toFixed(1)}%`, color: margem > 20 ? "#2e9e5b" : margem > 0 ? "#b97a00" : C.danger }] : []),
+                          ...(medAprov > 0 ? [{ label: "Medições aprovadas", value: fmtC(medAprov), color: "#4a9eff" }] : []),
+                        ].map((k) => (
+                          <div key={k.label} style={{ background: C.darker, borderRadius: 8, padding: "12px 14px", borderTop: `3px solid ${k.color}` }}>
+                            <div style={{ fontSize: 11, color: C.muted, marginBottom: 4 }}>{k.label}</div>
+                            <div style={{ fontSize: 16, fontWeight: 800, color: k.color }}>{k.value}</div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Barra de execução orçamentária */}
+                      {contrato > 0 && (
+                        <div style={{ marginBottom: 24 }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: C.muted, marginBottom: 6 }}>
+                            <span>Execução orçamentária</span>
+                            <span style={{ fontWeight: 700, color: executado > 100 ? C.danger : C.text }}>{executado.toFixed(1)}% do contrato</span>
+                          </div>
+                          <div style={{ height: 10, background: C.dark, borderRadius: 6, overflow: "hidden" }}>
+                            <div style={{ height: 10, width: `${Math.min(executado, 100)}%`, background: executado > 90 ? C.danger : executado > 70 ? "#b97a00" : "#2e9e5b", borderRadius: 6, transition: "width .5s" }} />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Lista de lançamentos */}
+                      <div style={{ fontSize: 12, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 10, textTransform: "uppercase" }}>
+                        Lançamentos da obra ({lans.length})
+                      </div>
+                      {lans.length === 0 ? (
+                        <div style={{ textAlign: "center", padding: "24px 0", color: C.muted, fontSize: 13 }}>
+                          Nenhum lançamento financeiro registrado para esta obra.<br />
+                          <span style={{ fontSize: 11 }}>Acesse o módulo Financeiro para lançar receitas e despesas.</span>
+                        </div>
+                      ) : (
+                        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                          {[...lans].sort((a, b) => (b.data || "").localeCompare(a.data || "")).map((l) => (
+                            <div key={l.id} style={{ display: "grid", gridTemplateColumns: "auto 1fr auto auto", gap: 10, alignItems: "center", padding: "9px 12px", background: C.darker, borderRadius: 8, borderLeft: `3px solid ${l.tipo === "receita" ? "#2e9e5b" : C.danger}` }}>
+                              <span style={{ fontSize: 18 }}>{l.tipo === "receita" ? "📥" : "📤"}</span>
+                              <div>
+                                <div style={{ fontSize: 12, fontWeight: 600 }}>{l.descricao || "—"}</div>
+                                <div style={{ fontSize: 11, color: C.muted }}>{l.categoria || l.tipo} · {l.data ? new Date(l.data + "T00:00").toLocaleDateString("pt-BR") : "—"}</div>
+                              </div>
+                              <span style={{ fontSize: 13, fontWeight: 700, color: l.tipo === "receita" ? "#2e9e5b" : C.danger }}>
+                                {l.tipo === "receita" ? "+" : "−"}{fmtC(l.valor)}
+                              </span>
+                              <span style={{ fontSize: 10, padding: "2px 6px", borderRadius: 4, background: l.status === "Pago" || l.status === "Recebido" ? "#2e9e5b22" : "#b97a0022", color: l.status === "Pago" || l.status === "Recebido" ? "#2e9e5b" : "#b97a00" }}>
+                                {l.status || "—"}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
 
                 {/* ABA FOTOS */}
                 {abaAtiva === "fotos" && (
