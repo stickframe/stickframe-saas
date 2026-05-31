@@ -20,7 +20,9 @@ import Modal from "../components/ui/Modal";
 const INSUMOS_LISTA = Array.from(
   new Set(
     SISTEMAS_SF.flatMap((s) =>
-      s.opcoes.flatMap((o) => o.itens.map((i) => i.nome))
+      (s.opcoes || []).flatMap((o) =>
+        (o.itens || []).map((i) => i.nome).filter(Boolean)
+      )
     )
   )
 ).sort((a, b) => a.localeCompare(b, "pt-BR"));
