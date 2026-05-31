@@ -15,7 +15,7 @@ export async function listarMonitorados() {
 export async function adicionarMonitor({ nome_produto, url, insumo_ref, loja }) {
   const { data, error } = await sb
     .from(T)
-    .insert({ nome_produto, url, insumo_ref: insumo_ref || null, loja: loja || null, empresa_id: getEmpresaId() })
+    .insert({ nome_produto, url: url || null, insumo_ref: insumo_ref || null, loja: loja || null, empresa_id: getEmpresaId(), status: "Ativo" })
     .select()
     .single();
   if (error) throw error;
@@ -70,5 +70,29 @@ export async function listarHistoricoPreco(monitorId, dias = 60) {
 export async function scrapePreco(url) {
   const { data, error } = await sb.functions.invoke("scrape-preco", { body: { url } });
   if (error) throw error;
-  return data; // { preco, loja, nome_produto, status, error? }
+  return data;
+}
+
+// Chama a Edge Function de scraping de categoria (retorna lista de produtos)
+export async function scraperCategoria(url) {
+  const { data, error } = await sb.functions.invoke("scrape-categoria", { body: { url } });
+  if (error) throw error;
+  return data; // { status, total, produtos: [{ nome_produto, url, loja, preco_atual }] }
+}
+
+// Insere múltiplos itens de uma vez (import de categoria)
+export async function importarMonitores(itens) {
+  const empresaId = getEmpresaId();
+  const rows = itens.map((i) => ({
+    empresa_id:   empresaId,
+    nome_produto: i.nome_produto,
+    url:          i.url || null,
+    loja:         i.loja || null,
+    preco_atual:  i.preco_atual || null,
+    data_captura: i.preco_atual ? new Date().toISOString() : null,
+    status:       "Ativo",
+  }));
+  const { data, error } = await sb.from(T).insert(rows).select();
+  if (error) throw error;
+  return data;
 }

@@ -374,7 +374,7 @@ function MonitorPrecos() {
       {modal && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 500,
           display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <div style={{ background: "#fff", borderRadius: 12, width: "min(520px, 95vw)",
+          <div style={{ background: "#fff", borderRadius: 16, width: "min(520px, 95vw)",
             padding: 24, boxShadow: "0 8px 32px rgba(0,0,0,0.2)", maxHeight: "90vh", overflowY: "auto" }}>
             <div style={{ fontWeight: 800, fontSize: 16, marginBottom: 16 }}>Adicionar produto para monitorar</div>
 

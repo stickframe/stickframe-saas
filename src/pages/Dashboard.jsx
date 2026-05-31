@@ -84,7 +84,7 @@ function GraficoLinha({ data, height = 80, color = C.red }) {
 function KpiCard({ label, value, sub, accent, icon }) {
   return (
     <div style={{
-      background: C.surface, borderRadius: 12, padding: "16px 14px",
+      background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", padding: "16px 14px",
       border: `1px solid ${C.border}`, borderTop: `3px solid ${accent}`,
     }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
@@ -251,8 +251,7 @@ function DashboardDiretor() {
         <td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right;font-weight:700">${fmt(rec - desp)}</td>
       </tr>`;
     }).join("");
-    const win = window.open("", "_blank");
-    win.document.write(`<!DOCTYPE html><html><head>
+    const html = `<!DOCTYPE html><html><head>
 <meta charset="utf-8">
 <title>Relatório Executivo — ${mes}</title>
 <style>
@@ -314,9 +313,8 @@ ${obrasAndamento.length > 0 ? `
 </table>` : ""}
 
 <div class="footer">StickFrame SaaS · Relatório gerado automaticamente · ${new Date().toLocaleDateString("pt-BR")}</div>
-</body></html>`);
-    win.document.close();
-    setTimeout(() => win.print(), 600);
+</body></html>`;
+    printHtml(html, `relatorio-executivo-${mes}`);
   }
 
   // ── Gráfico receita vs despesa por obra ───────────────────────────────────
@@ -447,7 +445,7 @@ ${obrasAndamento.length > 0 ? `
       {/* KPIs secundários */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 20 }}>
         {/* Medições pendentes */}
-        <div style={{ background: C.surface, borderRadius: 12, padding: "14px 16px", border: `1px solid ${C.border}`, borderLeft: `4px solid ${C.warning}` }}>
+        <div style={{ background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", padding: "14px 16px", border: `1px solid ${C.border}`, borderLeft: `4px solid ${C.warning}` }}>
           <div style={{ fontSize: 10, color: C.muted, letterSpacing: 1, marginBottom: 6 }}>MEDIÇÕES PENDENTES</div>
           <div style={{ fontSize: 20, fontWeight: 800, color: C.warning }}>{medPendentes.length}</div>
           <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>
@@ -456,7 +454,7 @@ ${obrasAndamento.length > 0 ? `
         </div>
 
         {/* Prazo das obras */}
-        <div style={{ background: C.surface, borderRadius: 12, padding: "14px 16px", border: `1px solid ${C.border}`, borderLeft: `4px solid ${atrasadas.length > 0 ? C.danger : C.success}` }}>
+        <div style={{ background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", padding: "14px 16px", border: `1px solid ${C.border}`, borderLeft: `4px solid ${atrasadas.length > 0 ? C.danger : C.success}` }}>
           <div style={{ fontSize: 10, color: C.muted, letterSpacing: 1, marginBottom: 6 }}>PRAZOS DAS OBRAS</div>
           <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
             <div>
@@ -475,7 +473,7 @@ ${obrasAndamento.length > 0 ? `
         </div>
 
         {/* Taxa de conversão CRM */}
-        <div style={{ background: C.surface, borderRadius: 12, padding: "14px 16px", border: `1px solid ${C.border}`, borderLeft: `4px solid #4a9eff` }}>
+        <div style={{ background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", padding: "14px 16px", border: `1px solid ${C.border}`, borderLeft: `4px solid #4a9eff` }}>
           <div style={{ fontSize: 10, color: C.muted, letterSpacing: 1, marginBottom: 6 }}>CONVERSÃO CRM</div>
           <div style={{ fontSize: 20, fontWeight: 800, color: "#4a9eff" }}>{taxaConv}%</div>
           <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>
@@ -487,7 +485,7 @@ ${obrasAndamento.length > 0 ? `
       {/* Gráficos linha 1 */}
       <div className="two-col" style={{ marginBottom: 16 }}>
         {/* Receita vs Despesa por obra */}
-        <div style={{ background: C.surface, borderRadius: 12, padding: 20, border: `1px solid ${C.border}` }}>
+        <div style={{ background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", padding: 20, border: `1px solid ${C.border}` }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
             <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted }}>RECEITA VS DESPESA / OBRA</div>
             <div style={{ display: "flex", gap: 12, fontSize: 10 }}>
@@ -509,7 +507,7 @@ ${obrasAndamento.length > 0 ? `
         </div>
 
         {/* Evolução mensal de receitas */}
-        <div style={{ background: C.surface, borderRadius: 12, padding: 20, border: `1px solid ${C.border}` }}>
+        <div style={{ background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", padding: 20, border: `1px solid ${C.border}` }}>
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 4 }}>
             EVOLUÇÃO DE RECEITAS — 6 MESES
           </div>
@@ -528,7 +526,7 @@ ${obrasAndamento.length > 0 ? `
       {/* Gráficos linha 2 */}
       <div className="three-col" style={{ marginBottom: 16 }}>
         {/* Obras por fase */}
-        <div style={{ background: C.surface, borderRadius: 12, padding: 20, border: `1px solid ${C.border}` }}>
+        <div style={{ background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", padding: 20, border: `1px solid ${C.border}` }}>
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 16 }}>OBRAS POR FASE</div>
           {obras.length === 0 ? (
             <div style={{ textAlign: "center", padding: "28px 0", color: C.muted, fontSize: 12 }}>Nenhuma obra cadastrada</div>
@@ -554,7 +552,7 @@ ${obrasAndamento.length > 0 ? `
         </div>
 
         {/* Pipeline CRM */}
-        <div style={{ background: C.surface, borderRadius: 12, padding: 20, border: `1px solid ${C.border}` }}>
+        <div style={{ background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", padding: 20, border: `1px solid ${C.border}` }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
             <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted }}>PIPELINE CRM</div>
             <div style={{ fontSize: 11, color: "#4a9eff", fontWeight: 700 }}>{taxaConv}% conv.</div>
@@ -573,7 +571,7 @@ ${obrasAndamento.length > 0 ? `
         </div>
 
         {/* Despesas por categoria */}
-        <div style={{ background: C.surface, borderRadius: 12, padding: 20, border: `1px solid ${C.border}` }}>
+        <div style={{ background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", padding: 20, border: `1px solid ${C.border}` }}>
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 16 }}>DESPESAS POR CATEGORIA</div>
           {despCats.length > 0 ? (
             <>
@@ -779,7 +777,7 @@ ${obrasAndamento.length > 0 ? `
 
       {/* Rentabilidade por obra */}
       {rentabilidade.length > 0 && (
-        <div style={{ background: C.surface, borderRadius: 12, padding: 20, border: `1px solid ${C.border}` }}>
+        <div style={{ background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", padding: 20, border: `1px solid ${C.border}` }}>
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 16 }}>RENTABILIDADE POR OBRA</div>
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
@@ -893,7 +891,7 @@ ${obrasAndamento.length > 0 ? `
       })()}
 
       {/* Progresso das obras */}
-      <div style={{ background: C.surface, borderRadius: 12, padding: 20, border: `1px solid ${C.border}` }}>
+      <div style={{ background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", padding: 20, border: `1px solid ${C.border}` }}>
         <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 16 }}>PROGRESSO DAS OBRAS</div>
         {obras.length === 0 ? (
           <div style={{ textAlign: "center", padding: "28px 0", color: C.muted }}>

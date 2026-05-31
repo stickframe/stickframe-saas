@@ -278,6 +278,24 @@ export default function Configuracoes() {
             </div>
           </Card>
 
+          {/* Alertas de preço */}
+          <Card>
+            <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 16 }}>📈 Alertas de Variação de Preços</div>
+            <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 14 }}>
+              <div>
+                <LabelF>E-mail para receber alertas</LabelF>
+                <Input type="email" value={empresa.email_alertas_precos} onChange={(v) => setEmpresa((f) => ({ ...f, email_alertas_precos: v }))} placeholder="andre@stickframe.com.br" />
+              </div>
+              <div>
+                <LabelF>Alertar quando variar mais de (%)</LabelF>
+                <Input type="number" min="1" max="50" value={empresa.alerta_variacao_pct} onChange={(v) => setEmpresa((f) => ({ ...f, alerta_variacao_pct: v }))} placeholder="5" />
+              </div>
+            </div>
+            <div style={{ fontSize: 12, color: C.muted, marginTop: 8 }}>
+              Você receberá um email diariamente quando algum produto monitorado variar mais do que esse percentual.
+            </div>
+          </Card>
+
           <div style={{ display: "flex", justifyContent: "flex-end" }}>
             <Btn disabled={!empresa.nome || saving} onClick={salvarEmpresa}>
               {saving ? "Salvando…" : "💾 Salvar dados da empresa"}

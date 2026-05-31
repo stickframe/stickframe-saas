@@ -31,7 +31,7 @@ const tdSt = { padding: "7px 10px", fontSize: 12, verticalAlign: "middle" };
 // ─── helpers ─────────────────────────────────────────────────────────────────
 function Card({ title, children }) {
   return (
-    <div style={{ background: C.surface, borderRadius: 10, border: `1px solid ${C.border}`, overflow: "hidden" }}>
+    <div style={{ background: C.surface, borderRadius: 14, border: `1px solid ${C.border}`, overflow: "hidden" }}>
       {title && (
         <div style={{ padding: "10px 14px", borderBottom: `1px solid ${C.border}`, fontWeight: 700, fontSize: 13, background: C.darker }}>
           {title}
@@ -1278,7 +1278,7 @@ export default function OrcamentoTecnico() {
       <div style={{ flex: 1, minWidth: 0 }}>
         {!resultado ? (
           <div style={{ textAlign: "center", padding: "80px 24px", color: C.muted,
-            background: C.surface, borderRadius: 12, border: `1px solid ${C.border}` }}>
+            background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", border: `1px solid ${C.border}` }}>
             <div style={{ fontSize: 52, marginBottom: 16 }}>📊</div>
             <p style={{ fontSize: 15, margin: 0 }}>Configure os parâmetros ao lado e clique em <strong>Calcular Orçamento</strong></p>
             <p style={{ fontSize: 12, marginTop: 8 }}>Gera composição detalhada de todos os insumos com preços regionais calibrados por CUB</p>
@@ -1378,7 +1378,7 @@ export default function OrcamentoTecnico() {
 
             {/* comparativo de padrões */}
             {comparativo && (
-              <div style={{ background: C.surface, borderRadius: 10, border: `1px solid ${C.border}`, overflow: "hidden" }}>
+              <div style={{ background: C.surface, borderRadius: 14, border: `1px solid ${C.border}`, overflow: "hidden" }}>
                 <div style={{ padding: "12px 18px", borderBottom: `1px solid ${C.border}`, fontWeight: 700, fontSize: 14, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <span>⚖️ Comparativo de Padrões</span>
                   <button onClick={() => setComparativo(null)} style={{ background: "none", border: "none", color: C.muted, cursor: "pointer", fontSize: 12 }}>✕ fechar</button>
@@ -1472,7 +1472,7 @@ export default function OrcamentoTecnico() {
 
             {/* cronograma financeiro */}
             {resultado.cronograma?.length > 0 && (
-              <div style={{ background: C.surface, borderRadius: 10, border: `1px solid ${C.border}`, overflow: "hidden" }}>
+              <div style={{ background: C.surface, borderRadius: 14, border: `1px solid ${C.border}`, overflow: "hidden" }}>
                 <div style={{ padding: "12px 18px", borderBottom: `1px solid ${C.border}`, fontWeight: 700, fontSize: 14 }}>
                   📅 Cronograma Financeiro Estimado — {resultado.prazoMeses} meses
                 </div>
@@ -1503,7 +1503,7 @@ export default function OrcamentoTecnico() {
             </div>
 
             {/* breakdown por sistema */}
-            <div style={{ background: C.surface, borderRadius: 10, border: `1px solid ${C.border}`, overflow: "hidden" }}>
+            <div style={{ background: C.surface, borderRadius: 14, border: `1px solid ${C.border}`, overflow: "hidden" }}>
               <div style={{ padding: "13px 18px", borderBottom: `1px solid ${C.border}`,
                 fontWeight: 700, fontSize: 14, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <span>Composição por Sistema</span>
@@ -1549,7 +1549,7 @@ export default function OrcamentoTecnico() {
       {modalSalvar && resultado && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 500,
           display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <div style={{ background: "#fff", borderRadius: 12, width: "min(460px, 94vw)",
+          <div style={{ background: "#fff", borderRadius: 16, width: "min(460px, 94vw)",
             padding: 28, boxShadow: "0 8px 32px rgba(0,0,0,0.25)" }}>
             <div style={{ fontWeight: 800, fontSize: 17, marginBottom: 4 }}>💾 Salvar como Orçamento</div>
             <div style={{ fontSize: 12, color: C.muted, marginBottom: 20 }}>

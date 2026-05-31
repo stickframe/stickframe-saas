@@ -543,7 +543,7 @@ ${tabelaFases}
         </div>
 
         {/* Seleção de obra */}
-        <div style={{ background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, padding: "16px 20px", marginBottom: 20 }}>
+        <div style={{ background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", border: `1px solid ${C.border}`, padding: "16px 20px", marginBottom: 20 }}>
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 8, textTransform: "uppercase" }}>Obra</div>
           <Select
             value={obraId}
@@ -553,7 +553,7 @@ ${tabelaFases}
         </div>
 
         {!obraId ? (
-          <div style={{ background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, padding: "60px 0", textAlign: "center" }}>
+          <div style={{ background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", border: `1px solid ${C.border}`, padding: "60px 0", textAlign: "center" }}>
             <div style={{ fontSize: 36, marginBottom: 12 }}>📐</div>
             <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 8 }}>Selecione uma obra para começar</div>
             <div style={{ fontSize: 13, color: C.muted }}>A planilha de quantitativos é vinculada a cada obra.</div>
@@ -561,7 +561,7 @@ ${tabelaFases}
         ) : loading ? (
           <div style={{ textAlign: "center", padding: 40, color: C.muted }}>Carregando…</div>
         ) : items.length === 0 ? (
-          <div style={{ background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, padding: "60px 24px", textAlign: "center" }}>
+          <div style={{ background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", border: `1px solid ${C.border}`, padding: "60px 24px", textAlign: "center" }}>
             <div style={{ fontSize: 36, marginBottom: 12 }}>📋</div>
             <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 8 }}>Nenhum item cadastrado</div>
             <div style={{ fontSize: 13, color: C.muted, marginBottom: 24 }}>Use o template Steel Frame ou adicione itens manualmente.</div>
@@ -585,7 +585,7 @@ ${tabelaFases}
                 { label: "Fases",         value: String(faseGrupos.length),sub: `de ${FASES.length} fases`,  accent: C.warning },
                 { label: "Itens totais",  value: String(items.length),     sub: "planilha completa",          accent: C.success },
               ].map((k) => (
-                <div key={k.label} style={{ background: C.surface, borderRadius: 10, padding: "14px 16px", border: `1px solid ${C.border}`, borderTop: `3px solid ${k.accent}` }}>
+                <div key={k.label} style={{ background: C.surface, borderRadius: 14, padding: "14px 16px", border: `1px solid ${C.border}`, borderTop: `3px solid ${k.accent}` }}>
                   <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1, color: C.muted, textTransform: "uppercase", marginBottom: 6 }}>{k.label}</div>
                   <div style={{ fontSize: 20, fontWeight: 900 }}>{k.value}</div>
                   <div style={{ fontSize: 11, color: C.muted, marginTop: 3 }}>{k.sub}</div>

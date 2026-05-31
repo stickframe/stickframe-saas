@@ -144,6 +144,7 @@ const FORM_VAZIO = {
 };
 
 export default function GestaoObras() {
+  const { toast, mostrarToast } = useToast();
   useModuleLoad("obras");
   useModuleLoad("clientes");
   useModuleLoad("financeiro");
@@ -312,6 +313,16 @@ export default function GestaoObras() {
     if (i >= FASES.length - 1) return;
     setChecklistMarcados({});
     setChecklistModal(true);
+  }
+
+  function retornar() {
+    if (!obra) return;
+    const i = FASES.indexOf(obra.fase);
+    if (i <= 0) return;
+    const novaFase  = FASES[i - 1];
+    const progresso = Math.round((i / FASES.length) * 100);
+    avancarFase(obra.id, novaFase, progresso);
+    mostrarToast(`↩ Retornou para: ${novaFase}`);
   }
 
   function confirmarAvancar() {
@@ -541,10 +552,7 @@ export default function GestaoObras() {
 
     </body></html>`;
 
-    win.document.open();
-    win.document.write(html);
-    win.document.close();
-    setTimeout(() => win.print(), 600);
+    printHtml(html, `dossie-${obra.nome.replace(/\s+/g, "-").toLowerCase()}`);
   }
 
   async function gerarRelatorioObra() {
@@ -1441,7 +1449,7 @@ export default function GestaoObras() {
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
 
                 {/* Ações rápidas */}
-                <div style={{ background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, padding: 18 }}>
+                <div style={{ background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", border: `1px solid ${C.border}`, padding: 18 }}>
                   <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 12 }}>AÇÃO RÁPIDA</div>
                   <div style={{ display: "flex", gap: 8 }}>
                     <Btn onClick={retornar} disabled={FASES.indexOf(obra.fase) <= 0} variant="ghost" size="sm" style={{ flex: 1 }}>← Retornar</Btn>
@@ -1534,7 +1542,7 @@ export default function GestaoObras() {
                 </div>
 
                 {/* Resumo */}
-                <div style={{ background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, padding: 18 }}>
+                <div style={{ background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", border: `1px solid ${C.border}`, padding: 18 }}>
                   <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 14 }}>RESUMO</div>
                   {[
                     ["Status",    obra.status],

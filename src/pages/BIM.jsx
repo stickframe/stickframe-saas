@@ -80,8 +80,7 @@ function exportarRelatorioApontamentos(apts, obraNome) {
   <script>window.onload=()=>window.print()</script>
   </body></html>`;
 
-  const win = window.open("", "_blank");
-  if (win) { win.document.write(html); win.document.close(); }
+  printHtml(html, `bim-apontamentos-${obraNome.replace(/\s+/g, "-").toLowerCase()}`);
 }
 
 // ─── Viewer IFC ───────────────────────────────────────────────────────────────
@@ -376,6 +375,7 @@ function Field({ label, children }) {
 
 // ─── Página BIM ───────────────────────────────────────────────────────────────
 export default function BIM() {
+  const { toast, mostrarToast } = useToast();
   useModuleLoad("obras");
   const obras                = useAppStore((s) => s.obras);
   const bimModelos           = useAppStore((s) => s.bimModelos);
@@ -520,7 +520,7 @@ export default function BIM() {
           ["Alta prioridade", stats.alta,    "#c0392b"],
           ["Resolvidos",    stats.resolvidos,"#2e9e5b"],
         ].map(([l, v, cor]) => (
-          <div key={l} style={{ background: C.surface, borderRadius: 10, border: `1px solid ${C.border}`, padding: "14px 18px" }}>
+          <div key={l} style={{ background: C.surface, borderRadius: 14, border: `1px solid ${C.border}`, padding: "14px 18px" }}>
             <div style={{ fontSize: 24, fontWeight: 800, color: cor }}>{v}</div>
             <div style={{ fontSize: 11, color: C.muted, marginTop: 3 }}>{l}</div>
           </div>

@@ -660,7 +660,7 @@ export default function CRM() {
 
       {/* Dashboard de Métricas */}
       <div style={{ display: "flex", gap: 16, marginBottom: 20, flexWrap: "wrap" }}>
-        <div style={{ flex: "1 1 200px", background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, padding: 16 }}>
+        <div style={{ flex: "1 1 200px", background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", border: `1px solid ${C.border}`, padding: 16 }}>
           <div style={{ fontSize: 11, color: C.muted, fontWeight: 700, letterSpacing: 1 }}>TAXA DE CONVERSÃO</div>
           <div style={{ fontSize: 26, fontWeight: 800, color: stats.taxa > 20 ? C.green : C.text, marginTop: 4 }}>{stats.taxa}%</div>
           <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>{stats.convertidos} convertidos de {stats.total} leads</div>
@@ -742,7 +742,7 @@ export default function CRM() {
                       }
                     }}
                     style={{ 
-                      minWidth: 260, flex: 1, background: C.surface, borderRadius: 10, border: `1px solid ${C.border}`,
+                      minWidth: 260, flex: 1, background: C.surface, borderRadius: 14, border: `1px solid ${C.border}`,
                       display: "flex", flexDirection: "column"
                     }}
                   >
@@ -799,7 +799,7 @@ export default function CRM() {
               })}
             </div>
           ) : (
-            <div style={{ background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, overflow: "hidden" }}>
+            <div style={{ background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", border: `1px solid ${C.border}`, overflow: "hidden" }}>
               {clientes.length === 0 ? (
                 <div style={{ padding: 48, textAlign: "center", color: C.muted }}>
                   <div style={{ fontSize: 32, marginBottom: 12 }}>◈</div>
@@ -924,7 +924,7 @@ export default function CRM() {
         })()}
 
         {cliente && view === "list" && (
-          <div style={{ background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, padding: 22, height: "fit-content" }}>
+          <div style={{ background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", border: `1px solid ${C.border}`, padding: 22, height: "fit-content" }}>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 14 }}>
               <div>
                 <div style={{ fontSize: 15, fontWeight: 700 }}>{cliente.nome}</div>

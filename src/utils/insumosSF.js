@@ -116,6 +116,20 @@ export const SISTEMAS_SF = [
     mao_obra_cub: 0.08,
     opcoes: [
       {
+        id: "c90_090", label: "Perfis C 90mm — 0,90mm",
+        desc: "Estrutura leve — partições internas, mezaninos, paredes divisórias",
+        aplicaFatorPadrao: true,
+        itens: [
+          { nome: "Montante C 90×40×15×0,90mm",         un: "pç", base: 1.50, preco: 14,   grupo: "Estrutura", categoria: "Estrutura de Aço" },
+          { nome: "Guia U 92×40×0,90mm",                un: "m",  base: 1.10, preco: 9,    grupo: "Estrutura", categoria: "Estrutura de Aço" },
+          { nome: "Montante C 90×40×15×0,90mm (verga)", un: "pç", base: 0.30, preco: 14,   grupo: "Estrutura", categoria: "Estrutura de Aço" },
+          { nome: "Chapa de reforço (steel plate 90mm)", un: "pç", base: 0.20, preco: 9,    grupo: "Estrutura", categoria: "Estrutura de Aço" },
+          { nome: "Prego helicóptero — track fix",       un: "kg", base: 0.25, preco: 24,   grupo: "Estrutura", categoria: "Estrutura de Aço" },
+          { nome: "Fita de vedação de guia (EPDM 50mm)", un: "m",  base: 1.20, preco: 3.80, grupo: "Estrutura", categoria: "Estrutura de Aço" },
+          { nome: "OSB 11,1mm (1,22×2,44m) — contraventamento", un: "chp", base: 0.38, preco: 55, grupo: "Estrutura", categoria: "Estrutura de Aço" },
+        ],
+      },
+      {
         id: "c90_125", label: "Perfis C 90mm — 1,25mm",
         desc: "Residencial até 2 pav. — padrão mais comum no Brasil",
         aplicaFatorPadrao: true,

@@ -208,6 +208,7 @@ const FORM_VAZIO = {
 };
 
 export default function Agenda() {
+  const { toast, mostrarToast } = useToast();
   useModuleLoad("clientes");
   useModuleLoad("obras");
   useModuleLoad("eventos");
@@ -387,7 +388,7 @@ export default function Agenda() {
 
         {/* View calendário */}
         {viewMode === "calendario" && (
-          <div style={{ background: C.surface, borderRadius: 12, padding: 20, border: `1px solid ${C.border}`, marginBottom: 20 }}>
+          <div style={{ background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", padding: 20, border: `1px solid ${C.border}`, marginBottom: 20 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
               <button onClick={() => setMesRef(new Date(mesRef.getFullYear(), mesRef.getMonth() - 1, 1))}
                 style={{ background: "none", border: `1px solid ${C.border}`, borderRadius: 6, padding: "4px 12px", cursor: "pointer", color: C.muted, fontSize: 14 }}>‹</button>
@@ -433,7 +434,7 @@ export default function Agenda() {
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12 }}>
               {proximos.map((e) => (
                 <div key={e.id} onClick={() => setVerEvento(e)} style={{
-                  background: C.surface, borderRadius: 10,
+                  background: C.surface, borderRadius: 14,
                   border: `1px solid ${C.border}`,
                   borderLeft: `4px solid ${e.cor || C.red}`,
                   padding: "14px 16px", cursor: "pointer",
@@ -469,7 +470,7 @@ export default function Agenda() {
         {/* Lista */}
         {eventosFiltro.length === 0 ? (
           <div style={{
-            background: C.surface, borderRadius: 12,
+            background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
             border: `1px solid ${C.border}`, padding: "48px 0",
             textAlign: "center",
           }}>
@@ -489,7 +490,7 @@ export default function Agenda() {
               const isPast = toISO(e.data) < hoje;
               return (
                 <div key={e.id} onClick={() => setVerEvento(e)} style={{
-                  background: C.surface, borderRadius: 10,
+                  background: C.surface, borderRadius: 14,
                   border: `1px solid ${isHoje ? (e.cor || C.red) + "66" : C.border}`,
                   borderLeft: `4px solid ${isPast ? C.border : (e.cor || C.red)}`,
                   padding: "14px 20px",

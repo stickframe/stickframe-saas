@@ -114,8 +114,7 @@ function gerarPDFContrato(c, emp) {
   <script>window.onload=()=>window.print()</script>
   </body></html>`;
 
-  const win = window.open("", "_blank");
-  if (win) { win.document.write(html); win.document.close(); }
+  printHtml(html, `contrato-${c.ref || "contrato"}`);
 }
 
 // ─── Status ──────────────────────────────────────────────────────────────────
@@ -443,7 +442,7 @@ export default function Contratos() {
 
         {/* Empty state */}
         {contratos.length === 0 ? (
-          <div style={{ background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, padding: 48, textAlign: "center" }}>
+          <div style={{ background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", border: `1px solid ${C.border}`, padding: 48, textAlign: "center" }}>
             <div style={{ fontSize: 36, marginBottom: 12 }}>◑</div>
             <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 8 }}>Nenhum contrato cadastrado</div>
             <div style={{ fontSize: 13, color: C.muted, marginBottom: 24 }}>Crie um contrato vinculando cliente e obra para formalizar o projeto.</div>
@@ -455,7 +454,7 @@ export default function Contratos() {
               const cl = clientes.find((x) => x.id === c.cliente_id);
               return (
                 <div key={c.id} style={{
-                  background: C.surface, borderRadius: 12,
+                  background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
                   border: `1px solid ${C.border}`, padding: "18px 22px",
                 }}>
                   <div style={{ display: "flex", alignItems: "flex-start", gap: 16, flexWrap: "wrap" }}>
