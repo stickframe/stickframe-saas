@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { C } from "../utils/constants";
 import useAppStore from "../store/useAppStore";
 import { useModuleLoad } from "../hooks/useModuleLoad";
@@ -509,6 +510,49 @@ function IndicePrecos() {
   );
 }
 
+function VirtualFornList({ lista, sel, onSelect }) {
+  const parentRef = useRef(null);
+  const virtualizer = useVirtualizer({
+    count: lista.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 72,
+    overscan: 5,
+  });
+
+  return (
+    <div ref={parentRef} style={{ flex: 1, overflowY: "auto" }}>
+      <div style={{ height: virtualizer.getTotalSize(), position: "relative" }}>
+        {virtualizer.getVirtualItems().map((vItem) => {
+          const f = lista[vItem.index];
+          const isSelected = sel?.id === f.id;
+          return (
+            <div
+              key={f.id}
+              onClick={() => onSelect(f)}
+              style={{
+                position: "absolute", top: vItem.start, width: "100%",
+                padding: "12px 16px", cursor: "pointer", boxSizing: "border-box",
+                borderBottom: `1px solid ${C.border}`,
+                background: isSelected ? C.red + "10" : "#fff",
+                borderLeft: isSelected ? `3px solid ${C.red}` : "3px solid transparent",
+              }}
+            >
+              <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 3 }}>{f.nome}</div>
+              <div style={{ fontSize: 11, color: C.muted, display: "flex", gap: 8 }}>
+                <span>{f.especialidade}</span>
+                {f.cidade && <span>· {f.cidade}</span>}
+                <span style={{ marginLeft: "auto", color: STATUS_COR[f.status] || C.muted, fontWeight: 700 }}>
+                  {f.status}
+                </span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 const ESPECIALIDADES = [
   "Aço / Steel Frame", "Concreto / Fundação", "Elétrica", "Hidráulica",
   "Gesso / Drywall", "OSB / Madeira", "Cimentícia / Fachada", "Ferragens",
@@ -675,37 +719,8 @@ export default function Fornecedores() {
           </select>
         </div>
 
-        {/* Lista */}
-        <div style={{ flex: 1, overflowY: "auto" }}>
-          {listaFiltrada.length === 0 && (
-            <div style={{ padding: 32, textAlign: "center", color: C.muted, fontSize: 13 }}>
-              Nenhum fornecedor encontrado.
-            </div>
-          )}
-          {listaFiltrada.map((f) => (
-            <div
-              key={f.id}
-              onClick={() => abrirFornecedor(f)}
-              style={{
-                padding: "14px 16px", cursor: "pointer",
-                borderBottom: `1px solid ${C.border}`,
-                background: sel?.id === f.id ? C.dark : "#fff",
-                transition: "background .15s",
-              }}
-            >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>{f.nome}</div>
-                <span style={{
-                  fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 10,
-                  background: (STATUS_COR[f.status] || C.muted) + "22",
-                  color: STATUS_COR[f.status] || C.muted,
-                }}>{f.status}</span>
-              </div>
-              <div style={{ fontSize: 12, color: C.muted }}>{f.especialidade}</div>
-              {f.cidade && <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{f.cidade}{f.estado ? ` — ${f.estado}` : ""}</div>}
-            </div>
-          ))}
-        </div>
+        {/* Lista virtualizada */}
+        <VirtualFornList lista={listaFiltrada} sel={sel} onSelect={abrirFornecedor} />
       </div>
 
       {/* ── Painel direito ──────────────────────────────────────────────────── */}

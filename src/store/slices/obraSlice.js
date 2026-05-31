@@ -50,22 +50,35 @@ export const createObraSlice = (set, get) => ({
 
   updateObra: async (id, updates) => {
     const anterior = get().obras.find((o) => o.id === id);
-    const data = await atualizarObra(id, updates);
-    set((s) => ({ obras: s.obras.map((o) => o.id === id ? data : o) }));
-
-    const LABELS = { nome: "Nome", cliente: "Cliente", status: "Status", contrato: "Contrato (R$)", email_cliente: "Email do cliente", prazo_inicio: "Início", prazo_fim: "Entrega", fase: "Fase" };
-    const campos = Object.entries(LABELS)
-      .filter(([k]) => updates[k] !== undefined && String(updates[k] ?? "") !== String(anterior?.[k] ?? ""))
-      .map(([k, label]) => ({ campo: label, de: String(anterior?.[k] ?? "—") || "—", para: String(updates[k] ?? "—") || "—" }));
-
-    get().registrar("obra", "editado", `Obra ${data.nome} atualizada`, id, campos.length > 0 ? { campos } : null);
+    // Optimistic update
+    set((s) => ({ obras: s.obras.map((o) => o.id === id ? { ...o, ...updates } : o) }));
+    try {
+      const data = await atualizarObra(id, updates);
+      set((s) => ({ obras: s.obras.map((o) => o.id === id ? data : o) }));
+      const LABELS = { nome: "Nome", cliente: "Cliente", status: "Status", contrato: "Contrato (R$)", email_cliente: "Email do cliente", prazo_inicio: "Início", prazo_fim: "Entrega", fase: "Fase" };
+      const campos = Object.entries(LABELS)
+        .filter(([k]) => updates[k] !== undefined && String(updates[k] ?? "") !== String(anterior?.[k] ?? ""))
+        .map(([k, label]) => ({ campo: label, de: String(anterior?.[k] ?? "—") || "—", para: String(updates[k] ?? "—") || "—" }));
+      get().registrar("obra", "editado", `Obra ${data.nome} atualizada`, id, campos.length > 0 ? { campos } : null);
+    } catch (e) {
+      // Rollback
+      set((s) => ({ obras: s.obras.map((o) => o.id === id ? anterior : o) }));
+      throw e;
+    }
   },
 
   deleteObra: async (id) => {
     const o = get().obras.find((x) => x.id === id);
-    await deletarObra(id);
+    // Optimistic remove
     set((s) => ({ obras: s.obras.filter((x) => x.id !== id) }));
-    get().registrar("obra", "deletado", `Obra ${o?.nome} removida`);
+    try {
+      await deletarObra(id);
+      get().registrar("obra", "deletado", `Obra ${o?.nome} removida`);
+    } catch (e) {
+      // Rollback
+      set((s) => ({ obras: [o, ...s.obras] }));
+      throw e;
+    }
   },
 
   loadDiario: async (obraId) => {

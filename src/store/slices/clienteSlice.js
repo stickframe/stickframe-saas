@@ -21,16 +21,30 @@ export const createClienteSlice = (set, get) => ({
   },
 
   updateCliente: async (id, updates) => {
-    const data = await atualizarCliente(id, updates);
-    set((s) => ({ clientes: s.clientes.map((c) => (c.id === id ? data : c)) }));
-    get().registrar("cliente", "editado", `Cliente ${updates.nome} atualizado`);
+    const anterior = get().clientes.find((c) => c.id === id);
+    // Optimistic update
+    set((s) => ({ clientes: s.clientes.map((c) => c.id === id ? { ...c, ...updates } : c) }));
+    try {
+      const data = await atualizarCliente(id, updates);
+      set((s) => ({ clientes: s.clientes.map((c) => c.id === id ? data : c) }));
+      get().registrar("cliente", "editado", `Cliente ${updates.nome || anterior?.nome} atualizado`);
+    } catch (e) {
+      set((s) => ({ clientes: s.clientes.map((c) => c.id === id ? anterior : c) }));
+      throw e;
+    }
   },
 
   deleteCliente: async (id) => {
     const c = get().clientes.find((x) => x.id === id);
-    await deletarCliente(id);
+    // Optimistic remove
     set((s) => ({ clientes: s.clientes.filter((x) => x.id !== id) }));
-    get().registrar("cliente", "deletado", `Cliente ${c?.nome} removido`);
+    try {
+      await deletarCliente(id);
+      get().registrar("cliente", "deletado", `Cliente ${c?.nome} removido`);
+    } catch (e) {
+      set((s) => ({ clientes: [c, ...s.clientes] }));
+      throw e;
+    }
   },
 
   importClientes: async (lista) => {

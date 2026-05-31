@@ -24,16 +24,28 @@ export const createContratoSlice = (set, get) => ({
   },
 
   updateContrato: async (id, updates) => {
-    const data = await atualizarContrato(id, updates);
-    set((s) => ({ contratos: s.contratos.map((c) => (c.id === id ? data : c)) }));
-    get().registrar("contrato", "editado", `Contrato atualizado`);
+    const anterior = get().contratos.find((c) => c.id === id);
+    set((s) => ({ contratos: s.contratos.map((c) => c.id === id ? { ...c, ...updates } : c) }));
+    try {
+      const data = await atualizarContrato(id, updates);
+      set((s) => ({ contratos: s.contratos.map((c) => c.id === id ? data : c) }));
+      get().registrar("contrato", "editado", `Contrato atualizado`);
+    } catch (e) {
+      set((s) => ({ contratos: s.contratos.map((c) => c.id === id ? anterior : c) }));
+      throw e;
+    }
   },
 
   deleteContrato: async (id) => {
     const c = get().contratos.find((x) => x.id === id);
-    await deletarContrato(id);
     set((s) => ({ contratos: s.contratos.filter((x) => x.id !== id) }));
-    get().registrar("contrato", "deletado", `Contrato ${c?.ref} removido`);
+    try {
+      await deletarContrato(id);
+      get().registrar("contrato", "deletado", `Contrato ${c?.ref} removido`);
+    } catch (e) {
+      set((s) => ({ contratos: [c, ...s.contratos] }));
+      throw e;
+    }
   },
 
   loadOrcamentos: async () => {
