@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { useToast } from "../hooks/useToast";
 import { C, FASES } from "../utils/constants";
 import { fmt } from "../utils/format";
 import useAppStore from "../store/useAppStore";
@@ -100,6 +101,7 @@ export default function Quantitativos() {
 
   const obras        = useAppStore((s) => s.obras);
   const fornecedores = useAppStore((s) => s.fornecedores);
+  const { toast, mostrarToast } = useToast();
 
   const [obraId,    setObraId]    = useState("");
   const [faseFiltro,setFaseFiltro] = useState("Todas");
@@ -111,7 +113,6 @@ export default function Quantitativos() {
   const [form,      setForm]       = useState(FORM_VAZIO);
   const [editCell,  setEditCell]   = useState(null); // { id, field }
   const [editVal,   setEditVal]    = useState("");
-  const [toast,     setToast]      = useState(null);
   const [confirm,   setConfirm]    = useState(null);
   const [templateModal, setTemplateModal] = useState(false);
   const [templateFases, setTemplateFases] = useState({});
@@ -120,9 +121,6 @@ export default function Quantitativos() {
 
   const obra = obras.find((o) => o.id === obraId);
 
-  function mostrarToast(msg) {
-    setToast(msg); setTimeout(() => setToast(null), 3000);
-  }
 
   const carregar = useCallback(async () => {
     if (!obraId) return;
@@ -214,12 +212,9 @@ export default function Quantitativos() {
 
   // ── Exportar PDF ──────────────────────────────────────────────────────────
   function exportarPDF() {
-    const faseGrupos = FASES.filter((f) => filtrados.some((i) => i.fase === f));
-    const totalGeral = filtrados.reduce((a, i) => a + Number(i.quantidade) * Number(i.custo_unitario), 0);
-
     const tabelaFases = faseGrupos.map((fase) => {
       const itensFase = filtrados.filter((i) => i.fase === fase);
-      const totalFase = itensFase.reduce((a, i) => a + Number(i.quantidade) * Number(i.custo_unitario), 0);
+      const totalFase = totalPorFaseMap[fase] || 0;
       const linhas = itensFase.map((i) => {
         const total = Number(i.quantidade) * Number(i.custo_unitario);
         return `<tr>
@@ -280,19 +275,31 @@ ${tabelaFases}
   }
 
   // ── Filtros e cálculos ────────────────────────────────────────────────────
-  const filtrados = items.filter((i) => {
+  const filtrados = useMemo(() => items.filter((i) => {
     const mF = faseFiltro === "Todas" || i.fase === faseFiltro;
     const mC = catFiltro  === "Todas" || i.categoria === catFiltro;
     return mF && mC;
-  });
+  }), [items, faseFiltro, catFiltro]);
 
-  const totalGeral    = filtrados.reduce((a, i) => a + Number(i.quantidade) * Number(i.custo_unitario), 0);
-  const faseGrupos    = FASES.filter((f) => filtrados.some((i) => i.fase === f));
-  const totalPorFase  = (fase) => filtrados.filter((i) => i.fase === fase)
-    .reduce((a, i) => a + Number(i.quantidade) * Number(i.custo_unitario), 0);
+  const { totalGeral, faseGrupos, totalPorFaseMap, areaTotal, custoPorM2 } = useMemo(() => {
+    const totFase = {};
+    let total = 0;
+    filtrados.forEach((i) => {
+      const v = Number(i.quantidade) * Number(i.custo_unitario);
+      total += v;
+      totFase[i.fase] = (totFase[i.fase] || 0) + v;
+    });
+    const area = obra ? Number(obra.area || 48) * Number(obra.unidades || 1) : 1;
+    return {
+      totalGeral:      total,
+      faseGrupos:      FASES.filter((f) => totFase[f] > 0),
+      totalPorFaseMap: totFase,
+      areaTotal:       area,
+      custoPorM2:      area > 0 ? total / area : 0,
+    };
+  }, [filtrados, obra]);
 
-  const areaTotal = obra ? Number(obra.area || 48) * Number(obra.unidades || 1) : 1;
-  const custoPorM2 = areaTotal > 0 ? totalGeral / areaTotal : 0;
+  const totalPorFase = (fase) => totalPorFaseMap[fase] || 0;
 
   const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
 

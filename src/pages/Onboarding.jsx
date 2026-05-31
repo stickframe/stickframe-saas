@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useToast } from "../hooks/useToast";
 import { C, FASES, PRECOS } from "../utils/constants";
 import { buscarEmpresa, atualizarEmpresa } from "../services/repositories/empresaRepository";
 import useAppStore from "../store/useAppStore";
@@ -57,9 +58,10 @@ export default function Onboarding({ onComplete }) {
   const clientes    = useAppStore((s) => s.clientes);
   const obras       = useAppStore((s) => s.obras);
 
+    const { toast, mostrarToast } = useToast();
+
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
-  const [toast,  setToast]  = useState(null);
 
   // Step 0 — Empresa
   const [empresa, setEmpresa] = useState({
@@ -91,11 +93,6 @@ export default function Onboarding({ onComplete }) {
       });
     }).catch(() => {});
   }, [empresaId]);
-
-  function mostrarToast(msg) {
-    setToast(msg);
-    setTimeout(() => setToast(null), 2500);
-  }
 
   // ── Step 0: salvar empresa ─────────────────────────────────────────────────
   async function salvarEmpresa() {

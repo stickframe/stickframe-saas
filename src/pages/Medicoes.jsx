@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { C } from "../utils/constants";
 import { fmt } from "../utils/format";
 import useAppStore from "../store/useAppStore";
@@ -15,7 +15,14 @@ export default function Medicoes() {
   const addMedicao   = useAppStore((s) => s.addMedicao);
   const aprovarMedicao = useAppStore((s) => s.aprovarMedicao);
 
-  const [obraId, setObraId] = useState(obras[0]?.id);
+  const [obraId, setObraId] = useState(() => obras[0]?.id || null);
+  const [pagina, setPagina] = useState(0);
+  const POR_PAGINA = 15;
+
+  // Sync obraId quando obras carregam depois do mount
+  useEffect(() => {
+    setObraId((prev) => prev || obras[0]?.id || null);
+  }, [obras]);
 
   useModuleLoad("obras");
   useModuleLoad("financeiro");
@@ -29,14 +36,25 @@ export default function Medicoes() {
   const lista = medicoes[obraId] || [];
   const fin   = financeiro[obraId] || { contrato: 0, lancamentos: [] };
 
-  const totalMedido   = lista.reduce((a, m) => a + Number(m.valor), 0);
-  const pctMedido     = fin.contrato > 0 ? Math.round((totalMedido / fin.contrato) * 100) : 0;
-  const totalAprovado = lista.filter((m) => m.status === "Aprovada").reduce((a, m) => a + Number(m.valor), 0);
+  const { totalMedido, pctMedido, totalAprovado, listaPage, totalPages } = useMemo(() => {
+    const total   = lista.reduce((a, m) => a + Number(m.valor), 0);
+    const aprovado = lista.filter((m) => m.status === "Aprovada").reduce((a, m) => a + Number(m.valor), 0);
+    const pages   = Math.max(1, Math.ceil(lista.length / POR_PAGINA));
+    const safePag = Math.min(pagina, pages - 1);
+    return {
+      totalMedido:   total,
+      pctMedido:     fin.contrato > 0 ? Math.round((total / fin.contrato) * 100) : 0,
+      totalAprovado: aprovado,
+      listaPage:     lista.slice(safePag * POR_PAGINA, (safePag + 1) * POR_PAGINA),
+      totalPages:    pages,
+    };
+  }, [lista, fin.contrato, pagina]);
 
   const salvar = () => {
     addMedicao(obraId, { ...form, valor: Number(form.valor), percentual: Number(form.percentual) });
     setModal(false);
     setForm(FORM_VAZIO);
+    setPagina(0);
   };
 
   return (
@@ -117,7 +135,7 @@ export default function Medicoes() {
                 </tr>
               </thead>
               <tbody>
-                {lista.map((m) => (
+                {listaPage.map((m) => (
                   <tr key={m.id} style={{ borderBottom: `1px solid ${C.border}` }}>
                     <td style={{ padding: "13px 16px", fontSize: 13, fontWeight: 700, color: C.red }}>#{m.numero}</td>
                     <td style={{ padding: "13px 16px", fontSize: 13, color: C.muted }}>{m.data}</td>
@@ -134,6 +152,23 @@ export default function Medicoes() {
                 ))}
               </tbody>
             </table>
+            {totalPages > 1 && (
+              <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 8, padding: "12px 16px", borderTop: `1px solid ${C.border}` }}>
+                <button onClick={() => setPagina((p) => Math.max(0, p - 1))} disabled={pagina === 0}
+                  aria-label="Página anterior"
+                  style={{ padding: "5px 12px", borderRadius: 6, border: `1px solid ${C.border}`, background: "none", cursor: pagina === 0 ? "default" : "pointer", opacity: pagina === 0 ? 0.4 : 1 }}>
+                  ‹
+                </button>
+                <span style={{ fontSize: 12, color: C.muted }}>
+                  {pagina + 1} / {totalPages}
+                </span>
+                <button onClick={() => setPagina((p) => Math.min(totalPages - 1, p + 1))} disabled={pagina >= totalPages - 1}
+                  aria-label="Próxima página"
+                  style={{ padding: "5px 12px", borderRadius: 6, border: `1px solid ${C.border}`, background: "none", cursor: pagina >= totalPages - 1 ? "default" : "pointer", opacity: pagina >= totalPages - 1 ? 0.4 : 1 }}>
+                  ›
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

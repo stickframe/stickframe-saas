@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import { useDebounce } from "../hooks/useDebounce";
 import { C } from "../utils/constants";
 import useAppStore from "../store/useAppStore";
 import { useModuleLoad } from "../hooks/useModuleLoad";
@@ -51,15 +52,17 @@ export default function Historico() {
   const [filtroTipo, setFiltroTipo] = useState("todos");
   const [busca,      setBusca]      = useState("");
   const [soMinhas,   setSoMinhas]   = useState(false);
+  const buscaDebounced = useDebounce(busca, 300);
 
   const titulo = TITULO_PERFIL[perfil] || "Histórico de Atividades";
 
-  const itens = historico
+  const itens = useMemo(() => historico
     .filter((h) => !tiposPermitidos || tiposPermitidos.includes(h.tipo))
     .filter((h) => !soMinhas || h.usuario_id === userId)
     .filter((h) => filtroTipo === "todos" || h.tipo === filtroTipo)
-    .filter((h) => !busca || (h.descricao || h.desc || "").toLowerCase().includes(busca.toLowerCase()))
-    .sort((a, b) => b.id - a.id);
+    .filter((h) => !buscaDebounced || (h.descricao || h.desc || "").toLowerCase().includes(buscaDebounced.toLowerCase()))
+    .sort((a, b) => b.id - a.id),
+  [historico, tiposPermitidos, soMinhas, userId, filtroTipo, buscaDebounced]);
   const tipos = ["todos", ...(tiposPermitidos || ["cliente", "orcamento", "contrato", "financeiro", "obra"])];
 
   return (

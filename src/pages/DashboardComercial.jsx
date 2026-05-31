@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useToast } from "../hooks/useToast";
 import { C } from "../utils/constants";
 import { fmt } from "../utils/format";
 import useAppStore from "../store/useAppStore";
@@ -53,10 +54,9 @@ export default function DashboardComercial() {
   const user       = useAppStore((s) => s.user);
   const updateCliente = useAppStore((s) => s.updateCliente);
 
-  const [filtroFunil, setFiltroFunil] = useState(null);
-  const [toast, setToast] = useState(null);
+    const { toast, mostrarToast } = useToast();
 
-  function mostrarToast(msg) { setToast(msg); setTimeout(() => setToast(null), 3000); }
+  const [filtroFunil, setFiltroFunil] = useState(null);
 
   // ── Cálculos ───────────────────────────────────────────────────────────────
   const hoje = new Date();

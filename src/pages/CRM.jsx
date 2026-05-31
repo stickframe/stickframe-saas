@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, memo } from "react";
 import { C } from "../utils/constants";
 import { fmt } from "../utils/format";
 import { enviarWhatsApp, msgCliente } from "../services/whatsappService";
@@ -83,7 +83,7 @@ function Secao({ titulo }) {
 }
 
 // ─── Formulário (fora do componente para não re-montar a cada render) ─────────
-function FormCliente({ form, setForm, onSave, onCancel, btnLabel, disabled }) {
+const FormCliente = memo(function FormCliente({ form, setForm, onSave, onCancel, btnLabel, disabled }) {
   const [erros, setErros] = useState({});
   const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
 
@@ -108,6 +108,7 @@ function FormCliente({ form, setForm, onSave, onCancel, btnLabel, disabled }) {
           value={form[key]}
           onChange={set(key)}
           placeholder={placeholder}
+          hasError={!!erros[key]}
           {...extra}
         />
         {erros[key] && (
@@ -217,7 +218,7 @@ function FormCliente({ form, setForm, onSave, onCancel, btnLabel, disabled }) {
       </div>
     </div>
   );
-}
+});
 
 // ─── CRM principal ───────────────────────────────────────────────────────────
 const FORM_VAZIO = {

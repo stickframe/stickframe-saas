@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useToast } from "../hooks/useToast";
 import { C, FASES } from "../utils/constants";
 import { bimUrl } from "../utils/cdn";
 import useAppStore from "../store/useAppStore";
@@ -136,7 +137,9 @@ function IFCViewer({ url, onElementClick }) {
         await ifcLoader.setup();
 
         setMsg("Carregando modelo IFC...");
-        const resp  = await fetch(url);
+        const controller = new AbortController();
+        const resp  = await fetch(url, { signal: controller.signal });
+        if (destroyed) { controller.abort(); components.dispose(); return; }
         const buff  = await resp.arrayBuffer();
         const model = await ifcLoader.load(new Uint8Array(buff));
         world.scene.three.add(model);
@@ -393,15 +396,12 @@ export default function BIM() {
   const [filtroStatus, setFiltroStatus] = useState("Todos");
   const [filtroPrio,   setFiltroPrio]   = useState("Todos");
   const [filtroDisciplina, setFiltroDisciplina] = useState("Todas");
-  const [toast,        setToast]        = useState(null);
   const [elementoSelecionado, setElementoSelecionado] = useState(null);
 
   useEffect(() => { if (!obraId && obras.length > 0) setObraId(obras[0].id); }, [obras, obraId]);
   useEffect(() => {
     if (obraId) { loadBimModelos(obraId); loadBimApontamentos(obraId); }
   }, [obraId]);
-
-  function mostrarToast(msg) { setToast(msg); setTimeout(() => setToast(null), 3500); }
 
   const modelos  = bimModelos[obraId] || [];
   const todosApt = bimApontamentos[obraId] || [];

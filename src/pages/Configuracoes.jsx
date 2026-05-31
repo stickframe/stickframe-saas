@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useToast } from "../hooks/useToast";
 import { C, PERFIS } from "../utils/constants";
 import useAppStore from "../store/useAppStore";
 import {
@@ -51,9 +52,11 @@ export default function Configuracoes() {
   const user      = useAppStore((s) => s.user);
   const empresaId = useAppStore((s) => s.empresaId);
 
+  const { toast, mostrarToast: _toast } = useToast(3500);
+  const mostrarToast = (msg, err) => _toast(err ? `❌ ${msg}` : msg);
+
   const [tab,     setTab]     = useState("empresa");
   const [saving,  setSaving]  = useState(false);
-  const [toast,   setToast]   = useState(null);
   const [usuarios, setUsuarios] = useState([]);
 
   // Empresa
@@ -71,10 +74,7 @@ export default function Configuracoes() {
   const [senhaForm, setSenhaForm] = useState({ nova: "", confirmar: "" });
   const [showSenha, setShowSenha] = useState(false);
 
-  function mostrarToast(msg, err) {
-    setToast({ msg, err: !!err });
-    setTimeout(() => setToast(null), 3500);
-  }
+
 
   // ── Carrega dados ─────────────────────────────────────────────────────────
   useEffect(() => {
@@ -164,10 +164,10 @@ export default function Configuracoes() {
       {toast && (
         <div style={{
           position: "fixed", bottom: 28, right: 28, zIndex: 999,
-          background: C.surface, border: `1px solid ${toast.err ? C.danger : C.success}`,
+          background: C.surface, border: `1px solid ${String(toast).startsWith("❌") ? C.danger : C.success}`,
           borderRadius: 10, padding: "12px 20px", fontSize: 13, fontWeight: 600,
-          boxShadow: "0 8px 32px #0006", color: toast.err ? C.danger : C.text,
-        }}>{toast.msg}</div>
+          boxShadow: "0 8px 32px #0006", color: String(toast).startsWith("❌") ? C.danger : C.text,
+        }}>{toast}</div>
       )}
 
       {/* Header */}

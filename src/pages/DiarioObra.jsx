@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useToast } from "../hooks/useToast";
 import { C, CLIMAS, TURNOS } from "../utils/constants";
 import useAppStore from "../store/useAppStore";
 import { useModuleLoad } from "../hooks/useModuleLoad";
@@ -245,14 +246,14 @@ export default function DiarioObra() {
   const [modal,     setModal]     = useState(false);
   const [verReg,    setVerReg]    = useState(null);
   const [form,      setForm]      = useState(FORM_VAZIO);
-  const [toast,     setToast]     = useState(null);
+  const { toast, mostrarToast } = useToast();
   const [online,    setOnline]    = useState(navigator.onLine);
   const [pendentes, setPendentes] = useState(0);
 
-  // Inicializa obraId quando obras carregarem
+  // Inicializa obraId quando obras carregarem (sem sobrescrever seleção manual)
   useEffect(() => {
-    if (!obraId && obras.length > 0) setObraId(obras[0].id);
-  }, [obras, obraId]);
+    setObraId((prev) => prev || obras[0]?.id || null);
+  }, [obras]);
 
   // Detecta mudança de conectividade
   useEffect(() => {
@@ -265,24 +266,22 @@ export default function DiarioObra() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const withTimeout = (promise, ms = 8000) =>
+    Promise.race([promise, new Promise((_, rej) => setTimeout(() => rej(new Error("Timeout")), ms))]);
+
   const sincronizarPendentes = useCallback(async () => {
     const pendentes = await getPendentesDiario();
     for (const p of pendentes) {
       try {
-        await addDiario(p.obraId, p.registro);
+        await withTimeout(addDiario(p.obraId, p.registro));
         await deletarPendente(p.localId);
-      } catch { /* ignora falha de item individual */ }
+      } catch { /* item ignorado; tentará novamente na próxima conexão */ }
     }
     setPendentes(await contarPendentes());
   }, [addDiario]);
 
   // Carrega diário da obra selecionada
   useModuleLoad("diario", obraId);
-
-  function mostrarToast(msg) {
-    setToast(msg);
-    setTimeout(() => setToast(null), 3000);
-  }
 
   function abrirNovoRegistro() {
     setForm({ ...FORM_VAZIO, data: new Date().toISOString().slice(0, 10) });
