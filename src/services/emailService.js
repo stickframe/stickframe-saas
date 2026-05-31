@@ -27,7 +27,8 @@ function templateBase(titulo, corpo) {
   `;
 }
 
-export async function emailFaseAvancada({ obraEmail, obraNome, fase, progresso }) {
+export async function emailFaseAvancada({ obraEmail, obraNome, fase, progresso, portalToken }) {
+  const portalUrl = portalToken ? `${window.location.origin}/portal/${portalToken}` : null;
   await enviarEmail({
     to: obraEmail,
     subject: `Atualização de obra: ${obraNome}`,
@@ -41,7 +42,7 @@ export async function emailFaseAvancada({ obraEmail, obraNome, fase, progresso }
            <div style="height:6px;width:${progresso}%;background:linear-gradient(90deg,#981915,#6e1210);border-radius:3px;"></div>
          </div>
        </div>
-       <p style="color:#444;line-height:1.6;">Acesse o portal para mais detalhes.</p>`
+       ${portalUrl ? `<div style="text-align:center;margin:20px 0;"><a href="${portalUrl}" style="display:inline-block;background:linear-gradient(135deg,#981915,#6e1210);color:#fff;text-decoration:none;padding:13px 28px;border-radius:8px;font-weight:700;font-size:14px;">🏗 Ver minha obra no portal</a></div><p style="font-size:11px;color:#aaa;text-align:center;">Ou acesse: <a href="${portalUrl}" style="color:#981915;">${portalUrl}</a></p>` : "<p style=\"color:#444;line-height:1.6;\">Entre em contato para mais detalhes.</p>"}`
     ),
   });
 }

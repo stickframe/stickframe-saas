@@ -13,6 +13,7 @@ export default function PortalOnline() {
   const [outrasObras,setOutras]  = useState([]);
   const [fotos,      setFotos]   = useState([]);
   const [vistorias,  setVistorias] = useState([]);
+  const [empresa,    setEmpresa] = useState(null);
   const [fotoAberta, setFotoAberta] = useState(null);
   const [loading,    setLoading] = useState(true);
   const hoje = new Date().toLocaleDateString("pt-BR");
@@ -31,6 +32,7 @@ export default function PortalOnline() {
         setOutras(data.outras_obras || []);
         setFotos(data.fotos || []);
         setVistorias(data.vistorias || []);
+        setEmpresa(data.empresa || null);
       } finally {
         setLoading(false);
       }
@@ -79,7 +81,7 @@ export default function PortalOnline() {
       {/* Header */}
       <div style={{ background: "#1A1A1A", padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <img src="https://gpzmglcxmbboxxogbibq.supabase.co/storage/v1/object/public/arquivos/logos/34ec14d3-02fc-4b0a-8040-67f7a739394d/logo.jpg?t=1780161932174" style={{ width: 32, height: 32, borderRadius: 7, objectFit: "contain" }} alt="Logo" />
+          <img src={empresa?.logo_url || "https://gpzmglcxmbboxxogbibq.supabase.co/storage/v1/object/public/arquivos/logos/34ec14d3-02fc-4b0a-8040-67f7a739394d/logo.jpg?t=1780161932174"} style={{ width: 32, height: 32, borderRadius: 7, objectFit: "contain" }} alt="Logo" />
           <div>
             <div style={{ fontSize: 14, fontWeight: 800, letterSpacing: 2, color: "#fff" }}>
               <span style={{ color: "#555" }}>STICK</span><span style={{ color: "#981915" }}>FRAME</span>
@@ -350,19 +352,20 @@ export default function PortalOnline() {
         <div style={{ background: "#1A1A1A", borderRadius: 14, padding: "20px", marginBottom: 12, textAlign: "center" }}>
           <div style={{ fontSize: 11, color: "#555", letterSpacing: 1, marginBottom: 8 }}>DÚVIDAS SOBRE SUA OBRA?</div>
           <div style={{ fontSize: 15, fontWeight: 700, color: "#fff", marginBottom: 14 }}>Fale com a Stick Frame</div>
-          <a
-            href="https://wa.me/5511940000000?text=Olá, gostaria de informações sobre minha obra."
-            target="_blank"
-            rel="noreferrer"
-            style={{
-              display: "inline-flex", alignItems: "center", gap: 8,
-              background: "#25D366", color: "#fff", borderRadius: 8,
-              padding: "10px 24px", fontSize: 13, fontWeight: 700,
-              textDecoration: "none",
-            }}
-          >
-            <span style={{ fontSize: 16 }}>💬</span> WhatsApp
-          </a>
+          {empresa?.telefone ? (
+            <a
+              href={`https://wa.me/55${empresa.telefone.replace(/\D/g, "")}?text=${encodeURIComponent(`Olá! Tenho dúvidas sobre a obra: ${obra.nome}`)}`}
+              target="_blank" rel="noreferrer"
+              style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#25D366", color: "#fff", borderRadius: 8, padding: "10px 24px", fontSize: 13, fontWeight: 700, textDecoration: "none" }}
+            >
+              <span style={{ fontSize: 16 }}>💬</span> WhatsApp
+            </a>
+          ) : empresa?.email ? (
+            <a href={`mailto:${empresa.email}?subject=Dúvida sobre obra: ${obra.nome}`}
+              style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#981915", color: "#fff", borderRadius: 8, padding: "10px 24px", fontSize: 13, fontWeight: 700, textDecoration: "none" }}>
+              <span style={{ fontSize: 16 }}>✉️</span> Enviar e-mail
+            </a>
+          ) : null}
         </div>
 
         <div style={{ textAlign: "center", padding: "12px 0 24px", fontSize: 10, color: "#aaa" }}>

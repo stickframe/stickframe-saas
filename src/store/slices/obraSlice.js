@@ -36,7 +36,7 @@ export const createObraSlice = (set, get) => ({
     });
     const uid = get().user?.uid;
     if (uid) criarNotificacao({ usuarioId: uid, titulo: `Fase avançada: ${novaFase}`, mensagem: `Obra ${nome} avançou para a fase "${novaFase}".`, tipo: "info" }).catch(() => {});
-    if (o?.email_cliente) emailFaseAvancada({ obraEmail: o.email_cliente, obraNome: nome, fase: novaFase, progresso }).catch(() => {});
+    if (o?.email_cliente) emailFaseAvancada({ obraEmail: o.email_cliente, obraNome: nome, fase: novaFase, progresso, portalToken: o.token_portal }).catch(() => {});
   },
 
   addObra: async (obra) => {
