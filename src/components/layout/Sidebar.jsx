@@ -2,7 +2,7 @@ import { useState } from "react";
 import { C, NAV, PERFIS } from "../../utils/constants";
 import useAppStore from "../../store/useAppStore";
 
-export default function Sidebar({ open }) {
+export default function Sidebar({ open, onClose }) {
   const user        = useAppStore((s) => s.user);
   const activePage  = useAppStore((s) => s.activePage);
   const setActivePage = useAppStore((s) => s.setActivePage);
@@ -43,7 +43,7 @@ export default function Sidebar({ open }) {
         {navFiltro.map((n) => (
           <button
             key={n.key}
-            onClick={() => setActivePage(n.key)}
+            onClick={() => { setActivePage(n.key); onClose?.(); }}
             style={{
               display: "flex", alignItems: "center", gap: 12, width: "100%",
               padding: "11px 20px",

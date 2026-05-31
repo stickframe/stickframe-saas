@@ -22,22 +22,33 @@
   .sidebar-desktop {
     position: fixed;
     top: 0;
-    left: -220px;
-    height: 100vh;
+    left: 0;
+    width: min(280px, 85vw) !important;
+    height: 100vh !important;
     z-index: 95;
-    transition: left 0.25s ease;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    box-shadow: none;
   }
 
   .sidebar-desktop.open {
-    left: 0;
+    transform: translateX(0);
+    box-shadow: 4px 0 32px rgba(0,0,0,0.35);
   }
 
   .hamburger {
     display: block;
   }
 
+  .topbar-page-title {
+    display: block;
+  }
+
   .topbar {
     padding: 10px 16px;
+    position: sticky;
+    top: 0;
+    z-index: 80;
   }
 
   .main-content {
@@ -48,8 +59,10 @@
     display: block;
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.6);
+    background: rgba(0, 0, 0, 0.55);
     z-index: 90;
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
   }
 
   .kpi-grid-6,
