@@ -532,6 +532,124 @@ export default function GestaoObras() {
     setTimeout(() => win.print(), 600);
   }
 
+  async function gerarRelatorioObra() {
+    if (!obra) return;
+    mostrarToast("⏳ Gerando relatório...");
+    await loadMedicoes(obraId);
+
+    const lans = financeiro[obraId]?.lancamentos || [];
+    const meds = medicoes[obraId] || [];
+    const contrato = Number(obra.contrato) || 0;
+    const receitas = lans.filter((l) => l.tipo === "receita").reduce((a, l) => a + (l.valor || 0), 0);
+    const despesas = lans.filter((l) => l.tipo === "despesa").reduce((a, l) => a + (l.valor || 0), 0);
+    const margem = contrato > 0 ? (((contrato - despesas) / contrato) * 100).toFixed(1) : "—";
+    const hoje = new Date().toLocaleDateString("pt-BR");
+    const fmtR = (v) => (v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+    // Prazo info
+    const inicio = obra.prazo_inicio ? new Date(obra.prazo_inicio + "T00:00").toLocaleDateString("pt-BR") : "—";
+    const fim = obra.prazo_fim ? new Date(obra.prazo_fim + "T00:00").toLocaleDateString("pt-BR") : "—";
+    const diasRestantes = obra.prazo_fim
+      ? Math.ceil((new Date(obra.prazo_fim + "T00:00") - new Date()) / 86400000)
+      : null;
+
+    // Cash flow — sorted lancamentos with running balance
+    const lansOrdenados = [...lans].sort((a, b) => (a.data || "").localeCompare(b.data || ""));
+    let saldoAcc = 0;
+    const cashFlowRows = lansOrdenados.map((l) => {
+      saldoAcc += l.tipo === "receita" ? (l.valor || 0) : -(l.valor || 0);
+      return `<tr>
+        <td>${l.data ? new Date(l.data + "T00:00").toLocaleDateString("pt-BR") : "—"}</td>
+        <td>${l.descricao || "—"}</td>
+        <td style="color:${l.tipo === "receita" ? "#2e9e5b" : "#dc2626"};font-weight:600">${l.tipo === "receita" ? "+" : "−"}${fmtR(l.valor)}</td>
+        <td style="font-weight:700;color:${saldoAcc >= 0 ? "#2e9e5b" : "#dc2626"}">${fmtR(saldoAcc)}</td>
+      </tr>`;
+    }).join("");
+
+    // Medições table
+    const medsRows = meds.map((m) => `<tr>
+      <td>${m.numero || "—"}</td>
+      <td>${m.descricao || "—"}</td>
+      <td>${fmtR(m.valor)}</td>
+      <td style="color:${m.status === "Aprovada" ? "#2e9e5b" : "#b97a00"};font-weight:700">${m.status}</td>
+    </tr>`).join("");
+
+    const htmlContent = `
+      <div style="max-width:900px;margin:0 auto;padding:40px">
+        <!-- Header -->
+        <div style="border-bottom:3px solid #981915;padding-bottom:20px;margin-bottom:24px">
+          <div style="font-size:10px;font-weight:800;letter-spacing:2px;color:#981915;margin-bottom:8px">STICKFRAME · RELATÓRIO DE OBRA</div>
+          <h1 style="font-size:26px;font-weight:900;margin:0 0 6px">${obra.nome}</h1>
+          <div style="font-size:13px;color:#6b7280">Cliente: <strong>${obra.cliente || "—"}</strong> &nbsp;·&nbsp; Gerado em: <strong>${hoje}</strong></div>
+        </div>
+
+        <!-- KPIs -->
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:28px">
+          ${[
+            ["CONTRATO TOTAL", fmtR(contrato), "#1a1a1a"],
+            ["RECEITAS", fmtR(receitas), "#2e9e5b"],
+            ["DESPESAS", fmtR(despesas), "#dc2626"],
+            ["MARGEM ESTIMADA", margem !== "—" ? margem + "%" : "—", Number(margem) > 20 ? "#2e9e5b" : "#b97a00"],
+            ["PROGRESSO", `${obra.progresso || 0}%`, "#981915"],
+            ["FASE ATUAL", obra.fase || "—", "#1a1a1a"],
+          ].map(([l, v, c]) => `<div style="background:#f9fafb;border-radius:10px;padding:14px 18px;border:1px solid #e5e7eb">
+            <div style="font-size:10px;color:#9ca3af;letter-spacing:1px;margin-bottom:6px">${l}</div>
+            <div style="font-size:20px;font-weight:900;color:${c}">${v}</div>
+          </div>`).join("")}
+        </div>
+
+        <!-- Prazo -->
+        <h2 style="font-size:13px;font-weight:800;letter-spacing:1px;color:#981915;margin:24px 0 12px;text-transform:uppercase;border-bottom:1px solid #e5e7eb;padding-bottom:8px">⏱ Prazo</h2>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px">
+          <div style="background:#f9fafb;border-radius:8px;padding:12px 16px;border:1px solid #e5e7eb"><div style="font-size:10px;color:#9ca3af;margin-bottom:4px">INÍCIO</div><div style="font-weight:700">${inicio}</div></div>
+          <div style="background:#f9fafb;border-radius:8px;padding:12px 16px;border:1px solid #e5e7eb"><div style="font-size:10px;color:#9ca3af;margin-bottom:4px">ENTREGA PREVISTA</div><div style="font-weight:700">${fim}</div></div>
+          <div style="background:${diasRestantes != null && diasRestantes < 0 ? "#fef2f2" : "#f9fafb"};border-radius:8px;padding:12px 16px;border:1px solid ${diasRestantes != null && diasRestantes < 0 ? "#fca5a5" : "#e5e7eb"}">
+            <div style="font-size:10px;color:#9ca3af;margin-bottom:4px">DIAS RESTANTES</div>
+            <div style="font-weight:700;color:${diasRestantes != null && diasRestantes < 0 ? "#dc2626" : "#1a1a1a"}">${diasRestantes != null ? (diasRestantes < 0 ? `${Math.abs(diasRestantes)} dias de atraso` : `${diasRestantes} dias`) : "—"}</div>
+          </div>
+        </div>
+
+        <!-- Cash Flow -->
+        <h2 style="font-size:13px;font-weight:800;letter-spacing:1px;color:#981915;margin:24px 0 12px;text-transform:uppercase;border-bottom:1px solid #e5e7eb;padding-bottom:8px">💰 Fluxo de Caixa</h2>
+        ${lans.length === 0 ? "<p style='color:#9ca3af;font-size:13px'>Nenhum lançamento registrado.</p>" : `
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead><tr style="background:#f3f4f6">
+            <th style="padding:8px 10px;text-align:left;font-size:10px;color:#6b7280;letter-spacing:.8px">DATA</th>
+            <th style="padding:8px 10px;text-align:left;font-size:10px;color:#6b7280;letter-spacing:.8px">DESCRIÇÃO</th>
+            <th style="padding:8px 10px;text-align:left;font-size:10px;color:#6b7280;letter-spacing:.8px">VALOR</th>
+            <th style="padding:8px 10px;text-align:left;font-size:10px;color:#6b7280;letter-spacing:.8px">SALDO ACUMULADO</th>
+          </tr></thead>
+          <tbody>${cashFlowRows}</tbody>
+        </table>`}
+
+        <!-- Medições -->
+        <h2 style="font-size:13px;font-weight:800;letter-spacing:1px;color:#981915;margin:28px 0 12px;text-transform:uppercase;border-bottom:1px solid #e5e7eb;padding-bottom:8px">📐 Medições (${meds.length})</h2>
+        ${meds.length === 0 ? "<p style='color:#9ca3af;font-size:13px'>Nenhuma medição registrada.</p>" : `
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead><tr style="background:#f3f4f6">
+            <th style="padding:8px 10px;text-align:left;font-size:10px;color:#6b7280;letter-spacing:.8px">Nº</th>
+            <th style="padding:8px 10px;text-align:left;font-size:10px;color:#6b7280;letter-spacing:.8px">DESCRIÇÃO</th>
+            <th style="padding:8px 10px;text-align:left;font-size:10px;color:#6b7280;letter-spacing:.8px">VALOR</th>
+            <th style="padding:8px 10px;text-align:left;font-size:10px;color:#6b7280;letter-spacing:.8px">STATUS</th>
+          </tr></thead>
+          <tbody>${medsRows}</tbody>
+        </table>`}
+
+        <div style="margin-top:40px;padding-top:14px;border-top:1px solid #e5e7eb;font-size:11px;color:#9ca3af;text-align:center">
+          Stick Frame Sistemas Construtivos · Santo André/SP · Relatório gerado em ${hoje}
+        </div>
+      </div>`;
+
+    const w = window.open("", "_blank");
+    w.document.write(`<!DOCTYPE html><html><head><title>Relatório — ${obra.nome}</title><style>
+      body { font-family: Arial, sans-serif; font-size: 12px; color: #1a1a1a; margin: 0; }
+      @media print { @page { margin: 20mm; } }
+      table td, table th { border-bottom: 1px solid #e5e7eb; }
+    </style></head><body>${htmlContent}</body></html>`);
+    w.document.close();
+    setTimeout(() => { w.print(); }, 400);
+  }
+
   function handleFiles(files) {
     const lista = Array.from(files);
     if (!lista.length) return;
@@ -802,7 +920,7 @@ export default function GestaoObras() {
               <div>
                 {/* Abas */}
                 <div style={{ display: "flex", borderBottom: `1px solid ${C.border}` }}>
-                  {[["fases", "📋 Fases"], ["financeiro", "💰 Financeiro"], ["fotos", "📷 Fotos"], ["arquivos", "📁 Arquivos"], ["historico", "🕑 Histórico"]].map(([k, l]) => (
+                  {[["fases", "📋 Fases"], ["financeiro", "💰 Financeiro"], ["fluxo", "📈 Fluxo"], ["fotos", "📷 Fotos"], ["arquivos", "📁 Arquivos"], ["historico", "🕑 Histórico"]].map(([k, l]) => (
                     <button key={k} onClick={() => setAbaAtiva(k)} style={{
                       padding: "10px 20px", background: "transparent", border: "none",
                       borderBottom: `2px solid ${abaAtiva === k ? C.red : "transparent"}`,
@@ -1133,6 +1251,13 @@ export default function GestaoObras() {
                       borderRadius: 6, color: "#2e9e5b", fontSize: 12, fontWeight: 700,
                       cursor: "pointer", fontFamily: "inherit",
                     }}>📄 Dossiê de Obra</button>
+
+                    <button onClick={gerarRelatorioObra} style={{
+                      width: "100%", padding: "8px 0",
+                      background: "#0f766e22", border: "1px solid #0f766e44",
+                      borderRadius: 6, color: "#0f766e", fontSize: 12, fontWeight: 700,
+                      cursor: "pointer", fontFamily: "inherit",
+                    }}>📊 Relatório de Obra</button>
 
                     <button onClick={() => setQrModal(true)} style={{
                       width: "100%", padding: "8px 0",

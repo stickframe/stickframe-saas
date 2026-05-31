@@ -61,6 +61,66 @@ export async function emailMedicaoAprovada({ obraEmail, obraNome, numMedicao, va
   });
 }
 
+export async function emailAlertaPreco({ nomeProduto, precoAnterior, precoAtual, variacao, loja, email }) {
+  const fmtBRL = (v) => Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  await enviarEmail({
+    to: email,
+    subject: `⚠️ Alerta de preço: ${nomeProduto} subiu ${variacao}%`,
+    html: templateBase(
+      `Alerta de variação de preço`,
+      `<p style="color:#444;line-height:1.6;">O produto <strong>${nomeProduto}</strong> teve um aumento de preço acima do limite configurado.</p>
+       <div style="background:#fff7ed;border:1px solid #fb923c;border-radius:8px;padding:16px;margin:16px 0;">
+         <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;">
+           <div style="text-align:center;">
+             <div style="font-size:11px;color:#9ca3af;margin-bottom:4px;">PREÇO ANTERIOR</div>
+             <div style="font-size:18px;font-weight:700;color:#6b7280;text-decoration:line-through;">${fmtBRL(precoAnterior)}</div>
+           </div>
+           <div style="font-size:24px;color:#fb923c;font-weight:900;">→</div>
+           <div style="text-align:center;">
+             <div style="font-size:11px;color:#9ca3af;margin-bottom:4px;">PREÇO ATUAL</div>
+             <div style="font-size:22px;font-weight:900;color:#dc2626;">${fmtBRL(precoAtual)}</div>
+           </div>
+           <div style="text-align:center;background:#fef2f2;border-radius:8px;padding:10px 16px;">
+             <div style="font-size:11px;color:#9ca3af;margin-bottom:4px;">VARIAÇÃO</div>
+             <div style="font-size:22px;font-weight:900;color:#dc2626;">▲ ${Number(variacao).toFixed(1)}%</div>
+           </div>
+         </div>
+         ${loja ? `<div style="margin-top:10px;font-size:11px;color:#9ca3af;">Loja: <strong>${loja}</strong></div>` : ""}
+       </div>
+       <p style="color:#444;line-height:1.6;">Acesse o Monitor de Preços para mais detalhes e atualizar seu orçamento.</p>`
+    ),
+  });
+}
+
+export async function emailAlertaObraAtrasada({ nomeObra, prazoFim, diasAtraso, email }) {
+  const prazoFmt = prazoFim ? new Date(prazoFim + "T00:00").toLocaleDateString("pt-BR") : "—";
+  const portalUrl = window.location.origin + "/obras";
+  await enviarEmail({
+    to: email,
+    subject: `🚨 Obra atrasada: ${nomeObra} (${diasAtraso} dias)`,
+    html: templateBase(
+      `Obra atrasada: ${nomeObra}`,
+      `<p style="color:#444;line-height:1.6;">A obra <strong>${nomeObra}</strong> está atrasada em relação ao prazo previsto.</p>
+       <div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;padding:16px;margin:16px 0;">
+         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+           <div>
+             <div style="font-size:11px;color:#9ca3af;margin-bottom:4px;">PRAZO PREVISTO</div>
+             <div style="font-size:16px;font-weight:700;color:#dc2626;">${prazoFmt}</div>
+           </div>
+           <div>
+             <div style="font-size:11px;color:#9ca3af;margin-bottom:4px;">DIAS DE ATRASO</div>
+             <div style="font-size:24px;font-weight:900;color:#dc2626;">${diasAtraso}</div>
+           </div>
+         </div>
+       </div>
+       <div style="text-align:center;margin:20px 0;">
+         <a href="${portalUrl}" style="display:inline-block;background:linear-gradient(135deg,#981915,#6e1210);color:#fff;text-decoration:none;padding:13px 28px;border-radius:8px;font-weight:700;font-size:14px;">🏗 Acessar painel de obras</a>
+       </div>
+       <p style="color:#444;line-height:1.6;">Acesse o sistema para reagendar o prazo ou atualizar o status da obra.</p>`
+    ),
+  });
+}
+
 export async function emailNovoOrcamento({ clienteEmail, clienteNome, valor, padrao }) {
   const valorFmt = `R$ ${Number(valor).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
   await enviarEmail({
