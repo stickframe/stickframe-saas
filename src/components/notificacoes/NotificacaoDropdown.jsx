@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { C } from "../../utils/constants";
 import useAppStore from "../../store/useAppStore";
 import { useNotificacoes } from "../../hooks/useNotificacoes";
@@ -93,6 +93,17 @@ export default function NotificacaoDropdown() {
   const [aberto,    setAberto]    = useState(false);
   const [aba,       setAba]       = useState("alertas");
   const [catFiltro, setCatFiltro] = useState("todas");
+  const [dropPos,   setDropPos]   = useState({ top: 0, left: 0 });
+  const btnRef = useRef(null);
+
+  useEffect(() => {
+    if (!aberto || !btnRef.current) return;
+    const r = btnRef.current.getBoundingClientRect();
+    const dropW = Math.min(400, window.innerWidth - 16);
+    // tenta abrir à direita; se passar da tela, recua
+    const left = Math.min(r.left, window.innerWidth - dropW - 8);
+    setDropPos({ top: r.bottom + 8, left: Math.max(8, left) });
+  }, [aberto]);
 
   const perfil = useAppStore((s) => s.user?.perfil);
   const { notificacoes, marcar, marcarTodas } = useNotificacoes();
@@ -110,7 +121,7 @@ export default function NotificacaoDropdown() {
 
   return (
     <div style={{ position: "relative" }}>
-      <button onClick={() => setAberto((v) => !v)} style={{
+      <button ref={btnRef} onClick={() => setAberto((v) => !v)} style={{
         position: "relative", background: "none",
         border: `1px solid ${totalBadge > 0 ? C.warning : C.border}`,
         borderRadius: 8, padding: "8px 12px", cursor: "pointer",
@@ -133,11 +144,12 @@ export default function NotificacaoDropdown() {
 
       {aberto && (
         <>
-          <div style={{ position: "fixed", inset: 0, zIndex: 98 }} onClick={() => setAberto(false)} />
+          <div style={{ position: "fixed", inset: 0, zIndex: 298 }} onClick={() => setAberto(false)} />
           <div style={{
-            position: "absolute", top: "calc(100% + 8px)", right: 0,
-            width: 400, background: C.surface, border: `1px solid ${C.border}`,
-            borderRadius: 14, zIndex: 99, boxShadow: "0 12px 48px #00000033", overflow: "hidden",
+            position: "fixed", top: dropPos.top, left: dropPos.left,
+            width: Math.min(400, window.innerWidth - 16),
+            background: C.surface, border: `1px solid ${C.border}`,
+            borderRadius: 14, zIndex: 299, boxShadow: "0 12px 48px #00000033", overflow: "hidden",
           }}>
             {/* Header */}
             <div style={{ padding: "14px 18px", borderBottom: `1px solid ${C.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
