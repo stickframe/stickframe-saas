@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { CUB_ESTADOS, PADROES_SF, SISTEMAS_SF } from "../utils/insumosSF";
 import { C } from "../utils/constants";
 import useAppStore from "../store/useAppStore";
+import { listarPrecosVivos } from "../services/repositories/precosRepository";
 
 const fmtBRL = (v) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 const fmtN   = (v, d = 2) => Number(v).toLocaleString("pt-BR", { minimumFractionDigits: d, maximumFractionDigits: d });
@@ -103,11 +104,25 @@ function SistemaRow({ s, aberto, toggle }) {
             </thead>
             <tbody>
               {s.itensCalc.map((item, i) => (
-                <tr key={i} style={{ borderBottom: `1px solid ${C.border}`, background: i % 2 ? "#f4f4f8" : "#fff" }}>
-                  <td style={tdSt}>{item.nome}</td>
+                <tr key={i} style={{ borderBottom: `1px solid ${C.border}`, background: item.precoVivo ? "#f0fdf4" : i % 2 ? "#f4f4f8" : "#fff" }}>
+                  <td style={tdSt}>
+                    {item.nome}
+                    {item.precoVivo && (
+                      <span title={`Preço ao vivo: ${item.lojaVivo || "monitorado"}`}
+                        style={{ marginLeft: 6, fontSize: 10, background: "#dcfce7", color: "#166534",
+                          padding: "1px 5px", borderRadius: 4, fontWeight: 700 }}>
+                        🔴 ao vivo
+                      </span>
+                    )}
+                  </td>
                   <td style={{ ...tdSt, textAlign: "center", color: C.muted }}>{item.un}</td>
                   <td style={{ ...tdSt, textAlign: "right" }}>{fmtN(item.qtd)}</td>
-                  <td style={{ ...tdSt, textAlign: "right" }}>{fmtN(item.preco)}</td>
+                  <td style={{ ...tdSt, textAlign: "right" }}>
+                    {fmtN(item.precoUsado ?? item.preco)}
+                    {item.precoVivo && item.preco !== item.precoUsado && (
+                      <div style={{ fontSize: 10, color: C.muted, textDecoration: "line-through" }}>{fmtN(item.preco)}</div>
+                    )}
+                  </td>
                   <td style={{ ...tdSt, textAlign: "right", fontWeight: 600 }}>{fmtN(item.total)}</td>
                 </tr>
               ))}
@@ -163,8 +178,21 @@ export default function OrcamentoTecnico() {
     return d;
   });
 
+  const [usarPrecosVivos, setUsarPrecosVivos] = useState(true);
+  const [precosVivos, setPrecosVivos]         = useState({});
+  const [loadingPrecos, setLoadingPrecos]     = useState(false);
+
+  useEffect(() => {
+    setLoadingPrecos(true);
+    listarPrecosVivos()
+      .then(setPrecosVivos)
+      .catch(() => {})
+      .finally(() => setLoadingPrecos(false));
+  }, []);
+
   const cubEfetivo = parseN(cubManual) || CUB_ESTADOS[estado]?.cub || 2340;
   const fatorPadrao = PADROES_SF[padrao]?.fator || 1;
+  const qtdPrecosVivos = Object.keys(precosVivos).length;
 
   const calcular = () => {
     const areaNum = parseN(area);
@@ -187,9 +215,11 @@ export default function OrcamentoTecnico() {
       const itensCalc = itensBase.map((item) => {
         const fator = item.aplicaFatorPadrao || aplicaFatorOpcao ? fatorPadrao : 1;
         const qtd   = item.base * areaUsada * fator;
-        const total = qtd * item.preco;
+        const vivo  = usarPrecosVivos && precosVivos[item.nome];
+        const precoUsado = vivo ? vivo.preco_atual : item.preco;
+        const total = qtd * precoUsado;
         totalSistema += total;
-        return { ...item, qtd, total };
+        return { ...item, qtd, total, precoUsado, precoVivo: vivo ? vivo.preco_atual : null, lojaVivo: vivo?.loja };
       });
 
       const mo = sistema.mao_obra_cub * cubEfetivo * areaNum;
@@ -339,6 +369,18 @@ export default function OrcamentoTecnico() {
           <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, cursor: "pointer", marginTop: 4 }}>
             <input type="checkbox" checked={incluiMO} onChange={(e) => setIncluiMO(e.target.checked)} />
             Incluir mão de obra (baseada no CUB regional)
+          </label>
+          <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, cursor: "pointer" }}>
+            <input type="checkbox" checked={usarPrecosVivos} onChange={(e) => setUsarPrecosVivos(e.target.checked)} />
+            <span>
+              Usar preços de mercado ao vivo
+              {loadingPrecos
+                ? <span style={{ color: C.muted }}> (carregando…)</span>
+                : qtdPrecosVivos > 0
+                  ? <span style={{ color: C.success, fontWeight: 700 }}> ✓ {qtdPrecosVivos} monitorados</span>
+                  : <span style={{ color: C.muted }}> (nenhum monitorado)</span>
+              }
+            </span>
           </label>
         </Card>
 
