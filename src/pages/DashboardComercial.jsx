@@ -4,7 +4,6 @@ import { fmt } from "../utils/format";
 import useAppStore from "../store/useAppStore";
 import { useModuleLoad } from "../hooks/useModuleLoad";
 import { enviarWhatsApp } from "../services/whatsappService";
-import { sb } from "../services/supabase";
 
 const FUNIL = ["Lead", "Em negociação", "Proposta enviada", "Fechado"];
 const FUNIL_COR = {

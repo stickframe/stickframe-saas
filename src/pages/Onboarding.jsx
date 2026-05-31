@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { C, FASES, PRECOS } from "../utils/constants";
-import { sb } from "../services/supabase";
+import { buscarEmpresa, atualizarEmpresa } from "../services/repositories/empresaRepository";
 import useAppStore from "../store/useAppStore";
 import Btn from "../components/ui/Btn";
 import Input from "../components/ui/Input";
@@ -79,19 +79,17 @@ export default function Onboarding({ onComplete }) {
   useEffect(() => {
     // Carrega dados atuais da empresa
     if (!empresaId) return;
-    sb.from("empresas").select("*").eq("id", empresaId).single().then(({ data }) => {
-      if (data) {
-        setEmpresa({
-          nome:      data.nome      || "",
-          cnpj:      data.cnpj      || "",
-          cidade:    data.cidade    || "",
-          telefone:  data.telefone  || "",
-          email:     data.email     || "",
-          segmento:  data.segmento  || "Construção Steel Frame",
-          site:      data.site      || "",
-        });
-      }
-    });
+    buscarEmpresa().then((data) => {
+      if (data) setEmpresa({
+        nome:     data.nome      || "",
+        cnpj:     data.cnpj      || "",
+        cidade:   data.cidade    || "",
+        telefone: data.telefone  || "",
+        email:    data.email     || "",
+        segmento: data.segmento  || "Construção Steel Frame",
+        site:     data.site      || "",
+      });
+    }).catch(() => {});
   }, [empresaId]);
 
   function mostrarToast(msg) {
@@ -104,7 +102,7 @@ export default function Onboarding({ onComplete }) {
     if (!empresa.nome) return;
     setSaving(true);
     try {
-      await sb.from("empresas").update({
+      await atualizarEmpresa({
         nome:     empresa.nome,
         cnpj:     empresa.cnpj     || null,
         cidade:   empresa.cidade   || null,
@@ -112,7 +110,7 @@ export default function Onboarding({ onComplete }) {
         email:    empresa.email    || null,
         segmento: empresa.segmento || null,
         site:     empresa.site     || null,
-      }).eq("id", empresaId);
+      });
       setStep(1);
     } catch {
       mostrarToast("❌ Erro ao salvar empresa.");
@@ -168,7 +166,7 @@ export default function Onboarding({ onComplete }) {
 
   // ── Concluir ───────────────────────────────────────────────────────────────
   async function concluirOnboarding() {
-    await sb.from("empresas").update({ onboarding_completo: true }).eq("id", empresaId);
+    await atualizarEmpresa({ onboarding_completo: true });
     onComplete();
   }
 
