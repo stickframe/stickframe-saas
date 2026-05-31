@@ -11,9 +11,19 @@ import {
   scraperCategoria,
   importarMonitores,
 } from "../services/repositories/precosRepository";
+import { SISTEMAS_SF } from "../utils/insumosSF";
 import Btn from "../components/ui/Btn";
 import Input from "../components/ui/Input";
 import Modal from "../components/ui/Modal";
+
+// Todos os nomes de insumos da lista estática, ordenados alfabeticamente
+const INSUMOS_LISTA = Array.from(
+  new Set(
+    SISTEMAS_SF.flatMap((s) =>
+      s.opcoes.flatMap((o) => o.itens.map((i) => i.nome))
+    )
+  )
+).sort((a, b) => a.localeCompare(b, "pt-BR"));
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 function variacao(atual, anterior) {
@@ -93,8 +103,11 @@ export default function MonitorPrecos() {
   const [loading,  setLoading]  = useState(true);
   const [modal,    setModal]    = useState(false);
   const [form,     setForm]     = useState(FORM_VAZIO);
-  const [salvando, setSalvando] = useState(false);
-  const [scraping, setScraping] = useState(null);
+  const [salvando,    setSalvando]    = useState(false);
+  const [scraping,    setScraping]    = useState(null);
+  const [testando,    setTestando]    = useState(false);
+  const [testeRes,    setTesteRes]    = useState(null);
+  const [insumoCustom, setInsumoCustom] = useState("");
   const [busca,    setBusca]    = useState("");
   const [filtro,   setFiltro]   = useState("Todos");
 
@@ -119,20 +132,39 @@ export default function MonitorPrecos() {
     }
   }
 
+  async function testarUrl() {
+    if (!form.url.trim()) return;
+    setTestando(true);
+    setTesteRes(null);
+    try {
+      const res = await scrapePreco(form.url.trim());
+      setTesteRes(res);
+      if (res?.nome_produto && !form.nome_produto.trim()) setForm((f) => ({ ...f, nome_produto: res.nome_produto }));
+      if (res?.loja && !form.loja.trim()) setForm((f) => ({ ...f, loja: res.loja }));
+    } catch (e) {
+      setTesteRes({ error: e.message, status: "error" });
+    } finally {
+      setTestando(false);
+    }
+  }
+
   async function salvar() {
     if (!form.nome_produto.trim()) return;
+    const insumoRef = form.insumo_ref === "__custom__" ? insumoCustom.trim() : form.insumo_ref.trim();
     setSalvando(true);
     try {
       await adicionarMonitor({
         nome_produto: form.nome_produto.trim(),
         url:          form.url.trim() || null,
         loja:         form.loja.trim() || null,
-        insumo_ref:   form.insumo_ref.trim() || null,
+        insumo_ref:   insumoRef || null,
         alerta_pct:   Number(form.alerta_pct) || 10,
       });
       mostrarToast("✅ Item adicionado!");
       setModal(false);
       setForm(FORM_VAZIO);
+      setTesteRes(null);
+      setInsumoCustom("");
       carregar();
     } catch (e) {
       mostrarToast("❌ " + e.message);
@@ -502,33 +534,88 @@ export default function MonitorPrecos() {
 
       {/* Modal novo item */}
       {modal && (
-        <Modal title="Adicionar item monitorado" onClose={() => setModal(false)}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        <Modal title="Adicionar produto para monitorar" onClose={() => { setModal(false); setTesteRes(null); setInsumoCustom(""); setForm(FORM_VAZIO); }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 14, minWidth: 480 }}>
+
+            {/* URL + Testar */}
             <div>
-              <label style={{ fontSize: 11, fontWeight: 700, color: C.muted, display: "block", marginBottom: 6, textTransform: "uppercase", letterSpacing: 1 }}>Nome do material *</label>
+              <label style={{ fontSize: 11, fontWeight: 700, color: C.muted, display: "block", marginBottom: 6, textTransform: "uppercase", letterSpacing: 1 }}>URL do produto *</label>
+              <div style={{ display: "flex", gap: 8 }}>
+                <Input value={form.url} onChange={(v) => { set("url")(v); setTesteRes(null); }} placeholder="https://www.espacosmart.com.br/..." />
+                <button onClick={testarUrl} disabled={testando || !form.url.trim()} style={{
+                  padding: "9px 16px", borderRadius: 8, border: "none",
+                  background: C.red, color: "#fff", fontSize: 13, fontWeight: 700,
+                  cursor: testando ? "wait" : "pointer", fontFamily: "inherit", whiteSpace: "nowrap",
+                }}>
+                  {testando ? "..." : "Testar"}
+                </button>
+              </div>
+              {testeRes && (
+                <div style={{
+                  marginTop: 8, padding: "10px 14px", borderRadius: 8, fontSize: 13,
+                  background: testeRes.preco ? "#f0fdf4" : "#fff7ed",
+                  border: `1px solid ${testeRes.preco ? "#16a34a33" : "#f59e0b33"}`,
+                  color: testeRes.preco ? "#15803d" : "#b45309",
+                }}>
+                  {testeRes.preco
+                    ? `✅ Preço encontrado: R$ ${Number(testeRes.preco).toLocaleString("pt-BR", { minimumFractionDigits: 2 })} (${testeRes.loja || ""})`
+                    : `⚠️ ${testeRes.error || "Preço não encontrado"}`}
+                </div>
+              )}
+            </div>
+
+            {/* Nome */}
+            <div>
+              <label style={{ fontSize: 11, fontWeight: 700, color: C.muted, display: "block", marginBottom: 6, textTransform: "uppercase", letterSpacing: 1 }}>Nome do produto *</label>
               <Input value={form.nome_produto} onChange={set("nome_produto")} placeholder="Ex: Montante 90mm, OSB 11mm..." />
             </div>
+
+            {/* Mapear insumo */}
+            <div>
+              <label style={{ fontSize: 11, fontWeight: 700, color: C.muted, display: "block", marginBottom: 6, textTransform: "uppercase", letterSpacing: 1 }}>
+                Mapear para insumo do Orçamento Técnico <span style={{ fontWeight: 400 }}>(opcional)</span>
+              </label>
+              <select
+                value={form.insumo_ref}
+                onChange={(e) => { set("insumo_ref")(e.target.value); if (e.target.value !== "__custom__") setInsumoCustom(""); }}
+                style={{ width: "100%", padding: "9px 12px", borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 13, outline: "none", fontFamily: "inherit", background: "#fff", color: C.text }}
+              >
+                <option value="">— Não mapear —</option>
+                {INSUMOS_LISTA.map((nome) => (
+                  <option key={nome} value={nome}>{nome}</option>
+                ))}
+                <option value="__custom__">✏️ Digitar nome personalizado...</option>
+              </select>
+              {form.insumo_ref === "__custom__" && (
+                <input
+                  value={insumoCustom}
+                  onChange={(e) => setInsumoCustom(e.target.value)}
+                  placeholder="Digite o nome do insumo personalizado"
+                  autoFocus
+                  style={{ marginTop: 8, width: "100%", padding: "9px 12px", borderRadius: 8, border: `1px solid ${C.red}`, fontSize: 13, outline: "none", fontFamily: "inherit", background: "#fff", boxSizing: "border-box" }}
+                />
+              )}
+              <div style={{ fontSize: 11, color: C.muted, marginTop: 4 }}>
+                Quando mapeado, o Orçamento Técnico usará o preço ao vivo deste produto
+              </div>
+            </div>
+
+            {/* Loja + Alerta */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
               <div>
                 <label style={{ fontSize: 11, fontWeight: 700, color: C.muted, display: "block", marginBottom: 6, textTransform: "uppercase", letterSpacing: 1 }}>Loja</label>
-                <Input value={form.loja} onChange={set("loja")} placeholder="Ex: Leroy Merlin" />
+                <Input value={form.loja} onChange={set("loja")} placeholder="Ex: espacosmart.com.br" />
               </div>
               <div>
                 <label style={{ fontSize: 11, fontWeight: 700, color: C.muted, display: "block", marginBottom: 6, textTransform: "uppercase", letterSpacing: 1 }}>Alerta (% variação)</label>
                 <Input value={form.alerta_pct} onChange={set("alerta_pct")} type="number" min="1" max="100" placeholder="10" />
               </div>
             </div>
-            <div>
-              <label style={{ fontSize: 11, fontWeight: 700, color: C.muted, display: "block", marginBottom: 6, textTransform: "uppercase", letterSpacing: 1 }}>URL do produto (para scraping automático)</label>
-              <Input value={form.url} onChange={set("url")} placeholder="https://..." />
-            </div>
-            <div style={{ fontSize: 12, color: C.muted, background: C.dark, borderRadius: 8, padding: "10px 14px" }}>
-              💡 Se informar a URL, o sistema tentará capturar o preço automaticamente ao clicar em "↺ Atualizar".
-            </div>
+
             <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", paddingTop: 8, borderTop: `1px solid ${C.border}` }}>
-              <Btn variant="ghost" onClick={() => setModal(false)}>Cancelar</Btn>
+              <Btn variant="ghost" onClick={() => { setModal(false); setTesteRes(null); setInsumoCustom(""); setForm(FORM_VAZIO); }}>Cancelar</Btn>
               <Btn disabled={!form.nome_produto.trim() || salvando} onClick={salvar}>
-                {salvando ? "Salvando..." : "Adicionar"}
+                {salvando ? "Salvando..." : "Salvar"}
               </Btn>
             </div>
           </div>
