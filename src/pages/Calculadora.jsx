@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { C } from "../utils/constants";
 import useAppStore from "../store/useAppStore";
 import * as XLSX from "xlsx";
@@ -62,11 +62,27 @@ export default function Calculadora() {
   const [resultado, setResultado] = useState(null);
 
   // Otimização de corte
-  const [tamBarra,    setTamBarra]    = useState(6000);
-  const [tamC90,      setTamC90]      = useState(2800);
-  const [tamC140,     setTamC140]     = useState(600);
-  const [otimizacao,  setOtimizacao]  = useState(null);
-  const [verTodas,    setVerTodas]    = useState({});
+  const [tamBarra,      setTamBarra]      = useState(6000);
+  const [tamC90,        setTamC90]        = useState(2800);
+  const [tamC140,       setTamC140]       = useState(600);
+  const [otimizacao,    setOtimizacao]    = useState(null);
+  const [verTodas,      setVerTodas]      = useState({});
+  const [cortadas,      setCortadas]      = useState({});
+
+  // Persistência do progresso de corte em localStorage
+  const cortesKey = resultado ? `sf_cortes_${resultado.area}_${resultado.pavs}` : null;
+  useEffect(() => {
+    if (!cortesKey) return;
+    try { setCortadas(JSON.parse(localStorage.getItem(cortesKey) || "{}")); } catch { /* */ }
+  }, [cortesKey]);
+
+  function toggleCortada(key) {
+    setCortadas((prev) => {
+      const next = { ...prev, [key]: !prev[key] };
+      if (cortesKey) localStorage.setItem(cortesKey, JSON.stringify(next));
+      return next;
+    });
+  }
 
   function calcular() {
     const a = parseFloat(String(area).replace(",", "."));
@@ -146,6 +162,7 @@ export default function Calculadora() {
     }
     setOtimizacao({ grupos, guia });
     setVerTodas({});
+    setCortadas({});
   }
 
   const totalGeral = resultado?.items.reduce((s, i) => s + i.total, 0) || 0;
@@ -362,70 +379,153 @@ export default function Calculadora() {
               }}>🔧 Calcular</button>
             </div>
 
-            {/* Resultados */}
+            {/* Resultados — cards mobile-first */}
             {otimizacao && (
-              <div style={{ padding: 20 }}>
+              <div style={{ padding: "16px 16px 20px" }}>
                 {otimizacao.grupos.map((prof) => {
-                  const sobraTotal = prof.barras.reduce((s, b) => s + b.sobra, 0);
-                  const visiveis   = verTodas[prof.nome] ? prof.barras : prof.barras.slice(0, 8);
-                  const corApr     = prof.apr >= 90 ? C.success : prof.apr >= 75 ? "#f09020" : C.danger;
+                  const visiveis    = verTodas[prof.nome] ? prof.barras : prof.barras.slice(0, 10);
+                  const sobraTotal  = prof.barras.reduce((s, b) => s + b.sobra, 0);
+                  const numCortadas = prof.barras.filter((b) => cortadas[`${prof.nome}_${b.id}`]).length;
+                  const corApr      = prof.apr >= 90 ? C.success : prof.apr >= 75 ? "#d97706" : C.danger;
                   return (
-                    <div key={prof.nome} style={{ marginBottom: 24 }}>
-                      {/* Cabeçalho do perfil */}
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                    <div key={prof.nome} style={{ marginBottom: 28 }}>
+
+                      {/* Cabeçalho do grupo */}
+                      <div style={{
+                        display: "flex", justifyContent: "space-between", alignItems: "flex-start",
+                        padding: "12px 14px", background: "#1a1a1a", borderRadius: "10px 10px 0 0",
+                      }}>
                         <div>
-                          <span style={{ fontWeight: 700, fontSize: 14 }}>{prof.nome}</span>
-                          <span style={{ marginLeft: 10, fontSize: 12, color: C.muted }}>
-                            {prof.barras.length} barra{prof.barras.length !== 1 ? "s" : ""} de {tamBarra / 1000}m
-                          </span>
-                        </div>
-                        <div style={{ display: "flex", gap: 20, fontSize: 12 }}>
-                          <span style={{ fontWeight: 700, color: corApr }}>{prof.apr.toFixed(1)}% aproveitamento</span>
-                          <span style={{ color: C.muted }}>sobra total: {fmtMm(sobraTotal)}</span>
-                        </div>
-                      </div>
-
-                      {/* Barras visuais */}
-                      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                        {visiveis.map((b) => (
-                          <div key={b.id} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                            <span style={{ fontSize: 10, color: C.muted, width: 44, textAlign: "right", flexShrink: 0, fontFamily: "monospace" }}>
-                              B{String(b.id).padStart(2, "0")}
-                            </span>
-                            <div style={{ flex: 1, display: "flex", height: 26, borderRadius: 4, overflow: "hidden", border: `1px solid ${C.border}` }}>
-                              {b.cortes.map((c, ci) => (
-                                <div key={ci} style={{
-                                  width: `${(c.tam / tamBarra) * 100}%`,
-                                  background: prof.cor,
-                                  borderRight: "1px solid rgba(255,255,255,0.25)",
-                                  display: "flex", alignItems: "center", justifyContent: "center",
-                                  fontSize: 9, color: "#fff", fontWeight: 700,
-                                  overflow: "hidden", whiteSpace: "nowrap", flexShrink: 0,
-                                }}>
-                                  {c.tam >= 600 ? `${c.tam}` : ""}
-                                </div>
-                              ))}
-                              {b.sobra > 0 && (
-                                <div style={{
-                                  flex: 1, background: "#efefef", minWidth: 4,
-                                  display: "flex", alignItems: "center", justifyContent: "center",
-                                  fontSize: 9, color: "#bbb", fontWeight: 600,
-                                }}>
-                                  {b.sobra >= 300 ? `${b.sobra}` : ""}
-                                </div>
-                              )}
-                            </div>
-                            <span style={{ fontSize: 10, width: 70, flexShrink: 0, color: b.sobra === 0 ? C.success : C.muted }}>
-                              {b.sobra === 0 ? "✅ sem sobra" : `↩ ${b.sobra}mm`}
-                            </span>
+                          <div style={{ fontSize: 13, fontWeight: 800, color: "#fff", letterSpacing: 0.5 }}>{prof.nome}</div>
+                          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.55)", marginTop: 3 }}>
+                            {prof.barras.length} barras de {tamBarra / 1000}m · sobra total {fmtMm(sobraTotal)}
                           </div>
-                        ))}
+                        </div>
+                        <div style={{ textAlign: "right" }}>
+                          <div style={{ fontSize: 18, fontWeight: 900, color: corApr }}>{prof.apr.toFixed(1)}%</div>
+                          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.5)", marginTop: 1 }}>aproveitamento</div>
+                        </div>
                       </div>
 
-                      {prof.barras.length > 8 && (
+                      {/* Barra de progresso das cortadas */}
+                      <div style={{
+                        height: 6, background: "#e5e5e5",
+                        borderLeft: "1px solid #ddd", borderRight: "1px solid #ddd",
+                        position: "relative", overflow: "hidden",
+                      }}>
+                        <div style={{
+                          height: "100%", background: C.success,
+                          width: `${(numCortadas / prof.barras.length) * 100}%`,
+                          transition: "width .3s ease",
+                        }} />
+                      </div>
+
+                      {/* Contador de progresso */}
+                      <div style={{
+                        padding: "6px 14px", background: "#f7f7f7",
+                        borderLeft: "1px solid #ddd", borderRight: "1px solid #ddd",
+                        fontSize: 11, color: C.muted, display: "flex", justifyContent: "space-between",
+                      }}>
+                        <span>{numCortadas} de {prof.barras.length} cortadas</span>
+                        {numCortadas === prof.barras.length && (
+                          <span style={{ fontWeight: 700, color: C.success }}>✅ Concluído!</span>
+                        )}
+                      </div>
+
+                      {/* Cards de barra */}
+                      <div style={{ border: "1px solid #ddd", borderTop: "none", borderRadius: "0 0 10px 10px", overflow: "hidden" }}>
+                        {visiveis.map((b, idx) => {
+                          const key       = `${prof.nome}_${b.id}`;
+                          const isCortada = !!cortadas[key];
+                          return (
+                            <div key={b.id} style={{
+                              padding: "14px 14px 12px",
+                              background: isCortada ? "#f0faf4" : "#fff",
+                              borderTop: idx > 0 ? "1px solid #e8e8e8" : "none",
+                              transition: "background .2s",
+                            }}>
+                              {/* Linha superior */}
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                                <span style={{
+                                  fontSize: 15, fontWeight: 800, color: isCortada ? C.success : "#1a1a1a",
+                                  letterSpacing: 0.3,
+                                }}>
+                                  {isCortada ? "✅ " : ""}BARRA {String(b.id).padStart(2, "0")}
+                                </span>
+                                <span style={{
+                                  fontSize: 12, fontWeight: 700, padding: "3px 10px", borderRadius: 6,
+                                  background: b.sobra === 0 ? C.success + "20" : b.sobra > 500 ? C.danger + "15" : "#fef3c7",
+                                  color: b.sobra === 0 ? C.success : b.sobra > 500 ? C.danger : "#92400e",
+                                }}>
+                                  {b.sobra === 0 ? "Sem sobra" : `Sobra ${b.sobra}mm`}
+                                </span>
+                              </div>
+
+                              {/* Barra visual proporcional */}
+                              <div style={{
+                                display: "flex", height: 36, borderRadius: 6,
+                                overflow: "hidden", border: "1px solid #d0d0d0",
+                                opacity: isCortada ? 0.45 : 1,
+                                transition: "opacity .2s",
+                              }}>
+                                {b.cortes.map((c, ci) => (
+                                  <div key={ci} style={{
+                                    width: `${(c.tam / tamBarra) * 100}%`,
+                                    background: isCortada ? "#6b7280" : prof.cor,
+                                    borderRight: "2px solid rgba(255,255,255,0.3)",
+                                    display: "flex", alignItems: "center", justifyContent: "center",
+                                    fontSize: 10, fontWeight: 800, color: "#fff",
+                                    overflow: "hidden", whiteSpace: "nowrap", flexShrink: 0,
+                                  }}>
+                                    {c.tam >= 400 ? `${c.tam}` : ""}
+                                  </div>
+                                ))}
+                                {b.sobra > 0 && (
+                                  <div style={{
+                                    flex: 1, background: "#e0e0e0", minWidth: 6,
+                                    display: "flex", alignItems: "center", justifyContent: "center",
+                                    fontSize: 9, color: "#999", fontWeight: 600,
+                                  }}>
+                                    {b.sobra >= 400 ? `${b.sobra}` : ""}
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Legenda das peças */}
+                              <div style={{ display: "flex", gap: 8, marginTop: 6, flexWrap: "wrap" }}>
+                                {b.cortes.map((c, ci) => (
+                                  <span key={ci} style={{ fontSize: 11, color: "#444", fontWeight: 600 }}>
+                                    {ci + 1}. {c.tam}mm
+                                  </span>
+                                ))}
+                              </div>
+
+                              {/* Botão de marcar */}
+                              <button onClick={() => toggleCortada(key)} style={{
+                                marginTop: 12, width: "100%", padding: "11px 0",
+                                background: isCortada ? C.success : "transparent",
+                                border: `2px solid ${isCortada ? C.success : "#d0d0d0"}`,
+                                borderRadius: 8, cursor: "pointer", fontFamily: "inherit",
+                                fontSize: 13, fontWeight: 800,
+                                color: isCortada ? "#fff" : "#555",
+                                transition: "all .2s",
+                              }}>
+                                {isCortada ? "✅ Cortada — toque para desfazer" : "Marcar como Cortada"}
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {prof.barras.length > 10 && (
                         <button onClick={() => setVerTodas((v) => ({ ...v, [prof.nome]: !v[prof.nome] }))}
-                          style={{ marginTop: 8, padding: "4px 12px", background: "none", border: `1px solid ${C.border}`, borderRadius: 6, fontSize: 11, cursor: "pointer", fontFamily: "inherit", color: C.muted }}>
-                          {verTodas[prof.nome] ? "▲ Recolher" : `▼ Ver todas as ${prof.barras.length - 8} barras ocultas`}
+                          style={{
+                            marginTop: 8, width: "100%", padding: "10px 0",
+                            background: "none", border: `1px solid ${C.border}`,
+                            borderRadius: 8, fontSize: 12, cursor: "pointer",
+                            fontFamily: "inherit", color: C.muted, fontWeight: 600,
+                          }}>
+                          {verTodas[prof.nome] ? "▲ Recolher" : `▼ Ver mais ${prof.barras.length - 10} barras`}
                         </button>
                       )}
                     </div>
@@ -434,25 +534,46 @@ export default function Calculadora() {
 
                 {/* Guia U — linear contínua */}
                 {otimizacao.guia && (
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 18px", background: C.dark, borderRadius: 10, marginBottom: 16 }}>
-                    <div>
-                      <div style={{ fontWeight: 700, fontSize: 13 }}>{otimizacao.guia.nome}</div>
-                      <div style={{ fontSize: 12, color: C.muted, marginTop: 3 }}>
-                        {fmtMm(otimizacao.guia.mm)} necessários → {otimizacao.guia.nb} barra{otimizacao.guia.nb !== 1 ? "s" : ""} de {tamBarra / 1000}m
+                  <div style={{
+                    borderRadius: 10, border: "1px solid #ddd", overflow: "hidden", marginBottom: 20,
+                  }}>
+                    <div style={{ padding: "12px 14px", background: "#1a1a1a", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <div>
+                        <div style={{ fontSize: 13, fontWeight: 800, color: "#fff" }}>{otimizacao.guia.nome}</div>
+                        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.55)", marginTop: 2 }}>
+                          Linear contínua — sem FFD
+                        </div>
+                      </div>
+                      <div style={{ textAlign: "right" }}>
+                        <div style={{ fontSize: 18, fontWeight: 900, color: otimizacao.guia.apr >= 90 ? C.success : "#d97706" }}>
+                          {otimizacao.guia.apr.toFixed(1)}%
+                        </div>
+                        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.5)" }}>aproveitamento</div>
                       </div>
                     </div>
-                    <div style={{ textAlign: "right" }}>
-                      <div style={{ fontSize: 16, fontWeight: 800, color: otimizacao.guia.apr >= 90 ? C.success : "#f09020" }}>
-                        {otimizacao.guia.apr.toFixed(1)}%
+                    <div style={{ padding: "14px", background: "#fff", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <div style={{ fontSize: 13, color: "#333" }}>
+                        <span style={{ fontWeight: 700 }}>{fmtMm(otimizacao.guia.mm)}</span>
+                        <span style={{ color: C.muted }}> necessários</span>
                       </div>
-                      <div style={{ fontSize: 11, color: C.muted }}>sobra {fmtMm(otimizacao.guia.sobra)}</div>
+                      <div style={{ fontSize: 13 }}>
+                        <span style={{ fontWeight: 800, color: "#1a1a1a" }}>{otimizacao.guia.nb} barras</span>
+                        <span style={{ color: C.muted, fontSize: 11 }}> de {tamBarra / 1000}m</span>
+                      </div>
+                      <div style={{ fontSize: 12, color: otimizacao.guia.sobra > 500 ? C.danger : C.muted }}>
+                        sobra {fmtMm(otimizacao.guia.sobra)}
+                      </div>
                     </div>
                   </div>
                 )}
 
-                {/* Legenda */}
-                <div style={{ padding: "10px 14px", background: "#fff7f0", border: `1px solid #e0700020`, borderRadius: 8, fontSize: 11, color: C.graphite }}>
-                  ⚠️ Comprimentos de referência. Confirme com a tabela de corte do projeto estrutural antes de solicitar ao almoxarifado. Peças de sobra ≥ 40cm devem ser catalogadas para reaproveitamento.
+                {/* Aviso técnico */}
+                <div style={{
+                  padding: "12px 14px", background: "#fffbeb",
+                  border: "1px solid #fde68a", borderRadius: 8, fontSize: 12, color: "#78350f", lineHeight: 1.5,
+                }}>
+                  ⚠️ Comprimentos de referência. Confirme com a tabela de corte do projeto estrutural.
+                  Peças de sobra ≥ 400mm devem ser catalogadas para reaproveitamento.
                 </div>
               </div>
             )}
