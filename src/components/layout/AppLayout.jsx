@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import Sidebar from "./Sidebar";
 import NotificacaoDropdown from "../notificacoes/NotificacaoDropdown";
 import CommandPalette from "../ui/CommandPalette";
+import PWAInstallBanner from "../ui/PWAInstallBanner";
 import { C, NAV } from "../../utils/constants";
 import { buscarEmpresa } from "../../services/repositories/empresaRepository";
 import useAppStore from "../../store/useAppStore";
@@ -60,6 +61,7 @@ export default function AppLayout({ children }) {
         </main>
       </div>
       <CommandPalette onNavigate={setActivePage} />
+      <PWAInstallBanner />
     </div>
   );
 }
