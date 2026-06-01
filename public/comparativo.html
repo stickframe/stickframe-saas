@@ -63,6 +63,7 @@
 
   /* ── DIFERENCIAIS ── */
   .diff-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 40px; }
+  .diff-grid .diff-card:nth-child(7) { grid-column: span 3; }
   .diff-card {
     background: #fff; border-radius: 12px; padding: 22px 20px;
     border: 1px solid #e4e4ea; border-top: 3px solid #981915;
@@ -298,6 +299,24 @@
           <td><span class="tag-no">Não</span></td>
           <td><span class="tag-yes">✓ BI avançado</span></td>
         </tr>
+        <tr>
+          <td>Custo médio por m² histórico por padrão</td>
+          <td class="ours"><span class="tag-yes">✓ Gráfico automático</span></td>
+          <td><span class="tag-no">Não</span></td>
+          <td><span class="tag-no">Não</span></td>
+          <td><span class="tag-no">Não</span></td>
+          <td><span class="tag-no">Não</span></td>
+          <td><span class="tag-partial">⚠ BI externo</span></td>
+        </tr>
+        <tr>
+          <td>Previsão de prazo por histórico</td>
+          <td class="ours"><span class="tag-yes">✓ Velocidade real</span></td>
+          <td><span class="tag-partial">⚠ IA genérica</span></td>
+          <td><span class="tag-no">Não</span></td>
+          <td><span class="tag-no">Não</span></td>
+          <td><span class="tag-no">Não</span></td>
+          <td><span class="tag-partial">⚠ BI externo</span></td>
+        </tr>
       </tbody>
     </table>
   </div>
@@ -334,6 +353,11 @@
       <div class="number">06</div>
       <div class="title">Portal + Chat + Docs</div>
       <div class="desc">Portal do cliente com chat em tempo real, upload de documentos e assinatura — tudo por link único sem cadastro. Experiência premium sem custo de app.</div>
+    </div>
+    <div class="diff-card">
+      <div class="number">07</div>
+      <div class="title">Inteligência de Negócios</div>
+      <div class="desc">Custo médio por m² e previsão de prazo calculados automaticamente a partir do histórico real da sua empresa — não dados genéricos de mercado. Quanto mais obras, mais preciso.</div>
     </div>
   </div>
 
