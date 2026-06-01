@@ -91,7 +91,7 @@ export default function Inteligencia() {
     <div style={{ padding: "24px 28px", maxWidth: 900 }}>
       {/* Header */}
       <div style={{ marginBottom: 24 }}>
-        <div style={{ fontSize: 22, fontWeight: 800, color: C.text }}><Brain size={13} /> Inteligência de Negócios</div>
+        <div style={{ fontSize: 22, fontWeight: 800, color: C.text }}>Inteligência de Negócios</div>
         <div style={{ fontSize: 13, color: C.muted, marginTop: 4 }}>Análise histórica de custos e prazos</div>
       </div>
 
