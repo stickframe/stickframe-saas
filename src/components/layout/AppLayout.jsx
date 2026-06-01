@@ -24,7 +24,11 @@ export default function AppLayout({ children }) {
   const userId = useAppStore((s) => s.user?.id);
 
   useEffect(() => {
-    if (empresaId && userId) subscribePush(empresaId, userId);
+    if (empresaId && userId) {
+      localStorage.setItem("empresa_id", empresaId);
+      localStorage.setItem("user_id", userId);
+      subscribePush(empresaId, userId);
+    }
   }, [empresaId, userId]);
 
   // Pré-carrega clientes para o badge de follow-up do perfil comercial
