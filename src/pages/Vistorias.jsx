@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Trash2, Pencil } from "../components/ui/Icon";
 import { useToast } from "../hooks/useToast";
 import { C, FASES } from "../utils/constants";
 import useAppStore from "../store/useAppStore";
@@ -407,7 +408,7 @@ export default function Vistorias() {
                 </div>
                 <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
                   <button onClick={() => setVerV(v)} style={{ padding: "7px 14px", borderRadius: 6, border: `1px solid ${C.border}`, background: "transparent", color: C.muted, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>Ver</button>
-                  <button onClick={async () => { await deleteVistoria(obraId, v.id); mostrarToast("🗑 Vistoria removida."); }} style={{ padding: "7px 10px", borderRadius: 6, border: `1px solid ${C.danger}44`, background: C.danger + "18", color: C.danger, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>🗑</button>
+                  <button onClick={async () => { await deleteVistoria(obraId, v.id); mostrarToast("🗑 Vistoria removida."); }} style={{ padding: "7px 10px", borderRadius: 6, border: `1px solid ${C.danger}44`, background: C.danger + "18", color: C.danger, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}><Trash2 size={13} /></button>
                 </div>
               </div>
             );

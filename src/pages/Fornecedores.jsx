@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback, useRef } from "react";
+import { Trash2, Pencil } from "../components/ui/Icon";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { C } from "../utils/constants";
 import useAppStore from "../store/useAppStore";
@@ -202,11 +203,11 @@ export default function Fornecedores() {
                     <div style={{ display: "flex", gap: 8 }}>
                       <button onClick={() => { setForm({ ...FORM_FORN, ...sel }); setModal("editar-forn"); }}
                         style={{ padding: "7px 14px", background: C.dark, border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
-                        ✏️ Editar
+                        <Pencil size={13} /> Editar
                       </button>
                       <button onClick={() => excluirFornecedor(sel.id)}
                         style={{ padding: "7px 14px", background: C.danger + "15", border: `1px solid ${C.danger}44`, borderRadius: 8, fontSize: 12, fontWeight: 600, color: C.danger, cursor: "pointer", fontFamily: "inherit" }}>
-                        🗑 Excluir
+                        <Trash2 size={13} /> Excluir
                       </button>
                     </div>
                   </div>
@@ -248,9 +249,9 @@ export default function Fornecedores() {
                           </div>
                           <div style={{ display: "flex", gap: 8, marginTop: 12, justifyContent: "flex-end" }}>
                             <button onClick={() => { setFormCot({ ...FORM_COT, ...c, obra_id: c.obra_id || "" }); setCotSel(c); setModal("editar-cot"); }}
-                              style={{ padding: "5px 12px", background: C.dark, border: `1px solid ${C.border}`, borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>✏️ Editar</button>
+                              style={{ padding: "5px 12px", background: C.dark, border: `1px solid ${C.border}`, borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}><Pencil size={13} /> Editar</button>
                             <button onClick={async () => { await deleteCotacao(sel.id, c.id); mostrarToast("Cotação removida."); }}
-                              style={{ padding: "5px 12px", background: C.danger + "15", border: `1px solid ${C.danger}33`, borderRadius: 6, fontSize: 11, fontWeight: 600, color: C.danger, cursor: "pointer", fontFamily: "inherit" }}>🗑</button>
+                              style={{ padding: "5px 12px", background: C.danger + "15", border: `1px solid ${C.danger}33`, borderRadius: 6, fontSize: 11, fontWeight: 600, color: C.danger, cursor: "pointer", fontFamily: "inherit" }}><Trash2 size={13} /></button>
                           </div>
                         </div>
                       ))}

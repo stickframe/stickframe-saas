@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback, memo } from "react";
+import { Trash2, Pencil } from "../components/ui/Icon";
 const CRM_LEAD_KEY = "sf_crm_lead";
 import { C } from "../utils/constants";
 import { fmt } from "../utils/format";
@@ -566,7 +567,7 @@ export default function CRM() {
       {confirm && (
         <div style={{ position: "fixed", inset: 0, background: "#000b", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12, padding: 28, width: 360, textAlign: "center" }}>
-            <div style={{ fontSize: 22, marginBottom: 8 }}>🗑</div>
+            <div style={{ fontSize: 22, marginBottom: 8 }}><Trash2 size={13} /></div>
             <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 8 }}>Deletar cliente?</div>
             <div style={{ fontSize: 13, color: C.muted, marginBottom: 24 }}>
               <strong style={{ color: C.text }}>{cliente?.nome}</strong> será removido permanentemente.
@@ -1000,7 +1001,7 @@ export default function CRM() {
             </button>
 
             <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-              <Btn variant="ghost" size="sm" onClick={() => abrirEditar(cliente)} fullWidth>✏️ Editar</Btn>
+              <Btn variant="ghost" size="sm" onClick={() => abrirEditar(cliente)} fullWidth><Pencil size={13} /> Editar</Btn>
               <button onClick={() => setConfirm(true)} style={{
                 flex: 1, padding: "7px 0",
                 background: C.danger + "22", border: `1px solid ${C.danger}44`,

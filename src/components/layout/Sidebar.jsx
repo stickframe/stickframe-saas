@@ -1,15 +1,22 @@
 import { useState, useEffect } from "react";
+import * as LucideIcons from "lucide-react";
 import { C, NAV, PERFIS } from "../../utils/constants";
 import useAppStore from "../../store/useAppStore";
 import { sb, getEmpresaId } from "../../services/supabase";
 import { LOGO_STICKFRAME } from "../../utils/cdn";
 
+function NavIcon({ name, size = 16, color }) {
+  const Icon = LucideIcons[name];
+  if (!Icon) return null;
+  return <Icon size={size} color={color} strokeWidth={1.75} />;
+}
+
 export default function Sidebar({ open, onClose }) {
-  const user        = useAppStore((s) => s.user);
-  const activePage  = useAppStore((s) => s.activePage);
+  const user          = useAppStore((s) => s.user);
+  const activePage    = useAppStore((s) => s.activePage);
   const setActivePage = useAppStore((s) => s.setActivePage);
-  const logout      = useAppStore((s) => s.logout);
-  const clientes    = useAppStore((s) => s.clientes);
+  const logout        = useAppStore((s) => s.logout);
+  const clientes      = useAppStore((s) => s.clientes);
   const [confirm, setConfirm] = useState(false);
 
   const perfil    = PERFIS[user?.perfil] || PERFIS.diretor;
@@ -27,7 +34,6 @@ export default function Sidebar({ open, onClose }) {
       .then(({ count }) => setPreOrcCount(count || 0));
   }, []);
 
-  // Badge de follow-ups vencidos para perfil comercial
   const hoje = new Date().toISOString().slice(0, 10);
   const followupsVencidos = user?.perfil === "comercial"
     ? clientes.filter((c) => c.proximo_contato && c.proximo_contato <= hoje && c.status !== "Fechado").length
@@ -53,38 +59,40 @@ export default function Sidebar({ open, onClose }) {
 
       {/* Nav */}
       <nav style={{ flex: 1, padding: "12px 0", overflowY: "auto" }}>
-        {navFiltro.map((n) => (
-          <button
-            key={n.key}
-            onClick={() => { setActivePage(n.key); onClose?.(); }}
-            style={{
-              display: "flex", alignItems: "center", gap: 12, width: "100%",
-              padding: "11px 20px",
-              background: active === n.key ? C.red + "18" : "transparent",
-              borderTop: "none",
-              borderRight: "none",
-              borderBottom: "none",
-              borderLeft: `3px solid ${active === n.key ? C.red : "transparent"}`,
-              cursor: "pointer",
-              color: active === n.key ? C.text : C.muted,
-              fontSize: 13, fontWeight: active === n.key ? 600 : 400,
-              textAlign: "left", transition: "all .15s",
-            }}
-          >
-            <span style={{ fontSize: 15, color: active === n.key ? C.red : C.muted }}>{n.icon}</span>
-            <span style={{ flex: 1 }}>{n.label}</span>
-            {n.key === "crm" && followupsVencidos > 0 && (
-              <span style={{ background: C.red, color: "#fff", borderRadius: 10, fontSize: 10, fontWeight: 700, padding: "1px 6px", minWidth: 18, textAlign: "center" }}>
-                {followupsVencidos}
-              </span>
-            )}
-            {n.key === "orcamentos" && preOrcCount > 0 && (
-              <span style={{ background: "#2e9e5b", color: "#fff", borderRadius: 10, fontSize: 10, fontWeight: 700, padding: "1px 6px", minWidth: 18, textAlign: "center" }}>
-                {preOrcCount}
-              </span>
-            )}
-          </button>
-        ))}
+        {navFiltro.map((n) => {
+          const isActive = active === n.key;
+          const iconColor = isActive ? C.red : C.muted;
+          return (
+            <button
+              key={n.key}
+              onClick={() => { setActivePage(n.key); onClose?.(); }}
+              style={{
+                display: "flex", alignItems: "center", gap: 12, width: "100%",
+                padding: "11px 20px",
+                background: isActive ? C.red + "18" : "transparent",
+                borderTop: "none", borderRight: "none", borderBottom: "none",
+                borderLeft: `3px solid ${isActive ? C.red : "transparent"}`,
+                cursor: "pointer",
+                color: isActive ? C.text : C.muted,
+                fontSize: 13, fontWeight: isActive ? 600 : 400,
+                textAlign: "left", transition: "all .15s",
+              }}
+            >
+              <NavIcon name={n.icon} color={iconColor} />
+              <span style={{ flex: 1 }}>{n.label}</span>
+              {n.key === "crm" && followupsVencidos > 0 && (
+                <span style={{ background: C.red, color: "#fff", borderRadius: 10, fontSize: 10, fontWeight: 700, padding: "1px 6px", minWidth: 18, textAlign: "center" }}>
+                  {followupsVencidos}
+                </span>
+              )}
+              {n.key === "orcamentos" && preOrcCount > 0 && (
+                <span style={{ background: "#2e9e5b", color: "#fff", borderRadius: 10, fontSize: 10, fontWeight: 700, padding: "1px 6px", minWidth: 18, textAlign: "center" }}>
+                  {preOrcCount}
+                </span>
+              )}
+            </button>
+          );
+        })}
       </nav>
 
       {/* User */}

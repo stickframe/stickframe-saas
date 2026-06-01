@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { Trash2, Pencil } from "../ui/Icon";
 import { C } from "../../utils/constants";
 import { fmtBRL, fmtDateTime } from "../../utils/format";
 import useAppStore from "../../store/useAppStore";
@@ -245,7 +246,7 @@ export default function MonitorPrecos() {
                         {syncing[item.id] ? "…" : "🔄"}
                       </button>
                       <button onClick={() => remover(item.id)} title="Remover"
-                        style={{ padding: "4px 8px", fontSize: 13, background: "none", border: `1px solid ${C.border}`, borderRadius: 5, cursor: "pointer", color: C.danger }}>🗑</button>
+                        style={{ padding: "4px 8px", fontSize: 13, background: "none", border: `1px solid ${C.border}`, borderRadius: 5, cursor: "pointer", color: C.danger }}><Trash2 size={13} /></button>
                     </div>
                   </td>
                 </tr>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Trash2, Pencil } from "../components/ui/Icon";
 import { useToast } from "../hooks/useToast";
 import { C } from "../utils/constants";
 import { fmt } from "../utils/format";
@@ -310,7 +311,7 @@ export default function Equipe() {
       {confirm && (
         <div style={{ position: "fixed", inset: 0, background: "#000b", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12, padding: 28, width: 360, textAlign: "center" }}>
-            <div style={{ fontSize: 22, marginBottom: 8 }}>🗑</div>
+            <div style={{ fontSize: 22, marginBottom: 8 }}><Trash2 size={13} /></div>
             <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 8 }}>Remover colaborador?</div>
             <div style={{ fontSize: 13, color: C.muted, marginBottom: 24 }}>Essa ação não pode ser desfeita.</div>
             <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
@@ -578,13 +579,13 @@ export default function Equipe() {
                       )}
 
                       <div style={{ display: "flex", gap: 8 }}>
-                        <Btn variant="ghost" size="sm" onClick={() => abrirEditar(c)}>✏️ Editar</Btn>
+                        <Btn variant="ghost" size="sm" onClick={() => abrirEditar(c)}><Pencil size={13} /> Editar</Btn>
                         <button onClick={() => setConfirm(c.id)} style={{
                           padding: "6px 12px", background: C.danger + "22",
                           border: `1px solid ${C.danger}44`, borderRadius: 6,
                           color: C.danger, fontSize: 11, fontWeight: 700,
                           cursor: "pointer", fontFamily: "inherit",
-                        }}>🗑</button>
+                        }}><Trash2 size={13} /></button>
                       </div>
                     </div>
                   );
@@ -655,7 +656,7 @@ export default function Equipe() {
                           <button onClick={() => removeAlocacao(a.id)} style={{
                             background: "none", border: "none", cursor: "pointer",
                             color: C.muted, fontSize: 14, padding: 4,
-                          }}>🗑</button>
+                          }}><Trash2 size={13} /></button>
                         </td>
                       </tr>
                     ))}
@@ -750,7 +751,7 @@ export default function Equipe() {
                             <button onClick={() => removeHorasTrabalhadas(h.id)} style={{
                               background: "none", border: "none", cursor: "pointer",
                               color: C.muted, fontSize: 14, padding: 4,
-                            }}>🗑</button>
+                            }}><Trash2 size={13} /></button>
                           </td>
                         </tr>
                       );

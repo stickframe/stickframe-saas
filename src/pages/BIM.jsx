@@ -1,4 +1,5 @@
 import * as Sentry from "@sentry/react";
+import { Trash2, Pencil } from "../components/ui/Icon";
 import { useState, useEffect, useRef } from "react";
 import { useToast } from "../hooks/useToast";
 import { C, FASES } from "../utils/constants";
@@ -570,7 +571,7 @@ export default function BIM() {
                     <button onClick={() => abrirModelo(m)} style={{ padding: "7px 16px", borderRadius: 6, border: "1px solid #4a9eff44", background: "#4a9eff18", color: "#4a9eff", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
                       🖥 Visualizar 3D
                     </button>
-                    <button onClick={async () => { await deleteBimModelo(obraId, m.id, m.storage_path); mostrarToast("🗑 Modelo removido."); }} style={{ padding: "7px 10px", borderRadius: 6, border: `1px solid ${C.danger}44`, background: C.danger + "18", color: C.danger, fontSize: 11, cursor: "pointer", fontFamily: "inherit" }}>🗑</button>
+                    <button onClick={async () => { await deleteBimModelo(obraId, m.id, m.storage_path); mostrarToast("🗑 Modelo removido."); }} style={{ padding: "7px 10px", borderRadius: 6, border: `1px solid ${C.danger}44`, background: C.danger + "18", color: C.danger, fontSize: 11, cursor: "pointer", fontFamily: "inherit" }}><Trash2 size={13} /></button>
                   </div>
                 </div>
               ))}
@@ -693,7 +694,7 @@ export default function BIM() {
                       {a.status !== "Em andamento" && a.status !== "Resolvido" && (
                         <button onClick={() => updateBimApontamento(obraId, a.id, { status: "Em andamento" })} style={{ padding: "5px 10px", borderRadius: 5, border: "1px solid #b97a0044", background: "#b97a0018", color: "#b97a00", fontSize: 10, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>→ Iniciar</button>
                       )}
-                      <button onClick={async () => { await deleteBimApontamento(obraId, a.id); mostrarToast("🗑 Apontamento removido."); }} style={{ padding: "5px 8px", borderRadius: 5, border: `1px solid ${C.danger}44`, background: C.danger + "18", color: C.danger, fontSize: 10, cursor: "pointer", fontFamily: "inherit" }}>🗑</button>
+                      <button onClick={async () => { await deleteBimApontamento(obraId, a.id); mostrarToast("🗑 Apontamento removido."); }} style={{ padding: "5px 8px", borderRadius: 5, border: `1px solid ${C.danger}44`, background: C.danger + "18", color: C.danger, fontSize: 10, cursor: "pointer", fontFamily: "inherit" }}><Trash2 size={13} /></button>
                     </div>
                   </div>
                 );

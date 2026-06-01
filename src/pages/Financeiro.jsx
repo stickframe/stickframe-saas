@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { Trash2, Pencil } from "../components/ui/Icon";
 import { useToast } from "../hooks/useToast";
 import { C, CATEGORIAS_RECEITA, CATEGORIAS_DESPESA } from "../utils/constants";
 import { fmt, fmtPct } from "../utils/format";
@@ -568,7 +569,7 @@ export default function Financeiro() {
                 fontSize: 10, color: C.red, background: "none", border: `1px solid ${C.border}`,
                 borderRadius: 5, padding: "3px 8px", cursor: "pointer", fontFamily: "inherit", fontWeight: 600,
               }}>
-                {temOrcCats ? "✏ Editar" : "+ Definir orçamento"}
+                {temOrcCats ? "<Pencil size={13} /> Editar" : "+ Definir orçamento"}
               </button>
             </div>
 

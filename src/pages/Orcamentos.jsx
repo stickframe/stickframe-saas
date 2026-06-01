@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Trash2, Pencil } from "../components/ui/Icon";
 import { sb, getEmpresaId } from "../services/supabase";
 import { LOGO_STICKFRAME } from "../utils/cdn";
 import { useToast } from "../hooks/useToast";
@@ -961,7 +962,7 @@ export default function Orcamentos() {
       {confirm && (
         <div style={{ position: "fixed", inset: 0, background: "#000b", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12, padding: 28, width: 360, textAlign: "center" }}>
-            <div style={{ fontSize: 22, marginBottom: 8 }}>🗑</div>
+            <div style={{ fontSize: 22, marginBottom: 8 }}><Trash2 size={13} /></div>
             <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 8 }}>Deletar orçamento?</div>
             <div style={{ fontSize: 13, color: C.muted, marginBottom: 24 }}>Essa ação não pode ser desfeita.</div>
             <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
@@ -1213,7 +1214,7 @@ export default function Orcamentos() {
 
                   {/* Ações */}
                   <div style={{ display: "flex", gap: 8, marginTop: 14, flexWrap: "wrap" }}>
-                    <Btn variant="ghost" size="sm" onClick={() => abrirEditar(o)}>✏️ Editar</Btn>
+                    <Btn variant="ghost" size="sm" onClick={() => abrirEditar(o)}><Pencil size={13} /> Editar</Btn>
                     <button
                       onClick={() => gerarPDF(o)}
                       style={{
