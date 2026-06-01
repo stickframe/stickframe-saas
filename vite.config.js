@@ -7,6 +7,9 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: "autoUpdate",
+      strategies: "injectManifest",
+      srcDir: "src",
+      filename: "sw.js",
       includeAssets: ["favicon.svg", "logo.png", "logo-transparente-122x122.png"],
       manifest: {
         name: "Stickframe Gestão",
@@ -20,16 +23,9 @@ export default defineConfig({
           { src: "/logo.png", sizes: "512x512", type: "image/png", purpose: "any maskable" },
         ],
       },
-      workbox: {
+      injectManifest: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
-        maximumFileSizeToCacheInBytes: 6 * 1024 * 1024, // 6 MiB — cobre o BIM engine
-        runtimeCaching: [
-          {
-            urlPattern: /^https:\/\/gpzmglcxmbboxxogbibq\.supabase\.co\/.*/i,
-            handler: "NetworkFirst",
-            options: { cacheName: "supabase-cache", networkTimeoutSeconds: 5 },
-          },
-        ],
+        maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
       },
     }),
   ],

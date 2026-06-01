@@ -3,6 +3,7 @@ import Sidebar from "./Sidebar";
 import NotificacaoDropdown from "../notificacoes/NotificacaoDropdown";
 import CommandPalette from "../ui/CommandPalette";
 import PWAInstallBanner from "../ui/PWAInstallBanner";
+import { subscribePush } from "../../services/pushService";
 import { C, NAV } from "../../utils/constants";
 import { buscarEmpresa } from "../../services/repositories/empresaRepository";
 import useAppStore from "../../store/useAppStore";
@@ -20,6 +21,11 @@ export default function AppLayout({ children }) {
   const perfil     = useAppStore((s) => s.user?.perfil);
   const activeLabel = NAV.find((n) => n.key === activePage)?.label || "";
   const loadClientes = useAppStore((s) => s.loadClientes);
+  const userId = useAppStore((s) => s.user?.id);
+
+  useEffect(() => {
+    if (empresaId && userId) subscribePush(empresaId, userId);
+  }, [empresaId, userId]);
 
   // Pré-carrega clientes para o badge de follow-up do perfil comercial
   useEffect(() => {
