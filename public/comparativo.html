@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Stickframe SaaS — Comparativo de Mercado</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; background: #f5f5f8; color: #1a1a1a; padding: 40px 24px; }
+  .page { max-width: 960px; margin: 0 auto; }
+
+  .cover {
+    background: linear-gradient(135deg, #981915 0%, #6e1210 100%);
+    color: #fff; border-radius: 16px; padding: 56px 56px 48px; margin-bottom: 32px;
+    position: relative; overflow: hidden;
+  }
+  .cover::after {
+    content: ""; position: absolute; right: -60px; top: -60px;
+    width: 320px; height: 320px; border-radius: 50%; background: rgba(255,255,255,0.05);
+  }
+  .cover-tag {
+    display: inline-block; background: rgba(255,255,255,0.15); color: rgba(255,255,255,0.9);
+    font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase;
+    padding: 5px 14px; border-radius: 20px; margin-bottom: 20px;
+  }
+  .cover h1 { font-size: 34px; font-weight: 700; line-height: 1.2; margin-bottom: 10px; }
+  .cover h1 span { color: rgba(255,255,255,0.55); }
+  .cover p { font-size: 15px; color: rgba(255,255,255,0.72); line-height: 1.6; max-width: 520px; }
+
+  .section-title {
+    font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+    color: #981915; margin-bottom: 20px; padding-bottom: 8px; border-bottom: 2px solid #981915;
+  }
+
+  /* ── TABELA COMPARATIVA ── */
+  .table-wrap { overflow-x: auto; margin-bottom: 40px; border-radius: 14px; border: 1px solid #e4e4ea; }
+  table { width: 100%; border-collapse: collapse; background: #fff; }
+  thead tr { background: #1a1a1a; }
+  thead th {
+    padding: 14px 16px; text-align: center; font-size: 13px; font-weight: 600; color: #fff;
+    white-space: nowrap;
+  }
+  thead th:first-child { text-align: left; min-width: 180px; }
+  thead th.ours { background: #981915; }
+
+  tbody tr { border-bottom: 1px solid #f0f0f4; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: #fafafa; }
+  tbody tr.category-row { background: #f5f5f8; }
+  tbody tr.category-row td { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #6b7280; padding: 10px 16px; }
+
+  td { padding: 11px 16px; font-size: 13px; text-align: center; color: #4b4b4b; }
+  td:first-child { text-align: left; font-weight: 500; color: #1a1a1a; }
+  td.ours { background: #fff8f8; font-weight: 700; color: #981915; }
+
+  .yes { font-size: 18px; }
+  .no  { font-size: 18px; color: #d1d5db; }
+  .partial { font-size: 18px; color: #f59e0b; }
+  .tag-yes { display: inline-block; background: #2e9e5b22; color: #2e9e5b; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 10px; }
+  .tag-partial { display: inline-block; background: #f59e0b22; color: #b45309; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 10px; }
+  .tag-no { display: inline-block; background: #f3f4f6; color: #9ca3af; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 10px; }
+
+  /* ── DIFERENCIAIS ── */
+  .diff-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 40px; }
+  .diff-card {
+    background: #fff; border-radius: 12px; padding: 22px 20px;
+    border: 1px solid #e4e4ea; border-top: 3px solid #981915;
+  }
+  .diff-card .number { font-size: 28px; font-weight: 800; color: #981915; margin-bottom: 8px; }
+  .diff-card .title { font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+  .diff-card .desc { font-size: 12px; color: #6b7280; line-height: 1.55; }
+
+  /* ── PREÇOS ── */
+  .price-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 40px; }
+  .price-card { background: #fff; border-radius: 12px; padding: 20px; border: 1px solid #e4e4ea; text-align: center; }
+  .price-card.ours { border-color: #981915; border-width: 2px; }
+  .price-card .brand { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+  .price-card .price { font-size: 22px; font-weight: 800; color: #1a1a1a; margin-bottom: 4px; }
+  .price-card .price.ours-price { color: #981915; }
+  .price-card .note { font-size: 11px; color: #9ca3af; }
+  .price-card .focus { display: inline-block; margin-top: 8px; background: #f3f4f6; color: #4b4b4b; font-size: 10px; font-weight: 600; padding: 3px 10px; border-radius: 10px; }
+  .price-card.ours .focus { background: #981915; color: #fff; }
+
+  .footer { text-align: center; font-size: 12px; color: #9ca3af; padding-top: 24px; border-top: 1px solid #e4e4ea; }
+  .footer strong { color: #981915; }
+
+  .print-btn {
+    position: fixed; bottom: 28px; right: 28px; background: #981915; color: #fff; border: none;
+    border-radius: 50px; padding: 12px 24px; font-size: 14px; font-weight: 600; cursor: pointer;
+    box-shadow: 0 4px 16px rgba(152,25,21,0.4); display: flex; align-items: center; gap: 8px;
+  }
+  .print-btn:hover { background: #6e1210; }
+  @media print { body { background: #fff; padding: 0; } .print-btn { display: none; } }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- CAPA -->
+  <div class="cover">
+    <div class="cover-tag">Análise Competitiva · Junho 2026</div>
+    <h1>Stickframe SaaS <span>vs. Mercado</span></h1>
+    <p>Comparativo entre os principais sistemas de gestão para construtoras do Brasil — módulos, funcionalidades e posicionamento de preço.</p>
+  </div>
+
+  <!-- TABELA -->
+  <div class="section-title">Comparativo de Funcionalidades</div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Funcionalidade</th>
+          <th class="ours">Stickframe</th>
+          <th>Sienge</th>
+          <th>Vobi</th>
+          <th>Obra Prima</th>
+          <th>Gestor Obras</th>
+          <th>TOTVS</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="category-row"><td colspan="7">Captação e Comercial</td></tr>
+        <tr>
+          <td>Calculadora pública de orçamento</td>
+          <td class="ours"><span class="tag-yes">✓ Exclusivo</span></td>
+          <td><span class="tag-no">Não</span></td>
+          <td><span class="tag-no">Não</span></td>
+          <td><span class="tag-no">Não</span></td>
+          <td><span class="tag-no">Não</span></td>
+          <td><span class="tag-no">Não</span></td>
+        </tr>
+        <tr>
+          <td>CRM com funil Kanban</td>
+          <td class="ours"><span class="tag-yes">✓ Score + follow-up</span></td>
+          <td><span class="tag-yes">✓</span></td>
+          <td><span class="tag-partial">⚠ Básico</span></td>
+          <td><span class="tag-no">Não</span></td>
+          <td><span class="tag-no">Não</span></td>
+          <td><span class="tag-yes">✓</span></td>
+        </tr>
+        <tr>
+          <td>Sequência follow-up automático</td>
+          <td class="ours"><span class="tag-yes">✓ D+3/7/15</span></td>
+          <td><span class="tag-no">Não</span></td>
+          <td><span class="tag-no">Não</span></td>
+          <td><span class="tag-no">Não</span></td>
+          <td><span class="tag-no">Não</span></td>
+          <td><span class="tag-partial">⚠ Add-on</span></td>
+        </tr>
+        <tr>
+          <td>Orçamento automático por m²</td>
+          <td class="ours"><span class="tag-yes">✓</span></td>
+          <td><span class="tag-yes">✓</span></td>
+          <td><span class="tag-partial">⚠</span></td>
+          <td><span class="tag-yes">✓</span></td>
+          <td><span class="tag-yes">✓</span></td>
+          <td><span class="tag-yes">✓</span></td>
+        </tr>
+        <tr>
+          <td>Templates WhatsApp no CRM</td>
+          <td class="ours"><span class="tag-yes">✓ Nativo</span></td>
+          <td><span class="tag-no">Não</span></td>
+          <td><span class="tag-yes">✓</span></td>
+          <td><span class="tag-no">Não</span></td>
+          <td><span class="tag-no">Não</span></td>
+          <td><span class="tag-no">Não</span></td>
+        </tr>
+
+        <tr class="category-row"><td colspan="7">Gestão de Obras</td></tr>
+        <tr>
+          <td>Fases construtivas com checklist</td>
+          <td class="ours"><span class="tag-yes">✓ 7 fases Steel Frame</span></td>
+          <td><span class="tag-yes">✓</span></td>
+          <td><span class="tag-yes">✓</span></td>
+          <td><span class="tag-yes">✓</span></td>
+          <td><span class="tag-yes">✓</span></td>
+          <td><span class="tag-yes">✓</span></td>
+        </tr>
+        <tr>
+          <td>Cronograma Gantt</td>
+          <td class="ours"><span class="tag-yes">✓</span></td>
+          <td><span class="tag-yes">✓</span></td>
+          <td><span class="tag-yes">✓</span></td>
+          <td><span class="tag-yes">✓</span></td>
+          <td><span class="tag-partial">⚠ Básico</span></td>
+          <td><span class="tag-yes">✓</span></td>
+        </tr>
+        <tr>
+          <td>Diário de obra</td>
+          <td class="ours"><span class="tag-yes">✓</span></td>
+          <td><span class="tag-yes">✓</span></td>
+          <td><span class="tag-yes">✓</span></td>
+          <td><span class="tag-yes">✓</span></td>
+          <td><span class="tag-partial">⚠</span></td>
+          <td><span class="tag-yes">✓</span></td>
+        </tr>
+        <tr>
+          <td>Vistorias & FVS</td>
+          <td class="ours"><span class="tag-yes">✓</span></td>
+          <td><span class="tag-yes">✓</span></td>
+          <td><span class="tag-partial">⚠</span></td>
+          <td><span class="tag-yes">✓</span></td>
+          <td><span class="tag-no">Não</span></td>
+          <td><span class="tag-partial">⚠ Add-on</span></td>
+        </tr>
+        <tr>
+          <td>Viewer BIM / IFC</td>
+          <td class="ours"><span class="tag-yes">✓ Three.js nativo</span></td>
+          <td><span class="tag-no">Não</span></td>
+          <td><span class="tag-yes">✓</span></td>
+          <td><span class="tag-no">Não</span></td>
+          <td><span class="tag-no">Não</span></td>
+          <td><span class="tag-partial">⚠ Integração</span></td>
+        </tr>
+        <tr>
+          <td>Quantitativos com templates</td>
+          <td class="ours"><span class="tag-yes">✓</span></td>
+          <td><span class="tag-yes">✓</span></td>
+          <td><span class="tag-partial">⚠</span></td>
+          <td><span class="tag-yes">✓</span></td>
+          <td><span class="tag-yes">✓</span></td>
+          <td><span class="tag-yes">✓</span></td>
+        </tr>
+
+        <tr class="category-row"><td colspan="7">Cliente e Financeiro</td></tr>
+        <tr>
+          <td>Portal do cliente</td>
+          <td class="ours"><span class="tag-yes">✓ Token + chat + docs</span></td>
+          <td><span class="tag-partial">⚠ Limitado</span></td>
+          <td><span class="tag-yes">✓</span></td>
+          <td><span class="tag-yes">✓</span></td>
+          <td><span class="tag-yes">✓</span></td>
+          <td><span class="tag-yes">✓</span></td>
+        </tr>
+        <tr>
+          <td>Assinatura digital nativa</td>
+          <td class="ours"><span class="tag-yes">✓ Canvas no portal</span></td>
+          <td><span class="tag-no">Não</span></td>
+          <td><span class="tag-no">Não</span></td>
+          <td><span class="tag-no">Não</span></td>
+          <td><span class="tag-no">Não</span></td>
+          <td><span class="tag-partial">⚠ Add-on pago</span></td>
+        </tr>
+        <tr>
+          <td>Boleto bancário integrado</td>
+          <td class="ours"><span class="tag-yes">✓ Asaas</span></td>
+          <td><span class="tag-yes">✓</span></td>
+          <td><span class="tag-no">Não</span></td>
+          <td><span class="tag-no">Não</span></td>
+          <td><span class="tag-no">Não</span></td>
+          <td><span class="tag-yes">✓</span></td>
+        </tr>
+        <tr>
+          <td>Parcelas automáticas 30/40/30%</td>
+          <td class="ours"><span class="tag-yes">✓ Ao criar obra</span></td>
+          <td><span class="tag-no">Não</span></td>
+          <td><span class="tag-no">Não</span></td>
+          <td><span class="tag-no">Não</span></td>
+          <td><span class="tag-no">Não</span></td>
+          <td><span class="tag-no">Não</span></td>
+        </tr>
+        <tr>
+          <td>Alerta inadimplência por email</td>
+          <td class="ours"><span class="tag-yes">✓</span></td>
+          <td><span class="tag-yes">✓</span></td>
+          <td><span class="tag-no">Não</span></td>
+          <td><span class="tag-no">Não</span></td>
+          <td><span class="tag-no">Não</span></td>
+          <td><span class="tag-yes">✓</span></td>
+        </tr>
+
+        <tr class="category-row"><td colspan="7">Especialização</td></tr>
+        <tr>
+          <td>Foco em Steel Frame</td>
+          <td class="ours"><span class="tag-yes">✓ Exclusivo</span></td>
+          <td><span class="tag-no">Genérico</span></td>
+          <td><span class="tag-no">Genérico</span></td>
+          <td><span class="tag-no">Genérico</span></td>
+          <td><span class="tag-no">Genérico</span></td>
+          <td><span class="tag-no">Genérico</span></td>
+        </tr>
+        <tr>
+          <td>Pipeline lead → obra → financeiro</td>
+          <td class="ours"><span class="tag-yes">✓ Automático</span></td>
+          <td><span class="tag-partial">⚠ Manual</span></td>
+          <td><span class="tag-partial">⚠ Parcial</span></td>
+          <td><span class="tag-no">Não</span></td>
+          <td><span class="tag-no">Não</span></td>
+          <td><span class="tag-partial">⚠ Complexo</span></td>
+        </tr>
+        <tr>
+          <td>Inteligência / análise histórica</td>
+          <td class="ours"><span class="tag-yes">✓ Custo m² + prazo</span></td>
+          <td><span class="tag-yes">✓ IA preditiva</span></td>
+          <td><span class="tag-no">Não</span></td>
+          <td><span class="tag-no">Não</span></td>
+          <td><span class="tag-no">Não</span></td>
+          <td><span class="tag-yes">✓ BI avançado</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- DIFERENCIAIS -->
+  <div class="section-title">5 Diferenciais Exclusivos do Stickframe</div>
+  <div class="diff-grid">
+    <div class="diff-card">
+      <div class="number">01</div>
+      <div class="title">Calculadora Pública</div>
+      <div class="desc">Única plataforma com página pública de simulação. Visitante calcula Steel Frame vs Alvenaria e vira lead automaticamente no CRM — sem formulário manual.</div>
+    </div>
+    <div class="diff-card">
+      <div class="number">02</div>
+      <div class="title">Foco 100% Steel Frame</div>
+      <div class="desc">Fases, checklists, quantitativos e BIM calibrados para Steel Frame. Os concorrentes são genéricos — você precisa adaptar. Aqui está pronto.</div>
+    </div>
+    <div class="diff-card">
+      <div class="number">03</div>
+      <div class="title">Assinatura Digital Nativa</div>
+      <div class="desc">Cliente assina o contrato direto no portal via canvas — sem Docusign, sem link externo, sem custo adicional. Aprovação de medições também pelo portal.</div>
+    </div>
+    <div class="diff-card">
+      <div class="number">04</div>
+      <div class="title">Pipeline Automático</div>
+      <div class="desc">Lead → Orçamento → Obra → Lançamentos financeiros (30/40/30%) gerados automaticamente. Outros sistemas exigem configuração manual em cada etapa.</div>
+    </div>
+    <div class="diff-card">
+      <div class="number">05</div>
+      <div class="title">Follow-up Automático</div>
+      <div class="desc">Sequência D+3, D+7, D+15 criada com um clique no CRM. Score de lead com 6 fatores identifica quem priorizar sem depender de memória do vendedor.</div>
+    </div>
+    <div class="diff-card">
+      <div class="number">06</div>
+      <div class="title">Portal + Chat + Docs</div>
+      <div class="desc">Portal do cliente com chat em tempo real, upload de documentos e assinatura — tudo por link único sem cadastro. Experiência premium sem custo de app.</div>
+    </div>
+  </div>
+
+  <!-- PREÇOS -->
+  <div class="section-title">Posicionamento de Preço</div>
+  <div class="price-grid">
+    <div class="price-card ours">
+      <div class="brand">Stickframe SaaS</div>
+      <div class="price ours-price">Especializado</div>
+      <div class="note">Plataforma dedicada a Steel Frame</div>
+      <div class="focus">Steel Frame</div>
+    </div>
+    <div class="price-card">
+      <div class="brand">Vobi / Gestor Obras</div>
+      <div class="price">R$ 89–299<span style="font-size:13px;font-weight:400">/mês</span></div>
+      <div class="note">Pequenas construtoras, genérico</div>
+      <div class="focus">Genérico</div>
+    </div>
+    <div class="price-card">
+      <div class="brand">Sienge / TOTVS</div>
+      <div class="price">Sob consulta</div>
+      <div class="note">Médias e grandes, alto custo implantação</div>
+      <div class="focus">Enterprise</div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <strong>Stickframe SaaS</strong> — Comparativo elaborado em Junho 2026 com base em informações públicas dos concorrentes.<br>
+    stickframe.com.br
+  </div>
+
+</div>
+<button class="print-btn" onclick="window.print()">🖨️ Salvar como PDF</button>
+</body>
+</html>
