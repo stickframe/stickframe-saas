@@ -6,23 +6,41 @@ import { fmt } from "../utils/format";
 const PADROES = ["Econômico", "Padrão", "Alto Padrão"];
 const PADRAO_COLOR = { "Econômico": "#4a9eff", "Padrão": "#2e9e5b", "Alto Padrão": "#9b59b6" };
 
+const PERIODO_OPTS = [
+  { label: "Últimos 30 dias", days: 30 },
+  { label: "Últimos 90 dias", days: 90 },
+  { label: "Últimos 12 meses", days: 365 },
+  { label: "Todo período", days: 0 },
+];
+
 export default function Inteligencia() {
   const [orcamentos, setOrcamentos] = useState([]);
   const [obras, setObras] = useState([]);
+  const [funil, setFunil] = useState({ leads: 0, orcamentos: 0, obras: 0, concluidas: 0 });
+  const [periodo, setPeriodo] = useState(90);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     (async () => {
       const empresaId = getEmpresaId();
-      const [{ data: orcs }, { data: obs }] = await Promise.all([
+      const desde = periodo > 0
+        ? new Date(Date.now() - periodo * 86400000).toISOString()
+        : "2000-01-01";
+
+      const [{ data: orcs }, { data: obs }, { count: leads }, { count: orcCount }, { count: obrasCount }, { count: conclCount }] = await Promise.all([
         sb.from("orcamentos").select("area, valor, padrao, status, criado").eq("empresa_id", empresaId),
         sb.from("obras").select("fase, progresso, prazo_inicio, prazo_fim, status, nome").eq("empresa_id", empresaId),
+        sb.from("pre_orcamentos").select("*", { count: "exact", head: true }).eq("empresa_id", empresaId).gte("created_at", desde),
+        sb.from("orcamentos").select("*", { count: "exact", head: true }).eq("empresa_id", empresaId).gte("created_at", desde),
+        sb.from("obras").select("*", { count: "exact", head: true }).eq("empresa_id", empresaId).gte("created_at", desde),
+        sb.from("obras").select("*", { count: "exact", head: true }).eq("empresa_id", empresaId).eq("status", "Concluída").gte("created_at", desde),
       ]);
       setOrcamentos(orcs || []);
       setObras(obs || []);
+      setFunil({ leads: leads || 0, orcamentos: orcCount || 0, obras: obrasCount || 0, concluidas: conclCount || 0 });
       setLoading(false);
     })();
-  }, []);
+  }, [periodo]);
 
   // ── Análise por padrão ─────────────────────────────────────────────────────
   const stats = PADROES.map((pad) => {
@@ -74,6 +92,62 @@ export default function Inteligencia() {
       <div style={{ marginBottom: 24 }}>
         <div style={{ fontSize: 22, fontWeight: 800, color: C.text }}>🧠 Inteligência de Negócios</div>
         <div style={{ fontSize: 13, color: C.muted, marginTop: 4 }}>Análise histórica de custos e prazos</div>
+      </div>
+
+      {/* ── Funil de Conversão ────────────────────────────────────────────────── */}
+      <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12, padding: 24, marginBottom: 20 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
+          <div style={{ fontSize: 15, fontWeight: 700 }}>📊 Funil de Conversão</div>
+          <select value={periodo} onChange={(e) => setPeriodo(Number(e.target.value))} style={{ border: `1px solid ${C.border}`, borderRadius: 8, padding: "6px 12px", fontSize: 12, background: C.surface, color: C.text, cursor: "pointer" }}>
+            {PERIODO_OPTS.map((o) => <option key={o.days} value={o.days}>{o.label}</option>)}
+          </select>
+        </div>
+        {(() => {
+          const etapas = [
+            { label: "Leads", icon: "🎯", count: funil.leads, color: "#4a9eff" },
+            { label: "Orçamentos", icon: "📋", count: funil.orcamentos, color: "#9b59b6" },
+            { label: "Obras", icon: "🏗", count: funil.obras, color: C.red },
+            { label: "Concluídas", icon: "✅", count: funil.concluidas, color: "#2e9e5b" },
+          ];
+          const maxCount = Math.max(...etapas.map((e) => e.count), 1);
+          return (
+            <div>
+              <div style={{ display: "flex", gap: 8, alignItems: "flex-end", marginBottom: 16 }}>
+                {etapas.map((e, i) => {
+                  const pct = Math.max((e.count / maxCount) * 100, e.count > 0 ? 8 : 0);
+                  const conv = i > 0 && etapas[i - 1].count > 0
+                    ? Math.round((e.count / etapas[i - 1].count) * 100)
+                    : null;
+                  return (
+                    <div key={e.label} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
+                      {conv !== null && (
+                        <div style={{ fontSize: 10, color: C.muted, fontWeight: 600 }}>↓ {conv}%</div>
+                      )}
+                      <div style={{ width: "100%", background: e.color + "22", borderRadius: 8, display: "flex", flexDirection: "column", justifyContent: "flex-end", minHeight: 120, position: "relative" }}>
+                        <div style={{ background: e.color, borderRadius: 8, height: `${pct}%`, minHeight: e.count > 0 ? 24 : 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          {e.count > 0 && <span style={{ color: "#fff", fontSize: 13, fontWeight: 800 }}>{e.count}</span>}
+                        </div>
+                      </div>
+                      <div style={{ fontSize: 11, color: C.muted, textAlign: "center" }}>{e.icon} {e.label}</div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, marginTop: 8 }}>
+                {[
+                  { label: "Lead → Orçamento", val: funil.leads > 0 ? Math.round((funil.orcamentos / funil.leads) * 100) : 0 },
+                  { label: "Orçamento → Obra", val: funil.orcamentos > 0 ? Math.round((funil.obras / funil.orcamentos) * 100) : 0 },
+                  { label: "Obra → Conclusão", val: funil.obras > 0 ? Math.round((funil.concluidas / funil.obras) * 100) : 0 },
+                ].map((t) => (
+                  <div key={t.label} style={{ background: C.dark, borderRadius: 8, padding: "10px 14px", textAlign: "center" }}>
+                    <div style={{ fontSize: 20, fontWeight: 800, color: t.val >= 30 ? "#2e9e5b" : t.val >= 10 ? "#b97a00" : C.red }}>{t.val}%</div>
+                    <div style={{ fontSize: 10, color: C.muted, marginTop: 2 }}>{t.label}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
       </div>
 
       {/* ── Seção 1: Custo por m² ─────────────────────────────────────────────── */}
