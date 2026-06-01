@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Phone } from "../components/ui/Icon";
 import { useToast } from "../hooks/useToast";
 import { C } from "../utils/constants";
 import { fmt } from "../utils/format";
@@ -248,7 +249,7 @@ export default function DashboardComercial() {
                     </div>
                     {c.proximo_contato && (
                       <div style={{ fontSize: 10, marginTop: 3, color: atrasado ? C.danger : hoje2 ? C.warning : C.success, fontWeight: 700 }}>
-                        📞 {atrasado ? "Atrasado · " : hoje2 ? "Hoje · " : ""}
+                        <Phone size={12} /> {atrasado ? "Atrasado · " : hoje2 ? "Hoje · " : ""}
                         {new Date(c.proximo_contato + "T00:00").toLocaleDateString("pt-BR")}
                       </div>
                     )}

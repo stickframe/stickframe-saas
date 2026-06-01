@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { BarChart2, Brain, TrendingUp } from "../components/ui/Icon";
 import { sb, getEmpresaId } from "../services/supabase";
 import { C } from "../utils/constants";
 import { fmt } from "../utils/format";
@@ -90,14 +91,14 @@ export default function Inteligencia() {
     <div style={{ padding: "24px 28px", maxWidth: 900 }}>
       {/* Header */}
       <div style={{ marginBottom: 24 }}>
-        <div style={{ fontSize: 22, fontWeight: 800, color: C.text }}>🧠 Inteligência de Negócios</div>
+        <div style={{ fontSize: 22, fontWeight: 800, color: C.text }}><Brain size={13} /> Inteligência de Negócios</div>
         <div style={{ fontSize: 13, color: C.muted, marginTop: 4 }}>Análise histórica de custos e prazos</div>
       </div>
 
       {/* ── Funil de Conversão ────────────────────────────────────────────────── */}
       <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12, padding: 24, marginBottom: 20 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
-          <div style={{ fontSize: 15, fontWeight: 700 }}>📊 Funil de Conversão</div>
+          <div style={{ fontSize: 15, fontWeight: 700 }}><BarChart2 size={13} /> Funil de Conversão</div>
           <select value={periodo} onChange={(e) => setPeriodo(Number(e.target.value))} style={{ border: `1px solid ${C.border}`, borderRadius: 8, padding: "6px 12px", fontSize: 12, background: C.surface, color: C.text, cursor: "pointer" }}>
             {PERIODO_OPTS.map((o) => <option key={o.days} value={o.days}>{o.label}</option>)}
           </select>
@@ -156,7 +157,7 @@ export default function Inteligencia() {
           <div style={{ fontSize: 15, fontWeight: 700 }}>Custo por m² por Tipologia</div>
           {emAlta && (
             <span style={{ background: "#dcfce7", border: "1px solid #86efac", borderRadius: 8, padding: "4px 12px", fontSize: 12, fontWeight: 700, color: "#166534" }}>
-              📈 Em alta
+              <TrendingUp size={13} /> Em alta
             </span>
           )}
         </div>

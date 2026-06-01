@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { AlertTriangle, BarChart2, ClipboardList, DollarSign, HardHat, Pencil, Ruler, Search, Trash2, TrendingUp } from "../components/ui/Icon";
 import { useToast } from "../hooks/useToast";
 import { C, FASES } from "../utils/constants";
 import { exportarObrasExcel } from "../utils/exportExcel";
@@ -463,7 +464,7 @@ export default function GestaoObras() {
     const progresso = Math.round(((i + 2) / FASES.length) * 100);
     avancarFase(obra.id, novaFase, progresso);
     setChecklistModal(false);
-    mostrarToast(`📋 Avançou para: ${novaFase}`);
+    mostrarToast(`<ClipboardList size={13} /> Avançou para: ${novaFase}`);
   }
 
   async function gerarDossie() {
@@ -635,7 +636,7 @@ export default function GestaoObras() {
     <div class="page">
 
       <!-- RESUMO EXECUTIVO -->
-      <h2>📊 Resumo Executivo</h2>
+      <h2><BarChart2 size={13} /> Resumo Executivo</h2>
       <div class="kpi-grid">
         ${kpi("VALOR DO CONTRATO", fmtR(obra.contrato))}
         ${kpi("RECEITAS", fmtR(receitas), "#2e9e5b")}
@@ -648,24 +649,24 @@ export default function GestaoObras() {
       </div>
 
       <!-- FASES -->
-      <h2>🏗 Fases da Obra</h2>
+      <h2><HardHat size={13} /> Fases da Obra</h2>
       ${fasesHtml}
       <div style="font-size:12px;color:#6b7280;margin-top:6px">Fase atual: <strong style="color:#981915">${obra.fase || FASES[0]}</strong></div>
 
       <!-- VISTORIAS -->
-      <h2>🔍 Vistorias & FVS (${vists.length})</h2>
+      <h2><Search size={13} /> Vistorias & FVS (${vists.length})</h2>
       ${vistsHtml}
 
       <!-- MEDIÇÕES -->
-      <h2>📐 Medições (${meds.length})</h2>
+      <h2><Ruler size={13} /> Medições (${meds.length})</h2>
       ${medsHtml}
 
       <!-- QUANTITATIVOS -->
-      <h2>📋 Quantitativos de Materiais (${quants.length} itens)</h2>
+      <h2><ClipboardList size={13} /> Quantitativos de Materiais (${quants.length} itens)</h2>
       ${quantsHtml}
 
       <!-- FINANCEIRO -->
-      <h2>💰 Lançamentos Financeiros (${fin.length})</h2>
+      <h2><DollarSign size={13} /> Lançamentos Financeiros (${fin.length})</h2>
       ${finHtml}
 
       <!-- DIÁRIO -->
@@ -764,7 +765,7 @@ export default function GestaoObras() {
         </div>
 
         <!-- Cash Flow -->
-        <h2 style="font-size:13px;font-weight:800;letter-spacing:1px;color:#981915;margin:24px 0 12px;text-transform:uppercase;border-bottom:1px solid #e5e7eb;padding-bottom:8px">💰 Fluxo de Caixa</h2>
+        <h2 style="font-size:13px;font-weight:800;letter-spacing:1px;color:#981915;margin:24px 0 12px;text-transform:uppercase;border-bottom:1px solid #e5e7eb;padding-bottom:8px"><DollarSign size={13} /> Fluxo de Caixa</h2>
         ${lans.length === 0 ? "<p style='color:#9ca3af;font-size:13px'>Nenhum lançamento registrado.</p>" : `
         <table style="width:100%;border-collapse:collapse;font-size:12px">
           <thead><tr style="background:#f3f4f6">
@@ -777,7 +778,7 @@ export default function GestaoObras() {
         </table>`}
 
         <!-- Medições -->
-        <h2 style="font-size:13px;font-weight:800;letter-spacing:1px;color:#981915;margin:28px 0 12px;text-transform:uppercase;border-bottom:1px solid #e5e7eb;padding-bottom:8px">📐 Medições (${meds.length})</h2>
+        <h2 style="font-size:13px;font-weight:800;letter-spacing:1px;color:#981915;margin:28px 0 12px;text-transform:uppercase;border-bottom:1px solid #e5e7eb;padding-bottom:8px"><Ruler size={13} /> Medições (${meds.length})</h2>
         ${meds.length === 0 ? "<p style='color:#9ca3af;font-size:13px'>Nenhuma medição registrada.</p>" : `
         <table style="width:100%;border-collapse:collapse;font-size:12px">
           <thead><tr style="background:#f3f4f6">
@@ -900,7 +901,7 @@ export default function GestaoObras() {
       {confirm && (
         <div style={{ position: "fixed", inset: 0, background: "#000b", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12, padding: 28, width: 360, textAlign: "center" }}>
-            <div style={{ fontSize: 22, marginBottom: 8 }}>🗑</div>
+            <div style={{ fontSize: 22, marginBottom: 8 }}><Trash2 size={13} /></div>
             <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 8 }}>Deletar obra?</div>
             <div style={{ fontSize: 13, color: C.muted, marginBottom: 24 }}>
               <strong style={{ color: C.text }}>{obra?.nome}</strong> e todos seus dados serão removidos.
@@ -929,7 +930,7 @@ export default function GestaoObras() {
             border: "1px solid #2e9e5b44", borderRadius: 8,
             color: "#2e9e5b", fontSize: 12, fontWeight: 700,
             cursor: "pointer", fontFamily: "inherit",
-          }}>📊 Exportar Excel</button>
+          }}><BarChart2 size={13} /> Exportar Excel</button>
           <Btn onClick={abrirNova}>+ Nova obra</Btn>
         </div>
       </div>
@@ -980,7 +981,7 @@ export default function GestaoObras() {
             {atrasadas.length > 0 && (
               <div style={{ flex: 1, background: C.danger + "18", border: `1px solid ${C.danger}44`, borderRadius: 10, padding: 16 }}>
                 <div style={{ fontSize: 12, fontWeight: 800, color: C.danger, display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontSize: 18 }}>⚠️</span> OBRAS ATRASADAS ({atrasadas.length})
+                  <span style={{ fontSize: 18 }}><AlertTriangle size={14} /></span> OBRAS ATRASADAS ({atrasadas.length})
                 </div>
                 <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 6 }}>
                   {atrasadas.map(o => (
@@ -1283,7 +1284,7 @@ export default function GestaoObras() {
 
                   return (
                     <div style={{ background: C.surface, borderRadius: "0 0 12px 12px", border: `1px solid ${C.border}`, borderTop: "none", padding: 22 }}>
-                      <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 16 }}>📈 Fluxo de Caixa Mensal</div>
+                      <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 16 }}><TrendingUp size={13} /> Fluxo de Caixa Mensal</div>
 
                       {rows.length === 0 ? (
                         <div style={{ textAlign: "center", padding: "32px 0", color: C.muted, fontSize: 13 }}>Nenhum lançamento registrado.</div>
@@ -1533,7 +1534,7 @@ export default function GestaoObras() {
                               background: C.danger + "22", border: `1px solid ${C.danger}44`,
                               borderRadius: 6, color: C.danger, fontSize: 11, fontWeight: 700,
                               cursor: "pointer", padding: "4px 10px", fontFamily: "inherit", flexShrink: 0,
-                            }}>🗑</button>
+                            }}><Trash2 size={13} /></button>
                           </div>
                         ))}
                       </div>
@@ -1604,7 +1605,7 @@ export default function GestaoObras() {
                     </div>
                   )}
                   <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 8 }}>
-                    <Btn variant="ghost" size="sm" fullWidth onClick={abrirEditar}>✏️ Editar obra</Btn>
+                    <Btn variant="ghost" size="sm" fullWidth onClick={abrirEditar}><Pencil size={13} /> Editar obra</Btn>
                     <button onClick={gerarDossie} style={{
                       width: "100%", padding: "8px 0",
                       background: "#2e9e5b22", border: "1px solid #2e9e5b44",
@@ -1617,7 +1618,7 @@ export default function GestaoObras() {
                       background: "#0f766e22", border: "1px solid #0f766e44",
                       borderRadius: 6, color: "#0f766e", fontSize: 12, fontWeight: 700,
                       cursor: "pointer", fontFamily: "inherit",
-                    }}>📊 Relatório de Obra</button>
+                    }}><BarChart2 size={13} /> Relatório de Obra</button>
 
                     <button onClick={() => setQrModal(true)} style={{
                       width: "100%", padding: "8px 0",

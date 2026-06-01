@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { CheckCircle } from "../components/ui/Icon";
 import { useParams } from "react-router-dom";
 import { sb } from "../services/supabase";
 import { fmt } from "../utils/format";
@@ -196,7 +197,7 @@ export default function PropostaOnline() {
         <div style={{ background: jaAceito ? "#f0fdf4" : "#fff", borderRadius: 14, padding: "24px", marginBottom: 14, boxShadow: "0 2px 12px rgba(0,0,0,.06)", border: jaAceito ? "1px solid #86efac" : "1px solid #f0f0f0" }}>
           {jaAceito ? (
             <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: 36, marginBottom: 10 }}>✅</div>
+              <div style={{ fontSize: 36, marginBottom: 10 }}><CheckCircle size={14} /></div>
               <div style={{ fontSize: 16, fontWeight: 800, color: "#2e9e5b", marginBottom: 6 }}>Proposta aceita!</div>
               <div style={{ fontSize: 13, color: "#555" }}>
                 Aceite registrado por <strong>{orc.aceite_nome || aceite.nome}</strong>

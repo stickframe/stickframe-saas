@@ -89,3 +89,128 @@ select:focus {
 .mobile-overlay {
   display: none;
 }
+
+/* ─── CSS Variables ─────────────────────────────────────────────────────── */
+:root {
+  --red:     #981915;
+  --red-dk:  #6e1210;
+  --surface: #ffffff;
+  --bg:      #f5f6f8;
+  --border:  #e2e4ea;
+  --text:    #1a1a1a;
+  --muted:   #6b7280;
+  --success: #2e9e5b;
+  --warning: #b97a00;
+  --danger:  #c0392b;
+  --shadow:  0 2px 8px rgba(0,0,0,0.05);
+  --radius:  12px;
+  --radius-lg: 16px;
+}
+
+/* ─── Cards ─────────────────────────────────────────────────────────────── */
+/* .sf-card já existe acima — variações: */
+.sf-card-border {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+
+.sf-section {
+  background: var(--surface);
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  border: 1px solid var(--border);
+  border-top: none;
+  padding: 20px;
+}
+
+/* ─── Flexbox helpers ────────────────────────────────────────────────────── */
+.sf-row          { display: flex; align-items: center; gap: 10px; }
+.sf-row-between  { display: flex; justify-content: space-between; align-items: center; }
+.sf-row-end      { display: flex; justify-content: flex-end; align-items: center; gap: 8px; }
+.sf-col          { display: flex; flex-direction: column; gap: 14px; }
+.sf-col-sm       { display: flex; flex-direction: column; gap: 8px; }
+
+/* ─── Grid helpers (gap-12 para KPIs internos) ───────────────────────────── */
+.sf-grid-2       { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.sf-grid-3       { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+
+/* ─── Typography ─────────────────────────────────────────────────────────── */
+.sf-label        { font-size: 11px; font-weight: 700; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; margin-bottom: 6px; }
+.sf-label-sm     { font-size: 10px; color: var(--muted); }
+.sf-muted        { color: var(--muted); font-size: 13px; }
+.sf-muted-sm     { color: var(--muted); font-size: 11px; }
+.sf-value        { font-size: 22px; font-weight: 800; color: var(--text); }
+.sf-value-lg     { font-size: 28px; font-weight: 800; color: var(--text); }
+.sf-value-red    { font-size: 22px; font-weight: 800; color: var(--red); }
+
+/* ─── Page header ────────────────────────────────────────────────────────── */
+.sf-page-header  { display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; flex-wrap: wrap; gap: 12px; }
+.sf-page-title   { font-size: 22px; font-weight: 800; color: var(--text); }
+.sf-page-sub     { font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+/* ─── Section divider ────────────────────────────────────────────────────── */
+.sf-divider      { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+
+/* ─── Action bar (modal footer / form actions) ───────────────────────────── */
+.sf-actions      { display: flex; gap: 8px; justify-content: flex-end; padding-top: 12px; border-top: 1px solid var(--border); }
+
+/* ─── Empty state ────────────────────────────────────────────────────────── */
+.sf-empty        { text-align: center; padding: 48px 16px; color: var(--muted); font-size: 14px; }
+.sf-empty-icon   { font-size: 36px; margin-bottom: 12px; }
+
+/* ─── Badge base (complementa Badge.jsx) ─────────────────────────────────── */
+.sf-badge        { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+.sf-badge-red    { background: #fde8e8; color: var(--red); }
+.sf-badge-green  { background: #e6f9f0; color: var(--success); }
+.sf-badge-yellow { background: #fff8e1; color: var(--warning); }
+.sf-badge-gray   { background: #f0f1f3; color: var(--muted); }
+
+/* ─── Table base ─────────────────────────────────────────────────────────── */
+.sf-table        { width: 100%; border-collapse: collapse; font-size: 13px; }
+.sf-table th     { padding: 8px 12px; text-align: left; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; color: var(--muted); border-bottom: 1px solid var(--border); }
+.sf-table td     { padding: 10px 12px; border-bottom: 1px solid var(--border); color: var(--text); }
+.sf-table tr:last-child td { border-bottom: none; }
+.sf-table tr:hover td      { background: var(--bg); }
+
+/* ─── Modal ──────────────────────────────────────────────────────────────── */
+.sf-modal-backdrop {
+  position: fixed; inset: 0; background: rgba(0,0,0,.65);
+  z-index: 100; display: flex; align-items: center; justify-content: center; padding: 0 12px;
+}
+.sf-modal-box {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 24px; max-height: min(90vh, calc(100dvh - 40px)); overflow-y: auto; outline: none;
+}
+.sf-modal-header {
+  display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px;
+}
+.sf-modal-title  { font-size: 15px; font-weight: 700; color: var(--text); }
+.sf-modal-close  {
+  background: none; border: none; color: var(--muted); font-size: 22px;
+  cursor: pointer; line-height: 1; padding: 0 4px;
+}
+.sf-modal-close:hover { color: var(--text); }
+
+/* ─── Btn ────────────────────────────────────────────────────────────────── */
+.sf-btn {
+  border: none; border-radius: 6px; font-family: inherit; font-weight: 700;
+  transition: opacity .15s; display: inline-flex; align-items: center;
+  justify-content: center; gap: 6px; cursor: pointer; white-space: nowrap;
+}
+.sf-btn-sm   { padding: 6px 12px;  font-size: 11px; }
+.sf-btn-md   { padding: 9px 18px;  font-size: 13px; }
+.sf-btn-full { width: 100%; }
+.sf-btn-disabled { opacity: .4; cursor: not-allowed; }
+.sf-btn-primary { background: var(--red);     color: #fff; }
+.sf-btn-ghost   { background: transparent;    color: var(--muted); border: 1px solid var(--border); }
+.sf-btn-success { background: var(--success); color: #fff; }
+.sf-btn-danger  { background: var(--danger);  color: #fff; }
+.sf-btn:not(.sf-btn-disabled):hover { opacity: .85; }
+
+/* ─── Responsive: mobile collapse ────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .sf-grid-2, .sf-grid-3 { grid-template-columns: 1fr; }
+  .sf-page-header         { flex-direction: column; align-items: flex-start; }
+}

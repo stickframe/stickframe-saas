@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { ClipboardList, DollarSign, Pencil, Phone, Trash2 } from "../components/ui/Icon";
 import { useToast } from "../hooks/useToast";
 import { C } from "../utils/constants";
 import { fmt } from "../utils/format";
@@ -310,7 +311,7 @@ export default function Equipe() {
       {confirm && (
         <div style={{ position: "fixed", inset: 0, background: "#000b", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12, padding: 28, width: 360, textAlign: "center" }}>
-            <div style={{ fontSize: 22, marginBottom: 8 }}>🗑</div>
+            <div style={{ fontSize: 22, marginBottom: 8 }}><Trash2 size={13} /></div>
             <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 8 }}>Remover colaborador?</div>
             <div style={{ fontSize: 13, color: C.muted, marginBottom: 24 }}>Essa ação não pode ser desfeita.</div>
             <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
@@ -371,7 +372,7 @@ export default function Equipe() {
             </div>
             <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", paddingTop: 12, borderTop: `1px solid ${C.border}` }}>
               <Btn variant="ghost" onClick={() => setFolhaModal(false)}>Cancelar</Btn>
-              <Btn disabled={!obraFolha || totalSelecionado === 0} onClick={lancarFolha}>💰 Lançar {fmt(totalSelecionado)}</Btn>
+              <Btn disabled={!obraFolha || totalSelecionado === 0} onClick={lancarFolha}><DollarSign size={13} /> Lançar {fmt(totalSelecionado)}</Btn>
             </div>
           </div>
         </Modal>
@@ -481,7 +482,7 @@ export default function Equipe() {
                 color: C.success, fontSize: 12, fontWeight: 700,
                 cursor: "pointer", fontFamily: "inherit",
               }}>
-                💰 Lançar folha ({fmt(folha)})
+                <DollarSign size={13} /> Lançar folha ({fmt(folha)})
               </button>
             )}
             {tab === "equipe"   && <Btn onClick={abrirNovo}>+ Novo colaborador</Btn>}
@@ -551,8 +552,8 @@ export default function Equipe() {
 
                       <div style={{ display: "flex", flexDirection: "column", gap: 5, marginBottom: 12 }}>
                         {c.email    && <div style={{ fontSize: 12, color: C.muted }}>✉ {c.email}</div>}
-                        {c.telefone && <div style={{ fontSize: 12, color: C.muted }}>📞 {c.telefone}</div>}
-                        {c.salario  && <div style={{ fontSize: 12, color: C.success, fontWeight: 700 }}>💰 {fmt(c.salario)}</div>}
+                        {c.telefone && <div style={{ fontSize: 12, color: C.muted }}><Phone size={12} /> {c.telefone}</div>}
+                        {c.salario  && <div style={{ fontSize: 12, color: C.success, fontWeight: 700 }}><DollarSign size={13} /> {fmt(c.salario)}</div>}
                       </div>
 
                       {alocAtivas.length > 0 && (
@@ -578,13 +579,13 @@ export default function Equipe() {
                       )}
 
                       <div style={{ display: "flex", gap: 8 }}>
-                        <Btn variant="ghost" size="sm" onClick={() => abrirEditar(c)}>✏️ Editar</Btn>
+                        <Btn variant="ghost" size="sm" onClick={() => abrirEditar(c)}><Pencil size={13} /> Editar</Btn>
                         <button onClick={() => setConfirm(c.id)} style={{
                           padding: "6px 12px", background: C.danger + "22",
                           border: `1px solid ${C.danger}44`, borderRadius: 6,
                           color: C.danger, fontSize: 11, fontWeight: 700,
                           cursor: "pointer", fontFamily: "inherit",
-                        }}>🗑</button>
+                        }}><Trash2 size={13} /></button>
                       </div>
                     </div>
                   );
@@ -623,7 +624,7 @@ export default function Equipe() {
 
             {alocacoesFiltradas.length === 0 ? (
               <div style={{ background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", border: `1px solid ${C.border}`, padding: "50px 0", textAlign: "center" }}>
-                <div style={{ fontSize: 32, marginBottom: 12 }}>📋</div>
+                <div style={{ fontSize: 32, marginBottom: 12 }}><ClipboardList size={36} /></div>
                 <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 8 }}>Nenhuma alocação registrada</div>
                 <div style={{ fontSize: 12, color: C.muted, marginBottom: 20 }}>Aloque colaboradores às obras para controlar a equipe por projeto.</div>
                 <Btn onClick={() => setAlocModal(true)}>+ Nova alocação</Btn>
@@ -655,7 +656,7 @@ export default function Equipe() {
                           <button onClick={() => removeAlocacao(a.id)} style={{
                             background: "none", border: "none", cursor: "pointer",
                             color: C.muted, fontSize: 14, padding: 4,
-                          }}>🗑</button>
+                          }}><Trash2 size={13} /></button>
                         </td>
                       </tr>
                     ))}
@@ -750,7 +751,7 @@ export default function Equipe() {
                             <button onClick={() => removeHorasTrabalhadas(h.id)} style={{
                               background: "none", border: "none", cursor: "pointer",
                               color: C.muted, fontSize: 14, padding: 4,
-                            }}>🗑</button>
+                            }}><Trash2 size={13} /></button>
                           </td>
                         </tr>
                       );

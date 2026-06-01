@@ -1,4 +1,5 @@
 import { Component } from "react";
+import { AlertTriangle } from ".//Icon";
 import * as Sentry from "@sentry/react";
 import { C } from "../../utils/constants";
 
@@ -21,7 +22,7 @@ export class ErrorBoundary extends Component {
     if (this.state.hasError) {
       return (
         <div style={{ padding: 40, textAlign: "center" }}>
-          <div style={{ fontSize: 36, marginBottom: 16 }}>⚠️</div>
+          <div style={{ fontSize: 36, marginBottom: 16 }}><AlertTriangle size={14} /></div>
           <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 8 }}>
             Algo deu errado neste módulo
           </div>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { AlertTriangle } from "../components/ui/Icon";
 import { useToast } from "../hooks/useToast";
 import { C } from "../utils/constants";
 import { fmt } from "../utils/format";
@@ -204,7 +205,7 @@ export default function Equipamentos() {
             background: "#fff8e1", border: "1px solid #c88a00", borderRadius: 10,
             padding: "14px 18px", display: "flex", alignItems: "center", gap: 8,
           }}>
-            <span>⚠️</span>
+            <span><AlertTriangle size={14} /></span>
             <div>
               <div style={{ fontSize: 13, fontWeight: 600, color: "#c88a00" }}>
                 {alertaManutencao.length} equipamento{alertaManutencao.length > 1 ? "s" : ""} com manutenção próxima

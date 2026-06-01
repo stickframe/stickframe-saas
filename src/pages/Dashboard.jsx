@@ -1,4 +1,5 @@
 import { useEffect, useState, lazy, Suspense } from "react";
+import { AlertTriangle, BarChart2, CalendarDays, CheckCircle, TrendingUp } from "../components/ui/Icon";
 import { listarMonitorados } from "../services/repositories/precosRepository";
 import { C, CATEGORIAS_DESPESA, FASES } from "../utils/constants";
 import { fmt } from "../utils/format";
@@ -621,7 +622,7 @@ ${obrasAndamento.length > 0 ? `
             {/* Agenda do dia */}
             <div style={{ background: C.surface, borderRadius: 12, padding: 20, border: `1px solid ${C.border}` }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted }}>📅 AGENDA DO DIA</div>
+                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted }}><CalendarDays size={13} /> AGENDA DO DIA</div>
                 {followUps.length > 0 && (
                   <span style={{ background: C.danger + "22", color: C.danger, borderRadius: 10, fontSize: 10, fontWeight: 700, padding: "2px 8px" }}>
                     {followUps.length} pendente{followUps.length > 1 ? "s" : ""}
@@ -630,7 +631,7 @@ ${obrasAndamento.length > 0 ? `
               </div>
               {followUps.length === 0 ? (
                 <div style={{ textAlign: "center", padding: "24px 0", color: C.muted, fontSize: 12 }}>
-                  <div style={{ fontSize: 24, marginBottom: 8 }}>✅</div>
+                  <div style={{ fontSize: 24, marginBottom: 8 }}><CheckCircle size={14} /></div>
                   Nenhum follow-up pendente para hoje
                 </div>
               ) : (
@@ -663,10 +664,10 @@ ${obrasAndamento.length > 0 ? `
 
             {/* Preços em alta / baixa */}
             <div style={{ background: C.surface, borderRadius: 12, padding: 20, border: `1px solid ${C.border}` }}>
-              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 16 }}>📈 MONITOR DE PREÇOS</div>
+              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 16 }}><TrendingUp size={13} /> MONITOR DE PREÇOS</div>
               {emAlta.length === 0 && emBaixa.length === 0 ? (
                 <div style={{ textAlign: "center", padding: "24px 0", color: C.muted, fontSize: 12 }}>
-                  <div style={{ fontSize: 24, marginBottom: 8 }}>📊</div>
+                  <div style={{ fontSize: 24, marginBottom: 8 }}><BarChart2 size={36} /></div>
                   Nenhuma variação registrada ainda
                 </div>
               ) : (
@@ -701,7 +702,7 @@ ${obrasAndamento.length > 0 ? `
         <div style={{ background: "#fff5f5", border: "1px solid #fca5a5", borderRadius: 12, padding: 20 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 14 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <span style={{ fontSize: 18 }}>⚠️</span>
+              <span style={{ fontSize: 18 }}><AlertTriangle size={14} /></span>
               <div>
                 <div style={{ fontSize: 13, fontWeight: 800, color: "#991b1b" }}>
                   Atenção: {inadimplentes.length} obra{inadimplentes.length > 1 ? "s" : ""} com pagamento atrasado em relação ao progresso

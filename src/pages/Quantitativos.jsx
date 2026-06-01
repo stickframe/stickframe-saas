@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { ClipboardList, Pencil, Ruler, Trash2 } from "../components/ui/Icon";
 import { useToast } from "../hooks/useToast";
 import { printHtml } from "../utils/printHtml";
 import { C, FASES } from "../utils/constants";
@@ -491,7 +492,7 @@ ${tabelaFases}
       {confirm && (
         <div style={{ position: "fixed", inset: 0, background: "#000b", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12, padding: 28, width: 340, textAlign: "center" }}>
-            <div style={{ fontSize: 22, marginBottom: 8 }}>🗑</div>
+            <div style={{ fontSize: 22, marginBottom: 8 }}><Trash2 size={13} /></div>
             <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 20 }}>Remover este item?</div>
             <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
               <Btn variant="ghost" onClick={() => setConfirm(null)}>Cancelar</Btn>
@@ -554,7 +555,7 @@ ${tabelaFases}
 
         {!obraId ? (
           <div style={{ background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", border: `1px solid ${C.border}`, padding: "60px 0", textAlign: "center" }}>
-            <div style={{ fontSize: 36, marginBottom: 12 }}>📐</div>
+            <div style={{ fontSize: 36, marginBottom: 12 }}><Ruler size={36} /></div>
             <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 8 }}>Selecione uma obra para começar</div>
             <div style={{ fontSize: 13, color: C.muted }}>A planilha de quantitativos é vinculada a cada obra.</div>
           </div>
@@ -562,7 +563,7 @@ ${tabelaFases}
           <div style={{ textAlign: "center", padding: 40, color: C.muted }}>Carregando…</div>
         ) : items.length === 0 ? (
           <div style={{ background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", border: `1px solid ${C.border}`, padding: "60px 24px", textAlign: "center" }}>
-            <div style={{ fontSize: 36, marginBottom: 12 }}>📋</div>
+            <div style={{ fontSize: 36, marginBottom: 12 }}><ClipboardList size={36} /></div>
             <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 8 }}>Nenhum item cadastrado</div>
             <div style={{ fontSize: 13, color: C.muted, marginBottom: 24 }}>Use o template Steel Frame ou adicione itens manualmente.</div>
             <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
@@ -725,8 +726,8 @@ ${tabelaFases}
                                     setEditId(item.id);
                                     setForm({ fase: item.fase, descricao: item.descricao, unidade: item.unidade, quantidade: String(item.quantidade), custo_unitario: String(item.custo_unitario), categoria: item.categoria || "Outros", observacoes: item.observacoes || "" });
                                     setModal("editar");
-                                  }} style={{ background: "none", border: "none", cursor: "pointer", color: C.muted, fontSize: 13, padding: 3 }}>✏️</button>
-                                  <button onClick={() => setConfirm(item.id)} style={{ background: "none", border: "none", cursor: "pointer", color: C.muted, fontSize: 13, padding: 3 }}>🗑</button>
+                                  }} style={{ background: "none", border: "none", cursor: "pointer", color: C.muted, fontSize: 13, padding: 3 }}><Pencil size={13} /></button>
+                                  <button onClick={() => setConfirm(item.id)} style={{ background: "none", border: "none", cursor: "pointer", color: C.muted, fontSize: 13, padding: 3 }}><Trash2 size={13} /></button>
                                 </div>
                               </td>
                             </tr>

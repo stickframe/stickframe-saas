@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Bell, CheckCircle, HardHat, Zap } from "../components/ui/Icon";
 import { sb } from "../services/supabase";
 
 // Pricing constants
@@ -114,7 +115,7 @@ export default function CalculadoraPublica() {
 
       // Open WhatsApp notification to empresa owner
       try {
-        const msg = `🔔 *Novo lead via Calculadora!*\n\n👤 *${nome}*\n📱 ${whatsapp}\n📍 ${cidade || "—"}\n\n🏗️ *Projeto:*\n• Área: ${area}m² · ${pavimentos}\n• Padrão: ${padrao}\n• Estimativa: R$ ${Math.round(sfValor * 0.92).toLocaleString("pt-BR")} – R$ ${Math.round(sfValor * 1.12).toLocaleString("pt-BR")}\n\nAcesse o sistema para responder: https://stickframe.com.br`;
+        const msg = `<Bell size={13} /> *Novo lead via Calculadora!*\n\n👤 *${nome}*\n📱 ${whatsapp}\n📍 ${cidade || "—"}\n\n<HardHat size={13} /> *Projeto:*\n• Área: ${area}m² · ${pavimentos}\n• Padrão: ${padrao}\n• Estimativa: R$ ${Math.round(sfValor * 0.92).toLocaleString("pt-BR")} – R$ ${Math.round(sfValor * 1.12).toLocaleString("pt-BR")}\n\nAcesse o sistema para responder: https://stickframe.com.br`;
         const { data: waNum } = await sb.rpc("get_empresa_whatsapp_alertas");
         const numLimpo = (waNum || "").replace(/\D/g, "");
         if (numLimpo) {
@@ -512,7 +513,7 @@ export default function CalculadoraPublica() {
 
                 {speedPct > 0 && (
                   <div className="comparison-note">
-                    ⚡ Steel Frame pode ser até <strong>{speedPct}% mais rápido</strong> que a alvenaria convencional
+                    <Zap size={13} /> Steel Frame pode ser até <strong>{speedPct}% mais rápido</strong> que a alvenaria convencional
                   </div>
                 )}
 
@@ -564,7 +565,7 @@ export default function CalculadoraPublica() {
           {/* ============ STEP: SUCCESS ============ */}
           {step === "success" && (
             <div className="calc-card">
-              <div className="success-icon">✅</div>
+              <div className="success-icon"><CheckCircle size={14} /></div>
               <div className="success-title">Recebemos seu contato!</div>
               <p className="success-msg">
                 Nossa equipe vai entrar em contato em até 24h pelo WhatsApp <strong>{whatsapp}</strong>.

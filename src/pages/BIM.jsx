@@ -1,4 +1,5 @@
 import * as Sentry from "@sentry/react";
+import { AlertTriangle, Box, FileText, Trash2 } from "../components/ui/Icon";
 import { useState, useEffect, useRef } from "react";
 import { useToast } from "../hooks/useToast";
 import { C, FASES } from "../utils/constants";
@@ -210,13 +211,13 @@ function IFCViewer({ url, onElementClick }) {
           )}
           {status === "idle" && (
             <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: 40, marginBottom: 10 }}>🧊</div>
+              <div style={{ fontSize: 40, marginBottom: 10 }}><Box size={36} /></div>
               <div style={{ fontSize: 13, color: "#555" }}>Selecione um modelo IFC para visualizar</div>
             </div>
           )}
           {status === "error" && (
             <div style={{ textAlign: "center", padding: 20 }}>
-              <div style={{ fontSize: 36, marginBottom: 10 }}>⚠️</div>
+              <div style={{ fontSize: 36, marginBottom: 10 }}><AlertTriangle size={14} /></div>
               <div style={{ fontSize: 13, color: "#c0392b", marginBottom: 6 }}>Erro ao carregar modelo</div>
               <div style={{ fontSize: 11, color: "#888", maxWidth: 300, lineHeight: 1.5 }}>{msg}</div>
             </div>
@@ -321,7 +322,7 @@ function ModalUpload({ onSave, onClose }) {
         <div style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: 14 }}>
           <label style={{ display: "block", border: `2px dashed ${file ? C.red : C.border}`, borderRadius: 10, padding: "20px", textAlign: "center", cursor: "pointer", background: file ? C.red + "08" : C.darker }}>
             <input type="file" accept=".ifc" style={{ display: "none" }} onChange={(e) => { const f = e.target.files[0]; if (f) { setFile(f); if (!nome) setNome(f.name.replace(".ifc", "")); } }} />
-            <div style={{ fontSize: 28, marginBottom: 6 }}>🧊</div>
+            <div style={{ fontSize: 28, marginBottom: 6 }}><Box size={36} /></div>
             {file ? (
               <div>
                 <div style={{ fontSize: 13, fontWeight: 700, color: C.red }}>{file.name}</div>
@@ -444,7 +445,7 @@ export default function BIM() {
 
   if (obras.length === 0) return (
     <div style={{ textAlign: "center", padding: "80px 0" }}>
-      <div style={{ fontSize: 40, marginBottom: 16 }}>🧊</div>
+      <div style={{ fontSize: 40, marginBottom: 16 }}><Box size={36} /></div>
       <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Nenhuma obra cadastrada</div>
       <div style={{ fontSize: 13, color: C.muted }}>Cadastre uma obra em <strong>Gestão de Obras</strong> para começar.</div>
     </div>
@@ -550,7 +551,7 @@ export default function BIM() {
         <div style={{ background: C.surface, borderRadius: "0 0 12px 12px", border: `1px solid ${C.border}`, borderTop: "none", padding: 22 }}>
           {modelos.length === 0 ? (
             <div style={{ textAlign: "center", padding: "40px 0" }}>
-              <div style={{ fontSize: 36, marginBottom: 12 }}>🧊</div>
+              <div style={{ fontSize: 36, marginBottom: 12 }}><Box size={36} /></div>
               <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 6 }}>Nenhum modelo importado</div>
               <div style={{ fontSize: 13, color: C.muted, marginBottom: 24 }}>Importe arquivos .IFC para visualizar em 3D.</div>
               <button onClick={() => setModalUpload(true)} style={btnPrimary}>⬆ Importar primeiro modelo</button>
@@ -559,7 +560,7 @@ export default function BIM() {
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {modelos.map((m) => (
                 <div key={m.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 18px", background: C.darker, borderRadius: 10, border: `1px solid ${C.border}` }}>
-                  <div style={{ width: 42, height: 42, borderRadius: 8, background: "#4a9eff20", border: "2px solid #4a9eff44", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}>🧊</div>
+                  <div style={{ width: 42, height: 42, borderRadius: 8, background: "#4a9eff20", border: "2px solid #4a9eff44", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}><Box size={36} /></div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 13, fontWeight: 700 }}>{m.nome}</div>
                     <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>
@@ -570,7 +571,7 @@ export default function BIM() {
                     <button onClick={() => abrirModelo(m)} style={{ padding: "7px 16px", borderRadius: 6, border: "1px solid #4a9eff44", background: "#4a9eff18", color: "#4a9eff", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
                       🖥 Visualizar 3D
                     </button>
-                    <button onClick={async () => { await deleteBimModelo(obraId, m.id, m.storage_path); mostrarToast("🗑 Modelo removido."); }} style={{ padding: "7px 10px", borderRadius: 6, border: `1px solid ${C.danger}44`, background: C.danger + "18", color: C.danger, fontSize: 11, cursor: "pointer", fontFamily: "inherit" }}>🗑</button>
+                    <button onClick={async () => { await deleteBimModelo(obraId, m.id, m.storage_path); mostrarToast("🗑 Modelo removido."); }} style={{ padding: "7px 10px", borderRadius: 6, border: `1px solid ${C.danger}44`, background: C.danger + "18", color: C.danger, fontSize: 11, cursor: "pointer", fontFamily: "inherit" }}><Trash2 size={13} /></button>
                   </div>
                 </div>
               ))}
@@ -651,7 +652,7 @@ export default function BIM() {
             ))}
             {todosApt.length > 0 && (
               <button onClick={() => exportarRelatorioApontamentos(apts, obraAtual?.nome || "Obra")} style={{ marginLeft: "auto", padding: "4px 12px", borderRadius: 5, border: `1px solid ${C.border}`, background: "transparent", color: C.muted, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
-                📄 PDF
+                <FileText size={13} /> PDF
               </button>
             )}
           </div>
@@ -693,7 +694,7 @@ export default function BIM() {
                       {a.status !== "Em andamento" && a.status !== "Resolvido" && (
                         <button onClick={() => updateBimApontamento(obraId, a.id, { status: "Em andamento" })} style={{ padding: "5px 10px", borderRadius: 5, border: "1px solid #b97a0044", background: "#b97a0018", color: "#b97a00", fontSize: 10, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>→ Iniciar</button>
                       )}
-                      <button onClick={async () => { await deleteBimApontamento(obraId, a.id); mostrarToast("🗑 Apontamento removido."); }} style={{ padding: "5px 8px", borderRadius: 5, border: `1px solid ${C.danger}44`, background: C.danger + "18", color: C.danger, fontSize: 10, cursor: "pointer", fontFamily: "inherit" }}>🗑</button>
+                      <button onClick={async () => { await deleteBimApontamento(obraId, a.id); mostrarToast("🗑 Apontamento removido."); }} style={{ padding: "5px 8px", borderRadius: 5, border: `1px solid ${C.danger}44`, background: C.danger + "18", color: C.danger, fontSize: 10, cursor: "pointer", fontFamily: "inherit" }}><Trash2 size={13} /></button>
                     </div>
                   </div>
                 );
@@ -719,7 +720,7 @@ export default function BIM() {
               <div style={{ fontSize: 36 }}>🖥</div>
               <div style={{ fontSize: 14, fontWeight: 700, color: "#555" }}>Nenhum modelo aberto</div>
               <div style={{ fontSize: 12, color: "#444", marginBottom: 8 }}>Vá para "Modelos" e clique em "Visualizar 3D"</div>
-              <button onClick={() => setAba("modelos")} style={{ ...btnPrimary, fontSize: 12 }}>🧊 Ver modelos</button>
+              <button onClick={() => setAba("modelos")} style={{ ...btnPrimary, fontSize: 12 }}><Box size={13} /> Ver modelos</button>
             </div>
           )}
         </div>

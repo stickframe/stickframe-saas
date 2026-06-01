@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { ClipboardList, Save } from "../components/ui/Icon";
 import { useToast } from "../hooks/useToast";
 import { C, CLIMAS, TURNOS } from "../utils/constants";
 import useAppStore from "../store/useAppStore";
@@ -135,7 +136,7 @@ function FormDiario({ form, setForm, onSave, onCancel }) {
       {/* Ações */}
       <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", paddingTop: 12, borderTop: `1px solid ${C.border}` }}>
         <Btn variant="ghost" onClick={onCancel}>Cancelar</Btn>
-        <Btn disabled={!ok} onClick={onSave}>💾 Salvar registro</Btn>
+        <Btn disabled={!ok} onClick={onSave}><Save size={13} /> Salvar registro</Btn>
       </div>
     </div>
   );
@@ -310,7 +311,7 @@ export default function DiarioObra() {
   if (obras.length === 0) {
     return (
       <div style={{ textAlign: "center", padding: "80px 0" }}>
-        <div style={{ fontSize: 40, marginBottom: 16 }}>📋</div>
+        <div style={{ fontSize: 40, marginBottom: 16 }}><ClipboardList size={36} /></div>
         <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Nenhuma obra cadastrada</div>
         <div style={{ fontSize: 13, color: C.muted }}>
           Cadastre uma obra em <strong>Gestão de Obras</strong> para começar o diário.
@@ -425,7 +426,7 @@ export default function DiarioObra() {
             background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", border: `1px solid ${C.border}`,
             padding: "56px 0", textAlign: "center",
           }}>
-            <div style={{ fontSize: 36, marginBottom: 12 }}>📋</div>
+            <div style={{ fontSize: 36, marginBottom: 12 }}><ClipboardList size={36} /></div>
             <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 6 }}>Nenhum registro ainda</div>
             <div style={{ fontSize: 13, color: C.muted, marginBottom: 24 }}>Registre as atividades diárias da obra para manter o histórico.</div>
             <Btn onClick={abrirNovoRegistro}>+ Criar primeiro registro</Btn>

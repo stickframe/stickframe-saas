@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Bell, ClipboardList, FileText, Pencil, Smartphone, Trash2, Zap } from "../components/ui/Icon";
 import { sb, getEmpresaId } from "../services/supabase";
 import { LOGO_STICKFRAME } from "../utils/cdn";
 import { useToast } from "../hooks/useToast";
@@ -933,7 +934,7 @@ export default function Orcamentos() {
         <Modal title="Novo orçamento" onClose={() => setModal(false)}>
           {estimativo && (
             <div style={{ background: C.red + "0d", border: `1px solid ${C.red}33`, borderRadius: 10, padding: "12px 16px", marginBottom: 16 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: C.red, marginBottom: 4 }}>⚡ Estimativo — {estimativo.tipo === "residencial" ? "Residencial" : "Galpão/Comercial"} · {estimativo.area}m²</div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: C.red, marginBottom: 4 }}><Zap size={13} /> Estimativo — {estimativo.tipo === "residencial" ? "Residencial" : "Galpão/Comercial"} · {estimativo.area}m²</div>
               <div style={{ fontSize: 12, color: C.muted }}>
                 {estimativo.itens.length} itens · Custo materiais: <strong style={{ color: C.text }}>{estimativo.totalGeral.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</strong>
                 <span style={{ marginLeft: 8 }}>· {(estimativo.totalGeral / estimativo.area).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}/m²</span>
@@ -961,7 +962,7 @@ export default function Orcamentos() {
       {confirm && (
         <div style={{ position: "fixed", inset: 0, background: "#000b", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12, padding: 28, width: 360, textAlign: "center" }}>
-            <div style={{ fontSize: 22, marginBottom: 8 }}>🗑</div>
+            <div style={{ fontSize: 22, marginBottom: 8 }}><Trash2 size={13} /></div>
             <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 8 }}>Deletar orçamento?</div>
             <div style={{ fontSize: 13, color: C.muted, marginBottom: 24 }}>Essa ação não pode ser desfeita.</div>
             <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
@@ -1021,7 +1022,7 @@ export default function Orcamentos() {
 
             {estimativo?.itens?.length > 0 && (
               <div style={{ background: C.red + "0d", border: `1px solid ${C.red}33`, borderRadius: 8, padding: "10px 14px", fontSize: 12, color: C.red }}>
-                ⚡ {estimativo.itens.length} itens da calculadora estimativa serão importados automaticamente para os Quantitativos desta obra.
+                <Zap size={13} /> {estimativo.itens.length} itens da calculadora estimativa serão importados automaticamente para os Quantitativos desta obra.
               </div>
             )}
 
@@ -1053,7 +1054,7 @@ export default function Orcamentos() {
               borderRadius: 8, padding: "9px 16px", fontSize: 13, fontWeight: 700,
               cursor: "pointer", fontFamily: "inherit",
             }}>
-              ⚡ Calculadora estimativa
+              <Zap size={13} /> Calculadora estimativa
             </button>
             <Btn onClick={abrirNovo}>+ Novo orçamento</Btn>
           </div>
@@ -1064,7 +1065,7 @@ export default function Orcamentos() {
           <div style={{ background: "#2e9e5b11", border: "1px solid #2e9e5b44", borderRadius: 12, padding: "16px 20px", marginBottom: 20 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
               <div>
-                <div style={{ fontSize: 14, fontWeight: 800, color: "#2e9e5b" }}>🔔 {preOrcamentos.length} pré-orçamento(s) novo(s)</div>
+                <div style={{ fontSize: 14, fontWeight: 800, color: "#2e9e5b" }}><Bell size={13} /> {preOrcamentos.length} pré-orçamento(s) novo(s)</div>
                 <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>Leads da calculadora aguardando sua análise</div>
               </div>
             </div>
@@ -1109,7 +1110,7 @@ export default function Orcamentos() {
                     const msg = `Olá ${p.nome}! 👋\n\nRecebi sua simulação de Steel Frame (${p.area}m² · ${p.padrao}).\n\nVou preparar uma proposta detalhada para você. Posso entrar em contato agora?\n\nStick Frame · Santo André/SP`;
                     window.open(`https://wa.me/${num.startsWith("55") ? num : "55" + num}?text=${encodeURIComponent(msg)}`, "_blank");
                   }} style={{ background: "#25D36622", border: "1px solid #25D36644", borderRadius: 6, color: "#25D366", fontSize: 11, fontWeight: 700, padding: "6px 12px", cursor: "pointer", fontFamily: "inherit" }}>
-                    📲 WhatsApp
+                    <Smartphone size={13} /> WhatsApp
                   </button>
                 </div>
               </div>
@@ -1122,7 +1123,7 @@ export default function Orcamentos() {
           <div style={{ background: C.red + "0d", border: `1px solid ${C.red}33`, borderRadius: 12, marginBottom: 16, overflow: "hidden" }}>
             <div style={{ padding: "14px 18px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div>
-                <div style={{ fontSize: 12, fontWeight: 700, color: C.red, marginBottom: 2 }}>⚡ Estimativo calculado — {["residencial","galpão"].includes(estimativo.tipo) ? (estimativo.tipo === "residencial" ? "Residencial" : "Galpão") : estimativo.tipo || "Residencial"} · {estimativo.area}m²</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: C.red, marginBottom: 2 }}><Zap size={13} /> Estimativo calculado — {["residencial","galpão"].includes(estimativo.tipo) ? (estimativo.tipo === "residencial" ? "Residencial" : "Galpão") : estimativo.tipo || "Residencial"} · {estimativo.area}m²</div>
                 <div style={{ fontSize: 11, color: C.muted }}>{estimativo.itens.length} itens · Total materiais: <strong>{estimativo.totalGeral.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</strong></div>
               </div>
               <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
@@ -1213,7 +1214,7 @@ export default function Orcamentos() {
 
                   {/* Ações */}
                   <div style={{ display: "flex", gap: 8, marginTop: 14, flexWrap: "wrap" }}>
-                    <Btn variant="ghost" size="sm" onClick={() => abrirEditar(o)}>✏️ Editar</Btn>
+                    <Btn variant="ghost" size="sm" onClick={() => abrirEditar(o)}><Pencil size={13} /> Editar</Btn>
                     <button
                       onClick={() => gerarPDF(o)}
                       style={{
@@ -1223,7 +1224,7 @@ export default function Orcamentos() {
                         cursor: "pointer", fontFamily: "inherit",
                       }}
                     >
-                      📄 PDF simples
+                      <FileText size={13} /> PDF simples
                     </button>
                     <button
                       onClick={() => gerarPropostaComercialPDF(o)}
@@ -1234,7 +1235,7 @@ export default function Orcamentos() {
                         cursor: "pointer", fontFamily: "inherit",
                       }}
                     >
-                      📋 Proposta Comercial
+                      <ClipboardList size={13} /> Proposta Comercial
                     </button>
                     <button
                       onClick={() => gerarContratoHTML(o)}
@@ -1301,7 +1302,7 @@ export default function Orcamentos() {
                           cursor: "pointer", fontFamily: "inherit",
                         }}
                       >
-                        📲 WhatsApp
+                        <Smartphone size={13} /> WhatsApp
                       </button>
                     )}
 

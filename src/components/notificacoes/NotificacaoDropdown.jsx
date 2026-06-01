@@ -1,4 +1,5 @@
 import { useState, useMemo, useRef, useEffect } from "react";
+import { CheckCircle } from "../ui/Icon";
 import { C } from "../../utils/constants";
 import useAppStore from "../../store/useAppStore";
 import { useNotificacoes } from "../../hooks/useNotificacoes";
@@ -211,7 +212,7 @@ export default function NotificacaoDropdown() {
                 <div style={{ maxHeight: 340, overflowY: "auto" }}>
                   {alertasFiltrados.length === 0 ? (
                     <div style={{ padding: "32px 18px", textAlign: "center", color: C.muted, fontSize: 13 }}>
-                      <div style={{ fontSize: 28, marginBottom: 8 }}>✅</div>
+                      <div style={{ fontSize: 28, marginBottom: 8 }}><CheckCircle size={14} /></div>
                       Nenhum alerta no momento.
                     </div>
                   ) : alertasFiltrados.map((a, i) => (
