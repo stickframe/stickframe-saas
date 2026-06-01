@@ -46,7 +46,7 @@ function Label({ children, required }) {
 }
 
 // ─── Formulário (fora do componente) ─────────────────────────────────────────
-function FormOrc({ form, setForm, clientes, onSave, onCancel, btnLabel }) {
+function FormOrc({ form, setForm, clientes, onSave, onCancel, onDelete, btnLabel }) {
   const set  = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
   const calc = calcOrcamento({ area: form.area, unidades: form.unidades, padrao: form.padrao });
 
@@ -139,6 +139,11 @@ function FormOrc({ form, setForm, clientes, onSave, onCancel, btnLabel }) {
         display: "flex", gap: 10, justifyContent: "flex-end",
         paddingTop: 12, borderTop: `1px solid ${C.border}`,
       }}>
+        {onDelete && form.status === "Recusado" && (
+          <Btn variant="danger" onClick={onDelete} style={{ marginRight: "auto" }}>
+            <Trash2 size={13} /> Excluir orçamento
+          </Btn>
+        )}
         <Btn variant="ghost" onClick={onCancel}>Cancelar</Btn>
         <Btn
           disabled={!form.cliente_id || !clientes.length}
@@ -953,6 +958,7 @@ export default function Orcamentos() {
           <FormOrc
             form={form} setForm={setForm} clientes={clientes}
             onSave={salvarEdicao} onCancel={() => setModal(false)}
+            onDelete={() => { setModal(false); confirmarDelete(editId); }}
             btnLabel="Salvar alterações"
           />
         </Modal>
