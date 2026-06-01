@@ -88,15 +88,18 @@ export default function Inteligencia() {
   );
 
   return (
-    <div style={{ padding: "24px 28px", maxWidth: 900 }}>
+    <div style={{ padding: "24px 28px", maxWidth: 1100 }}>
       {/* Header */}
       <div style={{ marginBottom: 24 }}>
         <div style={{ fontSize: 22, fontWeight: 800, color: C.text }}>Inteligência de Negócios</div>
         <div style={{ fontSize: 13, color: C.muted, marginTop: 4 }}>Análise histórica de custos e prazos</div>
       </div>
 
+      {/* ── Linha 1: Funil + Custo m² lado a lado ───────────────────────────── */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 20 }}>
+
       {/* ── Funil de Conversão ────────────────────────────────────────────────── */}
-      <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12, padding: 24, marginBottom: 20 }}>
+      <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12, padding: 24 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
           <div style={{ fontSize: 15, fontWeight: 700 }}><BarChart2 size={13} /> Funil de Conversão</div>
           <select value={periodo} onChange={(e) => setPeriodo(Number(e.target.value))} style={{ border: `1px solid ${C.border}`, borderRadius: 8, padding: "6px 12px", fontSize: 12, background: C.surface, color: C.text, cursor: "pointer" }}>
@@ -152,7 +155,7 @@ export default function Inteligencia() {
       </div>
 
       {/* ── Seção 1: Custo por m² ─────────────────────────────────────────────── */}
-      <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12, padding: 24, marginBottom: 20 }}>
+      <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12, padding: 24 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
           <div style={{ fontSize: 15, fontWeight: 700 }}>Custo por m² por Tipologia</div>
           {emAlta && (
@@ -208,8 +211,10 @@ export default function Inteligencia() {
         </table>
       </div>
 
+      </div>{/* fecha grid 2 colunas */}
+
       {/* ── Seção 2: Previsão de Prazo ────────────────────────────────────────── */}
-      <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12, padding: 24 }}>
+      <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12, padding: 24, marginBottom: 20 }}>
         <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 4 }}>Previsão de Prazo</div>
         <div style={{ fontSize: 12, color: C.muted, marginBottom: 20 }}>
           {avgDuracao
