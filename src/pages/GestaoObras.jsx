@@ -12,6 +12,7 @@ import Modal from "../components/ui/Modal";
 import { listarQuantitativos } from "../services/repositories/quantitativoRepository";
 import { emailAlertaObraAtrasada } from "../services/emailService";
 import { listarCheckinsDia } from "../services/repositories/checkinRepository";
+import { sb } from "../services/supabase";
 
 const ICONE_TIPO  = { pdf: "📄", imagem: "🖼️", outro: "📎" };
 const CATS        = ["Projeto", "Foto", "Documento", "Outro"];
@@ -137,6 +138,134 @@ function FormObra({ form, setForm, clientes, onSave, onCancel, btnLabel }) {
 }
 
 // ─── Gestão de Obras ──────────────────────────────────────────────────────────
+// ─── Diário com foto ──────────────────────────────────────────────────────────
+function DiarioAba({ obraId, obra, diario, addDiario }) {
+  const hoje = new Date().toISOString().split("T")[0];
+  const [form, setForm] = useState({ data: hoje, turno: "Manhã", clima: "Ensolarado", atividades: "", ocorrencias: "" });
+  const [fotoFile, setFotoFile] = useState(null);
+  const [fotoPreview, setFotoPreview] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [fotoAmpliada, setFotoAmpliada] = useState(null);
+  const { mostrarToast } = useToast();
+
+  const handleFoto = (e) => {
+    const f = e.target.files[0];
+    if (!f) return;
+    setFotoFile(f);
+    setFotoPreview(URL.createObjectURL(f));
+  };
+
+  const salvar = async () => {
+    if (!form.atividades.trim()) { mostrarToast("⚠️ Informe as atividades do dia."); return; }
+    setSaving(true);
+    try {
+      let foto_url = null;
+      if (fotoFile) {
+        const ext = fotoFile.name.split(".").pop();
+        const path = `diario/${obraId}/${Date.now()}.${ext}`;
+        const { error: upErr } = await sb.storage.from("arquivos").upload(path, fotoFile, { upsert: false });
+        if (!upErr) {
+          const { data } = sb.storage.from("arquivos").getPublicUrl(path);
+          foto_url = data.publicUrl;
+        }
+      }
+      await addDiario(obraId, { ...form, foto_url });
+      setForm({ data: hoje, turno: "Manhã", clima: "Ensolarado", atividades: "", ocorrencias: "" });
+      setFotoFile(null);
+      setFotoPreview(null);
+      mostrarToast("✅ Registro salvo no diário!");
+    } catch (e) {
+      mostrarToast("❌ Erro ao salvar. Tente novamente.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div style={{ background: C.surface, borderRadius: "0 0 12px 12px", border: `1px solid ${C.border}`, borderTop: "none", padding: 22 }}>
+      {/* Formulário */}
+      <div style={{ background: C.dark, borderRadius: 10, padding: 18, marginBottom: 24 }}>
+        <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 14, color: C.text }}>📝 Novo registro</div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 12 }}>
+          <div>
+            <Label>Data</Label>
+            <Input type="date" value={form.data} onChange={(v) => setForm((f) => ({ ...f, data: v }))} />
+          </div>
+          <div>
+            <Label>Turno</Label>
+            <Select value={form.turno} onChange={(v) => setForm((f) => ({ ...f, turno: v }))}
+              options={["Manhã", "Tarde", "Integral"].map((t) => ({ value: t, label: t }))} />
+          </div>
+          <div>
+            <Label>Clima</Label>
+            <Select value={form.clima} onChange={(v) => setForm((f) => ({ ...f, clima: v }))}
+              options={["Ensolarado", "Nublado", "Chuvoso", "Parcialmente nublado"].map((c) => ({ value: c, label: c }))} />
+          </div>
+        </div>
+        <div style={{ marginBottom: 12 }}>
+          <Label required>Atividades realizadas</Label>
+          <textarea value={form.atividades} onChange={(e) => setForm((f) => ({ ...f, atividades: e.target.value }))}
+            placeholder="Descreva o que foi feito hoje na obra..."
+            style={{ width: "100%", minHeight: 80, padding: "8px 12px", border: `1px solid ${C.border}`, borderRadius: 8, background: C.surface, color: C.text, fontSize: 13, fontFamily: "inherit", resize: "vertical", boxSizing: "border-box" }} />
+        </div>
+        <div style={{ marginBottom: 12 }}>
+          <Label>Ocorrências / Observações</Label>
+          <textarea value={form.ocorrencias} onChange={(e) => setForm((f) => ({ ...f, ocorrencias: e.target.value }))}
+            placeholder="Problemas, atrasos, visitas, etc..."
+            style={{ width: "100%", minHeight: 60, padding: "8px 12px", border: `1px solid ${C.border}`, borderRadius: 8, background: C.surface, color: C.text, fontSize: 13, fontFamily: "inherit", resize: "vertical", boxSizing: "border-box" }} />
+        </div>
+        {/* Upload foto */}
+        <div style={{ marginBottom: 16 }}>
+          <Label>Foto da obra (opcional)</Label>
+          <label style={{ display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }}>
+            <div style={{ background: C.surface, border: `1px dashed ${C.border}`, borderRadius: 8, padding: "10px 18px", fontSize: 13, color: C.muted, display: "flex", alignItems: "center", gap: 8 }}>
+              📷 {fotoFile ? fotoFile.name : "Tirar foto ou escolher arquivo"}
+            </div>
+            <input type="file" accept="image/*" capture="environment" onChange={handleFoto} style={{ display: "none" }} />
+          </label>
+          {fotoPreview && (
+            <img src={fotoPreview} alt="preview" onClick={() => setFotoAmpliada(fotoPreview)}
+              style={{ marginTop: 10, maxWidth: 200, maxHeight: 150, borderRadius: 8, border: `1px solid ${C.border}`, cursor: "zoom-in", objectFit: "cover" }} />
+          )}
+        </div>
+        <Btn onClick={salvar} disabled={saving}>{saving ? "Salvando..." : "💾 Salvar registro"}</Btn>
+      </div>
+
+      {/* Lista de registros */}
+      {diario.length === 0 ? (
+        <div style={{ textAlign: "center", padding: "24px 0", color: C.muted, fontSize: 13 }}>Nenhum registro no diário ainda.</div>
+      ) : diario.map((r, i) => (
+        <div key={r.id || i} style={{ borderBottom: `1px solid ${C.border}`, paddingBottom: 16, marginBottom: 16 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8, flexWrap: "wrap", gap: 6 }}>
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <span style={{ fontWeight: 700, fontSize: 13 }}>{r.data ? new Date(r.data + "T00:00").toLocaleDateString("pt-BR") : "—"}</span>
+              <span style={{ fontSize: 11, color: C.muted, background: C.dark, padding: "2px 8px", borderRadius: 6 }}>{r.turno}</span>
+              <span style={{ fontSize: 11, color: C.muted }}>{r.clima}</span>
+            </div>
+          </div>
+          <div style={{ fontSize: 13, color: C.text, marginBottom: r.ocorrencias ? 8 : 0, lineHeight: 1.5 }}>{r.atividades}</div>
+          {r.ocorrencias && (
+            <div style={{ background: "#fff5f5", borderLeft: `3px solid ${C.red}`, padding: "6px 12px", borderRadius: "0 6px 6px 0", fontSize: 12, color: "#555", marginBottom: 8 }}>
+              ⚠️ {r.ocorrencias}
+            </div>
+          )}
+          {r.foto_url && (
+            <img src={r.foto_url} alt="foto" onClick={() => setFotoAmpliada(r.foto_url)}
+              style={{ maxWidth: 180, maxHeight: 130, borderRadius: 8, border: `1px solid ${C.border}`, cursor: "zoom-in", objectFit: "cover", marginTop: 8 }} />
+          )}
+        </div>
+      ))}
+
+      {/* Lightbox */}
+      {fotoAmpliada && (
+        <div onClick={() => setFotoAmpliada(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", cursor: "zoom-out" }}>
+          <img src={fotoAmpliada} alt="ampliada" style={{ maxWidth: "90vw", maxHeight: "90vh", borderRadius: 10 }} />
+        </div>
+      )}
+    </div>
+  );
+}
+
 const FORM_VAZIO = {
   nome: "", cliente_id: "", cliente: "", email_cliente: "",
   status: "Planejamento", fase: "Projeto executivo",
@@ -167,6 +296,7 @@ export default function GestaoObras() {
   const loadDiario        = useAppStore((s) => s.loadDiario);
   const vistorias         = useAppStore((s) => s.vistorias);
   const loadVistorias     = useAppStore((s) => s.loadVistorias);
+  const addDiario         = useAppStore((s) => s.addDiario);
 
   useModuleLoad("arquivos", obras[0]?.id);
 
@@ -197,6 +327,7 @@ export default function GestaoObras() {
   }, [obras, obraId]);
 
   useEffect(() => {
+    if (abaAtiva === "diario" && obraId) loadDiario(obraId);
     if (abaAtiva === "historico" && obraId) {
       setHistLoading(true);
       loadHistoricoObra(obraId).then((d) => { setHistObra(d); setHistLoading(false); });
@@ -958,7 +1089,7 @@ export default function GestaoObras() {
               <div>
                 {/* Abas */}
                 <div style={{ display: "flex", borderBottom: `1px solid ${C.border}` }}>
-                  {[["fases", "📋 Fases"], ["financeiro", "💰 Financeiro"], ["fluxo", "📈 Fluxo"], ["cronograma", "📅 Cronograma"], ["fotos", "📷 Fotos"], ["arquivos", "📁 Arquivos"], ["historico", "🕑 Histórico"]].map(([k, l]) => (
+                  {[["fases", "📋 Fases"], ["financeiro", "💰 Financeiro"], ["fluxo", "📈 Fluxo"], ["cronograma", "📅 Cronograma"], ["diario", "📓 Diário"], ["fotos", "📷 Fotos"], ["arquivos", "📁 Arquivos"], ["historico", "🕑 Histórico"]].map(([k, l]) => (
                     <button key={k} onClick={() => setAbaAtiva(k)} style={{
                       padding: "10px 20px", background: "transparent", border: "none",
                       borderBottom: `2px solid ${abaAtiva === k ? C.red : "transparent"}`,
@@ -1409,6 +1540,16 @@ export default function GestaoObras() {
                     )}
                   </div>
                 )}
+                {/* ABA DIÁRIO */}
+                {abaAtiva === "diario" && (
+                  <DiarioAba
+                    obraId={obraId}
+                    obra={obra}
+                    diario={diario[obraId] || []}
+                    addDiario={addDiario}
+                  />
+                )}
+
                 {/* ABA HISTÓRICO */}
                 {abaAtiva === "historico" && (
                   <div style={{ background: C.surface, borderRadius: "0 0 12px 12px", border: `1px solid ${C.border}`, borderTop: "none", padding: 22 }}>
