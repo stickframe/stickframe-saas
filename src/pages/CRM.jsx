@@ -348,7 +348,11 @@ export default function CRM() {
   const [scoreModal, setScoreModal] = useState(null); // cliente para score detail
   const [seqLoading, setSeqLoading] = useState(false);
 
-  const cliente = useMemo(() => clientes.find((c) => c.id === sel), [clientes, sel]);
+  const cliente = useMemo(() => {
+    const found = clientes.find((c) => c.id === sel);
+    if (sel && !found) setSel(null); // cliente foi deletado, limpa seleção
+    return found;
+  }, [clientes, sel]);
   const { toast, mostrarToast } = useToast();
   const hojeStr = new Date().toISOString().split("T")[0];
 
