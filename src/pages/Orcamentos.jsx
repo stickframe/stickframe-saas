@@ -874,8 +874,28 @@ export default function Orcamentos() {
         await updateOrcamento(o.id, { proposta_token: token });
       }
       const url = `${window.location.origin}/proposta/${token}`;
-      await navigator.clipboard.writeText(url);
-      mostrarToast("🔗 Link da proposta copiado!");
+      if (navigator.share) {
+        await navigator.share({ title: "Proposta Stickframe", url });
+        mostrarToast("🔗 Proposta compartilhada!");
+      } else {
+        await navigator.clipboard.writeText(url);
+        mostrarToast("🔗 Link da proposta copiado!");
+      }
+    } catch {
+      mostrarToast("❌ Erro ao gerar link.");
+    }
+  }
+
+  async function compartilharWhatsApp(o) {
+    try {
+      let token = o.proposta_token;
+      if (!token) {
+        token = crypto.randomUUID();
+        await updateOrcamento(o.id, { proposta_token: token });
+      }
+      const url = `${window.location.origin}/proposta/${token}`;
+      const msg = encodeURIComponent(`Olá! Segue o link da sua proposta Stickframe:\n${url}`);
+      window.open(`https://wa.me/?text=${msg}`, "_blank");
     } catch {
       mostrarToast("❌ Erro ao gerar link.");
     }
@@ -1238,6 +1258,19 @@ export default function Orcamentos() {
                     >
                       {o.proposta_token ? "🔗 Copiar link" : "🔗 Gerar proposta"}
                     </button>
+                    {o.proposta_token && (
+                      <button
+                        onClick={() => compartilharWhatsApp(o)}
+                        style={{
+                          padding: "6px 14px", background: "#25d36622",
+                          border: "1px solid #25d36644", borderRadius: 6,
+                          color: "#25d366", fontSize: 11, fontWeight: 700,
+                          cursor: "pointer", fontFamily: "inherit",
+                        }}
+                      >
+                        💬 WhatsApp
+                      </button>
+                    )}
                     {o.status !== "Recusado" && (
                       <button
                         onClick={() => abrirConverter(o)}
