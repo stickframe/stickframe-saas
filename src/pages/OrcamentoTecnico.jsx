@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { BarChart2, CalendarDays, ClipboardList, FileText, HardHat, Link, Save } from "../components/ui/Icon";
 import { useToast } from "../hooks/useToast";
 import { printHtml } from "../utils/printHtml";
 import { CUB_ESTADOS, PADROES_SF, SISTEMAS_SF } from "../utils/insumosSF";
@@ -584,7 +585,7 @@ export default function OrcamentoTecnico() {
 
     const cronoRows = r.cronograma.length ? `
       <div style="page-break-before:always">
-      <h3 style="margin:0 0 14px;font-size:15px">📅 Cronograma Financeiro Estimado</h3>
+      <h3 style="margin:0 0 14px;font-size:15px"><CalendarDays size={13} /> Cronograma Financeiro Estimado</h3>
       <table style="width:100%;border-collapse:collapse;font-size:12px">
         <thead><tr style="background:#1a1a2e;color:#fff">
           <th style="padding:8px 10px;text-align:left">Mês</th>
@@ -671,7 +672,7 @@ export default function OrcamentoTecnico() {
       </div>
 
       <!-- COMPOSIÇÃO -->
-      <h3 style="margin:0 0 12px;font-size:15px">📋 Composição por Sistema</h3>
+      <h3 style="margin:0 0 12px;font-size:15px"><ClipboardList size={13} /> Composição por Sistema</h3>
       <table>
         <thead><tr style="background:#1a1a2e;color:#fff">
           <th style="padding:8px 10px;text-align:left">Insumo</th>
@@ -932,7 +933,7 @@ export default function OrcamentoTecnico() {
     }).join("");
 
     const cronoHtml = r.cronograma.length ? `
-      <h3 style="margin:32px 0 14px;font-size:15px;color:#1a1a1a">📅 Plano de Desembolso Estimado</h3>
+      <h3 style="margin:32px 0 14px;font-size:15px;color:#1a1a1a"><CalendarDays size={13} /> Plano de Desembolso Estimado</h3>
       <table style="width:100%;border-collapse:collapse;font-size:13px">
         <thead><tr style="background:#981915;color:#fff">
           <th style="padding:8px 12px;text-align:left">Mês</th>
@@ -997,7 +998,7 @@ export default function OrcamentoTecnico() {
       </div>
 
       <!-- COMPOSIÇÃO POR FASE -->
-      <h3 style="margin:0 0 14px;font-size:16px">🏗 Composição por Sistema Construtivo</h3>
+      <h3 style="margin:0 0 14px;font-size:16px"><HardHat size={13} /> Composição por Sistema Construtivo</h3>
       <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:28px">
         <thead><tr style="background:#1a1a1a;color:#fff">
           <th style="padding:10px 14px;text-align:left">Sistema</th>
@@ -1023,7 +1024,7 @@ export default function OrcamentoTecnico() {
 
       <!-- CONDIÇÕES -->
       <div style="margin-top:32px;border:1px solid #eee;border-radius:8px;padding:20px">
-        <h4 style="margin:0 0 12px;font-size:14px;color:#981915">📋 Condições Comerciais</h4>
+        <h4 style="margin:0 0 12px;font-size:14px;color:#981915"><ClipboardList size={13} /> Condições Comerciais</h4>
         <ul style="margin:0;padding-left:18px;font-size:13px;color:#444;line-height:1.8">
           <li>Proposta válida por 30 dias a partir de ${dataHoje}</li>
           <li>Valores sujeitos a confirmação mediante vistoria do terreno</li>
@@ -1114,7 +1115,7 @@ export default function OrcamentoTecnico() {
 
         {crmLead && (
           <div style={{ background: "#b91c1c15", border: "1px solid #b91c1c44", borderRadius: 8, padding: "10px 14px", display: "flex", alignItems: "center", gap: 10 }}>
-            <span style={{ fontSize: 18 }}>🔗</span>
+            <span style={{ fontSize: 18 }}><Link size={11} /></span>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 11, color: C.red, fontWeight: 700 }}>VIA CRM</div>
               <div style={{ fontSize: 13, fontWeight: 700 }}>{crmLead.nome}</div>
@@ -1279,7 +1280,7 @@ export default function OrcamentoTecnico() {
         {!resultado ? (
           <div style={{ textAlign: "center", padding: "80px 24px", color: C.muted,
             background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", border: `1px solid ${C.border}` }}>
-            <div style={{ fontSize: 52, marginBottom: 16 }}>📊</div>
+            <div style={{ fontSize: 52, marginBottom: 16 }}><BarChart2 size={36} /></div>
             <p style={{ fontSize: 15, margin: 0 }}>Configure os parâmetros ao lado e clique em <strong>Calcular Orçamento</strong></p>
             <p style={{ fontSize: 12, marginTop: 8 }}>Gera composição detalhada de todos os insumos com preços regionais calibrados por CUB</p>
           </div>
@@ -1312,7 +1313,7 @@ export default function OrcamentoTecnico() {
                 padding: "9px 18px", background: C.red, color: "#fff",
                 border: "none", borderRadius: 7, fontSize: 13, fontWeight: 700, cursor: "pointer",
               }}>
-                💾 Salvar como Orçamento
+                <Save size={13} /> Salvar como Orçamento
               </button>
               <button onClick={exportarPDF} style={{
                 padding: "9px 18px", background: "#2563eb", color: "#fff",
@@ -1348,7 +1349,7 @@ export default function OrcamentoTecnico() {
                 padding: "9px 18px", background: "#c88a00", color: "#fff",
                 border: "none", borderRadius: 7, fontSize: 13, fontWeight: 600, cursor: "pointer",
               }}>
-                📋 Proposta para Cliente
+                <ClipboardList size={13} /> Proposta para Cliente
               </button>
               {Object.keys(precosEditados).length > 0 && (
                 <button onClick={() => { setPrecosEditados({}); calcular(); }} style={{
@@ -1424,7 +1425,7 @@ export default function OrcamentoTecnico() {
                 <div style={{ padding: "12px 18px", borderBottom: `1px solid ${C.border}`, fontWeight: 700, fontSize: 14, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <span>🔩 Comparativo de Espessuras de Estrutura</span>
                   <div style={{ display: "flex", gap: 8 }}>
-                    <button onClick={exportarComparativoPDF} style={{ background: "#0f766e", color: "#fff", border: "none", borderRadius: 5, padding: "4px 12px", fontSize: 12, cursor: "pointer" }}>📄 PDF</button>
+                    <button onClick={exportarComparativoPDF} style={{ background: "#0f766e", color: "#fff", border: "none", borderRadius: 5, padding: "4px 12px", fontSize: 12, cursor: "pointer" }}><FileText size={13} /> PDF</button>
                     <button onClick={() => setComparativoVersoes(null)} style={{ background: "none", border: "none", color: C.muted, cursor: "pointer", fontSize: 12 }}>✕ fechar</button>
                   </div>
                 </div>
@@ -1474,7 +1475,7 @@ export default function OrcamentoTecnico() {
             {resultado.cronograma?.length > 0 && (
               <div style={{ background: C.surface, borderRadius: 14, border: `1px solid ${C.border}`, overflow: "hidden" }}>
                 <div style={{ padding: "12px 18px", borderBottom: `1px solid ${C.border}`, fontWeight: 700, fontSize: 14 }}>
-                  📅 Cronograma Financeiro Estimado — {resultado.prazoMeses} meses
+                  <CalendarDays size={13} /> Cronograma Financeiro Estimado — {resultado.prazoMeses} meses
                 </div>
                 <div style={{ padding: 14, display: "flex", flexDirection: "column", gap: 8 }}>
                   {resultado.cronograma.map((m) => (
@@ -1551,7 +1552,7 @@ export default function OrcamentoTecnico() {
           display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div style={{ background: "#fff", borderRadius: 16, width: "min(460px, 94vw)",
             padding: 28, boxShadow: "0 8px 32px rgba(0,0,0,0.25)" }}>
-            <div style={{ fontWeight: 800, fontSize: 17, marginBottom: 4 }}>💾 Salvar como Orçamento</div>
+            <div style={{ fontWeight: 800, fontSize: 17, marginBottom: 4 }}><Save size={13} /> Salvar como Orçamento</div>
             <div style={{ fontSize: 12, color: C.muted, marginBottom: 20 }}>
               {resultado.area} m² · {resultado.padrao} · {fmtBRL(resultado.totalGeral)}
             </div>

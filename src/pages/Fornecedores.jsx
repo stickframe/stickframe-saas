@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback, useRef } from "react";
-import { Trash2, Pencil } from "../components/ui/Icon";
+import { Building2, HardHat, Mail, Pencil, Phone, Trash2 } from "../components/ui/Icon";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { C } from "../utils/constants";
 import useAppStore from "../store/useAppStore";
@@ -195,9 +195,9 @@ export default function Fornecedores() {
                         {sel.especialidade}{sel.cidade ? ` · ${sel.cidade}${sel.estado ? `/${sel.estado}` : ""}` : ""}
                       </div>
                       <div style={{ display: "flex", gap: 16, marginTop: 8, fontSize: 12, color: C.muted }}>
-                        {sel.telefone && <span>📞 {sel.telefone}</span>}
-                        {sel.email    && <span>✉️ {sel.email}</span>}
-                        {sel.cnpj     && <span>🏢 {sel.cnpj}</span>}
+                        {sel.telefone && <span><Phone size={12} /> {sel.telefone}</span>}
+                        {sel.email    && <span><Mail size={12} /> {sel.email}</span>}
+                        {sel.cnpj     && <span><Building2 size={12} /> {sel.cnpj}</span>}
                       </div>
                     </div>
                     <div style={{ display: "flex", gap: 8 }}>
@@ -238,7 +238,7 @@ export default function Fornecedores() {
                           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                             <div>
                               <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4 }}>{c.descricao}</div>
-                              {c.obras?.nome     && <div style={{ fontSize: 12, color: C.muted, marginBottom: 4 }}>🏗 {c.obras.nome}</div>}
+                              {c.obras?.nome     && <div style={{ fontSize: 12, color: C.muted, marginBottom: 4 }}><HardHat size={13} /> {c.obras.nome}</div>}
                               {c.data_validade   && <div style={{ fontSize: 11, color: C.muted }}>Válida até {new Date(c.data_validade).toLocaleDateString("pt-BR")}</div>}
                               {c.observacoes     && <div style={{ fontSize: 12, color: C.muted, marginTop: 6, fontStyle: "italic" }}>{c.observacoes}</div>}
                             </div>

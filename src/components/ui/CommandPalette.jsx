@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { Search } from ".//Icon";
 import { useHotkeys } from "react-hotkeys-hook";
 import { C, NAV, PERFIS } from "../../utils/constants";
 import useAppStore from "../../store/useAppStore";
@@ -87,7 +88,7 @@ export default function CommandPalette({ onNavigate }) {
       >
         {/* Input */}
         <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "14px 18px", borderBottom: `1px solid ${C.border}` }}>
-          <span style={{ fontSize: 16, color: C.muted }}>🔍</span>
+          <span style={{ fontSize: 16, color: C.muted }}><Search size={36} /></span>
           <input
             ref={inputRef}
             value={query}

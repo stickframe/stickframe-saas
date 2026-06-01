@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Save } from "../components/ui/Icon";
 import { useToast } from "../hooks/useToast";
 import { C, TIPOS_EVENTO, COR_TIPO_EVENTO } from "../utils/constants";
 import useAppStore from "../store/useAppStore";
@@ -127,7 +128,7 @@ function FormEvento({ form, setForm, clientes, obras, tiposDisponiveis, onSave, 
       {/* Ações */}
       <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", paddingTop: 12, borderTop: `1px solid ${C.border}` }}>
         <Btn variant="ghost" onClick={onCancel}>Cancelar</Btn>
-        <Btn disabled={!ok} onClick={onSave}>💾 Salvar compromisso</Btn>
+        <Btn disabled={!ok} onClick={onSave}><Save size={13} /> Salvar compromisso</Btn>
       </div>
     </div>
   );

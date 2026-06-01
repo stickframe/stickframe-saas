@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Building2 } from "../components/ui/Icon";
 import { useToast } from "../hooks/useToast";
 import { C, FASES, PRECOS } from "../utils/constants";
 import { buscarEmpresa, atualizarEmpresa } from "../services/repositories/empresaRepository";
@@ -208,7 +209,7 @@ export default function Onboarding({ onComplete }) {
         {step === 0 && (
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             <div style={{ background: C.red + "10", border: `1px solid ${C.red}33`, borderRadius: 10, padding: "12px 16px", marginBottom: 4 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: C.red, marginBottom: 2 }}>🏢 Dados da empresa</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: C.red, marginBottom: 2 }}><Building2 size={12} /> Dados da empresa</div>
               <div style={{ fontSize: 12, color: C.muted }}>Essas informações aparecerão nos relatórios e propostas.</div>
             </div>
 

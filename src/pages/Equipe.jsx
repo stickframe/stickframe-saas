@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Trash2, Pencil } from "../components/ui/Icon";
+import { ClipboardList, DollarSign, Pencil, Phone, Trash2 } from "../components/ui/Icon";
 import { useToast } from "../hooks/useToast";
 import { C } from "../utils/constants";
 import { fmt } from "../utils/format";
@@ -372,7 +372,7 @@ export default function Equipe() {
             </div>
             <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", paddingTop: 12, borderTop: `1px solid ${C.border}` }}>
               <Btn variant="ghost" onClick={() => setFolhaModal(false)}>Cancelar</Btn>
-              <Btn disabled={!obraFolha || totalSelecionado === 0} onClick={lancarFolha}>💰 Lançar {fmt(totalSelecionado)}</Btn>
+              <Btn disabled={!obraFolha || totalSelecionado === 0} onClick={lancarFolha}><DollarSign size={13} /> Lançar {fmt(totalSelecionado)}</Btn>
             </div>
           </div>
         </Modal>
@@ -482,7 +482,7 @@ export default function Equipe() {
                 color: C.success, fontSize: 12, fontWeight: 700,
                 cursor: "pointer", fontFamily: "inherit",
               }}>
-                💰 Lançar folha ({fmt(folha)})
+                <DollarSign size={13} /> Lançar folha ({fmt(folha)})
               </button>
             )}
             {tab === "equipe"   && <Btn onClick={abrirNovo}>+ Novo colaborador</Btn>}
@@ -552,8 +552,8 @@ export default function Equipe() {
 
                       <div style={{ display: "flex", flexDirection: "column", gap: 5, marginBottom: 12 }}>
                         {c.email    && <div style={{ fontSize: 12, color: C.muted }}>✉ {c.email}</div>}
-                        {c.telefone && <div style={{ fontSize: 12, color: C.muted }}>📞 {c.telefone}</div>}
-                        {c.salario  && <div style={{ fontSize: 12, color: C.success, fontWeight: 700 }}>💰 {fmt(c.salario)}</div>}
+                        {c.telefone && <div style={{ fontSize: 12, color: C.muted }}><Phone size={12} /> {c.telefone}</div>}
+                        {c.salario  && <div style={{ fontSize: 12, color: C.success, fontWeight: 700 }}><DollarSign size={13} /> {fmt(c.salario)}</div>}
                       </div>
 
                       {alocAtivas.length > 0 && (
@@ -624,7 +624,7 @@ export default function Equipe() {
 
             {alocacoesFiltradas.length === 0 ? (
               <div style={{ background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", border: `1px solid ${C.border}`, padding: "50px 0", textAlign: "center" }}>
-                <div style={{ fontSize: 32, marginBottom: 12 }}>📋</div>
+                <div style={{ fontSize: 32, marginBottom: 12 }}><ClipboardList size={36} /></div>
                 <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 8 }}>Nenhuma alocação registrada</div>
                 <div style={{ fontSize: 12, color: C.muted, marginBottom: 20 }}>Aloque colaboradores às obras para controlar a equipe por projeto.</div>
                 <Btn onClick={() => setAlocModal(true)}>+ Nova alocação</Btn>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Trash2, Pencil } from "../components/ui/Icon";
+import { Pencil, Smartphone, Trash2 } from "../components/ui/Icon";
 import { useToast } from "../hooks/useToast";
 import { buscarEmpresa } from "../services/repositories/empresaRepository";
 import { C, PRECOS } from "../utils/constants";
@@ -519,7 +519,7 @@ export default function Contratos() {
                             border: "1px solid #25D36644", borderRadius: 6,
                             color: "#25D366", fontSize: 12, fontWeight: 700,
                             cursor: "pointer", fontFamily: "inherit", width: "100%",
-                          }}>📲 WhatsApp</button>
+                          }}><Smartphone size={13} /> WhatsApp</button>
                         )}
                         <button onClick={() => setConfirm(c.id)} style={{
                           padding: "7px 0", background: C.danger + "22",

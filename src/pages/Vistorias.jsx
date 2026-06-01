@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Trash2, Pencil } from "../components/ui/Icon";
+import { Search, Trash2 } from "../components/ui/Icon";
 import { useToast } from "../hooks/useToast";
 import { C, FASES } from "../utils/constants";
 import useAppStore from "../store/useAppStore";
@@ -305,7 +305,7 @@ export default function Vistorias() {
 
   if (obras.length === 0) return (
     <div style={{ textAlign: "center", padding: "80px 0" }}>
-      <div style={{ fontSize: 40, marginBottom: 16 }}>🔍</div>
+      <div style={{ fontSize: 40, marginBottom: 16 }}><Search size={36} /></div>
       <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Nenhuma obra cadastrada</div>
       <div style={{ fontSize: 13, color: C.muted }}>Cadastre uma obra em <strong>Gestão de Obras</strong> para iniciar vistorias.</div>
     </div>
@@ -372,7 +372,7 @@ export default function Vistorias() {
       {/* Lista */}
       {lista.length === 0 ? (
         <div style={{ background: C.surface, borderRadius: 14, border: `1px solid ${C.border}`, padding: "56px 0", textAlign: "center" }}>
-          <div style={{ fontSize: 36, marginBottom: 12 }}>🔍</div>
+          <div style={{ fontSize: 36, marginBottom: 12 }}><Search size={36} /></div>
           <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 6 }}>Nenhuma vistoria registrada</div>
           <div style={{ fontSize: 13, color: C.muted, marginBottom: 24 }}>Inicie uma FVS guiada para registrar a conformidade dos serviços.</div>
           <button onClick={() => setModal(true)} style={{ padding: "10px 24px", borderRadius: 8, border: "none", background: C.red, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>+ Criar primeira vistoria</button>

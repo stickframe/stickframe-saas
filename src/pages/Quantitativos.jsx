@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { Trash2, Pencil } from "../components/ui/Icon";
+import { ClipboardList, Pencil, Ruler, Trash2 } from "../components/ui/Icon";
 import { useToast } from "../hooks/useToast";
 import { printHtml } from "../utils/printHtml";
 import { C, FASES } from "../utils/constants";
@@ -555,7 +555,7 @@ ${tabelaFases}
 
         {!obraId ? (
           <div style={{ background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", border: `1px solid ${C.border}`, padding: "60px 0", textAlign: "center" }}>
-            <div style={{ fontSize: 36, marginBottom: 12 }}>📐</div>
+            <div style={{ fontSize: 36, marginBottom: 12 }}><Ruler size={36} /></div>
             <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 8 }}>Selecione uma obra para começar</div>
             <div style={{ fontSize: 13, color: C.muted }}>A planilha de quantitativos é vinculada a cada obra.</div>
           </div>
@@ -563,7 +563,7 @@ ${tabelaFases}
           <div style={{ textAlign: "center", padding: 40, color: C.muted }}>Carregando…</div>
         ) : items.length === 0 ? (
           <div style={{ background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", border: `1px solid ${C.border}`, padding: "60px 24px", textAlign: "center" }}>
-            <div style={{ fontSize: 36, marginBottom: 12 }}>📋</div>
+            <div style={{ fontSize: 36, marginBottom: 12 }}><ClipboardList size={36} /></div>
             <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 8 }}>Nenhum item cadastrado</div>
             <div style={{ fontSize: 13, color: C.muted, marginBottom: 24 }}>Use o template Steel Frame ou adicione itens manualmente.</div>
             <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>

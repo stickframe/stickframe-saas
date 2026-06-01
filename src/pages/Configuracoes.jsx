@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { TrendingUp } from "../components/ui/Icon";
 import { useToast } from "../hooks/useToast";
 import { C, PERFIS } from "../utils/constants";
 import useAppStore from "../store/useAppStore";
@@ -280,7 +281,7 @@ export default function Configuracoes() {
 
           {/* Alertas de preço */}
           <Card>
-            <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 16 }}>📈 Alertas de Variação de Preços</div>
+            <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 16 }}><TrendingUp size={13} /> Alertas de Variação de Preços</div>
             <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 14 }}>
               <div>
                 <LabelF>E-mail para receber alertas</LabelF>

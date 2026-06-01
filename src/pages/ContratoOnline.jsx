@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { CheckCircle } from "../components/ui/Icon";
 import { useParams } from "react-router-dom";
 import { sb } from "../services/supabase";
 import { fmt } from "../utils/format";
@@ -200,7 +201,7 @@ export default function ContratoOnline() {
         }}>
           {jaAssinado ? (
             <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: 40, marginBottom: 10 }}>✅</div>
+              <div style={{ fontSize: 40, marginBottom: 10 }}><CheckCircle size={14} /></div>
               <div style={{ fontSize: 17, fontWeight: 800, color: "#2e9e5b", marginBottom: 6 }}>Contrato assinado!</div>
               <div style={{ fontSize: 13, color: "#555", marginBottom: 4 }}>
                 Assinatura digital de <strong>{c.assinatura_nome || aceite.nome}</strong>

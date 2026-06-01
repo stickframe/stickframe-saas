@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Trash2, Pencil } from "../ui/Icon";
+import { BarChart2, Link, Search, Trash2 } from "../ui/Icon";
 import { C } from "../../utils/constants";
 import { fmtBRL, fmtDateTime } from "../../utils/format";
 import useAppStore from "../../store/useAppStore";
@@ -192,7 +192,7 @@ export default function MonitorPrecos() {
 
       {itens.length === 0 ? (
         <div style={{ textAlign: "center", padding: "60px 24px", background: "#fff", border: `1px solid ${C.border}`, borderRadius: 12, color: C.muted }}>
-          <div style={{ fontSize: 40, marginBottom: 12 }}>🔍</div>
+          <div style={{ fontSize: 40, marginBottom: 12 }}><Search size={36} /></div>
           <div style={{ fontWeight: 700, marginBottom: 6 }}>Nenhum produto monitorado ainda</div>
           <div style={{ fontSize: 13 }}>Clique em "Adicionar produto", cole a URL da loja e o sistema captura o preço</div>
         </div>
@@ -215,7 +215,7 @@ export default function MonitorPrecos() {
                 <tr key={item.id} style={{ borderTop: `1px solid ${C.border}`, background: i % 2 ? "#fafafa" : "#fff" }}>
                   <td style={{ ...tdSt, maxWidth: 220 }}>
                     <div style={{ fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{item.nome_produto}</div>
-                    {item.insumo_ref && <div style={{ fontSize: 11, color: "#2563eb", marginTop: 2 }}>🔗 {item.insumo_ref}</div>}
+                    {item.insumo_ref && <div style={{ fontSize: 11, color: "#2563eb", marginTop: 2 }}><Link size={11} /> {item.insumo_ref}</div>}
                     <a href={item.url} target="_blank" rel="noreferrer" style={{ fontSize: 11, color: C.muted, textDecoration: "none" }}>
                       {item.url.slice(0, 45)}{item.url.length > 45 ? "…" : ""}
                     </a>
@@ -240,7 +240,7 @@ export default function MonitorPrecos() {
                   <td style={{ ...tdSt, textAlign: "center" }}>
                     <div style={{ display: "flex", gap: 6, justifyContent: "center" }}>
                       <button onClick={() => setGrafItem(grafItem === item.id ? null : item.id)} title="Ver histórico"
-                        style={{ padding: "4px 8px", fontSize: 13, background: grafItem === item.id ? "#eff6ff" : "none", border: `1px solid ${grafItem === item.id ? "#93c5fd" : C.border}`, borderRadius: 5, cursor: "pointer" }}>📊</button>
+                        style={{ padding: "4px 8px", fontSize: 13, background: grafItem === item.id ? "#eff6ff" : "none", border: `1px solid ${grafItem === item.id ? "#93c5fd" : C.border}`, borderRadius: 5, cursor: "pointer" }}><BarChart2 size={36} /></button>
                       <button onClick={() => sincronizar(item)} disabled={syncing[item.id]} title="Sincronizar agora"
                         style={{ padding: "4px 8px", fontSize: 13, background: "none", border: `1px solid ${C.border}`, borderRadius: 5, cursor: "pointer", opacity: syncing[item.id] ? 0.5 : 1 }}>
                         {syncing[item.id] ? "…" : "🔄"}

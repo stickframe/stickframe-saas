@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { BarChart2, ClipboardList } from "../components/ui/Icon";
 import { C } from "../utils/constants";
 import useAppStore from "../store/useAppStore";
 import * as XLSX from "xlsx";
@@ -313,7 +314,7 @@ export default function Calculadora() {
                 padding: "9px 16px", background: "rgba(255,255,255,0.15)",
                 border: "1px solid rgba(255,255,255,0.3)", borderRadius: 8,
                 color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
-              }}>📊 Exportar Excel</button>
+              }}><BarChart2 size={13} /> Exportar Excel</button>
               <button onClick={() => window.print()} style={{
                 padding: "9px 16px", background: "rgba(255,255,255,0.15)",
                 border: "1px solid rgba(255,255,255,0.3)", borderRadius: 8,
@@ -323,7 +324,7 @@ export default function Calculadora() {
                 padding: "9px 18px", background: "#fff",
                 border: "none", borderRadius: 8,
                 color: C.red, fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "inherit",
-              }}>📋 Usar no Orçamento →</button>
+              }}><ClipboardList size={13} /> Usar no Orçamento →</button>
             </div>
           </div>
 
@@ -386,7 +387,7 @@ export default function Calculadora() {
               cursor: "pointer", fontFamily: "inherit",
               boxShadow: "0 4px 16px rgba(152,25,21,0.3)",
             }}>
-              📋 Enviar para Orçamento →
+              <ClipboardList size={13} /> Enviar para Orçamento →
             </button>
           </div>
 

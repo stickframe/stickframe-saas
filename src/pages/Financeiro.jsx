@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Trash2, Pencil } from "../components/ui/Icon";
+import { BarChart2, Pencil } from "../components/ui/Icon";
 import { useToast } from "../hooks/useToast";
 import { C, CATEGORIAS_RECEITA, CATEGORIAS_DESPESA } from "../utils/constants";
 import { fmt, fmtPct } from "../utils/format";
@@ -317,7 +317,7 @@ export default function Financeiro() {
               border: "1px solid #2e9e5b44", borderRadius: 8,
               color: "#2e9e5b", fontSize: 12, fontWeight: 700,
               cursor: "pointer", fontFamily: "inherit",
-            }}>📊 Exportar Excel</button>
+            }}><BarChart2 size={13} /> Exportar Excel</button>
             <button onClick={exportarRelatorio} style={{
               padding: "8px 16px", background: "#4a9eff22",
               border: "1px solid #4a9eff44", borderRadius: 8,

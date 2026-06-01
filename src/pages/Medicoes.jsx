@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import { Link, Ruler } from "../components/ui/Icon";
 import { C } from "../utils/constants";
 import { fmt } from "../utils/format";
 import useAppStore from "../store/useAppStore";
@@ -174,7 +175,7 @@ export default function Medicoes() {
 
         {lista.length === 0 ? (
           <div style={{ background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", border: `1px solid ${C.border}`, padding: "48px 0", textAlign: "center" }}>
-            <div style={{ fontSize: 32, marginBottom: 12 }}>📐</div>
+            <div style={{ fontSize: 32, marginBottom: 12 }}><Ruler size={36} /></div>
             <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 6 }}>Nenhuma medição registrada</div>
             <div style={{ fontSize: 13, color: C.muted }}>Clique em "+ Nova medição" para começar.</div>
           </div>
@@ -205,7 +206,7 @@ export default function Medicoes() {
                         <button onClick={() => { setAsaasModal(m); setVencimentoAsaas(defaultVencimento()); }} style={{ padding: "5px 10px", background: "#1a56db22", border: "1px solid #1a56db44", borderRadius: 6, color: "#1a56db", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>💳 Cobrança</button>
                       )}
                       {m.link_pagamento && (
-                        <a href={m.link_pagamento} target="_blank" rel="noreferrer" style={{ padding: "5px 8px", background: C.border, border: `1px solid ${C.border}`, borderRadius: 6, color: C.text, fontSize: 12, textDecoration: "none" }} title="Abrir link de pagamento">🔗</a>
+                        <a href={m.link_pagamento} target="_blank" rel="noreferrer" style={{ padding: "5px 8px", background: C.border, border: `1px solid ${C.border}`, borderRadius: 6, color: C.text, fontSize: 12, textDecoration: "none" }} title="Abrir link de pagamento"><Link size={11} /></a>
                       )}
                     </td>
                   </tr>
