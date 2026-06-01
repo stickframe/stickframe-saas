@@ -150,7 +150,7 @@ function Secao({ titulo }) {
 }
 
 // ─── Formulário (fora do componente para não re-montar a cada render) ─────────
-const FormCliente = memo(function FormCliente({ form, setForm, onSave, onCancel, btnLabel, disabled }) {
+const FormCliente = memo(function FormCliente({ form, setForm, onSave, onCancel, onDelete, btnLabel, disabled }) {
   const [erros, setErros] = useState({});
   const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
 
@@ -297,6 +297,11 @@ const FormCliente = memo(function FormCliente({ form, setForm, onSave, onCancel,
 
       {/* AÇÕES */}
       <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 4, paddingTop: 12, borderTop: `1px solid ${C.border}` }}>
+        {onDelete && (
+          <Btn variant="danger" onClick={onDelete} style={{ marginRight: "auto" }}>
+            <Trash2 size={13} /> Excluir cliente
+          </Btn>
+        )}
         <Btn variant="ghost" onClick={onCancel}>Cancelar</Btn>
         <Btn disabled={!form.nome.trim() || disabled} onClick={handleSave}>{btnLabel}</Btn>
       </div>
@@ -332,6 +337,8 @@ export default function CRM() {
   const [modal,      setModal]      = useState(false);
   const [sel,        setSel]        = useState(null);
   const [confirm,    setConfirm]    = useState(false);
+  const [dragging,   setDragging]   = useState(false);
+  const [trashOver,  setTrashOver]  = useState(false);
   const [isSaving,   setIsSaving]   = useState(false);
   const [form,       setForm]       = useState(FORM_VAZIO);
   const [csvModal,   setCsvModal]   = useState(false);
@@ -415,9 +422,11 @@ export default function CRM() {
       const { valorDisplay, ...payload } = form;
       await updateCliente(sel, {
         ...payload,
-        unidades: parseInt(form.unidades) || 0,
-        area_m2:  parseFloat(form.area_m2) || null,
-        valor:    form.valor || 0,
+        unidades:        parseInt(form.unidades) || 0,
+        area_m2:         parseFloat(form.area_m2) || null,
+        valor:           form.valor || 0,
+        proximo_contato: form.proximo_contato || null,
+        responsavel:     form.responsavel || null,
       });
       setModal(false);
       mostrarToast("✅ Cliente atualizado!");
@@ -557,6 +566,7 @@ export default function CRM() {
           <FormCliente
             form={form} setForm={setForm}
             onSave={salvarEdicao} onCancel={() => setModal(false)}
+            onDelete={() => { setModal(false); setConfirm(true); }}
             btnLabel={isSaving ? "Salvando…" : "Salvar alterações"}
             disabled={isSaving}
           />
@@ -759,10 +769,11 @@ export default function CRM() {
                       {clientesColuna.map(c => {
                         const atrasado = c.proximo_contato && c.proximo_contato <= hojeStr && status !== "Fechado" && status !== "Em execução";
                         return (
-                          <div 
+                          <div
                             key={c.id}
                             draggable
-                            onDragStart={e => e.dataTransfer.setData("text/plain", c.id)}
+                            onDragStart={e => { e.dataTransfer.setData("text/plain", c.id); setDragging(true); }}
+                            onDragEnd={() => setDragging(false)}
                             onClick={() => abrirEditar(c)}
                             style={{ 
                               background: C.surface, borderRadius: 8, padding: 14, cursor: "grab", 
@@ -798,6 +809,30 @@ export default function CRM() {
                   </div>
                 )
               })}
+
+              {/* Zona lixeira — aparece só durante drag */}
+              {dragging && (
+                <div
+                  onDragOver={e => { e.preventDefault(); setTrashOver(true); }}
+                  onDragLeave={() => setTrashOver(false)}
+                  onDrop={e => {
+                    const id = e.dataTransfer.getData("text/plain");
+                    setDragging(false);
+                    setTrashOver(false);
+                    if (id) { setSel(id); setConfirm(true); }
+                  }}
+                  style={{
+                    minWidth: 120, borderRadius: 14, border: `2px dashed ${trashOver ? C.danger : C.border}`,
+                    background: trashOver ? C.danger + "18" : C.darker,
+                    display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8,
+                    padding: "20px 16px", transition: "all .15s", cursor: "copy",
+                    color: trashOver ? C.danger : C.muted, fontSize: 12, fontWeight: 700,
+                  }}
+                >
+                  <Trash2 size={22} color={trashOver ? C.danger : C.muted} />
+                  Excluir
+                </div>
+              )}
             </div>
           ) : (
             <div style={{ background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", border: `1px solid ${C.border}`, overflow: "hidden" }}>
