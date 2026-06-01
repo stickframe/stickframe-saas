@@ -1,4 +1,4 @@
-import { sb } from "./supabaseClient";
+import { sb } from "./supabase";
 
 const VAPID_PUBLIC = "BKT8lBsSp8WHV8893gIDOnEAYedOePXJizeucW3AzukegQaHc-_V1x8yo28NonhIvxNp4zU2G3E705x_ZkG1oFs";
 
