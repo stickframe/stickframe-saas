@@ -97,6 +97,21 @@ export default function CalculadoraPublica() {
       });
       if (error) throw error;
 
+      // Email de confirmação para o lead
+      if (email) {
+        import("../services/emailService").then(({ emailNovoLead }) => {
+          emailNovoLead({
+            email,
+            nome,
+            padrao,
+            area,
+            valorMin: Math.round(sfValor * 0.92),
+            valorMax: Math.round(sfValor * 1.12),
+            cidade,
+          }).catch(() => {});
+        });
+      }
+
       // Open WhatsApp notification to empresa owner
       try {
         const msg = `🔔 *Novo lead via Calculadora!*\n\n👤 *${nome}*\n📱 ${whatsapp}\n📍 ${cidade || "—"}\n\n🏗️ *Projeto:*\n• Área: ${area}m² · ${pavimentos}\n• Padrão: ${padrao}\n• Estimativa: R$ ${Math.round(sfValor * 0.92).toLocaleString("pt-BR")} – R$ ${Math.round(sfValor * 1.12).toLocaleString("pt-BR")}\n\nAcesse o sistema para responder: https://stickframe.com.br`;

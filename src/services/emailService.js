@@ -172,3 +172,33 @@ export async function emailNovoOrcamento({ clienteEmail, clienteNome, valor, pad
     ),
   });
 }
+
+export async function emailNovoLead({ email, nome, padrao, area, valorMin, valorMax, cidade }) {
+  if (!email) return;
+  const fmtR = (v) => Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2 });
+  const faixaTexto = valorMin && valorMax
+    ? `${fmtR(valorMin)} a ${fmtR(valorMax)}`
+    : valorMin ? `a partir de ${fmtR(valorMin)}` : "";
+
+  await enviarEmail({
+    to: email,
+    subject: "Seu orçamento estimado — Stick Frame",
+    html: templateBase(
+      `Olá, ${nome}! Recebemos seu pedido`,
+      `<p style="color:#444;line-height:1.6;">Obrigado pelo interesse em construir com a <strong>Stick Frame</strong>!</p>
+       <p style="color:#444;line-height:1.6;">Com base nas informações que você nos enviou, preparamos uma estimativa inicial:</p>
+       <div style="background:#f4f4f4;border-radius:8px;padding:20px;margin:16px 0;">
+         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+           <div><div style="font-size:11px;color:#888;margin-bottom:4px;">PADRÃO</div><div style="font-size:15px;font-weight:700;color:#1a1a1a;">${padrao || "Padrão"}</div></div>
+           <div><div style="font-size:11px;color:#888;margin-bottom:4px;">ÁREA</div><div style="font-size:15px;font-weight:700;color:#1a1a1a;">${area || "—"} m²</div></div>
+           ${cidade ? `<div><div style="font-size:11px;color:#888;margin-bottom:4px;">CIDADE</div><div style="font-size:15px;font-weight:700;color:#1a1a1a;">${cidade}</div></div>` : ""}
+         </div>
+         ${faixaTexto ? `<div style="border-top:1px solid #e0e0e0;padding-top:12px;margin-top:4px;"><div style="font-size:11px;color:#888;margin-bottom:4px;">FAIXA ESTIMADA</div><div style="font-size:22px;font-weight:900;color:#981915;">${faixaTexto}</div><div style="font-size:10px;color:#aaa;margin-top:4px;">* Estimativa preliminar. Valor real pode variar conforme projeto.</div></div>` : ""}
+       </div>
+       <p style="color:#444;line-height:1.6;">Nossa equipe entrará em contato em breve para apresentar uma proposta detalhada. Qualquer dúvida, estamos à disposição!</p>
+       <div style="text-align:center;margin:24px 0;">
+         <a href="https://stickframe.com.br" style="display:inline-block;background:linear-gradient(135deg,#981915,#6e1210);color:#fff;text-decoration:none;padding:13px 28px;border-radius:8px;font-weight:700;font-size:14px;">🏠 Conheça nosso trabalho</a>
+       </div>`
+    ),
+  });
+}
