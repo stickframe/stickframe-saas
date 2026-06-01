@@ -1188,7 +1188,7 @@ export default function GestaoObras() {
                               <thead>
                                 <tr style={{ background: C.darker }}>
                                   {["Mês", "Receitas", "Despesas", "Resultado", "Saldo Acum."].map((h) => (
-                                    <th key={h} style={{ padding: "8px 12px", textAlign: "right", fontWeight: 700, fontSize: 11, color: C.muted, whiteSpace: "nowrap", textAlign: h === "Mês" ? "left" : "right" }}>{h}</th>
+                                    <th key={h} style={{ padding: "8px 12px", textAlign: h === "Mês" ? "left" : "right", fontWeight: 700, fontSize: 11, color: C.muted, whiteSpace: "nowrap" }}>{h}</th>
                                   ))}
                                 </tr>
                               </thead>
