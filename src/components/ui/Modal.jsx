@@ -1,10 +1,8 @@
 import { useEffect, useRef } from "react";
-import { C } from "../../utils/constants";
 
 export default function Modal({ title, onClose, children, width = 600 }) {
   const firstRef = useRef(null);
 
-  // Focus trap: ao abrir, foca o modal; Tab fica dentro
   useEffect(() => {
     const prev = document.activeElement;
     firstRef.current?.focus();
@@ -36,28 +34,18 @@ export default function Modal({ title, onClose, children, width = 600 }) {
       role="dialog"
       aria-modal="true"
       aria-labelledby="modal-title"
-      style={{ position: "fixed", inset: 0, background: "#000b", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 12px" }}
+      className="sf-modal-backdrop"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <div
         ref={firstRef}
         tabIndex={-1}
-        className="modal-inner"
-        style={{
-          background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12, padding: 24,
-          width: `min(${width}px, 100%)`, maxHeight: "min(90vh, calc(100dvh - 40px))", overflowY: "auto",
-          outline: "none",
-        }}
+        className="modal-inner sf-modal-box"
+        style={{ width: `min(${width}px, 100%)` }}
       >
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 22 }}>
-          <h3 id="modal-title" style={{ fontSize: 15, fontWeight: 700 }}>{title}</h3>
-          <button
-            onClick={onClose}
-            aria-label="Fechar modal"
-            style={{ background: "none", border: "none", color: C.muted, fontSize: 22, cursor: "pointer", lineHeight: 1 }}
-          >
-            ×
-          </button>
+        <div className="sf-modal-header">
+          <h3 id="modal-title" className="sf-modal-title">{title}</h3>
+          <button onClick={onClose} aria-label="Fechar modal" className="sf-modal-close">×</button>
         </div>
         {children}
       </div>
