@@ -358,6 +358,8 @@ export default function CRM() {
   const [waModal,    setWaModal]    = useState(null); // cliente para WA modal
   const [scoreModal, setScoreModal] = useState(null); // cliente para score detail
   const [seqLoading, setSeqLoading] = useState(false);
+  const [criarObraModal, setCriarObraModal] = useState(null); // cliente para criar obra
+  const addObra = useAppStore((s) => s.addObra);
 
   const cliente = useMemo(() => clientes.find((c) => c.id === sel), [clientes, sel]);
 
@@ -765,6 +767,10 @@ export default function CRM() {
                       if (id) {
                         updateCliente(id, { status });
                         mostrarToast(`✅ Movido para ${status}`);
+                        if (status === "Em execução") {
+                          const c = clientes.find((x) => x.id === id);
+                          if (c) setCriarObraModal(c);
+                        }
                       }
                     }}
                     style={{ 
@@ -933,6 +939,39 @@ export default function CRM() {
         </div>
 
         {/* Painel lateral (Detalhes do Cliente) só aparece na Lista */}
+        {/* Modal Criar Obra ao mover para Em execução */}
+        {criarObraModal && (
+          <div style={{ position: "fixed", inset: 0, background: "#000a", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 14, padding: 28, width: 420, maxWidth: "95vw" }}>
+              <div style={{ fontSize: 18, fontWeight: 800, marginBottom: 6 }}>🏗️ Criar obra?</div>
+              <div style={{ fontSize: 13, color: C.muted, marginBottom: 20, lineHeight: 1.6 }}>
+                <strong>{criarObraModal.nome}</strong> foi movido para <strong>Em execução</strong>.<br />
+                Deseja criar uma obra automaticamente para este cliente?
+              </div>
+              <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+                <Btn variant="ghost" onClick={() => setCriarObraModal(null)}>Não, só mover</Btn>
+                <Btn onClick={async () => {
+                  const c = criarObraModal;
+                  await addObra({
+                    nome: c.nome + " — " + new Date().getFullYear(),
+                    cliente_id: c.id,
+                    cliente: c.nome,
+                    email_cliente: c.email || "",
+                    status: "Planejamento",
+                    fase: "Fundação",
+                    progresso: 0,
+                    contrato: c.valor || 0,
+                  });
+                  setCriarObraModal(null);
+                  mostrarToast("🏗️ Obra criada com sucesso!");
+                }}>
+                  Sim, criar obra
+                </Btn>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Modal WhatsApp Templates */}
         {waModal && (
           <div style={{ position: "fixed", inset: 0, background: "#000a", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center" }}>
