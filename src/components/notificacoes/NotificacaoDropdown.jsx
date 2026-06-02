@@ -3,10 +3,30 @@ import { CheckCircle } from "../ui/Icon";
 import { C } from "../../utils/constants";
 import useAppStore from "../../store/useAppStore";
 import { useNotificacoes } from "../../hooks/useNotificacoes";
+import { sb, getEmpresaId } from "../../services/supabase";
 
 const TIPO_ICON = { info: "ℹ️", sucesso: "✅", alerta: "⚠️", erro: "⛔" };
-const CAT_LABELS = { prazo: "Prazos", medicao: "Medições", vistoria: "Vistorias", orcamento: "Orçamentos", bim: "BIM" };
-const CAT_ICONS  = { prazo: "⏰", medicao: "📐", vistoria: "🔍", orcamento: "📋", bim: "🧊" };
+const CAT_LABELS = { prazo: "Prazos", medicao: "Medições", vistoria: "Vistorias", orcamento: "Orçamentos", bim: "BIM", followup: "Follow-ups", lead: "Novos Leads" };
+const CAT_ICONS  = { prazo: "⏰", medicao: "📐", vistoria: "🔍", orcamento: "📋", bim: "🧊", followup: "📅", lead: "🎯" };
+
+function usePreOrcamentos() {
+  const [preOrcs, setPreOrcs] = useState([]);
+  useEffect(() => {
+    const empId = getEmpresaId();
+    if (!empId) return;
+    sb.from("pre_orcamentos").select("id, nome, created_at").eq("empresa_id", empId).eq("status", "Novo").order("created_at", { ascending: false })
+      .then(({ data }) => setPreOrcs(data || []));
+
+    const ch = sb.channel("pre-orcs-notif")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "pre_orcamentos", filter: `empresa_id=eq.${empId}` },
+        (p) => setPreOrcs((prev) => [p.new, ...prev]))
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "pre_orcamentos", filter: `empresa_id=eq.${empId}` },
+        () => sb.from("pre_orcamentos").select("id, nome, created_at").eq("empresa_id", empId).eq("status", "Novo").order("created_at", { ascending: false }).then(({ data }) => setPreOrcs(data || [])))
+      .subscribe();
+    return () => ch.unsubscribe();
+  }, []);
+  return preOrcs;
+}
 
 function useAlertas() {
   const obras           = useAppStore((s) => s.obras);
@@ -14,6 +34,8 @@ function useAlertas() {
   const medicoes        = useAppStore((s) => s.medicoes);
   const vistorias       = useAppStore((s) => s.vistorias);
   const bimApontamentos = useAppStore((s) => s.bimApontamentos);
+  const clientes        = useAppStore((s) => s.clientes);
+  const preOrcs         = usePreOrcamentos();
 
   return useMemo(() => {
     const alertas = [];
@@ -71,8 +93,31 @@ function useAlertas() {
         alertas.push({ categoria: "bim", tipo: "alerta", cor: "#9b59b6", icon: "🧊", titulo: "Apontamentos BIM críticos", texto: `${nomeObra} — ${criticos.length} apontamento(s) Alta prioridade em aberto` });
     });
 
+    // 6. Follow-ups vencidos no CRM
+    const hojeStr = new Date().toISOString().slice(0, 10);
+    clientes
+      .filter((c) => c.proximo_contato && c.proximo_contato <= hojeStr && c.status !== "Fechado" && c.status !== "Em execução" && c.status !== "Perdido")
+      .forEach((c) => {
+        const diasAtraso = Math.ceil((new Date(hojeStr) - new Date(c.proximo_contato)) / 86400000);
+        alertas.push({
+          categoria: "followup", tipo: diasAtraso > 3 ? "erro" : "alerta",
+          cor: diasAtraso > 3 ? C.danger : C.warning, icon: "📅",
+          titulo: "Follow-up vencido",
+          texto: `${c.nome} — ${diasAtraso === 0 ? "hoje" : `${diasAtraso} dia(s) em atraso`} (${c.status})`,
+        });
+      });
+
+    // 7. Novos leads da calculadora pública
+    preOrcs.forEach((p) => {
+      alertas.push({
+        categoria: "lead", tipo: "info", cor: "#25D366", icon: "🎯",
+        titulo: "Novo lead recebido",
+        texto: `${p.nome} preencheu a calculadora — aguardando análise`,
+      });
+    });
+
     return alertas;
-  }, [obras, orcamentos, medicoes, vistorias, bimApontamentos]);
+  }, [obras, orcamentos, medicoes, vistorias, bimApontamentos, clientes, preOrcs]);
 }
 
 function tempoAtras(ts) {
@@ -86,7 +131,7 @@ function tempoAtras(ts) {
 // Categorias de alerta relevantes por perfil
 const CATS_PERFIL = {
   engenheiro: ["prazo", "medicao", "vistoria", "bim"],
-  comercial:  ["orcamento"],
+  comercial:  ["orcamento", "followup", "lead"],
   financeiro: ["prazo"],
 };
 
