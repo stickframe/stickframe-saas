@@ -31,7 +31,7 @@ const TEMPLATES = {
     { categoria: "Projeto", descricao: "ART / RRT",                   unidade: "vb", quantidade: 1,    custo_unitario: 1200  },
   ],
   "Fundação": [
-    { categoria: "Fundação", descricao: "Radier de concreto",         unidade: "m²", quantidade: 1,    custo_unitario: 280  },
+    { categoria: "Fundação", descricao: "Radier de concreto",         unidade: "m²", quantidade: 1,    custo_unitario: 400  },
     { categoria: "Fundação", descricao: "Brita + areia (lastro)",      unidade: "m³", quantidade: 0.1,  custo_unitario: 150  },
     { categoria: "Fundação", descricao: "Lona plástica impermeabiliz.", unidade: "m²", quantidade: 1.2, custo_unitario: 8    },
     { categoria: "Fundação", descricao: "Ferragem CA-50",              unidade: "kg", quantidade: 8,    custo_unitario: 12   },
@@ -44,7 +44,7 @@ const TEMPLATES = {
     { categoria: "Estrutura", descricao: "Parafuso autobrocante 4,2×13", unidade: "un", quantidade: 80, custo_unitario: 0.28 },
     { categoria: "Estrutura", descricao: "Parafuso autobrocante 4,8×25", unidade: "un", quantidade: 40, custo_unitario: 0.35 },
     { categoria: "Estrutura", descricao: "Fita adesiva estrutural",    unidade: "m",  quantidade: 2,    custo_unitario: 3.5  },
-    { categoria: "Estrutura", descricao: "Mão de obra montagem",       unidade: "m²", quantidade: 1,    custo_unitario: 140  },
+    { categoria: "Estrutura", descricao: "Mão de obra montagem",       unidade: "m²", quantidade: 1,    custo_unitario: 900  },
   ],
   "Fechamentos": [
     { categoria: "Vedação", descricao: "OSB 11,1 mm (externo)",        unidade: "m²", quantidade: 1.1,  custo_unitario: 68  },
