@@ -1,14 +1,25 @@
 import { precacheAndRoute, cleanupOutdatedCaches } from "workbox-precaching";
 import { registerRoute } from "workbox-routing";
-import { NetworkFirst } from "workbox-strategies";
+import { NetworkFirst, StaleWhileRevalidate } from "workbox-strategies";
 
 cleanupOutdatedCaches();
+
+// Assume controle imediatamente sem esperar o reload
+self.skipWaiting();
+self.addEventListener("activate", (e) => e.waitUntil(clients.claim()));
+
 precacheAndRoute(self.__WB_MANIFEST);
 
 // Supabase: sempre NetworkFirst
 registerRoute(
   ({ url }) => url.hostname.includes("supabase.co"),
   new NetworkFirst({ cacheName: "supabase-cache", networkTimeoutSeconds: 5 })
+);
+
+// Chunks JS/CSS: StaleWhileRevalidate — serve do cache mas já busca o novo
+registerRoute(
+  ({ request }) => request.destination === "script" || request.destination === "style",
+  new StaleWhileRevalidate({ cacheName: "assets-cache" })
 );
 
 // Push notification handler
