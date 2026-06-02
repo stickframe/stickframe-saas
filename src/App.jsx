@@ -85,11 +85,11 @@ function AuthenticatedApp() {
       () => import("./pages/Financeiro"),
       () => import("./pages/Dashboard"),
     ];
-    // Usa requestIdleCallback para não competir com o render inicial
-    const id = requestIdleCallback
+    const hasRIC = typeof requestIdleCallback !== "undefined";
+    const id = hasRIC
       ? requestIdleCallback(() => PREFETCH.forEach((fn) => fn()), { timeout: 3000 })
       : setTimeout(() => PREFETCH.forEach((fn) => fn()), 1500);
-    return () => requestIdleCallback ? cancelIdleCallback(id) : clearTimeout(id);
+    return () => hasRIC ? cancelIdleCallback(id) : clearTimeout(id);
   }, [user]);
 
   // Sincroniza URL com activePage (permite compartilhar links e usar botão Voltar)
