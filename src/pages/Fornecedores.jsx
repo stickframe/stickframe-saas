@@ -12,6 +12,7 @@ import Select from "../components/ui/Select";
 import Modal from "../components/ui/Modal";
 import MonitorPrecos from "../components/fornecedores/MonitorPrecos";
 import IndicePrecos from "../components/fornecedores/IndicePrecos";
+import Concorrencias from "./Concorrencias";
 import { printHtml } from "../utils/printHtml";
 import { enviarWhatsApp } from "../services/whatsappService";
 
@@ -257,7 +258,7 @@ ${(c.observacoes || poForm.observacoes_po) ? `
 
       {/* ── Tab bar ── */}
       <div style={{ display: "flex", borderBottom: `1px solid ${C.border}`, background: "#fff", padding: "0 20px", flexShrink: 0 }}>
-        {[["fornecedores","🏭 Fornecedores"],["indice","📈 Índice de Preços"],["monitor","🔍 Monitor de Mercado"]].map(([k, l]) => (
+        {[["fornecedores","🏭 Fornecedores"],["concorrencias","🤝 Concorrências"],["indice","📈 Índice de Preços"],["monitor","🔍 Monitor de Mercado"]].map(([k, l]) => (
           <button key={k} onClick={() => setViewMode(k)} style={{
             padding: "14px 20px", border: "none", background: "none", cursor: "pointer",
             fontFamily: "inherit", fontSize: 13, fontWeight: viewMode === k ? 700 : 400,
@@ -267,8 +268,9 @@ ${(c.observacoes || poForm.observacoes_po) ? `
         ))}
       </div>
 
-      {viewMode === "indice"   && <div style={{ flex: 1, overflowY: "auto" }}><IndicePrecos /></div>}
-      {viewMode === "monitor"  && <div style={{ flex: 1, overflowY: "auto" }}><MonitorPrecos /></div>}
+      {viewMode === "concorrencias" && <div style={{ flex: 1, overflow: "hidden" }}><Concorrencias /></div>}
+      {viewMode === "indice"        && <div style={{ flex: 1, overflowY: "auto" }}><IndicePrecos /></div>}
+      {viewMode === "monitor"       && <div style={{ flex: 1, overflowY: "auto" }}><MonitorPrecos /></div>}
 
       {viewMode === "fornecedores" && (
         <div style={{ display: "flex", flex: 1, overflow: "hidden", position: "relative" }}>
