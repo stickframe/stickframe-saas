@@ -53,9 +53,9 @@ const useAppStore = create(
       name: "stickframe-storage",
       // Persiste só estado de UI — dados do banco são recarregados
       partialize: (s) => ({
-        user:       s.user,
-        empresaId:  s.empresaId,
-        activePage: s.activePage,
+        user:      s.user,
+        empresaId: s.empresaId,
+        // activePage removido: a URL agora é a fonte de verdade da navegação
       }),
     }
   )

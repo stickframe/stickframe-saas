@@ -34,7 +34,7 @@ export default function AppLayout({ children }) {
   // Pré-carrega clientes para o badge de follow-up do perfil comercial
   useEffect(() => {
     if (perfil === "comercial" && empresaId) loadClientes();
-  }, [perfil, empresaId]);
+  }, [perfil, empresaId, loadClientes]);
 
   useEffect(() => {
     if (!empresaId) return;
