@@ -291,6 +291,7 @@ export default function GestaoObras() {
   const loadHistoricoObra = useAppStore((s) => s.loadHistoricoObra);
   const financeiro        = useAppStore((s) => s.financeiro);
   const perfil            = useAppStore((s) => s.user?.perfil);
+  const empresaId         = useAppStore((s) => s.empresaId);
   const medicoes          = useAppStore((s) => s.medicoes);
   const diario            = useAppStore((s) => s.diario);
   const loadMedicoes      = useAppStore((s) => s.loadMedicoes);
@@ -1727,7 +1728,6 @@ export default function GestaoObras() {
                           onClick={async () => {
                             if (!portalReply.trim()) return;
                             setPortalSending(true);
-                            const empresaId = useAppStore.getState().empresaId;
                             const { error } = await sb.rpc("portal_responder_mensagem", { p_obra_id: obraId, p_empresa_id: empresaId, p_mensagem: portalReply.trim() });
                             if (!error) {
                               setPortalMsgs((prev) => [...prev, { autor: "construtora", nome: "Equipe Stick Frame", mensagem: portalReply.trim(), created_at: new Date().toISOString() }]);
