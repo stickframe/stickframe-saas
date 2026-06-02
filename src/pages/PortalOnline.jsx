@@ -27,6 +27,7 @@ export default function PortalOnline() {
   const [chatNome,   setChatNome] = useState("");
   const [chatMsg,    setChatMsg] = useState("");
   const [chatEnv,    setChatEnv] = useState(false);
+  const msgEndRef = useRef(null);
   const hoje = new Date().toLocaleDateString("pt-BR");
 
   useEffect(() => {
@@ -46,11 +47,31 @@ export default function PortalOnline() {
         setEmpresa(data.empresa || null);
         setMensagens(data.mensagens || []);
         setDocumentos(data.documentos || []);
+
+        // Realtime: escuta novas mensagens da construtora em tempo real
+        if (data.obra?.id) {
+          sb.channel(`portal-msgs-${data.obra.id}`)
+            .on("postgres_changes", {
+              event: "INSERT", schema: "public", table: "portal_mensagens",
+              filter: `obra_id=eq.${data.obra.id}`,
+            }, (payload) => {
+              setMensagens((prev) => {
+                if (prev.find((m) => m.id === payload.new.id)) return prev;
+                return [...prev, payload.new];
+              });
+            })
+            .subscribe();
+        }
       } finally {
         setLoading(false);
       }
     })();
   }, [token]);
+
+  // Scroll automático para última mensagem
+  useEffect(() => {
+    msgEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [mensagens]);
 
   if (loading) return (
     <div style={{ minHeight: "100vh", background: "#1A1A1A", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16 }}>
@@ -376,17 +397,17 @@ export default function PortalOnline() {
           {mensagens.length === 0 && (
             <div style={{ fontSize: 12, color: "#aaa", textAlign: "center", padding: "12px 0" }}>Nenhuma mensagem ainda. Envie uma abaixo.</div>
           )}
-          <div style={{ maxHeight: 320, overflowY: "auto", marginBottom: 12 }}>
+          <div style={{ maxHeight: 320, overflowY: "auto", marginBottom: 12, display: "flex", flexDirection: "column", gap: 8 }}>
             {mensagens.map((m, i) => {
               const isClient = m.autor === "cliente";
               return (
-                <div key={m.id || i} style={{ display: "flex", justifyContent: isClient ? "flex-end" : "flex-start", marginBottom: 8 }}>
+                <div key={m.id || i} style={{ display: "flex", justifyContent: isClient ? "flex-end" : "flex-start" }}>
                   <div style={{
                     maxWidth: "78%", background: isClient ? "#981915" : "#f0f0f0",
                     color: isClient ? "#fff" : "#222", borderRadius: isClient ? "12px 12px 3px 12px" : "12px 12px 12px 3px",
                     padding: "8px 12px", fontSize: 12, lineHeight: 1.5,
                   }}>
-                    {!isClient && <div style={{ fontSize: 9, fontWeight: 700, color: "#981915", marginBottom: 3 }}>{m.nome || "Equipe"}</div>}
+                    {!isClient && <div style={{ fontSize: 9, fontWeight: 700, color: "#981915", marginBottom: 3 }}>🏗️ {m.nome || "Equipe Stick Frame"}</div>}
                     <div>{m.mensagem}</div>
                     <div style={{ fontSize: 9, opacity: .6, marginTop: 4, textAlign: "right" }}>
                       {m.created_at ? new Date(m.created_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : ""}
@@ -395,6 +416,7 @@ export default function PortalOnline() {
                 </div>
               );
             })}
+            <div ref={msgEndRef} />
           </div>
           <div style={{ borderTop: "1px solid #f0f0f0", paddingTop: 12 }}>
             <input

@@ -6,8 +6,8 @@ import { useNotificacoes } from "../../hooks/useNotificacoes";
 import { sb, getEmpresaId } from "../../services/supabase";
 
 const TIPO_ICON = { info: "ℹ️", sucesso: "✅", alerta: "⚠️", erro: "⛔" };
-const CAT_LABELS = { prazo: "Prazos", medicao: "Medições", vistoria: "Vistorias", orcamento: "Orçamentos", bim: "BIM", followup: "Follow-ups", lead: "Novos Leads" };
-const CAT_ICONS  = { prazo: "⏰", medicao: "📐", vistoria: "🔍", orcamento: "📋", bim: "🧊", followup: "📅", lead: "🎯" };
+const CAT_LABELS = { prazo: "Prazos", medicao: "Medições", vistoria: "Vistorias", orcamento: "Orçamentos", bim: "BIM", followup: "Follow-ups", lead: "Novos Leads", chat: "Mensagens" };
+const CAT_ICONS  = { prazo: "⏰", medicao: "📐", vistoria: "🔍", orcamento: "📋", bim: "🧊", followup: "📅", lead: "🎯", chat: "💬" };
 
 function usePreOrcamentos() {
   const [preOrcs, setPreOrcs] = useState([]);
@@ -28,6 +28,22 @@ function usePreOrcamentos() {
   return preOrcs;
 }
 
+function useMsgsPendentes() {
+  const [msgs, setMsgs] = useState([]);
+  const empresaId = useAppStore((s) => s.empresaId);
+  useEffect(() => {
+    if (!empresaId) return;
+    sb.from("portal_mensagens").select("id, nome, mensagem, obra_id, created_at").eq("empresa_id", empresaId).eq("autor", "cliente").eq("lida", false)
+      .order("created_at", { ascending: false }).then(({ data }) => setMsgs(data || []));
+    const ch = sb.channel("portal-msgs-notif")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "portal_mensagens", filter: `empresa_id=eq.${empresaId}` },
+        (p) => { if (p.new.autor === "cliente") setMsgs((prev) => [p.new, ...prev]); })
+      .subscribe();
+    return () => ch.unsubscribe();
+  }, [empresaId]);
+  return msgs;
+}
+
 function useAlertas() {
   const obras           = useAppStore((s) => s.obras);
   const orcamentos      = useAppStore((s) => s.orcamentos);
@@ -36,6 +52,7 @@ function useAlertas() {
   const bimApontamentos = useAppStore((s) => s.bimApontamentos);
   const clientes        = useAppStore((s) => s.clientes);
   const preOrcs         = usePreOrcamentos();
+  const msgsPendentes   = useMsgsPendentes();
 
   return useMemo(() => {
     const alertas = [];
@@ -116,8 +133,18 @@ function useAlertas() {
       });
     });
 
+    // 8. Mensagens do portal não lidas
+    msgsPendentes.forEach((m) => {
+      const obra = obras.find((o) => o.id === m.obra_id);
+      alertas.push({
+        categoria: "chat", tipo: "info", cor: "#4a9eff", icon: "💬",
+        titulo: "Mensagem do cliente",
+        texto: `${m.nome || "Cliente"} — ${obra?.nome?.split("—")[0]?.trim() || "Obra"}: "${m.mensagem?.slice(0, 60)}${m.mensagem?.length > 60 ? "…" : ""}"`,
+      });
+    });
+
     return alertas;
-  }, [obras, orcamentos, medicoes, vistorias, bimApontamentos, clientes, preOrcs]);
+  }, [obras, orcamentos, medicoes, vistorias, bimApontamentos, clientes, preOrcs, msgsPendentes]);
 }
 
 function tempoAtras(ts) {
@@ -130,8 +157,8 @@ function tempoAtras(ts) {
 
 // Categorias de alerta relevantes por perfil
 const CATS_PERFIL = {
-  engenheiro: ["prazo", "medicao", "vistoria", "bim"],
-  comercial:  ["orcamento", "followup", "lead"],
+  engenheiro: ["prazo", "medicao", "vistoria", "bim", "chat"],
+  comercial:  ["orcamento", "followup", "lead", "chat"],
   financeiro: ["prazo"],
 };
 

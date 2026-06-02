@@ -322,10 +322,24 @@ export default function GestaoObras() {
   const [qrModal,      setQrModal]      = useState(false);
   const [checkinsHoje, setCheckinsHoje] = useState([]);
   const [checkinsVis,  setCheckinsVis]  = useState(false);
+  const [portalMsgs,   setPortalMsgs]   = useState([]);
+  const [portalReply,  setPortalReply]  = useState("");
+  const [portalSending, setPortalSending] = useState(false);
 
   useEffect(() => {
     if (!obraId && obras.length > 0) setObraId(obras[0].id);
   }, [obras, obraId]);
+
+  // Chat do portal: carrega + Realtime
+  useEffect(() => {
+    if (!obraId) return;
+    sb.from("portal_mensagens").select("*").eq("obra_id", obraId).order("created_at").then(({ data }) => setPortalMsgs(data || []));
+    const ch = sb.channel(`obra-msgs-${obraId}`)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "portal_mensagens", filter: `obra_id=eq.${obraId}` },
+        (p) => setPortalMsgs((prev) => prev.find((m) => m.id === p.new.id) ? prev : [...prev, p.new]))
+      .subscribe();
+    return () => ch.unsubscribe();
+  }, [obraId]);
 
   useEffect(() => {
     if (abaAtiva === "diario" && obraId) loadDiario(obraId);
@@ -1674,6 +1688,55 @@ export default function GestaoObras() {
                         </div>
                       )}
                     </div>
+                    {/* Chat do Portal */}
+                    {obra?.token_portal && (
+                      <div style={{ marginTop: 16, borderTop: `1px solid ${C.border}`, paddingTop: 14 }}>
+                        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 10 }}>💬 CHAT COM CLIENTE</div>
+                        <div style={{ maxHeight: 220, overflowY: "auto", display: "flex", flexDirection: "column", gap: 6, marginBottom: 10 }}>
+                          {portalMsgs.length === 0 && <div style={{ fontSize: 11, color: C.muted, textAlign: "center", padding: 8 }}>Nenhuma mensagem ainda.</div>}
+                          {portalMsgs.map((m, i) => {
+                            const isCliente = m.autor === "cliente";
+                            return (
+                              <div key={m.id || i} style={{ display: "flex", justifyContent: isCliente ? "flex-start" : "flex-end" }}>
+                                <div style={{
+                                  maxWidth: "85%", padding: "6px 10px", borderRadius: isCliente ? "10px 10px 10px 2px" : "10px 10px 2px 10px",
+                                  background: isCliente ? C.darker : C.red + "22", fontSize: 11, lineHeight: 1.5,
+                                  border: `1px solid ${isCliente ? C.border : C.red + "44"}`,
+                                }}>
+                                  {isCliente && <div style={{ fontSize: 9, fontWeight: 700, color: C.red, marginBottom: 2 }}>👤 {m.nome || "Cliente"}</div>}
+                                  <div>{m.mensagem}</div>
+                                  <div style={{ fontSize: 9, color: C.muted, marginTop: 2, textAlign: "right" }}>
+                                    {m.created_at ? new Date(m.created_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : ""}
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                        <textarea
+                          value={portalReply}
+                          onChange={(e) => setPortalReply(e.target.value)}
+                          placeholder="Responder ao cliente..."
+                          rows={2}
+                          style={{ width: "100%", background: C.darker, border: `1px solid ${C.border}`, borderRadius: 6, padding: "6px 10px", fontSize: 11, color: C.text, resize: "none", outline: "none", fontFamily: "inherit" }}
+                        />
+                        <button
+                          disabled={portalSending || !portalReply.trim()}
+                          onClick={async () => {
+                            if (!portalReply.trim()) return;
+                            setPortalSending(true);
+                            const empresaId = useAppStore.getState().empresaId;
+                            const { error } = await sb.rpc("portal_responder_mensagem", { p_obra_id: obraId, p_empresa_id: empresaId, p_mensagem: portalReply.trim() });
+                            if (!error) setPortalReply("");
+                            setPortalSending(false);
+                          }}
+                          style={{ marginTop: 6, width: "100%", padding: "7px 0", background: portalSending || !portalReply.trim() ? C.muted : C.red, color: "#fff", border: "none", borderRadius: 6, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}
+                        >
+                          {portalSending ? "Enviando..." : "↩ Responder"}
+                        </button>
+                      </div>
+                    )}
+
                     <button onClick={() => setConfirm(true)} style={{
                       width: "100%", padding: "8px 0",
                       background: C.danger + "22", border: `1px solid ${C.danger}44`,
