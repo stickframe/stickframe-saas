@@ -11,6 +11,152 @@ import Input from "../components/ui/Input";
 import Select from "../components/ui/Select";
 import Modal from "../components/ui/Modal";
 
+// ─── Fluxo de Caixa Dinâmico ─────────────────────────────────────────────────
+function FluxoCaixa({ lancamentos }) {
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+  const DIAS = 60;
+
+  const dias = useMemo(() => {
+    const arr = [];
+    for (let i = -7; i < DIAS; i++) {
+      const d = new Date(hoje);
+      d.setDate(d.getDate() + i);
+      const iso = d.toISOString().slice(0, 10);
+      let entrada = 0, saida = 0;
+      lancamentos.forEach((l) => {
+        const ref = l.data_vencimento || l.data;
+        if (ref === iso) {
+          if (l.tipo === "receita") entrada += l.valor || 0;
+          else saida += l.valor || 0;
+        }
+      });
+      arr.push({ iso, d, entrada, saida, passado: i < 0 });
+    }
+    // Calcula saldo corrente acumulado
+    let saldo = 0;
+    return arr.map((dia) => {
+      saldo += dia.entrada - dia.saida;
+      return { ...dia, saldo };
+    });
+  }, [lancamentos]);
+
+  const maxAbs = Math.max(1, ...dias.map((d) => Math.max(d.entrada, d.saida, Math.abs(d.saldo))));
+  const negativo = dias.filter((d) => d.saldo < 0);
+  const hoje7 = dias.filter((d) => !d.passado && d.d <= new Date(hoje.getTime() + 7 * 86400000));
+  const totalEntrada7 = hoje7.reduce((a, d) => a + d.entrada, 0);
+  const totalSaida7   = hoje7.reduce((a, d) => a + d.saida, 0);
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      {/* KPIs de projeção */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+        {[
+          { label: "Entradas próx. 7 dias", value: fmt(totalEntrada7), color: C.success },
+          { label: "Saídas próx. 7 dias",   value: fmt(totalSaida7),   color: C.red },
+          { label: "Dias c/ saldo negativo", value: String(negativo.length), color: negativo.length > 0 ? C.danger : C.success },
+        ].map((k, i) => (
+          <div key={i} style={{ background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, borderTop: `3px solid ${k.color}`, padding: "14px 16px" }}>
+            <div style={{ fontSize: 10, color: C.muted, letterSpacing: 1, marginBottom: 6 }}>{k.label.toUpperCase()}</div>
+            <div style={{ fontSize: 20, fontWeight: 800, color: k.color }}>{k.value}</div>
+          </div>
+        ))}
+      </div>
+
+      {negativo.length > 0 && (
+        <div style={{ background: "#fff5f5", border: "1px solid #fca5a5", borderRadius: 12, padding: "14px 18px" }}>
+          <div style={{ fontWeight: 700, color: "#991b1b", fontSize: 13, marginBottom: 6 }}>⚠️ Atenção: saldo projetado negativo em {negativo.length} dia(s)</div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            {negativo.slice(0, 5).map((d) => (
+              <span key={d.iso} style={{ background: "#fee2e2", color: "#991b1b", borderRadius: 6, padding: "3px 10px", fontSize: 12, fontWeight: 600 }}>
+                {d.d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })} · {fmt(d.saldo)}
+              </span>
+            ))}
+            {negativo.length > 5 && <span style={{ fontSize: 12, color: C.muted }}>+{negativo.length - 5} dias</span>}
+          </div>
+        </div>
+      )}
+
+      {/* Gráfico de barras dia a dia */}
+      <div style={{ background: C.surface, borderRadius: 14, border: `1px solid ${C.border}`, padding: "18px 20px" }}>
+        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 4 }}>FLUXO DE CAIXA — PROJEÇÃO 60 DIAS</div>
+        <div style={{ fontSize: 12, color: C.muted, marginBottom: 16 }}>Barras: entradas (verde) e saídas (vermelho) por data de vencimento · Linha: saldo acumulado</div>
+        <div style={{ overflowX: "auto" }}>
+          <svg width={Math.max(dias.length * 18, 400)} height={180} style={{ display: "block" }}>
+            {dias.map((d, i) => {
+              const x   = i * 18 + 2;
+              const h   = 100;
+              const entH = (d.entrada / maxAbs) * h;
+              const saiH = (d.saida   / maxAbs) * h;
+              const isHoje = d.iso === hoje.toISOString().slice(0, 10);
+              return (
+                <g key={d.iso}>
+                  {isHoje && <rect x={x} y={0} width={16} height={180} fill="#f0f0ff" opacity={0.5} />}
+                  {/* entrada */}
+                  <rect x={x + 1} y={130 - entH} width={6} height={entH} fill={C.success} opacity={d.passado ? 0.4 : 0.85} rx={1} />
+                  {/* saída */}
+                  <rect x={x + 9} y={130 - saiH} width={6} height={saiH} fill={C.red} opacity={d.passado ? 0.4 : 0.85} rx={1} />
+                  {/* label semana */}
+                  {(i % 7 === 0) && (
+                    <text x={x + 8} y={148} textAnchor="middle" fontSize={8} fill={C.muted}>
+                      {d.d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}
+                    </text>
+                  )}
+                </g>
+              );
+            })}
+            {/* Linha de saldo acumulado */}
+            <polyline
+              fill="none" stroke="#4a9eff" strokeWidth={1.5} opacity={0.8}
+              points={dias.map((d, i) => {
+                const x = i * 18 + 10;
+                const y = 130 - (d.saldo / maxAbs) * 90;
+                return `${x},${Math.max(5, Math.min(155, y))}`;
+              }).join(" ")}
+            />
+            {/* Linha zero */}
+            <line x1={0} y1={130} x2={dias.length * 18} y2={130} stroke={C.border} strokeWidth={1} />
+            {/* Legenda */}
+            <rect x={4}  y={160} width={8} height={8} fill={C.success} rx={1} />
+            <text x={15} y={168} fontSize={9} fill={C.muted}>Entradas</text>
+            <rect x={60} y={160} width={8} height={8} fill={C.red} rx={1} />
+            <text x={71} y={168} fontSize={9} fill={C.muted}>Saídas</text>
+            <line x1={116} y1={164} x2={128} y2={164} stroke="#4a9eff" strokeWidth={2} />
+            <text x={131} y={168} fontSize={9} fill={C.muted}>Saldo acum.</text>
+          </svg>
+        </div>
+      </div>
+
+      {/* Timeline detalhada */}
+      <div style={{ background: C.surface, borderRadius: 14, border: `1px solid ${C.border}`, overflow: "hidden" }}>
+        <div style={{ padding: "14px 20px", borderBottom: `1px solid ${C.border}`, fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted }}>
+          AGENDA DE VENCIMENTOS
+        </div>
+        <div style={{ maxHeight: 320, overflowY: "auto" }}>
+          {dias.filter((d) => d.entrada > 0 || d.saida > 0).slice(0, 30).map((d) => (
+            <div key={d.iso} style={{
+              display: "flex", alignItems: "center", gap: 12, padding: "11px 20px",
+              borderBottom: `1px solid ${C.border}`,
+              background: d.saldo < 0 ? "#fff5f5" : "transparent",
+            }}>
+              <div style={{ width: 56, fontSize: 12, fontWeight: 700, color: d.passado ? C.muted : C.text, flexShrink: 0 }}>
+                {d.d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}
+              </div>
+              <div style={{ flex: 1, display: "flex", gap: 12 }}>
+                {d.entrada > 0 && <span style={{ fontSize: 12, color: C.success, fontWeight: 600 }}>↑ {fmt(d.entrada)}</span>}
+                {d.saida > 0   && <span style={{ fontSize: 12, color: C.red,     fontWeight: 600 }}>↓ {fmt(d.saida)}</span>}
+              </div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: d.saldo < 0 ? C.danger : C.success, flexShrink: 0 }}>
+                {d.saldo >= 0 ? "+" : ""}{fmt(d.saldo)}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Mini gráfico ─────────────────────────────────────────────────────────────
 function BarChart({ data, height = 100 }) {
   const max = Math.max(...data.map((d) => d.value), 1);
@@ -126,6 +272,7 @@ export default function Financeiro() {
   const updateObra    = useAppStore((s) => s.updateObra);
 
   const [obraId,      setObraId]      = useState(null);
+  const [finTab,      setFinTab]      = useState("lancamentos"); // "lancamentos" | "fluxo"
   const [modal,       setModal]       = useState(null); // "receita" | "despesa"
   const [form,        setForm]        = useState(FORM_VAZIO);
   const { toast, mostrarToast } = useToast();
@@ -372,6 +519,22 @@ export default function Financeiro() {
             )}
           </div>
         )}
+
+        {/* Tabs */}
+        <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
+          {[["lancamentos", "📊 Análise"], ["fluxo", "📅 Fluxo de Caixa"]].map(([k, label]) => (
+            <button key={k} onClick={() => setFinTab(k)} style={{
+              padding: "7px 16px", borderRadius: 8, border: `1px solid ${finTab === k ? C.red : C.border}`,
+              background: finTab === k ? C.red + "18" : "transparent",
+              color: finTab === k ? C.text : C.muted, fontSize: 12, fontWeight: finTab === k ? 700 : 400,
+              cursor: "pointer", fontFamily: "inherit",
+            }}>{label}</button>
+          ))}
+        </div>
+
+        {finTab === "fluxo" ? (
+          <FluxoCaixa lancamentos={Object.values(financeiro).flatMap((f) => f.lancamentos || [])} />
+        ) : (<>
 
         {/* KPIs */}
         <div className="kpi-grid-5" style={{ marginBottom: 18 }}>
@@ -693,6 +856,7 @@ export default function Financeiro() {
             </div>
           </div>
         </div>
+      </>)} {/* end finTab === "lancamentos" */}
       </div>
     </>
   );

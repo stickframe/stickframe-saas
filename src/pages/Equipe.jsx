@@ -18,6 +18,7 @@ const ESPECIALIDADES = ["Montador","Ajudante","Fundação","Elétrica","Hidrául
 const STATUS_OPTS    = ["Ativo","Férias","Afastado","Inativo"];
 const STATUS_COR     = { Ativo: "#2e9e5b", Férias: "#4a9eff", Afastado: "#c88a00", Inativo: C.muted };
 const FUNCOES        = ["Montador","Mestre de obra","Pedreiro","Eletricista","Encanador","Pintor","Acabamento","Coordenador","Outro"];
+const UNIDADES       = ["m²","m","un","kg","hr","vb"];
 
 function LabelField({ children, required }) {
   return (
@@ -46,6 +47,7 @@ function Tab({ label, active, onClick }) {
 const FORM_VAZIO = {
   nome: "", cargo: "", email: "", telefone: "",
   especialidade: "Montador", status: "Ativo", salario: "", observacoes: "",
+  tipo_contrato: "CLT", valor_producao: "", unidade_producao: "m²",
 };
 
 function FormColaborador({ form, setForm, onSave, onCancel, btnLabel }) {
@@ -88,6 +90,35 @@ function FormColaborador({ form, setForm, onSave, onCancel, btnLabel }) {
             options={STATUS_OPTS.map((s) => ({ value: s, label: s }))} />
         </div>
       </div>
+      {/* Tipo de contrato */}
+      <div style={{ background: C.darker, borderRadius: 10, padding: "14px 16px" }}>
+        <LabelField>Tipo de Contrato</LabelField>
+        <div style={{ display: "flex", gap: 10, marginBottom: 10 }}>
+          {["CLT", "Empreiteiro"].map((t) => (
+            <button key={t} onClick={() => set("tipo_contrato")(t)} style={{
+              padding: "6px 16px", borderRadius: 8, border: `1px solid ${form.tipo_contrato === t ? C.red : C.border}`,
+              background: form.tipo_contrato === t ? C.red + "18" : "#fff",
+              color: form.tipo_contrato === t ? C.text : C.muted,
+              fontSize: 12, fontWeight: form.tipo_contrato === t ? 700 : 400,
+              cursor: "pointer", fontFamily: "inherit",
+            }}>{t}</button>
+          ))}
+        </div>
+        {form.tipo_contrato === "Empreiteiro" && (
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 8 }}>
+            <div>
+              <LabelField required>Valor por Unidade (R$)</LabelField>
+              <Input value={form.valor_producao} onChange={set("valor_producao")} type="number" min="0" placeholder="Ex: 25,00" />
+            </div>
+            <div>
+              <LabelField>Unidade de Medição</LabelField>
+              <Select value={form.unidade_producao} onChange={set("unidade_producao")}
+                options={UNIDADES.map((u) => ({ value: u, label: u }))} />
+            </div>
+          </div>
+        )}
+      </div>
+
       <div>
         <LabelField>Observações</LabelField>
         <textarea
@@ -134,6 +165,9 @@ export default function Equipe() {
   const removeHorasTrabalhadas = useAppStore((s) => s.removeHorasTrabalhadas);
 
   const [tab,        setTab]        = useState("equipe");
+  const [empModal,   setEmpModal]   = useState(null); // { colaborador }
+  const [empForm,    setEmpForm]    = useState({ obra_id: "", quantidade: "", descricao: "", data_inicio: "", data_fim: "" });
+  const [empApurando, setEmpApurando] = useState(false);
   const [modal,      setModal]      = useState(null);
   const [editId,     setEditId]     = useState(null);
   const [confirm,    setConfirm]    = useState(null);
@@ -199,18 +233,21 @@ export default function Equipe() {
       nome: c.nome || "", cargo: c.cargo || "", email: c.email || "",
       telefone: c.telefone || "", especialidade: c.especialidade || "Montador",
       status: c.status || "Ativo", salario: c.salario || "", observacoes: c.observacoes || "",
+      tipo_contrato: c.tipo_contrato || "CLT", valor_producao: c.valor_producao || "", unidade_producao: c.unidade_producao || "m²",
     });
     setModal("editar");
   }
 
   async function salvarNovo() {
-    await addColaborador({ ...form, salario: form.salario ? Number(form.salario) : null });
+    const payload = { ...form, salario: form.salario ? Number(form.salario) : null, valor_producao: form.valor_producao ? Number(form.valor_producao) : null };
+    await addColaborador(payload);
     setModal(null);
     mostrarToast("✅ Colaborador cadastrado!");
   }
 
   async function salvarEdicao() {
-    await updateColaborador(editId, { ...form, salario: form.salario ? Number(form.salario) : null });
+    const payload = { ...form, salario: form.salario ? Number(form.salario) : null, valor_producao: form.valor_producao ? Number(form.valor_producao) : null };
+    await updateColaborador(editId, payload);
     setModal(null);
     mostrarToast("✅ Dados atualizados!");
   }
@@ -523,9 +560,10 @@ export default function Equipe() {
 
         {/* Tabs */}
         <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
-          <Tab label="👷 Equipe"     active={tab === "equipe"}    onClick={() => setTab("equipe")} />
-          <Tab label="📋 Alocações"  active={tab === "alocacoes"} onClick={() => setTab("alocacoes")} />
-          <Tab label="⏱ Horas"      active={tab === "horas"}     onClick={() => setTab("horas")} />
+          <Tab label="👷 Equipe"        active={tab === "equipe"}       onClick={() => setTab("equipe")} />
+          <Tab label="🔨 Empreiteiros" active={tab === "empreiteiros"} onClick={() => setTab("empreiteiros")} />
+          <Tab label="📋 Alocações"    active={tab === "alocacoes"}    onClick={() => setTab("alocacoes")} />
+          <Tab label="⏱ Horas"        active={tab === "horas"}        onClick={() => setTab("horas")} />
         </div>
 
         {/* ══ Tab: Equipe ══ */}
@@ -626,6 +664,89 @@ export default function Equipe() {
               </div>
             )}
           </>
+        )}
+
+        {/* ══ Tab: Empreiteiros ══ */}
+        {tab === "empreiteiros" && (() => {
+          const empreiteiros = colaboradores.filter((c) => c.tipo_contrato === "Empreiteiro");
+          return (
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              {empreiteiros.length === 0 ? (
+                <div style={{ background: C.surface, borderRadius: 16, border: `1px solid ${C.border}`, padding: "50px 0", textAlign: "center" }}>
+                  <div style={{ fontSize: 40, marginBottom: 12 }}>🔨</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 8 }}>Nenhum empreiteiro cadastrado</div>
+                  <div style={{ fontSize: 12, color: C.muted }}>Cadastre um colaborador e defina o tipo como "Empreiteiro"</div>
+                </div>
+              ) : empreiteiros.map((c) => (
+                <div key={c.id} style={{ background: C.surface, borderRadius: 16, border: `1px solid ${C.border}`, padding: "20px", borderLeft: `4px solid #7c3aed` }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
+                    <div>
+                      <div style={{ fontSize: 15, fontWeight: 800 }}>{c.nome}</div>
+                      <div style={{ fontSize: 12, color: C.muted }}>{c.especialidade} · {c.cargo || "Empreiteiro"}</div>
+                    </div>
+                    <div style={{ textAlign: "right" }}>
+                      <div style={{ fontSize: 16, fontWeight: 900, color: "#7c3aed" }}>R$ {c.valor_producao?.toFixed(2)}</div>
+                      <div style={{ fontSize: 11, color: C.muted }}>por {c.unidade_producao}</div>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => { setEmpModal({ colaborador: c }); setEmpForm({ obra_id: obras[0]?.id || "", quantidade: "", descricao: "", data_inicio: new Date(Date.now() - 6 * 86400000).toISOString().slice(0, 10), data_fim: new Date().toISOString().slice(0, 10) }); }}
+                    style={{ padding: "8px 18px", background: "#7c3aed22", border: "1px solid #7c3aed44", borderRadius: 8, color: "#7c3aed", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+                    💰 Apurar Pagamento
+                  </button>
+                </div>
+              ))}
+            </div>
+          );
+        })()}
+
+        {/* Modal apurar empreiteiro */}
+        {empModal && (
+          <div style={{ position: "fixed", inset: 0, background: "#000b", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+            <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, width: "100%", maxWidth: 460, padding: "28px 28px 22px" }}>
+              <div style={{ fontSize: 16, fontWeight: 800, marginBottom: 18 }}>💰 Apurar Pagamento — {empModal.colaborador.nome}</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 5 }}>OBRA</div>
+                  <Select value={empForm.obra_id} onChange={(v) => setEmpForm((f) => ({ ...f, obra_id: v }))}
+                    options={obras.map((o) => ({ value: o.id, label: o.nome?.split("—")[0]?.trim() }))} />
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                  <div>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 5 }}>DATA INÍCIO</div>
+                    <Input type="date" value={empForm.data_inicio} onChange={(v) => setEmpForm((f) => ({ ...f, data_inicio: v })) } />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 5 }}>DATA FIM</div>
+                    <Input type="date" value={empForm.data_fim} onChange={(v) => setEmpForm((f) => ({ ...f, data_fim: v })) } />
+                  </div>
+                </div>
+                <div style={{ background: C.darker, borderRadius: 10, padding: "12px 14px", fontSize: 12, color: C.muted }}>
+                  O sistema irá buscar toda a produção não paga no período e gerar um lançamento de despesa no Financeiro.
+                </div>
+                <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", paddingTop: 8 }}>
+                  <Btn variant="ghost" onClick={() => setEmpModal(null)}>Cancelar</Btn>
+                  <Btn disabled={empApurando || !empForm.obra_id || !empForm.data_inicio || !empForm.data_fim} onClick={async () => {
+                    setEmpApurando(true);
+                    try {
+                      const { sb } = await import("../services/supabase");
+                      const empresaId = (await import("../store/useAppStore")).default.getState().empresaId;
+                      const { data, error } = await sb.rpc("apurar_empreiteiro", {
+                        p_empresa_id: empresaId, p_colaborador_id: empModal.colaborador.id,
+                        p_obra_id: empForm.obra_id, p_data_inicio: empForm.data_inicio, p_data_fim: empForm.data_fim,
+                      });
+                      if (error) throw error;
+                      mostrarToast(`✅ Lançado R$ ${data.total?.toFixed(2)} — ${data.quantidade} ${data.unidade}`);
+                      setEmpModal(null);
+                    } catch (e) { mostrarToast(`❌ ${e.message}`, true); }
+                    finally { setEmpApurando(false); }
+                  }}>
+                    {empApurando ? "Apurando..." : "Gerar Pagamento"}
+                  </Btn>
+                </div>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* ══ Tab: Alocações ══ */}
