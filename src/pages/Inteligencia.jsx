@@ -93,7 +93,7 @@ export default function Inteligencia() {
         <p style={{ color: C.muted, fontSize: 13, marginTop: 4 }}>Histórico e projeções baseadas no custo real de execução</p>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, marginBottom: 24 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16, marginBottom: 24 }}>
         <div style={{ background: C.surface, borderRadius: 12, padding: 20, border: `1px solid ${C.border}`, borderTop: `3px solid ${C.red}` }}>
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 8 }}>CUSTO HISTÓRICO GERAL</div>
           <div style={{ fontSize: 28, fontWeight: 900, color: C.text }}>
@@ -121,7 +121,7 @@ export default function Inteligencia() {
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
         <div style={{ background: C.surface, borderRadius: 12, padding: 20, border: `1px solid ${C.border}` }}>
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 16 }}>CUSTO HISTÓRICO POR PADRÃO</div>
           {dadosPadrao.length === 0 ? (
