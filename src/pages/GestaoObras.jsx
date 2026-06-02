@@ -332,6 +332,17 @@ export default function GestaoObras() {
   const [portalReply,  setPortalReply]  = useState("");
   const [portalSending, setPortalSending] = useState(false);
 
+  // Garantia
+  const chamados      = useAppStore((s) => s.chamados);
+  const loadChamados  = useAppStore((s) => s.loadChamados);
+  const addChamado    = useAppStore((s) => s.addChamado);
+  const updateChamado = useAppStore((s) => s.updateChamado);
+  const deleteChamado = useAppStore((s) => s.deleteChamado);
+  const [chamadoModal,  setChamadoModal]  = useState(false);
+  const [chamadoForm,   setChamadoForm]   = useState({ titulo: "", descricao: "", categoria: "Outro", prioridade: "Média" });
+  const [chamadoEd,     setChamadoEd]     = useState(null);
+  const [chamadoSaving, setChamadoSaving] = useState(false);
+
   useEffect(() => {
     if (!obraId && obras.length > 0) setObraId(obras[0].id);
   }, [obras, obraId]);
@@ -349,6 +360,7 @@ export default function GestaoObras() {
 
   useEffect(() => {
     if (abaAtiva === "diario" && obraId) loadDiario(obraId);
+    if (abaAtiva === "garantia" && obraId) loadChamados(obraId);
     if (abaAtiva === "historico" && obraId) {
       setHistLoading(true);
       loadHistoricoObra(obraId).then((d) => { setHistObra(d); setHistLoading(false); });
@@ -1286,7 +1298,7 @@ export default function GestaoObras() {
               <div>
                 {/* Abas */}
                 <div style={{ display: "flex", borderBottom: `1px solid ${C.border}` }}>
-                  {[["fases", "📋 Fases"], ["financeiro", "💰 Financeiro"], ["fluxo", "📈 Fluxo"], ["cronograma", "📅 Cronograma"], ["diario", "📓 Diário"], ["fotos", "📷 Fotos"], ["arquivos", "📁 Arquivos"], ["historico", "🕑 Histórico"]].map(([k, l]) => (
+                  {[["fases", "📋 Fases"], ["financeiro", "💰 Financeiro"], ["fluxo", "📈 Fluxo"], ["cronograma", "📅 Cronograma"], ["diario", "📓 Diário"], ["fotos", "📷 Fotos"], ["arquivos", "📁 Arquivos"], ["historico", "🕑 Histórico"], ...(obra.status === "Concluída" ? [["garantia", "🛠️ Garantia"]] : [])].map(([k, l]) => (
                     <button key={k} onClick={() => setAbaAtiva(k)} style={{
                       padding: "10px 20px", background: "transparent", border: "none",
                       borderBottom: `2px solid ${abaAtiva === k ? C.red : "transparent"}`,
@@ -1781,6 +1793,134 @@ export default function GestaoObras() {
                     })}
                   </div>
                 )}
+                {/* ABA GARANTIA */}
+                {abaAtiva === "garantia" && (() => {
+                  const CATS_CHAMADO = ["Elétrica","Hidráulica","Estrutural","Acabamento / Gesso","Esquadrias","Cobertura","Outro"];
+                  const PRIORIDADE_COR = { "Alta": C.danger, "Média": C.warning, "Baixa": C.success };
+                  const STATUS_CHAMADO_COR = { "Aberto": "#4a9eff", "Em andamento": C.warning, "Resolvido": C.success, "Cancelado": C.muted };
+                  const listaChamados = chamados[obraId] || [];
+                  const abertos = listaChamados.filter((c) => c.status === "Aberto" || c.status === "Em andamento");
+                  const custoTotal = listaChamados.filter((c) => c.status === "Resolvido").reduce((a, c) => a + (Number(c.custo_reparo) || 0), 0);
+
+                  async function salvarChamado() {
+                    setChamadoSaving(true);
+                    try {
+                      if (chamadoEd) {
+                        await updateChamado(obraId, chamadoEd.id, chamadoForm);
+                        mostrarToast("✅ Chamado atualizado!");
+                      } else {
+                        await addChamado(obraId, chamadoForm);
+                        mostrarToast("✅ Chamado aberto!");
+                      }
+                      setChamadoModal(false); setChamadoEd(null);
+                    } catch (e) { mostrarToast("❌ " + e.message); }
+                    finally { setChamadoSaving(false); }
+                  }
+
+                  return (
+                    <div style={{ background: C.surface, borderRadius: "0 0 12px 12px", border: `1px solid ${C.border}`, borderTop: "none", padding: 22 }}>
+                      {/* KPIs */}
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 20 }}>
+                        {[
+                          { label: "Chamados abertos", value: abertos.length, cor: abertos.length > 0 ? "#4a9eff" : C.success },
+                          { label: "Total de chamados", value: listaChamados.length, cor: C.muted },
+                          { label: "Custo de garantia", value: `R$ ${custoTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`, cor: custoTotal > 0 ? C.danger : C.success },
+                        ].map((kpi) => (
+                          <div key={kpi.label} style={{ background: "#fff", borderRadius: 10, padding: "12px 14px", border: `1px solid ${C.border}`, borderTop: `3px solid ${kpi.cor}` }}>
+                            <div style={{ fontSize: 10, fontWeight: 700, color: C.muted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6 }}>{kpi.label}</div>
+                            <div style={{ fontSize: 20, fontWeight: 900 }}>{kpi.value}</div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Header */}
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                        <div style={{ fontSize: 13, fontWeight: 700 }}>{listaChamados.length} chamado{listaChamados.length !== 1 ? "s" : ""}</div>
+                        <button onClick={() => { setChamadoForm({ titulo: "", descricao: "", categoria: "Outro", prioridade: "Média" }); setChamadoEd(null); setChamadoModal(true); }} style={{
+                          padding: "7px 14px", background: C.red, border: "none", borderRadius: 8, color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
+                        }}>+ Abrir chamado</button>
+                      </div>
+
+                      {listaChamados.length === 0 ? (
+                        <div style={{ textAlign: "center", padding: "32px 0", color: C.muted, fontSize: 13 }}>
+                          <div style={{ fontSize: 28, marginBottom: 8 }}>🛠️</div>
+                          Nenhum chamado de garantia registrado.
+                        </div>
+                      ) : listaChamados.map((ch) => (
+                        <div key={ch.id} style={{ background: "#fff", border: `1px solid ${C.border}`, borderRadius: 10, padding: "14px 16px", marginBottom: 10, borderLeft: `4px solid ${STATUS_CHAMADO_COR[ch.status] || C.muted}` }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
+                            <div style={{ fontWeight: 700, fontSize: 14 }}>{ch.titulo}</div>
+                            <div style={{ display: "flex", gap: 6, alignItems: "center", flexShrink: 0, marginLeft: 10 }}>
+                              <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 6, background: (PRIORIDADE_COR[ch.prioridade] || C.muted) + "20", color: PRIORIDADE_COR[ch.prioridade] || C.muted }}>{ch.prioridade}</span>
+                              <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 6, background: (STATUS_CHAMADO_COR[ch.status] || C.muted) + "20", color: STATUS_CHAMADO_COR[ch.status] || C.muted }}>{ch.status}</span>
+                            </div>
+                          </div>
+                          <div style={{ fontSize: 12, color: C.muted, marginBottom: ch.descricao ? 6 : 0 }}>{ch.categoria} · {new Date(ch.created_at).toLocaleDateString("pt-BR")}{ch.criado_pelo_cliente ? " · 👤 Cliente" : ""}</div>
+                          {ch.descricao && <div style={{ fontSize: 12, color: C.graphite, lineHeight: 1.5, marginBottom: 6 }}>{ch.descricao}</div>}
+                          {ch.resolucao && <div style={{ fontSize: 12, background: C.success + "12", border: `1px solid ${C.success}33`, borderRadius: 6, padding: "6px 10px", color: C.success, marginBottom: 6 }}>✓ {ch.resolucao}</div>}
+                          {ch.custo_reparo > 0 && <div style={{ fontSize: 12, color: C.danger, fontWeight: 700 }}>Custo: R$ {Number(ch.custo_reparo).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</div>}
+                          <div style={{ display: "flex", gap: 8, marginTop: 10, justifyContent: "flex-end" }}>
+                            <button onClick={() => { setChamadoForm({ titulo: ch.titulo, descricao: ch.descricao || "", categoria: ch.categoria, prioridade: ch.prioridade, status: ch.status, resolucao: ch.resolucao || "", custo_reparo: ch.custo_reparo || "", agendado_para: ch.agendado_para || "" }); setChamadoEd(ch); setChamadoModal(true); }} style={{ padding: "5px 12px", background: C.dark, border: `1px solid ${C.border}`, borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>✎ Editar</button>
+                            <button onClick={async () => { if (!confirm("Excluir chamado?")) return; await deleteChamado(obraId, ch.id); mostrarToast("Chamado removido."); }} style={{ padding: "5px 12px", background: C.danger + "15", border: `1px solid ${C.danger}33`, borderRadius: 6, fontSize: 11, fontWeight: 600, color: C.danger, cursor: "pointer", fontFamily: "inherit" }}>✕</button>
+                          </div>
+                        </div>
+                      ))}
+
+                      {/* Modal chamado */}
+                      {chamadoModal && (
+                        <Modal title={chamadoEd ? "Editar chamado" : "🛠️ Abrir chamado de garantia"} onClose={() => { setChamadoModal(false); setChamadoEd(null); }}>
+                          <div className="sf-col">
+                            <div>
+                              <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 6 }}>TÍTULO *</div>
+                              <Input value={chamadoForm.titulo} onChange={(v) => setChamadoForm((f) => ({ ...f, titulo: v }))} placeholder="Ex: Trinca no gesso da sala" />
+                            </div>
+                            <div className="sf-grid-2">
+                              <div>
+                                <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 6 }}>CATEGORIA</div>
+                                <Select value={chamadoForm.categoria} onChange={(v) => setChamadoForm((f) => ({ ...f, categoria: v }))} options={CATS_CHAMADO.map((c) => ({ value: c, label: c }))} />
+                              </div>
+                              <div>
+                                <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 6 }}>PRIORIDADE</div>
+                                <Select value={chamadoForm.prioridade} onChange={(v) => setChamadoForm((f) => ({ ...f, prioridade: v }))} options={["Baixa","Média","Alta"].map((v) => ({ value: v, label: v }))} />
+                              </div>
+                            </div>
+                            <div>
+                              <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 6 }}>DESCRIÇÃO</div>
+                              <textarea value={chamadoForm.descricao} onChange={(e) => setChamadoForm((f) => ({ ...f, descricao: e.target.value }))} placeholder="Descreva o problema em detalhes..." rows={3} style={{ width: "100%", padding: "9px 12px", borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 13, fontFamily: "inherit", resize: "vertical", outline: "none", boxSizing: "border-box" }} />
+                            </div>
+                            {chamadoEd && (
+                              <>
+                                <div>
+                                  <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 6 }}>STATUS</div>
+                                  <Select value={chamadoForm.status || "Aberto"} onChange={(v) => setChamadoForm((f) => ({ ...f, status: v }))} options={["Aberto","Em andamento","Resolvido","Cancelado"].map((v) => ({ value: v, label: v }))} />
+                                </div>
+                                <div className="sf-grid-2">
+                                  <div>
+                                    <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 6 }}>CUSTO DO REPARO (R$)</div>
+                                    <Input value={chamadoForm.custo_reparo} onChange={(v) => setChamadoForm((f) => ({ ...f, custo_reparo: v }))} type="number" min="0" placeholder="0,00" />
+                                  </div>
+                                  <div>
+                                    <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 6 }}>AGENDADO PARA</div>
+                                    <Input value={chamadoForm.agendado_para} onChange={(v) => setChamadoForm((f) => ({ ...f, agendado_para: v }))} type="date" />
+                                  </div>
+                                </div>
+                                <div>
+                                  <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 6 }}>RESOLUÇÃO</div>
+                                  <Input value={chamadoForm.resolucao} onChange={(v) => setChamadoForm((f) => ({ ...f, resolucao: v }))} placeholder="Descreva como foi resolvido" />
+                                </div>
+                              </>
+                            )}
+                            <div className="sf-actions">
+                              <Btn variant="ghost" onClick={() => { setChamadoModal(false); setChamadoEd(null); }}>Cancelar</Btn>
+                              <Btn disabled={!chamadoForm.titulo || chamadoSaving} onClick={salvarChamado}>{chamadoSaving ? "Salvando…" : chamadoEd ? "Salvar" : "Abrir chamado"}</Btn>
+                            </div>
+                          </div>
+                        </Modal>
+                      )}
+                    </div>
+                  );
+                })()}
+
               </div>
 
               {/* Coluna lateral */}
