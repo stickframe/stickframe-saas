@@ -2195,6 +2195,67 @@ export default function GestaoObras() {
                   Abrir página
                 </Btn>
               </div>
+              <button onClick={() => {
+                const qrBig = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(url)}&bgcolor=ffffff&color=981915&margin=16`;
+                const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Placa QR — ${obra.nome}</title>
+<style>
+  @page { size: A4; margin: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; background: #fff; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+  .placa { width: 210mm; min-height: 297mm; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 32px; background: #fff; }
+  .header { background: #981915; width: 100%; border-radius: 16px 16px 0 0; padding: 24px 32px; display: flex; align-items: center; justify-content: space-between; }
+  .header h1 { color: #fff; font-size: 28px; font-weight: 900; letter-spacing: -0.5px; }
+  .header span { color: rgba(255,255,255,0.7); font-size: 13px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+  .body { border: 2px solid #e5e7eb; border-top: none; border-radius: 0 0 16px 16px; width: 100%; padding: 40px 32px; text-align: center; }
+  .obra-nome { font-size: 26px; font-weight: 900; color: #1a1a1a; margin-bottom: 8px; }
+  .obra-sub { font-size: 14px; color: #6b7280; margin-bottom: 40px; }
+  .qr-wrap { background: #fff; border: 3px solid #981915; border-radius: 20px; padding: 20px; display: inline-block; margin-bottom: 32px; }
+  .instrucao { background: #f5f5f7; border-radius: 12px; padding: 18px 24px; margin-bottom: 28px; }
+  .instrucao p { font-size: 16px; color: #374151; font-weight: 600; line-height: 1.6; }
+  .instrucao .destaque { color: #981915; font-weight: 900; font-size: 18px; }
+  .bullets { display: flex; justify-content: center; gap: 24px; flex-wrap: wrap; }
+  .bullet { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .bullet .icone { font-size: 28px; }
+  .bullet .texto { font-size: 12px; color: #6b7280; font-weight: 600; text-align: center; max-width: 80px; }
+  .footer { margin-top: 32px; font-size: 11px; color: #9ca3af; letter-spacing: 1px; text-transform: uppercase; }
+</style></head><body>
+<div class="placa">
+  <div style="width:100%">
+    <div class="header">
+      <div>
+        <div style="color:rgba(255,255,255,0.7);font-size:11px;letter-spacing:2px;font-weight:700;margin-bottom:4px">STICKFRAME CONSTRUTORA</div>
+        <h1>${obra.nome}</h1>
+      </div>
+      <div style="text-align:right">
+        <div style="background:rgba(255,255,255,0.2);border-radius:8px;padding:8px 14px;color:#fff;font-size:13px;font-weight:700">${obra.status || "Em andamento"}</div>
+        ${obra.fase ? `<div style="color:rgba(255,255,255,0.7);font-size:11px;margin-top:6px;font-weight:600">${obra.fase}</div>` : ""}
+      </div>
+    </div>
+    <div class="body">
+      <div class="instrucao">
+        <p>📱 <span class="destaque">Escaneie o QR Code</span> para acessar<br>os projetos, modelos 3D e status da obra</p>
+      </div>
+      <div class="qr-wrap">
+        <img src="${qrBig}" width="300" height="300" alt="QR Code" />
+      </div>
+      <div class="bullets">
+        <div class="bullet"><div class="icone">📄</div><div class="texto">Projetos em PDF</div></div>
+        <div class="bullet"><div class="icone">🧊</div><div class="texto">Modelo BIM 3D</div></div>
+        <div class="bullet"><div class="icone">📊</div><div class="texto">Status da obra</div></div>
+        <div class="bullet"><div class="icone">✅</div><div class="texto">Check-in de equipe</div></div>
+      </div>
+      <div class="footer">Powered by Stickframe · stickframe.com.br</div>
+    </div>
+  </div>
+</div>
+</body></html>`;
+                printHtml(html, `placa-qr-${obra.nome.replace(/\s+/g,"-").toLowerCase()}`);
+              }} style={{
+                width: "100%", padding: "10px 0",
+                background: "#7c3aed22", border: "1px solid #7c3aed44",
+                borderRadius: 8, color: "#7c3aed", fontSize: 13, fontWeight: 700,
+                cursor: "pointer", fontFamily: "inherit",
+              }}>🖨️ Gerar Placa para Impressão</button>
             </div>
           </Modal>
         );

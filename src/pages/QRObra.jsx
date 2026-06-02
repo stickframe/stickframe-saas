@@ -2,224 +2,332 @@ import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { sb } from "../services/supabase";
 import { registrarCheckin, listarCheckinsDia } from "../services/repositories/checkinRepository";
+import { LOGO_STICKFRAME, storageUrl, bimUrl } from "../utils/cdn";
 
-const C_QR = {
-  red:     "#981915",
-  surface: "#ffffff",
-  dark:    "#f5f5f7",
-  border:  "#dcdce4",
-  text:    "#1a1a1a",
-  muted:   "#6b7280",
-  success: "#2e9e5b",
+const C = {
+  red: "#981915", border: "#e5e7eb", muted: "#6b7280",
+  success: "#2e9e5b", warning: "#b97a00", text: "#1a1a1a",
+  dark: "#f5f5f7", surface: "#ffffff",
 };
 
-const FUNCOES = ["Montador Steel Frame", "Eletricista", "Encanador", "Pedreiro", "Carpinteiro", "Pintor", "Ajudante", "Outro"];
+const FASE_COR = {
+  "Projeto executivo": "#4a9eff", "Fundação": "#b97a00",
+  "Estrutura Steel Frame": "#981915", "Fechamentos": "#7c3aed",
+  "Instalações": "#0891b2", "Cobertura": "#059669",
+  "Acabamento": "#ea580c", "Entrega": "#2e9e5b",
+};
 
-export default function QRObra() {
-  const { obraId } = useParams();
+const FUNCOES = ["Montador Steel Frame","Eletricista","Encanador","Pedreiro","Carpinteiro","Pintor","Ajudante","Outro"];
 
-  const [obra,      setObra]      = useState(null);
-  const [checkins,  setCheckins]  = useState([]);
-  const [loading,   setLoading]   = useState(true);
-  const [nome,      setNome]      = useState("");
-  const [funcao,    setFuncao]    = useState("Montador Steel Frame");
-  const [enviando,  setEnviando]  = useState(false);
-  const [sucesso,   setSucesso]   = useState(false);
-  const [erro,      setErro]      = useState(null);
+function Tab({ label, active, onClick, badge }) {
+  return (
+    <button onClick={onClick} style={{
+      flex: 1, padding: "12px 4px", border: "none", background: "none",
+      borderBottom: `3px solid ${active ? C.red : "transparent"}`,
+      color: active ? C.red : C.muted, fontSize: 12, fontWeight: active ? 700 : 500,
+      cursor: "pointer", fontFamily: "inherit", position: "relative",
+    }}>
+      {label}
+      {badge > 0 && <span style={{ position: "absolute", top: 6, right: "50%", transform: "translateX(60%)", background: C.red, color: "#fff", borderRadius: "50%", width: 16, height: 16, fontSize: 9, fontWeight: 900, display: "flex", alignItems: "center", justifyContent: "center" }}>{badge}</span>}
+    </button>
+  );
+}
 
-  useEffect(() => {
-    async function carregar() {
-      try {
-        const { data: obraData } = await sb
-          .from("obras")
-          .select("id, nome, status, fase")
-          .eq("id", obraId)
-          .single();
-        setObra(obraData);
+function StatusBadge({ status }) {
+  const CORES = { "Em andamento": C.success, "Pausada": C.warning, "Concluída": "#2563eb", "Planejamento": C.muted };
+  const cor = CORES[status] || C.muted;
+  return <span style={{ background: cor + "22", color: cor, border: `1px solid ${cor}44`, borderRadius: 10, padding: "3px 10px", fontSize: 11, fontWeight: 700 }}>{status}</span>;
+}
 
-        const lista = await listarCheckinsDia(obraId);
-        setCheckins(lista);
-      } catch {
-        setErro("Obra não encontrada.");
-      } finally {
-        setLoading(false);
-      }
-    }
-    if (obraId) carregar();
-  }, [obraId]);
+// ── Aba Status ────────────────────────────────────────────────────────────────
+function AbaStatus({ obra }) {
+  const progresso = Number(obra.progresso || 0);
+  const prazoFim = obra.prazo_fim ? new Date(obra.prazo_fim + "T00:00") : null;
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  const diasRestantes = prazoFim ? Math.ceil((prazoFim - hoje) / (1000*60*60*24)) : null;
+  const faseCor = FASE_COR[obra.fase] || C.red;
 
-  async function registrar() {
-    if (!nome.trim()) return;
-    setEnviando(true);
-    setErro(null);
-    try {
-      const novo = await registrarCheckin({ obra_id: obraId, nome_operario: nome.trim(), funcao });
-      setCheckins((prev) => [novo, ...prev]);
-      setSucesso(true);
-      setNome("");
-      setTimeout(() => setSucesso(false), 4000);
-    } catch (e) {
-      setErro("Erro ao registrar: " + e.message);
-    } finally {
-      setEnviando(false);
-    }
-  }
+  return (
+    <div style={{ padding: "20px 16px", display: "flex", flexDirection: "column", gap: 16 }}>
+      {/* Progresso */}
+      <div style={{ background: C.surface, borderRadius: 14, padding: "18px 16px", border: `1px solid ${C.border}` }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+          <div style={{ fontSize: 13, fontWeight: 700 }}>Progresso físico</div>
+          <div style={{ fontSize: 26, fontWeight: 900, color: progresso >= 80 ? C.success : C.text }}>{progresso}%</div>
+        </div>
+        <div style={{ height: 10, borderRadius: 5, background: C.border, overflow: "hidden" }}>
+          <div style={{ width: `${progresso}%`, height: "100%", background: progresso >= 80 ? C.success : C.red, borderRadius: 5, transition: "width .5s" }} />
+        </div>
+        {obra.fase && (
+          <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ width: 10, height: 10, borderRadius: "50%", background: faseCor, display: "inline-block", flexShrink: 0 }} />
+            <span style={{ fontSize: 13, fontWeight: 600, color: faseCor }}>Fase atual: {obra.fase}</span>
+          </div>
+        )}
+      </div>
 
-  function fmtHora(iso) {
-    if (!iso) return "";
-    const d = new Date(iso);
-    return d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
-  }
+      {/* Prazo */}
+      {prazoFim && (
+        <div style={{ background: diasRestantes < 0 ? "#fef2f2" : diasRestantes <= 14 ? "#fffbeb" : "#f0fdf4", borderRadius: 14, padding: "14px 16px", border: `1px solid ${diasRestantes < 0 ? "#fecaca" : diasRestantes <= 14 ? "#fde68a" : "#bbf7d0"}` }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 6 }}>PRAZO DE ENTREGA</div>
+          <div style={{ fontSize: 18, fontWeight: 900 }}>{prazoFim.toLocaleDateString("pt-BR", { day: "numeric", month: "long", year: "numeric" })}</div>
+          <div style={{ fontSize: 13, fontWeight: 700, marginTop: 4, color: diasRestantes < 0 ? "#dc2626" : diasRestantes <= 14 ? C.warning : C.success }}>
+            {diasRestantes < 0 ? `⚠️ ${Math.abs(diasRestantes)} dias de atraso` : diasRestantes === 0 ? "🎯 Entrega hoje!" : `✅ ${diasRestantes} dias restantes`}
+          </div>
+        </div>
+      )}
 
-  if (loading) {
+      {/* Info */}
+      <div style={{ background: C.surface, borderRadius: 14, border: `1px solid ${C.border}`, overflow: "hidden" }}>
+        {[
+          obra.cliente && ["Cliente", obra.cliente],
+          obra.endereco && ["Endereço", obra.endereco],
+          obra.area && ["Área", `${obra.area} m²`],
+          obra.status && ["Status", <StatusBadge key="st" status={obra.status} />],
+        ].filter(Boolean).map(([label, value], i, arr) => (
+          <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 16px", borderBottom: i < arr.length - 1 ? `1px solid ${C.border}` : "none" }}>
+            <span style={{ fontSize: 12, color: C.muted, fontWeight: 600 }}>{label}</span>
+            <span style={{ fontSize: 13, fontWeight: 600 }}>{value}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Aba Projetos ──────────────────────────────────────────────────────────────
+function AbaProjetos({ arquivos }) {
+  const DISC_ICONE = { "Arquitetônico": "🏠", "Estrutural": "⚙️", "Steel Frame": "🔩", "Elétrico": "⚡", "Hidráulico": "💧", "AVAC": "🌡️", "Fundação": "🏗️" };
+
+  if (arquivos.length === 0) {
     return (
-      <div style={{ minHeight: "100vh", background: C_QR.dark, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <div style={{ color: C_QR.muted, fontSize: 14 }}>Carregando...</div>
+      <div style={{ padding: "48px 20px", textAlign: "center", color: C.muted }}>
+        <div style={{ fontSize: 36, marginBottom: 12 }}>📄</div>
+        <div style={{ fontWeight: 700, fontSize: 15 }}>Nenhum projeto disponível</div>
+        <div style={{ fontSize: 13, marginTop: 6 }}>Os documentos técnicos aparecerão aqui quando forem publicados.</div>
       </div>
     );
   }
 
-  if (!obra || erro === "Obra não encontrada.") {
-    return (
-      <div style={{ minHeight: "100vh", background: C_QR.dark, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <div style={{ textAlign: "center" }}>
-          <div style={{ fontSize: 40, marginBottom: 12 }}>🏗️</div>
-          <div style={{ fontWeight: 700, fontSize: 18, color: C_QR.text }}>Obra não encontrada</div>
-          <div style={{ color: C_QR.muted, fontSize: 13, marginTop: 6 }}>Verifique o QR code e tente novamente.</div>
+  // Agrupar por disciplina
+  const grupos = arquivos.reduce((acc, a) => {
+    const disc = a.disciplina || "Geral";
+    if (!acc[disc]) acc[disc] = [];
+    acc[disc].push(a);
+    return acc;
+  }, {});
+
+  return (
+    <div style={{ padding: "16px" }}>
+      {Object.entries(grupos).map(([disc, arqs]) => (
+        <div key={disc} style={{ marginBottom: 16 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}>
+            <span>{DISC_ICONE[disc] || "📁"}</span> {disc}
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {arqs.map((a) => {
+              const url = storageUrl(a.storage_path);
+              const isPdf = a.tipo === "pdf" || a.nome?.toLowerCase().endsWith(".pdf");
+              return (
+                <a key={a.id} href={url} target="_blank" rel="noreferrer" style={{ display: "flex", alignItems: "center", gap: 12, background: C.surface, borderRadius: 12, padding: "12px 14px", border: `1px solid ${C.border}`, textDecoration: "none", color: C.text }}>
+                  <span style={{ fontSize: 24, flexShrink: 0 }}>{isPdf ? "📄" : "🖼️"}</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.nome}</div>
+                    <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>
+                      {a.revisao && <span style={{ background: "#4a9eff18", color: "#4a9eff", borderRadius: 4, padding: "1px 6px", fontWeight: 700, marginRight: 6 }}>{a.revisao}</span>}
+                      {a.tamanho} · {a.data}
+                    </div>
+                  </div>
+                  <span style={{ fontSize: 18, color: C.red, flexShrink: 0 }}>↓</span>
+                </a>
+              );
+            })}
+          </div>
         </div>
+      ))}
+    </div>
+  );
+}
+
+// ── Aba BIM ───────────────────────────────────────────────────────────────────
+function AbaBIM({ modelos }) {
+  if (modelos.length === 0) {
+    return (
+      <div style={{ padding: "48px 20px", textAlign: "center", color: C.muted }}>
+        <div style={{ fontSize: 36, marginBottom: 12 }}>🧊</div>
+        <div style={{ fontWeight: 700, fontSize: 15 }}>Nenhum modelo 3D disponível</div>
+        <div style={{ fontSize: 13, marginTop: 6 }}>Os modelos BIM aparecerão aqui quando forem importados.</div>
       </div>
     );
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: C_QR.dark, padding: "0 0 40px" }}>
-
-      {/* Header */}
-      <div style={{
-        background: C_QR.red, padding: "24px 20px", textAlign: "center",
-      }}>
-        <div style={{ fontSize: 13, color: "rgba(255,255,255,0.7)", fontWeight: 600, letterSpacing: 1, marginBottom: 4 }}>
-          STICKFRAME — CHECK-IN DE OBRA
-        </div>
-        <div style={{ color: "#fff", fontSize: 22, fontWeight: 700 }}>{obra.nome}</div>
-        {obra.fase && (
-          <div style={{ color: "rgba(255,255,255,0.8)", fontSize: 13, marginTop: 4 }}>
-            Fase: {obra.fase}
+    <div style={{ padding: "16px", display: "flex", flexDirection: "column", gap: 12 }}>
+      <div style={{ background: "#1a1a2e", borderRadius: 14, padding: "14px 16px", display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+        <span style={{ fontSize: 20 }}>💡</span>
+        <div style={{ fontSize: 12, color: "#a5b4fc", lineHeight: 1.5 }}>Para visualização 3D completa, acesse o sistema no computador. Aqui você pode baixar os arquivos IFC.</div>
+      </div>
+      {modelos.map((m) => (
+        <a key={m.id} href={bimUrl(m.storage_path)} target="_blank" rel="noreferrer" style={{ display: "flex", alignItems: "center", gap: 12, background: C.surface, borderRadius: 12, padding: "14px 16px", border: `1px solid ${C.border}`, textDecoration: "none", color: C.text }}>
+          <span style={{ fontSize: 28 }}>🧊</span>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 14, fontWeight: 700 }}>{m.nome}</div>
+            <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>Arquivo IFC · {new Date(m.created_at).toLocaleDateString("pt-BR")}</div>
           </div>
-        )}
+          <span style={{ fontSize: 18, color: C.red }}>↓</span>
+        </a>
+      ))}
+    </div>
+  );
+}
+
+// ── Aba Check-in ──────────────────────────────────────────────────────────────
+function AbaCheckin({ obraId }) {
+  const [checkins, setCheckins] = useState([]);
+  const [nome,     setNome]     = useState("");
+  const [funcao,   setFuncao]   = useState("Montador Steel Frame");
+  const [enviando, setEnviando] = useState(false);
+  const [sucesso,  setSucesso]  = useState(false);
+  const [erro,     setErro]     = useState(null);
+
+  useEffect(() => {
+    listarCheckinsDia(obraId).then(setCheckins).catch(() => {});
+  }, [obraId]);
+
+  async function registrar() {
+    if (!nome.trim()) return;
+    setEnviando(true); setErro(null);
+    try {
+      const novo = await registrarCheckin({ obra_id: obraId, nome_operario: nome.trim(), funcao });
+      setCheckins((p) => [novo, ...p]);
+      setSucesso(true); setNome("");
+      setTimeout(() => setSucesso(false), 4000);
+    } catch (e) { setErro("Erro: " + e.message); }
+    finally { setEnviando(false); }
+  }
+
+  return (
+    <div style={{ padding: "16px", display: "flex", flexDirection: "column", gap: 16 }}>
+      <div style={{ background: C.surface, borderRadius: 14, padding: 20, border: `1px solid ${C.border}` }}>
+        <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 16 }}>Registrar Presença</div>
+        <div style={{ marginBottom: 12 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 6 }}>SEU NOME *</div>
+          <input value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Ex: João da Silva" onKeyDown={(e) => e.key === "Enter" && registrar()}
+            style={{ width: "100%", padding: "13px 14px", borderRadius: 10, fontSize: 16, border: `1px solid ${C.border}`, outline: "none", boxSizing: "border-box", fontFamily: "inherit" }} />
+        </div>
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 6 }}>FUNÇÃO</div>
+          <select value={funcao} onChange={(e) => setFuncao(e.target.value)}
+            style={{ width: "100%", padding: "13px 14px", borderRadius: 10, fontSize: 15, border: `1px solid ${C.border}`, outline: "none", background: C.surface, fontFamily: "inherit" }}>
+            {FUNCOES.map((f) => <option key={f}>{f}</option>)}
+          </select>
+        </div>
+        {erro && <div style={{ background: "#fef2f2", color: "#dc2626", borderRadius: 8, padding: "10px 14px", fontSize: 13, marginBottom: 12 }}>{erro}</div>}
+        {sucesso && <div style={{ background: "#f0fdf4", color: C.success, borderRadius: 8, padding: "10px 14px", fontSize: 13, fontWeight: 600, marginBottom: 12 }}>✅ Presença registrada!</div>}
+        <button onClick={registrar} disabled={enviando || !nome.trim()}
+          style={{ width: "100%", padding: "14px", borderRadius: 12, border: "none", background: !nome.trim() || enviando ? "#ccc" : C.red, color: "#fff", fontSize: 15, fontWeight: 700, cursor: nome.trim() && !enviando ? "pointer" : "not-allowed", fontFamily: "inherit" }}>
+          {enviando ? "Registrando..." : "✅ Registrar Entrada"}
+        </button>
       </div>
 
-      <div style={{ maxWidth: 420, margin: "0 auto", padding: "24px 20px" }}>
-
-        {/* Formulário */}
-        <div style={{
-          background: C_QR.surface, borderRadius: 16, padding: 24,
-          boxShadow: "0 4px 20px rgba(0,0,0,0.08)", marginBottom: 24,
-        }}>
-          <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 18, color: C_QR.text }}>
-            Registrar Presença
+      {checkins.length > 0 && (
+        <div style={{ background: C.surface, borderRadius: 14, padding: 18, border: `1px solid ${C.border}` }}>
+          <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 14, display: "flex", justifyContent: "space-between" }}>
+            <span>Presenças hoje</span>
+            <span style={{ background: C.red + "22", color: C.red, borderRadius: 12, padding: "2px 10px", fontSize: 12 }}>{checkins.length}</span>
           </div>
-
-          <div style={{ marginBottom: 14 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C_QR.muted, marginBottom: 6 }}>
-              SEU NOME *
+          {checkins.map((c) => (
+            <div key={c.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", background: C.dark, borderRadius: 10, marginBottom: 8 }}>
+              <div style={{ width: 36, height: 36, borderRadius: "50%", background: C.red, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 15, flexShrink: 0 }}>
+                {c.nome_operario[0]?.toUpperCase()}
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 600, fontSize: 13 }}>{c.nome_operario}</div>
+                <div style={{ fontSize: 11, color: C.muted }}>{c.funcao}</div>
+              </div>
+              <div style={{ fontSize: 12, color: C.muted }}>{new Date(c.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</div>
             </div>
-            <input
-              value={nome}
-              onChange={(e) => setNome(e.target.value)}
-              placeholder="Ex: João da Silva"
-              style={{
-                width: "100%", padding: "12px 14px", borderRadius: 10, fontSize: 15,
-                border: `1px solid ${C_QR.border}`, outline: "none",
-                background: C_QR.surface, color: C_QR.text, boxSizing: "border-box",
-              }}
-              onKeyDown={(e) => e.key === "Enter" && registrar()}
-            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Principal ─────────────────────────────────────────────────────────────────
+export default function QRObra() {
+  const { obraId } = useParams();
+  const [dados,   setDados]   = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [erro,    setErro]    = useState(null);
+  const [tab,     setTab]     = useState("status");
+
+  useEffect(() => {
+    if (!obraId) { setErro("ID de obra inválido."); setLoading(false); return; }
+    sb.rpc("qr_get_obra_dados", { p_obra_id: obraId })
+      .then(({ data, error }) => {
+        if (error || !data) { setErro("Obra não encontrada."); return; }
+        setDados(data);
+      })
+      .catch(() => setErro("Erro ao carregar."))
+      .finally(() => setLoading(false));
+  }, [obraId]);
+
+  if (loading) return (
+    <div style={{ minHeight: "100vh", background: C.dark, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Inter, system-ui, sans-serif" }}>
+      <div style={{ textAlign: "center" }}>
+        <div style={{ width: 40, height: 40, border: `3px solid ${C.red}`, borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto 12px" }} />
+        <div style={{ color: C.muted, fontSize: 13 }}>Carregando...</div>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    </div>
+  );
+
+  if (erro || !dados) return (
+    <div style={{ minHeight: "100vh", background: C.dark, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Inter, system-ui, sans-serif" }}>
+      <div style={{ textAlign: "center", padding: 24 }}>
+        <div style={{ fontSize: 48, marginBottom: 12 }}>🏗️</div>
+        <div style={{ fontWeight: 700, fontSize: 18 }}>{erro || "Obra não encontrada"}</div>
+        <div style={{ color: C.muted, fontSize: 13, marginTop: 6 }}>Verifique o QR code e tente novamente.</div>
+      </div>
+    </div>
+  );
+
+  const { obra, arquivos, bim_modelos } = dados;
+
+  return (
+    <div style={{ minHeight: "100vh", background: C.dark, fontFamily: "Inter, system-ui, sans-serif", paddingBottom: 40 }}>
+
+      {/* Header */}
+      <div style={{ background: C.red, padding: "20px 20px 0" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+          <img src={LOGO_STICKFRAME} alt="Stick Frame" style={{ height: 28, filter: "brightness(0) invert(1)", borderRadius: 4 }} onError={(e) => { e.target.style.display = "none"; }} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ color: "#ffffff99", fontSize: 10, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase" }}>STICKFRAME · OBRA</div>
+            <div style={{ color: "#fff", fontSize: 17, fontWeight: 800, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{obra.nome}</div>
           </div>
-
-          <div style={{ marginBottom: 20 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C_QR.muted, marginBottom: 6 }}>
-              FUNÇÃO
-            </div>
-            <select
-              value={funcao}
-              onChange={(e) => setFuncao(e.target.value)}
-              style={{
-                width: "100%", padding: "12px 14px", borderRadius: 10, fontSize: 15,
-                border: `1px solid ${C_QR.border}`, outline: "none",
-                background: C_QR.surface, color: C_QR.text,
-              }}
-            >
-              {FUNCOES.map((f) => <option key={f} value={f}>{f}</option>)}
-            </select>
-          </div>
-
-          {erro && (
-            <div style={{ background: "#fdecea", color: "#c0392b", borderRadius: 8, padding: "10px 14px", fontSize: 13, marginBottom: 12 }}>
-              {erro}
-            </div>
-          )}
-
-          {sucesso && (
-            <div style={{ background: "#e8f7ef", color: "#2e9e5b", borderRadius: 8, padding: "10px 14px", fontSize: 13, marginBottom: 12, fontWeight: 600 }}>
-              ✅ Presença registrada com sucesso!
-            </div>
-          )}
-
-          <button
-            onClick={registrar}
-            disabled={enviando || !nome.trim()}
-            style={{
-              width: "100%", padding: "14px", borderRadius: 12, border: "none",
-              background: !nome.trim() || enviando ? "#ccc" : C_QR.red,
-              color: "#fff", fontSize: 15, fontWeight: 700, cursor: nome.trim() && !enviando ? "pointer" : "not-allowed",
-              transition: "background .2s",
-            }}
-          >
-            {enviando ? "Registrando..." : "✅ Registrar Entrada"}
-          </button>
+          <StatusBadge status={obra.status} />
         </div>
 
-        {/* Check-ins do dia */}
-        {checkins.length > 0 && (
-          <div style={{
-            background: C_QR.surface, borderRadius: 16, padding: 20,
-            boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
-          }}>
-            <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 14, color: C_QR.text, display: "flex", justifyContent: "space-between" }}>
-              <span>Presenças hoje</span>
-              <span style={{ background: C_QR.red + "22", color: C_QR.red, borderRadius: 12, padding: "2px 10px", fontSize: 12 }}>
-                {checkins.length}
-              </span>
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {checkins.map((c) => (
-                <div key={c.id} style={{
-                  display: "flex", alignItems: "center", gap: 12,
-                  padding: "10px 14px", background: C_QR.dark, borderRadius: 10,
-                }}>
-                  <div style={{
-                    width: 36, height: 36, borderRadius: "50%",
-                    background: C_QR.red, color: "#fff",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    fontWeight: 700, fontSize: 15, flexShrink: 0,
-                  }}>
-                    {c.nome_operario[0]?.toUpperCase()}
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 600, fontSize: 13, color: C_QR.text }}>{c.nome_operario}</div>
-                    <div style={{ fontSize: 11, color: C_QR.muted }}>{c.funcao || "—"}</div>
-                  </div>
-                  <div style={{ fontSize: 12, color: C_QR.muted }}>{fmtHora(c.created_at)}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        <div style={{ textAlign: "center", marginTop: 24, fontSize: 11, color: C_QR.muted }}>
-          Powered by Stickframe · {new Date().toLocaleDateString("pt-BR")}
+        {/* Tabs */}
+        <div style={{ display: "flex", background: "rgba(0,0,0,0.15)", borderRadius: "10px 10px 0 0", overflow: "hidden" }}>
+          <Tab label="📊 Status"   active={tab === "status"}   onClick={() => setTab("status")} />
+          <Tab label="📄 Projetos" active={tab === "projetos"} onClick={() => setTab("projetos")} badge={arquivos.length} />
+          <Tab label="🧊 BIM"      active={tab === "bim"}      onClick={() => setTab("bim")} badge={bim_modelos.length} />
+          <Tab label="✅ Check-in"  active={tab === "checkin"}  onClick={() => setTab("checkin")} />
         </div>
+      </div>
+
+      {/* Conteúdo da aba */}
+      <div style={{ maxWidth: 540, margin: "0 auto" }}>
+        {tab === "status"   && <AbaStatus obra={obra} />}
+        {tab === "projetos" && <AbaProjetos arquivos={arquivos} />}
+        {tab === "bim"      && <AbaBIM modelos={bim_modelos} />}
+        {tab === "checkin"  && <AbaCheckin obraId={obraId} />}
+      </div>
+
+      <div style={{ textAlign: "center", color: C.muted, fontSize: 10, letterSpacing: 1, marginTop: 24, textTransform: "uppercase" }}>
+        Powered by Stickframe · {new Date().toLocaleDateString("pt-BR")}
       </div>
     </div>
   );
