@@ -52,9 +52,12 @@ export default function PainelQR() {
     </div>
   );
 
-  const { painel, obra, total_paineis, montados } = dados;
+  const { painel, obra, total_paineis, montados, modelo_bim } = dados;
   const progresso = total_paineis > 0 ? Math.round((montados / total_paineis) * 100) : 0;
   const jaMontado = painel.status === "Montado";
+  const bimLink = modelo_bim && painel.ifc_element_id
+    ? `${window.location.origin}/bim?obraId=${obra?.id}&elementId=${painel.ifc_element_id}`
+    : null;
 
   return (
     <div style={{ minHeight: "100vh", background: C.dark, fontFamily: "Inter, system-ui, sans-serif", paddingBottom: 40 }}>
@@ -96,6 +99,20 @@ export default function PainelQR() {
                 <div style={{ fontSize: 14, fontWeight: 700 }}>{painel.local_instalacao}</div>
               </div>
             </div>
+          )}
+
+          {bimLink && (
+            <a href={bimLink} target="_blank" rel="noreferrer" style={{
+              display: "flex", alignItems: "center", gap: 10, background: "#1a1a2e",
+              borderRadius: 10, padding: "12px 14px", textDecoration: "none", marginBottom: 12,
+            }}>
+              <span style={{ fontSize: 22 }}>🧊</span>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#7eb8ff" }}>Ver localização no Modelo BIM 3D</div>
+                <div style={{ fontSize: 11, color: "#8888aa" }}>Abre o modelo com este painel destacado em vermelho</div>
+              </div>
+              <span style={{ marginLeft: "auto", color: "#7eb8ff", fontSize: 16 }}>→</span>
+            </a>
           )}
 
           {jaMontado && (

@@ -6,6 +6,7 @@ import { C, FASES } from "../utils/constants";
 import { bimUrl } from "../utils/cdn";
 import useAppStore from "../store/useAppStore";
 import { useModuleLoad } from "../hooks/useModuleLoad";
+import { useSearchParams } from "react-router-dom";
 
 const DISCIPLINAS_BIM = ["Arquitetônico","Estrutural","Hidrossanitário","Elétrico","HVAC","Fundação","Paisagismo","Outro"];
 const TIPOS_APT = ["Clash","Inconsistência","Pendência","Melhoria","Outro"];
@@ -85,7 +86,7 @@ function exportarRelatorioApontamentos(apts, obraNome) {
 }
 
 // ─── Viewer IFC ───────────────────────────────────────────────────────────────
-function IFCViewer({ url, onElementClick }) {
+function IFCViewer({ url, onElementClick, highlightElementId }) {
   const containerRef = useRef(null);
   const viewerRef    = useRef(null);
   const [status, setStatus] = useState("idle");
@@ -144,6 +145,49 @@ function IFCViewer({ url, onElementClick }) {
         const buff  = await resp.arrayBuffer();
         const model = await ifcLoader.load(new Uint8Array(buff));
         world.scene.three.add(model);
+
+        // Highlight de elemento específico (ex: painel vindo do QR Code)
+        if (highlightElementId) {
+          try {
+            const THREE = await import("three");
+            const targetId = Number(highlightElementId);
+            const highlightMat = new THREE.MeshStandardMaterial({ color: 0xcc2200, emissive: 0x661100, transparent: true, opacity: 0.92 });
+            const ghostMat     = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, transparent: true, opacity: 0.15, depthWrite: false });
+
+            model.traverse((child) => {
+              if (!child.isMesh) return;
+              const geom = child.geometry;
+              if (!geom?.groups?.length) {
+                // Sem grupos: tenta pelo userData
+                const eid = child.userData?.expressID ?? child.userData?.id;
+                if (eid === targetId) {
+                  child.material = highlightMat;
+                } else {
+                  child.material = ghostMat;
+                }
+                return;
+              }
+              // Com grupos (fragmentos mesclados): colore grupo pelo expressId
+              const mats = Array.isArray(child.material) ? child.material : [child.material];
+              const newMats = mats.map((m, i) => {
+                const gIds = geom.groups[i]?.expressIDs || geom.groups[i]?.ids;
+                if (gIds && (gIds.has ? gIds.has(targetId) : gIds.includes(targetId))) return highlightMat;
+                return ghostMat;
+              });
+              child.material = newMats;
+            });
+
+            // Centraliza câmera no elemento destacado
+            const box = new THREE.Box3();
+            model.traverse((c) => { if (c.isMesh && c.material === highlightMat) box.expandByObject(c); });
+            if (!box.isEmpty()) {
+              const center = box.getCenter(new THREE.Vector3());
+              const size   = box.getSize(new THREE.Vector3());
+              const dist   = Math.max(size.length() * 2, 8);
+              world.camera.controls.setLookAt(center.x + dist, center.y + dist * 0.5, center.z + dist, center.x, center.y, center.z, true);
+            }
+          } catch (_) { /* highlight opcional, não bloqueia viewer */ }
+        }
 
         // Clique em elemento → notifica pai
         if (onElementClick) {
@@ -378,6 +422,9 @@ function Field({ label, children }) {
 export default function BIM() {
   const { toast, mostrarToast } = useToast();
   useModuleLoad("obras");
+  const [searchParams] = useSearchParams();
+  const urlObraId    = searchParams.get("obraId");
+  const urlElementId = searchParams.get("elementId");
   const obras                = useAppStore((s) => s.obras);
   const bimModelos           = useAppStore((s) => s.bimModelos);
   const bimApontamentos      = useAppStore((s) => s.bimApontamentos);
@@ -400,10 +447,25 @@ export default function BIM() {
   const [filtroDisciplina, setFiltroDisciplina] = useState("Todas");
   const [elementoSelecionado, setElementoSelecionado] = useState(null);
 
-  useEffect(() => { if (!obraId && obras.length > 0) setObraId(obras[0].id); }, [obras, obraId]);
+  useEffect(() => {
+    if (urlObraId) setObraId(urlObraId);
+    else if (!obraId && obras.length > 0) setObraId(obras[0].id);
+  }, [obras, obraId, urlObraId]);
+
   useEffect(() => {
     if (obraId) { loadBimModelos(obraId); loadBimApontamentos(obraId); }
   }, [obraId]);
+
+  // Se veio do QR do painel com elementId → auto-abre o primeiro modelo e destaca
+  useEffect(() => {
+    if (!urlElementId || !obraId) return;
+    const modList = bimModelos[obraId];
+    if (!modList?.length) return;
+    const primeiro = modList[0];
+    setModeloUrl(bimUrl(primeiro.storage_path));
+    setModeloNome(`${primeiro.nome} — Painel #${urlElementId}`);
+    setAba("viewer");
+  }, [urlElementId, obraId, bimModelos]);
 
 
   const modelos  = bimModelos[obraId] || [];
@@ -708,8 +770,19 @@ export default function BIM() {
       {aba === "viewer" && (
         <div style={{ background: "#1a1a1a", borderRadius: "0 0 12px 12px", border: `1px solid ${C.border}`, borderTop: "none" }}>
           {modeloUrl ? (
-            <div style={{ height: 600 }}>
-              <IFCViewer url={modeloUrl} onElementClick={handleElementClick} />
+            <div style={{ height: urlElementId ? 560 : 600 }}>
+              {urlElementId && (
+                <div style={{ background: "#981915", padding: "10px 16px", display: "flex", alignItems: "center", gap: 10 }}>
+                  <span style={{ fontSize: 18 }}>📍</span>
+                  <div>
+                    <div style={{ color: "#fff", fontSize: 13, fontWeight: 800 }}>Localização do Painel — Element ID #{urlElementId}</div>
+                    <div style={{ color: "rgba(255,255,255,0.75)", fontSize: 11 }}>Elemento destacado em vermelho · restante em transparência</div>
+                  </div>
+                </div>
+              )}
+              <div style={{ height: urlElementId ? "calc(100% - 56px)" : "100%" }}>
+                <IFCViewer url={modeloUrl} onElementClick={handleElementClick} highlightElementId={urlElementId} />
+              </div>
               <div style={{ padding: "8px 14px", background: "#111", fontSize: 11, color: "#555", borderTop: "1px solid #222", display: "flex", gap: 20 }}>
                 <span>🖱 Arrastar: orbitar · Scroll: zoom · Shift+arrastar: pan</span>
                 <span>· Clique em elemento para criar apontamento</span>
