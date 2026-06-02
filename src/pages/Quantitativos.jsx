@@ -15,6 +15,7 @@ import {
   deletarQuantitativo, inserirTemplate,
 } from "../services/repositories/quantitativoRepository";
 import { criarCotacao } from "../services/repositories/fornecedoresRepository";
+import { listarMonitorados } from "../services/repositories/precosRepository";
 
 // ─── Templates Steel Frame por fase ──────────────────────────────────────────
 const UNIDADES = ["m²","m","m³","un","kg","vb","l","hrs","cj"];
@@ -120,6 +121,7 @@ export default function Quantitativos() {
   const [templateFases, setTemplateFases] = useState({});
   const [cotarItem, setCotarItem]  = useState(null); // item a ser cotado
   const [cotarForm, setCotarForm]  = useState({ fornecedor_id: "", valor: "", observacoes: "", atualizar_custo: true });
+  const [monitorados, setMonitorados] = useState([]);
 
   const obra = obras.find((o) => o.id === obraId);
 
@@ -459,6 +461,27 @@ ${tabelaFases}
                 placeholder="Deixe vazio para cotação em aberto"
               />
             </div>
+            {monitorados.filter((m) => m.preco_atual).length > 0 && (
+              <div style={{ background: C.darker, borderRadius: 8, padding: "10px 14px" }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, marginBottom: 8, letterSpacing: 1, textTransform: "uppercase" }}>
+                  📊 Ou usar preço monitorado
+                </div>
+                <Select
+                  value=""
+                  onChange={(v) => {
+                    const m = monitorados.find((x) => x.id === v);
+                    if (m) setCotarForm((f) => ({ ...f, valor: String(m.preco_atual), observacoes: f.observacoes || `Ref: ${m.nome_produto}${m.loja ? " · " + m.loja : ""}` }));
+                  }}
+                  options={[
+                    { value: "", label: "— Selecione um produto monitorado —" },
+                    ...monitorados.filter((m) => m.preco_atual).map((m) => ({
+                      value: m.id,
+                      label: `${m.nome_produto}${m.loja ? " · " + m.loja : ""} — R$ ${Number(m.preco_atual).toFixed(2).replace(".", ",")}`,
+                    })),
+                  ]}
+                />
+              </div>
+            )}
             <div>
               <LabelF>Observações</LabelF>
               <Input
@@ -720,7 +743,7 @@ ${tabelaFases}
                                 <div style={{ display: "flex", gap: 4, justifyContent: "center" }}>
                                   <button
                                     title="Cotar com fornecedor"
-                                    onClick={() => { setCotarItem(item); setCotarForm({ fornecedor_id: "", valor: "", observacoes: "", atualizar_custo: true }); }}
+                                    onClick={() => { setCotarItem(item); setCotarForm({ fornecedor_id: "", valor: "", observacoes: "", atualizar_custo: true }); listarMonitorados().then(setMonitorados).catch(() => {}); }}
                                     style={{ background: "none", border: "none", cursor: "pointer", color: "#4a9eff", fontSize: 13, padding: 3 }}>🏭</button>
                                   <button onClick={() => {
                                     setEditId(item.id);
