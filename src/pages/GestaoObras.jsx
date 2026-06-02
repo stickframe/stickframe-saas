@@ -322,6 +322,11 @@ export default function GestaoObras() {
   const [fotoAmpliada, setFotoAmpliada] = useState(null);
   const [qrModal,      setQrModal]      = useState(false);
   const [checkinsHoje, setCheckinsHoje] = useState([]);
+  const [relMensalModal, setRelMensalModal] = useState(false);
+  const [relMensalMes,   setRelMensalMes]   = useState(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  });
   const [checkinsVis,  setCheckinsVis]  = useState(false);
   const [portalMsgs,   setPortalMsgs]   = useState([]);
   const [portalReply,  setPortalReply]  = useState("");
@@ -480,6 +485,182 @@ export default function GestaoObras() {
     avancarFase(obra.id, novaFase, progresso);
     setChecklistModal(false);
     mostrarToast(`<ClipboardList size={13} /> Avançou para: ${novaFase}`);
+  }
+
+  async function gerarRelatorioMensal(mes) {
+    if (!obra) return;
+    setRelMensalModal(false);
+    mostrarToast("⏳ Gerando relatório mensal...");
+    await Promise.all([loadMedicoes(obraId), loadDiario(obraId)]);
+
+    const [ano, mesN] = mes.split("-").map(Number);
+    const nomeMes = new Date(ano, mesN - 1, 1).toLocaleString("pt-BR", { month: "long", year: "numeric" });
+
+    const fin        = (financeiro[obraId]?.lancamentos || []).filter((l) => {
+      if (!l.data) return false;
+      const d = new Date(l.data + "T00:00");
+      return d.getFullYear() === ano && d.getMonth() + 1 === mesN;
+    });
+    const diarioMes  = (diario[obraId] || []).filter((r) => {
+      if (!r.data) return false;
+      const d = new Date(r.data + "T00:00");
+      return d.getFullYear() === ano && d.getMonth() + 1 === mesN;
+    });
+    const medsMes    = (medicoes[obraId] || []).filter((m) => {
+      if (!m.created_at) return false;
+      const d = new Date(m.created_at);
+      return d.getFullYear() === ano && d.getMonth() + 1 === mesN;
+    });
+
+    const fmtR = (v) => (v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    const hoje = new Date().toLocaleDateString("pt-BR");
+
+    const receitas = fin.filter((l) => l.tipo === "receita").reduce((a, l) => a + (l.valor || 0), 0);
+    const despesas = fin.filter((l) => l.tipo === "despesa").reduce((a, l) => a + (l.valor || 0), 0);
+    const progresso = obra.progresso || 0;
+    const faseIdx   = FASES.indexOf(obra.fase);
+
+    const barPct = (pct, cor = "#981915") =>
+      `<div style="background:#e5e7eb;border-radius:4px;height:8px;overflow:hidden">
+        <div style="width:${Math.min(pct,100)}%;height:8px;background:${cor};border-radius:4px"></div>
+      </div>`;
+
+    const kpiCard = (label, value, sub, cor = "#1a1a1a") =>
+      `<div style="background:#f9fafb;border-radius:10px;padding:14px 16px;border:1px solid #e5e7eb">
+        <div style="font-size:9px;color:#9ca3af;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">${label}</div>
+        <div style="font-size:20px;font-weight:900;color:${cor}">${value}</div>
+        ${sub ? `<div style="font-size:10px;color:#9ca3af;margin-top:3px">${sub}</div>` : ""}
+      </div>`;
+
+    const fasesHtml = `<div style="display:flex;flex-direction:column;gap:6px">
+      ${FASES.map((f, i) => {
+        const done = i < faseIdx, curr = i === faseIdx;
+        const bg  = done ? "#2e9e5b" : curr ? "#981915" : "#f3f4f6";
+        const tc  = done || curr ? "#fff" : "#9ca3af";
+        return `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:${bg};border-radius:8px">
+          <span style="font-size:11px;font-weight:700;color:${tc}">${done ? "✓" : curr ? "▶" : String(i+1).padStart(2,"0")}</span>
+          <span style="font-size:12px;font-weight:${curr?"800":"600"};color:${tc}">${f}</span>
+          ${curr ? `<span style="margin-left:auto;background:rgba(255,255,255,.2);border-radius:10px;padding:2px 10px;font-size:9px;font-weight:700;color:#fff">FASE ATUAL</span>` : ""}
+        </div>`;
+      }).join("")}
+    </div>`;
+
+    const diarioHtml = diarioMes.length === 0
+      ? `<p style="color:#9ca3af;text-align:center;padding:20px 0;font-size:13px">Nenhum registro no diário em ${nomeMes}.</p>`
+      : diarioMes.map((r) => `
+        <div style="padding:14px 0;border-bottom:1px solid #e5e7eb">
+          <div style="display:flex;gap:12px;align-items:center;margin-bottom:6px">
+            <span style="background:#f3f4f6;border-radius:6px;padding:3px 8px;font-size:10px;font-weight:700;color:#6b7280">${r.data || "—"}</span>
+            ${r.clima ? `<span style="font-size:11px;color:#9ca3af">${r.clima}</span>` : ""}
+            ${r.turno ? `<span style="font-size:11px;color:#9ca3af">${r.turno}</span>` : ""}
+            ${r.responsavel ? `<span style="font-size:11px;color:#9ca3af">· ${r.responsavel}</span>` : ""}
+          </div>
+          <div style="font-size:13px;line-height:1.6;color:#374151">${r.atividades || ""}</div>
+          ${r.ocorrencias ? `<div style="background:#fff5f5;border-left:3px solid #981915;padding:8px 12px;margin-top:8px;font-size:12px;color:#555;border-radius:0 6px 6px 0">⚠ ${r.ocorrencias}</div>` : ""}
+        </div>`).join("");
+
+    const finHtml = fin.length === 0
+      ? `<p style="color:#9ca3af;text-align:center;padding:20px 0;font-size:13px">Nenhum lançamento em ${nomeMes}.</p>`
+      : `<table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead><tr style="background:#f3f4f6">
+            <th style="text-align:left;padding:8px 10px;font-size:10px;color:#6b7280;font-weight:700">Data</th>
+            <th style="text-align:left;padding:8px 10px;font-size:10px;color:#6b7280;font-weight:700">Descrição</th>
+            <th style="text-align:left;padding:8px 10px;font-size:10px;color:#6b7280;font-weight:700">Categoria</th>
+            <th style="text-align:right;padding:8px 10px;font-size:10px;color:#6b7280;font-weight:700">Valor</th>
+          </tr></thead><tbody>
+          ${fin.map((l) => `<tr style="border-bottom:1px solid #e5e7eb">
+            <td style="padding:8px 10px">${l.data || "—"}</td>
+            <td style="padding:8px 10px">${l.descricao || "—"}</td>
+            <td style="padding:8px 10px;color:#9ca3af">${l.categoria || "—"}</td>
+            <td style="padding:8px 10px;text-align:right;font-weight:700;color:${l.tipo === "receita" ? "#2e9e5b" : "#c0392b"}">
+              ${l.tipo === "receita" ? "+" : "−"}${fmtR(l.valor)}
+            </td>
+          </tr>`).join("")}
+          <tr style="background:#f9fafb;font-weight:800">
+            <td colspan="3" style="padding:10px;text-align:right;font-size:11px;color:#6b7280">SALDO DO MÊS</td>
+            <td style="padding:10px;text-align:right;color:${receitas - despesas >= 0 ? "#2e9e5b" : "#c0392b"};font-size:14px">${fmtR(receitas - despesas)}</td>
+          </tr>
+        </tbody></table>`;
+
+    const medsHtml = medsMes.length === 0
+      ? `<p style="color:#9ca3af;text-align:center;padding:20px 0;font-size:13px">Nenhuma medição em ${nomeMes}.</p>`
+      : `<table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead><tr style="background:#f3f4f6">
+            <th style="text-align:left;padding:8px 10px;font-size:10px;color:#6b7280;font-weight:700">Nº</th>
+            <th style="text-align:left;padding:8px 10px;font-size:10px;color:#6b7280;font-weight:700">Descrição</th>
+            <th style="text-align:right;padding:8px 10px;font-size:10px;color:#6b7280;font-weight:700">Valor</th>
+            <th style="text-align:left;padding:8px 10px;font-size:10px;color:#6b7280;font-weight:700">Status</th>
+          </tr></thead><tbody>
+          ${medsMes.map((m) => `<tr style="border-bottom:1px solid #e5e7eb">
+            <td style="padding:8px 10px">${m.numero || "—"}</td>
+            <td style="padding:8px 10px">${m.descricao || "—"}</td>
+            <td style="padding:8px 10px;text-align:right;font-weight:700">${fmtR(m.valor)}</td>
+            <td style="padding:8px 10px;font-weight:700;color:${m.status === "Aprovada" ? "#2e9e5b" : "#b97a00"}">${m.status}</td>
+          </tr>`).join("")}
+        </tbody></table>`;
+
+    const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8">
+    <title>Relatório Mensal — ${obra.nome} — ${nomeMes}</title>
+    <style>
+      *{box-sizing:border-box;margin:0;padding:0}
+      body{font-family:'Segoe UI',Arial,sans-serif;color:#1a1a1a;background:#fff}
+      .page{padding:44px;max-width:900px;margin:0 auto}
+      h2{font-size:11px;font-weight:800;letter-spacing:2px;color:#981915;margin:32px 0 14px;text-transform:uppercase;border-bottom:2px solid #981915;padding-bottom:8px}
+      @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}.page{padding:24px}h2{margin:22px 0 10px}}
+    </style></head><body>
+
+    <!-- CAPA -->
+    <div style="background:linear-gradient(135deg,#0d1117 0%,#1a0505 100%);color:#fff;padding:52px 44px">
+      <div style="font-size:9px;letter-spacing:3px;color:#981915;margin-bottom:20px;font-weight:700">STICKFRAME · RELATÓRIO GERENCIAL MENSAL</div>
+      <div style="font-size:36px;font-weight:900;line-height:1.1;margin-bottom:8px">${obra.nome}</div>
+      <div style="font-size:15px;color:rgba(255,255,255,0.5);margin-bottom:6px">Cliente: <strong style="color:#fff">${obra.cliente || "—"}</strong></div>
+      <div style="font-size:18px;font-weight:700;color:#981915;margin-bottom:32px;text-transform:capitalize">${nomeMes}</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">
+        ${[
+          ["PROGRESSO FÍSICO", `${progresso}%`],
+          ["RECEITAS NO MÊS", fmtR(receitas)],
+          ["DESPESAS NO MÊS", fmtR(despesas)],
+          ["SALDO DO MÊS", fmtR(receitas - despesas)],
+        ].map(([l, v]) => `<div style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px 16px">
+          <div style="font-size:8px;color:rgba(255,255,255,0.4);letter-spacing:1.5px;margin-bottom:6px">${l}</div>
+          <div style="font-size:18px;font-weight:900">${v}</div>
+        </div>`).join("")}
+      </div>
+      <div style="margin-top:20px;font-size:10px;color:rgba(255,255,255,0.25)">Gerado em ${hoje} · Stick Frame Sistemas Construtivos</div>
+    </div>
+
+    <div class="page">
+
+      <h2>📊 Resumo Executivo</h2>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:16px">
+        ${kpiCard("Receitas no mês", fmtR(receitas), `${fin.filter(l=>l.tipo==="receita").length} lançamentos`, "#2e9e5b")}
+        ${kpiCard("Despesas no mês", fmtR(despesas), `${fin.filter(l=>l.tipo==="despesa").length} lançamentos`, "#c0392b")}
+        ${kpiCard("Saldo do período", fmtR(receitas - despesas), "", receitas - despesas >= 0 ? "#2e9e5b" : "#c0392b")}
+        ${kpiCard("Registros no diário", String(diarioMes.length), `${medsMes.length} medição(ões)`, "#4a9eff")}
+      </div>
+      <div style="margin-bottom:8px;font-size:11px;color:#6b7280">Progresso físico acumulado — ${progresso}%</div>
+      ${barPct(progresso)}
+
+      <h2>🏗️ Fases da Obra</h2>
+      ${fasesHtml}
+
+      <h2>📑 Medições do Período (${medsMes.length})</h2>
+      ${medsHtml}
+
+      <h2>💰 Movimentação Financeira (${fin.length} lançamentos)</h2>
+      ${finHtml}
+
+      <h2>📓 Diário de Obra — ${nomeMes} (${diarioMes.length} registros)</h2>
+      ${diarioHtml}
+
+      <div style="margin-top:48px;padding-top:16px;border-top:2px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center">
+        <div style="font-size:10px;color:#9ca3af">Stick Frame Sistemas Construtivos · Santo André/SP</div>
+        <div style="font-size:10px;color:#9ca3af">Relatório gerado em ${hoje}</div>
+      </div>
+    </div>
+    </body></html>`;
+
+    printHtml(html, `relatorio-mensal-${obra.nome.replace(/\s+/g, "-").toLowerCase()}-${mes}`);
   }
 
   async function gerarDossie() {
@@ -1627,6 +1808,12 @@ export default function GestaoObras() {
                       borderRadius: 6, color: "#2e9e5b", fontSize: 12, fontWeight: 700,
                       cursor: "pointer", fontFamily: "inherit",
                     }}>📄 Dossiê de Obra</button>
+                    <button onClick={() => setRelMensalModal(true)} style={{
+                      width: "100%", padding: "8px 0",
+                      background: "#4a9eff22", border: "1px solid #4a9eff44",
+                      borderRadius: 6, color: "#4a9eff", fontSize: 12, fontWeight: 700,
+                      cursor: "pointer", fontFamily: "inherit",
+                    }}>📅 Relatório Mensal</button>
 
                     <button onClick={gerarRelatorioObra} style={{
                       width: "100%", padding: "8px 0",
@@ -1847,6 +2034,27 @@ export default function GestaoObras() {
           </Modal>
         );
       })()}
+
+      {/* Modal Relatório Mensal */}
+      {relMensalModal && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ background: "#fff", borderRadius: 14, padding: 28, width: 340, boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
+            <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 6 }}>📅 Relatório Mensal</div>
+            <div style={{ fontSize: 12, color: C.muted, marginBottom: 18 }}>Selecione o mês para gerar o relatório gerencial.</div>
+            <label style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: 1, textTransform: "uppercase", display: "block", marginBottom: 6 }}>Mês de referência</label>
+            <input
+              type="month"
+              value={relMensalMes}
+              onChange={(e) => setRelMensalMes(e.target.value)}
+              style={{ width: "100%", padding: "9px 12px", border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, fontFamily: "inherit", marginBottom: 20 }}
+            />
+            <div style={{ display: "flex", gap: 10 }}>
+              <button onClick={() => setRelMensalModal(false)} style={{ flex: 1, padding: "9px 0", background: C.darker, border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}>Cancelar</button>
+              <button onClick={() => gerarRelatorioMensal(relMensalMes)} style={{ flex: 1, padding: "9px 0", background: "#4a9eff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 700, color: "#fff", cursor: "pointer", fontFamily: "inherit" }}>📄 Gerar PDF</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Lightbox fotos */}
       {fotoAmpliada && (
