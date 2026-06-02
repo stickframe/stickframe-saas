@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { ClipboardList, DollarSign, Pencil, Phone, Trash2 } from "../components/ui/Icon";
+import { printHtml } from "../utils/printHtml";
+import { LOGO_STICKFRAME } from "../utils/cdn";
 import { useToast } from "../hooks/useToast";
 import { C } from "../utils/constants";
 import { fmt } from "../utils/format";
@@ -159,6 +161,34 @@ export default function Equipe() {
     loadAlocacoes();
     loadHorasTrabalhadas();
   }, [loadAlocacoes, loadHorasTrabalhadas]);
+
+  // ── Crachá / QR Ponto ────────────────────────────────────────────────────
+  function gerarCracha(c) {
+    if (!c.token_ponto) return;
+    const url = `${window.location.origin}/ponto/${c.token_ponto}`;
+    const qr  = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}`;
+    printHtml(`
+      <style>
+        body { margin:0; display:flex; align-items:center; justify-content:center; min-height:100vh; background:#f5f5f7; font-family:Inter,system-ui,sans-serif; }
+        .card { width:220px; background:#fff; border-radius:16px; padding:24px 20px; text-align:center; box-shadow:0 4px 20px rgba(0,0,0,.12); border-top:6px solid #981915; }
+        .logo { height:22px; margin-bottom:14px; }
+        .avatar { width:54px; height:54px; border-radius:50%; background:#981915; color:#fff; font-size:22px; font-weight:900; display:flex; align-items:center; justify-content:center; margin:0 auto 10px; }
+        .nome { font-size:16px; font-weight:800; color:#1a1a1a; margin-bottom:3px; }
+        .cargo { font-size:11px; color:#6b7280; margin-bottom:14px; }
+        .qr { width:160px; height:160px; margin:0 auto 12px; display:block; }
+        .label { font-size:9px; font-weight:700; letter-spacing:1.5px; color:#6b7280; text-transform:uppercase; }
+        @media print { body { background:#fff; } .card { box-shadow:none; } }
+      </style>
+      <div class="card">
+        <img src="${LOGO_STICKFRAME}" class="logo" onerror="this.style.display='none'"/>
+        <div class="avatar">${c.nome[0].toUpperCase()}</div>
+        <div class="nome">${c.nome}</div>
+        <div class="cargo">${c.cargo || c.especialidade || "Colaborador"}</div>
+        <img src="${qr}" class="qr"/>
+        <div class="label">⏱ Ponto Eletrônico</div>
+      </div>
+    `, `cracha-${c.nome}`);
+  }
 
   // ── Equipe CRUD ──────────────────────────────────────────────────────────
   function abrirNovo() { setForm(FORM_VAZIO); setModal("novo"); }
@@ -578,8 +608,11 @@ export default function Equipe() {
                         </div>
                       )}
 
-                      <div style={{ display: "flex", gap: 8 }}>
+                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                         <Btn variant="ghost" size="sm" onClick={() => abrirEditar(c)}><Pencil size={13} /> Editar</Btn>
+                        {c.token_ponto && (
+                          <Btn variant="ghost" size="sm" onClick={() => gerarCracha(c)}>🪪 Crachá</Btn>
+                        )}
                         <button onClick={() => setConfirm(c.id)} style={{
                           padding: "6px 12px", background: C.danger + "22",
                           border: `1px solid ${C.danger}44`, borderRadius: 6,

@@ -27,6 +27,10 @@ export default function PortalOnline() {
   const [chatNome,   setChatNome] = useState("");
   const [chatMsg,    setChatMsg] = useState("");
   const [chatEnv,    setChatEnv] = useState(false);
+  const [chamados,   setChamados]  = useState([]);
+  const [chamadoForm, setChamadoForm] = useState({ titulo: "", descricao: "", categoria: "Outro" });
+  const [chamadoEnv,  setChamadoEnv] = useState(false);
+  const [chamadoModal, setChamadoModal] = useState(false);
   const msgEndRef = useRef(null);
   const hoje = new Date().toLocaleDateString("pt-BR");
 
@@ -47,6 +51,11 @@ export default function PortalOnline() {
         setEmpresa(data.empresa || null);
         setMensagens(data.mensagens || []);
         setDocumentos(data.documentos || []);
+
+        // Carregar chamados de garantia se obra concluída
+        if (data.obra?.status === "Concluída") {
+          sb.rpc("portal_listar_chamados", { p_token: token }).then(({ data: ch }) => setChamados(ch || []));
+        }
 
         // Realtime: escuta novas mensagens da construtora em tempo real
         if (data.obra?.id) {
@@ -497,6 +506,74 @@ export default function PortalOnline() {
             {docUploading && <div style={{ fontSize: 11, color: "#981915", marginTop: 6 }}>Enviando...</div>}
           </div>
         </Card>
+
+        {/* Garantia / Assistência Técnica — somente obra concluída */}
+        {obra.status === "Concluída" && (
+          <Card title="🛠️ Assistência Técnica / Garantia">
+            <div style={{ fontSize: 12, color: "#555", marginBottom: 16, lineHeight: 1.6 }}>
+              Sua obra foi entregue! Se precisar de suporte pós-obra, abra um chamado abaixo. Nossa equipe irá atender e registrar a ocorrência.
+            </div>
+
+            {/* Botão abrir chamado */}
+            {!chamadoModal ? (
+              <button onClick={() => { setChamadoForm({ titulo: "", descricao: "", categoria: "Outro" }); setChamadoModal(true); }} style={{
+                width: "100%", padding: "11px", background: "#981915", border: "none", borderRadius: 8, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", marginBottom: chamados.length > 0 ? 16 : 0,
+              }}>+ Abrir chamado de manutenção</button>
+            ) : (
+              <div style={{ background: "#fafafa", border: "1px solid #ddd", borderRadius: 10, padding: "14px 16px", marginBottom: 16 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 12 }}>Novo chamado</div>
+                <div style={{ marginBottom: 10 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: "#888", marginBottom: 4 }}>TÍTULO *</div>
+                  <input value={chamadoForm.titulo} onChange={(e) => setChamadoForm((f) => ({ ...f, titulo: e.target.value }))} placeholder="Ex: Trinca no gesso da sala" style={{ width: "100%", border: "1px solid #ddd", borderRadius: 8, padding: "8px 12px", fontSize: 12, fontFamily: "inherit", outline: "none", boxSizing: "border-box" }} />
+                </div>
+                <div style={{ marginBottom: 10 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: "#888", marginBottom: 4 }}>CATEGORIA</div>
+                  <select value={chamadoForm.categoria} onChange={(e) => setChamadoForm((f) => ({ ...f, categoria: e.target.value }))} style={{ width: "100%", border: "1px solid #ddd", borderRadius: 8, padding: "8px 12px", fontSize: 12, fontFamily: "inherit", background: "#fff", outline: "none" }}>
+                    {["Elétrica","Hidráulica","Estrutural","Acabamento / Gesso","Esquadrias","Cobertura","Outro"].map((c) => <option key={c}>{c}</option>)}
+                  </select>
+                </div>
+                <div style={{ marginBottom: 14 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: "#888", marginBottom: 4 }}>DESCRIÇÃO</div>
+                  <textarea value={chamadoForm.descricao} onChange={(e) => setChamadoForm((f) => ({ ...f, descricao: e.target.value }))} placeholder="Descreva o problema..." rows={3} style={{ width: "100%", border: "1px solid #ddd", borderRadius: 8, padding: "8px 12px", fontSize: 12, fontFamily: "inherit", resize: "vertical", outline: "none", boxSizing: "border-box" }} />
+                </div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button onClick={() => setChamadoModal(false)} style={{ flex: 1, padding: "9px", background: "#f0f0f0", border: "none", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>Cancelar</button>
+                  <button disabled={!chamadoForm.titulo.trim() || chamadoEnv} onClick={async () => {
+                    setChamadoEnv(true);
+                    const { error } = await sb.rpc("portal_abrir_chamado", { p_token: token, p_titulo: chamadoForm.titulo.trim(), p_descricao: chamadoForm.descricao.trim(), p_categoria: chamadoForm.categoria });
+                    if (!error) {
+                      setChamados((prev) => [{ titulo: chamadoForm.titulo, descricao: chamadoForm.descricao, categoria: chamadoForm.categoria, status: "Aberto", created_at: new Date().toISOString() }, ...prev]);
+                      setChamadoModal(false);
+                    }
+                    setChamadoEnv(false);
+                  }} style={{ flex: 2, padding: "9px", background: !chamadoForm.titulo.trim() || chamadoEnv ? "#ccc" : "#981915", border: "none", borderRadius: 8, color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+                    {chamadoEnv ? "Enviando..." : "Enviar chamado"}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Lista de chamados anteriores */}
+            {chamados.length > 0 && (
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "#888", letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Meus chamados</div>
+                {chamados.map((ch, i) => {
+                  const ST_COR = { "Aberto": "#4a9eff", "Em andamento": "#b97a00", "Resolvido": "#2e9e5b", "Cancelado": "#aaa" };
+                  return (
+                    <div key={ch.id || i} style={{ borderBottom: i < chamados.length - 1 ? "1px solid #f0f0f0" : "none", padding: "10px 0" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                        <div style={{ fontSize: 13, fontWeight: 700 }}>{ch.titulo}</div>
+                        <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 10, background: (ST_COR[ch.status] || "#aaa") + "22", color: ST_COR[ch.status] || "#aaa", flexShrink: 0, marginLeft: 8 }}>{ch.status}</span>
+                      </div>
+                      <div style={{ fontSize: 11, color: "#888", marginTop: 3 }}>{ch.categoria} · {new Date(ch.created_at).toLocaleDateString("pt-BR")}</div>
+                      {ch.resolucao && <div style={{ fontSize: 11, color: "#2e9e5b", marginTop: 4, fontStyle: "italic" }}>✓ {ch.resolucao}</div>}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </Card>
+        )}
 
         {/* Assinatura Digital */}
         {!obra.assinatura_data && (

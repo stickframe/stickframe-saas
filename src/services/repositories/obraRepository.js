@@ -81,11 +81,25 @@ export async function adicionarArquivos(obraId, arquivos, empresaId) {
       fase:         a.fase       || null,
       disciplina:   a.disciplina || null,
       status_doc:   a.status_doc || "Ativo",
+      revisao:      a.revisao    || "Rev. 01",
       storage_path: storagePath,
     });
   }
   const { data, error } = await sb.from("arquivos").insert(rows).select();
   if (error) throw error;
+
+  // Auto-invalidar revisões anteriores da mesma disciplina
+  for (const row of (data || [])) {
+    if (row.disciplina) {
+      await sb.rpc("ged_invalidar_revisoes_anteriores", {
+        p_obra_id:    obraId,
+        p_empresa_id: empresaId,
+        p_disciplina: row.disciplina,
+        p_novo_id:    row.id,
+      }).catch(() => {});
+    }
+  }
+
   // Enriquecer com URL pública
   return (data || []).map((row) => ({
     ...row,
@@ -95,6 +109,11 @@ export async function adicionarArquivos(obraId, arquivos, empresaId) {
     path: row.storage_path,
   }));
 }
+export async function marcarCienteArquivo(id) {
+  const { error } = await sb.rpc("ged_marcar_ciente", { p_arquivo_id: id });
+  if (error) throw error;
+}
+
 export async function deletarArquivo(id, storagePath) {
   if (storagePath) await sb.storage.from("arquivos").remove([storagePath]);
   const { error } = await sb.from("arquivos").delete().eq("id", id);

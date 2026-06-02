@@ -291,7 +291,9 @@ export default function GestaoObras() {
   const loadHistoricoObra = useAppStore((s) => s.loadHistoricoObra);
   const financeiro        = useAppStore((s) => s.financeiro);
   const perfil            = useAppStore((s) => s.user?.perfil);
+  const userId            = useAppStore((s) => s.user?.uid);
   const empresaId         = useAppStore((s) => s.empresaId);
+  const marcarCiente      = useAppStore((s) => s.marcarCiente);
   const medicoes          = useAppStore((s) => s.medicoes);
   const diario            = useAppStore((s) => s.diario);
   const loadMedicoes      = useAppStore((s) => s.loadMedicoes);
@@ -328,9 +330,27 @@ export default function GestaoObras() {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
   });
   const [checkinsVis,  setCheckinsVis]  = useState(false);
+  const [gedTravaModal, setGedTravaModal] = useState(false);
+  // Rastreio
+  const [paineis,     setPaineis]     = useState([]);
+  const [ambientes,   setAmbientes]   = useState([]);
+  const [painelForm,  setPainelForm]  = useState({ codigo: "", descricao: "", local_instalacao: "" });
+  const [ambForm,     setAmbForm]     = useState({ nome: "", andar: "" });
+  const [rastreioTab, setRastreioTab] = useState("paineis");
   const [portalMsgs,   setPortalMsgs]   = useState([]);
   const [portalReply,  setPortalReply]  = useState("");
   const [portalSending, setPortalSending] = useState(false);
+
+  // Garantia
+  const chamados      = useAppStore((s) => s.chamados);
+  const loadChamados  = useAppStore((s) => s.loadChamados);
+  const addChamado    = useAppStore((s) => s.addChamado);
+  const updateChamado = useAppStore((s) => s.updateChamado);
+  const deleteChamado = useAppStore((s) => s.deleteChamado);
+  const [chamadoModal,  setChamadoModal]  = useState(false);
+  const [chamadoForm,   setChamadoForm]   = useState({ titulo: "", descricao: "", categoria: "Outro", prioridade: "Média" });
+  const [chamadoEd,     setChamadoEd]     = useState(null);
+  const [chamadoSaving, setChamadoSaving] = useState(false);
 
   useEffect(() => {
     if (!obraId && obras.length > 0) setObraId(obras[0].id);
@@ -349,6 +369,11 @@ export default function GestaoObras() {
 
   useEffect(() => {
     if (abaAtiva === "diario" && obraId) loadDiario(obraId);
+    if (abaAtiva === "garantia" && obraId) loadChamados(obraId);
+    if (abaAtiva === "rastreio" && obraId) {
+      sb.from("paineis").select("*").eq("obra_id", obraId).order("created_at").then(({ data }) => setPaineis(data || []));
+      sb.from("ambientes_qr").select("*").eq("obra_id", obraId).order("created_at").then(({ data }) => setAmbientes(data || []));
+    }
     if (abaAtiva === "historico" && obraId) {
       setHistLoading(true);
       loadHistoricoObra(obraId).then((d) => { setHistObra(d); setHistLoading(false); });
@@ -1009,7 +1034,7 @@ export default function GestaoObras() {
 
   async function confirmarUpload() {
     if (!uploadMeta) return;
-    const { files, disciplina, status_doc } = uploadMeta;
+    const { files, disciplina, status_doc, revisao = "Rev. 01" } = uploadMeta;
     const novos = files.map((f) => ({
       file:       f,
       nome:       f.name,
@@ -1020,6 +1045,7 @@ export default function GestaoObras() {
       fase:       obra?.fase || null,
       disciplina,
       status_doc,
+      revisao,
     }));
     setUploadMeta(null);
     try {
@@ -1068,6 +1094,15 @@ export default function GestaoObras() {
                   onChange={(v) => setUploadMeta((m) => ({ ...m, status_doc: v }))}
                   options={STATUS_DOC.map((s) => ({ value: s, label: s }))}
                 />
+              </div>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 6 }}>NÚMERO DE REVISÃO</div>
+                <Select
+                  value={uploadMeta.revisao || "Rev. 01"}
+                  onChange={(v) => setUploadMeta((m) => ({ ...m, revisao: v }))}
+                  options={["Rev. 00","Rev. 01","Rev. 02","Rev. 03","Rev. 04","Rev. 05","Rev. A","Rev. B","Rev. C"].map((v) => ({ value: v, label: v }))}
+                />
+                <div style={{ fontSize: 11, color: C.warning, marginTop: 5 }}>⚡ Ao enviar, revisões anteriores desta disciplina serão marcadas como Desatualizado.</div>
               </div>
             </div>
             <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
@@ -1286,8 +1321,14 @@ export default function GestaoObras() {
               <div>
                 {/* Abas */}
                 <div style={{ display: "flex", borderBottom: `1px solid ${C.border}` }}>
-                  {[["fases", "📋 Fases"], ["financeiro", "💰 Financeiro"], ["fluxo", "📈 Fluxo"], ["cronograma", "📅 Cronograma"], ["diario", "📓 Diário"], ["fotos", "📷 Fotos"], ["arquivos", "📁 Arquivos"], ["historico", "🕑 Histórico"]].map(([k, l]) => (
-                    <button key={k} onClick={() => setAbaAtiva(k)} style={{
+                  {[["fases", "📋 Fases"], ["financeiro", "💰 Financeiro"], ["fluxo", "📈 Fluxo"], ["cronograma", "📅 Cronograma"], ["diario", "📓 Diário"], ["fotos", "📷 Fotos"], ["arquivos", "📁 Arquivos"], ["rastreio", "🏷️ Rastreio"], ["historico", "🕑 Histórico"], ...(obra.status === "Concluída" ? [["garantia", "🛠️ Garantia"]] : [])].map(([k, l]) => (
+                    <button key={k} onClick={() => {
+                      if (k === "diario" && userId) {
+                        const pendentes = arqObra.filter((a) => a.disciplina && a.status_doc !== "Desatualizado" && !(a.cientes_uids || []).includes(userId));
+                        if (pendentes.length > 0) { setGedTravaModal(true); return; }
+                      }
+                      setAbaAtiva(k);
+                    }} style={{
                       padding: "10px 20px", background: "transparent", border: "none",
                       borderBottom: `2px solid ${abaAtiva === k ? C.red : "transparent"}`,
                       color: abaAtiva === k ? C.text : C.muted,
@@ -1707,32 +1748,38 @@ export default function GestaoObras() {
                       </div>
                     ) : (
                       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                        {arqFiltro.map((a) => (
-                          <div key={a.id} style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "12px 14px", background: C.darker, borderRadius: 8, border: `1px solid ${C.border}` }}>
+                        {arqFiltro.map((a) => {
+                          const desatualizado = a.status_doc === "Desatualizado";
+                          const jaCiente = (a.cientes_uids || []).includes(userId);
+                          const precisaCiencia = !desatualizado && a.disciplina && !jaCiente;
+                          return (
+                          <div key={a.id} style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "12px 14px", background: desatualizado ? "#fff8f0" : C.darker, borderRadius: 8, border: `1px solid ${desatualizado ? "#f59e0b55" : C.border}`, position: "relative", opacity: desatualizado ? 0.75 : 1 }}>
+                            {desatualizado && (
+                              <div style={{ position: "absolute", top: 8, right: 8, background: "#f59e0b", color: "#fff", fontSize: 9, fontWeight: 900, letterSpacing: 1.5, padding: "2px 8px", borderRadius: 4, transform: "rotate(-1deg)", textTransform: "uppercase" }}>DESATUALIZADO</div>
+                            )}
                             <span style={{ fontSize: 22, flexShrink: 0, marginTop: 2 }}>{ICONE_TIPO[a.tipo] || "📎"}</span>
                             <div style={{ flex: 1, minWidth: 0 }}>
-                              <div style={{ fontSize: 13, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.nome}</div>
-                              <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{a.tamanho} · {a.data}</div>
+                              <div style={{ fontSize: 13, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", textDecoration: desatualizado ? "line-through" : "none", color: desatualizado ? C.muted : C.text }}>{a.nome}</div>
+                              <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{a.tamanho} · {a.data}{a.revisao ? ` · ${a.revisao}` : ""}</div>
                               <div style={{ display: "flex", gap: 6, marginTop: 6, flexWrap: "wrap" }}>
                                 {a.disciplina && <span style={{ background: "#4a9eff18", color: "#4a9eff", border: "1px solid #4a9eff33", borderRadius: 4, padding: "1px 7px", fontSize: 10, fontWeight: 700 }}>{a.disciplina}</span>}
                                 {a.fase && <span style={{ background: "#98191518", color: "#981915", border: "1px solid #98191533", borderRadius: 4, padding: "1px 7px", fontSize: 10, fontWeight: 700 }}>{a.fase}</span>}
                                 {a.status_doc && <span style={{ background: (STATUS_DOC_COR[a.status_doc] || C.muted) + "18", color: STATUS_DOC_COR[a.status_doc] || C.muted, border: `1px solid ${(STATUS_DOC_COR[a.status_doc] || C.muted)}33`, borderRadius: 4, padding: "1px 7px", fontSize: 10, fontWeight: 700 }}>{a.status_doc}</span>}
+                                {jaCiente && !desatualizado && <span style={{ background: C.success + "18", color: C.success, border: `1px solid ${C.success}33`, borderRadius: 4, padding: "1px 7px", fontSize: 10, fontWeight: 700 }}>✓ Ciente</span>}
                               </div>
                             </div>
-                            {a.url && (
-                              <a href={a.url} target="_blank" rel="noreferrer" style={{
-                                background: "#4a9eff22", border: "1px solid #4a9eff44",
-                                borderRadius: 6, color: "#4a9eff", fontSize: 11, fontWeight: 700,
-                                padding: "4px 10px", textDecoration: "none", flexShrink: 0,
-                              }}>↓</a>
-                            )}
-                            <button onClick={() => deleteArquivo(obraId, a.id, a.path)} style={{
-                              background: C.danger + "22", border: `1px solid ${C.danger}44`,
-                              borderRadius: 6, color: C.danger, fontSize: 11, fontWeight: 700,
-                              cursor: "pointer", padding: "4px 10px", fontFamily: "inherit", flexShrink: 0,
-                            }}><Trash2 size={13} /></button>
+                            <div style={{ display: "flex", flexDirection: "column", gap: 6, flexShrink: 0 }}>
+                              {precisaCiencia && (
+                                <button onClick={async () => { await marcarCiente(obraId, a.id, userId); mostrarToast("✅ Ciência registrada!"); }} style={{ background: C.success + "22", border: `1px solid ${C.success}44`, borderRadius: 6, color: C.success, fontSize: 11, fontWeight: 700, cursor: "pointer", padding: "4px 10px", fontFamily: "inherit", whiteSpace: "nowrap" }}>✓ Ciente</button>
+                              )}
+                              {a.url && (
+                                <a href={a.url} target="_blank" rel="noreferrer" style={{ background: "#4a9eff22", border: "1px solid #4a9eff44", borderRadius: 6, color: "#4a9eff", fontSize: 11, fontWeight: 700, padding: "4px 10px", textDecoration: "none", textAlign: "center" }}>↓</a>
+                              )}
+                              <button onClick={() => deleteArquivo(obraId, a.id, a.path)} style={{ background: C.danger + "22", border: `1px solid ${C.danger}44`, borderRadius: 6, color: C.danger, fontSize: 11, fontWeight: 700, cursor: "pointer", padding: "4px 10px", fontFamily: "inherit" }}><Trash2 size={13} /></button>
+                            </div>
                           </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     )}
                   </div>
@@ -1781,6 +1828,280 @@ export default function GestaoObras() {
                     })}
                   </div>
                 )}
+                {/* ABA RASTREIO */}
+                {abaAtiva === "rastreio" && (() => {
+                  const BASE = window.location.origin;
+                  const montados = paineis.filter((p) => p.status === "Montado").length;
+                  const progPaineis = paineis.length > 0 ? Math.round((montados / paineis.length) * 100) : 0;
+
+                  async function addPainel() {
+                    if (!painelForm.codigo.trim()) return;
+                    const { data, error } = await sb.from("paineis").insert({ ...painelForm, obra_id: obraId, empresa_id: empresaId }).select().single();
+                    if (!error) { setPaineis((p) => [...p, data]); setPainelForm({ codigo: "", descricao: "", local_instalacao: "" }); mostrarToast("✅ Painel adicionado!"); }
+                  }
+                  async function addAmbiente() {
+                    if (!ambForm.nome.trim()) return;
+                    const { data, error } = await sb.from("ambientes_qr").insert({ ...ambForm, obra_id: obraId, empresa_id: empresaId }).select().single();
+                    if (!error) { setAmbientes((a) => [...a, data]); setAmbForm({ nome: "", andar: "" }); mostrarToast("✅ Ambiente adicionado!"); }
+                  }
+                  function gerarPlacaAmbiente(amb) {
+                    const link = `${BASE}/ambiente/${amb.token}`;
+                    const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(link)}&bgcolor=ffffff&color=981915&margin=10`;
+                    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Tag ${amb.nome}</title>
+<style>@page{size:A5;margin:0}body{font-family:Arial,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#fff}
+.card{width:148mm;height:105mm;border:3px solid #981915;border-radius:12px;display:flex;overflow:hidden}
+.lado-esq{background:#981915;padding:16px 14px;display:flex;flex-direction:column;justify-content:space-between;width:100px;flex-shrink:0}
+.lado-dir{padding:16px 18px;flex:1;display:flex;flex-direction:column;justify-content:center}
+.titulo{color:#fff;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;opacity:.8}
+.amb-nome{color:#fff;font-size:18px;font-weight:900;line-height:1.2;margin-top:6px}
+.andar{color:rgba(255,255,255,.7);font-size:11px;margin-top:4px}
+.obra{color:rgba(255,255,255,.5);font-size:9px;margin-top:auto}
+.instrucao{font-size:12px;font-weight:700;color:#374151;margin-bottom:8px}
+.sub{font-size:10px;color:#6b7280;margin-top:8px}
+</style></head><body>
+<div class="card">
+<div class="lado-esq"><div><div class="titulo">Stick Frame</div><div class="amb-nome">${amb.nome}</div>${amb.andar ? `<div class="andar">${amb.andar}</div>` : ""}</div><div class="obra">${obra.nome}</div></div>
+<div class="lado-dir"><div class="instrucao">🚨 Encontrou um problema?</div><img src="${qrSrc}" width="130" height="130"/><div class="sub">Escaneie para reportar uma ocorrência neste ambiente</div></div>
+</div></body></html>`;
+                    printHtml(html, `tag-${amb.nome.replace(/\s+/g,"-").toLowerCase()}`);
+                  }
+                  function gerarEtiquetaPainel(p) {
+                    const link = `${BASE}/painel/${p.token}`;
+                    const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(link)}&bgcolor=ffffff&color=981915&margin=8`;
+                    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Etiqueta ${p.codigo}</title>
+<style>@page{size:100mm 70mm;margin:0}body{font-family:Arial,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#fff}
+.card{width:96mm;height:66mm;border:2px solid #981915;border-radius:8px;display:flex;align-items:stretch;overflow:hidden}
+.lado-esq{background:#981915;padding:10px;display:flex;flex-direction:column;justify-content:center;align-items:center;width:72px;flex-shrink:0}
+.codigo{color:#fff;font-size:14px;font-weight:900;text-align:center;word-break:break-all}
+.label{color:rgba(255,255,255,.7);font-size:7px;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px}
+.lado-dir{padding:10px 12px;flex:1;display:flex;flex-direction:column;justify-content:center}
+.desc{font-size:11px;font-weight:700;color:#1a1a1a;margin-bottom:4px}
+.local{font-size:9px;color:#6b7280;margin-bottom:8px}
+.sub{font-size:8px;color:#9ca3af;margin-top:6px}
+</style></head><body>
+<div class="card">
+<div class="lado-esq"><div class="label">Painel</div><div class="codigo">${p.codigo}</div></div>
+<div class="lado-dir"><div class="desc">${p.descricao || p.codigo}</div>${p.local_instalacao ? `<div class="local">📍 ${p.local_instalacao}</div>` : ""}<img src="${qrSrc}" width="100" height="100"/><div class="sub">Escaneie para confirmar montagem</div></div>
+</div></body></html>`;
+                    printHtml(html, `etiqueta-${p.codigo}`);
+                  }
+
+                  return (
+                    <div style={{ background: C.surface, borderRadius: "0 0 12px 12px", border: `1px solid ${C.border}`, borderTop: "none", padding: 22 }}>
+                      {/* Sub-tabs */}
+                      <div style={{ display: "flex", gap: 0, borderBottom: `1px solid ${C.border}`, marginBottom: 20 }}>
+                        {[["paineis","🏷️ Painéis"],["ambientes","🚪 Ambientes"]].map(([k, l]) => (
+                          <button key={k} onClick={() => setRastreioTab(k)} style={{ padding: "8px 18px", border: "none", background: "none", cursor: "pointer", fontFamily: "inherit", fontSize: 13, fontWeight: rastreioTab === k ? 700 : 400, color: rastreioTab === k ? C.red : C.muted, borderBottom: `2px solid ${rastreioTab === k ? C.red : "transparent"}` }}>{l}</button>
+                        ))}
+                      </div>
+
+                      {rastreioTab === "paineis" && (
+                        <>
+                          {/* KPIs painéis */}
+                          {paineis.length > 0 && (
+                            <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 10, marginBottom: 16 }}>
+                              {[["Total", paineis.length, C.muted],["Montados", montados, C.success],["Progresso", `${progPaineis}%`, C.red]].map(([l,v,cor]) => (
+                                <div key={l} style={{ background: "#fff", borderRadius: 10, padding: "12px 14px", border: `1px solid ${C.border}`, borderTop: `3px solid ${cor}` }}>
+                                  <div style={{ fontSize: 10, color: C.muted, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }}>{l}</div>
+                                  <div style={{ fontSize: 20, fontWeight: 900, color: cor }}>{v}</div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          {/* Formulário add */}
+                          <div style={{ background: C.darker, borderRadius: 10, padding: "14px 16px", marginBottom: 16, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "flex-end" }}>
+                            <div style={{ flex: "1 1 80px", minWidth: 80 }}>
+                              <div style={{ fontSize: 10, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 4 }}>CÓDIGO *</div>
+                              <input value={painelForm.codigo} onChange={(e) => setPainelForm((f) => ({ ...f, codigo: e.target.value }))} placeholder="P-01" style={{ width: "100%", padding: "8px 10px", border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, fontFamily: "inherit", outline: "none", boxSizing: "border-box" }} />
+                            </div>
+                            <div style={{ flex: "2 1 140px" }}>
+                              <div style={{ fontSize: 10, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 4 }}>DESCRIÇÃO</div>
+                              <input value={painelForm.descricao} onChange={(e) => setPainelForm((f) => ({ ...f, descricao: e.target.value }))} placeholder="Parede Norte" style={{ width: "100%", padding: "8px 10px", border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, fontFamily: "inherit", outline: "none", boxSizing: "border-box" }} />
+                            </div>
+                            <div style={{ flex: "2 1 140px" }}>
+                              <div style={{ fontSize: 10, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 4 }}>LOCAL</div>
+                              <input value={painelForm.local_instalacao} onChange={(e) => setPainelForm((f) => ({ ...f, local_instalacao: e.target.value }))} placeholder="Eixo A-B / Pavto 1" style={{ width: "100%", padding: "8px 10px", border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, fontFamily: "inherit", outline: "none", boxSizing: "border-box" }} />
+                            </div>
+                            <button onClick={addPainel} style={{ padding: "8px 16px", background: C.red, border: "none", borderRadius: 8, color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", flexShrink: 0 }}>+ Adicionar</button>
+                          </div>
+                          {/* Lista */}
+                          {paineis.length === 0 ? (
+                            <div style={{ textAlign: "center", padding: "32px 0", color: C.muted, fontSize: 13 }}>Nenhum painel cadastrado.</div>
+                          ) : paineis.map((p) => (
+                            <div key={p.id} style={{ background: "#fff", border: `1px solid ${C.border}`, borderLeft: `4px solid ${p.status === "Montado" ? C.success : C.warning}`, borderRadius: 10, padding: "12px 14px", marginBottom: 8, display: "flex", alignItems: "center", gap: 12 }}>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ fontWeight: 700, fontSize: 14 }}>{p.codigo}</div>
+                                {p.descricao && <div style={{ fontSize: 12, color: C.muted }}>{p.descricao}</div>}
+                                {p.local_instalacao && <div style={{ fontSize: 11, color: C.muted }}>📍 {p.local_instalacao}</div>}
+                                {p.montado_por && <div style={{ fontSize: 11, color: C.success, marginTop: 3 }}>✓ {p.montado_por} · {p.montado_em ? new Date(p.montado_em).toLocaleDateString("pt-BR") : ""}</div>}
+                              </div>
+                              <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 8, background: (p.status === "Montado" ? C.success : C.warning) + "20", color: p.status === "Montado" ? C.success : C.warning, flexShrink: 0 }}>{p.status}</span>
+                              <button onClick={() => gerarEtiquetaPainel(p)} title="Gerar etiqueta" style={{ padding: "5px 10px", background: "#7c3aed22", border: "1px solid #7c3aed44", borderRadius: 6, fontSize: 12, cursor: "pointer", fontFamily: "inherit", color: "#7c3aed", fontWeight: 700, flexShrink: 0 }}>🖨️</button>
+                            </div>
+                          ))}
+                        </>
+                      )}
+
+                      {rastreioTab === "ambientes" && (
+                        <>
+                          <div style={{ background: C.darker, borderRadius: 10, padding: "14px 16px", marginBottom: 16, display: "flex", gap: 8, alignItems: "flex-end", flexWrap: "wrap" }}>
+                            <div style={{ flex: "2 1 160px" }}>
+                              <div style={{ fontSize: 10, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 4 }}>AMBIENTE *</div>
+                              <input value={ambForm.nome} onChange={(e) => setAmbForm((f) => ({ ...f, nome: e.target.value }))} placeholder="Suíte Master" style={{ width: "100%", padding: "8px 10px", border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, fontFamily: "inherit", outline: "none", boxSizing: "border-box" }} />
+                            </div>
+                            <div style={{ flex: "1 1 100px" }}>
+                              <div style={{ fontSize: 10, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 4 }}>ANDAR / BLOCO</div>
+                              <input value={ambForm.andar} onChange={(e) => setAmbForm((f) => ({ ...f, andar: e.target.value }))} placeholder="1º andar" style={{ width: "100%", padding: "8px 10px", border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, fontFamily: "inherit", outline: "none", boxSizing: "border-box" }} />
+                            </div>
+                            <button onClick={addAmbiente} style={{ padding: "8px 16px", background: C.red, border: "none", borderRadius: 8, color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", flexShrink: 0 }}>+ Adicionar</button>
+                          </div>
+                          {ambientes.length === 0 ? (
+                            <div style={{ textAlign: "center", padding: "32px 0", color: C.muted, fontSize: 13 }}>Nenhum ambiente cadastrado.</div>
+                          ) : ambientes.map((a) => (
+                            <div key={a.id} style={{ background: "#fff", border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 14px", marginBottom: 8, display: "flex", alignItems: "center", gap: 12 }}>
+                              <span style={{ fontSize: 22 }}>🚪</span>
+                              <div style={{ flex: 1 }}>
+                                <div style={{ fontWeight: 700, fontSize: 14 }}>{a.nome}</div>
+                                {a.andar && <div style={{ fontSize: 12, color: C.muted }}>{a.andar}</div>}
+                              </div>
+                              <button onClick={() => { navigator.clipboard?.writeText(`${BASE}/ambiente/${a.token}`); mostrarToast("📋 Link copiado!"); }} style={{ padding: "5px 10px", background: C.dark, border: `1px solid ${C.border}`, borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>📋</button>
+                              <button onClick={() => gerarPlacaAmbiente(a)} style={{ padding: "5px 10px", background: "#7c3aed22", border: "1px solid #7c3aed44", borderRadius: 6, fontSize: 12, cursor: "pointer", fontFamily: "inherit", color: "#7c3aed", fontWeight: 700 }}>🖨️</button>
+                            </div>
+                          ))}
+                        </>
+                      )}
+                    </div>
+                  );
+                })()}
+
+                {/* ABA GARANTIA */}
+                {abaAtiva === "garantia" && (() => {
+                  const CATS_CHAMADO = ["Elétrica","Hidráulica","Estrutural","Acabamento / Gesso","Esquadrias","Cobertura","Outro"];
+                  const PRIORIDADE_COR = { "Alta": C.danger, "Média": C.warning, "Baixa": C.success };
+                  const STATUS_CHAMADO_COR = { "Aberto": "#4a9eff", "Em andamento": C.warning, "Resolvido": C.success, "Cancelado": C.muted };
+                  const listaChamados = chamados[obraId] || [];
+                  const abertos = listaChamados.filter((c) => c.status === "Aberto" || c.status === "Em andamento");
+                  const custoTotal = listaChamados.filter((c) => c.status === "Resolvido").reduce((a, c) => a + (Number(c.custo_reparo) || 0), 0);
+
+                  async function salvarChamado() {
+                    setChamadoSaving(true);
+                    try {
+                      if (chamadoEd) {
+                        await updateChamado(obraId, chamadoEd.id, chamadoForm);
+                        mostrarToast("✅ Chamado atualizado!");
+                      } else {
+                        await addChamado(obraId, chamadoForm);
+                        mostrarToast("✅ Chamado aberto!");
+                      }
+                      setChamadoModal(false); setChamadoEd(null);
+                    } catch (e) { mostrarToast("❌ " + e.message); }
+                    finally { setChamadoSaving(false); }
+                  }
+
+                  return (
+                    <div style={{ background: C.surface, borderRadius: "0 0 12px 12px", border: `1px solid ${C.border}`, borderTop: "none", padding: 22 }}>
+                      {/* KPIs */}
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 20 }}>
+                        {[
+                          { label: "Chamados abertos", value: abertos.length, cor: abertos.length > 0 ? "#4a9eff" : C.success },
+                          { label: "Total de chamados", value: listaChamados.length, cor: C.muted },
+                          { label: "Custo de garantia", value: `R$ ${custoTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`, cor: custoTotal > 0 ? C.danger : C.success },
+                        ].map((kpi) => (
+                          <div key={kpi.label} style={{ background: "#fff", borderRadius: 10, padding: "12px 14px", border: `1px solid ${C.border}`, borderTop: `3px solid ${kpi.cor}` }}>
+                            <div style={{ fontSize: 10, fontWeight: 700, color: C.muted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6 }}>{kpi.label}</div>
+                            <div style={{ fontSize: 20, fontWeight: 900 }}>{kpi.value}</div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Header */}
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                        <div style={{ fontSize: 13, fontWeight: 700 }}>{listaChamados.length} chamado{listaChamados.length !== 1 ? "s" : ""}</div>
+                        <button onClick={() => { setChamadoForm({ titulo: "", descricao: "", categoria: "Outro", prioridade: "Média" }); setChamadoEd(null); setChamadoModal(true); }} style={{
+                          padding: "7px 14px", background: C.red, border: "none", borderRadius: 8, color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
+                        }}>+ Abrir chamado</button>
+                      </div>
+
+                      {listaChamados.length === 0 ? (
+                        <div style={{ textAlign: "center", padding: "32px 0", color: C.muted, fontSize: 13 }}>
+                          <div style={{ fontSize: 28, marginBottom: 8 }}>🛠️</div>
+                          Nenhum chamado de garantia registrado.
+                        </div>
+                      ) : listaChamados.map((ch) => (
+                        <div key={ch.id} style={{ background: "#fff", border: `1px solid ${C.border}`, borderRadius: 10, padding: "14px 16px", marginBottom: 10, borderLeft: `4px solid ${STATUS_CHAMADO_COR[ch.status] || C.muted}` }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
+                            <div style={{ fontWeight: 700, fontSize: 14 }}>{ch.titulo}</div>
+                            <div style={{ display: "flex", gap: 6, alignItems: "center", flexShrink: 0, marginLeft: 10 }}>
+                              <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 6, background: (PRIORIDADE_COR[ch.prioridade] || C.muted) + "20", color: PRIORIDADE_COR[ch.prioridade] || C.muted }}>{ch.prioridade}</span>
+                              <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 6, background: (STATUS_CHAMADO_COR[ch.status] || C.muted) + "20", color: STATUS_CHAMADO_COR[ch.status] || C.muted }}>{ch.status}</span>
+                            </div>
+                          </div>
+                          <div style={{ fontSize: 12, color: C.muted, marginBottom: ch.descricao ? 6 : 0 }}>{ch.categoria} · {new Date(ch.created_at).toLocaleDateString("pt-BR")}{ch.criado_pelo_cliente ? " · 👤 Cliente" : ""}</div>
+                          {ch.descricao && <div style={{ fontSize: 12, color: C.graphite, lineHeight: 1.5, marginBottom: 6 }}>{ch.descricao}</div>}
+                          {ch.resolucao && <div style={{ fontSize: 12, background: C.success + "12", border: `1px solid ${C.success}33`, borderRadius: 6, padding: "6px 10px", color: C.success, marginBottom: 6 }}>✓ {ch.resolucao}</div>}
+                          {ch.custo_reparo > 0 && <div style={{ fontSize: 12, color: C.danger, fontWeight: 700 }}>Custo: R$ {Number(ch.custo_reparo).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</div>}
+                          <div style={{ display: "flex", gap: 8, marginTop: 10, justifyContent: "flex-end" }}>
+                            <button onClick={() => { setChamadoForm({ titulo: ch.titulo, descricao: ch.descricao || "", categoria: ch.categoria, prioridade: ch.prioridade, status: ch.status, resolucao: ch.resolucao || "", custo_reparo: ch.custo_reparo || "", agendado_para: ch.agendado_para || "" }); setChamadoEd(ch); setChamadoModal(true); }} style={{ padding: "5px 12px", background: C.dark, border: `1px solid ${C.border}`, borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>✎ Editar</button>
+                            <button onClick={async () => { if (!confirm("Excluir chamado?")) return; await deleteChamado(obraId, ch.id); mostrarToast("Chamado removido."); }} style={{ padding: "5px 12px", background: C.danger + "15", border: `1px solid ${C.danger}33`, borderRadius: 6, fontSize: 11, fontWeight: 600, color: C.danger, cursor: "pointer", fontFamily: "inherit" }}>✕</button>
+                          </div>
+                        </div>
+                      ))}
+
+                      {/* Modal chamado */}
+                      {chamadoModal && (
+                        <Modal title={chamadoEd ? "Editar chamado" : "🛠️ Abrir chamado de garantia"} onClose={() => { setChamadoModal(false); setChamadoEd(null); }}>
+                          <div className="sf-col">
+                            <div>
+                              <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 6 }}>TÍTULO *</div>
+                              <Input value={chamadoForm.titulo} onChange={(v) => setChamadoForm((f) => ({ ...f, titulo: v }))} placeholder="Ex: Trinca no gesso da sala" />
+                            </div>
+                            <div className="sf-grid-2">
+                              <div>
+                                <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 6 }}>CATEGORIA</div>
+                                <Select value={chamadoForm.categoria} onChange={(v) => setChamadoForm((f) => ({ ...f, categoria: v }))} options={CATS_CHAMADO.map((c) => ({ value: c, label: c }))} />
+                              </div>
+                              <div>
+                                <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 6 }}>PRIORIDADE</div>
+                                <Select value={chamadoForm.prioridade} onChange={(v) => setChamadoForm((f) => ({ ...f, prioridade: v }))} options={["Baixa","Média","Alta"].map((v) => ({ value: v, label: v }))} />
+                              </div>
+                            </div>
+                            <div>
+                              <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 6 }}>DESCRIÇÃO</div>
+                              <textarea value={chamadoForm.descricao} onChange={(e) => setChamadoForm((f) => ({ ...f, descricao: e.target.value }))} placeholder="Descreva o problema em detalhes..." rows={3} style={{ width: "100%", padding: "9px 12px", borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 13, fontFamily: "inherit", resize: "vertical", outline: "none", boxSizing: "border-box" }} />
+                            </div>
+                            {chamadoEd && (
+                              <>
+                                <div>
+                                  <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 6 }}>STATUS</div>
+                                  <Select value={chamadoForm.status || "Aberto"} onChange={(v) => setChamadoForm((f) => ({ ...f, status: v }))} options={["Aberto","Em andamento","Resolvido","Cancelado"].map((v) => ({ value: v, label: v }))} />
+                                </div>
+                                <div className="sf-grid-2">
+                                  <div>
+                                    <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 6 }}>CUSTO DO REPARO (R$)</div>
+                                    <Input value={chamadoForm.custo_reparo} onChange={(v) => setChamadoForm((f) => ({ ...f, custo_reparo: v }))} type="number" min="0" placeholder="0,00" />
+                                  </div>
+                                  <div>
+                                    <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 6 }}>AGENDADO PARA</div>
+                                    <Input value={chamadoForm.agendado_para} onChange={(v) => setChamadoForm((f) => ({ ...f, agendado_para: v }))} type="date" />
+                                  </div>
+                                </div>
+                                <div>
+                                  <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 6 }}>RESOLUÇÃO</div>
+                                  <Input value={chamadoForm.resolucao} onChange={(v) => setChamadoForm((f) => ({ ...f, resolucao: v }))} placeholder="Descreva como foi resolvido" />
+                                </div>
+                              </>
+                            )}
+                            <div className="sf-actions">
+                              <Btn variant="ghost" onClick={() => { setChamadoModal(false); setChamadoEd(null); }}>Cancelar</Btn>
+                              <Btn disabled={!chamadoForm.titulo || chamadoSaving} onClick={salvarChamado}>{chamadoSaving ? "Salvando…" : chamadoEd ? "Salvar" : "Abrir chamado"}</Btn>
+                            </div>
+                          </div>
+                        </Modal>
+                      )}
+                    </div>
+                  );
+                })()}
+
               </div>
 
               {/* Coluna lateral */}
@@ -2030,8 +2351,107 @@ export default function GestaoObras() {
                   Abrir página
                 </Btn>
               </div>
+              <button onClick={() => {
+                const qrBig = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(url)}&bgcolor=ffffff&color=981915&margin=16`;
+                const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Placa QR — ${obra.nome}</title>
+<style>
+  @page { size: A4; margin: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; background: #fff; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+  .placa { width: 210mm; min-height: 297mm; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 32px; background: #fff; }
+  .header { background: #981915; width: 100%; border-radius: 16px 16px 0 0; padding: 24px 32px; display: flex; align-items: center; justify-content: space-between; }
+  .header h1 { color: #fff; font-size: 28px; font-weight: 900; letter-spacing: -0.5px; }
+  .header span { color: rgba(255,255,255,0.7); font-size: 13px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+  .body { border: 2px solid #e5e7eb; border-top: none; border-radius: 0 0 16px 16px; width: 100%; padding: 40px 32px; text-align: center; }
+  .obra-nome { font-size: 26px; font-weight: 900; color: #1a1a1a; margin-bottom: 8px; }
+  .obra-sub { font-size: 14px; color: #6b7280; margin-bottom: 40px; }
+  .qr-wrap { background: #fff; border: 3px solid #981915; border-radius: 20px; padding: 20px; display: inline-block; margin-bottom: 32px; }
+  .instrucao { background: #f5f5f7; border-radius: 12px; padding: 18px 24px; margin-bottom: 28px; }
+  .instrucao p { font-size: 16px; color: #374151; font-weight: 600; line-height: 1.6; }
+  .instrucao .destaque { color: #981915; font-weight: 900; font-size: 18px; }
+  .bullets { display: flex; justify-content: center; gap: 24px; flex-wrap: wrap; }
+  .bullet { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .bullet .icone { font-size: 28px; }
+  .bullet .texto { font-size: 12px; color: #6b7280; font-weight: 600; text-align: center; max-width: 80px; }
+  .footer { margin-top: 32px; font-size: 11px; color: #9ca3af; letter-spacing: 1px; text-transform: uppercase; }
+</style></head><body>
+<div class="placa">
+  <div style="width:100%">
+    <div class="header">
+      <div>
+        <div style="color:rgba(255,255,255,0.7);font-size:11px;letter-spacing:2px;font-weight:700;margin-bottom:4px">STICKFRAME CONSTRUTORA</div>
+        <h1>${obra.nome}</h1>
+      </div>
+      <div style="text-align:right">
+        <div style="background:rgba(255,255,255,0.2);border-radius:8px;padding:8px 14px;color:#fff;font-size:13px;font-weight:700">${obra.status || "Em andamento"}</div>
+        ${obra.fase ? `<div style="color:rgba(255,255,255,0.7);font-size:11px;margin-top:6px;font-weight:600">${obra.fase}</div>` : ""}
+      </div>
+    </div>
+    <div class="body">
+      <div class="instrucao">
+        <p>📱 <span class="destaque">Escaneie o QR Code</span> para acessar<br>os projetos, modelos 3D e status da obra</p>
+      </div>
+      <div class="qr-wrap">
+        <img src="${qrBig}" width="300" height="300" alt="QR Code" />
+      </div>
+      <div class="bullets">
+        <div class="bullet"><div class="icone">📄</div><div class="texto">Projetos em PDF</div></div>
+        <div class="bullet"><div class="icone">🧊</div><div class="texto">Modelo BIM 3D</div></div>
+        <div class="bullet"><div class="icone">📊</div><div class="texto">Status da obra</div></div>
+        <div class="bullet"><div class="icone">✅</div><div class="texto">Check-in de equipe</div></div>
+      </div>
+      <div class="footer">Powered by Stickframe · stickframe.com.br</div>
+    </div>
+  </div>
+</div>
+</body></html>`;
+                printHtml(html, `placa-qr-${obra.nome.replace(/\s+/g,"-").toLowerCase()}`);
+              }} style={{
+                width: "100%", padding: "10px 0",
+                background: "#7c3aed22", border: "1px solid #7c3aed44",
+                borderRadius: 8, color: "#7c3aed", fontSize: 13, fontWeight: 700,
+                cursor: "pointer", fontFamily: "inherit",
+              }}>🖨️ Gerar Placa para Impressão</button>
             </div>
           </Modal>
+        );
+      })()}
+
+      {/* Modal GED — trava de ciência antes do Diário */}
+      {gedTravaModal && (() => {
+        const pendentes = arqObra.filter((a) => a.disciplina && a.status_doc !== "Desatualizado" && !(a.cientes_uids || []).includes(userId));
+        return (
+          <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ background: "#fff", borderRadius: 16, padding: 28, width: 420, boxShadow: "0 20px 60px rgba(0,0,0,0.4)" }}>
+              <div style={{ fontSize: 22, marginBottom: 8 }}>⚠️</div>
+              <div style={{ fontSize: 16, fontWeight: 800, marginBottom: 8 }}>Novas revisões de projeto</div>
+              <div style={{ fontSize: 13, color: C.muted, marginBottom: 16, lineHeight: 1.6 }}>
+                Você precisa confirmar ciência das seguintes revisões antes de acessar o Diário de Obras:
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
+                {pendentes.map((a) => (
+                  <div key={a.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "#fff8f0", border: "1px solid #f59e0b44", borderRadius: 8, padding: "10px 14px" }}>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 700 }}>{a.nome}</div>
+                      <div style={{ fontSize: 11, color: C.muted }}>{a.disciplina}{a.revisao ? ` · ${a.revisao}` : ""}</div>
+                    </div>
+                    <button onClick={async () => { await marcarCiente(obraId, a.id, userId); mostrarToast("✅ Ciência registrada!"); }} style={{ padding: "6px 14px", background: C.success, border: "none", borderRadius: 6, color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", flexShrink: 0 }}>
+                      ✓ Ciente
+                    </button>
+                  </div>
+                ))}
+              </div>
+              {pendentes.every((a) => (a.cientes_uids || []).includes(userId)) ? (
+                <button onClick={() => { setGedTravaModal(false); setAbaAtiva("diario"); }} style={{ width: "100%", padding: "12px", background: C.red, border: "none", borderRadius: 8, color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+                  📓 Abrir Diário de Obras
+                </button>
+              ) : (
+                <button onClick={() => setGedTravaModal(false)} style={{ width: "100%", padding: "12px", background: C.dark, border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+                  Cancelar
+                </button>
+              )}
+            </div>
+          </div>
         );
       })()}
 

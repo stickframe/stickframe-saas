@@ -12,6 +12,7 @@ import { createColaboradorSlice }  from "./slices/colaboradorSlice";
 import { createVistoriaSlice }     from "./slices/vistoriaSlice";
 import { createBimSlice }          from "./slices/bimSlice";
 import { createFornecedoresSlice } from "./slices/fornecedoresSlice";
+import { createGarantiaSlice }     from "./slices/garantiaSlice";
 
 // ─── ESTADO BASE (loading + loaded + activePage) ─────────────────────────────
 const createBaseSlice = (set) => ({
@@ -48,6 +49,7 @@ const useAppStore = create(
       ...createVistoriaSlice(...a),
       ...createBimSlice(...a),
       ...createFornecedoresSlice(...a),
+      ...createGarantiaSlice(...a),
     }),
     {
       name: "stickframe-storage",

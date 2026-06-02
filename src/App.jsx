@@ -36,7 +36,11 @@ const Equipamentos      = lazy(() => import("./pages/Equipamentos"));
 const Checklists        = lazy(() => import("./pages/Checklists"));
 const QRObra            = lazy(() => import("./pages/QRObra"));
 const Inteligencia      = lazy(() => import("./pages/Inteligencia"));
-const CalculadoraPublica = lazy(() => import("./pages/CalculadoraPublica"));
+const CalculadoraPublica   = lazy(() => import("./pages/CalculadoraPublica"));
+const ConcorrenciaPublica  = lazy(() => import("./pages/ConcorrenciaPublica"));
+const PontoColaborador     = lazy(() => import("./pages/PontoColaborador"));
+const AmbienteQR           = lazy(() => import("./pages/AmbienteQR"));
+const PainelQR             = lazy(() => import("./pages/PainelQR"));
 
 const PAGES = {
   dashboard:  Dashboard,
@@ -145,6 +149,10 @@ export default function App() {
           <Route path="/contrato/:token" element={<ContratoOnline />} />
           <Route path="/qr/obra/:obraId" element={<QRObra />} />
           <Route path="/calcular" element={<CalculadoraPublica />} />
+          <Route path="/concorrencia/:token" element={<ConcorrenciaPublica />} />
+          <Route path="/ponto/:token"       element={<PontoColaborador />} />
+          <Route path="/ambiente/:token"    element={<AmbienteQR />} />
+          <Route path="/painel/:token"      element={<PainelQR />} />
           <Route path="/login" element={<LoginScreen />} />
           <Route path="/*" element={
             <RequireAuth>
