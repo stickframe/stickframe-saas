@@ -186,6 +186,7 @@ export default function Configuracoes() {
         <Tab label="👤 Meu perfil" active={tab === "perfil"}   onClick={() => setTab("perfil")} />
         <Tab label="👥 Usuários"  active={tab === "usuarios"} onClick={() => setTab("usuarios")} />
         <Tab label="⚙️ Sistema"   active={tab === "sistema"}  onClick={() => setTab("sistema")} />
+        <Tab label="🤖 Robô IA"   active={tab === "ia"}       onClick={() => setTab("ia")} />
       </div>
 
       {/* ══ Aba: Empresa ══ */}
@@ -542,6 +543,125 @@ export default function Configuracoes() {
           </Card>
         </>
       )}
+      {/* ══ Aba: Robô IA / WhatsApp ══ */}
+      {tab === "ia" && <AbaRoboIA empresaId={empresaId} mostrarToast={mostrarToast} />}
     </>
+  );
+}
+
+// ─── Aba Robô IA ─────────────────────────────────────────────────────────────
+import { sb } from "../services/supabase";
+
+function AbaRoboIA({ empresaId, mostrarToast }) {
+  const [cfg,    setCfg]    = useState({ openai_key: "", waba_token: "", phone_number_id: "", sistema_prompt: "", modelo_openai: "gpt-4o-mini", ativo: false, verify_token: "" });
+  const [saving, setSaving] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  const webhookUrl  = supabaseUrl ? `${supabaseUrl}/functions/v1/whatsapp-bot` : "—";
+
+  useEffect(() => {
+    if (!empresaId) return;
+    sb.from("ia_config").select("*").eq("empresa_id", empresaId).single()
+      .then(({ data }) => {
+        if (data) setCfg({ openai_key: data.openai_key || "", waba_token: data.waba_token || "", phone_number_id: data.phone_number_id || "", sistema_prompt: data.sistema_prompt || "", modelo_openai: data.modelo_openai || "gpt-4o-mini", ativo: data.ativo || false, verify_token: data.verify_token || "" });
+        setLoaded(true);
+      });
+  }, [empresaId]);
+
+  const set = (k) => (v) => setCfg((f) => ({ ...f, [k]: v }));
+
+  async function salvar() {
+    setSaving(true);
+    try {
+      await sb.from("ia_config").upsert({ ...cfg, empresa_id: empresaId }, { onConflict: "empresa_id" });
+      mostrarToast("✅ Configuração salva!");
+      // Reload to get verify_token if newly created
+      const { data } = await sb.from("ia_config").select("verify_token").eq("empresa_id", empresaId).single();
+      if (data?.verify_token) setCfg((f) => ({ ...f, verify_token: data.verify_token }));
+    } catch (e) { mostrarToast(`❌ ${e.message}`, true); }
+    finally { setSaving(false); }
+  }
+
+  const inp = { width: "100%", padding: "10px 13px", border: `1px solid #e5e7eb`, borderRadius: 8, fontSize: 13, fontFamily: "inherit", outline: "none", background: "#fff", boxSizing: "border-box" };
+  const Label = ({ children }) => <div style={{ fontSize: 11, fontWeight: 700, color: "#6b7280", letterSpacing: 1, marginBottom: 5, textTransform: "uppercase" }}>{children}</div>;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      {/* Status ativo */}
+      <div style={{ background: cfg.ativo ? "#f0fdf4" : "#fff5f5", border: `1px solid ${cfg.ativo ? "#86efac" : "#fca5a5"}`, borderRadius: 14, padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div>
+          <div style={{ fontWeight: 700, fontSize: 14, color: cfg.ativo ? "#166534" : "#991b1b" }}>{cfg.ativo ? "🟢 Robô ativo" : "🔴 Robô desativado"}</div>
+          <div style={{ fontSize: 12, color: "#6b7280", marginTop: 3 }}>Responde automaticamente às mensagens no WhatsApp da construtora</div>
+        </div>
+        <button onClick={() => setCfg((f) => ({ ...f, ativo: !f.ativo }))} style={{ padding: "8px 20px", borderRadius: 10, border: "none", background: cfg.ativo ? "#fee2e2" : "#dcfce7", color: cfg.ativo ? "#991b1b" : "#166534", fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}>
+          {cfg.ativo ? "Desativar" : "Ativar"}
+        </button>
+      </div>
+
+      {/* Webhook URL */}
+      <div style={{ background: "#f0f9ff", border: "1px solid #bae6fd", borderRadius: 12, padding: "14px 18px" }}>
+        <Label>URL do Webhook (configurar no Meta)</Label>
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <input readOnly value={webhookUrl} style={{ ...inp, fontFamily: "monospace", fontSize: 11, background: "#e0f2fe", flex: 1 }} />
+          <button onClick={() => { navigator.clipboard.writeText(webhookUrl); mostrarToast("✅ URL copiada!"); }} style={{ padding: "10px 14px", background: "#0ea5e9", border: "none", borderRadius: 8, color: "#fff", fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap" }}>Copiar</button>
+        </div>
+        {cfg.verify_token && (
+          <div style={{ marginTop: 10 }}>
+            <Label>Verify Token</Label>
+            <input readOnly value={cfg.verify_token} style={{ ...inp, fontFamily: "monospace", fontSize: 11, background: "#e0f2fe" }} />
+          </div>
+        )}
+      </div>
+
+      {/* Credenciais */}
+      <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 14, padding: "20px" }}>
+        <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 16 }}>🔑 Credenciais</div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <div>
+            <Label>OpenAI API Key</Label>
+            <input type="password" value={cfg.openai_key} onChange={(e) => set("openai_key")(e.target.value)} placeholder="sk-..." style={inp} />
+          </div>
+          <div>
+            <Label>WhatsApp Access Token (WABA)</Label>
+            <input type="password" value={cfg.waba_token} onChange={(e) => set("waba_token")(e.target.value)} placeholder="EAAxxxxx..." style={inp} />
+          </div>
+          <div>
+            <Label>Phone Number ID</Label>
+            <input value={cfg.phone_number_id} onChange={(e) => set("phone_number_id")(e.target.value)} placeholder="Ex: 123456789012345" style={inp} />
+          </div>
+          <div>
+            <Label>Modelo OpenAI</Label>
+            <select value={cfg.modelo_openai} onChange={(e) => set("modelo_openai")(e.target.value)} style={inp}>
+              {["gpt-4o-mini", "gpt-4o", "gpt-4-turbo", "gpt-3.5-turbo"].map((m) => <option key={m} value={m}>{m}</option>)}
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* Prompt do sistema */}
+      <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 14, padding: "20px" }}>
+        <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>💬 Personalidade do Robô</div>
+        <div style={{ fontSize: 12, color: "#6b7280", marginBottom: 12 }}>Descreva como o robô deve se comportar. O sistema injeta automaticamente os dados da obra e vencimentos.</div>
+        <textarea value={cfg.sistema_prompt} onChange={(e) => set("sistema_prompt")(e.target.value)}
+          placeholder={`Ex: Você é a Lara, assistente virtual da Construtora Silva. Seja simpática, objetiva e sempre finalize com "Posso ajudar em algo mais?"`}
+          rows={5} style={{ ...inp, resize: "vertical" }} />
+      </div>
+
+      <div style={{ background: "#f9fafb", borderRadius: 12, padding: "14px 18px", fontSize: 12, color: "#6b7280" }}>
+        <div style={{ fontWeight: 700, marginBottom: 6 }}>📋 Como configurar no Meta Business:</div>
+        <ol style={{ paddingLeft: 18, lineHeight: 1.8 }}>
+          <li>Acesse <strong>developers.facebook.com</strong> → seu app → WhatsApp → Configuração</li>
+          <li>Cole a URL do Webhook acima no campo "URL de callback"</li>
+          <li>Cole o Verify Token no campo "Token de verificação"</li>
+          <li>Inscreva-se no evento <strong>messages</strong></li>
+          <li>Salve as credenciais aqui e ative o robô</li>
+        </ol>
+      </div>
+
+      <button onClick={salvar} disabled={saving} style={{ padding: "13px", background: saving ? "#ccc" : "#981915", border: "none", borderRadius: 12, color: "#fff", fontSize: 14, fontWeight: 800, cursor: "pointer", fontFamily: "inherit" }}>
+        {saving ? "Salvando..." : "💾 Salvar configuração"}
+      </button>
+    </div>
   );
 }

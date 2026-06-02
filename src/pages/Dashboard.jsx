@@ -222,6 +222,37 @@ function DashboardDiretor() {
   const atrasadas  = obrasComPrazo.filter((o) => new Date(o.prazo_fim) < hoje);
   const noPrazo    = obrasComPrazo.filter((o) => new Date(o.prazo_fim) >= hoje);
 
+  // ── Compras Preditivas ───────────────────────────────────────────────────
+  const FASE_THRESHOLDS = [
+    { fase: "Fundação",     min: 0,  max: 15,  materiais: ["Brita", "Cimento Portland", "Armação CA-50", "Formas"] },
+    { fase: "Levantamento", min: 15, max: 40,  materiais: ["Perfis C90/U90", "OSB 11mm", "Parafusos Selbohner", "Fita impermeabilizante"] },
+    { fase: "Cobertura",    min: 40, max: 55,  materiais: ["Telhas metálicas", "Cumeeiras e rufos", "Calhas PVC", "Estrutura da tesoura"] },
+    { fase: "Fechamentos",  min: 55, max: 75,  materiais: ["Gesso acartonado", "Lã de vidro 50mm", "Massa corrida PVA", "Drywall"] },
+    { fase: "Acabamento",   min: 75, max: 95,  materiais: ["Porcelanato", "Tinta Acrílica", "Louças e metais", "Disjuntores e elétrica final"] },
+    { fase: "Entrega",      min: 95, max: 100, materiais: ["Limpeza final", "Pintura de toque", "Revisões e comissionamento"] },
+  ];
+
+  const alertasCompra = obras
+    .filter((o) => o.status === "Em andamento" && o.prazo_inicio && o.prazo_fim)
+    .flatMap((o) => {
+      const inicio   = new Date(o.prazo_inicio);
+      const fim      = new Date(o.prazo_fim);
+      const duracaoTotal = (fim - inicio) / 86400000;
+      if (duracaoTotal <= 0) return [];
+      const alerts = [];
+      FASE_THRESHOLDS.forEach((fz) => {
+        const diasFaseInicio = (fz.min / 100) * duracaoTotal;
+        const dataFase = new Date(inicio.getTime() + diasFaseInicio * 86400000);
+        const diasAte  = Math.round((dataFase - hoje) / 86400000);
+        const progAtual = o.progresso || 0;
+        if (diasAte >= 0 && diasAte <= 15 && progAtual < fz.max) {
+          alerts.push({ obra: o, fase: fz.fase, diasAte, materiais: fz.materiais });
+        }
+      });
+      return alerts;
+    })
+    .sort((a, b) => a.diasAte - b.diasAte);
+
   // ── KPIs ──────────────────────────────────────────────────────────────────
   const obrasAtivas = obras.filter((o) => o.status === "Em andamento").length;
 
@@ -769,6 +800,41 @@ ${obrasAndamento.length > 0 ? `
                     <div style={{ height: 8, width: `${Math.min(o.pctRecebido, 100)}%`, background: "#2e9e5b", borderRadius: 4 }} />
                     <div style={{ position: "absolute", top: 0, left: `${Math.min(o.progresso, 100)}%`, height: 8, width: 2, background: "#991b1b", transform: "translateX(-1px)" }} title={`Progresso: ${o.progresso}%`} />
                   </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Compras Preditivas */}
+      {alertasCompra.length > 0 && (
+        <div style={{ background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 16, padding: 20, marginBottom: 8 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+            <span style={{ fontSize: 20 }}>📦</span>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 800, color: "#92400e" }}>Alertas de Compras — {alertasCompra.length} fase(s) se aproximando</div>
+              <div style={{ fontSize: 11, color: "#b45309" }}>Materiais a requisitar nos próximos 15 dias</div>
+            </div>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {alertasCompra.map((a, i) => (
+              <div key={i} style={{ background: "#fff", border: "1px solid #fde68a", borderRadius: 12, padding: "14px 16px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8, flexWrap: "wrap", gap: 6 }}>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 700 }}>{a.obra.nome?.split("—")[0]?.trim()}</div>
+                    <div style={{ fontSize: 11, color: "#92400e" }}>
+                      Entrando em <strong>{a.fase}</strong> em {a.diasAte === 0 ? "hoje" : `${a.diasAte} dia${a.diasAte > 1 ? "s" : ""}`}
+                    </div>
+                  </div>
+                  <span style={{ background: a.diasAte <= 3 ? "#fee2e2" : "#fef9ec", color: a.diasAte <= 3 ? "#991b1b" : "#92400e", borderRadius: 8, padding: "3px 10px", fontSize: 11, fontWeight: 700 }}>
+                    {a.diasAte === 0 ? "🔴 Hoje" : a.diasAte <= 3 ? `🟠 ${a.diasAte}d` : `🟡 ${a.diasAte}d`}
+                  </span>
+                </div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 10 }}>
+                  {a.materiais.map((m) => (
+                    <span key={m} style={{ background: "#fef9ec", border: "1px solid #fde68a", borderRadius: 6, padding: "3px 8px", fontSize: 11, color: "#78350f" }}>📦 {m}</span>
+                  ))}
                 </div>
               </div>
             ))}
