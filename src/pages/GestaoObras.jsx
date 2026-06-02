@@ -291,7 +291,9 @@ export default function GestaoObras() {
   const loadHistoricoObra = useAppStore((s) => s.loadHistoricoObra);
   const financeiro        = useAppStore((s) => s.financeiro);
   const perfil            = useAppStore((s) => s.user?.perfil);
+  const userId            = useAppStore((s) => s.user?.uid);
   const empresaId         = useAppStore((s) => s.empresaId);
+  const marcarCiente      = useAppStore((s) => s.marcarCiente);
   const medicoes          = useAppStore((s) => s.medicoes);
   const diario            = useAppStore((s) => s.diario);
   const loadMedicoes      = useAppStore((s) => s.loadMedicoes);
@@ -328,6 +330,7 @@ export default function GestaoObras() {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
   });
   const [checkinsVis,  setCheckinsVis]  = useState(false);
+  const [gedTravaModal, setGedTravaModal] = useState(false); // bloqueio diário por revisões não confirmadas
   const [portalMsgs,   setPortalMsgs]   = useState([]);
   const [portalReply,  setPortalReply]  = useState("");
   const [portalSending, setPortalSending] = useState(false);
@@ -1021,7 +1024,7 @@ export default function GestaoObras() {
 
   async function confirmarUpload() {
     if (!uploadMeta) return;
-    const { files, disciplina, status_doc } = uploadMeta;
+    const { files, disciplina, status_doc, revisao = "Rev. 01" } = uploadMeta;
     const novos = files.map((f) => ({
       file:       f,
       nome:       f.name,
@@ -1032,6 +1035,7 @@ export default function GestaoObras() {
       fase:       obra?.fase || null,
       disciplina,
       status_doc,
+      revisao,
     }));
     setUploadMeta(null);
     try {
@@ -1080,6 +1084,15 @@ export default function GestaoObras() {
                   onChange={(v) => setUploadMeta((m) => ({ ...m, status_doc: v }))}
                   options={STATUS_DOC.map((s) => ({ value: s, label: s }))}
                 />
+              </div>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 6 }}>NÚMERO DE REVISÃO</div>
+                <Select
+                  value={uploadMeta.revisao || "Rev. 01"}
+                  onChange={(v) => setUploadMeta((m) => ({ ...m, revisao: v }))}
+                  options={["Rev. 00","Rev. 01","Rev. 02","Rev. 03","Rev. 04","Rev. 05","Rev. A","Rev. B","Rev. C"].map((v) => ({ value: v, label: v }))}
+                />
+                <div style={{ fontSize: 11, color: C.warning, marginTop: 5 }}>⚡ Ao enviar, revisões anteriores desta disciplina serão marcadas como Desatualizado.</div>
               </div>
             </div>
             <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
@@ -1299,7 +1312,13 @@ export default function GestaoObras() {
                 {/* Abas */}
                 <div style={{ display: "flex", borderBottom: `1px solid ${C.border}` }}>
                   {[["fases", "📋 Fases"], ["financeiro", "💰 Financeiro"], ["fluxo", "📈 Fluxo"], ["cronograma", "📅 Cronograma"], ["diario", "📓 Diário"], ["fotos", "📷 Fotos"], ["arquivos", "📁 Arquivos"], ["historico", "🕑 Histórico"], ...(obra.status === "Concluída" ? [["garantia", "🛠️ Garantia"]] : [])].map(([k, l]) => (
-                    <button key={k} onClick={() => setAbaAtiva(k)} style={{
+                    <button key={k} onClick={() => {
+                      if (k === "diario" && userId) {
+                        const pendentes = arqObra.filter((a) => a.disciplina && a.status_doc !== "Desatualizado" && !(a.cientes_uids || []).includes(userId));
+                        if (pendentes.length > 0) { setGedTravaModal(true); return; }
+                      }
+                      setAbaAtiva(k);
+                    }} style={{
                       padding: "10px 20px", background: "transparent", border: "none",
                       borderBottom: `2px solid ${abaAtiva === k ? C.red : "transparent"}`,
                       color: abaAtiva === k ? C.text : C.muted,
@@ -1719,32 +1738,38 @@ export default function GestaoObras() {
                       </div>
                     ) : (
                       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                        {arqFiltro.map((a) => (
-                          <div key={a.id} style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "12px 14px", background: C.darker, borderRadius: 8, border: `1px solid ${C.border}` }}>
+                        {arqFiltro.map((a) => {
+                          const desatualizado = a.status_doc === "Desatualizado";
+                          const jaCiente = (a.cientes_uids || []).includes(userId);
+                          const precisaCiencia = !desatualizado && a.disciplina && !jaCiente;
+                          return (
+                          <div key={a.id} style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "12px 14px", background: desatualizado ? "#fff8f0" : C.darker, borderRadius: 8, border: `1px solid ${desatualizado ? "#f59e0b55" : C.border}`, position: "relative", opacity: desatualizado ? 0.75 : 1 }}>
+                            {desatualizado && (
+                              <div style={{ position: "absolute", top: 8, right: 8, background: "#f59e0b", color: "#fff", fontSize: 9, fontWeight: 900, letterSpacing: 1.5, padding: "2px 8px", borderRadius: 4, transform: "rotate(-1deg)", textTransform: "uppercase" }}>DESATUALIZADO</div>
+                            )}
                             <span style={{ fontSize: 22, flexShrink: 0, marginTop: 2 }}>{ICONE_TIPO[a.tipo] || "📎"}</span>
                             <div style={{ flex: 1, minWidth: 0 }}>
-                              <div style={{ fontSize: 13, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.nome}</div>
-                              <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{a.tamanho} · {a.data}</div>
+                              <div style={{ fontSize: 13, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", textDecoration: desatualizado ? "line-through" : "none", color: desatualizado ? C.muted : C.text }}>{a.nome}</div>
+                              <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{a.tamanho} · {a.data}{a.revisao ? ` · ${a.revisao}` : ""}</div>
                               <div style={{ display: "flex", gap: 6, marginTop: 6, flexWrap: "wrap" }}>
                                 {a.disciplina && <span style={{ background: "#4a9eff18", color: "#4a9eff", border: "1px solid #4a9eff33", borderRadius: 4, padding: "1px 7px", fontSize: 10, fontWeight: 700 }}>{a.disciplina}</span>}
                                 {a.fase && <span style={{ background: "#98191518", color: "#981915", border: "1px solid #98191533", borderRadius: 4, padding: "1px 7px", fontSize: 10, fontWeight: 700 }}>{a.fase}</span>}
                                 {a.status_doc && <span style={{ background: (STATUS_DOC_COR[a.status_doc] || C.muted) + "18", color: STATUS_DOC_COR[a.status_doc] || C.muted, border: `1px solid ${(STATUS_DOC_COR[a.status_doc] || C.muted)}33`, borderRadius: 4, padding: "1px 7px", fontSize: 10, fontWeight: 700 }}>{a.status_doc}</span>}
+                                {jaCiente && !desatualizado && <span style={{ background: C.success + "18", color: C.success, border: `1px solid ${C.success}33`, borderRadius: 4, padding: "1px 7px", fontSize: 10, fontWeight: 700 }}>✓ Ciente</span>}
                               </div>
                             </div>
-                            {a.url && (
-                              <a href={a.url} target="_blank" rel="noreferrer" style={{
-                                background: "#4a9eff22", border: "1px solid #4a9eff44",
-                                borderRadius: 6, color: "#4a9eff", fontSize: 11, fontWeight: 700,
-                                padding: "4px 10px", textDecoration: "none", flexShrink: 0,
-                              }}>↓</a>
-                            )}
-                            <button onClick={() => deleteArquivo(obraId, a.id, a.path)} style={{
-                              background: C.danger + "22", border: `1px solid ${C.danger}44`,
-                              borderRadius: 6, color: C.danger, fontSize: 11, fontWeight: 700,
-                              cursor: "pointer", padding: "4px 10px", fontFamily: "inherit", flexShrink: 0,
-                            }}><Trash2 size={13} /></button>
+                            <div style={{ display: "flex", flexDirection: "column", gap: 6, flexShrink: 0 }}>
+                              {precisaCiencia && (
+                                <button onClick={async () => { await marcarCiente(obraId, a.id, userId); mostrarToast("✅ Ciência registrada!"); }} style={{ background: C.success + "22", border: `1px solid ${C.success}44`, borderRadius: 6, color: C.success, fontSize: 11, fontWeight: 700, cursor: "pointer", padding: "4px 10px", fontFamily: "inherit", whiteSpace: "nowrap" }}>✓ Ciente</button>
+                              )}
+                              {a.url && (
+                                <a href={a.url} target="_blank" rel="noreferrer" style={{ background: "#4a9eff22", border: "1px solid #4a9eff44", borderRadius: 6, color: "#4a9eff", fontSize: 11, fontWeight: 700, padding: "4px 10px", textDecoration: "none", textAlign: "center" }}>↓</a>
+                              )}
+                              <button onClick={() => deleteArquivo(obraId, a.id, a.path)} style={{ background: C.danger + "22", border: `1px solid ${C.danger}44`, borderRadius: 6, color: C.danger, fontSize: 11, fontWeight: 700, cursor: "pointer", padding: "4px 10px", fontFamily: "inherit" }}><Trash2 size={13} /></button>
+                            </div>
                           </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     )}
                   </div>
@@ -2172,6 +2197,44 @@ export default function GestaoObras() {
               </div>
             </div>
           </Modal>
+        );
+      })()}
+
+      {/* Modal GED — trava de ciência antes do Diário */}
+      {gedTravaModal && (() => {
+        const pendentes = arqObra.filter((a) => a.disciplina && a.status_doc !== "Desatualizado" && !(a.cientes_uids || []).includes(userId));
+        return (
+          <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ background: "#fff", borderRadius: 16, padding: 28, width: 420, boxShadow: "0 20px 60px rgba(0,0,0,0.4)" }}>
+              <div style={{ fontSize: 22, marginBottom: 8 }}>⚠️</div>
+              <div style={{ fontSize: 16, fontWeight: 800, marginBottom: 8 }}>Novas revisões de projeto</div>
+              <div style={{ fontSize: 13, color: C.muted, marginBottom: 16, lineHeight: 1.6 }}>
+                Você precisa confirmar ciência das seguintes revisões antes de acessar o Diário de Obras:
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
+                {pendentes.map((a) => (
+                  <div key={a.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "#fff8f0", border: "1px solid #f59e0b44", borderRadius: 8, padding: "10px 14px" }}>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 700 }}>{a.nome}</div>
+                      <div style={{ fontSize: 11, color: C.muted }}>{a.disciplina}{a.revisao ? ` · ${a.revisao}` : ""}</div>
+                    </div>
+                    <button onClick={async () => { await marcarCiente(obraId, a.id, userId); mostrarToast("✅ Ciência registrada!"); }} style={{ padding: "6px 14px", background: C.success, border: "none", borderRadius: 6, color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", flexShrink: 0 }}>
+                      ✓ Ciente
+                    </button>
+                  </div>
+                ))}
+              </div>
+              {pendentes.every((a) => (a.cientes_uids || []).includes(userId)) ? (
+                <button onClick={() => { setGedTravaModal(false); setAbaAtiva("diario"); }} style={{ width: "100%", padding: "12px", background: C.red, border: "none", borderRadius: 8, color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+                  📓 Abrir Diário de Obras
+                </button>
+              ) : (
+                <button onClick={() => setGedTravaModal(false)} style={{ width: "100%", padding: "12px", background: C.dark, border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+                  Cancelar
+                </button>
+              )}
+            </div>
+          </div>
         );
       })()}
 

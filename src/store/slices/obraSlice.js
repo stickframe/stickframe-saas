@@ -2,7 +2,7 @@ import {
   listarObras, criarObra, atualizarObra, deletarObra, atualizarFase,
   listarDiario, adicionarDiario,
   listarMedicoes, adicionarMedicao, aprovarMedicao,
-  listarArquivos, adicionarArquivos, deletarArquivo,
+  listarArquivos, adicionarArquivos, deletarArquivo, marcarCienteArquivo,
   subscribeObras, subscribeDiario,
 } from "../../services/repositories/obraRepository";
 import { criarNotificacao } from "../../services/repositories/notificacoesRepository";
@@ -149,6 +149,18 @@ export const createObraSlice = (set, get) => ({
   deleteArquivo: async (obraId, arqId, path) => {
     await deletarArquivo(arqId, path);
     set((s) => ({ arquivos: { ...s.arquivos, [obraId]: s.arquivos[obraId].filter((a) => a.id !== arqId) } }));
+  },
+
+  marcarCiente: async (obraId, arqId, userId) => {
+    await marcarCienteArquivo(arqId);
+    set((s) => ({
+      arquivos: {
+        ...s.arquivos,
+        [obraId]: (s.arquivos[obraId] || []).map((a) =>
+          a.id === arqId ? { ...a, cientes_uids: [...(a.cientes_uids || []), userId] } : a
+        ),
+      },
+    }));
   },
 
   subscribeObras: () => subscribeObras((payload) => {
