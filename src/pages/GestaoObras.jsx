@@ -1699,13 +1699,15 @@ export default function GestaoObras() {
                             return (
                               <div key={m.id || i} style={{ display: "flex", justifyContent: isCliente ? "flex-start" : "flex-end" }}>
                                 <div style={{
-                                  maxWidth: "85%", padding: "6px 10px", borderRadius: isCliente ? "10px 10px 10px 2px" : "10px 10px 2px 10px",
-                                  background: isCliente ? C.darker : C.red + "22", fontSize: 11, lineHeight: 1.5,
-                                  border: `1px solid ${isCliente ? C.border : C.red + "44"}`,
+                                  maxWidth: "85%", padding: "6px 10px", fontSize: 11, lineHeight: 1.5,
+                                  borderRadius: isCliente ? "10px 10px 10px 2px" : "10px 10px 2px 10px",
+                                  background: isCliente ? C.darker : C.red,
+                                  color: isCliente ? C.text : "#fff",
+                                  border: `1px solid ${isCliente ? C.border : C.red}`,
                                 }}>
                                   {isCliente && <div style={{ fontSize: 9, fontWeight: 700, color: C.red, marginBottom: 2 }}>👤 {m.nome || "Cliente"}</div>}
                                   <div>{m.mensagem}</div>
-                                  <div style={{ fontSize: 9, color: C.muted, marginTop: 2, textAlign: "right" }}>
+                                  <div style={{ fontSize: 9, opacity: 0.6, marginTop: 2, textAlign: "right" }}>
                                     {m.created_at ? new Date(m.created_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : ""}
                                   </div>
                                 </div>
@@ -1727,7 +1729,12 @@ export default function GestaoObras() {
                             setPortalSending(true);
                             const empresaId = useAppStore.getState().empresaId;
                             const { error } = await sb.rpc("portal_responder_mensagem", { p_obra_id: obraId, p_empresa_id: empresaId, p_mensagem: portalReply.trim() });
-                            if (!error) setPortalReply("");
+                            if (!error) {
+                              setPortalMsgs((prev) => [...prev, { autor: "construtora", nome: "Equipe Stick Frame", mensagem: portalReply.trim(), created_at: new Date().toISOString() }]);
+                              setPortalReply("");
+                            } else {
+                              mostrarToast("❌ Erro ao enviar: " + error.message);
+                            }
                             setPortalSending(false);
                           }}
                           style={{ marginTop: 6, width: "100%", padding: "7px 0", background: portalSending || !portalReply.trim() ? C.muted : C.red, color: "#fff", border: "none", borderRadius: 6, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}
