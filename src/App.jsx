@@ -75,6 +75,23 @@ function AuthenticatedApp() {
     if (user?.empresaId) setEmpresaId(user.empresaId);
   }, [user]);
 
+  // Prefetch das páginas mais acessadas em background após login
+  useEffect(() => {
+    if (!user) return;
+    const PREFETCH = [
+      () => import("./pages/CRM"),
+      () => import("./pages/Orcamentos"),
+      () => import("./pages/GestaoObras"),
+      () => import("./pages/Financeiro"),
+      () => import("./pages/Dashboard"),
+    ];
+    // Usa requestIdleCallback para não competir com o render inicial
+    const id = requestIdleCallback
+      ? requestIdleCallback(() => PREFETCH.forEach((fn) => fn()), { timeout: 3000 })
+      : setTimeout(() => PREFETCH.forEach((fn) => fn()), 1500);
+    return () => requestIdleCallback ? cancelIdleCallback(id) : clearTimeout(id);
+  }, [user]);
+
   // Sincroniza URL com activePage (permite compartilhar links e usar botão Voltar)
   useEffect(() => {
     const path = `/${activePage === "dashboard" ? "" : activePage}`;
