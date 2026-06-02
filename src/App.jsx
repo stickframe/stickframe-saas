@@ -1,11 +1,12 @@
 import { lazy, Suspense, useEffect } from "react";
+import { setEmpresaId } from "./services/supabase";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import "./styles/globals.css";
 import "./styles/responsive.css";
 import useAppStore from "./store/useAppStore";
 import AppLayout from "./components/layout/AppLayout";
 import LoginScreen from "./pages/LoginScreen";
-import LoadingScreen from "./components/ui/LoadingScreen";
+import LoadingScreen, { PageLoader } from "./components/ui/LoadingScreen";
 import { ErrorBoundary } from "./components/ui/ErrorBoundary";
 
 const Dashboard   = lazy(() => import("./pages/Dashboard"));
@@ -64,23 +65,47 @@ const PAGES = {
 };
 
 function AuthenticatedApp() {
-  const activePage = useAppStore((s) => s.activePage);
-  const user       = useAppStore((s) => s.user);
-  const loaded     = useAppStore((s) => s.loaded);
+  const activePage    = useAppStore((s) => s.activePage);
+  const setActivePage = useAppStore((s) => s.setActivePage);
+  const user          = useAppStore((s) => s.user);
+  const loaded        = useAppStore((s) => s.loaded);
 
-  // Restaura empresaId no service após refresh (persist só salva o valor, não o setter)
+  // Restaura empresaId no service após refresh — import síncrono elimina race condition
   useEffect(() => {
-    if (user?.empresaId) {
-      import("./services/supabase").then(({ setEmpresaId }) => setEmpresaId(user.empresaId));
-    }
+    if (user?.empresaId) setEmpresaId(user.empresaId);
   }, [user]);
+
+  // Sincroniza URL com activePage (permite compartilhar links e usar botão Voltar)
+  useEffect(() => {
+    const path = `/${activePage === "dashboard" ? "" : activePage}`;
+    if (window.location.pathname !== path) {
+      window.history.pushState(null, "", path);
+    }
+  }, [activePage]);
+
+  // Lê a URL ao montar para restaurar a página correta após reload
+  useEffect(() => {
+    const page = window.location.pathname.replace("/", "") || "dashboard";
+    if (PAGES[page] && page !== activePage) setActivePage(page);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Suporte ao botão Voltar/Avançar do navegador
+  useEffect(() => {
+    const onPop = () => {
+      const page = window.location.pathname.replace("/", "") || "dashboard";
+      if (PAGES[page]) setActivePage(page);
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, [setActivePage]);
 
   const ActivePage = PAGES[activePage] || Dashboard;
 
   return (
     <AppLayout>
       <ErrorBoundary>
-        <Suspense fallback={<LoadingScreen />}>
+        <Suspense fallback={<PageLoader />}>
           <ActivePage />
         </Suspense>
       </ErrorBoundary>
