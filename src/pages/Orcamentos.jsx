@@ -827,6 +827,8 @@ export default function Orcamentos() {
       prazo:         obraForm.prazo_fim || "—",
       prazo_inicio:  obraForm.prazo_inicio || null,
       prazo_fim:     obraForm.prazo_fim || null,
+      area:          Number(o.area) || 0,
+      padrao:        o.padrao || "Padrão",
     });
 
     // Se há estimativo da calculadora, importa para quantitativos da obra
