@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, memo } from "react";
+import { useState, useMemo, useCallback, useEffect, memo } from "react";
 import { AlertTriangle, Pencil, Smartphone, Trash2 } from "../components/ui/Icon";
 const CRM_LEAD_KEY = "sf_crm_lead";
 import { C } from "../utils/constants";
