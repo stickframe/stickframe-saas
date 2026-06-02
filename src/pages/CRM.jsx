@@ -89,6 +89,17 @@ const WA_TEMPLATES = [
     msg: (c) => `Olá ${c.nome}! 👋\n\nGostaria de dar um retorno sobre nossa proposta — podemos agendar uma conversa rápida para fechar os detalhes do seu projeto?\n\nStick Frame · Santo André/SP` },
 ];
 
+// Mensagem padrão por etapa do funil
+const WA_POR_STATUS = {
+  "Lead":              WA_TEMPLATES[0], // 1º Contato
+  "Contato feito":     WA_TEMPLATES[1], // Follow-up
+  "Proposta enviada":  WA_TEMPLATES[2], // Proposta
+  "Negociação":        WA_TEMPLATES[3], // Fechamento
+  "Fechado":           WA_TEMPLATES[3],
+  "Em execução":       WA_TEMPLATES[1],
+  "Perdido":           WA_TEMPLATES[1],
+};
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 function fmtTel(v) {
   const d = v.replace(/\D/g, "").slice(0, 11);
@@ -801,6 +812,25 @@ export default function CRM() {
                               <span style={{ background: C.darker, padding: "2px 6px", borderRadius: 4 }}>{c.origem || "Indicação"}</span>
                               {atrasado && <span style={{ color: C.danger, fontWeight: 700, fontSize: 10, background: C.danger+"22", padding: "2px 6px", borderRadius: 4 }}>⚠️ FOLLOW-UP</span>}
                             </div>
+                            {c.contato && (
+                              <button
+                                onClick={e => {
+                                  e.stopPropagation();
+                                  const tpl = WA_POR_STATUS[status] || WA_TEMPLATES[0];
+                                  enviarWhatsApp(c.contato, tpl.msg(c));
+                                }}
+                                style={{
+                                  marginTop: 10, width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                                  padding: "6px 0", borderRadius: 7, border: "1px solid #25D36633",
+                                  background: "#25D36610", color: "#25D366", fontSize: 11, fontWeight: 700,
+                                  cursor: "pointer", transition: "background 0.15s",
+                                }}
+                                onMouseEnter={e => e.currentTarget.style.background = "#25D36622"}
+                                onMouseLeave={e => e.currentTarget.style.background = "#25D36610"}
+                              >
+                                💬 Contatar
+                              </button>
+                            )}
                           </div>
                         );
                       })}
