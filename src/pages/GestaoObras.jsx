@@ -334,7 +334,7 @@ export default function GestaoObras() {
   // Rastreio
   const [paineis,     setPaineis]     = useState([]);
   const [ambientes,   setAmbientes]   = useState([]);
-  const [painelForm,  setPainelForm]  = useState({ codigo: "", descricao: "", local_instalacao: "" });
+  const [painelForm,  setPainelForm]  = useState({ codigo: "", descricao: "", local_instalacao: "", ifc_element_id: "" });
   const [ambForm,     setAmbForm]     = useState({ nome: "", andar: "" });
   const [rastreioTab, setRastreioTab] = useState("paineis");
   const [portalMsgs,   setPortalMsgs]   = useState([]);
@@ -1836,8 +1836,11 @@ export default function GestaoObras() {
 
                   async function addPainel() {
                     if (!painelForm.codigo.trim()) return;
-                    const { data, error } = await sb.from("paineis").insert({ ...painelForm, obra_id: obraId, empresa_id: empresaId }).select().single();
-                    if (!error) { setPaineis((p) => [...p, data]); setPainelForm({ codigo: "", descricao: "", local_instalacao: "" }); mostrarToast("✅ Painel adicionado!"); }
+                    const payload = { ...painelForm, obra_id: obraId, empresa_id: empresaId };
+                    if (!payload.ifc_element_id) delete payload.ifc_element_id;
+                    else payload.ifc_element_id = parseInt(payload.ifc_element_id);
+                    const { data, error } = await sb.from("paineis").insert(payload).select().single();
+                    if (!error) { setPaineis((p) => [...p, data]); setPainelForm({ codigo: "", descricao: "", local_instalacao: "", ifc_element_id: "" }); mostrarToast("✅ Painel adicionado!"); }
                   }
                   async function addAmbiente() {
                     if (!ambForm.nome.trim()) return;
@@ -1922,6 +1925,10 @@ export default function GestaoObras() {
                               <div style={{ fontSize: 10, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 4 }}>LOCAL</div>
                               <input value={painelForm.local_instalacao} onChange={(e) => setPainelForm((f) => ({ ...f, local_instalacao: e.target.value }))} placeholder="Eixo A-B / Pavto 1" style={{ width: "100%", padding: "8px 10px", border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, fontFamily: "inherit", outline: "none", boxSizing: "border-box" }} />
                             </div>
+                            <div style={{ flex: "1 1 90px" }}>
+                              <div style={{ fontSize: 10, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 4 }}>IFC ID</div>
+                              <input value={painelForm.ifc_element_id} onChange={(e) => setPainelForm((f) => ({ ...f, ifc_element_id: e.target.value }))} placeholder="Ex: 12345" type="number" style={{ width: "100%", padding: "8px 10px", border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, fontFamily: "inherit", outline: "none", boxSizing: "border-box" }} />
+                            </div>
                             <button onClick={addPainel} style={{ padding: "8px 16px", background: C.red, border: "none", borderRadius: 8, color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", flexShrink: 0 }}>+ Adicionar</button>
                           </div>
                           {/* Lista */}
@@ -1933,6 +1940,7 @@ export default function GestaoObras() {
                                 <div style={{ fontWeight: 700, fontSize: 14 }}>{p.codigo}</div>
                                 {p.descricao && <div style={{ fontSize: 12, color: C.muted }}>{p.descricao}</div>}
                                 {p.local_instalacao && <div style={{ fontSize: 11, color: C.muted }}>📍 {p.local_instalacao}</div>}
+                                {p.ifc_element_id && <div style={{ fontSize: 11, color: "#4a9eff" }}>🧊 IFC #{p.ifc_element_id}</div>}
                                 {p.montado_por && <div style={{ fontSize: 11, color: C.success, marginTop: 3 }}>✓ {p.montado_por} · {p.montado_em ? new Date(p.montado_em).toLocaleDateString("pt-BR") : ""}</div>}
                               </div>
                               <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 8, background: (p.status === "Montado" ? C.success : C.warning) + "20", color: p.status === "Montado" ? C.success : C.warning, flexShrink: 0 }}>{p.status}</span>

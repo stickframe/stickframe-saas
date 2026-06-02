@@ -12,6 +12,7 @@ export default function PontoColaborador() {
   const [enviando, setEnviando] = useState(false);
   const [resultado,setResultado]= useState(null);
   const [erro,     setErro]     = useState(null);
+  const [gpsStatus, setGpsStatus] = useState("idle"); // idle | obtendo | ok | negado
 
   useEffect(() => {
     if (!token) { setErro("Token inválido."); setLoading(false); return; }
@@ -26,13 +27,26 @@ export default function PontoColaborador() {
 
   async function registrar() {
     setEnviando(true);
-    const { data, error } = await sb.rpc("ponto_registrar", { p_token: token });
+    setGpsStatus("obtendo");
+
+    let lat = null, lng = null;
+    try {
+      const pos = await new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 6000, maximumAge: 0 });
+      });
+      lat = pos.coords.latitude;
+      lng = pos.coords.longitude;
+      setGpsStatus("ok");
+    } catch (_) {
+      setGpsStatus("negado");
+    }
+
+    const { data, error } = await sb.rpc("ponto_registrar", { p_token: token, p_lat: lat, p_lng: lng });
     if (error) { setErro(error.message); setEnviando(false); return; }
     setResultado(data);
-    // Atualiza pontos localmente
     setDados((prev) => ({
       ...prev,
-      pontos_hoje: [{ tipo: data.tipo, created_at: new Date().toISOString(), nome: prev?.colaborador?.nome }, ...(prev?.pontos_hoje || [])],
+      pontos_hoje: [{ tipo: data.tipo, created_at: new Date().toISOString(), lat, lng, distancia_obra_m: data.distancia_m }, ...(prev?.pontos_hoje || [])],
     }));
     setEnviando(false);
   }
@@ -103,6 +117,17 @@ export default function PontoColaborador() {
               {resultado.tipo === "entrada" ? "Entrada registrada!" : "Saída registrada!"}
             </div>
             <div style={{ fontSize: 16, color: C.muted, marginTop: 4 }}>{resultado.hora}</div>
+            {resultado.distancia_m != null && (
+              <div style={{ marginTop: 10, padding: "8px 12px", borderRadius: 8, background: resultado.fora_da_obra ? "#fef2f2" : "#f0fdf4", border: `1px solid ${resultado.fora_da_obra ? "#fca5a5" : "#86efac"}` }}>
+                <span style={{ fontSize: 13, fontWeight: 700, color: resultado.fora_da_obra ? C.red : C.success }}>
+                  {resultado.fora_da_obra ? "⚠️" : "📍"} {resultado.distancia_m}m da obra
+                  {resultado.fora_da_obra && " — fora do perímetro"}
+                </span>
+              </div>
+            )}
+            {gpsStatus === "negado" && (
+              <div style={{ marginTop: 8, fontSize: 11, color: C.muted }}>📵 GPS não disponível — localização não verificada</div>
+            )}
           </div>
         )}
 
@@ -113,7 +138,7 @@ export default function PontoColaborador() {
           color: "#fff", fontSize: 18, fontWeight: 800, cursor: enviando ? "wait" : "pointer",
           fontFamily: "inherit", boxShadow: "0 4px 16px rgba(0,0,0,0.12)",
         }}>
-          {enviando ? "Registrando..." : proximoTipo === "entrada" ? "▶ Registrar Entrada" : "⏹ Registrar Saída"}
+          {enviando && gpsStatus === "obtendo" ? "📡 Obtendo GPS..." : enviando ? "Registrando..." : proximoTipo === "entrada" ? "▶ Registrar Entrada" : "⏹ Registrar Saída"}
         </button>
 
         {/* Resumo do dia */}
