@@ -14,7 +14,13 @@ describe("Autenticação", () => {
   });
 
   it("realiza login com credenciais válidas", () => {
-    cy.login(Cypress.env("TEST_EMAIL"), Cypress.env("TEST_PASSWORD"));
+    const email = Cypress.env("TEST_EMAIL");
+    const password = Cypress.env("TEST_PASSWORD");
+    if (!email || !password) {
+      cy.log("Credenciais de teste não configuradas — pulando");
+      return;
+    }
+    cy.login(email, password);
     cy.visit("/");
     cy.get("nav, aside, [class*='sidebar']", { timeout: 15000 }).should("exist");
   });

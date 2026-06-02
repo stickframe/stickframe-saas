@@ -1,4 +1,10 @@
 describe("Financeiro", () => {
+  before(function () {
+    if (!Cypress.env("TEST_EMAIL") || !Cypress.env("TEST_PASSWORD")) {
+      this.skip();
+    }
+  });
+
   beforeEach(() => {
     cy.login(Cypress.env("TEST_EMAIL"), Cypress.env("TEST_PASSWORD"));
     cy.visit("/");

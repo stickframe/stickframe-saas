@@ -1,4 +1,10 @@
 describe("CRM — Clientes", () => {
+  before(function () {
+    if (!Cypress.env("TEST_EMAIL") || !Cypress.env("TEST_PASSWORD")) {
+      this.skip();
+    }
+  });
+
   beforeEach(() => {
     cy.login(Cypress.env("TEST_EMAIL"), Cypress.env("TEST_PASSWORD"));
     cy.visit("/");
@@ -13,7 +19,7 @@ describe("CRM — Clientes", () => {
   });
 
   it("abre modal de novo cliente", () => {
-    cy.get("button").contains(/novo|adicionar|\\+/i).first().click();
+    cy.get("button").contains(/novo|adicionar|\+/i).first().click();
     cy.get("input, form").should("exist");
   });
 });

@@ -1,4 +1,10 @@
 describe("Obras", () => {
+  before(function () {
+    if (!Cypress.env("TEST_EMAIL") || !Cypress.env("TEST_PASSWORD")) {
+      this.skip();
+    }
+  });
+
   beforeEach(() => {
     cy.login(Cypress.env("TEST_EMAIL"), Cypress.env("TEST_PASSWORD"));
     cy.visit("/");
@@ -12,7 +18,7 @@ describe("Obras", () => {
   });
 
   it("abre modal de nova obra", () => {
-    cy.get("button").contains(/nova|adicionar|\\+/i).first().click();
+    cy.get("button").contains(/nova|adicionar|\+/i).first().click();
     cy.get("input, form").should("exist");
   });
 
