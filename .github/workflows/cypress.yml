@@ -17,8 +17,9 @@ jobs:
         uses: cypress-io/github-action@v6
         with:
           build: npm run build
-          start: npm run dev
-          wait-on: 'http://localhost:5173'
+          start: npm run preview -- --host --port 4173
+          wait-on: 'http://localhost:4173'
+          wait-on-timeout: 60
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_KEY: ${{ secrets.VITE_SUPABASE_KEY }}
