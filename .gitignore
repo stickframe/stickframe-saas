@@ -4,3 +4,6 @@ dist
 .env.local
 .env.txt
 .DS_Store
+cypress.env.json
+cypress/videos
+cypress/screenshots
