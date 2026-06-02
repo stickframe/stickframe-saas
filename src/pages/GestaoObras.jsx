@@ -11,9 +11,6 @@ import Select from "../components/ui/Select";
 import Badge from "../components/ui/Badge";
 import Modal from "../components/ui/Modal";
 import { listarQuantitativos } from "../services/repositories/quantitativoRepository";
-import { emailAlertaObraAtrasada } from "../services/emailService";
-import { listarCheckinsDia } from "../services/repositories/checkinRepository";
-import { sb } from "../services/supabase";
 
 const ICONE_TIPO  = { pdf: "📄", imagem: "🖼️", outro: "📎" };
 const CATS        = ["Projeto", "Foto", "Documento", "Outro"];
@@ -300,7 +297,6 @@ export default function GestaoObras() {
   const loadDiario        = useAppStore((s) => s.loadDiario);
   const vistorias         = useAppStore((s) => s.vistorias);
   const loadVistorias     = useAppStore((s) => s.loadVistorias);
-  const addDiario         = useAppStore((s) => s.addDiario);
 
   useModuleLoad("arquivos", obras[0]?.id);
 
@@ -467,8 +463,7 @@ export default function GestaoObras() {
         prazo_inicio:  form.prazo_inicio || null,
         prazo_fim:     form.prazo_fim    || null,
         contrato:      Number(form.contrato) || 0,
-        progresso,
-        retencao_pct:  Number(form.retencao_pct) || 0,
+        progresso:     form.progresso || 0,
       });
       setModal(null);
       mostrarToast("✅ Obra atualizada!");
@@ -512,185 +507,12 @@ export default function GestaoObras() {
     mostrarToast(`<ClipboardList size={13} /> Avançou para: ${novaFase}`);
   }
 
-  async function gerarRelatorioMensal(mes) {
-    if (!obra) return;
-    setRelMensalModal(false);
-    mostrarToast("⏳ Gerando relatório mensal...");
-    await Promise.all([loadMedicoes(obraId), loadDiario(obraId)]);
-
-    const [ano, mesN] = mes.split("-").map(Number);
-    const nomeMes = new Date(ano, mesN - 1, 1).toLocaleString("pt-BR", { month: "long", year: "numeric" });
-
-    const fin        = (financeiro[obraId]?.lancamentos || []).filter((l) => {
-      if (!l.data) return false;
-      const d = new Date(l.data + "T00:00");
-      return d.getFullYear() === ano && d.getMonth() + 1 === mesN;
-    });
-    const diarioMes  = (diario[obraId] || []).filter((r) => {
-      if (!r.data) return false;
-      const d = new Date(r.data + "T00:00");
-      return d.getFullYear() === ano && d.getMonth() + 1 === mesN;
-    });
-    const medsMes    = (medicoes[obraId] || []).filter((m) => {
-      if (!m.created_at) return false;
-      const d = new Date(m.created_at);
-      return d.getFullYear() === ano && d.getMonth() + 1 === mesN;
-    });
-
-    const fmtR = (v) => (v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-    const hoje = new Date().toLocaleDateString("pt-BR");
-
-    const receitas = fin.filter((l) => l.tipo === "receita").reduce((a, l) => a + (l.valor || 0), 0);
-    const despesas = fin.filter((l) => l.tipo === "despesa").reduce((a, l) => a + (l.valor || 0), 0);
-    const progresso = obra.progresso || 0;
-    const faseIdx   = FASES.indexOf(obra.fase);
-
-    const barPct = (pct, cor = "#981915") =>
-      `<div style="background:#e5e7eb;border-radius:4px;height:8px;overflow:hidden">
-        <div style="width:${Math.min(pct,100)}%;height:8px;background:${cor};border-radius:4px"></div>
-      </div>`;
-
-    const kpiCard = (label, value, sub, cor = "#1a1a1a") =>
-      `<div style="background:#f9fafb;border-radius:10px;padding:14px 16px;border:1px solid #e5e7eb">
-        <div style="font-size:9px;color:#9ca3af;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">${label}</div>
-        <div style="font-size:20px;font-weight:900;color:${cor}">${value}</div>
-        ${sub ? `<div style="font-size:10px;color:#9ca3af;margin-top:3px">${sub}</div>` : ""}
-      </div>`;
-
-    const fasesHtml = `<div style="display:flex;flex-direction:column;gap:6px">
-      ${FASES.map((f, i) => {
-        const done = i < faseIdx, curr = i === faseIdx;
-        const bg  = done ? "#2e9e5b" : curr ? "#981915" : "#f3f4f6";
-        const tc  = done || curr ? "#fff" : "#9ca3af";
-        return `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:${bg};border-radius:8px">
-          <span style="font-size:11px;font-weight:700;color:${tc}">${done ? "✓" : curr ? "▶" : String(i+1).padStart(2,"0")}</span>
-          <span style="font-size:12px;font-weight:${curr?"800":"600"};color:${tc}">${f}</span>
-          ${curr ? `<span style="margin-left:auto;background:rgba(255,255,255,.2);border-radius:10px;padding:2px 10px;font-size:9px;font-weight:700;color:#fff">FASE ATUAL</span>` : ""}
-        </div>`;
-      }).join("")}
-    </div>`;
-
-    const diarioHtml = diarioMes.length === 0
-      ? `<p style="color:#9ca3af;text-align:center;padding:20px 0;font-size:13px">Nenhum registro no diário em ${nomeMes}.</p>`
-      : diarioMes.map((r) => `
-        <div style="padding:14px 0;border-bottom:1px solid #e5e7eb">
-          <div style="display:flex;gap:12px;align-items:center;margin-bottom:6px">
-            <span style="background:#f3f4f6;border-radius:6px;padding:3px 8px;font-size:10px;font-weight:700;color:#6b7280">${r.data || "—"}</span>
-            ${r.clima ? `<span style="font-size:11px;color:#9ca3af">${r.clima}</span>` : ""}
-            ${r.turno ? `<span style="font-size:11px;color:#9ca3af">${r.turno}</span>` : ""}
-            ${r.responsavel ? `<span style="font-size:11px;color:#9ca3af">· ${r.responsavel}</span>` : ""}
-          </div>
-          <div style="font-size:13px;line-height:1.6;color:#374151">${r.atividades || ""}</div>
-          ${r.ocorrencias ? `<div style="background:#fff5f5;border-left:3px solid #981915;padding:8px 12px;margin-top:8px;font-size:12px;color:#555;border-radius:0 6px 6px 0">⚠ ${r.ocorrencias}</div>` : ""}
-        </div>`).join("");
-
-    const finHtml = fin.length === 0
-      ? `<p style="color:#9ca3af;text-align:center;padding:20px 0;font-size:13px">Nenhum lançamento em ${nomeMes}.</p>`
-      : `<table style="width:100%;border-collapse:collapse;font-size:12px">
-          <thead><tr style="background:#f3f4f6">
-            <th style="text-align:left;padding:8px 10px;font-size:10px;color:#6b7280;font-weight:700">Data</th>
-            <th style="text-align:left;padding:8px 10px;font-size:10px;color:#6b7280;font-weight:700">Descrição</th>
-            <th style="text-align:left;padding:8px 10px;font-size:10px;color:#6b7280;font-weight:700">Categoria</th>
-            <th style="text-align:right;padding:8px 10px;font-size:10px;color:#6b7280;font-weight:700">Valor</th>
-          </tr></thead><tbody>
-          ${fin.map((l) => `<tr style="border-bottom:1px solid #e5e7eb">
-            <td style="padding:8px 10px">${l.data || "—"}</td>
-            <td style="padding:8px 10px">${l.descricao || "—"}</td>
-            <td style="padding:8px 10px;color:#9ca3af">${l.categoria || "—"}</td>
-            <td style="padding:8px 10px;text-align:right;font-weight:700;color:${l.tipo === "receita" ? "#2e9e5b" : "#c0392b"}">
-              ${l.tipo === "receita" ? "+" : "−"}${fmtR(l.valor)}
-            </td>
-          </tr>`).join("")}
-          <tr style="background:#f9fafb;font-weight:800">
-            <td colspan="3" style="padding:10px;text-align:right;font-size:11px;color:#6b7280">SALDO DO MÊS</td>
-            <td style="padding:10px;text-align:right;color:${receitas - despesas >= 0 ? "#2e9e5b" : "#c0392b"};font-size:14px">${fmtR(receitas - despesas)}</td>
-          </tr>
-        </tbody></table>`;
-
-    const medsHtml = medsMes.length === 0
-      ? `<p style="color:#9ca3af;text-align:center;padding:20px 0;font-size:13px">Nenhuma medição em ${nomeMes}.</p>`
-      : `<table style="width:100%;border-collapse:collapse;font-size:12px">
-          <thead><tr style="background:#f3f4f6">
-            <th style="text-align:left;padding:8px 10px;font-size:10px;color:#6b7280;font-weight:700">Nº</th>
-            <th style="text-align:left;padding:8px 10px;font-size:10px;color:#6b7280;font-weight:700">Descrição</th>
-            <th style="text-align:right;padding:8px 10px;font-size:10px;color:#6b7280;font-weight:700">Valor</th>
-            <th style="text-align:left;padding:8px 10px;font-size:10px;color:#6b7280;font-weight:700">Status</th>
-          </tr></thead><tbody>
-          ${medsMes.map((m) => `<tr style="border-bottom:1px solid #e5e7eb">
-            <td style="padding:8px 10px">${m.numero || "—"}</td>
-            <td style="padding:8px 10px">${m.descricao || "—"}</td>
-            <td style="padding:8px 10px;text-align:right;font-weight:700">${fmtR(m.valor)}</td>
-            <td style="padding:8px 10px;font-weight:700;color:${m.status === "Aprovada" ? "#2e9e5b" : "#b97a00"}">${m.status}</td>
-          </tr>`).join("")}
-        </tbody></table>`;
-
-    const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8">
-    <title>Relatório Mensal — ${obra.nome} — ${nomeMes}</title>
-    <style>
-      *{box-sizing:border-box;margin:0;padding:0}
-      body{font-family:'Segoe UI',Arial,sans-serif;color:#1a1a1a;background:#fff}
-      .page{padding:44px;max-width:900px;margin:0 auto}
-      h2{font-size:11px;font-weight:800;letter-spacing:2px;color:#981915;margin:32px 0 14px;text-transform:uppercase;border-bottom:2px solid #981915;padding-bottom:8px}
-      @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}.page{padding:24px}h2{margin:22px 0 10px}}
-    </style></head><body>
-
-    <!-- CAPA -->
-    <div style="background:linear-gradient(135deg,#0d1117 0%,#1a0505 100%);color:#fff;padding:52px 44px">
-      <div style="font-size:9px;letter-spacing:3px;color:#981915;margin-bottom:20px;font-weight:700">STICKFRAME · RELATÓRIO GERENCIAL MENSAL</div>
-      <div style="font-size:36px;font-weight:900;line-height:1.1;margin-bottom:8px">${obra.nome}</div>
-      <div style="font-size:15px;color:rgba(255,255,255,0.5);margin-bottom:6px">Cliente: <strong style="color:#fff">${obra.cliente || "—"}</strong></div>
-      <div style="font-size:18px;font-weight:700;color:#981915;margin-bottom:32px;text-transform:capitalize">${nomeMes}</div>
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">
-        ${[
-          ["PROGRESSO FÍSICO", `${progresso}%`],
-          ["RECEITAS NO MÊS", fmtR(receitas)],
-          ["DESPESAS NO MÊS", fmtR(despesas)],
-          ["SALDO DO MÊS", fmtR(receitas - despesas)],
-        ].map(([l, v]) => `<div style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px 16px">
-          <div style="font-size:8px;color:rgba(255,255,255,0.4);letter-spacing:1.5px;margin-bottom:6px">${l}</div>
-          <div style="font-size:18px;font-weight:900">${v}</div>
-        </div>`).join("")}
-      </div>
-      <div style="margin-top:20px;font-size:10px;color:rgba(255,255,255,0.25)">Gerado em ${hoje} · Stick Frame Sistemas Construtivos</div>
-    </div>
-
-    <div class="page">
-
-      <h2>📊 Resumo Executivo</h2>
-      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:16px">
-        ${kpiCard("Receitas no mês", fmtR(receitas), `${fin.filter(l=>l.tipo==="receita").length} lançamentos`, "#2e9e5b")}
-        ${kpiCard("Despesas no mês", fmtR(despesas), `${fin.filter(l=>l.tipo==="despesa").length} lançamentos`, "#c0392b")}
-        ${kpiCard("Saldo do período", fmtR(receitas - despesas), "", receitas - despesas >= 0 ? "#2e9e5b" : "#c0392b")}
-        ${kpiCard("Registros no diário", String(diarioMes.length), `${medsMes.length} medição(ões)`, "#4a9eff")}
-      </div>
-      <div style="margin-bottom:8px;font-size:11px;color:#6b7280">Progresso físico acumulado — ${progresso}%</div>
-      ${barPct(progresso)}
-
-      <h2>🏗️ Fases da Obra</h2>
-      ${fasesHtml}
-
-      <h2>📑 Medições do Período (${medsMes.length})</h2>
-      ${medsHtml}
-
-      <h2>💰 Movimentação Financeira (${fin.length} lançamentos)</h2>
-      ${finHtml}
-
-      <h2>📓 Diário de Obra — ${nomeMes} (${diarioMes.length} registros)</h2>
-      ${diarioHtml}
-
-      <div style="margin-top:48px;padding-top:16px;border-top:2px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center">
-        <div style="font-size:10px;color:#9ca3af">Stick Frame Sistemas Construtivos · Santo André/SP</div>
-        <div style="font-size:10px;color:#9ca3af">Relatório gerado em ${hoje}</div>
-      </div>
-    </div>
-    </body></html>`;
-
-    printHtml(html, `relatorio-mensal-${obra.nome.replace(/\s+/g, "-").toLowerCase()}-${mes}`);
-  }
-
   async function gerarDossie() {
     if (!obra) return;
     mostrarToast("⏳ Gerando dossiê...");
+    const win = window.open("", "_blank");
+    if (!win) { mostrarToast("❌ Popup bloqueado. Permita popups para este site."); return; }
+    win.document.write("<html><body style='font-family:sans-serif;padding:40px;color:#555'>⏳ Carregando dossiê...</body></html>");
     await Promise.all([loadMedicoes(obraId), loadDiario(obraId), loadVistorias(obraId)]);
     const quants = await listarQuantitativos(obraId).catch(() => []);
 
@@ -701,7 +523,6 @@ export default function GestaoObras() {
     const arqs       = arqObra;
 
     const fmtR = (v) => (v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-
     const receitas  = fin.filter((l) => l.tipo === "receita").reduce((a, l) => a + (l.valor || 0), 0);
     const despesas  = fin.filter((l) => l.tipo === "despesa").reduce((a, l) => a + (l.valor || 0), 0);
     const resultado = receitas - despesas;
@@ -758,7 +579,6 @@ export default function GestaoObras() {
             <td style="color:${l.tipo === "receita" ? "#2e9e5b" : "#c0392b"};font-weight:600">${l.tipo === "receita" ? "+" : "−"}${fmtR(l.valor)}</td>
           </tr>`).join("")}
         </tbody></table>`;
-
 
     // ── Vistorias ─────────────────────────────────────────────────────────────
     const vistsHtml = vists.length === 0
@@ -857,7 +677,7 @@ export default function GestaoObras() {
     <div class="page">
 
       <!-- RESUMO EXECUTIVO -->
-      <h2><BarChart2 size={13} /> Resumo Executivo</h2>
+      <h2>📊 Resumo Executivo</h2>
       <div class="kpi-grid">
         ${kpi("VALOR DO CONTRATO", fmtR(obra.contrato))}
         ${kpi("RECEITAS", fmtR(receitas), "#2e9e5b")}
@@ -870,24 +690,24 @@ export default function GestaoObras() {
       </div>
 
       <!-- FASES -->
-      <h2><HardHat size={13} /> Fases da Obra</h2>
+      <h2>🏗 Fases da Obra</h2>
       ${fasesHtml}
       <div style="font-size:12px;color:#6b7280;margin-top:6px">Fase atual: <strong style="color:#981915">${obra.fase || FASES[0]}</strong></div>
 
       <!-- VISTORIAS -->
-      <h2><Search size={13} /> Vistorias & FVS (${vists.length})</h2>
+      <h2>🔍 Vistorias & FVS (${vists.length})</h2>
       ${vistsHtml}
 
       <!-- MEDIÇÕES -->
-      <h2><Ruler size={13} /> Medições (${meds.length})</h2>
+      <h2>📐 Medições (${meds.length})</h2>
       ${medsHtml}
 
       <!-- QUANTITATIVOS -->
-      <h2><ClipboardList size={13} /> Quantitativos de Materiais (${quants.length} itens)</h2>
+      <h2>📋 Quantitativos de Materiais (${quants.length} itens)</h2>
       ${quantsHtml}
 
       <!-- FINANCEIRO -->
-      <h2><DollarSign size={13} /> Lançamentos Financeiros (${fin.length})</h2>
+      <h2>💰 Lançamentos Financeiros (${fin.length})</h2>
       ${finHtml}
 
       <!-- DIÁRIO -->
@@ -902,128 +722,12 @@ export default function GestaoObras() {
         Stick Frame Sistemas Construtivos · Santo André/SP · Documento gerado em ${hoje}
       </div>
     </div>
-
     </body></html>`;
 
-    printHtml(html, `dossie-${obra.nome.replace(/\s+/g, "-").toLowerCase()}`);
-  }
-
-  async function gerarRelatorioObra() {
-    if (!obra) return;
-    mostrarToast("⏳ Gerando relatório...");
-    await loadMedicoes(obraId);
-
-    const lans = financeiro[obraId]?.lancamentos || [];
-    const meds = medicoes[obraId] || [];
-    const contrato = Number(obra.contrato) || 0;
-    const receitas = lans.filter((l) => l.tipo === "receita").reduce((a, l) => a + (l.valor || 0), 0);
-    const despesas = lans.filter((l) => l.tipo === "despesa").reduce((a, l) => a + (l.valor || 0), 0);
-    const margem = contrato > 0 ? (((contrato - despesas) / contrato) * 100).toFixed(1) : "—";
-    const hoje = new Date().toLocaleDateString("pt-BR");
-    const fmtR = (v) => (v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-
-    // Prazo info
-    const inicio = obra.prazo_inicio ? new Date(obra.prazo_inicio + "T00:00").toLocaleDateString("pt-BR") : "—";
-    const fim = obra.prazo_fim ? new Date(obra.prazo_fim + "T00:00").toLocaleDateString("pt-BR") : "—";
-    const diasRestantes = obra.prazo_fim
-      ? Math.ceil((new Date(obra.prazo_fim + "T00:00") - new Date()) / 86400000)
-      : null;
-
-    // Cash flow — sorted lancamentos with running balance
-    const lansOrdenados = [...lans].sort((a, b) => (a.data || "").localeCompare(b.data || ""));
-    let saldoAcc = 0;
-    const cashFlowRows = lansOrdenados.map((l) => {
-      saldoAcc += l.tipo === "receita" ? (l.valor || 0) : -(l.valor || 0);
-      return `<tr>
-        <td>${l.data ? new Date(l.data + "T00:00").toLocaleDateString("pt-BR") : "—"}</td>
-        <td>${l.descricao || "—"}</td>
-        <td style="color:${l.tipo === "receita" ? "#2e9e5b" : "#dc2626"};font-weight:600">${l.tipo === "receita" ? "+" : "−"}${fmtR(l.valor)}</td>
-        <td style="font-weight:700;color:${saldoAcc >= 0 ? "#2e9e5b" : "#dc2626"}">${fmtR(saldoAcc)}</td>
-      </tr>`;
-    }).join("");
-
-    // Medições table
-    const medsRows = meds.map((m) => `<tr>
-      <td>${m.numero || "—"}</td>
-      <td>${m.descricao || "—"}</td>
-      <td>${fmtR(m.valor)}</td>
-      <td style="color:${m.status === "Aprovada" ? "#2e9e5b" : "#b97a00"};font-weight:700">${m.status}</td>
-    </tr>`).join("");
-
-    const htmlContent = `
-      <div style="max-width:900px;margin:0 auto;padding:40px">
-        <!-- Header -->
-        <div style="border-bottom:3px solid #981915;padding-bottom:20px;margin-bottom:24px">
-          <div style="font-size:10px;font-weight:800;letter-spacing:2px;color:#981915;margin-bottom:8px">STICKFRAME · RELATÓRIO DE OBRA</div>
-          <h1 style="font-size:26px;font-weight:900;margin:0 0 6px">${obra.nome}</h1>
-          <div style="font-size:13px;color:#6b7280">Cliente: <strong>${obra.cliente || "—"}</strong> &nbsp;·&nbsp; Gerado em: <strong>${hoje}</strong></div>
-        </div>
-
-        <!-- KPIs -->
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:28px">
-          ${[
-            ["CONTRATO TOTAL", fmtR(contrato), "#1a1a1a"],
-            ["RECEITAS", fmtR(receitas), "#2e9e5b"],
-            ["DESPESAS", fmtR(despesas), "#dc2626"],
-            ["MARGEM ESTIMADA", margem !== "—" ? margem + "%" : "—", Number(margem) > 20 ? "#2e9e5b" : "#b97a00"],
-            ["PROGRESSO", `${obra.progresso || 0}%`, "#981915"],
-            ["FASE ATUAL", obra.fase || "—", "#1a1a1a"],
-          ].map(([l, v, c]) => `<div style="background:#f9fafb;border-radius:10px;padding:14px 18px;border:1px solid #e5e7eb">
-            <div style="font-size:10px;color:#9ca3af;letter-spacing:1px;margin-bottom:6px">${l}</div>
-            <div style="font-size:20px;font-weight:900;color:${c}">${v}</div>
-          </div>`).join("")}
-        </div>
-
-        <!-- Prazo -->
-        <h2 style="font-size:13px;font-weight:800;letter-spacing:1px;color:#981915;margin:24px 0 12px;text-transform:uppercase;border-bottom:1px solid #e5e7eb;padding-bottom:8px">⏱ Prazo</h2>
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px">
-          <div style="background:#f9fafb;border-radius:8px;padding:12px 16px;border:1px solid #e5e7eb"><div style="font-size:10px;color:#9ca3af;margin-bottom:4px">INÍCIO</div><div style="font-weight:700">${inicio}</div></div>
-          <div style="background:#f9fafb;border-radius:8px;padding:12px 16px;border:1px solid #e5e7eb"><div style="font-size:10px;color:#9ca3af;margin-bottom:4px">ENTREGA PREVISTA</div><div style="font-weight:700">${fim}</div></div>
-          <div style="background:${diasRestantes != null && diasRestantes < 0 ? "#fef2f2" : "#f9fafb"};border-radius:8px;padding:12px 16px;border:1px solid ${diasRestantes != null && diasRestantes < 0 ? "#fca5a5" : "#e5e7eb"}">
-            <div style="font-size:10px;color:#9ca3af;margin-bottom:4px">DIAS RESTANTES</div>
-            <div style="font-weight:700;color:${diasRestantes != null && diasRestantes < 0 ? "#dc2626" : "#1a1a1a"}">${diasRestantes != null ? (diasRestantes < 0 ? `${Math.abs(diasRestantes)} dias de atraso` : `${diasRestantes} dias`) : "—"}</div>
-          </div>
-        </div>
-
-        <!-- Cash Flow -->
-        <h2 style="font-size:13px;font-weight:800;letter-spacing:1px;color:#981915;margin:24px 0 12px;text-transform:uppercase;border-bottom:1px solid #e5e7eb;padding-bottom:8px"><DollarSign size={13} /> Fluxo de Caixa</h2>
-        ${lans.length === 0 ? "<p style='color:#9ca3af;font-size:13px'>Nenhum lançamento registrado.</p>" : `
-        <table style="width:100%;border-collapse:collapse;font-size:12px">
-          <thead><tr style="background:#f3f4f6">
-            <th style="padding:8px 10px;text-align:left;font-size:10px;color:#6b7280;letter-spacing:.8px">DATA</th>
-            <th style="padding:8px 10px;text-align:left;font-size:10px;color:#6b7280;letter-spacing:.8px">DESCRIÇÃO</th>
-            <th style="padding:8px 10px;text-align:left;font-size:10px;color:#6b7280;letter-spacing:.8px">VALOR</th>
-            <th style="padding:8px 10px;text-align:left;font-size:10px;color:#6b7280;letter-spacing:.8px">SALDO ACUMULADO</th>
-          </tr></thead>
-          <tbody>${cashFlowRows}</tbody>
-        </table>`}
-
-        <!-- Medições -->
-        <h2 style="font-size:13px;font-weight:800;letter-spacing:1px;color:#981915;margin:28px 0 12px;text-transform:uppercase;border-bottom:1px solid #e5e7eb;padding-bottom:8px"><Ruler size={13} /> Medições (${meds.length})</h2>
-        ${meds.length === 0 ? "<p style='color:#9ca3af;font-size:13px'>Nenhuma medição registrada.</p>" : `
-        <table style="width:100%;border-collapse:collapse;font-size:12px">
-          <thead><tr style="background:#f3f4f6">
-            <th style="padding:8px 10px;text-align:left;font-size:10px;color:#6b7280;letter-spacing:.8px">Nº</th>
-            <th style="padding:8px 10px;text-align:left;font-size:10px;color:#6b7280;letter-spacing:.8px">DESCRIÇÃO</th>
-            <th style="padding:8px 10px;text-align:left;font-size:10px;color:#6b7280;letter-spacing:.8px">VALOR</th>
-            <th style="padding:8px 10px;text-align:left;font-size:10px;color:#6b7280;letter-spacing:.8px">STATUS</th>
-          </tr></thead>
-          <tbody>${medsRows}</tbody>
-        </table>`}
-
-        <div style="margin-top:40px;padding-top:14px;border-top:1px solid #e5e7eb;font-size:11px;color:#9ca3af;text-align:center">
-          Stick Frame Sistemas Construtivos · Santo André/SP · Relatório gerado em ${hoje}
-        </div>
-      </div>`;
-
-    const w = window.open("", "_blank");
-    w.document.write(`<!DOCTYPE html><html><head><title>Relatório — ${obra.nome}</title><style>
-      body { font-family: Arial, sans-serif; font-size: 12px; color: #1a1a1a; margin: 0; }
-      @media print { @page { margin: 20mm; } }
-      table td, table th { border-bottom: 1px solid #e5e7eb; }
-    </style></head><body>${htmlContent}</body></html>`);
-    w.document.close();
-    setTimeout(() => { w.print(); }, 400);
+    win.document.open();
+    win.document.write(html);
+    win.document.close();
+    setTimeout(() => win.print(), 600);
   }
 
   function handleFiles(files) {
@@ -2130,63 +1834,13 @@ export default function GestaoObras() {
                     </div>
                   )}
                   <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 8 }}>
-                    <Btn variant="ghost" size="sm" fullWidth onClick={abrirEditar}><Pencil size={13} /> Editar obra</Btn>
+                    <Btn variant="ghost" size="sm" fullWidth onClick={abrirEditar}>✏️ Editar obra</Btn>
                     <button onClick={gerarDossie} style={{
                       width: "100%", padding: "8px 0",
                       background: "#2e9e5b22", border: "1px solid #2e9e5b44",
                       borderRadius: 6, color: "#2e9e5b", fontSize: 12, fontWeight: 700,
                       cursor: "pointer", fontFamily: "inherit",
                     }}>📄 Dossiê de Obra</button>
-                    <button onClick={() => setRelMensalModal(true)} style={{
-                      width: "100%", padding: "8px 0",
-                      background: "#4a9eff22", border: "1px solid #4a9eff44",
-                      borderRadius: 6, color: "#4a9eff", fontSize: 12, fontWeight: 700,
-                      cursor: "pointer", fontFamily: "inherit",
-                    }}>📅 Relatório Mensal</button>
-
-                    <button onClick={gerarRelatorioObra} style={{
-                      width: "100%", padding: "8px 0",
-                      background: "#0f766e22", border: "1px solid #0f766e44",
-                      borderRadius: 6, color: "#0f766e", fontSize: 12, fontWeight: 700,
-                      cursor: "pointer", fontFamily: "inherit",
-                    }}><BarChart2 size={13} /> Relatório de Obra</button>
-
-                    <button onClick={() => setQrModal(true)} style={{
-                      width: "100%", padding: "8px 0",
-                      background: "#9b59b622", border: "1px solid #9b59b644",
-                      borderRadius: 6, color: "#9b59b6", fontSize: 12, fontWeight: 700,
-                      cursor: "pointer", fontFamily: "inherit",
-                    }}>📱 QR Code Check-in</button>
-
-                    <button onClick={async () => {
-                      if (checkinsVis) { setCheckinsVis(false); return; }
-                      const list = await listarCheckinsDia(obraId).catch(() => []);
-                      setCheckinsHoje(list);
-                      setCheckinsVis(true);
-                    }} style={{
-                      width: "100%", padding: "8px 0",
-                      background: "#0f766e22", border: "1px solid #0f766e44",
-                      borderRadius: 6, color: "#0f766e", fontSize: 12, fontWeight: 700,
-                      cursor: "pointer", fontFamily: "inherit",
-                    }}>👷 Ver check-ins de hoje</button>
-                    {checkinsVis && (
-                      <div style={{ background: C.darker, border: `1px solid ${C.border}`, borderRadius: 8, padding: 10, marginTop: 2 }}>
-                        {checkinsHoje.length === 0 ? (
-                          <div style={{ fontSize: 11, color: C.muted, textAlign: "center" }}>Nenhum check-in hoje.</div>
-                        ) : checkinsHoje.map((c) => (
-                          <div key={c.id} style={{ display: "flex", justifyContent: "space-between", borderBottom: `1px solid ${C.border}`, paddingBottom: 6, marginBottom: 6, fontSize: 11 }}>
-                            <div>
-                              <div style={{ fontWeight: 700, color: C.text }}>{c.nome_operario}</div>
-                              <div style={{ color: C.muted }}>{c.funcao || "—"}</div>
-                            </div>
-                            <div style={{ color: C.muted, fontSize: 10 }}>
-                              {c.created_at ? new Date(c.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : ""}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
                     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                       <button onClick={copiarLinkPortal} style={{
                         width: "100%", padding: "8px 0",
