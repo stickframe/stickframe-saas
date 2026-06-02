@@ -1730,7 +1730,7 @@ export default function GestaoObras() {
                             setPortalSending(true);
                             const { error } = await sb.rpc("portal_responder_mensagem", { p_obra_id: obraId, p_empresa_id: empresaId, p_mensagem: portalReply.trim() });
                             if (!error) {
-                              setPortalMsgs((prev) => [...prev, { autor: "construtora", nome: "Equipe Stick Frame", mensagem: portalReply.trim(), created_at: new Date().toISOString() }]);
+                              setPortalMsgs((prev) => [...prev, { autor: "empresa", nome: "Equipe Stick Frame", mensagem: portalReply.trim(), created_at: new Date().toISOString() }]);
                               setPortalReply("");
                             } else {
                               mostrarToast("❌ Erro ao enviar: " + error.message);
