@@ -121,7 +121,9 @@ export default function Quantitativos() {
   const [templateFases, setTemplateFases] = useState({});
   const [cotarItem, setCotarItem]  = useState(null); // item a ser cotado
   const [cotarForm, setCotarForm]  = useState({ fornecedor_id: "", valor: "", observacoes: "", atualizar_custo: true });
-  const [monitorados, setMonitorados] = useState([]);
+  const [monitorarItem, setMonitorarItem] = useState(null); // item a substituir por monitorado
+  const [monitorados,   setMonitorados]   = useState([]);
+  const [monitorSel,    setMonitorSel]    = useState("");
 
   const obra = obras.find((o) => o.id === obraId);
 
@@ -326,6 +328,22 @@ ${tabelaFases}
     mostrarToast("✅ Cotação registrada" + (cotarForm.atualizar_custo && valor ? " e custo atualizado!" : "!"));
   }
 
+  // ── Substituir item por produto monitorado ───────────────────────────────
+  async function confirmarSubstituicao() {
+    const m = monitorados.find((x) => x.id === monitorSel);
+    if (!m || !monitorarItem) return;
+    const payload = {
+      descricao:      m.nome_produto,
+      custo_unitario: Number(m.preco_atual),
+      observacoes:    `Ref: ${m.nome_produto}${m.loja ? " · " + m.loja : ""}`,
+    };
+    const updated = await atualizarQuantitativo(monitorarItem.id, payload);
+    setItems((prev) => prev.map((i) => i.id === monitorarItem.id ? updated : i));
+    setMonitorarItem(null);
+    setMonitorSel("");
+    mostrarToast("✅ Item substituído pelo produto monitorado!");
+  }
+
   return (
     <>
       {toast && (
@@ -461,27 +479,6 @@ ${tabelaFases}
                 placeholder="Deixe vazio para cotação em aberto"
               />
             </div>
-            {monitorados.filter((m) => m.preco_atual).length > 0 && (
-              <div style={{ background: C.darker, borderRadius: 8, padding: "10px 14px" }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, marginBottom: 8, letterSpacing: 1, textTransform: "uppercase" }}>
-                  📊 Ou usar preço monitorado
-                </div>
-                <Select
-                  value=""
-                  onChange={(v) => {
-                    const m = monitorados.find((x) => x.id === v);
-                    if (m) setCotarForm((f) => ({ ...f, valor: String(m.preco_atual), observacoes: f.observacoes || `Ref: ${m.nome_produto}${m.loja ? " · " + m.loja : ""}` }));
-                  }}
-                  options={[
-                    { value: "", label: "— Selecione um produto monitorado —" },
-                    ...monitorados.filter((m) => m.preco_atual).map((m) => ({
-                      value: m.id,
-                      label: `${m.nome_produto}${m.loja ? " · " + m.loja : ""} — R$ ${Number(m.preco_atual).toFixed(2).replace(".", ",")}`,
-                    })),
-                  ]}
-                />
-              </div>
-            )}
             <div>
               <LabelF>Observações</LabelF>
               <Input
@@ -505,6 +502,57 @@ ${tabelaFases}
               <Btn variant="ghost" onClick={() => setCotarItem(null)}>Cancelar</Btn>
               <Btn disabled={!cotarForm.fornecedor_id} onClick={confirmarCotacao}>
                 🏭 Registrar cotação
+              </Btn>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* ── Modal substituir por monitorado ── */}
+      {monitorarItem && (
+        <Modal title="📊 Substituir por produto monitorado" onClose={() => setMonitorarItem(null)}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <div style={{ background: C.darker, borderRadius: 8, padding: "10px 14px", fontSize: 13 }}>
+              <span style={{ color: C.muted }}>Item atual: </span>
+              <strong>{monitorarItem.descricao}</strong>
+              <span style={{ color: C.muted, marginLeft: 8 }}>{monitorarItem.unidade} · {Number(monitorarItem.custo_unitario).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</span>
+            </div>
+            <div>
+              <LabelF required>Produto monitorado</LabelF>
+              {monitorados.filter((m) => m.preco_atual).length === 0 ? (
+                <div style={{ fontSize: 12, color: C.warning, padding: "10px 0" }}>
+                  ⚠️ Nenhum produto monitorado com preço capturado. Acesse o Monitor de Preços e atualize os preços primeiro.
+                </div>
+              ) : (
+                <Select
+                  value={monitorSel}
+                  onChange={setMonitorSel}
+                  options={[
+                    { value: "", label: "— Selecione um produto —" },
+                    ...monitorados.filter((m) => m.preco_atual).map((m) => ({
+                      value: m.id,
+                      label: `${m.nome_produto}${m.loja ? " · " + m.loja : ""} — R$ ${Number(m.preco_atual).toFixed(2).replace(".", ",")}`,
+                    })),
+                  ]}
+                />
+              )}
+            </div>
+            {monitorSel && (() => {
+              const m = monitorados.find((x) => x.id === monitorSel);
+              if (!m) return null;
+              return (
+                <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 8, padding: "10px 14px", fontSize: 12 }}>
+                  <div style={{ fontWeight: 700, color: "#15803d", marginBottom: 4 }}>✅ Será substituído por:</div>
+                  <div><strong>Descrição:</strong> {m.nome_produto}</div>
+                  <div><strong>Preço unitário:</strong> {Number(m.preco_atual).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</div>
+                  {m.loja && <div><strong>Loja:</strong> {m.loja}</div>}
+                </div>
+              );
+            })()}
+            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", paddingTop: 12, borderTop: `1px solid ${C.border}` }}>
+              <Btn variant="ghost" onClick={() => setMonitorarItem(null)}>Cancelar</Btn>
+              <Btn disabled={!monitorSel} onClick={confirmarSubstituicao}>
+                📊 Confirmar substituição
               </Btn>
             </div>
           </div>
@@ -743,8 +791,12 @@ ${tabelaFases}
                                 <div style={{ display: "flex", gap: 4, justifyContent: "center" }}>
                                   <button
                                     title="Cotar com fornecedor"
-                                    onClick={() => { setCotarItem(item); setCotarForm({ fornecedor_id: "", valor: "", observacoes: "", atualizar_custo: true }); listarMonitorados().then(setMonitorados).catch(() => {}); }}
+                                    onClick={() => { setCotarItem(item); setCotarForm({ fornecedor_id: "", valor: "", observacoes: "", atualizar_custo: true }); }}
                                     style={{ background: "none", border: "none", cursor: "pointer", color: "#4a9eff", fontSize: 13, padding: 3 }}>🏭</button>
+                                  <button
+                                    title="Substituir por produto monitorado"
+                                    onClick={() => { setMonitorarItem(item); setMonitorSel(""); listarMonitorados().then(setMonitorados).catch(() => {}); }}
+                                    style={{ background: "none", border: "none", cursor: "pointer", color: "#16a34a", fontSize: 13, padding: 3 }}>📊</button>
                                   <button onClick={() => {
                                     setEditId(item.id);
                                     setForm({ fase: item.fase, descricao: item.descricao, unidade: item.unidade, quantidade: String(item.quantidade), custo_unitario: String(item.custo_unitario), categoria: item.categoria || "Outros", observacoes: item.observacoes || "" });
