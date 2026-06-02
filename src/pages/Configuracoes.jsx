@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { TrendingUp } from "../components/ui/Icon";
+import * as Sentry from "@sentry/react";
 import { useToast } from "../hooks/useToast";
 import { C, PERFIS } from "../utils/constants";
 import useAppStore from "../store/useAppStore";
@@ -181,9 +182,10 @@ export default function Configuracoes() {
 
       {/* Tabs */}
       <div style={{ display: "flex", gap: 8, marginBottom: 24 }}>
-        <Tab label="🏢 Empresa"   active={tab === "empresa"} onClick={() => setTab("empresa")} />
-        <Tab label="👤 Meu perfil" active={tab === "perfil"}  onClick={() => setTab("perfil")} />
+        <Tab label="🏢 Empresa"   active={tab === "empresa"}  onClick={() => setTab("empresa")} />
+        <Tab label="👤 Meu perfil" active={tab === "perfil"}   onClick={() => setTab("perfil")} />
         <Tab label="👥 Usuários"  active={tab === "usuarios"} onClick={() => setTab("usuarios")} />
+        <Tab label="⚙️ Sistema"   active={tab === "sistema"}  onClick={() => setTab("sistema")} />
       </div>
 
       {/* ══ Aba: Empresa ══ */}
@@ -490,6 +492,50 @@ export default function Configuracoes() {
                       }}>{pg}</span>
                     ))}
                   </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </>
+      )}
+      {/* ══ Aba: Sistema ══ */}
+      {tab === "sistema" && (
+        <>
+          <Card title="Monitoramento de Erros (Sentry)" subtitle="Rastreamento automático de erros em produção">
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 20 }}>
+              <div style={{ background: C.darker, borderRadius: 10, padding: "14px 18px" }}>
+                <div style={{ fontSize: 11, color: C.muted, marginBottom: 4 }}>Status</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: import.meta.env.VITE_SENTRY_DSN ? C.success : C.warning }}>
+                  {import.meta.env.VITE_SENTRY_DSN ? "✓ Ativo" : "⚠ DSN não configurado"}
+                </div>
+              </div>
+              <div style={{ background: C.darker, borderRadius: 10, padding: "14px 18px" }}>
+                <div style={{ fontSize: 11, color: C.muted, marginBottom: 4 }}>Ambiente</div>
+                <div style={{ fontSize: 14, fontWeight: 700 }}>{import.meta.env.MODE}</div>
+              </div>
+            </div>
+            <div style={{ fontSize: 12, color: C.muted, marginBottom: 16 }}>
+              Clique no botão abaixo para enviar um erro de teste ao Sentry e confirmar que o monitoramento está funcionando.
+            </div>
+            <Btn variant="ghost" onClick={() => {
+              try { throw new Error("[Teste Sentry] Erro manual de verificação — pode ignorar."); }
+              catch (e) { Sentry.captureException(e); mostrarToast("✅ Erro de teste enviado ao Sentry!"); }
+            }}>
+              Enviar erro de teste
+            </Btn>
+          </Card>
+
+          <Card title="Informações do Build">
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              {[
+                ["Versão",     import.meta.env.VITE_APP_VERSION || "—"],
+                ["Modo",       import.meta.env.MODE],
+                ["Base URL",   import.meta.env.BASE_URL],
+                ["Supabase",   import.meta.env.VITE_SUPABASE_URL ? "✓ Configurado" : "✗ Ausente"],
+              ].map(([label, value]) => (
+                <div key={label} style={{ background: C.darker, borderRadius: 10, padding: "12px 16px" }}>
+                  <div style={{ fontSize: 10, color: C.muted, marginBottom: 3 }}>{label}</div>
+                  <div style={{ fontSize: 12, fontWeight: 600, fontFamily: "monospace" }}>{value}</div>
                 </div>
               ))}
             </div>
