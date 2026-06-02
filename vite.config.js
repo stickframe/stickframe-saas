@@ -20,7 +20,7 @@ export default defineConfig({
         display: "standalone",
         icons: [
           { src: "/logo-transparente-122x122.png", sizes: "122x122", type: "image/png" },
-          { src: "/logo.png", sizes: "512x512", type: "image/png", purpose: "any maskable" },
+          { src: "/logo.png", sizes: "122x122", type: "image/png", purpose: "any maskable" },
         ],
       },
       injectManifest: {
