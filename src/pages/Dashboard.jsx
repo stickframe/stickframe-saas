@@ -13,6 +13,7 @@ import SmartAlerts from "../components/ui/SmartAlerts";
 const DashboardComercial   = lazy(() => import("./DashboardComercial"));
 const DashboardEngenheiro  = lazy(() => import("./DashboardEngenheiro"));
 const DashboardFinanceiro  = lazy(() => import("./DashboardFinanceiro"));
+const DashboardAnalytics   = lazy(() => import("./DashboardAnalytics"));
 
 // ─── Gráfico de barras ────────────────────────────────────────────────────────
 function GraficoBarras({ data, height = 120 }) {
@@ -124,10 +125,52 @@ function evolucaoMensal(lancamentos, tipo = "receita", mesesAtras = 6) {
 // ─── Dashboard (roteador por perfil) ─────────────────────────────────────────
 export default function Dashboard() {
   const perfil = useAppStore((s) => s.user?.perfil);
+  const [tab, setTab] = useState("visao-geral");
+
   if (perfil === "comercial")  return <Suspense fallback={null}><DashboardComercial /></Suspense>;
   if (perfil === "engenheiro") return <Suspense fallback={null}><DashboardEngenheiro /></Suspense>;
   if (perfil === "financeiro") return <Suspense fallback={null}><DashboardFinanceiro /></Suspense>;
-  return <DashboardDiretor />;
+
+  // Diretor: tab switcher
+  return (
+    <div>
+      <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
+        <button
+          onClick={() => setTab("visao-geral")}
+          style={{
+            padding: "8px 18px", borderRadius: 8, fontSize: 12, fontWeight: tab === "visao-geral" ? 800 : 500,
+            cursor: "pointer", fontFamily: "inherit",
+            background: tab === "visao-geral" ? C.red : "transparent",
+            color: tab === "visao-geral" ? "#fff" : C.muted,
+            border: `1.5px solid ${tab === "visao-geral" ? C.red : C.border}`,
+            transition: "all .15s ease",
+          }}
+        >
+          Visao geral
+        </button>
+        <button
+          onClick={() => setTab("analytics")}
+          style={{
+            padding: "8px 18px", borderRadius: 8, fontSize: 12, fontWeight: tab === "analytics" ? 800 : 500,
+            cursor: "pointer", fontFamily: "inherit",
+            background: tab === "analytics" ? C.red : "transparent",
+            color: tab === "analytics" ? "#fff" : C.muted,
+            border: `1.5px solid ${tab === "analytics" ? C.red : C.border}`,
+            transition: "all .15s ease",
+          }}
+        >
+          Analytics
+        </button>
+      </div>
+      {tab === "analytics" ? (
+        <Suspense fallback={<div style={{ color: C.muted, fontSize: 13 }}>Carregando...</div>}>
+          <DashboardAnalytics />
+        </Suspense>
+      ) : (
+        <DashboardDiretor />
+      )}
+    </div>
+  );
 }
 
 function DashboardDiretor() {
