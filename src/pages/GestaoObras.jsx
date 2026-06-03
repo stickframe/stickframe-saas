@@ -1,5 +1,6 @@
 import ObraMembros from "../components/obras/ObraMembros";
 import ChangeOrders from "../components/obras/ChangeOrders";
+import ArquivoVersoes from "../components/obras/ArquivoVersoes";
 import { useObraPermission, useObrasVisiveis } from "../hooks/useObraPermission";
 import { useState, useEffect, useMemo } from "react";
 import { AlertTriangle, BarChart2, ClipboardList, DollarSign, HardHat, Pencil, Ruler, Search, Trash2, TrendingUp } from "../components/ui/Icon";
@@ -289,6 +290,7 @@ export default function GestaoObras() {
   const avancarFase       = useAppStore((s) => s.avancarFase);
   const addArquivos       = useAppStore((s) => s.addArquivos);
   const deleteArquivo     = useAppStore((s) => s.deleteArquivo);
+  const loadArquivos      = useAppStore((s) => s.loadArquivos);
   const loadHistoricoObra = useAppStore((s) => s.loadHistoricoObra);
   const financeiro        = useAppStore((s) => s.financeiro);
   const perfil            = useAppStore((s) => s.user?.perfil);
@@ -341,6 +343,7 @@ export default function GestaoObras() {
   const [portalMsgs,   setPortalMsgs]   = useState([]);
   const [portalReply,  setPortalReply]  = useState("");
   const [portalSending, setPortalSending] = useState(false);
+  const [verVersoes,   setVerVersoes]   = useState(null);
 
   // Garantia
   const chamados      = useAppStore((s) => s.chamados);
@@ -767,6 +770,16 @@ export default function GestaoObras() {
 
   return (
     <>
+      {/* Modal de versões de arquivo */}
+      {verVersoes && (
+        <ArquivoVersoes
+          arquivo={verVersoes}
+          obraId={obraId}
+          onClose={() => setVerVersoes(null)}
+          onNovaVersao={() => { loadArquivos(obraId); setVerVersoes(null); }}
+        />
+      )}
+
       {/* Toast */}
       {toast && (
         <div style={{
@@ -1485,6 +1498,7 @@ export default function GestaoObras() {
                               {precisaCiencia && (
                                 <button onClick={async () => { await marcarCiente(obraId, a.id, userId); mostrarToast("✅ Ciência registrada!"); }} style={{ background: C.success + "22", border: `1px solid ${C.success}44`, borderRadius: 6, color: C.success, fontSize: 11, fontWeight: 700, cursor: "pointer", padding: "4px 10px", fontFamily: "inherit", whiteSpace: "nowrap" }}>✓ Ciente</button>
                               )}
+                              <button onClick={() => setVerVersoes(a)} style={{ background: "#b97a0022", border: "1px solid #b97a0044", borderRadius: 6, color: "#b97a00", fontSize: 11, fontWeight: 700, cursor: "pointer", padding: "4px 10px", fontFamily: "inherit", whiteSpace: "nowrap" }}>📋 Versões</button>
                               {a.url && (
                                 <a href={a.url} target="_blank" rel="noreferrer" style={{ background: "#4a9eff22", border: "1px solid #4a9eff44", borderRadius: 6, color: "#4a9eff", fontSize: 11, fontWeight: 700, padding: "4px 10px", textDecoration: "none", textAlign: "center" }}>↓</a>
                               )}
