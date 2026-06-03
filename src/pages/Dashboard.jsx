@@ -8,6 +8,7 @@ import useAppStore from "../store/useAppStore";
 import { useModuleLoad } from "../hooks/useModuleLoad";
 import { useToast } from "../hooks/useToast";
 import { emailAlertaInadimplencia } from "../services/emailService";
+import SmartAlerts from "../components/ui/SmartAlerts";
 
 const DashboardComercial   = lazy(() => import("./DashboardComercial"));
 const DashboardEngenheiro  = lazy(() => import("./DashboardEngenheiro"));
@@ -145,6 +146,7 @@ function DashboardDiretor() {
   const empresa     = useAppStore((s) => s.empresa);
   const { toast: toastInadimpl, mostrarToast: toastMsg } = useToast();
   const loadMedicoes = useAppStore((s) => s.loadMedicoes);
+  const setActivePage = useAppStore((s) => s.setActivePage);
 
   // Carrega medições de todas as obras
   useEffect(() => {
@@ -429,6 +431,9 @@ ${obrasAndamento.length > 0 ? `
           📄 Relatório Mensal
         </button>
       </div>
+
+      {/* Smart Alerts */}
+      <SmartAlerts onNavigate={setActivePage} />
 
       {/* VGV — Funil financeiro */}
       <div style={{ background: C.surface, borderRadius: 14, padding: "20px 24px", border: `1px solid ${C.border}`, marginBottom: 20, borderTop: `3px solid ${C.red}` }}>
