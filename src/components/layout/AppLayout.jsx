@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import Sidebar from "./Sidebar";
 import NotificacaoDropdown from "../notificacoes/NotificacaoDropdown";
+import PresenceAvatars from "./PresenceAvatars";
 import CommandPalette from "../ui/CommandPalette";
 import PWAInstallBanner from "../ui/PWAInstallBanner";
 import { subscribePush } from "../../services/pushService";
@@ -78,6 +79,7 @@ export default function AppLayout({ children }) {
             >
               {darkMode ? "☀️" : "🌙"}
             </button>
+            <PresenceAvatars />
             <NotificacaoDropdown />
           </div>
         </div>
