@@ -34,6 +34,11 @@ const createBaseSlice = (set) => ({
     clientes:false, obras:false, orcamentos:false, financeiro:false,
     contratos:false, diario:{}, medicoes:{}, eventos:false, historico:false, arquivos:{}, colaboradores:false, fornecedores:false,
   },
+
+  savedViews: [],
+  setSavedViews: (updater) => set((s) => ({
+    savedViews: typeof updater === "function" ? updater(s.savedViews) : updater,
+  })),
 });
 
 // ─── STORE PRINCIPAL — composição de slices ───────────────────────────────────

@@ -7,6 +7,8 @@ import { enviarWhatsApp, msgCliente } from "../services/whatsappService";
 import useAppStore from "../store/useAppStore";
 import { useModuleLoad } from "../hooks/useModuleLoad";
 import { useToast } from "../hooks/useToast";
+import { useSavedViews } from "../hooks/useSavedViews";
+import SavedViewsBar from "../components/ui/SavedViewsBar";
 import Btn from "../components/ui/Btn";
 import Input from "../components/ui/Input";
 import Select from "../components/ui/Select";
@@ -361,6 +363,11 @@ export default function CRM() {
   const [criarObraModal, setCriarObraModal] = useState(null); // cliente para criar obra
   const addObra = useAppStore((s) => s.addObra);
 
+  // Saved views
+  const [crmFilters, setCrmFilters] = useState({ status: "", busca: "" });
+  const { loadViews } = useSavedViews("crm");
+  useEffect(() => { loadViews(); }, [loadViews]);
+
   const cliente = useMemo(() => clientes.find((c) => c.id === sel), [clientes, sel]);
 
   useEffect(() => {
@@ -685,6 +692,16 @@ export default function CRM() {
           <Btn onClick={abrirNovo}>+ Nova oportunidade</Btn>
         </div>
       </div>
+
+      {/* Saved Views Bar */}
+      <SavedViewsBar
+        module="crm"
+        activeFilters={crmFilters}
+        onApplyView={(filters) => {
+          if (filters) setCrmFilters((prev) => ({ ...prev, ...filters }));
+          else setCrmFilters({ status: "", busca: "" });
+        }}
+      />
 
       {/* Dashboard de Métricas */}
       <div style={{ display: "flex", gap: 16, marginBottom: 20, flexWrap: "wrap" }}>
