@@ -4,6 +4,7 @@ import { useToast } from "../hooks/useToast";
 import { C, FASES } from "../utils/constants";
 import useAppStore from "../store/useAppStore";
 import { useModuleLoad } from "../hooks/useModuleLoad";
+import { useObraPermission, useObrasVisiveis } from "../hooks/useObraPermission";
 
 // ─── Checklists guiados por serviço ──────────────────────────────────────────
 const FVS_TEMPLATES = {
@@ -273,7 +274,8 @@ const sel = { width: "100%", padding: "9px 12px", borderRadius: 7, border: `1px 
 // ─── Página principal ─────────────────────────────────────────────────────────
 export default function Vistorias() {
   useModuleLoad("obras");
-  const obras         = useAppStore((s) => s.obras);
+  const _obras        = useAppStore((s) => s.obras);
+  const obras         = useObrasVisiveis(_obras);
   const vistorias     = useAppStore((s) => s.vistorias);
   const loadVistorias = useAppStore((s) => s.loadVistorias);
   const addVistoria   = useAppStore((s) => s.addVistoria);
@@ -282,6 +284,7 @@ export default function Vistorias() {
     const { toast, mostrarToast } = useToast();
 
   const [obraId,  setObraId]  = useState(null);
+  const { podeEditar } = useObraPermission(obraId);
   const [modal,   setModal]   = useState(false);
   const [verV,    setVerV]    = useState(null);
   const [filtroR, setFiltroR] = useState("Todos");
@@ -325,9 +328,9 @@ export default function Vistorias() {
           <h2 style={{ fontSize: 22, fontWeight: 800 }}>Vistorias & FVS</h2>
           <p style={{ color: C.muted, fontSize: 13, marginTop: 4 }}>Fichas de Verificação de Serviço e inspeções guiadas</p>
         </div>
-        <button onClick={() => setModal(true)} style={{ padding: "10px 20px", borderRadius: 8, border: "none", background: C.red, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+        {podeEditar() && <button onClick={() => setModal(true)} style={{ padding: "10px 20px", borderRadius: 8, border: "none", background: C.red, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
           + Nova vistoria
-        </button>
+        </button>}
       </div>
 
       {/* Seletor de obra */}
@@ -375,7 +378,7 @@ export default function Vistorias() {
           <div style={{ fontSize: 36, marginBottom: 12 }}><Search size={36} /></div>
           <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 6 }}>Nenhuma vistoria registrada</div>
           <div style={{ fontSize: 13, color: C.muted, marginBottom: 24 }}>Inicie uma FVS guiada para registrar a conformidade dos serviços.</div>
-          <button onClick={() => setModal(true)} style={{ padding: "10px 24px", borderRadius: 8, border: "none", background: C.red, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>+ Criar primeira vistoria</button>
+          {podeEditar() && <button onClick={() => setModal(true)} style={{ padding: "10px 24px", borderRadius: 8, border: "none", background: C.red, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>+ Criar primeira vistoria</button>}
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>

@@ -9,6 +9,7 @@ import Btn from "../components/ui/Btn";
 import Input from "../components/ui/Input";
 import Select from "../components/ui/Select";
 import Modal from "../components/ui/Modal";
+import { useObraPermission, useObrasVisiveis } from "../hooks/useObraPermission";
 
 const MESES = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
 
@@ -239,11 +240,13 @@ const FORM_VAZIO = {
 export default function DiarioObra() {
   useModuleLoad("obras");
 
-  const obras     = useAppStore((s) => s.obras);
+  const _obras    = useAppStore((s) => s.obras);
+  const obras     = useObrasVisiveis(_obras);
   const diario    = useAppStore((s) => s.diario);
   const addDiario = useAppStore((s) => s.addDiario);
 
   const [obraId,    setObraId]    = useState(null);
+  const { podeEditar } = useObraPermission(obraId);
   const [modal,     setModal]     = useState(false);
   const [verReg,    setVerReg]    = useState(null);
   const [form,      setForm]      = useState(FORM_VAZIO);
@@ -380,7 +383,7 @@ export default function DiarioObra() {
             <h2 style={{ fontSize: 22, fontWeight: 800 }}>Diário de Obra</h2>
             <p style={{ color: C.muted, fontSize: 13, marginTop: 4 }}>Registro diário de atividades e ocorrências</p>
           </div>
-          <Btn onClick={abrirNovoRegistro}>+ Novo registro</Btn>
+          {podeEditar() && <Btn onClick={abrirNovoRegistro}>+ Novo registro</Btn>}
         </div>
 
         {/* Seletor de obra */}

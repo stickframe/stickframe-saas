@@ -10,15 +10,18 @@ import Input from "../components/ui/Input";
 import Badge from "../components/ui/Badge";
 import Modal from "../components/ui/Modal";
 import { gerarCobrancaAsaas } from "../services/repositories/obraRepository";
+import { useObraPermission, useObrasVisiveis } from "../hooks/useObraPermission";
 
 export default function Medicoes() {
-  const obras        = useAppStore((s) => s.obras);
+  const _obras       = useAppStore((s) => s.obras);
+  const obras        = useObrasVisiveis(_obras);
   const financeiro   = useAppStore((s) => s.financeiro);
   const medicoes     = useAppStore((s) => s.medicoes);
   const addMedicao   = useAppStore((s) => s.addMedicao);
   const aprovarMedicao = useAppStore((s) => s.aprovarMedicao);
 
   const [obraId, setObraId] = useState(() => obras[0]?.id || null);
+  const { podeEditar } = useObraPermission(obraId);
   const [pagina, setPagina] = useState(0);
   const POR_PAGINA = 15;
 
@@ -141,7 +144,7 @@ export default function Medicoes() {
             <h2 style={{ fontSize: 22, fontWeight: 800 }}>Medições de Obra</h2>
             <p style={{ color: C.muted, fontSize: 13, marginTop: 4 }}>Controle de avanço físico-financeiro por etapa</p>
           </div>
-          <Btn onClick={() => setModal(true)}>+ Nova medição</Btn>
+          {podeEditar() && <Btn onClick={() => setModal(true)}>+ Nova medição</Btn>}
         </div>
 
         <div style={{ display: "flex", gap: 10, marginBottom: 22, flexWrap: "wrap" }}>

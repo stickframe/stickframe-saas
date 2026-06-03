@@ -278,7 +278,8 @@ export default function GestaoObras() {
   useModuleLoad("clientes");
   useModuleLoad("financeiro");
 
-  const obras       = useAppStore((s) => s.obras);
+  const _obras      = useAppStore((s) => s.obras);
+  const obras       = useObrasVisiveis(_obras);
   const clientes    = useAppStore((s) => s.clientes);
   const arquivos    = useAppStore((s) => s.arquivos);
   const addObra           = useAppStore((s) => s.addObra);
@@ -303,6 +304,7 @@ export default function GestaoObras() {
   useModuleLoad("arquivos", obras[0]?.id);
 
   const [obraId,      setObraId]      = useState(null);
+  const { podeEditar, podeGerenciar, temAcesso } = useObraPermission(obraId);
   const [modal,       setModal]       = useState(null); // "nova" | "editar"
   const [confirm,     setConfirm]     = useState(false);
   const [dragOver,    setDragOver]    = useState(false);
@@ -1848,7 +1850,7 @@ export default function GestaoObras() {
                     </div>
                   )}
                   <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 8 }}>
-                    <Btn variant="ghost" size="sm" fullWidth onClick={abrirEditar}>✏️ Editar obra</Btn>
+                    <Btn variant="ghost" size="sm" fullWidth onClick={abrirEditar} disabled={!podeEditar()}>✏️ Editar obra</Btn>
                     <button onClick={gerarDossie} style={{
                       width: "100%", padding: "8px 0",
                       background: "#2e9e5b22", border: "1px solid #2e9e5b44",
