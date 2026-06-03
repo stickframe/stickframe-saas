@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import Comentarios from "../components/ui/Comentarios";
 import { Link, Ruler } from "../components/ui/Icon";
 import { C } from "../utils/constants";
 import { fmt } from "../utils/format";
@@ -39,6 +40,7 @@ export default function Medicoes() {
   const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
   const { toast, mostrarToast } = useToast();
   const [asaasModal, setAsaasModal] = useState(null); // null | medicao object
+  const [comentariosModal, setComentariosModal] = useState(null); // null | medicao object
   const [cpfCnpjCliente, setCpfCnpjCliente] = useState("");
   const defaultVencimento = () => { const d = new Date(); d.setDate(d.getDate() + 30); return d.toISOString().slice(0, 10); };
   const [vencimentoAsaas, setVencimentoAsaas] = useState(defaultVencimento);
@@ -92,6 +94,12 @@ export default function Medicoes() {
         <div style={{ position: "fixed", bottom: 28, left: "50%", transform: "translateX(-50%)", zIndex: 9999, background: C.darker, color: C.text, border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 20px", fontSize: 13, fontWeight: 600, boxShadow: "0 8px 32px #0006" }}>
           {toast}
         </div>
+      )}
+
+      {comentariosModal && (
+        <Modal title={`💬 Comentários — Medição #${comentariosModal.numero}`} onClose={() => setComentariosModal(null)}>
+          <Comentarios entidade="medicao" entidadeId={comentariosModal.id} title={`Medição #${comentariosModal.numero} — ${comentariosModal.descricao}`} />
+        </Modal>
       )}
 
       {asaasModal && (
@@ -211,6 +219,7 @@ export default function Medicoes() {
                       {m.link_pagamento && (
                         <a href={m.link_pagamento} target="_blank" rel="noreferrer" style={{ padding: "5px 8px", background: C.border, border: `1px solid ${C.border}`, borderRadius: 6, color: C.text, fontSize: 12, textDecoration: "none" }} title="Abrir link de pagamento"><Link size={11} /></a>
                       )}
+                      <button onClick={() => setComentariosModal(m)} style={{ padding: "5px 10px", background: "transparent", border: `1px solid ${C.border}`, borderRadius: 6, color: C.muted, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>💬</button>
                     </td>
                   </tr>
                 ))}

@@ -1,4 +1,5 @@
 import ObraMembros from "../components/obras/ObraMembros";
+import Comentarios from "../components/ui/Comentarios";
 import ChangeOrders from "../components/obras/ChangeOrders";
 import { useObraPermission, useObrasVisiveis } from "../hooks/useObraPermission";
 import { useState, useEffect, useMemo } from "react";
@@ -1030,7 +1031,7 @@ export default function GestaoObras() {
               <div>
                 {/* Abas */}
                 <div style={{ display: "flex", borderBottom: `1px solid ${C.border}` }}>
-                  {[["fases", "📋 Fases"], ["financeiro", "💰 Financeiro"], ["fluxo", "📈 Fluxo"], ["cronograma", "📅 Cronograma"], ["diario", "📓 Diário"], ["fotos", "📷 Fotos"], ["arquivos", "📁 Arquivos"], ["rastreio", "🏷️ Rastreio"], ["historico", "🕑 Histórico"], ...(obra.status === "Concluída" ? [["garantia", "🛠️ Garantia"]] : []), ...(perfil === "diretor" ? [["membros", "👥 Membros"]] : [])].map(([k, l]) => (
+                  {[["fases", "📋 Fases"], ["financeiro", "💰 Financeiro"], ["fluxo", "📈 Fluxo"], ["cronograma", "📅 Cronograma"], ["diario", "📓 Diário"], ["fotos", "📷 Fotos"], ["arquivos", "📁 Arquivos"], ["rastreio", "🏷️ Rastreio"], ["historico", "🕑 Histórico"], ...(obra.status === "Concluída" ? [["garantia", "🛠️ Garantia"]] : []), ...(perfil === "diretor" ? [["membros", "👥 Membros"]] : []), ["comentarios", "💬 Comentários"]].map(([k, l]) => (
                     <button key={k} onClick={() => {
                       if (k === "diario" && userId) {
                         const pendentes = arqObra.filter((a) => a.disciplina && a.status_doc !== "Desatualizado" && !(a.cientes_uids || []).includes(userId));
@@ -1832,6 +1833,12 @@ export default function GestaoObras() {
                       Defina quem pode ver e editar esta obra. Obras sem membros são visíveis para toda a equipe.
                     </p>
                     <ObraMembros obraId={obraId} />
+                  </div>
+                )}
+
+                {abaAtiva === "comentarios" && (
+                  <div style={{ padding: "20px 0" }}>
+                    <Comentarios entidade="obra" entidadeId={obraId} />
                   </div>
                 )}
 
