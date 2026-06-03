@@ -1,4 +1,5 @@
 import ObraMembros from "../components/obras/ObraMembros";
+import ChangeOrders from "../components/obras/ChangeOrders";
 import { useObraPermission, useObrasVisiveis } from "../hooks/useObraPermission";
 import { useState, useEffect, useMemo } from "react";
 import { AlertTriangle, BarChart2, ClipboardList, DollarSign, HardHat, Pencil, Ruler, Search, Trash2, TrendingUp } from "../components/ui/Icon";
@@ -1194,6 +1195,10 @@ export default function GestaoObras() {
                           ))}
                         </div>
                       )}
+                    {/* Aditivos de contrato */}
+                      <div style={{ marginTop: 24 }}>
+                        <ChangeOrders obraId={obraId} />
+                      </div>
                     </div>
                   );
                 })()}
