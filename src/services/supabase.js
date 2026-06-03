@@ -1,8 +1,8 @@
 import { createClient } from "@supabase/supabase-js";
 
 export const sb = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_KEY
+  import.meta.env.VITE_SUPABASE_URL || "https://placeholder.supabase.co",
+  import.meta.env.VITE_SUPABASE_KEY || "placeholder"
 );
 
 let _empresaId = null;
