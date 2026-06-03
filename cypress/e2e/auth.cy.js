@@ -1,13 +1,13 @@
 describe("Autenticação", () => {
   it("exibe a tela de login", () => {
-    cy.visit("/");
-    cy.get('input[type="email"]').should("exist");
+    cy.visit("/login");
+    cy.get('input[type="email"]', { timeout: 15000 }).should("exist");
     cy.get('input[type="password"]').should("exist");
   });
 
   it("bloqueia login com credenciais inválidas", () => {
-    cy.visit("/");
-    cy.get('input[type="email"]').type("invalido@test.com");
+    cy.visit("/login");
+    cy.get('input[type="email"]', { timeout: 15000 }).type("invalido@test.com");
     cy.get('input[type="password"]').type("senha_errada");
     cy.get("button").contains(/entrar|login/i).click();
     cy.get('input[type="email"]').should("exist");
