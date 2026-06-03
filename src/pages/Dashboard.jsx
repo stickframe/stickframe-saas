@@ -214,13 +214,26 @@ function DashboardDiretor() {
     .reduce((a, o) => a + (o.valor || 0), 0);
 
   // ── VGV — funil financeiro completo ──────────────────────────────────────
+  // "Qualificados" = Negociação, Proposta Enviada, Em Execução (excluindo leads brutos)
+  const STATUS_QUALIFICADO = ["Negociação", "Proposta Enviada", "Em Execução"];
+  const leadsQualificados  = clientes.filter((c) => STATUS_QUALIFICADO.includes(c.status));
+  const leadsBrutos        = clientes.filter((c) => c.status === "Lead");
+
   const vgvFunil = [
     {
-      label:   "Pipeline CRM",
-      sublabel: "leads + negociações",
-      valor:   clientes.filter((c) => c.status !== "Fechado").reduce((a, c) => a + (c.valor || 0), 0),
-      count:   clientes.filter((c) => c.status !== "Fechado").length,
-      color:   "#4a9eff",
+      label:    "Oportunidades",
+      sublabel: "negociação + proposta enviada",
+      valor:    leadsQualificados.reduce((a, c) => a + (c.valor || 0), 0),
+      count:    leadsQualificados.length,
+      color:    "#4a9eff",
+    },
+    {
+      label:    "Leads novos",
+      sublabel: "aguardando qualificação",
+      valor:    leadsBrutos.reduce((a, c) => a + (c.valor || 0), 0),
+      count:    leadsBrutos.length,
+      color:    "#94a3b8",
+      bruto:    true,
     },
     {
       label:   "Orçamentos",
@@ -254,7 +267,9 @@ function DashboardDiretor() {
       color:   C.success,
     },
   ];
-  const vgvTotal = vgvFunil.reduce((a, f) => a + f.valor, 0);
+  // VGV = só oportunidades qualificadas (exclui leads brutos que distorcem o número)
+  const vgvTotal = vgvFunil.filter((f) => !f.bruto).reduce((a, f) => a + f.valor, 0);
+  const vgvComLeads = vgvFunil.reduce((a, f) => a + f.valor, 0);
 
   // ── Medições pendentes ────────────────────────────────────────────────────
   const allMedicoes     = Object.values(medicoes).flat();
@@ -484,7 +499,12 @@ ${obrasAndamento.length > 0 ? `
           <div>
             <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.5, color: C.muted }}>VGV — VALOR GERAL DE VENDAS</div>
             <div style={{ fontSize: 28, fontWeight: 900, color: C.text, marginTop: 4 }}>{fmt(vgvTotal)}</div>
-            <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>soma de todo o pipeline até as obras concluídas</div>
+            <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>oportunidades qualificadas · pipeline até obras concluídas</div>
+            {vgvComLeads > vgvTotal && (
+              <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 3 }}>
+                + {fmt(vgvComLeads - vgvTotal)} em leads não qualificados
+              </div>
+            )}
           </div>
           <div style={{ textAlign: "right" }}>
             <div style={{ fontSize: 11, color: C.muted }}>Receita realizada</div>
@@ -496,21 +516,34 @@ ${obrasAndamento.length > 0 ? `
         {/* Barra de funil */}
         <div style={{ display: "flex", gap: 3, height: 10, borderRadius: 5, overflow: "hidden", marginBottom: 14 }}>
           {vgvFunil.map((f, i) => {
-            const pct = vgvTotal > 0 ? (f.valor / vgvTotal) * 100 : 0;
-            if (pct < 1) return null;
+            const base = vgvComLeads > 0 ? vgvComLeads : 1;
+            const pct = (f.valor / base) * 100;
+            if (pct < 0.5) return null;
             return (
-              <div key={i} style={{ width: `${pct}%`, background: f.color, minWidth: 4, transition: "width .4s ease" }} />
+              <div key={i} style={{
+                width: `${pct}%`, background: f.color, minWidth: 4,
+                opacity: f.bruto ? 0.35 : 1,
+                backgroundImage: f.bruto ? "repeating-linear-gradient(45deg,transparent,transparent 3px,rgba(255,255,255,.3) 3px,rgba(255,255,255,.3) 6px)" : "none",
+                transition: "width .4s ease",
+              }} />
             );
           })}
-          {vgvTotal === 0 && <div style={{ flex: 1, background: C.darker }} />}
+          {vgvComLeads === 0 && <div style={{ flex: 1, background: C.darker }} />}
         </div>
 
         {/* Etapas */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 8 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 8 }}>
           {vgvFunil.map((f, i) => (
-            <div key={i} style={{ borderLeft: `3px solid ${f.color}`, paddingLeft: 10 }}>
-              <div style={{ fontSize: 9, fontWeight: 700, color: f.color, letterSpacing: 1, marginBottom: 2 }}>{f.label.toUpperCase()}</div>
-              <div style={{ fontSize: 14, fontWeight: 800, color: C.text }}>{fmt(f.valor)}</div>
+            <div key={i} style={{
+              borderLeft: `3px solid ${f.color}`, paddingLeft: 10,
+              opacity: f.bruto ? 0.6 : 1,
+            }}>
+              <div style={{ fontSize: 9, fontWeight: 700, color: f.color, letterSpacing: 1, marginBottom: 2 }}>
+                {f.label.toUpperCase()}
+                {f.bruto && <span style={{ marginLeft: 4, fontSize: 8, color: "#94a3b8" }}>NÃO QUALIF.</span>}
+              </div>
+              <div style={{ fontSize: 14, fontWeight: 800, color: f.bruto ? C.muted : C.text }}>{fmt(f.valor)}</div>
+              <div style={{ fontSize: 10, color: C.muted }}>{f.sublabel}</div>
               <div style={{ fontSize: 10, color: C.muted }}>{f.count} {f.count === 1 ? "item" : "itens"}</div>
             </div>
           ))}
