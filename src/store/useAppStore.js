@@ -19,6 +19,9 @@ const createBaseSlice = (set) => ({
   activePage: "dashboard",
   setActivePage: (page) => set({ activePage: page }),
 
+  darkMode: false,
+  toggleDarkMode: () => set((s) => ({ darkMode: !s.darkMode })),
+
   loading: {
     auth:false, clientes:false, obras:false, orcamentos:false,
     financeiro:false, contratos:false, diario:false, medicoes:false,

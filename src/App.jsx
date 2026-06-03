@@ -6,7 +6,9 @@ import "./styles/responsive.css";
 import useAppStore from "./store/useAppStore";
 import AppLayout from "./components/layout/AppLayout";
 import LoginScreen from "./pages/LoginScreen";
-import LoadingScreen, { PageLoader } from "./components/ui/LoadingScreen";
+import LoadingScreen from "./components/ui/LoadingScreen";
+import { PageSkeleton } from "./components/ui/Skeleton";
+import { ToastProvider } from "./components/ui/Toast";
 import { ErrorBoundary } from "./components/ui/ErrorBoundary";
 
 const Dashboard   = lazy(() => import("./pages/Dashboard"));
@@ -121,13 +123,21 @@ function AuthenticatedApp() {
     return () => window.removeEventListener("popstate", onPop);
   }, [setActivePage]);
 
+  const darkMode = useAppStore((s) => s.darkMode);
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", darkMode ? "dark" : "light");
+  }, [darkMode]);
+
   const ActivePage = PAGES[activePage] || Dashboard;
 
   return (
     <AppLayout>
       <ErrorBoundary>
-        <Suspense fallback={<PageLoader />}>
-          <ActivePage />
+        <Suspense fallback={<PageSkeleton />}>
+          <div key={activePage} className="page-transition">
+            <ActivePage />
+          </div>
         </Suspense>
       </ErrorBoundary>
     </AppLayout>
@@ -142,6 +152,7 @@ function RequireAuth({ children }) {
 export default function App() {
   return (
     <BrowserRouter>
+      <ToastProvider>
       <Suspense fallback={<LoadingScreen />}>
         <Routes>
           <Route path="/portal/:token"   element={<PortalOnline />} />
@@ -161,6 +172,7 @@ export default function App() {
           } />
         </Routes>
       </Suspense>
+      </ToastProvider>
     </BrowserRouter>
   );
 }

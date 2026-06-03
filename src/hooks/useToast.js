@@ -1,12 +1,25 @@
-import { useState, useCallback } from "react";
+import { useCallback } from "react";
+import { useToast as useGlobalToast } from "../components/ui/Toast";
 
-export function useToast(duration = 3000) {
-  const [toast, setToast] = useState(null);
+const EMOJI_TYPE = {
+  "✅": "success", "💾": "success", "🎉": "success",
+  "❌": "error",   "⚠️": "warn",
+  "🗑": "info",    "📋": "info",
+};
+
+function detectType(msg) {
+  const first = [...(msg || "")][0];
+  return EMOJI_TYPE[first] || "info";
+}
+
+export function useToast() {
+  const global = useGlobalToast();
 
   const mostrarToast = useCallback((msg) => {
-    setToast(msg);
-    setTimeout(() => setToast(null), duration);
-  }, [duration]);
+    const type = detectType(msg);
+    global[type](msg);
+  }, [global]);
 
-  return { toast, mostrarToast };
+  // `toast` kept as null — rendering is handled globally by ToastProvider
+  return { toast: null, mostrarToast };
 }

@@ -22,6 +22,8 @@ export default function AppLayout({ children }) {
   const activeLabel = NAV.find((n) => n.key === activePage)?.label || "";
   const loadClientes = useAppStore((s) => s.loadClientes);
   const userId = useAppStore((s) => s.user?.id);
+  const darkMode = useAppStore((s) => s.darkMode);
+  const toggleDarkMode = useAppStore((s) => s.toggleDarkMode);
 
   useEffect(() => {
     if (empresaId && userId) {
@@ -64,7 +66,20 @@ export default function AppLayout({ children }) {
             <button className="hamburger" onClick={() => setMenuOpen((v) => !v)}>☰</button>
             <span className="topbar-page-title">{activeLabel}</span>
           </div>
-          <NotificacaoDropdown />
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <button
+              onClick={toggleDarkMode}
+              title={darkMode ? "Modo claro" : "Modo escuro"}
+              style={{
+                background: "none", border: "none", cursor: "pointer",
+                fontSize: 18, lineHeight: 1, padding: "4px 6px",
+                borderRadius: 8, color: "var(--muted)",
+              }}
+            >
+              {darkMode ? "☀️" : "🌙"}
+            </button>
+            <NotificacaoDropdown />
+          </div>
         </div>
         <main className="main-content">
           {children}
