@@ -8,8 +8,11 @@ import AppLayout from "./components/layout/AppLayout";
 import LoginScreen from "./pages/LoginScreen";
 import LoadingScreen from "./components/ui/LoadingScreen";
 import { PageSkeleton } from "./components/ui/Skeleton";
-import { ToastProvider } from "./components/ui/Toast";
+import { ToastProvider, useToast } from "./components/ui/Toast";
 import { ErrorBoundary } from "./components/ui/ErrorBoundary";
+import UndoBar from "./components/ui/UndoBar";
+import { useUndoStore } from "./store/undoStore";
+import { useHotkeys } from "react-hotkeys-hook";
 
 const Dashboard   = lazy(() => import("./pages/Dashboard"));
 const Agenda      = lazy(() => import("./pages/Agenda"));
@@ -149,10 +152,31 @@ function RequireAuth({ children }) {
   return user ? children : <Navigate to="/login" replace />;
 }
 
+function GlobalHotkeys() {
+  const pop = useUndoStore((s) => s.pop);
+  const toast = useToast();
+
+  useHotkeys("ctrl+z, meta+z", async (e) => {
+    e.preventDefault();
+    const entry = pop();
+    if (!entry) return;
+    try {
+      await entry.restoreFn();
+      toast.success(`↩️ Desfeito: ${entry.label}`);
+    } catch (err) {
+      toast.error(`Erro ao desfazer: ${err.message}`);
+    }
+  }, { enableOnFormTags: false });
+
+  return null;
+}
+
 export default function App() {
   return (
     <BrowserRouter>
       <ToastProvider>
+      <GlobalHotkeys />
+      <UndoBar />
       <Suspense fallback={<LoadingScreen />}>
         <Routes>
           <Route path="/portal/:token"   element={<PortalOnline />} />

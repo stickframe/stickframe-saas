@@ -36,6 +36,15 @@ export const createClienteSlice = (set, get) => ({
 
   deleteCliente: async (id) => {
     const c = get().clientes.find((x) => x.id === id);
+    if (!c) return;
+
+    // Capture undo snapshot before deleting
+    const { push } = (await import("../undoStore")).useUndoStore.getState();
+    push(`Cliente "${c.nome}"`, async () => {
+      const { error } = await (await import("../../services/supabase")).sb.from("clientes").upsert(c);
+      if (!error) set((s) => ({ clientes: [c, ...s.clientes] }));
+    });
+
     // Optimistic remove
     set((s) => ({ clientes: s.clientes.filter((x) => x.id !== id) }));
     try {
