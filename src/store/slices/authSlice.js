@@ -1,4 +1,5 @@
 import { sb, setEmpresaId } from "../../services/supabase";
+import { listarMembrosEmpresa } from "../../services/repositories/obraMembrosRepository";
 
 export const createAuthSlice = (set, get) => ({
   user:      null,
@@ -20,9 +21,12 @@ export const createAuthSlice = (set, get) => ({
           cargo:  usuario.cargo || "Usuário",
           perfil: usuario.perfil || "comercial",
           uid:    data.user.id,
+          id:     data.user.id,
         },
         empresaId: empId,
       });
+      // Carrega memberships de obras em background
+      listarMembrosEmpresa().then((list) => get().setAllObraMembros(list)).catch(() => {});
     } finally {
       get().setLoading("auth", false);
     }

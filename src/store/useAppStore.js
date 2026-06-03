@@ -39,6 +39,19 @@ const createBaseSlice = (set) => ({
   setSavedViews: (updater) => set((s) => ({
     savedViews: typeof updater === "function" ? updater(s.savedViews) : updater,
   })),
+
+  // obraMembros: { [obraId]: [{ obra_id, usuario_id, nivel }] }
+  obraMembros: {},
+  setObraMembros: (obraId, membros) =>
+    set((s) => ({ obraMembros: { ...s.obraMembros, [obraId]: membros } })),
+  setAllObraMembros: (list) => {
+    const byObra = {};
+    for (const m of list) {
+      if (!byObra[m.obra_id]) byObra[m.obra_id] = [];
+      byObra[m.obra_id].push(m);
+    }
+    set({ obraMembros: byObra });
+  },
 });
 
 // ─── STORE PRINCIPAL — composição de slices ───────────────────────────────────
