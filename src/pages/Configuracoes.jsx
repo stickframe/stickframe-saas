@@ -11,6 +11,7 @@ import {
 import Btn from "../components/ui/Btn";
 import Input from "../components/ui/Input";
 import Select from "../components/ui/Select";
+import WebhookConfig from "../components/configuracoes/WebhookConfig";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 function LabelF({ children, required }) {
@@ -187,6 +188,12 @@ export default function Configuracoes() {
         <Tab label="👥 Usuários"  active={tab === "usuarios"} onClick={() => setTab("usuarios")} />
         <Tab label="⚙️ Sistema"   active={tab === "sistema"}  onClick={() => setTab("sistema")} />
         <Tab label="🤖 Robô IA"   active={tab === "ia"}       onClick={() => setTab("ia")} />
+        {user?.perfil === "diretor" && (
+          <Tab label="🔗 Webhooks" active={tab === "webhooks"} onClick={() => setTab("webhooks")} />
+        )}
+        {user?.perfil === "diretor" && (
+          <Tab label="🌐 API"      active={tab === "api"}      onClick={() => setTab("api")} />
+        )}
       </div>
 
       {/* ══ Aba: Empresa ══ */}
@@ -545,6 +552,107 @@ export default function Configuracoes() {
       )}
       {/* ══ Aba: Robô IA / WhatsApp ══ */}
       {tab === "ia" && <AbaRoboIA empresaId={empresaId} mostrarToast={mostrarToast} />}
+
+      {/* ══ Aba: Webhooks (somente diretores) ══ */}
+      {tab === "webhooks" && user?.perfil === "diretor" && (
+        <Card title="Webhooks" subtitle="Configure endpoints externos para receber eventos automáticos do StickFrame.">
+          <WebhookConfig />
+        </Card>
+      )}
+
+      {/* ══ Aba: API pública (somente diretores) ══ */}
+      {tab === "api" && user?.perfil === "diretor" && (
+        <Card title="API pública" subtitle="Integre o StickFrame com sistemas externos via REST API.">
+          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            {/* Base URL */}
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 8, textTransform: "uppercase" }}>URL base</div>
+              <div style={{ display: "flex", gap: 8 }}>
+                <input
+                  readOnly
+                  value={`${import.meta.env.VITE_SUPABASE_URL || "https://<projeto>.supabase.co"}/functions/v1/api`}
+                  style={{
+                    flex: 1, padding: "10px 13px", background: C.darker,
+                    border: `1px solid ${C.border}`, borderRadius: 8,
+                    fontFamily: "monospace", fontSize: 12, color: C.text,
+                  }}
+                />
+                <button
+                  onClick={() => navigator.clipboard.writeText(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/api`)}
+                  style={{
+                    padding: "10px 14px", background: C.darker, border: `1px solid ${C.border}`,
+                    borderRadius: 8, cursor: "pointer", fontFamily: "inherit", fontSize: 12, color: C.text,
+                  }}
+                >
+                  Copiar
+                </button>
+              </div>
+            </div>
+
+            {/* Autenticação */}
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 8, textTransform: "uppercase" }}>Autenticação</div>
+              <div style={{
+                background: C.darker, border: `1px solid ${C.border}`, borderRadius: 8,
+                padding: "12px 16px", fontFamily: "monospace", fontSize: 12,
+              }}>
+                x-api-key: sua-chave
+              </div>
+              <div style={{ fontSize: 11, color: C.muted, marginTop: 6 }}>
+                Gere sua chave de API em Configurações → Equipe → seu perfil
+              </div>
+            </div>
+
+            {/* Endpoints */}
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 8, textTransform: "uppercase" }}>Endpoints disponíveis</div>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                <thead>
+                  <tr>
+                    {["Método", "Rota", "Descrição"].map((h) => (
+                      <th key={h} style={{
+                        textAlign: "left", padding: "8px 12px", fontWeight: 700,
+                        color: C.muted, borderBottom: `1px solid ${C.border}`, fontSize: 10,
+                        letterSpacing: 0.8, textTransform: "uppercase",
+                      }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    ["GET", "/obras",      "Lista todas as obras (máx. 100)"],
+                    ["GET", "/obras/:id",  "Detalha uma obra específica"],
+                    ["GET", "/clientes",   "Lista todos os clientes (máx. 100)"],
+                  ].map(([method, route, desc]) => (
+                    <tr key={route}>
+                      <td style={{ padding: "10px 12px", borderBottom: `1px solid ${C.border}` }}>
+                        <span style={{
+                          fontFamily: "monospace", fontSize: 11, fontWeight: 700,
+                          padding: "2px 7px", borderRadius: 5,
+                          background: C.success + "22", color: C.success,
+                        }}>{method}</span>
+                      </td>
+                      <td style={{ padding: "10px 12px", fontFamily: "monospace", color: C.text, borderBottom: `1px solid ${C.border}` }}>{route}</td>
+                      <td style={{ padding: "10px 12px", color: C.muted, borderBottom: `1px solid ${C.border}` }}>{desc}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Exemplo */}
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 8, textTransform: "uppercase" }}>Exemplo de requisição</div>
+              <pre style={{
+                background: C.darker, border: `1px solid ${C.border}`, borderRadius: 8,
+                padding: "14px 16px", fontFamily: "monospace", fontSize: 11,
+                color: C.text, overflow: "auto", margin: 0,
+              }}>{`curl -H "x-api-key: sua-chave" \\
+  ${import.meta.env.VITE_SUPABASE_URL || "https://<projeto>.supabase.co"}/functions/v1/api/obras`}</pre>
+            </div>
+          </div>
+        </Card>
+      )}
     </>
   );
 }
