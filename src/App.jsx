@@ -15,38 +15,48 @@ import { OnboardingTour } from "./components/ui/OnboardingTour";
 import { useUndoStore } from "./store/undoStore";
 import { useHotkeys } from "react-hotkeys-hook";
 
-const Dashboard   = lazy(() => import("./pages/Dashboard"));
-const Agenda      = lazy(() => import("./pages/Agenda"));
-const CRM         = lazy(() => import("./pages/CRM"));
-const Orcamentos  = lazy(() => import("./pages/Orcamentos"));
-const GestaoObras = lazy(() => import("./pages/GestaoObras"));
-const Medicoes    = lazy(() => import("./pages/Medicoes"));
-const DiarioObra  = lazy(() => import("./pages/DiarioObra"));
-const Financeiro  = lazy(() => import("./pages/Financeiro"));
-const Contratos   = lazy(() => import("./pages/Contratos"));
-const Historico   = lazy(() => import("./pages/Historico"));
-const PortalOnline   = lazy(() => import("./pages/PortalOnline"));
-const PropostaOnline  = lazy(() => import("./pages/PropostaOnline"));
-const ContratoOnline  = lazy(() => import("./pages/ContratoOnline"));
-const Equipe      = lazy(() => import("./pages/Equipe"));
-const Cronograma  = lazy(() => import("./pages/Cronograma"));
-const Vistorias   = lazy(() => import("./pages/Vistorias"));
-const BIM           = lazy(() => import("./pages/BIM"));
-const Quantitativos  = lazy(() => import("./pages/Quantitativos"));
-const Configuracoes  = lazy(() => import("./pages/Configuracoes"));
-const Fornecedores   = lazy(() => import("./pages/Fornecedores"));
-const Calculadora       = lazy(() => import("./pages/Calculadora"));
-const OrcamentoTecnico  = lazy(() => import("./pages/OrcamentoTecnico"));
-const MonitorPrecos     = lazy(() => import("./pages/MonitorPrecos"));
-const Equipamentos      = lazy(() => import("./pages/Equipamentos"));
-const Checklists        = lazy(() => import("./pages/Checklists"));
-const QRObra            = lazy(() => import("./pages/QRObra"));
-const Inteligencia      = lazy(() => import("./pages/Inteligencia"));
-const CalculadoraPublica   = lazy(() => import("./pages/CalculadoraPublica"));
-const ConcorrenciaPublica  = lazy(() => import("./pages/ConcorrenciaPublica"));
-const PontoColaborador     = lazy(() => import("./pages/PontoColaborador"));
-const AmbienteQR           = lazy(() => import("./pages/AmbienteQR"));
-const PainelQR             = lazy(() => import("./pages/PainelQR"));
+// Auto-reload on chunk fetch failure (stale SW cache after deploy)
+function lazyWithRetry(fn) {
+  return lazy(() => fn().catch((e) => {
+    if (e?.message?.includes("fetch") || e?.message?.includes("Failed")) {
+      window.location.reload();
+    }
+    throw e;
+  }));
+}
+
+const Dashboard   = lazyWithRetry(() => import("./pages/Dashboard"));
+const Agenda      = lazyWithRetry(() => import("./pages/Agenda"));
+const CRM         = lazyWithRetry(() => import("./pages/CRM"));
+const Orcamentos  = lazyWithRetry(() => import("./pages/Orcamentos"));
+const GestaoObras = lazyWithRetry(() => import("./pages/GestaoObras"));
+const Medicoes    = lazyWithRetry(() => import("./pages/Medicoes"));
+const DiarioObra  = lazyWithRetry(() => import("./pages/DiarioObra"));
+const Financeiro  = lazyWithRetry(() => import("./pages/Financeiro"));
+const Contratos   = lazyWithRetry(() => import("./pages/Contratos"));
+const Historico   = lazyWithRetry(() => import("./pages/Historico"));
+const PortalOnline   = lazyWithRetry(() => import("./pages/PortalOnline"));
+const PropostaOnline  = lazyWithRetry(() => import("./pages/PropostaOnline"));
+const ContratoOnline  = lazyWithRetry(() => import("./pages/ContratoOnline"));
+const Equipe      = lazyWithRetry(() => import("./pages/Equipe"));
+const Cronograma  = lazyWithRetry(() => import("./pages/Cronograma"));
+const Vistorias   = lazyWithRetry(() => import("./pages/Vistorias"));
+const BIM           = lazyWithRetry(() => import("./pages/BIM"));
+const Quantitativos  = lazyWithRetry(() => import("./pages/Quantitativos"));
+const Configuracoes  = lazyWithRetry(() => import("./pages/Configuracoes"));
+const Fornecedores   = lazyWithRetry(() => import("./pages/Fornecedores"));
+const Calculadora       = lazyWithRetry(() => import("./pages/Calculadora"));
+const OrcamentoTecnico  = lazyWithRetry(() => import("./pages/OrcamentoTecnico"));
+const MonitorPrecos     = lazyWithRetry(() => import("./pages/MonitorPrecos"));
+const Equipamentos      = lazyWithRetry(() => import("./pages/Equipamentos"));
+const Checklists        = lazyWithRetry(() => import("./pages/Checklists"));
+const QRObra            = lazyWithRetry(() => import("./pages/QRObra"));
+const Inteligencia      = lazyWithRetry(() => import("./pages/Inteligencia"));
+const CalculadoraPublica   = lazyWithRetry(() => import("./pages/CalculadoraPublica"));
+const ConcorrenciaPublica  = lazyWithRetry(() => import("./pages/ConcorrenciaPublica"));
+const PontoColaborador     = lazyWithRetry(() => import("./pages/PontoColaborador"));
+const AmbienteQR           = lazyWithRetry(() => import("./pages/AmbienteQR"));
+const PainelQR             = lazyWithRetry(() => import("./pages/PainelQR"));
 
 const PAGES = {
   dashboard:  Dashboard,

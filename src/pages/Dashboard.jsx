@@ -36,10 +36,20 @@ function Sparkline({ data = [], color = C.success, height = 32, width = 64 }) {
   );
 }
 
-const DashboardComercial   = lazy(() => import("./DashboardComercial"));
-const DashboardEngenheiro  = lazy(() => import("./DashboardEngenheiro"));
-const DashboardFinanceiro  = lazy(() => import("./DashboardFinanceiro"));
-const DashboardAnalytics   = lazy(() => import("./DashboardAnalytics"));
+// Reloads page on chunk fetch failure (stale service worker cache after deploy)
+function lazyWithRetry(fn) {
+  return lazy(() => fn().catch((e) => {
+    if (e?.message?.includes("fetch") || e?.message?.includes("Failed")) {
+      window.location.reload();
+    }
+    throw e;
+  }));
+}
+
+const DashboardComercial   = lazyWithRetry(() => import("./DashboardComercial"));
+const DashboardEngenheiro  = lazyWithRetry(() => import("./DashboardEngenheiro"));
+const DashboardFinanceiro  = lazyWithRetry(() => import("./DashboardFinanceiro"));
+const DashboardAnalytics   = lazyWithRetry(() => import("./DashboardAnalytics"));
 
 // ─── Gráfico de barras ────────────────────────────────────────────────────────
 function GraficoBarras({ data, height = 120 }) {
