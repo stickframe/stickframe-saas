@@ -275,31 +275,37 @@ export default function Certificacoes({ colaboradorId = null, onSaved }) {
               <div style={{ fontSize: 11, color: C.muted, marginBottom: 6 }}>Selecione uma ou mais:</div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 8 }}>
                 {NR_PRESETS.map(nr => {
-                  const sel = form.nrs.includes(nr);
                   const jatem = form.colaborador_id
                     ? certs.some(c => c.colaborador_id === form.colaborador_id && c.nr === nr)
                     : false;
+                  const sel = form.nrs.includes(nr);
+                  // Se já tem, bloqueia o clique — não permite duplicar
                   return (
-                    <button key={nr} onClick={() => {
-                      set("nrs")(sel ? form.nrs.filter(x => x !== nr) : [...form.nrs, nr]);
-                      if (!sel) set("nr")("");
-                    }} style={{
-                      padding: "4px 10px", borderRadius: 16, fontSize: 11, cursor: "pointer",
-                      fontFamily: "inherit", fontWeight: sel || jatem ? 700 : 400,
-                      border: `1px solid ${sel ? C.red : jatem ? C.success : C.border}`,
-                      background: sel ? C.red + "18" : jatem ? C.success + "18" : "transparent",
-                      color: sel ? C.red : jatem ? C.success : C.muted,
-                      position: "relative",
-                    }}>
-                      {nr}
-                      {jatem && !sel && <span style={{ marginLeft: 4, fontSize: 10 }}>✓</span>}
+                    <button key={nr}
+                      disabled={jatem}
+                      onClick={() => {
+                        if (jatem) return;
+                        set("nrs")(sel ? form.nrs.filter(x => x !== nr) : [...form.nrs, nr]);
+                        if (!sel) set("nr")("");
+                      }}
+                      title={jatem ? "Já cadastrada para este colaborador" : ""}
+                      style={{
+                        padding: "4px 10px", borderRadius: 16, fontSize: 11,
+                        cursor: jatem ? "not-allowed" : "pointer",
+                        fontFamily: "inherit", fontWeight: sel || jatem ? 700 : 400,
+                        border: `1px solid ${jatem ? C.success : sel ? C.red : C.border}`,
+                        background: jatem ? C.success + "18" : sel ? C.red + "18" : "transparent",
+                        color: jatem ? C.success : sel ? C.red : C.muted,
+                        opacity: jatem ? 0.75 : 1,
+                      }}>
+                      {jatem ? "✓ " : ""}{nr}
                     </button>
                   );
                 })}
               </div>
               {form.colaborador_id && certs.some(c => c.colaborador_id === form.colaborador_id) && (
                 <div style={{ fontSize: 11, color: C.success, marginBottom: 6, fontWeight: 600 }}>
-                  ✓ Verde = NR já cadastrada para este colaborador
+                  ✓ Verde = já cadastrada · não é possível duplicar
                 </div>
               )}
               {form.nrs.length === 0 && (
