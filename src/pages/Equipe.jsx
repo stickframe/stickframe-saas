@@ -253,17 +253,20 @@ export default function Equipe() {
 
   // ── Crachá / QR Ponto ────────────────────────────────────────────────────
   const NR_ICONES = {
-    "NR-01": { icon: "fa-clipboard-check", label: "PGR" },
-    "NR-05": { icon: "fa-users",           label: "CIPA" },
-    "NR-06": { icon: "fa-hard-hat",        label: "EPI" },
-    "NR-10": { icon: "fa-bolt",            label: "NR-10" },
-    "NR-12": { icon: "fa-cog",             label: "NR-12" },
-    "NR-17": { icon: "fa-chair",           label: "Ergon." },
-    "NR-18": { icon: "fa-hard-hat",        label: "NR-18" },
+    "NR-01": { icon: "fa-clipboard-check",   label: "PGR" },
+    "NR-05": { icon: "fa-users",             label: "CIPA" },
+    "NR-06": { icon: "fa-hard-hat",          label: "EPI" },
+    "NR-6":  { icon: "fa-hard-hat",          label: "EPI" },
+    "NR-10": { icon: "fa-bolt",              label: "NR-10" },
+    "NR-12": { icon: "fa-cog",               label: "NR-12" },
+    "NR-17": { icon: "fa-chair",             label: "Ergon." },
+    "NR-18": { icon: "fa-hard-hat",          label: "NR-18" },
+    "NR-20": { icon: "fa-fire",              label: "NR-20" },
     "NR-23": { icon: "fa-fire-extinguisher", label: "NR-23" },
-    "NR-35": { icon: "fa-user-shield",     label: "Altura" },
-    "ASO":   { icon: "fa-heartbeat",       label: "ASO" },
-    "Habilitação": { icon: "fa-id-card",   label: "CNH" },
+    "NR-33": { icon: "fa-wind",              label: "NR-33" },
+    "NR-35": { icon: "fa-user-shield",       label: "Altura" },
+    "ASO":   { icon: "fa-heartbeat",         label: "ASO" },
+    "Habilitação": { icon: "fa-id-card",     label: "CNH" },
   };
 
   function gerarCracha(c, certs = []) {
@@ -277,12 +280,13 @@ export default function Equipe() {
 
     const certBadges = certs.length > 0
       ? `<div class="certs-row">${certs.map((cert) => {
-          const key = Object.keys(NR_ICONES).find((k) => cert.nome?.includes(k) || k === cert.nome);
+          const nrVal = cert.nr || cert.nome || "";
+          const key = Object.keys(NR_ICONES).find((k) => nrVal.includes(k));
           const info = key ? NR_ICONES[key] : null;
           const icon = info ? `<i class="fas ${info.icon}"></i>` : "🏅";
-          const label = info?.label || cert.nome?.replace("Treinamento ", "").slice(0, 7);
-          const valid = cert.validade ? new Date(cert.validade) > new Date() : true;
-          return `<div class="cert-badge ${valid ? "" : "cert-vencido"}" title="${cert.nome}">${icon}<span>${label}</span></div>`;
+          const label = info?.label || nrVal.replace(/\(.*\)/, "").trim().slice(0, 7);
+          const valid = cert.data_validade ? new Date(cert.data_validade) > new Date() : true;
+          return `<div class="cert-badge ${valid ? "" : "cert-vencido"}" title="${nrVal}">${icon}<span>${label}</span></div>`;
         }).join("")}</div>`
       : "";
 
