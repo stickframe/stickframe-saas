@@ -70,7 +70,7 @@ function StatusBadge({ status }) {
   );
 }
 
-export default function Certificacoes({ colaboradorId = null }) {
+export default function Certificacoes({ colaboradorId = null, onSaved }) {
   const colaboradores = useAppStore((s) => s.colaboradores);
   const [certs, setCerts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -128,6 +128,7 @@ export default function Certificacoes({ colaboradorId = null }) {
       }
       setModal(null);
       setForm(FORM_VAZIO);
+      onSaved?.();
     } catch (e) {
       console.error("[Certificacoes]", e.message);
     } finally {

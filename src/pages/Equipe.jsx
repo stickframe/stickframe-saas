@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { ClipboardList, DollarSign, Pencil, Phone, Trash2 } from "../components/ui/Icon";
 import Certificacoes from "../components/equipe/Certificacoes";
 import { printHtml } from "../utils/printHtml";
@@ -9,6 +9,7 @@ import { fmt } from "../utils/format";
 import { mesAno } from "../utils/date";
 import useAppStore from "../store/useAppStore";
 import { useModuleLoad } from "../hooks/useModuleLoad";
+import { listarCertificacoes } from "../services/repositories/certificacaoRepository";
 import Btn from "../components/ui/Btn";
 import Input from "../components/ui/Input";
 import Select from "../components/ui/Select";
@@ -196,6 +197,21 @@ export default function Equipe() {
     loadAlocacoes();
     loadHorasTrabalhadas();
   }, [loadAlocacoes, loadHorasTrabalhadas]);
+
+  // Certificações para badges nos cards
+  const [certsByColab, setCertsByColab] = useState({});
+  const recarregarCerts = useCallback(async () => {
+    try {
+      const all = await listarCertificacoes();
+      const map = {};
+      all.forEach(c => {
+        if (!map[c.colaborador_id]) map[c.colaborador_id] = [];
+        map[c.colaborador_id].push(c);
+      });
+      setCertsByColab(map);
+    } catch {}
+  }, []);
+  useEffect(() => { recarregarCerts(); }, [recarregarCerts]);
 
   // ── Crachá / QR Ponto ────────────────────────────────────────────────────
   function gerarCracha(c) {
@@ -607,6 +623,7 @@ export default function Equipe() {
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 14 }}>
                 {lista.map((c) => {
                   const alocAtivas = alocacoes.filter((a) => a.colaborador_id === c.id);
+                  const certs = certsByColab[c.id] || [];
                   return (
                     <div key={c.id} style={{
                       background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", padding: "18px 20px",
@@ -639,6 +656,22 @@ export default function Equipe() {
                           {alocAtivas.length > 2 && (
                             <div style={{ fontSize: 10, color: C.muted }}>+{alocAtivas.length - 2} obra(s)</div>
                           )}
+                        </div>
+                      )}
+
+                      {certs.length > 0 && (
+                        <div style={{ marginBottom: 10, display: "flex", flexWrap: "wrap", gap: 4 }}>
+                          {certs.map(cert => {
+                            const cor = cert.status === "Vencida" ? "#ef4444" : cert.status === "Vencendo" ? "#f59e0b" : "#22c55e";
+                            const short = cert.nr.replace(/\s*\(.*\)/, "");
+                            return (
+                              <span key={cert.id} title={`${cert.nr} · ${cert.status}`} style={{
+                                fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 10,
+                                background: cor + "20", color: cor, border: `1px solid ${cor}40`,
+                                cursor: "default",
+                              }}>{short}</span>
+                            );
+                          })}
                         </div>
                       )}
 
@@ -921,7 +954,7 @@ export default function Equipe() {
 
         {/* ══ Tab: Compliance ══ */}
         {tab === "compliance" && (
-          <Certificacoes />
+          <Certificacoes onSaved={recarregarCerts} />
         )}
       </div>
     </>
