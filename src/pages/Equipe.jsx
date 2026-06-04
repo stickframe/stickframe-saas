@@ -278,8 +278,15 @@ export default function Equipe() {
       ? `<img src="${c.foto_url}" class="avatar-foto"/>`
       : `<div class="avatar">${inicial}</div>`;
 
-    const certBadges = certs.length > 0
-      ? `<div class="certs-row">${certs.map((cert) => {
+    // Deduplica por nr no crachá — mantém o mais recente
+    const certsUniq = Object.values(certs.reduce((acc, c) => {
+      const k = c.nr || "";
+      if (!acc[k] || (c.data_validade || "") > (acc[k].data_validade || "")) acc[k] = c;
+      return acc;
+    }, {}));
+
+    const certBadges = certsUniq.length > 0
+      ? `<div class="certs-row">${certsUniq.map((cert) => {
           const nrVal = (cert.nr != null && cert.nr !== "" && cert.nr !== "undefined") ? String(cert.nr) : "";
           const key = nrVal ? Object.keys(NR_ICONES).find((k) => nrVal.includes(k)) : undefined;
           const info = key ? NR_ICONES[key] : null;
@@ -706,7 +713,14 @@ export default function Equipe() {
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(300px, 100%), 1fr))", gap: 14 }}>
                 {lista.map((c) => {
                   const alocAtivas = alocacoes.filter((a) => a.colaborador_id === c.id);
-                  const certs = certsByColab[c.id] || [];
+                  const certsRaw = certsByColab[c.id] || [];
+                  // Deduplica por nr — mantém o mais recente (maior data_validade)
+                  const certsMap = {};
+                  certsRaw.forEach(cert => {
+                    const key = cert.nr || "";
+                    if (!certsMap[key] || (cert.data_validade || "") > (certsMap[key].data_validade || "")) certsMap[key] = cert;
+                  });
+                  const certs = Object.values(certsMap);
                   return (
                     <div key={c.id} style={{
                       background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", padding: "18px 20px",
