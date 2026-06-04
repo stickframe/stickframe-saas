@@ -1228,7 +1228,7 @@ export default function GestaoObras() {
                       )}
                     {/* Aditivos de contrato */}
                       <div style={{ marginTop: 24 }}>
-                        <ChangeOrders obraId={obraId} />
+                        <ChangeOrders obraId={obraId} userPerfil={perfil} />
                       </div>
                     </div>
                   );
