@@ -100,7 +100,11 @@ export default function SST() {
   function abrirNovoDDS() { setDdsEdit(null); setDdsForm({ data: hoje, tema: "", facilitador: "", participantes_txt: "", obs: "", obra_id: "" }); setDdsModal(true); }
   function abrirEditDDS(d) { setDdsEdit(d.id); setDdsForm({ ...d, participantes_txt: (d.participantes || []).join(", ") }); setDdsModal(true); }
   async function salvarDDS() {
-    const payload = { ...ddsForm, participantes: ddsForm.participantes_txt.split(",").map(s => s.trim()).filter(Boolean) };
+    const payload = {
+      ...ddsForm,
+      obra_id: ddsForm.obra_id || null,
+      participantes: ddsForm.participantes_txt.split(",").map(s => s.trim()).filter(Boolean),
+    };
     delete payload.participantes_txt;
     if (ddsEdit) await atualizarDDS(ddsEdit, payload); else await criarDDS(payload);
     setDdsModal(false); loadDDS();
@@ -110,7 +114,12 @@ export default function SST() {
   function abrirNovoInc() { setIncEdit(null); setIncForm({ data: hoje, tipo: "Quase-acidente", gravidade: "Baixa", descricao: "", acao_corretiva: "", status: "Aberto", obra_id: "", colaborador_id: "" }); setIncModal(true); }
   function abrirEditInc(i) { setIncEdit(i.id); setIncForm({ ...i, obra_id: i.obra_id || "", colaborador_id: i.colaborador_id || "" }); setIncModal(true); }
   async function salvarInc() {
-    if (incEdit) await atualizarIncidente(incEdit, incForm); else await criarIncidente(incForm);
+    const payload = {
+      ...incForm,
+      obra_id: incForm.obra_id || null,
+      colaborador_id: incForm.colaborador_id || null,
+    };
+    if (incEdit) await atualizarIncidente(incEdit, payload); else await criarIncidente(payload);
     setIncModal(false); loadInc();
   }
 
@@ -118,7 +127,14 @@ export default function SST() {
   function abrirNovoEpi() { setEpiEdit(null); setEpiForm({ item: "", quantidade: 1, data_entrega: hoje, validade: "", assinado: false, colaborador_id: "", obra_id: "", obs: "" }); setEpiModal(true); }
   function abrirEditEpi(e) { setEpiEdit(e.id); setEpiForm({ ...e, obra_id: e.obra_id || "", colaborador_id: e.colaborador_id || "" }); setEpiModal(true); }
   async function salvarEpi() {
-    if (epiEdit) await atualizarEpi(epiEdit, epiForm); else await criarEpi(epiForm);
+    const payload = {
+      ...epiForm,
+      validade:        epiForm.validade        || null,
+      obra_id:         epiForm.obra_id         || null,
+      colaborador_id:  epiForm.colaborador_id  || null,
+      quantidade:      Number(epiForm.quantidade) || 1,
+    };
+    if (epiEdit) await atualizarEpi(epiEdit, payload); else await criarEpi(payload);
     setEpiModal(false); loadEpis();
   }
 

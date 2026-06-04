@@ -82,7 +82,13 @@ export default function Suprimentos() {
   }
   function abrirEditPed(p) { setPedEdit(p.id); setPedForm({ ...p, obra_id: p.obra_id || "", valor_unitario: p.valor_unitario || "" }); setPedModal(true); }
   async function salvarPed() {
-    const payload = { ...pedForm, quantidade: Number(pedForm.quantidade), valor_unitario: pedForm.valor_unitario ? Number(pedForm.valor_unitario) : null };
+    const payload = {
+      ...pedForm,
+      obra_id: pedForm.obra_id || null,
+      data_entrega: pedForm.data_entrega || null,
+      quantidade: Number(pedForm.quantidade),
+      valor_unitario: pedForm.valor_unitario ? Number(pedForm.valor_unitario) : null,
+    };
     if (pedEdit) await atualizarPedido(pedEdit, payload); else await criarPedido(payload);
     setPedModal(false); loadPedidos();
   }
