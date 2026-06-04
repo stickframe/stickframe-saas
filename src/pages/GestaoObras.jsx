@@ -1532,12 +1532,23 @@ export default function GestaoObras() {
                 )}
                 {/* ABA DIÁRIO */}
                 {abaAtiva === "diario" && (
-                  <DiarioAba
-                    obraId={obraId}
-                    obra={obra}
-                    diario={diario[obraId] || []}
-                    addDiario={addDiario}
-                  />
+                  <div>
+                    <div style={{ padding: "16px 0 0" }}>
+                      {!showRDO ? (
+                        <button onClick={() => setShowRDO(true)} style={{ padding:"8px 16px", background:"#b41e1e", color:"#fff", border:"none", borderRadius:8, cursor:"pointer", fontWeight:600, marginBottom:16 }}>📋 Novo RDO</button>
+                      ) : (
+                        <div style={{ marginBottom: 16 }}>
+                          <RDOForm obraId={obraId} obraName={obra?.nome} onSaved={() => {}} onClose={() => setShowRDO(false)} />
+                        </div>
+                      )}
+                    </div>
+                    <DiarioAba
+                      obraId={obraId}
+                      obra={obra}
+                      diario={diario[obraId] || []}
+                      addDiario={addDiario}
+                    />
+                  </div>
                 )}
 
                 {/* ABA HISTÓRICO */}
@@ -1865,6 +1876,13 @@ export default function GestaoObras() {
                       Defina quem pode ver e editar esta obra. Obras sem membros são visíveis para toda a equipe.
                     </p>
                     <ObraMembros obraId={obraId} />
+                  </div>
+                )}
+
+                {/* ABA NCR */}
+                {abaAtiva === "ncr" && (
+                  <div style={{ background: C.surface, borderRadius: "0 0 12px 12px", border: `1px solid ${C.border}`, borderTop: "none", padding: 22 }}>
+                    <NaoConformidades obraId={obraId} />
                   </div>
                 )}
 
