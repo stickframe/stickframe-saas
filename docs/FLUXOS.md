@@ -1,5 +1,5 @@
 # Fluxos do StickFrame
-*Documentação dos fluxos principais do sistema — atualizado junho/2026*
+*Documentação dos fluxos principais do sistema — atualizado junho/2026 (v2)*
 
 ---
 
@@ -81,12 +81,16 @@ BIM
 ```
 Equipe
   ├─ Colaboradores (status: Ativo/Inativo/Afastado)
+  │   ├─ Foto do colaborador (upload Supabase Storage)
+  │   └─ Crachá impresso com QR Code + foto + badges NR
   ├─ Alocação em obras
-  ├─ Registro de horas
+  │   └─ Cada colaborador vinculado a uma ou mais obras ativas
+  ├─ Registro de horas (manual + automático via ponto)
   └─ Certificações NR
-      ├─ NR-18, NR-35, NR-10, NR-12, NR-06, NR-33...
+      ├─ NR-01, NR-05, NR-06, NR-10, NR-12, NR-17, NR-18, NR-23, NR-35, ASO...
       ├─ Validade com alertas de vencimento
-      └─ Badge visual por colaborador (Válida / Vencendo / Vencida)
+      ├─ Badge visual por colaborador (Válida / Vencendo / Vencida)
+      └─ Símbolos NR impressos no crachá (Font Awesome icons)
 ```
 
 ---
@@ -99,7 +103,14 @@ Financeiro
   ├─ Categorias e centros de custo por obra
   ├─ DRE mensal
   ├─ Fluxo de caixa
-  └─ Exportar relatório PDF
+  ├─ Exportar relatório PDF
+  └─ Folha de Pagamento (RH)
+      ├─ Seletor mês/ano
+      ├─ Importa pontos automáticos do período
+      ├─ Calcula dias trabalhados + horas totais por colaborador
+      ├─ Cruza com salário base → valor a pagar proporcional
+      ├─ Marcar como pago (status por colaborador)
+      └─ Imprimir holerite individual
 ```
 
 ---
@@ -159,7 +170,34 @@ POST /api/webhooks  (eventos: obra.criada, orcamento.aprovado, lead.novo)
 
 ---
 
-## 11. QR Code de Painel (rastreabilidade)
+## 11. Ponto Eletrônico por QR Code
+
+```
+Crachá impresso (PDF gerado em Equipe)
+  └─ QR Code único por colaborador (/ponto/:token)
+      └─ Abre no celular (sem login, sem app)
+          ├─ Tela: "Em qual obra você está?"
+          │   ├─ Múltiplas obras → cards clicáveis (obras alocadas)
+          │   └─ 1 obra → pula seleção, vai direto para check-in
+          └─ Check-in / Check-out
+              ├─ Botão verde: Registrar Entrada
+              ├─ Botão vermelho: Registrar Saída
+              ├─ GPS capturado (distância da obra calculada)
+              └─ Registro salvo em pontos (colaborador_id + obra_id + tipo + hora)
+
+Gestão de Obra → aba "Presença"
+  └─ Filtros: Hoje / Semana / Mês
+      ├─ Quem está na obra agora (badge "Em obra")
+      ├─ Horário de entrada e saída
+      └─ Total de horas por colaborador no período
+
+Financeiro → aba "Folha"
+  └─ Fechamento mensal com base nos pontos registrados
+```
+
+---
+
+## 12. QR Code de Painel (rastreabilidade)
 
 ```
 /qr/obra/:obraId  →  lista de painéis com QR
@@ -171,7 +209,7 @@ POST /api/webhooks  (eventos: obra.criada, orcamento.aprovado, lead.novo)
 
 ---
 
-## 12. Presença em Tempo Real
+## 13. Presença em Tempo Real
 
 ```
 Supabase Realtime (canal: obra-{obraId})
@@ -184,11 +222,12 @@ Supabase Realtime (canal: obra-{obraId})
 ## Resumo do Funil Completo
 
 ```
-AQUISIÇÃO          CONVERSÃO             EXECUÇÃO              ENTREGA
-─────────────      ─────────────────     ────────────────────  ──────────────
-/calcular          CRM Kanban            Cronograma            Portal Cliente
-Lead público   →   Orçamento         →  Diário / BIM      →   Garantias
-                   Proposta              Equipe / NR           Histórico
-                   Contrato CO-001       Financeiro
-                   Obra criada           Vistorias / RFI
+AQUISIÇÃO          CONVERSÃO             EXECUÇÃO                    ENTREGA
+─────────────      ─────────────────     ──────────────────────────  ──────────────
+/calcular          CRM Kanban            Cronograma / BIM            Portal Cliente
+Lead público   →   Orçamento         →  Diário / Fotos / RFI    →   Garantias
+                   Proposta              Equipe / NR / Crachá        Histórico
+                   Contrato CO-001       Ponto Eletrônico (QR)
+                   Obra criada           Presença por obra
+                                         Financeiro / Folha RH
 ```
