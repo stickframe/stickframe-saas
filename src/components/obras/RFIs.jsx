@@ -25,7 +25,7 @@ const SUGESTOES_TITULO = [
   "Definição de sistema de fixação de esquadria",
   "Passagem de tubulação hidráulica sem detalhe",
   "Travamento lateral de montante não especificado",
-  "Detalhe de transição steel frame e alvenaria",
+  "Detalhe de remate entre painéis distintos",
   "Carga de vento não considerada em projeto",
   "Detalhe de impermeabilização de rodapé ausente",
   "Definição de isolamento em área molhada",

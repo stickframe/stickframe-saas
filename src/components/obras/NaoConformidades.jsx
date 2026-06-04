@@ -19,8 +19,8 @@ const SUGESTOES_NCR = [
   "Contravento ou travamento lateral ausente",
   "Caixilho de janela/porta fora de nível",
   "Instalação hidráulica ou elétrica sem passador de proteção no perfil",
-  "Fundação/radier sem nível para assentamento da guia",
-  "Placa cimentícia fixada sem espaçamento mínimo do solo",
+  "Radier sem nível adequado para assentamento da guia",
+  "Placa de fachada fixada sem espaçamento mínimo do solo",
 ];
 
 const inputStyle = {
