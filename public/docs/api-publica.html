@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>API Pública REST — StickFrame</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --sf-red: #981915;
+    --dark: #0f1117;
+    --card: #16191f;
+    --border: #252830;
+    --text: #e8eaf0;
+    --muted: #7b8394;
+    --green: #22c55e;
+    --yellow: #f59e0b;
+    --red: #ef4444;
+    --blue: #3b82f6;
+    --radius: 14px;
+    --code-bg: #0d1117;
+  }
+  body { font-family: 'Inter', sans-serif; background: var(--dark); color: var(--text); font-size: 14px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+  a { color: var(--sf-red); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code { font-family: 'Fira Code', 'Cascadia Code', 'Consolas', monospace; }
+
+  .nav { padding: 16px 48px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+  .nav-back { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 6px; transition: color 0.15s; }
+  .nav-back:hover { color: var(--text); text-decoration: none; }
+  .nav-sep { color: var(--border); }
+  .nav-current { font-size: 13px; color: var(--text); font-weight: 500; }
+
+  .page-header {
+    background: linear-gradient(135deg, #0f1117 0%, #0d1420 60%, #0f1117 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 56px 48px 48px; position: relative; overflow: hidden;
+  }
+  .page-header::before {
+    content: ''; position: absolute; top: -80px; right: -80px;
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(59,130,246,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .header-inner { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
+  .header-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--sf-red); background: rgba(152,25,21,0.15); border: 1px solid rgba(152,25,21,0.3);
+    padding: 5px 14px; border-radius: 20px; margin-bottom: 20px;
+  }
+  .header-title { font-size: clamp(28px, 4vw, 44px); font-weight: 800; color: #fff; line-height: 1.15; margin-bottom: 12px; letter-spacing: -0.5px; }
+  .header-title .accent { color: var(--blue); }
+  .header-sub { color: var(--muted); font-size: 15px; max-width: 580px; line-height: 1.7; }
+  .header-meta { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 24px; }
+  .meta-pill {
+    background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+    padding: 8px 14px; font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 8px;
+  }
+  .meta-pill strong { color: var(--text); }
+  .dot-blue { width: 6px; height: 6px; border-radius: 50%; background: var(--blue); }
+  .dot-green { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 48px; }
+  section { padding: 52px 0; border-bottom: 1px solid var(--border); }
+  section:last-of-type { border-bottom: none; }
+
+  .sec-header { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; }
+  .sec-icon { font-size: 22px; }
+  .sec-title { font-size: 20px; font-weight: 800; color: #fff; }
+  .sec-badge { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; padding: 3px 10px; border-radius: 20px; margin-left: auto; white-space: nowrap; }
+  .badge-green { background: rgba(34,197,94,0.15); color: var(--green); border: 1px solid rgba(34,197,94,0.3); }
+  .badge-yellow { background: rgba(245,158,11,0.15); color: var(--yellow); border: 1px solid rgba(245,158,11,0.3); }
+  .badge-red { background: rgba(239,68,68,0.15); color: var(--red); border: 1px solid rgba(239,68,68,0.3); }
+  .badge-blue { background: rgba(59,130,246,0.15); color: var(--blue); border: 1px solid rgba(59,130,246,0.3); }
+
+  .tbl-wrap { overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: 24px; }
+  table { width: 100%; border-collapse: collapse; }
+  thead th { background: #1e2128; padding: 12px 18px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); text-align: left; }
+  tbody tr { border-top: 1px solid var(--border); transition: background 0.15s; }
+  tbody tr:nth-child(even) { background: rgba(255,255,255,0.02); }
+  tbody tr:hover { background: rgba(59,130,246,0.05); }
+  tbody td { padding: 13px 18px; font-size: 13px; color: var(--text); vertical-align: middle; }
+  tbody td code { font-size: 12px; background: var(--code-bg); border: 1px solid var(--border); border-radius: 5px; padding: 2px 7px; color: #79c0ff; }
+
+  .method { display: inline-block; padding: 3px 8px; border-radius: 5px; font-size: 10px; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase; }
+  .method-get { background: rgba(34,197,94,0.15); color: var(--green); border: 1px solid rgba(34,197,94,0.3); }
+  .method-post { background: rgba(245,158,11,0.15); color: var(--yellow); border: 1px solid rgba(245,158,11,0.3); }
+
+  /* CODE BLOCKS */
+  .code-block {
+    background: var(--code-bg); border: 1px solid var(--border);
+    border-radius: var(--radius); overflow: hidden; margin-bottom: 20px;
+  }
+  .code-block-header {
+    background: #161b22; border-bottom: 1px solid var(--border);
+    padding: 10px 18px; display: flex; align-items: center; justify-content: space-between;
+  }
+  .code-lang { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+  .lang-bash { color: var(--green); }
+  .lang-json { color: var(--yellow); }
+  .code-block pre { padding: 20px 22px; overflow-x: auto; }
+  .code-block code { font-size: 12.5px; line-height: 1.7; color: #e6edf3; }
+  .code-comment { color: #8b949e; }
+  .code-key { color: #79c0ff; }
+  .code-str { color: #a5d6ff; }
+  .code-num { color: #f78166; }
+  .code-cmd { color: var(--green); }
+  .code-flag { color: var(--yellow); }
+  .code-url { color: #a5d6ff; }
+
+  /* COMPARISON GRID */
+  .comp-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .comp-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+  .comp-card.highlight { border-color: rgba(152,25,21,0.4); border-left: 4px solid var(--sf-red); }
+  .comp-name { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+  .comp-sub { font-size: 11px; color: var(--muted); margin-bottom: 14px; }
+  .comp-item { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: var(--muted); margin-bottom: 7px; line-height: 1.5; }
+  .comp-item .icon-yes { color: var(--green); }
+  .comp-item .icon-no { color: var(--red); }
+  .comp-item .icon-partial { color: var(--yellow); }
+
+  /* LOCATION CARDS */
+  .loc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+  .loc-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 18px; }
+  .loc-title { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .loc-path { font-size: 13px; color: var(--blue); font-family: monospace; }
+
+  /* PITCH */
+  .pitch {
+    background: rgba(152,25,21,0.08); border-left: 4px solid var(--sf-red);
+    border-radius: 0 10px 10px 0; padding: 18px 22px;
+    font-size: 13px; color: var(--text); font-style: italic; line-height: 1.8; margin-top: 8px;
+  }
+  .pitch::before { content: '"'; font-size: 20px; font-weight: 800; color: var(--sf-red); margin-right: 4px; font-style: normal; vertical-align: -3px; }
+
+  footer { border-top: 1px solid var(--border); padding: 32px 48px; text-align: center; }
+  footer p { font-size: 12px; color: var(--muted); }
+  footer strong { color: var(--text); }
+
+  @media (max-width: 768px) {
+    .nav, .page-header, .container, footer { padding-left: 20px; padding-right: 20px; }
+    .comp-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/" class="nav-back">← Voltar ao sistema</a>
+  <span class="nav-sep">/</span>
+  <span class="nav-current">API Pública REST</span>
+</nav>
+
+<header class="page-header">
+  <div class="header-inner">
+    <div class="header-badge">&#9733; Diferencial StickFrame</div>
+    <h1 class="header-title">API Pública <span class="accent">REST</span></h1>
+    <p class="header-sub">Integre o StickFrame ao seu ERP, planilha ou sistema de terceiros com Bearer token — sem setup enterprise, sem meses de implantação.</p>
+    <div class="header-meta">
+      <div class="meta-pill"><span class="dot-blue"></span><strong>REST / JSON</strong></div>
+      <div class="meta-pill"><span class="dot-green"></span><strong>Bearer Token</strong> sf_live_xxx</div>
+      <div class="meta-pill"><span class="dot-blue"></span>Docs inline em <strong>/docs/api</strong></div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- ENDPOINTS -->
+  <section>
+    <div class="container">
+      <div class="sec-header">
+        <span class="sec-icon">📡</span>
+        <h2 class="sec-title">Endpoints Disponíveis</h2>
+        <span class="sec-badge badge-green">v1</span>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Método</th>
+              <th>Endpoint</th>
+              <th>Descrição</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="method method-get">GET</span></td>
+              <td><code>/api/v1/obras</code></td>
+              <td>Lista todas as obras da conta</td>
+            </tr>
+            <tr>
+              <td><span class="method method-get">GET</span></td>
+              <td><code>/api/v1/obras/:id</code></td>
+              <td>Detalhe completo de uma obra específica</td>
+            </tr>
+            <tr>
+              <td><span class="method method-get">GET</span></td>
+              <td><code>/api/v1/clientes</code></td>
+              <td>Lista clientes da conta</td>
+            </tr>
+            <tr>
+              <td><span class="method method-get">GET</span></td>
+              <td><code>/api/v1/financeiro</code></td>
+              <td>Resumo financeiro consolidado</td>
+            </tr>
+            <tr>
+              <td><span class="method method-post">POST</span></td>
+              <td><code>/api/v1/obras</code></td>
+              <td>Cria nova obra na conta</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- EXEMPLO -->
+  <section>
+    <div class="container">
+      <div class="sec-header">
+        <span class="sec-icon">⚡</span>
+        <h2 class="sec-title">Exemplo de Uso</h2>
+      </div>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-lang lang-bash">bash — curl</span>
+          <span style="font-size:11px;color:var(--muted);">Requisição</span>
+        </div>
+        <pre><code><span class="code-cmd">curl</span> <span class="code-flag">-H</span> <span class="code-str">"Authorization: Bearer sf_live_abc123"</span> \
+     <span class="code-url">https://app.stickframe.com.br/api/v1/obras</span></code></pre>
+      </div>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-lang lang-json">json — resposta</span>
+          <span style="font-size:11px;color:var(--muted);">200 OK</span>
+        </div>
+        <pre><code>[
+  {
+    <span class="code-key">"id"</span>: <span class="code-str">"obra-001"</span>,
+    <span class="code-key">"nome"</span>: <span class="code-str">"Residência Silva"</span>,
+    <span class="code-key">"status"</span>: <span class="code-str">"em_andamento"</span>,
+    <span class="code-key">"valor_contrato"</span>: <span class="code-num">280000</span>
+  },
+  {
+    <span class="code-key">"id"</span>: <span class="code-str">"obra-002"</span>,
+    <span class="code-key">"nome"</span>: <span class="code-str">"Comercial Teresópolis"</span>,
+    <span class="code-key">"status"</span>: <span class="code-str">"concluida"</span>,
+    <span class="code-key">"valor_contrato"</span>: <span class="code-num">640000</span>
+  }
+]</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- COMPARATIVO -->
+  <section>
+    <div class="container">
+      <div class="sec-header">
+        <span class="sec-icon">⚖️</span>
+        <h2 class="sec-title">Comparativo com Concorrentes</h2>
+      </div>
+      <div class="comp-grid">
+        <div class="comp-card highlight">
+          <div class="comp-name">StickFrame</div>
+          <div class="comp-sub">Disponível no plano profissional</div>
+          <div class="comp-item"><span class="icon-yes">✓</span> API REST pública documentada</div>
+          <div class="comp-item"><span class="icon-yes">✓</span> Bearer token <code>sf_live_xxx</code></div>
+          <div class="comp-item"><span class="icon-yes">✓</span> Docs inline em <code>/docs/api</code></div>
+          <div class="comp-item"><span class="icon-yes">✓</span> Revogação imediata de tokens</div>
+          <div class="comp-item"><span class="icon-yes">✓</span> Sem implantação enterprise</div>
+        </div>
+        <div class="comp-card">
+          <div class="comp-name">Procore</div>
+          <div class="comp-sub">Apenas tier Enterprise</div>
+          <div class="comp-item"><span class="icon-partial">~</span> API disponível, mas a partir de US$ 800/mês</div>
+          <div class="comp-item"><span class="icon-no">✗</span> Requer contrato enterprise</div>
+          <div class="comp-item"><span class="icon-no">✗</span> Processo de onboarding longo</div>
+          <div class="comp-item"><span class="icon-no">✗</span> Sem dados de mercado brasileiro</div>
+        </div>
+        <div class="comp-card">
+          <div class="comp-name">Sienge / Nacionais</div>
+          <div class="comp-sub">Obra Fácil, BuildPro, Volare</div>
+          <div class="comp-item"><span class="icon-partial">~</span> Sienge: +30 APIs, apenas Data Center</div>
+          <div class="comp-item"><span class="icon-no">✗</span> Obra Fácil: sem API documentada</div>
+          <div class="comp-item"><span class="icon-no">✗</span> BuildPro: sem API pública</div>
+          <div class="comp-item"><span class="icon-no">✗</span> Volare: sem API documentada</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ONDE APARECE -->
+  <section>
+    <div class="container">
+      <div class="sec-header">
+        <span class="sec-icon">📍</span>
+        <h2 class="sec-title">Onde Aparece no Sistema</h2>
+      </div>
+      <div class="loc-grid">
+        <div class="loc-card">
+          <div class="loc-title">Configurações</div>
+          <div class="loc-path">Configurações → Integrações → API Keys</div>
+          <p style="font-size:12px;color:var(--muted);margin-top:8px;">Geração e revogação de tokens Bearer com controle granular.</p>
+        </div>
+        <div class="loc-card">
+          <div class="loc-title">Documentação</div>
+          <div class="loc-path">/docs/api</div>
+          <p style="font-size:12px;color:var(--muted);margin-top:8px;">Documentação inline com exemplos interativos acessível dentro do próprio sistema.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PITCH -->
+  <section>
+    <div class="container">
+      <div class="sec-header">
+        <span class="sec-icon">🎯</span>
+        <h2 class="sec-title">Pitch para Apresentações</h2>
+      </div>
+      <div class="pitch">Nossos clientes corporativos já integram o StickFrame ao ERP deles via API REST — algo que no Procore só está disponível no plano Enterprise. Aqui, vem no plano profissional, pronto para usar.</div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="container">
+    <p><strong>StickFrame</strong> &copy; 2026 — Plataforma de gestão para construtoras de Steel Frame</p>
+  </div>
+</footer>
+
+</body>
+</html>
