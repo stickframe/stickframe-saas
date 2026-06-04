@@ -698,7 +698,7 @@ export default function Equipe() {
             ) : lista.length === 0 ? (
               <div style={{ textAlign: "center", padding: "40px 0", color: C.muted, fontSize: 13 }}>Nenhum resultado para os filtros aplicados.</div>
             ) : (
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 14 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(300px, 100%), 1fr))", gap: 14 }}>
                 {lista.map((c) => {
                   const alocAtivas = alocacoes.filter((a) => a.colaborador_id === c.id);
                   const certs = certsByColab[c.id] || [];

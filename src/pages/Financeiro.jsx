@@ -983,7 +983,7 @@ export default function Financeiro() {
         )}
 
         {/* Grid: gráfico + extrato */}
-        <div style={{ display: "grid", gridTemplateColumns: "300px 1fr", gap: 18 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 18 }}>
 
           {/* Desvio por categoria */}
           <div style={{ background: C.surface, borderRadius: 14, padding: 20, border: `1px solid ${C.border}` }}>

@@ -776,7 +776,7 @@ export default function CRM() {
       </div>
 
       {/* Layout principal */}
-      <div style={{ display: "grid", gridTemplateColumns: sel && view === "list" ? "1fr min(320px,100%)" : "1fr", gap: 18 }}>
+      <div style={{ display: "grid", gridTemplateColumns: sel && view === "list" ? "1fr min(min(320px, 42vw), 100%)" : "1fr", gap: 18 }}>
 
         {/* View Content */}
         <div>
