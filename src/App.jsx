@@ -11,6 +11,7 @@ import { PageSkeleton } from "./components/ui/Skeleton";
 import { ToastProvider, useToast } from "./components/ui/Toast";
 import { ErrorBoundary } from "./components/ui/ErrorBoundary";
 import UndoBar from "./components/ui/UndoBar";
+import { OnboardingTour } from "./components/ui/OnboardingTour";
 import { useUndoStore } from "./store/undoStore";
 import { useHotkeys } from "react-hotkeys-hook";
 
@@ -177,6 +178,7 @@ export default function App() {
       <ToastProvider>
       <GlobalHotkeys />
       <UndoBar />
+      <OnboardingTour />
       <Suspense fallback={<LoadingScreen />}>
         <Routes>
           <Route path="/portal/:token"   element={<PortalOnline />} />
