@@ -2051,16 +2051,16 @@ export default function GestaoObras() {
                       width: "100%", padding: "8px 0",
                       background: "#2e9e5b22", border: "1px solid #2e9e5b44",
                       borderRadius: 6, color: "#2e9e5b", fontSize: 12, fontWeight: 700,
-                      cursor: "pointer", fontFamily: "inherit",
-                    }}>📄 Dossiê de Obra</button>
+                      cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+                    }}>📄 Dossiê</button>
                     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                       <button onClick={copiarLinkPortal} style={{
                         width: "100%", padding: "8px 0",
                         background: "#4a9eff22", border: "1px solid #4a9eff44",
                         borderRadius: 6, color: "#4a9eff", fontSize: 12, fontWeight: 700,
-                        cursor: "pointer", fontFamily: "inherit",
+                        cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
                       }}>
-                        {obra.token_portal ? "🔗 Copiar link do portal" : "🔗 Gerar link do portal"}
+                        {obra.token_portal ? "🔗 Link do portal" : "🔗 Gerar link"}
                       </button>
                       {obra.token_portal && (
                         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
