@@ -1,7 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
 import useAppStore from "../store/useAppStore";
 import { useModuleLoad } from "../hooks/useModuleLoad";
-import { Card, Btn, Badge, Modal, Input, Select, Textarea } from "../components/ui";
+import Btn from "../components/ui/Btn";
+import Badge from "../components/ui/Badge";
+import Modal from "../components/ui/Modal";
+import Input from "../components/ui/Input";
+import Select from "../components/ui/Select";
 import { C } from "../utils/constants";
 import {
   listarDDS, criarDDS, atualizarDDS, deletarDDS,
@@ -175,7 +179,7 @@ export default function SST() {
 
       {/* ── DDS ── */}
       {aba === "dds" && (
-        <Card>
+        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: 20 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
             <h3 style={{ fontWeight: 700 }}>Diálogos Diários de Segurança</h3>
             <Btn onClick={abrirNovoDDS}>+ Novo DDS</Btn>
@@ -208,12 +212,12 @@ export default function SST() {
               </tbody>
             </table>
           )}
-        </Card>
+        </div>
       )}
 
       {/* ── Incidentes ── */}
       {aba === "incidentes" && (
-        <Card>
+        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: 20 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
             <h3 style={{ fontWeight: 700 }}>Registro de Incidentes</h3>
             <Btn onClick={abrirNovoInc}>+ Novo Incidente</Btn>
@@ -251,12 +255,12 @@ export default function SST() {
               </tbody>
             </table>
           )}
-        </Card>
+        </div>
       )}
 
       {/* ── EPIs ── */}
       {aba === "epis" && (
-        <Card>
+        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: 20 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
             <h3 style={{ fontWeight: 700 }}>Entrega de EPIs</h3>
             <Btn onClick={abrirNovoEpi}>+ Registrar Entrega</Btn>
@@ -296,7 +300,7 @@ export default function SST() {
               </tbody>
             </table>
           )}
-        </Card>
+        </div>
       )}
 
       {/* ── Modal DDS ── */}
@@ -314,7 +318,7 @@ export default function SST() {
               </select>
             </div>
             <Input label="Participantes (separados por vírgula)" value={ddsForm.participantes_txt} onChange={e => setDdsForm(f => ({ ...f, participantes_txt: e.target.value }))} placeholder="André, João, Maria" />
-            <Textarea label="Observações" value={ddsForm.obs} onChange={e => setDdsForm(f => ({ ...f, obs: e.target.value }))} rows={3} />
+            <div><label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: "block", marginBottom: 4 }}>Observações</label><textarea value={ddsForm.obs} onChange={e => setDdsForm(f => ({ ...f, obs: e.target.value }))} rows={3} style={{ width: "100%", background: C.dark, border: `1px solid ${C.border}`, borderRadius: 6, padding: "8px 10px", color: C.text, fontSize: 14, fontFamily: "inherit", resize: "vertical", boxSizing: "border-box" }} /></div>
             <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 4 }}>
               <Btn variant="ghost" onClick={() => setDdsModal(false)}>Cancelar</Btn>
               <Btn onClick={salvarDDS} disabled={!ddsForm.tema}>Salvar</Btn>
@@ -362,8 +366,8 @@ export default function SST() {
                 {colabs.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
               </select>
             </div>
-            <Textarea label="Descrição do ocorrido *" value={incForm.descricao} onChange={e => setIncForm(f => ({ ...f, descricao: e.target.value }))} rows={3} placeholder="Descreva o que aconteceu..." />
-            <Textarea label="Ação corretiva" value={incForm.acao_corretiva} onChange={e => setIncForm(f => ({ ...f, acao_corretiva: e.target.value }))} rows={2} placeholder="O que foi ou será feito..." />
+            <div><label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: "block", marginBottom: 4 }}>Descrição do ocorrido *</label><textarea value={incForm.descricao} onChange={e => setIncForm(f => ({ ...f, descricao: e.target.value }))} rows={3} placeholder="Descreva o que aconteceu..." style={{ width: "100%", background: C.dark, border: `1px solid ${C.border}`, borderRadius: 6, padding: "8px 10px", color: C.text, fontSize: 14, fontFamily: "inherit", resize: "vertical", boxSizing: "border-box" }} /></div>
+            <div><label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: "block", marginBottom: 4 }}>Ação corretiva</label><textarea value={incForm.acao_corretiva} onChange={e => setIncForm(f => ({ ...f, acao_corretiva: e.target.value }))} rows={2} placeholder="O que foi ou será feito..." style={{ width: "100%", background: C.dark, border: `1px solid ${C.border}`, borderRadius: 6, padding: "8px 10px", color: C.text, fontSize: 14, fontFamily: "inherit", resize: "vertical", boxSizing: "border-box" }} /></div>
             <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 4 }}>
               <Btn variant="ghost" onClick={() => setIncModal(false)}>Cancelar</Btn>
               <Btn onClick={salvarInc} disabled={!incForm.descricao}>Salvar</Btn>
@@ -406,7 +410,7 @@ export default function SST() {
               <input type="checkbox" id="assinado" checked={epiForm.assinado} onChange={e => setEpiForm(f => ({ ...f, assinado: e.target.checked }))} style={{ width: 18, height: 18 }} />
               <label htmlFor="assinado" style={{ fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Colaborador assinou o recibo</label>
             </div>
-            <Textarea label="Observações" value={epiForm.obs} onChange={e => setEpiForm(f => ({ ...f, obs: e.target.value }))} rows={2} />
+            <div><label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: "block", marginBottom: 4 }}>Observações</label><textarea value={epiForm.obs} onChange={e => setEpiForm(f => ({ ...f, obs: e.target.value }))} rows={2} style={{ width: "100%", background: C.dark, border: `1px solid ${C.border}`, borderRadius: 6, padding: "8px 10px", color: C.text, fontSize: 14, fontFamily: "inherit", resize: "vertical", boxSizing: "border-box" }} /></div>
             <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 4 }}>
               <Btn variant="ghost" onClick={() => setEpiModal(false)}>Cancelar</Btn>
               <Btn onClick={salvarEpi} disabled={!epiForm.colaborador_id || !epiForm.item}>Salvar</Btn>

@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 import useAppStore from "../store/useAppStore";
 import { useModuleLoad } from "../hooks/useModuleLoad";
-import { Card, Btn, Modal, Input, Textarea } from "../components/ui";
+import Btn from "../components/ui/Btn";
+import Modal from "../components/ui/Modal";
+import Input from "../components/ui/Input";
 import { C } from "../utils/constants";
 import {
   listarPedidos, criarPedido, atualizarPedido, deletarPedido,
@@ -164,7 +166,7 @@ export default function Suprimentos() {
 
       {/* ── Pedidos ── */}
       {aba === "pedidos" && (
-        <Card>
+        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: 20 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
             <h3 style={{ fontWeight: 700 }}>Pedidos de Material</h3>
             <Btn onClick={abrirNovoPed}>+ Novo Pedido</Btn>
@@ -203,12 +205,12 @@ export default function Suprimentos() {
               </tbody>
             </table>
           )}
-        </Card>
+        </div>
       )}
 
       {/* ── Estoque ── */}
       {aba === "estoque" && (
-        <Card>
+        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: 20 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
             <h3 style={{ fontWeight: 700 }}>Estoque / Almoxarifado</h3>
             <Btn onClick={abrirNovoEst}>+ Novo Item</Btn>
@@ -247,7 +249,7 @@ export default function Suprimentos() {
               </tbody>
             </table>
           )}
-        </Card>
+        </div>
       )}
 
       {/* ── Modal Pedido ── */}
@@ -293,7 +295,7 @@ export default function Suprimentos() {
               <Input label="Solicitante" value={pedForm.solicitante} onChange={e => setPedForm(f => ({ ...f, solicitante: e.target.value }))} placeholder="Nome" />
               <Input label="Valor unitário (R$)" type="number" min="0" step="0.01" value={pedForm.valor_unitario} onChange={e => setPedForm(f => ({ ...f, valor_unitario: e.target.value }))} />
             </div>
-            <Textarea label="Observações" value={pedForm.obs} onChange={e => setPedForm(f => ({ ...f, obs: e.target.value }))} rows={2} />
+            <div><label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: "block", marginBottom: 4 }}>Observações</label><textarea value={pedForm.obs} onChange={e => setPedForm(f => ({ ...f, obs: e.target.value }))} rows={2} style={{ width: "100%", background: C.dark, border: `1px solid ${C.border}`, borderRadius: 6, padding: "8px 10px", color: C.text, fontSize: 14, fontFamily: "inherit", resize: "vertical", boxSizing: "border-box" }} /></div>
             <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 4 }}>
               <Btn variant="ghost" onClick={() => setPedModal(false)}>Cancelar</Btn>
               <Btn onClick={salvarPed} disabled={!pedForm.item || !pedForm.quantidade}>Salvar</Btn>
@@ -344,7 +346,7 @@ export default function Suprimentos() {
               </div>
               <Input label="Quantidade" type="number" min="0.001" step="0.001" value={movForm.quantidade} onChange={e => setMovForm(f => ({ ...f, quantidade: e.target.value }))} />
             </div>
-            <Textarea label="Observação" value={movForm.obs} onChange={e => setMovForm(f => ({ ...f, obs: e.target.value }))} rows={2} placeholder="Ex: Retirado para obra Res. São Paulo" />
+            <div><label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: "block", marginBottom: 4 }}>Observação</label><textarea value={movForm.obs} onChange={e => setMovForm(f => ({ ...f, obs: e.target.value }))} rows={2} placeholder="Ex: Retirado para obra Res. São Paulo" style={{ width: "100%", background: C.dark, border: `1px solid ${C.border}`, borderRadius: 6, padding: "8px 10px", color: C.text, fontSize: 14, fontFamily: "inherit", resize: "vertical", boxSizing: "border-box" }} /></div>
             <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 4 }}>
               <Btn variant="ghost" onClick={() => setMovModal(null)}>Cancelar</Btn>
               <Btn onClick={registrarMov}>Registrar</Btn>
