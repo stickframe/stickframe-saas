@@ -14,6 +14,22 @@ const COR_URGENCIA = {
 };
 const DISCIPLINAS = ["Civil", "Elétrico", "Hidráulico", "Estrutural", "Acabamento", "Outro"];
 const URGENCIAS = ["Normal", "Alta", "Crítica"];
+const SUGESTOES_TITULO = [
+  "Definição de especificação de material",
+  "Esclarecimento de detalhe construtivo",
+  "Conflito entre projetos",
+  "Dimensionamento de elemento estrutural",
+  "Alteração de layout aprovado",
+  "Compatibilização elétrica e hidráulica",
+  "Cota divergente em projeto",
+  "Falta de detalhe no projeto executivo",
+  "Aprovação de material substituto",
+  "Interferência de tubulação",
+  "Definição de acabamento",
+  "Nível de piso divergente",
+  "Revisão de memória de cálculo",
+  "Pendência de aprovação de fornecedor",
+];
 
 function Badge({ label, cor }) {
   return (
@@ -158,8 +174,12 @@ export default function RFIs({ obraId, userPerfil }) {
 
             <label style={{ display: "block", marginBottom: 12 }}>
               <span style={{ fontSize: 12, color: "#6b7280" }}>Título *</span>
-              <input value={form.titulo || ""} onChange={set("titulo")}
+              <input value={form.titulo || ""} onChange={set("titulo")} list="rfi-sugestoes"
+                placeholder="Ex: Conflito entre projetos…"
                 style={{ display: "block", width: "100%", marginTop: 4, padding: 8, borderRadius: 6, border: "1px solid #e2e4ea", background: "#f5f6f8", boxSizing: "border-box" }} />
+              <datalist id="rfi-sugestoes">
+                {SUGESTOES_TITULO.map(s => <option key={s} value={s} />)}
+              </datalist>
             </label>
 
             <label style={{ display: "block", marginBottom: 12 }}>
