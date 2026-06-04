@@ -60,6 +60,8 @@ const PontoColaborador     = lazyWithRetry(() => import("./pages/PontoColaborado
 const AmbienteQR           = lazyWithRetry(() => import("./pages/AmbienteQR"));
 const PainelQR             = lazyWithRetry(() => import("./pages/PainelQR"));
 const BI                   = lazyWithRetry(() => import("./pages/BI"));
+const SST                  = lazyWithRetry(() => import("./pages/SST"));
+const Suprimentos          = lazyWithRetry(() => import("./pages/Suprimentos"));
 
 const PAGES = {
   dashboard:  Dashboard,
@@ -87,6 +89,8 @@ const PAGES = {
   inteligencia:   Inteligencia,
   analise:        Analise,
   bi:             BI,
+  sst:            SST,
+  suprimentos:    Suprimentos,
 };
 
 function AuthenticatedApp() {
