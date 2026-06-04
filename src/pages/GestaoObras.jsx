@@ -1,5 +1,6 @@
 import ObraMembros from "../components/obras/ObraMembros";
 import ChangeOrders from "../components/obras/ChangeOrders";
+import { ArquivoVersoes } from "../components/obras/ArquivoVersoes";
 import { useObraPermission, useObrasVisiveis } from "../hooks/useObraPermission";
 import { useState, useEffect, useMemo } from "react";
 import { AlertTriangle, BarChart2, ClipboardList, DollarSign, HardHat, Pencil, Ruler, Search, Trash2, TrendingUp } from "../components/ui/Icon";
@@ -352,6 +353,7 @@ export default function GestaoObras() {
   const [chamadoForm,   setChamadoForm]   = useState({ titulo: "", descricao: "", categoria: "Outro", prioridade: "Média" });
   const [chamadoEd,     setChamadoEd]     = useState(null);
   const [chamadoSaving, setChamadoSaving] = useState(false);
+  const [versaoModal,   setVersaoModal]   = useState(null);
 
   useEffect(() => {
     if (!obraId && obras.length > 0) setObraId(obras[0].id);
@@ -1488,6 +1490,7 @@ export default function GestaoObras() {
                               {a.url && (
                                 <a href={a.url} target="_blank" rel="noreferrer" style={{ background: "#4a9eff22", border: "1px solid #4a9eff44", borderRadius: 6, color: "#4a9eff", fontSize: 11, fontWeight: 700, padding: "4px 10px", textDecoration: "none", textAlign: "center" }}>↓</a>
                               )}
+                              <button onClick={() => setVersaoModal({ id: a.id, nome: a.nome })} style={{ background: "#4a9eff22", border: "1px solid #4a9eff44", borderRadius: 6, color: "#4a9eff", fontSize: 11, fontWeight: 700, cursor: "pointer", padding: "4px 10px", fontFamily: "inherit", whiteSpace: "nowrap" }}>📋 Versões</button>
                               <button onClick={() => deleteArquivo(obraId, a.id, a.path)} style={{ background: C.danger + "22", border: `1px solid ${C.danger}44`, borderRadius: 6, color: C.danger, fontSize: 11, fontWeight: 700, cursor: "pointer", padding: "4px 10px", fontFamily: "inherit" }}><Trash2 size={13} /></button>
                             </div>
                           </div>
@@ -2157,6 +2160,16 @@ export default function GestaoObras() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Modal versões de arquivo */}
+      {versaoModal && (
+        <ArquivoVersoes
+          arquivoId={versaoModal.id}
+          arquivoNome={versaoModal.nome}
+          obraId={obraId}
+          onClose={() => setVersaoModal(null)}
+        />
       )}
 
       {/* Lightbox fotos */}
