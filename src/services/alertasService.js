@@ -52,6 +52,21 @@ export async function verificarAlertas(empresaId, userId) {
         url: "/obras",
       });
     }
+    // Certificações vencendo em 30 dias
+    const { data: certs } = await sb
+      .from("certificacoes")
+      .select("nr, descricao, data_validade, colaborador:colaboradores(nome)")
+      .eq("empresa_id", empresaId)
+      .lte("data_validade", em30dias)
+      .gte("data_validade", hoje);
+
+    if (certs?.length) {
+      await sendPush(userId, {
+        title: `🛡️ ${certs.length} certificação(ões) NR vencendo`,
+        body: certs.slice(0, 3).map(c => `${c.colaborador?.nome} — ${c.nr}`).join(" · "),
+        url: "/equipe",
+      });
+    }
   } catch (e) {
     console.warn("[alertas]", e.message);
   }
