@@ -54,6 +54,7 @@ import Input from "../components/ui/Input";
 import Badge from "../components/ui/Badge";
 import Modal from "../components/ui/Modal";
 import { gerarCobrancaAsaas } from "../services/repositories/obraRepository";
+import { gerarBoletimMedicao } from "../services/relatorioService";
 import { useObraPermission, useObrasVisiveis } from "../hooks/useObraPermission";
 
 export default function Medicoes() {
@@ -195,7 +196,13 @@ export default function Medicoes() {
             <h2 style={{ fontSize: 22, fontWeight: 800 }}>Medições de Obra</h2>
             <p style={{ color: C.muted, fontSize: 13, marginTop: 4 }}>Controle de avanço físico-financeiro por etapa</p>
           </div>
-          {podeEditar() && <Btn onClick={() => setModal(true)}>+ Nova medição</Btn>}
+          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+            <button onClick={() => gerarBoletimMedicao(obra, lista)}
+              style={{ padding: "7px 14px", background: "#b41e1e", color: "#fff", border: "none", borderRadius: 8, cursor: "pointer", fontWeight: 600, fontSize: 13, display: "inline-flex", alignItems: "center", gap: 6 }}>
+              📄 Boletim PDF
+            </button>
+            {podeEditar() && <Btn onClick={() => setModal(true)}>+ Nova medição</Btn>}
+          </div>
         </div>
 
         <div style={{ display: "flex", gap: 10, marginBottom: 22, flexWrap: "wrap" }}>

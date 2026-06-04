@@ -1,5 +1,7 @@
+import { RelatorioFotografico } from "../components/obras/RelatorioFotografico";
 import ObraMembros from "../components/obras/ObraMembros";
 import NaoConformidades from "../components/obras/NaoConformidades";
+import Garantias from "../components/obras/Garantias";
 import { RDOForm } from "../components/obras/RDOForm";
 import Comentarios from "../components/ui/Comentarios";
 import ChangeOrders from "../components/obras/ChangeOrders";
@@ -1053,7 +1055,7 @@ export default function GestaoObras() {
               <div>
                 {/* Abas */}
                 <div style={{ display: "flex", borderBottom: `1px solid ${C.border}` }}>
-                  {[["fases", "📋 Fases"], ["financeiro", "💰 Financeiro"], ["fluxo", "📈 Fluxo"], ["cronograma", "📅 Cronograma"], ["diario", "📓 Diário"], ["fotos", "📷 Fotos"], ["arquivos", "📁 Arquivos"], ["ncr", "⚠️ NCR"], ["rastreio", "🏷️ Rastreio"], ["historico", "🕑 Histórico"], ...(obra.status === "Concluída" ? [["garantia", "🛠️ Garantia"]] : []), ...(perfil === "diretor" ? [["membros", "👥 Membros"]] : []), ["comentarios", "💬 Comentários"]].map(([k, l]) => (
+                  {[["fases", "📋 Fases"], ["financeiro", "💰 Financeiro"], ["fluxo", "📈 Fluxo"], ["cronograma", "📅 Cronograma"], ["diario", "📓 Diário"], ["fotos", "📷 Fotos"], ["arquivos", "📁 Arquivos"], ["ncr", "⚠️ NCR"], ["rastreio", "🏷️ Rastreio"], ["historico", "🕑 Histórico"], ...(obra.status === "Concluída" ? [["garantia", "🛠️ Garantia"]] : []), ["garantias", "🛡️ Garantias"], ...(perfil === "diretor" ? [["membros", "👥 Membros"]] : []), ["comentarios", "💬 Comentários"]].map(([k, l]) => (
                     <button key={k} onClick={() => {
                       if (k === "diario" && userId) {
                         const pendentes = arqObra.filter((a) => a.disciplina && a.status_doc !== "Desatualizado" && !(a.cientes_uids || []).includes(userId));
@@ -1439,6 +1441,9 @@ export default function GestaoObras() {
                 {/* ABA ARQUIVOS */}
                 {abaAtiva === "arquivos" && (
                   <div style={{ background: C.surface, borderRadius: "0 0 12px 12px", border: `1px solid ${C.border}`, borderTop: "none", padding: 22 }}>
+                    <div style={{ marginBottom: 16 }}>
+                      <RelatorioFotografico obra={obra} arquivos={arqObra} />
+                    </div>
                     <label style={{
                       display: "block",
                       border: `2px dashed ${dragOver ? C.red : C.border}`,

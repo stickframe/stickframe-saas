@@ -170,3 +170,55 @@ export function gerarRelatorioMensal(empresaNome, obras, clientes, financeiro) {
 
   doc.save(`relatorio-mensal-${hoje.replace(/\//g, "-")}.pdf`);
 }
+
+export function gerarBoletimMedicao(obra, medicoes = []) {
+  const doc = new jsPDF();
+  const hoje = new Date().toLocaleDateString("pt-BR");
+
+  // Header
+  doc.setFillColor(180, 30, 30);
+  doc.rect(0, 0, 210, 28, "F");
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(16); doc.setFont("helvetica", "bold");
+  doc.text("STICKFRAME", 14, 12);
+  doc.setFontSize(10); doc.setFont("helvetica", "normal");
+  doc.text("Boletim de Medição", 14, 21);
+  doc.text(hoje, 170, 21);
+
+  doc.setTextColor(0, 0, 0);
+  doc.setFontSize(14); doc.setFont("helvetica", "bold");
+  doc.text(obra.nome || "Obra", 14, 40);
+  doc.setFontSize(10); doc.setFont("helvetica", "normal");
+  doc.setTextColor(100);
+  doc.text(`Contrato: R$ ${(obra.contrato||0).toLocaleString("pt-BR", {minimumFractionDigits:2})}  |  Progresso: ${obra.progresso||0}%`, 14, 48);
+
+  autoTable(doc, {
+    startY: 56,
+    head: [["#","Serviço / Etapa","Data","% Previsto","% Realizado","Valor Medido"]],
+    body: medicoes.map((m, i) => [
+      i + 1,
+      m.descricao || m.servico || "—",
+      m.data || "—",
+      `${m.percentual_previsto || 0}%`,
+      `${m.percentual || m.percentual_acumulado || 0}%`,
+      `R$ ${((m.percentual || 0) / 100 * (obra.contrato || 0)).toLocaleString("pt-BR", {minimumFractionDigits:2})}`,
+    ]),
+    headStyles: { fillColor: [180, 30, 30] },
+    alternateRowStyles: { fillColor: [248, 248, 248] },
+    foot: [[
+      "", "TOTAL", "",
+      `${medicoes.reduce((a,m) => a+(m.percentual_previsto||0),0).toFixed(1)}%`,
+      `${medicoes.reduce((a,m) => a+(m.percentual||m.percentual_acumulado||0),0).toFixed(1)}%`,
+      `R$ ${(medicoes.reduce((a,m) => a+(m.percentual||0)/100*(obra.contrato||0),0)).toLocaleString("pt-BR",{minimumFractionDigits:2})}`,
+    ]],
+    footStyles: { fillColor: [180,30,30], textColor: [255,255,255], fontStyle: "bold" },
+  });
+
+  const n = doc.internal.getNumberOfPages();
+  for (let i = 1; i <= n; i++) {
+    doc.setPage(i);
+    doc.setFontSize(8); doc.setTextColor(150);
+    doc.text(`Pág ${i}/${n} — StickFrame`, 14, 290);
+  }
+  doc.save(`boletim-${(obra.nome||"obra").replace(/\s+/g,"-").toLowerCase()}.pdf`);
+}
