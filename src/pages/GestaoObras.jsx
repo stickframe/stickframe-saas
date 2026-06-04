@@ -11,6 +11,7 @@ import { ArquivoVersoes } from "../components/obras/ArquivoVersoes";
 import { PlantaApontamentos } from "../components/obras/PlantaApontamentos";
 import { PdfViewer } from "../components/obras/PdfViewer";
 import { useObraPermission, useObrasVisiveis } from "../hooks/useObraPermission";
+import { sb } from "../services/supabase";
 import { useState, useEffect, useMemo } from "react";
 import { AlertTriangle, BarChart2, ClipboardList, DollarSign, HardHat, Pencil, Ruler, Search, Trash2, TrendingUp } from "../components/ui/Icon";
 import { useToast } from "../hooks/useToast";
