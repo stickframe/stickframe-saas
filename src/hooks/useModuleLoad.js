@@ -4,7 +4,7 @@ import useAppStore from "../store/useAppStore";
 const MODULOS_VALIDOS = new Set([
   "clientes", "fornecedores", "obras", "contratos", "orcamentos",
   "financeiro", "cotacoes", "diario", "medicoes", "arquivos",
-  "notificacoes", "atividades",
+  "notificacoes", "atividades", "historico",
 ]);
 
 export function useModuleLoad(modulo, id = null) {

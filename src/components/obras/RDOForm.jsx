@@ -15,7 +15,7 @@ export function RDOForm({ obraId, obraName, onSaved, onClose }) {
   async function salvar() {
     setSaving(true);
     try {
-      const { data, error } = await sb.from("diario_obra").insert({
+      const { data, error } = await sb.from("diario").insert({
         ...form,
         obra_id: obraId,
         empresa_id: getEmpresaId(),
