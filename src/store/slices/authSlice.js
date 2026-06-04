@@ -18,6 +18,9 @@ async function _hydrateUser(set, get, authUser, email) {
     empresaId: empId,
   });
   listarMembrosEmpresa().then((list) => get().setAllObraMembros(list)).catch(() => {});
+  import("../services/alertasService").then(({ verificarAlertas }) => {
+    verificarAlertas(empId, authUser.id);
+  }).catch(() => {});
 }
 
 export const createAuthSlice = (set, get) => ({
