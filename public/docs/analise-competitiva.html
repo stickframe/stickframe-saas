@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Análise Competitiva — StickFrame</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --sf-red: #981915;
+    --dark: #0f1117;
+    --card: #16191f;
+    --border: #252830;
+    --text: #e8eaf0;
+    --muted: #7b8394;
+    --green: #22c55e;
+    --yellow: #f59e0b;
+    --red: #ef4444;
+    --blue: #3b82f6;
+    --radius: 14px;
+  }
+  body { font-family: 'Inter', sans-serif; background: var(--dark); color: var(--text); font-size: 14px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+  a { color: var(--sf-red); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* NAV */
+  .nav { padding: 16px 48px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+  .nav-back { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 6px; transition: color 0.15s; }
+  .nav-back:hover { color: var(--text); text-decoration: none; }
+  .nav-sep { color: var(--border); }
+  .nav-current { font-size: 13px; color: var(--text); font-weight: 500; }
+
+  /* HEADER */
+  .page-header {
+    background: linear-gradient(135deg, #0f1117 0%, #1a0f0e 60%, #0f1117 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 56px 48px 48px;
+    position: relative; overflow: hidden;
+  }
+  .page-header::before {
+    content: ''; position: absolute; top: -60px; right: -60px;
+    width: 350px; height: 350px;
+    background: radial-gradient(circle, rgba(152,25,21,0.15) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .header-inner { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
+  .header-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--sf-red); background: rgba(152,25,21,0.15); border: 1px solid rgba(152,25,21,0.3);
+    padding: 5px 14px; border-radius: 20px; margin-bottom: 20px;
+  }
+  .header-title { font-size: clamp(28px, 4vw, 44px); font-weight: 800; color: #fff; line-height: 1.15; margin-bottom: 12px; letter-spacing: -0.5px; }
+  .header-sub { color: var(--muted); font-size: 15px; max-width: 580px; line-height: 1.7; }
+
+  /* LAYOUT */
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 48px; }
+  section { padding: 52px 0; border-bottom: 1px solid var(--border); }
+  section:last-of-type { border-bottom: none; }
+
+  /* SECTION HEADER */
+  .sec-header { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; }
+  .sec-icon { font-size: 22px; }
+  .sec-title { font-size: 20px; font-weight: 800; color: #fff; }
+  .sec-badge {
+    font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+    padding: 3px 10px; border-radius: 20px; margin-left: auto;
+  }
+  .badge-green { background: rgba(34,197,94,0.15); color: var(--green); border: 1px solid rgba(34,197,94,0.3); }
+  .badge-yellow { background: rgba(245,158,11,0.15); color: var(--yellow); border: 1px solid rgba(245,158,11,0.3); }
+  .badge-red { background: rgba(239,68,68,0.15); color: var(--red); border: 1px solid rgba(239,68,68,0.3); }
+  .badge-blue { background: rgba(59,130,246,0.15); color: var(--blue); border: 1px solid rgba(59,130,246,0.3); }
+  .badge-sf { background: rgba(152,25,21,0.15); color: #e87775; border: 1px solid rgba(152,25,21,0.4); }
+
+  /* TABLE */
+  .tbl-wrap { overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: 12px; }
+  table { width: 100%; border-collapse: collapse; }
+  thead th { background: #1e2128; padding: 12px 18px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); text-align: left; }
+  tbody tr { border-top: 1px solid var(--border); transition: background 0.15s; }
+  tbody tr:nth-child(even) { background: rgba(255,255,255,0.02); }
+  tbody tr:hover { background: rgba(152,25,21,0.06); }
+  tbody td { padding: 13px 18px; font-size: 13px; color: var(--text); vertical-align: middle; }
+  tbody td strong { color: #fff; font-weight: 700; }
+
+  /* DIFFERENTIAL CARDS */
+  .diff-grid { display: flex; flex-direction: column; gap: 16px; }
+  .diff-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 24px 28px;
+    border-left: 4px solid var(--sf-red);
+    transition: border-color 0.15s, transform 0.15s;
+  }
+  .diff-card:hover { transform: translateX(4px); }
+  .diff-card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; flex-wrap: wrap; }
+  .diff-num { width: 28px; height: 28px; border-radius: 8px; background: var(--sf-red); color: #fff; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .diff-title { font-size: 15px; font-weight: 700; color: #fff; flex: 1; }
+  .diff-unicidade { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 3px 10px; border-radius: 20px; white-space: nowrap; }
+  .diff-body { font-size: 13px; color: var(--muted); line-height: 1.7; margin-bottom: 14px; }
+  .diff-body ul { margin: 8px 0 0 16px; display: flex; flex-direction: column; gap: 4px; }
+  .diff-apelo { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .diff-apelo-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  .stars { color: #f59e0b; font-size: 15px; letter-spacing: 2px; }
+  .stars .empty { color: var(--border); }
+
+  /* PITCH BLOCKQUOTE */
+  .pitch {
+    background: rgba(152,25,21,0.08);
+    border-left: 4px solid var(--sf-red);
+    border-radius: 0 10px 10px 0;
+    padding: 16px 20px;
+    font-size: 13px; color: var(--text); font-style: italic; line-height: 1.8;
+    margin-top: 10px;
+  }
+  .pitch::before { content: '"'; font-size: 20px; font-weight: 800; color: var(--sf-red); margin-right: 4px; font-style: normal; vertical-align: -3px; }
+
+  /* RANKING TABLE */
+  .rank-num { font-size: 18px; font-weight: 900; color: var(--sf-red); }
+  .rank-1 .rank-num { color: #f59e0b; }
+  .rank-2 .rank-num { color: var(--muted); }
+  .rank-3 .rank-num { color: #cd7f32; }
+
+  /* RECOMMENDATIONS */
+  .rec-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+  .rec-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; }
+  .rec-card-title { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .rec-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+  .rec-list li { font-size: 12px; color: var(--muted); display: flex; align-items: flex-start; gap: 8px; line-height: 1.5; }
+  .rec-list li::before { content: '→'; color: var(--sf-red); font-weight: 700; flex-shrink: 0; }
+  .rec-list li strong { color: var(--text); }
+
+  /* FOOTER */
+  footer { border-top: 1px solid var(--border); padding: 32px 48px; text-align: center; }
+  footer p { font-size: 12px; color: var(--muted); }
+  footer strong { color: var(--text); }
+
+  @media (max-width: 768px) {
+    .nav, .page-header, .container, footer { padding-left: 20px; padding-right: 20px; }
+    .diff-card-header { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/" class="nav-back">← Voltar ao sistema</a>
+  <span class="nav-sep">/</span>
+  <span class="nav-current">Análise Competitiva</span>
+</nav>
+
+<header class="page-header">
+  <div class="header-inner">
+    <div class="header-badge">&#9733; Diferencial StickFrame</div>
+    <h1 class="header-title">Análise Competitiva dos Diferenciais</h1>
+    <p class="header-sub">Relatório completo de posicionamento no mercado de SaaS para construção civil — com foco em Steel Frame. Junho/2026.</p>
+  </div>
+</header>
+
+<main>
+  <!-- MERCADO -->
+  <section>
+    <div class="container">
+      <div class="sec-header">
+        <span class="sec-icon">📈</span>
+        <h2 class="sec-title">Contexto de Mercado</h2>
+        <span class="sec-badge badge-green">Oportunidade</span>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Indicador</th>
+              <th>Dado</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Crescimento Steel Frame Brasil (5 anos)</td><td><strong>+60%</strong> (ABCEM)</td></tr>
+            <tr><td>Crescimento produção de perfis galvanizados (2023)</td><td><strong>+27,7%</strong></td></tr>
+            <tr><td>CAGR projetado até 2030</td><td><strong>4,8% a.a.</strong></td></tr>
+            <tr><td>Grupo Innova Steel (crescimento ago/23–ago/24)</td><td><strong>+117%</strong></td></tr>
+            <tr><td>Mercado global projetado até 2027</td><td><strong>US$ 280 bilhões</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="pitch">O Steel Frame é o segmento de crescimento mais acelerado da construção civil brasileira. O momento para um SaaS vertical especializado é agora — antes que os ERPs genéricos (Sienge, TOTVS) se adaptem.</div>
+    </div>
+  </section>
+
+  <!-- 8 DIFERENCIAIS -->
+  <section>
+    <div class="container">
+      <div class="sec-header">
+        <span class="sec-icon">🏆</span>
+        <h2 class="sec-title">Avaliação dos 8 Diferenciais</h2>
+      </div>
+      <div class="diff-grid">
+
+        <!-- 1 -->
+        <div class="diff-card">
+          <div class="diff-card-header">
+            <div class="diff-num">1</div>
+            <h3 class="diff-title">🏆 Monitor de Preços em Tempo Real</h3>
+            <span class="diff-unicidade badge-red">Unicidade: Altíssima</span>
+          </div>
+          <div class="diff-body">
+            Não existe em nenhum concorrente nacional. Sienge, Obra Prima, Volare e Controlec não oferecem monitoramento de preços de insumos específicos de Steel Frame. Procore tem integrações com ERPs de custo, mas sem feed de mercado de insumos brasileiro.
+            <ul>
+              <li>Dado real capturado: +19,1% Montante LSF em uma janela recente</li>
+              <li>Argumento de ROI imediato para diretor financeiro e gestão de suprimentos</li>
+              <li>Uma alta de 19% no insumo principal pode inviabilizar uma obra</li>
+            </ul>
+          </div>
+          <div class="diff-apelo">
+            <span class="diff-apelo-label">Apelo comercial:</span>
+            <span class="stars">★★★★★</span>
+          </div>
+          <div class="pitch">Somos o único sistema que mostra quanto custava e quanto custa hoje o Montante que você vai comprar amanhã — diretamente no seu dashboard, sem planilha, sem pesquisa manual.</div>
+        </div>
+
+        <!-- 2 -->
+        <div class="diff-card">
+          <div class="diff-card-header">
+            <div class="diff-num">2</div>
+            <h3 class="diff-title">🔌 API Pública REST</h3>
+            <span class="diff-unicidade badge-yellow">Unicidade: Alta</span>
+          </div>
+          <div class="diff-body">
+            Sienge oferece +30 APIs, mas apenas para clientes no plano Data Center (preço enterprise). Obra Prima, Volare, Controlec: sem API documentada pública. StickFrame entrega Bearer token <code>sf_live_xxx</code> com documentação inline dentro do próprio sistema.
+            <ul>
+              <li>Apelo para construtoras médias que já usam ERP financeiro (Conta Azul, Omie)</li>
+              <li>Argumento de não lock-in também é poderoso</li>
+            </ul>
+          </div>
+          <div class="diff-apelo">
+            <span class="diff-apelo-label">Apelo comercial:</span>
+            <span class="stars">★★★★<span class="empty">★</span></span>
+          </div>
+          <div class="pitch">Sua contabilidade no Omie, sua obra no StickFrame — sem copiar e colar. Uma linha de código conecta os dois.</div>
+        </div>
+
+        <!-- 3 -->
+        <div class="diff-card">
+          <div class="diff-card-header">
+            <div class="diff-num">3</div>
+            <h3 class="diff-title">📋 Change Orders Formais (CO-001)</h3>
+            <span class="diff-unicidade badge-yellow">Unicidade: Alta</span>
+          </div>
+          <div class="diff-body">
+            Nenhum concorrente nacional tem fluxo formal. Procore tem módulo de Change Orders como um dos recursos mais citados internacionalmente. Concorrentes nacionais têm "ordem de serviço" genérica, sem fluxo Rascunho→Pendente→Aprovado com impacto automático no contrato.
+            <ul>
+              <li>Dor altíssima: construtoras perdem dinheiro por não formalizar alterações de escopo</li>
+              <li>CO numerado, com valor, prazo e assinatura digital — diferencial imediato</li>
+            </ul>
+          </div>
+          <div class="diff-apelo">
+            <span class="diff-apelo-label">Apelo comercial:</span>
+            <span class="stars">★★★★★</span>
+          </div>
+          <div class="pitch">Todo aditivo que não tem número, não tem valor, não tem aprovação formal — vira discussão no final da obra. O StickFrame formaliza isso em 30 segundos.</div>
+        </div>
+
+        <!-- 4 -->
+        <div class="diff-card">
+          <div class="diff-card-header">
+            <div class="diff-num">4</div>
+            <h3 class="diff-title">🛡️ Compliance NR por Colaborador</h3>
+            <span class="diff-unicidade badge-red">Unicidade: Muito Alta</span>
+          </div>
+          <div class="diff-body">
+            Não existe integrado em nenhum software de gestão de obras nacional. Sienge tem blog sobre NRs mas não tem módulo de certificações por colaborador. NR-18 (construção civil) é obrigatória, fiscalização frequente do MTE.
+            <ul>
+              <li>Steel Frame tem especificidades: NR-35 (altura), NR-10 (elétrica), NR-12 (máquinas de corte)</li>
+              <li>Argumento de risco jurídico e autuação — mais urgente que "eficiência"</li>
+              <li>Com crescimento do ESG em obras, cresce a pressão por documentação</li>
+            </ul>
+          </div>
+          <div class="diff-apelo">
+            <span class="diff-apelo-label">Apelo comercial:</span>
+            <span class="stars">★★★★★</span>
+          </div>
+          <div class="pitch">Na próxima fiscalização do MTE, você abre o StickFrame e mostra em 10 segundos quais colaboradores têm NR-18 vigente, quais estão vencendo e quais já estão irregulares. Sem planilha, sem surpresa.</div>
+        </div>
+
+        <!-- 5 -->
+        <div class="diff-card">
+          <div class="diff-card-header">
+            <div class="diff-num">5</div>
+            <h3 class="diff-title">📊 BI Multi-Obra (Benchmarking)</h3>
+            <span class="diff-unicidade badge-yellow">Unicidade: Alta</span>
+          </div>
+          <div class="diff-body">
+            Enterprise no Procore, inexistente nos nacionais. Procore tem Analytics como módulo premium separado (estimado: +US$ 300/mês). Sienge tem relatórios por obra mas não benchmarking comparativo com score composto.
+            <ul>
+              <li>Para construtoras com 3+ obras simultâneas, saber qual tem melhor custo/m² é decisão estratégica</li>
+              <li>Apelo direto para o Diretor/CEO; funciona bem como argumento de upsell</li>
+            </ul>
+          </div>
+          <div class="diff-apelo">
+            <span class="diff-apelo-label">Apelo comercial:</span>
+            <span class="stars">★★★★<span class="empty">★</span></span>
+          </div>
+          <div class="pitch">Com 5 obras abertas, você sabe qual está gerando margem e qual está sangrando? O BI do StickFrame cruza custo/m², prazo, NCRs e te diz onde está o problema — antes do relatório mensal.</div>
+        </div>
+
+        <!-- 6 -->
+        <div class="diff-card">
+          <div class="diff-card-header">
+            <div class="diff-num">6</div>
+            <h3 class="diff-title">🔗 Portal do Cliente via Token</h3>
+            <span class="diff-unicidade badge-blue">Unicidade: Média</span>
+          </div>
+          <div class="diff-body">
+            Sienge Portal do Cliente confirmado: requer login. StickFrame: acesso via token único na URL — zero fricção para o cliente final. O cliente não precisa criar conta, não precisa lembrar senha, abre no celular como link do WhatsApp.
+            <ul>
+              <li>Argumento de experiência do cliente — fácil de demonstrar em vídeo</li>
+              <li>Construtoras premium entendem que transparência fideliza e reduz SAC</li>
+            </ul>
+          </div>
+          <div class="diff-apelo">
+            <span class="diff-apelo-label">Apelo comercial:</span>
+            <span class="stars">★★★★<span class="empty">★</span></span>
+          </div>
+          <div class="pitch">Manda um link no WhatsApp pro seu cliente. Ele abre no celular e vê o diário de obra de hoje, a fase em que está a construção, os documentos. Sem cadastro, sem senha.</div>
+        </div>
+
+        <!-- 7 -->
+        <div class="diff-card">
+          <div class="diff-card-header">
+            <div class="diff-num">7</div>
+            <h3 class="diff-title">📱 PWA Instalável + Push Notifications</h3>
+            <span class="diff-unicidade badge-blue">Unicidade: Média-Alta</span>
+          </div>
+          <div class="diff-body">
+            Procore tem app iOS/Android nativo, mas incluso apenas em planos pagos e disponível em inglês. Obra Prima e Sienge têm apps mobile, mas sem push notifications proativas (garantias, follow-ups, NR). StickFrame: PWA instalável com notificações de contexto de obra.
+            <ul>
+              <li>Argumento de conveniência, não de dor crítica</li>
+              <li>Mais forte como demo visual ("instala agora no celular") do que argumento isolado</li>
+            </ul>
+          </div>
+          <div class="diff-apelo">
+            <span class="diff-apelo-label">Apelo comercial:</span>
+            <span class="stars">★★★<span class="empty">★★</span></span>
+          </div>
+          <div class="pitch">Sem baixar nada na App Store. Você instala o StickFrame no celular igual a um app — e recebe notificação quando uma garantia vai vencer ou um follow-up está atrasado.</div>
+        </div>
+
+        <!-- 8 -->
+        <div class="diff-card">
+          <div class="diff-card-header">
+            <div class="diff-num">8</div>
+            <h3 class="diff-title">🧮 Calculadora Pública → CRM</h3>
+            <span class="diff-unicidade badge-yellow">Unicidade: Alta</span>
+          </div>
+          <div class="diff-body">
+            Nenhum concorrente nacional tem funil integrado assim. Calculadora pública de Steel Frame por m² e padrão construtivo disponível em <code>/calcular</code> sem login. Lead que calcula vira automaticamente entrada no CRM.
+            <ul>
+              <li>Simultaneamente ferramenta de captação e de qualificação</li>
+              <li>Lead já chega com área e padrão preenchidos para o time comercial</li>
+              <li>Argumento de custo de aquisição de cliente — time comercial entende imediatamente</li>
+            </ul>
+          </div>
+          <div class="diff-apelo">
+            <span class="diff-apelo-label">Apelo comercial:</span>
+            <span class="stars">★★★★<span class="empty">★</span></span>
+          </div>
+          <div class="pitch">Coloca o link da calculadora no seu Instagram. Quem calcula o preço da casa já entra direto no seu CRM com a área e o padrão preenchidos — o vendedor liga sabendo o que o cliente quer.</div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- RANKING -->
+  <section>
+    <div class="container">
+      <div class="sec-header">
+        <span class="sec-icon">🥇</span>
+        <h2 class="sec-title">Ranking por Impacto Comercial</h2>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Diferencial</th>
+              <th>Unicidade</th>
+              <th>Dor que resolve</th>
+              <th>Decisor</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="rank-1"><td><span class="rank-num">1°</span></td><td><strong>Compliance NR</strong></td><td><span class="sec-badge badge-red">Muito Alta</span></td><td>Autuação / risco jurídico</td><td>RH, Eng. Segurança, Diretor</td></tr>
+            <tr class="rank-2"><td><span class="rank-num">2°</span></td><td><strong>Change Orders</strong></td><td><span class="sec-badge badge-yellow">Alta</span></td><td>Perda financeira em aditivos</td><td>Diretor, Gerente de obra</td></tr>
+            <tr class="rank-3"><td><span class="rank-num">3°</span></td><td><strong>Monitor de Preços</strong></td><td><span class="sec-badge badge-red">Altíssima</span></td><td>Alta de insumos sem aviso</td><td>Diretor, Compras</td></tr>
+            <tr><td><span class="rank-num">4°</span></td><td>Portal do Cliente</td><td><span class="sec-badge badge-blue">Média</span></td><td>SAC, fidelização</td><td>Comercial, Diretor</td></tr>
+            <tr><td><span class="rank-num">5°</span></td><td>Calculadora → CRM</td><td><span class="sec-badge badge-yellow">Alta</span></td><td>CAC, qualificação de leads</td><td>Comercial</td></tr>
+            <tr><td><span class="rank-num">6°</span></td><td>API Pública</td><td><span class="sec-badge badge-yellow">Alta</span></td><td>Integração, não lock-in</td><td>TI, Diretor</td></tr>
+            <tr><td><span class="rank-num">7°</span></td><td>BI Multi-Obra</td><td><span class="sec-badge badge-yellow">Alta</span></td><td>Decisão estratégica</td><td>Diretor, CEO</td></tr>
+            <tr><td><span class="rank-num">8°</span></td><td>PWA + Push</td><td><span class="sec-badge badge-blue">Média-Alta</span></td><td>Conveniência</td><td>Todos</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- RECOMENDAÇÕES -->
+  <section>
+    <div class="container">
+      <div class="sec-header">
+        <span class="sec-icon">💡</span>
+        <h2 class="sec-title">Recomendações de Posicionamento</h2>
+      </div>
+      <div class="rec-grid">
+        <div class="rec-card">
+          <div class="rec-card-title">🖥️ Landing Page — Hierarquia de Argumentos</div>
+          <ol class="rec-list">
+            <li><strong>Headline:</strong> "O único sistema feito para construtoras de Steel Frame"</li>
+            <li><strong>Subheadline:</strong> Compliance NR, Change Orders, Monitor de Preços e Portal do Cliente — tudo integrado</li>
+            <li><strong>Hero visual:</strong> Dashboard com Monitor de Preços mostrando variação real (+19,1%)</li>
+            <li><strong>3 cards acima da dobra:</strong> Compliance NR · Change Orders · Monitor de Preços</li>
+            <li><strong>CTA secundário:</strong> "Calcule o custo da sua obra agora →"</li>
+          </ol>
+        </div>
+        <div class="rec-card">
+          <div class="rec-card-title">💰 Pitch para Investidores</div>
+          <ul class="rec-list">
+            <li><strong>Mercado:</strong> +60% em 5 anos, sem vertical SaaS dominante</li>
+            <li><strong>Moat:</strong> dados de preços proprietários + compliance vertical Steel Frame</li>
+            <li><strong>Expansão:</strong> API como plataforma para ecossistema de fornecedores</li>
+          </ul>
+        </div>
+        <div class="rec-card">
+          <div class="rec-card-title">🏗️ Pitch para Construtoras</div>
+          <ul class="rec-list">
+            <li>Abrir com dor de <strong>Compliance NR</strong> (risco imediato)</li>
+            <li>Demonstrar <strong>Monitor de Preços</strong> ao vivo (wow moment visual)</li>
+            <li>Fechar com <strong>Change Orders</strong> (ROI tangível em R$)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="container">
+    <p><strong>StickFrame</strong> &copy; 2026 — Plataforma de gestão para construtoras de Steel Frame</p>
+    <p style="margin-top:6px;">Relatório gerado via deep-research — junho/2026</p>
+  </div>
+</footer>
+
+</body>
+</html>
