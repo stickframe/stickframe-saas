@@ -266,6 +266,120 @@ function FormLancamento({ tipo, form, setForm, onSave, onCancel }) {
 // ─── Financeiro ───────────────────────────────────────────────────────────────
 const FORM_VAZIO = { categoria: "Materiais", valor: "", data: "", descricao: "", data_vencimento: "" };
 
+function FolhaPagamento({ folhaMes, setFolhaMes, folhaDados, folhaLoading, folhaPagos, setFolhaPagos, colaboradores, C }) {
+  function imprimirHolerite(c) {
+    const col = (colaboradores || []).find(x => x.id === c.id || x.nome === c.nome);
+    const sal = col?.salario || 0;
+    const valor = sal ? (sal / 26) * c.diasTrabalhados : 0;
+    const w = window.open("", "_blank", "width=600,height=700");
+    w.document.write(`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+      <title>Holerite — ${c.nome}</title>
+      <style>
+        body{font-family:Arial,sans-serif;margin:0;padding:32px;color:#1a1a1a}
+        .logo{font-size:20px;font-weight:900;letter-spacing:3px;margin-bottom:4px}
+        .logo span{color:#981915}
+        h2{margin:24px 0 4px}
+        table{width:100%;border-collapse:collapse;margin-top:16px;font-size:13px}
+        th{background:#f0f0f3;padding:8px 12px;text-align:left;font-size:11px;color:#6b7280}
+        td{padding:8px 12px;border-bottom:1px solid #e4e4ea}
+        .total{font-size:18px;font-weight:800;color:#2e9e5b;margin-top:24px}
+        @media print{button{display:none}}
+      </style></head><body>
+      <div class="logo">STICK<span>FRAME</span></div>
+      <div style="font-size:11px;color:#6b7280">HOLERITE</div>
+      <h2>${c.nome}</h2>
+      <div style="font-size:13px;color:#6b7280">Competência: ${folhaMes}</div>
+      <table>
+        <thead><tr><th>ITEM</th><th style="text-align:right">VALOR</th></tr></thead>
+        <tbody>
+          <tr><td>Dias trabalhados</td><td style="text-align:right">${c.diasTrabalhados}</td></tr>
+          <tr><td>Horas totais</td><td style="text-align:right">${c.totalHoras.toFixed(1)}h</td></tr>
+          <tr><td>Salário base</td><td style="text-align:right">R$ ${sal.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})}</td></tr>
+        </tbody>
+      </table>
+      <div class="total">Valor a pagar: R$ ${valor.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
+      <div style="margin-top:40px;font-size:11px;color:#6b7280">Gerado em ${new Date().toLocaleDateString("pt-BR")} · StickFrame</div>
+      <br><button onclick="window.print()">🖨️ Imprimir</button>
+    </body></html>`);
+    w.document.close();
+  }
+
+  const totalColabs = folhaDados.length;
+  const totalHoras  = folhaDados.reduce((a, c) => a + c.totalHoras, 0);
+  const totalPagar  = folhaDados.reduce((a, c) => {
+    const col = (colaboradores || []).find(x => x.id === c.id || x.nome === c.nome);
+    const sal = col?.salario || 0;
+    return a + (sal ? (sal / 26) * c.diasTrabalhados : 0);
+  }, 0);
+
+  return (
+    <div>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
+        <span style={{ fontSize: 12, color: C.muted }}>Competência:</span>
+        <input type="month" value={folhaMes} onChange={e => setFolhaMes(e.target.value)}
+          style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 8, color: C.text, fontSize: 13, padding: "6px 12px", fontFamily: "inherit" }} />
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12, marginBottom: 20 }}>
+        {[
+          { label: "Colaboradores", value: totalColabs, color: C.border },
+          { label: "Horas Totais",  value: `${totalHoras.toFixed(1)}h`, color: C.warning },
+          { label: "Total a Pagar", value: `R$ ${totalPagar.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})}`, color: C.success },
+        ].map((k, i) => (
+          <div key={i} style={{ background: C.surface, borderRadius: 14, padding: "16px 18px", border: `1px solid ${C.border}`, borderTop: `3px solid ${k.color}` }}>
+            <div style={{ fontSize: 10, color: C.muted, letterSpacing: 1, marginBottom: 8 }}>{k.label.toUpperCase()}</div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: k.color === C.border ? C.text : k.color }}>{k.value}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{ background: C.surface, borderRadius: 14, border: `1px solid ${C.border}`, overflow: "hidden" }}>
+        {folhaLoading ? (
+          <div style={{ padding: 40, textAlign: "center", color: C.muted }}>Carregando pontos…</div>
+        ) : folhaDados.length === 0 ? (
+          <div style={{ padding: 40, textAlign: "center", color: C.muted }}>Nenhum ponto registrado neste período.</div>
+        ) : (
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+            <thead>
+              <tr>
+                {["Nome","Dias","Horas","Salário Base","A Pagar","Status","Ações"].map(h => (
+                  <th key={h} style={{ padding: "10px 14px", textAlign: "left", fontSize: 10, color: C.muted, letterSpacing: 1, background: C.darker, borderBottom: `1px solid ${C.border}` }}>{h.toUpperCase()}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {folhaDados.map(c => {
+                const col   = (colaboradores || []).find(x => x.id === c.id || x.nome === c.nome);
+                const sal   = col?.salario || 0;
+                const valor = sal ? (sal / 26) * c.diasTrabalhados : 0;
+                const pago  = !!folhaPagos[c.id];
+                return (
+                  <tr key={c.id} style={{ borderBottom: `1px solid ${C.border}`, opacity: pago ? 0.7 : 1 }}>
+                    <td style={{ padding: "10px 14px", fontWeight: 600 }}>{c.nome || c.id}</td>
+                    <td style={{ padding: "10px 14px", color: C.muted }}>{c.diasTrabalhados}</td>
+                    <td style={{ padding: "10px 14px", color: C.muted }}>{c.totalHoras.toFixed(1)}h</td>
+                    <td style={{ padding: "10px 14px", color: C.muted }}>{sal ? `R$ ${sal.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})}` : "—"}</td>
+                    <td style={{ padding: "10px 14px", fontWeight: 700, color: C.success }}>{valor ? `R$ ${valor.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})}` : "—"}</td>
+                    <td style={{ padding: "10px 14px" }}>
+                      {pago
+                        ? <span style={{ background: C.success+"22", color: C.success, padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700 }}>✅ Pago</span>
+                        : <span style={{ background: C.warning+"22", color: C.warning, padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700 }}>Pendente</span>}
+                    </td>
+                    <td style={{ padding: "10px 14px" }}>
+                      <div style={{ display: "flex", gap: 6 }}>
+                        {!pago && <button onClick={() => setFolhaPagos(p => ({ ...p, [c.id]: true }))} style={{ padding: "5px 10px", borderRadius: 7, border: `1px solid ${C.success}`, background: C.success+"18", color: C.success, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>Marcar pago</button>}
+                        <button onClick={() => imprimirHolerite(c)} style={{ padding: "5px 10px", borderRadius: 7, border: `1px solid ${C.border}`, background: "transparent", color: C.muted, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>🖨️ Holerite</button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function Financeiro() {
   useModuleLoad("obras");
   useModuleLoad("financeiro");
@@ -378,9 +492,9 @@ export default function Financeiro() {
       </div>
     </div>
     <div class="kpis">
-      <div class="kpi"><div class="label">RECEITAS</div><div class="value" style="color:#2e9e5b">R$ ${rec.toLocaleString("pt-BR",{minimumFractionDigits:2})}</div></div>
-      <div class="kpi"><div class="label">DESPESAS</div><div class="value" style="color:#c0392b">R$ ${dep.toLocaleString("pt-BR",{minimumFractionDigits:2})}</div></div>
-      <div class="kpi"><div class="label">SALDO</div><div class="value" style="color:${rec-dep>=0?"#2e9e5b":"#c0392b"}">R$ ${(rec-dep).toLocaleString("pt-BR",{minimumFractionDigits:2})}</div></div>
+      <div class="kpi"><div class="label">RECEITAS</div><div class="value" style="color:#2e9e5b">R$ ${rec.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})}</div></div>
+      <div class="kpi"><div class="label">DESPESAS</div><div class="value" style="color:#c0392b">R$ ${dep.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})}</div></div>
+      <div class="kpi"><div class="label">SALDO</div><div class="value" style="color:${rec-dep>=0?"#2e9e5b":"#c0392b"}">R$ ${(rec-dep).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})}</div></div>
     </div>
     <table><thead><tr><th>DATA</th><th>TIPO</th><th>CATEGORIA</th><th>DESCRIÇÃO</th><th style="text-align:right">VALOR</th></tr></thead>
     <tbody>${rows || '<tr><td colspan="5" style="text-align:center;color:#6b7280;padding:24px">Nenhum lançamento</td></tr>'}</tbody></table>
@@ -630,6 +744,13 @@ export default function Financeiro() {
           <FluxoCaixaMensal obraId={obraId} />
         ) : finTab === "fluxo" ? (
           <FluxoCaixa lancamentos={Object.values(financeiro).flatMap((f) => f.lancamentos || [])} />
+        ) : finTab === "folha" ? (
+          <FolhaPagamento
+            folhaMes={folhaMes} setFolhaMes={setFolhaMes}
+            folhaDados={folhaDados} folhaLoading={folhaLoading}
+            folhaPagos={folhaPagos} setFolhaPagos={setFolhaPagos}
+            colaboradores={colaboradores} C={C}
+          />
         ) : (<>
 
         {/* KPIs */}
@@ -954,8 +1075,8 @@ export default function Financeiro() {
         </div>
       </>)} {/* end finTab === "lancamentos" */}
 
-      {/* ── Folha de Pagamento ─────────────────────────────────────────────── */}
-      {finTab === "folha" && (() => {
+      {/* bloco folha removido — renderizado via ternário acima */}
+      {false && (() => {
         const totalColabs = folhaDados.length;
         const totalHoras  = folhaDados.reduce((a, c) => a + c.totalHoras, 0);
         const totalPagar  = folhaDados.reduce((a, c) => {
@@ -991,10 +1112,10 @@ export default function Financeiro() {
               <tbody>
                 <tr><td>Dias trabalhados</td><td style="text-align:right">${c.diasTrabalhados}</td></tr>
                 <tr><td>Horas totais</td><td style="text-align:right">${c.totalHoras.toFixed(1)}h</td></tr>
-                <tr><td>Salário base</td><td style="text-align:right">R$ ${sal.toLocaleString("pt-BR",{minimumFractionDigits:2})}</td></tr>
+                <tr><td>Salário base</td><td style="text-align:right">R$ ${sal.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})}</td></tr>
               </tbody>
             </table>
-            <div class="total">Valor a pagar: R$ ${valor.toLocaleString("pt-BR",{minimumFractionDigits:2})}</div>
+            <div class="total">Valor a pagar: R$ ${valor.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
             <div style="margin-top:40px;font-size:11px;color:#6b7280">Gerado em ${new Date().toLocaleDateString("pt-BR")} · StickFrame</div>
             <br><button onclick="window.print()">🖨️ Imprimir</button>
           </body></html>`);
@@ -1022,7 +1143,7 @@ export default function Financeiro() {
               {[
                 { label: "Colaboradores", value: totalColabs, color: C.border },
                 { label: "Horas Totais",  value: `${totalHoras.toFixed(1)}h`, color: C.warning },
-                { label: "Total a Pagar", value: `R$ ${totalPagar.toLocaleString("pt-BR",{minimumFractionDigits:2})}`, color: C.success },
+                { label: "Total a Pagar", value: `R$ ${totalPagar.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})}`, color: C.success },
               ].map((k, i) => (
                 <div key={i} style={{
                   background: C.surface, borderRadius: 14, padding: "16px 18px",
@@ -1065,10 +1186,10 @@ export default function Financeiro() {
                           <td style={{ padding: "10px 14px", color: C.muted }}>{c.diasTrabalhados}</td>
                           <td style={{ padding: "10px 14px", color: C.muted }}>{c.totalHoras.toFixed(1)}h</td>
                           <td style={{ padding: "10px 14px", color: C.muted }}>
-                            {sal ? `R$ ${sal.toLocaleString("pt-BR",{minimumFractionDigits:2})}` : "—"}
+                            {sal ? `R$ ${sal.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})}` : "—"}
                           </td>
                           <td style={{ padding: "10px 14px", fontWeight: 700, color: C.success }}>
-                            {valor ? `R$ ${valor.toLocaleString("pt-BR",{minimumFractionDigits:2})}` : "—"}
+                            {valor ? `R$ ${valor.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})}` : "—"}
                           </td>
                           <td style={{ padding: "10px 14px" }}>
                             {pago
