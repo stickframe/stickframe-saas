@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import useAppStore from "../../store/useAppStore";
 
 const PASSOS = [
@@ -34,28 +35,30 @@ export function OnboardingTour() {
   if (!visivel) return null;
   const atual = PASSOS[passo];
 
-  return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <div style={{ background: "var(--bg-card)", borderRadius: 20, padding: "40px 36px", width: "min(460px, 90vw)", textAlign: "center", position: "relative", boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
-        <button onClick={fechar} style={{ position: "absolute", top: 14, right: 16, background: "none", border: "none", fontSize: 20, cursor: "pointer", color: "var(--text-muted)" }}>✕</button>
-        <div style={{ fontSize: 60, marginBottom: 16 }}>{atual.icone}</div>
-        <h2 style={{ margin: "0 0 10px", fontSize: 21 }}>{atual.titulo}</h2>
-        <p style={{ color: "var(--text-muted)", fontSize: 14, lineHeight: 1.65, margin: "0 0 28px" }}>{atual.descricao}</p>
-        <div style={{ display: "flex", justifyContent: "center", gap: 6, marginBottom: 24 }}>
+  const modal = (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 99999, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+      <div style={{ background: "var(--bg-card,#fff)", borderRadius: 20, padding: "40px 36px", width: "min(480px, 100%)", textAlign: "center", position: "relative", boxShadow: "0 24px 80px rgba(0,0,0,0.4)" }}>
+        <button onClick={fechar} style={{ position: "absolute", top: 14, right: 16, background: "none", border: "none", fontSize: 22, cursor: "pointer", color: "#999", lineHeight: 1 }}>✕</button>
+        <div style={{ fontSize: 64, marginBottom: 16, lineHeight: 1 }}>{atual.icone}</div>
+        <h2 style={{ margin: "0 0 12px", fontSize: 22, fontWeight: 800 }}>{atual.titulo}</h2>
+        <p style={{ color: "#666", fontSize: 15, lineHeight: 1.65, margin: "0 0 28px" }}>{atual.descricao}</p>
+        <div style={{ display: "flex", justifyContent: "center", gap: 6, marginBottom: 28 }}>
           {PASSOS.map((_, i) => (
-            <div key={i} onClick={() => setPasso(i)} style={{ width: i === passo ? 22 : 8, height: 8, borderRadius: 4, background: i === passo ? "#b41e1e" : "var(--border)", cursor: "pointer", transition: "all 0.2s" }} />
+            <div key={i} onClick={() => setPasso(i)} style={{ width: i === passo ? 24 : 8, height: 8, borderRadius: 4, background: i === passo ? "#b41e1e" : "#ddd", cursor: "pointer", transition: "all 0.25s" }} />
           ))}
         </div>
         <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
           {passo > 0 && (
-            <button onClick={() => setPasso(p => p - 1)} style={{ padding: "9px 18px", borderRadius: 10, border: "1px solid var(--border)", background: "none", cursor: "pointer", fontSize: 14 }}>← Voltar</button>
+            <button onClick={() => setPasso(p => p - 1)} style={{ padding: "10px 20px", borderRadius: 10, border: "1px solid #ddd", background: "none", cursor: "pointer", fontSize: 14, fontWeight: 600 }}>← Voltar</button>
           )}
-          <button onClick={avancar} style={{ padding: "9px 26px", borderRadius: 10, border: "none", background: "#b41e1e", color: "#fff", cursor: "pointer", fontWeight: 700, fontSize: 14 }}>
+          <button onClick={avancar} style={{ padding: "10px 28px", borderRadius: 10, border: "none", background: "#b41e1e", color: "#fff", cursor: "pointer", fontWeight: 700, fontSize: 15 }}>
             {passo === PASSOS.length - 1 ? "Começar! 🚀" : "Próximo →"}
           </button>
         </div>
-        <button onClick={fechar} style={{ marginTop: 10, background: "none", border: "none", fontSize: 12, color: "var(--text-muted)", cursor: "pointer" }}>Pular tour</button>
+        <button onClick={fechar} style={{ display: "block", margin: "12px auto 0", background: "none", border: "none", fontSize: 12, color: "#999", cursor: "pointer" }}>Pular tour</button>
       </div>
     </div>
   );
+
+  return createPortal(modal, document.body);
 }
