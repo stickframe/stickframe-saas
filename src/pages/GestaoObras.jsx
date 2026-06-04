@@ -323,6 +323,9 @@ export default function GestaoObras() {
   const [confirm,     setConfirm]     = useState(false);
   const [dragOver,    setDragOver]    = useState(false);
   const [abaAtiva,    setAbaAtiva]    = useState("fases");
+  const [pontosObra,    setPontosObra]    = useState([]);
+  const [pontosLoading, setPontosLoading] = useState(false);
+  const [pontosPeriodo, setPontosPeriodo] = useState("hoje");
   const [catFiltro,   setCatFiltro]   = useState("Todos");
   const [discFiltro,  setDiscFiltro]  = useState("Todos");
   const [statusDocFiltro, setStatusDocFiltro] = useState("Todos");
@@ -398,6 +401,23 @@ export default function GestaoObras() {
       loadHistoricoObra(obraId).then((d) => { setHistObra(d); setHistLoading(false); });
     }
   }, [abaAtiva, obraId]);
+
+  useEffect(() => {
+    if (abaAtiva !== "presenca" || !obraId) return;
+    setPontosLoading(true);
+    let query = sb.from("pontos").select("*").eq("obra_id", obraId).order("created_at", { ascending: false });
+    const now = new Date();
+    if (pontosPeriodo === "hoje") {
+      query = query.gte("created_at", new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString());
+    } else if (pontosPeriodo === "semana") {
+      const d = new Date(now); d.setDate(d.getDate() - 7);
+      query = query.gte("created_at", d.toISOString());
+    } else {
+      const d = new Date(now); d.setDate(1); d.setHours(0, 0, 0, 0);
+      query = query.gte("created_at", d.toISOString());
+    }
+    query.then(({ data }) => { setPontosObra(data || []); setPontosLoading(false); });
+  }, [abaAtiva, obraId, pontosPeriodo]);
 
   async function gerarTokenPortal() {
     const base = (obra.nome || "obra")
@@ -1059,7 +1079,7 @@ export default function GestaoObras() {
                 {/* Abas */}
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: `1px solid ${C.border}` }}>
                 <div style={{ display: "flex", flex: 1, overflowX: "auto" }}>
-                  {[["fases", "📋 Fases"], ["financeiro", "💰 Financeiro"], ["fluxo", "📈 Fluxo"], ["cronograma", "📅 Cronograma"], ["diario", "📓 Diário"], ["fotos", "📷 Fotos"], ["arquivos", "📁 Arquivos"], ["ncr", "⚠️ NCR"], ["rfis", "📝 RFIs"], ["rastreio", "🏷️ Rastreio"], ["historico", "🕑 Histórico"], ...(obra.status === "Concluída" ? [["garantia", "🛠️ Garantia"]] : []), ["garantias", "🛡️ Garantias"], ...(perfil === "diretor" ? [["membros", "👥 Membros"]] : []), ["comentarios", "💬 Comentários"]].map(([k, l]) => (
+                  {[["fases", "📋 Fases"], ["financeiro", "💰 Financeiro"], ["fluxo", "📈 Fluxo"], ["cronograma", "📅 Cronograma"], ["diario", "📓 Diário"], ["fotos", "📷 Fotos"], ["arquivos", "📁 Arquivos"], ["ncr", "⚠️ NCR"], ["rfis", "📝 RFIs"], ["rastreio", "🏷️ Rastreio"], ["historico", "🕑 Histórico"], ...(obra.status === "Concluída" ? [["garantia", "🛠️ Garantia"]] : []), ["garantias", "🛡️ Garantias"], ...(perfil === "diretor" ? [["membros", "👥 Membros"]] : []), ["presenca", "👥 Presença"], ["comentarios", "💬 Comentários"]].map(([k, l]) => (
                     <button key={k} onClick={() => {
                       if (k === "diario" && userId) {
                         const pendentes = arqObra.filter((a) => a.disciplina && a.status_doc !== "Desatualizado" && !(a.cientes_uids || []).includes(userId));
@@ -1911,6 +1931,92 @@ export default function GestaoObras() {
                     <Garantias obraId={obraId} />
                   </div>
                 )}
+
+                {abaAtiva === "presenca" && (() => {
+                  // Load effect handled outside JSX — see useEffect below
+                  const byColab = {};
+                  pontosObra.forEach(p => {
+                    const date = new Date(p.created_at).toLocaleDateString("pt-BR");
+                    const key = `${p.nome}-${date}`;
+                    if (!byColab[key]) byColab[key] = { nome: p.nome, date, pontos: [] };
+                    byColab[key].pontos.push(p);
+                  });
+                  const rows = Object.values(byColab).map(g => {
+                    const sorted = g.pontos.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+                    const entrada = sorted.find(p => p.tipo === "entrada");
+                    const saida = sorted.filter(p => p.tipo === "saida").at(-1);
+                    const horas = entrada && saida ? ((new Date(saida.created_at) - new Date(entrada.created_at)) / 3600000) : null;
+                    const emObra = entrada && !saida;
+                    return { nome: g.nome, date: g.date, entrada, saida, horas, emObra };
+                  });
+                  const totalColabs = new Set(rows.map(r => r.nome)).size;
+                  const totalHoras = rows.reduce((acc, r) => acc + (r.horas || 0), 0);
+                  return (
+                    <div style={{ padding: "20px 0" }}>
+                      {/* Period filter */}
+                      <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
+                        {[["hoje", "Hoje"], ["semana", "Semana"], ["mes", "Mês"]].map(([v, l]) => (
+                          <button key={v} onClick={() => setPontosPeriodo(v)} style={{
+                            padding: "6px 16px", borderRadius: 8, border: `1px solid ${pontosPeriodo === v ? C.red : C.border}`,
+                            background: pontosPeriodo === v ? C.red : C.surface, color: pontosPeriodo === v ? "#fff" : C.text,
+                            fontSize: 13, fontWeight: pontosPeriodo === v ? 700 : 400, cursor: "pointer", fontFamily: "inherit",
+                          }}>{l}</button>
+                        ))}
+                      </div>
+                      {/* Summary cards */}
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 20 }}>
+                        <div style={{ background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, padding: "14px 18px" }}>
+                          <div style={{ fontSize: 11, color: C.muted, fontWeight: 700, letterSpacing: 1, marginBottom: 4 }}>COLABORADORES</div>
+                          <div style={{ fontSize: 26, fontWeight: 800, color: C.text }}>{totalColabs}</div>
+                        </div>
+                        <div style={{ background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, padding: "14px 18px" }}>
+                          <div style={{ fontSize: 11, color: C.muted, fontWeight: 700, letterSpacing: 1, marginBottom: 4 }}>HORAS TOTAIS</div>
+                          <div style={{ fontSize: 26, fontWeight: 800, color: C.text }}>{totalHoras.toFixed(1)}h</div>
+                        </div>
+                      </div>
+                      {/* Table */}
+                      {pontosLoading ? (
+                        <div style={{ color: C.muted, textAlign: "center", padding: 32 }}>Carregando...</div>
+                      ) : rows.length === 0 ? (
+                        <div style={{ color: C.muted, textAlign: "center", padding: 40, background: C.surface, borderRadius: 12, border: `1px solid ${C.border}` }}>
+                          Nenhum registro de presença neste período
+                        </div>
+                      ) : (
+                        <div style={{ background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, overflow: "hidden" }}>
+                          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                            <thead>
+                              <tr style={{ borderBottom: `1px solid ${C.border}` }}>
+                                {["Colaborador", "Data", "Entrada", "Saída", "Horas", "Status"].map(h => (
+                                  <th key={h} style={{ padding: "10px 14px", textAlign: "left", fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted }}>{h.toUpperCase()}</th>
+                                ))}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {rows.map((r, i) => (
+                                <tr key={i} style={{ borderBottom: `1px solid ${C.border}`, background: i % 2 === 0 ? "transparent" : "rgba(0,0,0,0.02)" }}>
+                                  <td style={{ padding: "10px 14px", fontSize: 13, fontWeight: 600, color: C.text }}>{r.nome || "—"}</td>
+                                  <td style={{ padding: "10px 14px", fontSize: 13, color: C.muted }}>{r.date}</td>
+                                  <td style={{ padding: "10px 14px", fontSize: 13, color: C.text }}>{r.entrada ? new Date(r.entrada.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : "—"}</td>
+                                  <td style={{ padding: "10px 14px", fontSize: 13, color: C.text }}>{r.saida ? new Date(r.saida.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : "—"}</td>
+                                  <td style={{ padding: "10px 14px", fontSize: 13, color: C.text }}>{r.horas != null ? `${r.horas.toFixed(1)}h` : "—"}</td>
+                                  <td style={{ padding: "10px 14px" }}>
+                                    {r.emObra ? (
+                                      <span style={{ background: "#d1fae5", color: "#065f46", borderRadius: 6, padding: "3px 10px", fontSize: 12, fontWeight: 700 }}>Em obra</span>
+                                    ) : r.entrada ? (
+                                      <span style={{ background: "#e5e7eb", color: "#374151", borderRadius: 6, padding: "3px 10px", fontSize: 12, fontWeight: 700 }}>Saiu</span>
+                                    ) : (
+                                      <span style={{ color: C.muted, fontSize: 12 }}>—</span>
+                                    )}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
 
                 {abaAtiva === "comentarios" && (
                   <div style={{ padding: "20px 0" }}>
