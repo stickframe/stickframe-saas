@@ -269,20 +269,71 @@ const FORM_VAZIO = { categoria: "Materiais", valor: "", data: "", descricao: "",
 export default function Financeiro() {
   useModuleLoad("obras");
   useModuleLoad("financeiro");
+  useModuleLoad("colaboradores");
 
   const obras         = useAppStore((s) => s.obras);
   const financeiro    = useAppStore((s) => s.financeiro);
+  const colaboradores = useAppStore((s) => s.colaboradores);
   const addLancamento = useAppStore((s) => s.addLancamento);
   const updateObra    = useAppStore((s) => s.updateObra);
 
   const [obraId,      setObraId]      = useState(null);
-  const [finTab,      setFinTab]      = useState("lancamentos"); // "lancamentos" | "fluxo" | "dre" | "fluxo-mensal"
+  const [finTab,      setFinTab]      = useState("lancamentos"); // "lancamentos" | "fluxo" | "dre" | "fluxo-mensal" | "folha"
   const [modal,       setModal]       = useState(null); // "receita" | "despesa"
   const [form,        setForm]        = useState(FORM_VAZIO);
   const { toast, mostrarToast } = useToast();
   const [editOrc,     setEditOrc]     = useState(false); // editar orçamento por categoria
   const [orcForm,     setOrcForm]     = useState({});    // { [categoria]: valor }
   const [showImportFinanceiro, setShowImportFinanceiro] = useState(false);
+
+  // ── Folha de Pagamento ──────────────────────────────────────────────────────
+  const [folhaMes, setFolhaMes] = useState(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
+  });
+  const [folhaDados,   setFolhaDados]   = useState([]);
+  const [folhaLoading, setFolhaLoading] = useState(false);
+  const [folhaPagos,   setFolhaPagos]   = useState({}); // { colaboradorId: true }
+
+  useEffect(() => {
+    if (finTab !== "folha") return;
+    setFolhaLoading(true);
+    const [ano, mes] = folhaMes.split("-").map(Number);
+    const inicio = new Date(ano, mes-1, 1).toISOString();
+    const fim    = new Date(ano, mes,   1).toISOString();
+    sb.from("pontos")
+      .select("colaborador_id, nome, tipo, created_at, obra_id")
+      .gte("created_at", inicio)
+      .lt("created_at", fim)
+      .order("created_at")
+      .then(({ data }) => {
+        const byColab = {};
+        (data || []).forEach(p => {
+          if (!byColab[p.colaborador_id]) byColab[p.colaborador_id] = { id: p.colaborador_id, nome: p.nome, pontos: [] };
+          byColab[p.colaborador_id].pontos.push(p);
+        });
+        setFolhaDados(Object.values(byColab).map(c => {
+          const days = {};
+          c.pontos.forEach(p => {
+            const d = new Date(p.created_at).toLocaleDateString("pt-BR");
+            if (!days[d]) days[d] = [];
+            days[d].push(p);
+          });
+          let totalHoras = 0, diasTrabalhados = 0;
+          Object.values(days).forEach(dayPontos => {
+            const sorted = dayPontos.sort((a,b) => new Date(a.created_at)-new Date(b.created_at));
+            let last = null, dayHoras = 0;
+            sorted.forEach(p => {
+              if (p.tipo === "entrada") last = new Date(p.created_at);
+              else if (p.tipo === "saida" && last) { dayHoras += (new Date(p.created_at)-last)/3600000; last=null; }
+            });
+            if (dayHoras > 0) { totalHoras += dayHoras; diasTrabalhados++; }
+          });
+          return { ...c, totalHoras, diasTrabalhados };
+        }));
+        setFolhaLoading(false);
+      });
+  }, [finTab, folhaMes]);
 
   function exportarRelatorio() {
     const o   = obras.find((x) => x.id === obraId);
@@ -563,7 +614,7 @@ export default function Financeiro() {
 
         {/* Tabs */}
         <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
-          {[["lancamentos", "📊 Análise"], ["fluxo", "📅 Fluxo de Caixa"], ["dre", "📊 DRE"], ["fluxo-mensal", "💸 Fluxo Mensal"]].map(([k, label]) => (
+          {[["lancamentos", "📊 Análise"], ["fluxo", "📅 Fluxo de Caixa"], ["dre", "📊 DRE"], ["fluxo-mensal", "💸 Fluxo Mensal"], ["folha", "💰 Folha"]].map(([k, label]) => (
             <button key={k} onClick={() => setFinTab(k)} style={{
               padding: "7px 16px", borderRadius: 8, border: `1px solid ${finTab === k ? C.red : C.border}`,
               background: finTab === k ? C.red + "18" : "transparent",
@@ -902,6 +953,156 @@ export default function Financeiro() {
           </div>
         </div>
       </>)} {/* end finTab === "lancamentos" */}
+
+      {/* ── Folha de Pagamento ─────────────────────────────────────────────── */}
+      {finTab === "folha" && (() => {
+        const totalColabs = folhaDados.length;
+        const totalHoras  = folhaDados.reduce((a, c) => a + c.totalHoras, 0);
+        const totalPagar  = folhaDados.reduce((a, c) => {
+          const col = (colaboradores || []).find(x => x.id === c.id || x.nome === c.nome);
+          const sal = col?.salario || 0;
+          return a + (sal ? (sal / 26) * c.diasTrabalhados : 0);
+        }, 0);
+
+        function imprimirHolerite(c) {
+          const col = (colaboradores || []).find(x => x.id === c.id || x.nome === c.nome);
+          const sal = col?.salario || 0;
+          const valor = sal ? (sal / 26) * c.diasTrabalhados : 0;
+          const w = window.open("", "_blank", "width=600,height=700");
+          w.document.write(`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+            <title>Holerite — ${c.nome}</title>
+            <style>
+              body{font-family:Arial,sans-serif;margin:0;padding:32px;color:#1a1a1a}
+              .logo{font-size:20px;font-weight:900;letter-spacing:3px;margin-bottom:4px}
+              .logo span{color:#981915}
+              h2{margin:24px 0 4px}
+              table{width:100%;border-collapse:collapse;margin-top:16px;font-size:13px}
+              th{background:#f0f0f3;padding:8px 12px;text-align:left;font-size:11px;color:#6b7280}
+              td{padding:8px 12px;border-bottom:1px solid #e4e4ea}
+              .total{font-size:18px;font-weight:800;color:#2e9e5b;margin-top:24px}
+              @media print{button{display:none}}
+            </style></head><body>
+            <div class="logo">STICK<span>FRAME</span></div>
+            <div style="font-size:11px;color:#6b7280">HOLERITE</div>
+            <h2>${c.nome}</h2>
+            <div style="font-size:13px;color:#6b7280">Competência: ${folhaMes}</div>
+            <table>
+              <thead><tr><th>ITEM</th><th style="text-align:right">VALOR</th></tr></thead>
+              <tbody>
+                <tr><td>Dias trabalhados</td><td style="text-align:right">${c.diasTrabalhados}</td></tr>
+                <tr><td>Horas totais</td><td style="text-align:right">${c.totalHoras.toFixed(1)}h</td></tr>
+                <tr><td>Salário base</td><td style="text-align:right">R$ ${sal.toLocaleString("pt-BR",{minimumFractionDigits:2})}</td></tr>
+              </tbody>
+            </table>
+            <div class="total">Valor a pagar: R$ ${valor.toLocaleString("pt-BR",{minimumFractionDigits:2})}</div>
+            <div style="margin-top:40px;font-size:11px;color:#6b7280">Gerado em ${new Date().toLocaleDateString("pt-BR")} · StickFrame</div>
+            <br><button onclick="window.print()">🖨️ Imprimir</button>
+          </body></html>`);
+          w.document.close();
+        }
+
+        return (
+          <div>
+            {/* Seletor de mês */}
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
+              <span style={{ fontSize: 12, color: C.muted }}>Competência:</span>
+              <input
+                type="month"
+                value={folhaMes}
+                onChange={e => setFolhaMes(e.target.value)}
+                style={{
+                  background: C.surface, border: `1px solid ${C.border}`, borderRadius: 8,
+                  color: C.text, fontSize: 13, padding: "6px 12px", fontFamily: "inherit",
+                }}
+              />
+            </div>
+
+            {/* KPI summary */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12, marginBottom: 20 }}>
+              {[
+                { label: "Colaboradores", value: totalColabs, color: C.border },
+                { label: "Horas Totais",  value: `${totalHoras.toFixed(1)}h`, color: C.warning },
+                { label: "Total a Pagar", value: `R$ ${totalPagar.toLocaleString("pt-BR",{minimumFractionDigits:2})}`, color: C.success },
+              ].map((k, i) => (
+                <div key={i} style={{
+                  background: C.surface, borderRadius: 14, padding: "16px 18px",
+                  border: `1px solid ${C.border}`, borderTop: `3px solid ${k.color}`,
+                }}>
+                  <div style={{ fontSize: 10, color: C.muted, letterSpacing: 1, marginBottom: 8 }}>{k.label.toUpperCase()}</div>
+                  <div style={{ fontSize: 18, fontWeight: 800, color: k.color === C.border ? C.text : k.color }}>{k.value}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Table */}
+            <div style={{ background: C.surface, borderRadius: 14, border: `1px solid ${C.border}`, overflow: "hidden" }}>
+              {folhaLoading ? (
+                <div style={{ padding: 40, textAlign: "center", color: C.muted }}>Carregando pontos…</div>
+              ) : folhaDados.length === 0 ? (
+                <div style={{ padding: 40, textAlign: "center", color: C.muted }}>Nenhum ponto registrado neste período.</div>
+              ) : (
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                  <thead>
+                    <tr>
+                      {["Nome", "Dias Trabalhados", "Horas Totais", "Salário Base", "Valor a Pagar", "Status", "Ações"].map(h => (
+                        <th key={h} style={{
+                          padding: "10px 14px", textAlign: "left",
+                          fontSize: 10, color: C.muted, letterSpacing: 1,
+                          background: C.darker, borderBottom: `1px solid ${C.border}`,
+                        }}>{h.toUpperCase()}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {folhaDados.map(c => {
+                      const col   = (colaboradores || []).find(x => x.id === c.id || x.nome === c.nome);
+                      const sal   = col?.salario || 0;
+                      const valor = sal ? (sal / 26) * c.diasTrabalhados : 0;
+                      const pago  = !!folhaPagos[c.id];
+                      return (
+                        <tr key={c.id} style={{ borderBottom: `1px solid ${C.border}`, opacity: pago ? 0.7 : 1 }}>
+                          <td style={{ padding: "10px 14px", fontWeight: 600 }}>{c.nome || c.id}</td>
+                          <td style={{ padding: "10px 14px", color: C.muted }}>{c.diasTrabalhados}</td>
+                          <td style={{ padding: "10px 14px", color: C.muted }}>{c.totalHoras.toFixed(1)}h</td>
+                          <td style={{ padding: "10px 14px", color: C.muted }}>
+                            {sal ? `R$ ${sal.toLocaleString("pt-BR",{minimumFractionDigits:2})}` : "—"}
+                          </td>
+                          <td style={{ padding: "10px 14px", fontWeight: 700, color: C.success }}>
+                            {valor ? `R$ ${valor.toLocaleString("pt-BR",{minimumFractionDigits:2})}` : "—"}
+                          </td>
+                          <td style={{ padding: "10px 14px" }}>
+                            {pago
+                              ? <span style={{ background: C.success+"22", color: C.success, padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700 }}>✅ Pago</span>
+                              : <span style={{ background: C.warning+"22", color: C.warning, padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700 }}>Pendente</span>
+                            }
+                          </td>
+                          <td style={{ padding: "10px 14px" }}>
+                            <div style={{ display: "flex", gap: 6 }}>
+                              {!pago && (
+                                <button onClick={() => setFolhaPagos(p => ({ ...p, [c.id]: true }))} style={{
+                                  padding: "5px 10px", borderRadius: 7, border: `1px solid ${C.success}`,
+                                  background: C.success+"18", color: C.success, fontSize: 11,
+                                  fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
+                                }}>Marcar pago</button>
+                              )}
+                              <button onClick={() => imprimirHolerite(c)} style={{
+                                padding: "5px 10px", borderRadius: 7, border: `1px solid ${C.border}`,
+                                background: "transparent", color: C.muted, fontSize: 11,
+                                fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
+                              }}>🖨️ Holerite</button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
+        );
+      })()}
+
       </div>
     </>
   );
