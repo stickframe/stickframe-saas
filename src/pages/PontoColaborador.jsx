@@ -182,7 +182,7 @@ export default function PontoColaborador() {
                 </div>
                 <button
                   onClick={() => { setObraId(""); setEtapa("obra"); setResultado(null); }}
-                  style={{ background: "none", border: "none", cursor: "pointer", fontSize: 12, color: C.muted, fontFamily: "inherit", padding: "4px 8px", borderRadius: 6, background: C.dark }}
+                  style={{ background: C.dark, border: "none", cursor: "pointer", fontSize: 12, color: C.muted, fontFamily: "inherit", padding: "4px 8px", borderRadius: 6 }}
                 >
                   Trocar
                 </button>
