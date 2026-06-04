@@ -1,172 +1,107 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
+import { listarVersoes, uploadNovaRevisao } from "../../services/repositories/arquivoVersaoRepository";
 import { sb } from "../../services/supabase";
-import { C } from "../../utils/constants";
 
-function fmtBytes(bytes) {
-  if (!bytes) return "—";
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
-}
-
-export default function ArquivoVersoes({ arquivo, obraId, onClose, onNovaVersao }) {
+export function ArquivoVersoes({ arquivoId, arquivoNome, obraId, onClose }) {
   const [versoes, setVersoes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState(null);
+  const [novoArquivo, setNovoArquivo] = useState(null);
+  const [notas, setNotas] = useState("");
 
-  async function carregarVersoes() {
+  useEffect(() => { carregar(); }, [arquivoId]);
+
+  async function carregar() {
     setLoading(true);
-    const { data, error } = await sb
-      .from("arquivo_versoes")
-      .select("*, enviado_por:usuarios(nome)")
-      .eq("arquivo_id", arquivo.id)
-      .order("versao", { ascending: false });
-    if (!error) setVersoes(data || []);
-    setLoading(false);
+    try { setVersoes(await listarVersoes(arquivoId)); }
+    finally { setLoading(false); }
   }
 
-  useEffect(() => { carregarVersoes(); }, [arquivo.id]);
-
-  async function handleNovaVersao(e) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  async function handleUpload() {
+    if (!novoArquivo) return;
     setUploading(true);
-    setError(null);
     try {
-      const proximaVersao = (arquivo.versao || 1) + 1;
-      const storagePath = `${obraId}/${Date.now()}_v${proximaVersao}_${file.name}`;
-
-      // Upload para storage
-      const { error: upErr } = await sb.storage.from("arquivos").upload(storagePath, file, { upsert: false });
+      const path = `obras/${obraId}/${Date.now()}_${novoArquivo.name}`;
+      const { error: upErr } = await sb.storage.from("arquivos").upload(path, novoArquivo);
       if (upErr) throw upErr;
 
-      // Busca userId do usuário atual
-      const { data: { user } } = await sb.auth.getUser();
+      await uploadNovaRevisao(arquivoId, {
+        obra_id: obraId,
+        nome: novoArquivo.name,
+        tipo: novoArquivo.type,
+        tamanho: novoArquivo.size,
+        storage_path: path,
+        categoria: versoes[0]?.categoria || "outro",
+        data: new Date().toISOString().split("T")[0],
+      }, notas);
 
-      // Insere na tabela arquivo_versoes
-      const { error: insErr } = await sb.from("arquivo_versoes").insert({
-        arquivo_id:   arquivo.id,
-        versao:       proximaVersao,
-        storage_path: storagePath,
-        tamanho:      file.size,
-        enviado_por:  user?.id || null,
-      });
-      if (insErr) throw insErr;
+      await carregar();
+      setNovoArquivo(null);
+      setNotas("");
+    } finally { setUploading(false); }
+  }
 
-      // Atualiza arquivos: incrementa versao e storage_path
-      const { error: updErr } = await sb
-        .from("arquivos")
-        .update({ versao: proximaVersao, storage_path: storagePath })
-        .eq("id", arquivo.id);
-      if (updErr) throw updErr;
-
-      onNovaVersao();
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setUploading(false);
-    }
+  function downloadUrl(storagePath) {
+    return sb.storage.from("arquivos").getPublicUrl(storagePath).data.publicUrl;
   }
 
   return (
-    <div
-      onClick={onClose}
-      style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center" }}
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 14, padding: 28, width: 520, maxWidth: "95vw", maxHeight: "80vh", display: "flex", flexDirection: "column" }}
-      >
-        {/* Header */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 18 }}>
-          <div>
-            <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 2 }}>📋 Histórico de versões</div>
-            <div style={{ fontSize: 12, color: C.muted, maxWidth: 380, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{arquivo.nome}</div>
-          </div>
-          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 20, color: C.muted, lineHeight: 1 }}>×</button>
+    <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.5)", zIndex:1000, display:"flex", alignItems:"center", justifyContent:"center" }}>
+      <div style={{ background:"var(--bg-card)", borderRadius:12, padding:24, width:"min(700px,95vw)", maxHeight:"80vh", overflowY:"auto" }}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
+          <h3 style={{ margin:0 }}>Versões — {arquivoNome}</h3>
+          <button onClick={onClose} style={{ background:"none", border:"none", fontSize:20, cursor:"pointer" }}>✕</button>
         </div>
 
-        {/* Nova versão */}
-        <label style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18, cursor: uploading ? "wait" : "pointer" }}>
-          <div style={{ background: C.red, color: "#fff", borderRadius: 8, padding: "8px 16px", fontSize: 12, fontWeight: 700, whiteSpace: "nowrap", opacity: uploading ? 0.6 : 1 }}>
-            {uploading ? "⏳ Enviando..." : "📤 Nova versão"}
-          </div>
-          <span style={{ fontSize: 12, color: C.muted }}>Selecione o arquivo atualizado</span>
-          <input type="file" style={{ display: "none" }} disabled={uploading} onChange={handleNovaVersao} />
-        </label>
-
-        {error && (
-          <div style={{ background: "#fff0f0", border: "1px solid #fca5a5", borderRadius: 8, padding: "10px 14px", fontSize: 12, color: "#c0392b", marginBottom: 12 }}>
-            ❌ {error}
-          </div>
+        {loading ? <p>Carregando...</p> : (
+          <table style={{ width:"100%", borderCollapse:"collapse", marginBottom:24 }}>
+            <thead>
+              <tr style={{ borderBottom:"1px solid var(--border)" }}>
+                <th style={{ textAlign:"left", padding:"6px 8px" }}>Revisão</th>
+                <th style={{ textAlign:"left", padding:"6px 8px" }}>Arquivo</th>
+                <th style={{ textAlign:"left", padding:"6px 8px" }}>Data</th>
+                <th style={{ textAlign:"left", padding:"6px 8px" }}>Por</th>
+                <th style={{ textAlign:"left", padding:"6px 8px" }}>Notas</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {versoes.map((v, i) => (
+                <tr key={v.id} style={{ borderBottom:"1px solid var(--border)", background: i === versoes.length-1 ? "var(--bg-hover)" : "transparent" }}>
+                  <td style={{ padding:"8px" }}>
+                    <span style={{ background:"#3b82f6", color:"#fff", borderRadius:4, padding:"2px 8px", fontSize:12, fontWeight:700 }}>{v.revisao || "Rev A"}</span>
+                    {i === versoes.length-1 && <span style={{ marginLeft:6, fontSize:11, color:"var(--text-muted)" }}>atual</span>}
+                  </td>
+                  <td style={{ padding:"8px", fontSize:13 }}>{v.nome}</td>
+                  <td style={{ padding:"8px", fontSize:13 }}>{v.data || v.created_at?.split("T")[0]}</td>
+                  <td style={{ padding:"8px", fontSize:13 }}>{v.publicado_por_usuario?.nome || "—"}</td>
+                  <td style={{ padding:"8px", fontSize:13, color:"var(--text-muted)" }}>{v.notas_revisao || "—"}</td>
+                  <td style={{ padding:"8px" }}>
+                    <a href={downloadUrl(v.storage_path)} target="_blank" rel="noreferrer"
+                      style={{ fontSize:12, color:"#3b82f6" }}>⬇ Download</a>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         )}
 
-        {/* Lista de versões */}
-        <div style={{ overflowY: "auto", flex: 1 }}>
-          {loading ? (
-            <div style={{ textAlign: "center", padding: "24px 0", color: C.muted, fontSize: 13 }}>Carregando versões...</div>
-          ) : versoes.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "24px 0", color: C.muted, fontSize: 13 }}>
-              Nenhuma versão anterior registrada.<br />
-              <span style={{ fontSize: 11 }}>A versão atual é v{arquivo.versao || 1}.</span>
-            </div>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {versoes.map((v) => {
-                const isCurrent = v.versao === (arquivo.versao || 1);
-                const url = sb.storage.from("arquivos").getPublicUrl(v.storage_path).data.publicUrl;
-                return (
-                  <div
-                    key={v.id}
-                    style={{
-                      display: "flex", alignItems: "center", gap: 12,
-                      padding: "12px 14px", borderRadius: 8,
-                      background: isCurrent ? "#2e9e5b11" : C.darker,
-                      border: `1px solid ${isCurrent ? "#2e9e5b44" : C.border}`,
-                    }}
-                  >
-                    {/* Badge versão */}
-                    <span style={{
-                      background: isCurrent ? "#2e9e5b" : C.muted,
-                      color: "#fff", borderRadius: 6,
-                      padding: "3px 10px", fontSize: 11, fontWeight: 800,
-                      flexShrink: 0,
-                    }}>
-                      v{v.versao}
-                    </span>
-
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: isCurrent ? "#2e9e5b" : C.text }}>
-                        {isCurrent ? "Versão atual" : `Versão ${v.versao}`}
-                      </div>
-                      <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>
-                        {new Date(v.created_at).toLocaleString("pt-BR")}
-                        {v.enviado_por?.nome ? ` · ${v.enviado_por.nome}` : ""}
-                        {v.tamanho ? ` · ${fmtBytes(v.tamanho)}` : ""}
-                      </div>
-                    </div>
-
-                    {/* Botão download */}
-                    <a
-                      href={url}
-                      target="_blank"
-                      rel="noreferrer"
-                      style={{
-                        background: "#4a9eff22", border: "1px solid #4a9eff44",
-                        borderRadius: 6, color: "#4a9eff",
-                        fontSize: 11, fontWeight: 700,
-                        padding: "4px 10px", textDecoration: "none",
-                        flexShrink: 0,
-                      }}
-                    >
-                      ↓ Baixar
-                    </a>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+        <div style={{ borderTop:"1px solid var(--border)", paddingTop:16 }}>
+          <h4 style={{ margin:"0 0 12px" }}>Upload nova revisão</h4>
+          <input type="file" onChange={e => setNovoArquivo(e.target.files[0])} style={{ marginBottom:8, display:"block" }} />
+          <textarea
+            placeholder="Notas da revisão (ex: Atualizado conforme vistoria)"
+            value={notas} onChange={e => setNotas(e.target.value)}
+            rows={2}
+            style={{ width:"100%", marginBottom:8, padding:8, borderRadius:6, border:"1px solid var(--border)", background:"var(--bg-input)", resize:"vertical" }}
+          />
+          <button
+            onClick={handleUpload}
+            disabled={!novoArquivo || uploading}
+            style={{ padding:"8px 20px", background:"#3b82f6", color:"#fff", border:"none", borderRadius:8, cursor:"pointer", opacity: (!novoArquivo || uploading) ? 0.5 : 1 }}
+          >
+            {uploading ? "Enviando..." : "Publicar nova revisão"}
+          </button>
         </div>
       </div>
     </div>

@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import { sb } from "../services/supabase";
 import { registrarCheckin, listarCheckinsDia } from "../services/repositories/checkinRepository";
 import { LOGO_STICKFRAME, storageUrl, bimUrl } from "../utils/cdn";
+import { cachePlanta, getPlantaOffline, getPlantasDaObra } from "../services/offlineDB";
 
 const C = {
   red: "#981915", border: "#e5e7eb", muted: "#6b7280",
@@ -96,8 +97,57 @@ function AbaStatus({ obra }) {
 }
 
 // ── Aba Projetos ──────────────────────────────────────────────────────────────
-function AbaProjetos({ arquivos }) {
+function AbaProjetos({ arquivos, obraId }) {
   const DISC_ICONE = { "Arquitetônico": "🏠", "Estrutural": "⚙️", "Steel Frame": "🔩", "Elétrico": "⚡", "Hidráulico": "💧", "AVAC": "🌡️", "Fundação": "🏗️" };
+
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [cacheStatus, setCacheStatus] = useState({});
+
+  useEffect(() => {
+    function handleOnline() { setIsOnline(true); }
+    function handleOffline() { setIsOnline(false); }
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!arquivos.length) return;
+    // Check which are already cached
+    getPlantasDaObra(obraId).then((cached) => {
+      const cachedIds = new Set(cached.map((c) => c.id));
+      const initial = {};
+      arquivos.forEach((a) => {
+        initial[a.id] = cachedIds.has(a.id) ? "cached" : "unavailable";
+      });
+      setCacheStatus(initial);
+    }).catch(() => {});
+  }, [arquivos, obraId]);
+
+  useEffect(() => {
+    if (!isOnline || !arquivos.length) return;
+    arquivos.forEach((a) => {
+      const url = storageUrl(a.storage_path);
+      setCacheStatus((prev) => ({ ...prev, [a.id]: prev[a.id] === "cached" ? "cached" : "caching" }));
+      cachePlanta({ id: a.id, obraId, nome: a.nome, revisao: a.revisao, url, storagePath: a.storage_path })
+        .then((ok) => setCacheStatus((prev) => ({ ...prev, [a.id]: ok ? "cached" : "unavailable" })))
+        .catch(() => setCacheStatus((prev) => ({ ...prev, [a.id]: "unavailable" })));
+    });
+  }, [isOnline, arquivos, obraId]);
+
+  async function abrirPlanta(arquivo) {
+    const url = storageUrl(arquivo.storage_path);
+    if (navigator.onLine) {
+      window.open(url, "_blank");
+    } else {
+      const blobUrl = await getPlantaOffline(arquivo.id);
+      if (blobUrl) window.open(blobUrl, "_blank");
+      else alert("Esta planta não está disponível offline. Conecte-se uma vez para baixar.");
+    }
+  }
 
   if (arquivos.length === 0) {
     return (
@@ -117,8 +167,15 @@ function AbaProjetos({ arquivos }) {
     return acc;
   }, {});
 
+  const STATUS_ICON = { caching: "📥", cached: "✅", unavailable: "🌐" };
+
   return (
     <div style={{ padding: "16px" }}>
+      {!isOnline && (
+        <div style={{ background: "#1e293b", color: "#94a3b8", borderRadius: 10, padding: "10px 14px", marginBottom: 14, fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center", gap: 8 }}>
+          <span>📴</span> Modo offline — exibindo arquivos em cache
+        </div>
+      )}
       {Object.entries(grupos).map(([disc, arqs]) => (
         <div key={disc} style={{ marginBottom: 16 }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}>
@@ -126,10 +183,10 @@ function AbaProjetos({ arquivos }) {
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {arqs.map((a) => {
-              const url = storageUrl(a.storage_path);
               const isPdf = a.tipo === "pdf" || a.nome?.toLowerCase().endsWith(".pdf");
+              const status = cacheStatus[a.id];
               return (
-                <a key={a.id} href={url} target="_blank" rel="noreferrer" style={{ display: "flex", alignItems: "center", gap: 12, background: C.surface, borderRadius: 12, padding: "12px 14px", border: `1px solid ${C.border}`, textDecoration: "none", color: C.text }}>
+                <button key={a.id} onClick={() => abrirPlanta(a)} style={{ display: "flex", alignItems: "center", gap: 12, background: C.surface, borderRadius: 12, padding: "12px 14px", border: `1px solid ${C.border}`, textDecoration: "none", color: C.text, cursor: "pointer", fontFamily: "inherit", textAlign: "left", width: "100%" }}>
                   <span style={{ fontSize: 24, flexShrink: 0 }}>{isPdf ? "📄" : "🖼️"}</span>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 13, fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.nome}</div>
@@ -138,8 +195,8 @@ function AbaProjetos({ arquivos }) {
                       {a.tamanho} · {a.data}
                     </div>
                   </div>
-                  <span style={{ fontSize: 18, color: C.red, flexShrink: 0 }}>↓</span>
-                </a>
+                  <span style={{ fontSize: 16, flexShrink: 0 }} title={status}>{STATUS_ICON[status] || "🌐"}</span>
+                </button>
               );
             })}
           </div>
@@ -321,7 +378,7 @@ export default function QRObra() {
       {/* Conteúdo da aba */}
       <div style={{ maxWidth: 540, margin: "0 auto" }}>
         {tab === "status"   && <AbaStatus obra={obra} />}
-        {tab === "projetos" && <AbaProjetos arquivos={arquivos} />}
+        {tab === "projetos" && <AbaProjetos arquivos={arquivos} obraId={obraId} />}
         {tab === "bim"      && <AbaBIM modelos={bim_modelos} />}
         {tab === "checkin"  && <AbaCheckin obraId={obraId} />}
       </div>
