@@ -58,6 +58,7 @@ const ConcorrenciaPublica  = lazyWithRetry(() => import("./pages/ConcorrenciaPub
 const PontoColaborador     = lazyWithRetry(() => import("./pages/PontoColaborador"));
 const AmbienteQR           = lazyWithRetry(() => import("./pages/AmbienteQR"));
 const PainelQR             = lazyWithRetry(() => import("./pages/PainelQR"));
+const BI                   = lazyWithRetry(() => import("./pages/BI"));
 
 const PAGES = {
   dashboard:  Dashboard,
@@ -84,6 +85,7 @@ const PAGES = {
   checklists:     Checklists,
   inteligencia:   Inteligencia,
   analise:        Analise,
+  bi:             BI,
 };
 
 function AuthenticatedApp() {
