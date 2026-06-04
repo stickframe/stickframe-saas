@@ -3,6 +3,7 @@ import { TrendingUp } from "../components/ui/Icon";
 import * as Sentry from "@sentry/react";
 import { useToast } from "../hooks/useToast";
 import { C, PERFIS } from "../utils/constants";
+import PerfisCustomizados from "../components/configuracoes/PerfisCustomizados";
 import useAppStore from "../store/useAppStore";
 import {
   buscarEmpresa, atualizarEmpresa, uploadLogoEmpresa,
@@ -87,6 +88,9 @@ export default function Configuracoes() {
   const [showConvite, setShowConvite] = useState(false);
   const [convite, setConvite] = useState({ email: "", nome: "", perfil: "comercial" });
   const [convidando, setConvidando] = useState(false);
+
+  // Perfis customizados (para dropdown de usuários)
+  const perfisCustomizados = useAppStore((s) => s.perfisCustomizados);
 
 
 
@@ -533,6 +537,7 @@ export default function Configuracoes() {
                         { value: "comercial",   label: "Comercial" },
                         { value: "engenheiro",  label: "Engenheiro" },
                         { value: "financeiro",  label: "Financeiro" },
+                        ...perfisCustomizados.map((p) => ({ value: p.id, label: p.nome })),
                       ]}
                     />
                   </div>
@@ -562,7 +567,7 @@ export default function Configuracoes() {
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {usuarios.map((u) => {
                   const isMe    = u.id === user?.uid;
-                  const perfilU = PERFIS[u.perfil];
+                  const perfilU = PERFIS[u.perfil] || perfisCustomizados.find((p) => p.id === u.perfil);
                   return (
                     <div key={u.id} style={{
                       display: "flex", alignItems: "center", gap: 14,
@@ -601,6 +606,13 @@ export default function Configuracoes() {
                             {["diretor", "comercial", "engenheiro", "financeiro"].map((p) => (
                               <option key={p} value={p}>{PERFIS[p]?.label || p}</option>
                             ))}
+                            {perfisCustomizados.length > 0 && (
+                              <optgroup label="Personalizados">
+                                {perfisCustomizados.map((p) => (
+                                  <option key={p.id} value={p.id}>{p.nome}</option>
+                                ))}
+                              </optgroup>
+                            )}
                           </select>
                         ) : (
                           <span style={{
@@ -663,6 +675,8 @@ export default function Configuracoes() {
               ))}
             </div>
           </Card>
+
+          <PerfisCustomizados />
         </>
       )}
       {/* ══ Aba: Sistema ══ */}

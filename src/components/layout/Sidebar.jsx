@@ -19,7 +19,11 @@ export default function Sidebar({ open, onClose }) {
   const clientes      = useAppStore((s) => s.clientes);
   const [confirm, setConfirm] = useState(false);
 
-  const perfil    = PERFIS[user?.perfil] || PERFIS.diretor;
+  const perfisCustomizados = useAppStore((s) => s.perfisCustomizados);
+  const perfilCustom = !PERFIS[user?.perfil]
+    ? perfisCustomizados.find((p) => p.id === user?.perfil)
+    : null;
+  const perfil    = PERFIS[user?.perfil] || perfilCustom || PERFIS.diretor;
   const navFiltro = NAV.filter((n) => perfil.paginas.includes(n.key));
   const active    = perfil.paginas.includes(activePage) ? activePage : "dashboard";
 

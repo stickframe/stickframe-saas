@@ -1,5 +1,6 @@
 import { sb, setEmpresaId } from "../../services/supabase";
 import { listarMembrosEmpresa } from "../../services/repositories/obraMembrosRepository";
+import { listarPerfisCustomizados } from "../../services/repositories/perfisRepository";
 
 async function _hydrateUser(set, get, authUser, email) {
   const { data: usuario } = await sb.from("usuarios").select("*").eq("id", authUser.id).single();
@@ -18,7 +19,8 @@ async function _hydrateUser(set, get, authUser, email) {
     empresaId: empId,
   });
   listarMembrosEmpresa().then((list) => get().setAllObraMembros(list)).catch(() => {});
-  import("../services/alertasService").then(({ verificarAlertas }) => {
+  listarPerfisCustomizados().then((list) => set({ perfisCustomizados: list })).catch(() => {});
+  import("../../services/alertasService").then(({ verificarAlertas }) => {
     verificarAlertas(empId, authUser.id);
   }).catch(() => {});
 }
@@ -26,6 +28,8 @@ async function _hydrateUser(set, get, authUser, email) {
 export const createAuthSlice = (set, get) => ({
   user:      null,
   empresaId: null,
+  perfisCustomizados: [],
+  setPerfisCustomizados: (list) => set({ perfisCustomizados: list }),
 
   login: async (email, password) => {
     get().setLoading("auth", true);
