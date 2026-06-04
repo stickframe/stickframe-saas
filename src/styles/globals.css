@@ -76,14 +76,25 @@ select:focus {
   color: #1a1a1a;
   font-size: 22px;
   cursor: pointer;
-  padding: 4px 8px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  min-width: 44px;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
 }
+
+.hamburger:active { background: rgba(0,0,0,0.06); }
 
 .topbar-page-title {
   display: none;
   font-size: 15px;
   font-weight: 700;
   color: #1a1a1a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 45vw;
 }
 
 .mobile-overlay {
