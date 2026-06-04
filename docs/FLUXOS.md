@@ -1,5 +1,5 @@
 # Fluxos do StickFrame
-*Documentação dos fluxos principais do sistema — atualizado junho/2026 (v2)*
+*Documentação dos fluxos principais do sistema — atualizado junho/2026 (v3)*
 
 ---
 
@@ -200,7 +200,45 @@ Financeiro → aba "Folha"
 
 ---
 
-## 12. QR Code de Painel (rastreabilidade)
+## 12. SST — Saúde e Segurança no Trabalho
+
+```
+SST
+  ├─ DDS (Diálogo Diário de Segurança)
+  │   └─ Registro de tema, facilitador, participantes e obra
+  ├─ Incidentes
+  │   └─ Quase-acidente / Acidente / Incidente
+  │       ├─ Gravidade: Baixa / Média / Alta / Crítica
+  │       └─ Fluxo: Aberto → Em andamento → Fechado
+  └─ EPIs
+      └─ Entrega por colaborador — item, quantidade, validade, assinatura
+
+KPIs: Dias sem acidente · DDS este mês · Incidentes abertos · EPIs vencendo em 30d
+Tabelas: sst_dds · sst_incidentes · sst_epis (RLS por empresa_id)
+```
+
+---
+
+## 13. Suprimentos
+
+```
+Suprimentos
+  ├─ Pedidos de Material
+  │   ├─ Item, quantidade, unidade, urgência (Normal / Urgente / Crítico)
+  │   ├─ Vinculado a obra
+  │   └─ Status: Pendente → Aprovado → Em trânsito → Entregue
+  └─ Estoque / Almoxarifado
+      ├─ Cadastro de itens com estoque mínimo e localização
+      ├─ Movimentações: entrada / saída com saldo atualizado
+      └─ Alerta visual para itens abaixo do mínimo
+
+KPIs: Pedidos pendentes · Em trânsito · Críticos · Itens abaixo do mínimo
+Tabelas: suprimentos_pedidos · suprimentos_estoque · suprimentos_movimentos
+```
+
+---
+
+## 14. QR Code de Painel (rastreabilidade)
 
 ```
 /qr/obra/:obraId  →  lista de painéis com QR
@@ -212,7 +250,7 @@ Financeiro → aba "Folha"
 
 ---
 
-## 13. Presença em Tempo Real
+## 15. Presença em Tempo Real
 
 ```
 Supabase Realtime (canal: obra-{obraId})
@@ -233,4 +271,6 @@ Lead público   →   Orçamento         →  Diário / Fotos / RFI    →   Gar
                    Contrato CO-001       Ponto Eletrônico (QR)
                    Obra criada           Presença por obra
                                          Financeiro / Folha RH
+                                         SST (DDS / EPIs / Incidentes)
+                                         Suprimentos (Pedidos / Estoque)
 ```
