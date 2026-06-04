@@ -22,6 +22,7 @@ const SUGESTOES_NCR = [
   "Radier sem nível adequado para assentamento da guia",
   "Placa de fachada fixada sem espaçamento mínimo do solo",
   "Tabica de forro mal executada",
+  "Forro fora de nível",
 ];
 
 const inputStyle = {
