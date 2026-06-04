@@ -14,7 +14,11 @@
       "Bash(git -C /home/user/stickframe-saas add public/resumo-stickframe.html)",
       "Bash(git -C /home/user/stickframe-saas commit -m \"docs: add resumo-stickframe.html to public folder\")",
       "Bash(git -C /home/user/stickframe-saas push -u origin claude/hopeful-planck-kdTbe)",
-      "mcp__a5a69f48-5aaa-426d-9f3d-9d336c39d902__get_logs"
+      "mcp__a5a69f48-5aaa-426d-9f3d-9d336c39d902__get_logs",
+      "Bash(mkdir -p /home/user/stickframe-saas/public/docs)",
+      "Bash(cp /root/.claude/uploads/ce57fd33-fe63-45b3-86cf-c6c207d0eb7e/d9be16ab-analise_do_projeto.html /home/user/stickframe-saas/public/docs/analise-projeto.html)",
+      "Bash(cp /root/.claude/uploads/ce57fd33-fe63-45b3-86cf-c6c207d0eb7e/2c521324-stickframeXprocore.html /home/user/stickframe-saas/public/docs/stickframe-vs-procore.html)",
+      "Bash(cp /root/.claude/uploads/ce57fd33-fe63-45b3-86cf-c6c207d0eb7e/b74dabb1-frontend.html /home/user/stickframe-saas/public/docs/comparativo-frontend.html)"
     ]
   }
 }
