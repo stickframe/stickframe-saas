@@ -47,8 +47,8 @@ export async function registerBiometric(userId, userName, refreshToken) {
         displayName: userName,
       },
       pubKeyCredParams: [
-        { type: "public-key", alg: -7 },  // ES256
-        { type: "public-key", alg: -257 }, // RS256
+        { type: "public-key", alg: -7 },
+        { type: "public-key", alg: -257 },
       ],
       authenticatorSelection: {
         authenticatorAttachment: "platform",
@@ -94,4 +94,8 @@ export async function authenticateWithBiometric() {
 
 export function removeBiometric() {
   localStorage.removeItem(STORAGE_KEY);
+}
+
+export function saveCredentialId(id) {
+  localStorage.setItem(STORAGE_KEY, id);
 }

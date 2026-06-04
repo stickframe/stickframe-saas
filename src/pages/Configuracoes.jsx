@@ -7,7 +7,9 @@ import useAppStore from "../store/useAppStore";
 import {
   buscarEmpresa, atualizarEmpresa, uploadLogoEmpresa,
   listarUsuariosEmpresa, atualizarPerfil, trocarSenha,
+  atualizarPerfilUsuario, convidarUsuario,
 } from "../services/repositories/empresaRepository";
+import { hasSavedCredential, removeBiometric, isWebAuthnAvailable } from "../services/webAuthnService";
 import Btn from "../components/ui/Btn";
 import Input from "../components/ui/Input";
 import Select from "../components/ui/Select";
@@ -77,6 +79,15 @@ export default function Configuracoes() {
   const [senhaForm, setSenhaForm] = useState({ nova: "", confirmar: "" });
   const [showSenha, setShowSenha] = useState(false);
 
+  // Biometria
+  const [biometriaAtiva, setBiometriaAtiva] = useState(false);
+  const [webAuthnDisponivel, setWebAuthnDisponivel] = useState(false);
+
+  // Convidar usuário
+  const [showConvite, setShowConvite] = useState(false);
+  const [convite, setConvite] = useState({ email: "", nome: "", perfil: "comercial" });
+  const [convidando, setConvidando] = useState(false);
+
 
 
   // ── Carrega dados ─────────────────────────────────────────────────────────
@@ -101,6 +112,11 @@ export default function Configuracoes() {
   useEffect(() => {
     if (user) setPerfil({ nome: user.nome || "", cargo: user.cargo || "" });
   }, [user]);
+
+  useEffect(() => {
+    isWebAuthnAvailable().then(setWebAuthnDisponivel).catch(() => {});
+    setBiometriaAtiva(hasSavedCredential());
+  }, []);
 
   // ── Logo ─────────────────────────────────────────────────────────────────
   function handleLogoChange(e) {
@@ -159,6 +175,52 @@ export default function Configuracoes() {
     } catch (e) {
       mostrarToast("❌ Erro: " + e.message, true);
     } finally { setSaving(false); }
+  }
+
+  async function handleAlterarPerfil(uid, novoPerfil) {
+    try {
+      await atualizarPerfilUsuario(uid, { perfil: novoPerfil });
+      setUsuarios((prev) => prev.map((u) => u.id === uid ? { ...u, perfil: novoPerfil } : u));
+      mostrarToast("✅ Perfil atualizado!");
+    } catch (e) {
+      mostrarToast("Erro: " + e.message, true);
+    }
+  }
+
+  async function handleToggleAtivo(uid, ativoAtual) {
+    try {
+      await atualizarPerfilUsuario(uid, { ativo: !ativoAtual });
+      setUsuarios((prev) => prev.map((u) => u.id === uid ? { ...u, ativo: !ativoAtual } : u));
+      mostrarToast(!ativoAtual ? "✅ Usuário ativado!" : "✅ Usuário desativado!");
+    } catch (e) {
+      mostrarToast("Erro: " + e.message, true);
+    }
+  }
+
+  async function handleConvidarUsuario() {
+    if (!convite.email || !convite.nome) return;
+    setConvidando(true);
+    try {
+      await convidarUsuario(convite.email, convite.nome, convite.perfil);
+      setShowConvite(false);
+      setConvite({ email: "", nome: "", perfil: "comercial" });
+      mostrarToast("✅ Convite enviado!");
+      listarUsuariosEmpresa().then((data) => { if (data) setUsuarios(data); }).catch(() => {});
+    } catch (e) {
+      mostrarToast("Erro: " + e.message, true);
+    } finally {
+      setConvidando(false);
+    }
+  }
+
+  async function handleRemoverBiometria() {
+    try {
+      removeBiometric();
+      setBiometriaAtiva(false);
+      mostrarToast("✅ Biometria removida!");
+    } catch (e) {
+      mostrarToast("Erro: " + e.message, true);
+    }
   }
 
   const logoAtual = logoPreview || empresa.logo_url;
@@ -362,6 +424,23 @@ export default function Configuracoes() {
             </div>
           </Card>
 
+          {webAuthnDisponivel && (
+            <Card title="Biometria / Autenticação por dispositivo">
+              {biometriaAtiva ? (
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+                  <span style={{
+                    fontSize: 13, fontWeight: 700, padding: "6px 14px", borderRadius: 20,
+                    background: C.success + "18", color: C.success,
+                    border: `1px solid ${C.success}44`,
+                  }}>🔐 Biometria ativa neste dispositivo</span>
+                  <Btn variant="ghost" onClick={handleRemoverBiometria}>Remover biometria</Btn>
+                </div>
+              ) : (
+                <div style={{ fontSize: 13, color: C.muted }}>Biometria não ativada neste dispositivo</div>
+              )}
+            </Card>
+          )}
+
           {/* Trocar senha */}
           <Card title="Alterar senha" subtitle="Sua nova senha deve ter pelo menos 6 caracteres.">
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -425,7 +504,55 @@ export default function Configuracoes() {
       {/* ══ Aba: Usuários ══ */}
       {tab === "usuarios" && (
         <>
+          {showConvite && (
+            <div style={{
+              position: "fixed", inset: 0, background: "#0008", zIndex: 1000,
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }} onClick={() => setShowConvite(false)}>
+              <div onClick={(e) => e.stopPropagation()} style={{
+                background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16,
+                padding: "28px 32px", width: 400, maxWidth: "90vw",
+              }}>
+                <div style={{ fontSize: 16, fontWeight: 800, marginBottom: 20 }}>Convidar usuário</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                  <div>
+                    <LabelF required>E-mail</LabelF>
+                    <Input type="email" value={convite.email} onChange={(v) => setConvite((f) => ({ ...f, email: v }))} placeholder="usuario@email.com" />
+                  </div>
+                  <div>
+                    <LabelF required>Nome</LabelF>
+                    <Input value={convite.nome} onChange={(v) => setConvite((f) => ({ ...f, nome: v }))} placeholder="Nome completo" />
+                  </div>
+                  <div>
+                    <LabelF>Perfil</LabelF>
+                    <Select
+                      value={convite.perfil}
+                      onChange={(v) => setConvite((f) => ({ ...f, perfil: v }))}
+                      options={[
+                        { value: "diretor",     label: "Diretor" },
+                        { value: "comercial",   label: "Comercial" },
+                        { value: "engenheiro",  label: "Engenheiro" },
+                        { value: "financeiro",  label: "Financeiro" },
+                      ]}
+                    />
+                  </div>
+                </div>
+                <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 24 }}>
+                  <Btn variant="ghost" onClick={() => setShowConvite(false)}>Cancelar</Btn>
+                  <Btn disabled={!convite.email || !convite.nome || convidando} onClick={handleConvidarUsuario}>
+                    {convidando ? "Enviando…" : "Enviar convite"}
+                  </Btn>
+                </div>
+              </div>
+            </div>
+          )}
+
           <Card title="Usuários da empresa" subtitle={`${usuarios.length} conta(s) cadastrada(s) nesta empresa.`}>
+            {user?.perfil === "diretor" && (
+              <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 16 }}>
+                <Btn onClick={() => setShowConvite(true)}>+ Convidar usuário</Btn>
+              </div>
+            )}
             {usuarios.length === 0 ? (
               <div style={{ textAlign: "center", padding: "32px 0", color: C.muted }}>
                 <div style={{ fontSize: 28, marginBottom: 8 }}>👥</div>
@@ -459,14 +586,32 @@ export default function Configuracoes() {
                         <div style={{ fontSize: 11, color: C.muted, marginTop: 1 }}>{u.cargo || "—"}</div>
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <span style={{
-                          fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 12,
-                          background: (perfilU?.cor || C.muted) + "22",
-                          color: perfilU?.cor || C.muted,
-                          border: `1px solid ${(perfilU?.cor || C.muted)}44`,
-                        }}>
-                          {perfilU?.label || u.perfil || "—"}
-                        </span>
+                        {user?.perfil === "diretor" && !isMe ? (
+                          <select
+                            value={u.perfil || ""}
+                            onChange={(e) => handleAlterarPerfil(u.id, e.target.value)}
+                            style={{
+                              fontSize: 11, fontWeight: 700, padding: "3px 8px", borderRadius: 12,
+                              background: (perfilU?.cor || C.muted) + "22",
+                              color: perfilU?.cor || C.muted,
+                              border: `1px solid ${(perfilU?.cor || C.muted)}44`,
+                              cursor: "pointer", fontFamily: "inherit",
+                            }}
+                          >
+                            {["diretor", "comercial", "engenheiro", "financeiro"].map((p) => (
+                              <option key={p} value={p}>{PERFIS[p]?.label || p}</option>
+                            ))}
+                          </select>
+                        ) : (
+                          <span style={{
+                            fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 12,
+                            background: (perfilU?.cor || C.muted) + "22",
+                            color: perfilU?.cor || C.muted,
+                            border: `1px solid ${(perfilU?.cor || C.muted)}44`,
+                          }}>
+                            {perfilU?.label || u.perfil || "—"}
+                          </span>
+                        )}
                         <span style={{
                           fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 8,
                           background: u.ativo ? C.success + "18" : C.muted + "18",
@@ -474,6 +619,20 @@ export default function Configuracoes() {
                         }}>
                           {u.ativo ? "Ativo" : "Inativo"}
                         </span>
+                        {user?.perfil === "diretor" && !isMe && (
+                          <button
+                            onClick={() => handleToggleAtivo(u.id, u.ativo)}
+                            style={{
+                              fontSize: 10, fontWeight: 700, padding: "2px 10px", borderRadius: 20,
+                              background: u.ativo ? C.danger + "18" : C.success + "18",
+                              color: u.ativo ? C.danger : C.success,
+                              border: `1px solid ${u.ativo ? C.danger : C.success}44`,
+                              cursor: "pointer", fontFamily: "inherit",
+                            }}
+                          >
+                            {u.ativo ? "Desativar" : "Ativar"}
+                          </button>
+                        )}
                       </div>
                     </div>
                   );
