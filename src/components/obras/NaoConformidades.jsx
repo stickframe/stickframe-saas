@@ -5,6 +5,22 @@ import { C } from "../../utils/constants";
 const COR_G = { Baixa: C.muted, Media: "#4a9eff", Alta: "#e67e22", Critica: C.danger };
 const COR_S = { Aberta: C.danger, "Em análise": C.warning, "Em correção": "#e67e22", Verificando: "#4a9eff", Fechada: C.success };
 const DISCIPLINAS = ["Civil", "Elétrico", "Hidráulico", "Estrutural", "Acabamento", "Outro"];
+const SUGESTOES_NCR = [
+  "Execução fora de esquadro",
+  "Revestimento com defeito ou trincado",
+  "Contrapiso com nível incorreto",
+  "Impermeabilização inadequada",
+  "Fixação de estrutura não conforme",
+  "Prumo de parede fora do tolerado",
+  "Instalação elétrica em desacordo com projeto",
+  "Tubulação hidráulica fora de posição",
+  "Argamassa fora de traço especificado",
+  "Concreto sem espaçador de cobrimento",
+  "Alinhamento de fachada irregular",
+  "Armadura exposta ou oxidada",
+  "Espessura de reboco fora do especificado",
+  "Material aplicado diferente do especificado",
+];
 
 const inputStyle = {
   display: "block", width: "100%", marginTop: 4, padding: "8px 10px",
@@ -127,7 +143,11 @@ export default function NaoConformidades({ obraId }) {
             </div>
             <label style={{ display: "block", marginBottom: 12 }}>
               <span style={{ fontSize: 12, color: C.muted, fontWeight: 600 }}>Título *</span>
-              <input value={form.titulo || ""} onChange={setf("titulo")} style={inputStyle} />
+              <input value={form.titulo || ""} onChange={setf("titulo")} list="ncr-sugestoes"
+                placeholder="Ex: Execução fora de esquadro…" style={inputStyle} />
+              <datalist id="ncr-sugestoes">
+                {SUGESTOES_NCR.map(s => <option key={s} value={s} />)}
+              </datalist>
             </label>
             <label style={{ display: "block", marginBottom: 12 }}>
               <span style={{ fontSize: 12, color: C.muted, fontWeight: 600 }}>Descrição</span>
