@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 
 export default function Modal({ title, onClose, children, width = 600 }) {
   const firstRef = useRef(null);
@@ -29,7 +30,7 @@ export default function Modal({ title, onClose, children, width = 600 }) {
     };
   }, [onClose]);
 
-  return (
+  return createPortal(
     <div
       role="dialog"
       aria-modal="true"
@@ -49,6 +50,7 @@ export default function Modal({ title, onClose, children, width = 600 }) {
         </div>
         {children}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
