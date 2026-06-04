@@ -1,6 +1,8 @@
 import { RelatorioFotografico } from "../components/obras/RelatorioFotografico";
+import PresencaObra from "../components/obras/PresencaObra";
 import ObraMembros from "../components/obras/ObraMembros";
 import NaoConformidades from "../components/obras/NaoConformidades";
+import RFIs from "../components/obras/RFIs";
 import Garantias from "../components/obras/Garantias";
 import { RDOForm } from "../components/obras/RDOForm";
 import Comentarios from "../components/ui/Comentarios";
@@ -1054,7 +1056,8 @@ export default function GestaoObras() {
               {/* Coluna principal */}
               <div>
                 {/* Abas */}
-                <div style={{ display: "flex", borderBottom: `1px solid ${C.border}` }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: `1px solid ${C.border}` }}>
+                <div style={{ display: "flex", flex: 1, overflowX: "auto" }}>
                   {[["fases", "📋 Fases"], ["financeiro", "💰 Financeiro"], ["fluxo", "📈 Fluxo"], ["cronograma", "📅 Cronograma"], ["diario", "📓 Diário"], ["fotos", "📷 Fotos"], ["arquivos", "📁 Arquivos"], ["ncr", "⚠️ NCR"], ["rastreio", "🏷️ Rastreio"], ["historico", "🕑 Histórico"], ...(obra.status === "Concluída" ? [["garantia", "🛠️ Garantia"]] : []), ["garantias", "🛡️ Garantias"], ...(perfil === "diretor" ? [["membros", "👥 Membros"]] : []), ["comentarios", "💬 Comentários"]].map(([k, l]) => (
                     <button key={k} onClick={() => {
                       if (k === "diario" && userId) {
@@ -1070,6 +1073,10 @@ export default function GestaoObras() {
                       cursor: "pointer", fontFamily: "inherit", transition: "all .15s",
                     }}>{l}</button>
                   ))}
+                </div>
+                  <div style={{ padding: "0 12px", flexShrink: 0 }}>
+                    <PresencaObra obraId={obraId} />
+                  </div>
                 </div>
 
                 {/* ABA FASES */}
