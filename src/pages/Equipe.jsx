@@ -218,21 +218,23 @@ export default function Equipe() {
     if (!c.token_ponto) return;
     const url = `${window.location.origin}/ponto/${c.token_ponto}`;
     const qr  = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}`;
+    const inicial = c.nome[0].toUpperCase();
     printHtml(`
       <style>
-        body { margin:0; display:flex; align-items:center; justify-content:center; min-height:100vh; background:#f5f5f7; font-family:Inter,system-ui,sans-serif; }
-        .card { width:220px; background:#fff; border-radius:16px; padding:24px 20px; text-align:center; box-shadow:0 4px 20px rgba(0,0,0,.12); border-top:6px solid #981915; }
-        .logo { height:22px; margin-bottom:14px; }
-        .avatar { width:54px; height:54px; border-radius:50%; background:#981915; color:#fff; font-size:22px; font-weight:900; display:flex; align-items:center; justify-content:center; margin:0 auto 10px; }
-        .nome { font-size:16px; font-weight:800; color:#1a1a1a; margin-bottom:3px; }
-        .cargo { font-size:11px; color:#6b7280; margin-bottom:14px; }
-        .qr { width:160px; height:160px; margin:0 auto 12px; display:block; }
-        .label { font-size:9px; font-weight:700; letter-spacing:1.5px; color:#6b7280; text-transform:uppercase; }
-        @media print { body { background:#fff; } .card { box-shadow:none; } }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { display:flex; align-items:center; justify-content:center; min-height:100vh; background:#f5f5f7; font-family:Inter,Arial,sans-serif; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+        .card { width:240px; background:#fff; border-radius:16px; padding:28px 20px 20px; text-align:center; box-shadow:0 4px 20px rgba(0,0,0,.12); border-top:6px solid #981915; }
+        .logo { height:32px; margin-bottom:16px; display:block; margin-left:auto; margin-right:auto; }
+        .avatar { width:60px; height:60px; border-radius:50%; background:#981915; color:#fff; font-size:24px; font-weight:900; line-height:60px; text-align:center; margin:0 auto 12px; display:block; }
+        .nome { font-size:15px; font-weight:800; color:#1a1a1a; margin-bottom:4px; letter-spacing:.3px; }
+        .cargo { font-size:11px; color:#6b7280; margin-bottom:16px; text-transform:uppercase; letter-spacing:.8px; }
+        .qr { width:160px; height:160px; margin:0 auto 14px; display:block; border:1px solid #eee; border-radius:8px; padding:4px; }
+        .label { font-size:9px; font-weight:700; letter-spacing:2px; color:#9ca3af; text-transform:uppercase; }
+        @media print { body { background:#fff; min-height:unset; } .card { box-shadow:none; } }
       </style>
       <div class="card">
         <img src="${LOGO_STICKFRAME}" class="logo" onerror="this.style.display='none'"/>
-        <div class="avatar">${c.nome[0].toUpperCase()}</div>
+        <div class="avatar">${inicial}</div>
         <div class="nome">${c.nome}</div>
         <div class="cargo">${c.cargo || c.especialidade || "Colaborador"}</div>
         <img src="${qr}" class="qr"/>
