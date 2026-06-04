@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { sb } from "../services/supabase";
 import useAppStore from "../store/useAppStore";
 
@@ -7,6 +7,8 @@ export function usePresence() {
   const user = useAppStore((s) => s.user);
   const empresaId = useAppStore((s) => s.empresaId);
   const activePage = useAppStore((s) => s.activePage);
+  const channelRef = useRef(null);
+  const subscribedRef = useRef(false);
 
   useEffect(() => {
     if (!user?.id || !empresaId) return;
@@ -14,6 +16,8 @@ export function usePresence() {
     const channel = sb.channel(`empresa:${empresaId}:presence`, {
       config: { presence: { key: user.id } },
     });
+    channelRef.current = channel;
+    subscribedRef.current = false;
 
     channel
       .on("presence", { event: "sync" }, () => {
@@ -23,6 +27,7 @@ export function usePresence() {
       })
       .subscribe(async (status) => {
         if (status === "SUBSCRIBED") {
+          subscribedRef.current = true;
           await channel.track({
             id: user.id,
             nome: user.nome || user.email || "Usuário",
@@ -32,15 +37,23 @@ export function usePresence() {
         }
       });
 
-    return () => { sb.removeChannel(channel); };
+    return () => {
+      subscribedRef.current = false;
+      channelRef.current = null;
+      sb.removeChannel(channel);
+    };
   }, [user?.id, empresaId]);
 
-  // Update tracked page when activePage changes
+  // Atualiza página rastreada só se já estiver subscrito
   useEffect(() => {
-    if (!user?.id || !empresaId) return;
-    const channel = sb.channel(`empresa:${empresaId}:presence`);
-    channel.track?.({ id: user.id, nome: user.nome || user.email || "Usuário", pagina: activePage, ts: Date.now() });
-  }, [activePage, user?.id, empresaId]);
+    if (!user?.id || !subscribedRef.current || !channelRef.current) return;
+    channelRef.current.track({
+      id: user.id,
+      nome: user.nome || user.email || "Usuário",
+      pagina: activePage,
+      ts: Date.now(),
+    });
+  }, [activePage, user?.id]);
 
   return online;
 }
