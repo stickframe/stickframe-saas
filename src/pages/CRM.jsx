@@ -335,6 +335,7 @@ export default function CRM() {
   const addCliente     = useAppStore((s) => s.addCliente);
   const updateCliente  = useAppStore((s) => s.updateCliente);
   const setActivePage  = useAppStore((s) => s.setActivePage);
+  const userPerfil     = useAppStore((s) => s.user?.perfil);
 
   function abrirOrcamentoTecnico(c) {
     localStorage.setItem(CRM_LEAD_KEY, JSON.stringify({ id: c.id, nome: c.nome, area: c.unidades ? null : null }));
@@ -867,8 +868,8 @@ export default function CRM() {
                 )
               })}
 
-              {/* Zona lixeira — aparece só durante drag */}
-              {dragging && (
+              {/* Zona lixeira — aparece só durante drag, apenas para diretor */}
+              {dragging && userPerfil === "diretor" && (
                 <div
                   onDragOver={e => { e.preventDefault(); setTrashOver(true); }}
                   onDragLeave={() => setTrashOver(false)}
@@ -1127,14 +1128,16 @@ export default function CRM() {
 
             <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
               <Btn variant="ghost" size="sm" onClick={() => abrirEditar(cliente)} fullWidth><Pencil size={13} /> Editar</Btn>
-              <button onClick={() => setConfirm(true)} style={{
-                flex: 1, padding: "7px 0",
-                background: C.danger + "22", border: `1px solid ${C.danger}44`,
-                borderRadius: 6, color: C.danger, fontSize: 12,
-                fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
-              }}>
-                🗑 Deletar
-              </button>
+              {userPerfil === "diretor" && (
+                <button onClick={() => setConfirm(true)} style={{
+                  flex: 1, padding: "7px 0",
+                  background: C.danger + "22", border: `1px solid ${C.danger}44`,
+                  borderRadius: 6, color: C.danger, fontSize: 12,
+                  fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
+                }}>
+                  🗑 Deletar
+                </button>
+              )}
             </div>
 
             {cliente.contato && (
