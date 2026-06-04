@@ -265,7 +265,7 @@ export default function Equipe() {
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { display:flex; align-items:center; justify-content:center; min-height:100vh; background:#f5f5f7; font-family:Inter,Arial,sans-serif; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
         .card { width:240px; background:#fff; border-radius:16px; padding:28px 20px 20px; text-align:center; box-shadow:0 4px 20px rgba(0,0,0,.12); border-top:6px solid #981915; }
-        .logo { height:32px; margin-bottom:16px; display:block; margin-left:auto; margin-right:auto; }
+        .logo { height:48px; margin-bottom:16px; display:block; margin-left:auto; margin-right:auto; }
         .avatar { width:72px; height:72px; border-radius:50%; background:#981915; color:#fff; font-size:28px; font-weight:900; line-height:72px; text-align:center; margin:0 auto 12px; display:block; }
         .avatar-foto { width:72px; height:72px; border-radius:50%; object-fit:cover; margin:0 auto 12px; display:block; border:3px solid #981915; }
         .nome { font-size:15px; font-weight:800; color:#1a1a1a; margin-bottom:4px; letter-spacing:.3px; }
