@@ -1078,8 +1078,8 @@ export default function GestaoObras() {
               <div>
                 {/* Abas */}
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: `1px solid ${C.border}` }}>
-                <div style={{ display: "flex", flex: 1, overflowX: "auto" }}>
-                  {[["fases", "📋 Fases"], ["financeiro", "💰 Financeiro"], ["fluxo", "📈 Fluxo"], ["cronograma", "📅 Cronograma"], ["diario", "📓 Diário"], ["fotos", "📷 Fotos"], ["arquivos", "📁 Arquivos"], ["ncr", "⚠️ NCR"], ["rfis", "📝 RFIs"], ["rastreio", "🏷️ Rastreio"], ["historico", "🕑 Histórico"], ...(obra.status === "Concluída" ? [["garantia", "🛠️ Garantia"]] : []), ["garantias", "🛡️ Garantias"], ...(perfil === "diretor" ? [["membros", "👥 Membros"]] : []), ["presenca", "👥 Presença"], ["comentarios", "💬 Comentários"]].map(([k, l]) => (
+                <div style={{ display: "flex", flex: 1, overflowX: "auto", scrollbarWidth: "thin" }}>
+                  {[["fases", "Fases"], ["financeiro", "Financeiro"], ["fluxo", "Fluxo"], ["cronograma", "Cronograma"], ["diario", "Diário"], ["fotos", "Fotos"], ["arquivos", "Arquivos"], ["ncr", "NCR"], ["rfis", "RFIs"], ["rastreio", "Rastreio"], ["historico", "Histórico"], ...(obra.status === "Concluída" ? [["garantia", "Garantia"]] : []), ["garantias", "Garantias"], ...(perfil === "diretor" ? [["membros", "Membros"]] : []), ["presenca", "Presença"], ["comentarios", "Comentários"]].map(([k, l]) => (
                     <button key={k} onClick={() => {
                       if (k === "diario" && userId) {
                         const pendentes = arqObra.filter((a) => a.disciplina && a.status_doc !== "Desatualizado" && !(a.cientes_uids || []).includes(userId));
@@ -1087,11 +1087,12 @@ export default function GestaoObras() {
                       }
                       setAbaAtiva(k);
                     }} style={{
-                      padding: "10px 20px", background: "transparent", border: "none",
+                      padding: "10px 14px", background: "transparent", border: "none",
                       borderBottom: `2px solid ${abaAtiva === k ? C.red : "transparent"}`,
                       color: abaAtiva === k ? C.text : C.muted,
                       fontSize: 13, fontWeight: abaAtiva === k ? 700 : 400,
                       cursor: "pointer", fontFamily: "inherit", transition: "all .15s",
+                      whiteSpace: "nowrap",
                     }}>{l}</button>
                   ))}
                 </div>

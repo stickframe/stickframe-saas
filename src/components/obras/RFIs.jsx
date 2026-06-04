@@ -88,17 +88,17 @@ export default function RFIs({ obraId, userPerfil }) {
       </div>
 
       {loading ? <p>Carregando...</p> : rfis.length === 0 ? (
-        <div style={{ textAlign: "center", padding: 40, color: "var(--text-muted)" }}>📝 Nenhuma RFI registrada.</div>
+        <div style={{ textAlign: "center", padding: 40, color: "#6b7280" }}>📝 Nenhuma RFI registrada.</div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {rfis.map(r => (
             <div key={r.id} style={{
-              background: "var(--bg-card)", borderRadius: 10, padding: 16,
+              background: "#ffffff", borderRadius: 10, padding: 16,
               borderLeft: `4px solid ${COR_URGENCIA[r.urgencia] || "#6b7280"}`,
             }}>
               <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
                 <div>
-                  <span style={{ fontSize: 11, color: "var(--text-muted)", marginRight: 8 }}>{r.numero}</span>
+                  <span style={{ fontSize: 11, color: "#6b7280", marginRight: 8 }}>{r.numero}</span>
                   <b>{r.titulo}</b>
                 </div>
                 <div style={{ display: "flex", gap: 6 }}>
@@ -107,9 +107,9 @@ export default function RFIs({ obraId, userPerfil }) {
                 </div>
               </div>
 
-              {r.descricao && <p style={{ margin: "8px 0 0", fontSize: 13, color: "var(--text-muted)" }}>{r.descricao}</p>}
+              {r.descricao && <p style={{ margin: "8px 0 0", fontSize: 13, color: "#6b7280" }}>{r.descricao}</p>}
 
-              <div style={{ display: "flex", gap: 12, marginTop: 10, flexWrap: "wrap", alignItems: "center", fontSize: 12, color: "var(--text-muted)" }}>
+              <div style={{ display: "flex", gap: 12, marginTop: 10, flexWrap: "wrap", alignItems: "center", fontSize: 12, color: "#6b7280" }}>
                 <span>📐 {r.disciplina}</span>
                 {r.solicitante && <span>👤 {r.solicitante}</span>}
                 {r.data_solicitacao && <span>📅 {r.data_solicitacao}</span>}
@@ -129,7 +129,7 @@ export default function RFIs({ obraId, userPerfil }) {
                   )}
                   {r.status === "Aberto" && (
                     <button onClick={() => { setForm({ ...r }); setModal(r); }}
-                      style={{ fontSize: 11, padding: "2px 8px", background: "none", border: "1px solid var(--border)", borderRadius: 4, cursor: "pointer" }}>
+                      style={{ fontSize: 11, padding: "2px 8px", background: "none", border: "1px solid #e2e4ea", borderRadius: 4, cursor: "pointer" }}>
                       ✏️ Editar
                     </button>
                   )}
@@ -137,9 +137,9 @@ export default function RFIs({ obraId, userPerfil }) {
               </div>
 
               {r.resposta && (
-                <div style={{ marginTop: 10, background: "var(--bg-hover)", borderRadius: 6, padding: 10, fontSize: 12 }}>
+                <div style={{ marginTop: 10, background: "#f5f6f8", borderRadius: 6, padding: 10, fontSize: 12 }}>
                   <b>Resposta:</b> {r.resposta}
-                  {r.data_resposta && <span style={{ marginLeft: 8, color: "var(--text-muted)" }}>({r.data_resposta})</span>}
+                  {r.data_resposta && <span style={{ marginLeft: 8, color: "#6b7280" }}>({r.data_resposta})</span>}
                 </div>
               )}
             </div>
@@ -150,38 +150,38 @@ export default function RFIs({ obraId, userPerfil }) {
       {/* Create / Edit Modal */}
       {modal !== null && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <div style={{ background: "var(--bg-card)", borderRadius: 12, padding: 24, width: "min(500px,95vw)", maxHeight: "90vh", overflowY: "auto" }}>
+          <div style={{ background: "#ffffff", borderRadius: 12, padding: 24, width: "min(500px,95vw)", maxHeight: "90vh", overflowY: "auto" }}>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
               <h3 style={{ margin: 0 }}>{modal === "new" ? "Nova RFI" : "Editar RFI"}</h3>
               <button onClick={() => setModal(null)} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer" }}>✕</button>
             </div>
 
             <label style={{ display: "block", marginBottom: 12 }}>
-              <span style={{ fontSize: 12, color: "var(--text-muted)" }}>Título *</span>
+              <span style={{ fontSize: 12, color: "#6b7280" }}>Título *</span>
               <input value={form.titulo || ""} onChange={set("titulo")}
-                style={{ display: "block", width: "100%", marginTop: 4, padding: 8, borderRadius: 6, border: "1px solid var(--border)", background: "var(--bg-input)", boxSizing: "border-box" }} />
+                style={{ display: "block", width: "100%", marginTop: 4, padding: 8, borderRadius: 6, border: "1px solid #e2e4ea", background: "#f5f6f8", boxSizing: "border-box" }} />
             </label>
 
             <label style={{ display: "block", marginBottom: 12 }}>
-              <span style={{ fontSize: 12, color: "var(--text-muted)" }}>Descrição</span>
+              <span style={{ fontSize: 12, color: "#6b7280" }}>Descrição</span>
               <textarea value={form.descricao || ""} onChange={set("descricao")} rows={3}
-                style={{ display: "block", width: "100%", marginTop: 4, padding: 8, borderRadius: 6, border: "1px solid var(--border)", background: "var(--bg-input)", resize: "vertical", boxSizing: "border-box" }} />
+                style={{ display: "block", width: "100%", marginTop: 4, padding: 8, borderRadius: 6, border: "1px solid #e2e4ea", background: "#f5f6f8", resize: "vertical", boxSizing: "border-box" }} />
             </label>
 
             <label style={{ display: "block", marginBottom: 12 }}>
-              <span style={{ fontSize: 12, color: "var(--text-muted)" }}>Solicitante</span>
+              <span style={{ fontSize: 12, color: "#6b7280" }}>Solicitante</span>
               <input value={form.solicitante || ""} onChange={set("solicitante")}
-                style={{ display: "block", width: "100%", marginTop: 4, padding: 8, borderRadius: 6, border: "1px solid var(--border)", background: "var(--bg-input)", boxSizing: "border-box" }} />
+                style={{ display: "block", width: "100%", marginTop: 4, padding: 8, borderRadius: 6, border: "1px solid #e2e4ea", background: "#f5f6f8", boxSizing: "border-box" }} />
             </label>
 
             <div style={{ marginBottom: 14 }}>
-              <span style={{ fontSize: 12, color: "var(--text-muted)" }}>Disciplina</span>
+              <span style={{ fontSize: 12, color: "#6b7280" }}>Disciplina</span>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 6 }}>
                 {DISCIPLINAS.map(d => (
                   <button key={d} onClick={() => setForm(f => ({ ...f, disciplina: d }))}
                     style={{
-                      padding: "4px 12px", borderRadius: 20, border: "1px solid var(--border)", cursor: "pointer",
-                      background: form.disciplina === d ? "#ef4444" : "var(--bg-input)",
+                      padding: "4px 12px", borderRadius: 20, border: "1px solid #e2e4ea", cursor: "pointer",
+                      background: form.disciplina === d ? "#ef4444" : "#f5f6f8",
                       color: form.disciplina === d ? "#fff" : "inherit", fontSize: 12, fontWeight: form.disciplina === d ? 700 : 400,
                     }}>{d}</button>
                 ))}
@@ -189,13 +189,13 @@ export default function RFIs({ obraId, userPerfil }) {
             </div>
 
             <div style={{ marginBottom: 16 }}>
-              <span style={{ fontSize: 12, color: "var(--text-muted)" }}>Urgência</span>
-              <div style={{ display: "flex", gap: 0, marginTop: 6, borderRadius: 8, overflow: "hidden", border: "1px solid var(--border)" }}>
+              <span style={{ fontSize: 12, color: "#6b7280" }}>Urgência</span>
+              <div style={{ display: "flex", gap: 0, marginTop: 6, borderRadius: 8, overflow: "hidden", border: "1px solid #e2e4ea" }}>
                 {URGENCIAS.map(u => (
                   <button key={u} onClick={() => setForm(f => ({ ...f, urgencia: u }))}
                     style={{
                       flex: 1, padding: "7px 0", border: "none", cursor: "pointer",
-                      background: form.urgencia === u ? COR_URGENCIA[u] : "var(--bg-input)",
+                      background: form.urgencia === u ? COR_URGENCIA[u] : "#f5f6f8",
                       color: form.urgencia === u ? "#fff" : "inherit", fontSize: 12, fontWeight: form.urgencia === u ? 700 : 400,
                     }}>{u}</button>
                 ))}
@@ -203,7 +203,7 @@ export default function RFIs({ obraId, userPerfil }) {
             </div>
 
             <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-              <button onClick={() => setModal(null)} style={{ padding: "8px 16px", borderRadius: 8, border: "1px solid var(--border)", background: "none", cursor: "pointer" }}>Cancelar</button>
+              <button onClick={() => setModal(null)} style={{ padding: "8px 16px", borderRadius: 8, border: "1px solid #e2e4ea", background: "none", cursor: "pointer" }}>Cancelar</button>
               <button onClick={salvar} disabled={saving || !form.titulo?.trim()}
                 style={{ padding: "8px 20px", borderRadius: 8, border: "none", background: "#ef4444", color: "#fff", cursor: "pointer", fontWeight: 700, opacity: saving ? 0.6 : 1 }}>
                 {saving ? "Salvando..." : "Salvar"}
@@ -216,16 +216,16 @@ export default function RFIs({ obraId, userPerfil }) {
       {/* Responder Modal */}
       {responderModal && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 1100, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <div style={{ background: "var(--bg-card)", borderRadius: 12, padding: 24, width: "min(460px,95vw)" }}>
+          <div style={{ background: "#ffffff", borderRadius: 12, padding: 24, width: "min(460px,95vw)" }}>
             <h3 style={{ margin: "0 0 4px" }}>Responder RFI</h3>
-            <p style={{ margin: "0 0 16px", fontSize: 13, color: "var(--text-muted)" }}>{responderModal.numero} — {responderModal.titulo}</p>
+            <p style={{ margin: "0 0 16px", fontSize: 13, color: "#6b7280" }}>{responderModal.numero} — {responderModal.titulo}</p>
             <label style={{ display: "block", marginBottom: 16 }}>
-              <span style={{ fontSize: 12, color: "var(--text-muted)" }}>Resposta *</span>
+              <span style={{ fontSize: 12, color: "#6b7280" }}>Resposta *</span>
               <textarea value={resposta} onChange={e => setResposta(e.target.value)} rows={5}
-                style={{ display: "block", width: "100%", marginTop: 4, padding: 8, borderRadius: 6, border: "1px solid var(--border)", background: "var(--bg-input)", resize: "vertical", boxSizing: "border-box" }} />
+                style={{ display: "block", width: "100%", marginTop: 4, padding: 8, borderRadius: 6, border: "1px solid #e2e4ea", background: "#f5f6f8", resize: "vertical", boxSizing: "border-box" }} />
             </label>
             <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-              <button onClick={() => setResponderModal(null)} style={{ padding: "8px 16px", borderRadius: 8, border: "1px solid var(--border)", background: "none", cursor: "pointer" }}>Cancelar</button>
+              <button onClick={() => setResponderModal(null)} style={{ padding: "8px 16px", borderRadius: 8, border: "1px solid #e2e4ea", background: "none", cursor: "pointer" }}>Cancelar</button>
               <button onClick={responder} disabled={!resposta.trim()}
                 style={{ padding: "8px 20px", borderRadius: 8, border: "none", background: "#22c55e", color: "#fff", cursor: "pointer", fontWeight: 700, opacity: !resposta.trim() ? 0.5 : 1 }}>
                 ✅ Enviar Resposta
