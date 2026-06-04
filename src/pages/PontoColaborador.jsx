@@ -97,9 +97,13 @@ export default function PontoColaborador() {
           <span style={{ color: "rgba(255,255,255,0.7)", fontSize: 11, fontWeight: 700, letterSpacing: 1.5 }}>PONTO ELETRÔNICO</span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          <div style={{ width: 52, height: 52, borderRadius: "50%", background: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, fontWeight: 900, color: "#fff", flexShrink: 0 }}>
-            {colaborador.nome[0].toUpperCase()}
-          </div>
+          {colaborador.foto_url ? (
+            <img src={colaborador.foto_url} alt={colaborador.nome} style={{ width: 52, height: 52, borderRadius: "50%", objectFit: "cover", border: "2px solid rgba(255,255,255,0.4)", flexShrink: 0 }} />
+          ) : (
+            <div style={{ width: 52, height: 52, borderRadius: "50%", background: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, fontWeight: 900, color: "#fff", flexShrink: 0 }}>
+              {colaborador.nome[0].toUpperCase()}
+            </div>
+          )}
           <div>
             <div style={{ color: "#fff", fontSize: 20, fontWeight: 800 }}>{colaborador.nome}</div>
             <div style={{ color: "rgba(255,255,255,0.7)", fontSize: 13 }}>{colaborador.cargo || colaborador.especialidade}</div>
