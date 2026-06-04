@@ -310,6 +310,7 @@ export default function GestaoObras() {
   const marcarCiente      = useAppStore((s) => s.marcarCiente);
   const medicoes          = useAppStore((s) => s.medicoes);
   const diario            = useAppStore((s) => s.diario);
+  const addDiario         = useAppStore((s) => s.addDiario);
   const loadMedicoes      = useAppStore((s) => s.loadMedicoes);
   const loadDiario        = useAppStore((s) => s.loadDiario);
   const vistorias         = useAppStore((s) => s.vistorias);
@@ -1072,7 +1073,7 @@ export default function GestaoObras() {
           </div>
 
           {obra && (
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 260px", gap: 18 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr minmax(0,220px)", gap: 14 }}>
 
               {/* Coluna principal */}
               <div>
