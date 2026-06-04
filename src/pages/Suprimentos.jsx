@@ -262,9 +262,9 @@ export default function Suprimentos() {
       {pedModal && (
         <Modal onClose={() => setPedModal(false)} title={pedEdit ? "Editar Pedido" : "Novo Pedido de Material"}>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            <Input label="Item *" value={pedForm.item} onChange={e => setPedForm(f => ({ ...f, item: e.target.value }))} placeholder="Ex: Perfil U 90mm" />
+            <Input label="Item *" value={pedForm.item} onChange={v => setPedForm(f => ({ ...f, item: v }))} placeholder="Ex: Perfil U 90mm" />
             <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 12 }}>
-              <Input label="Quantidade *" type="number" min="0" step="0.001" value={pedForm.quantidade} onChange={e => setPedForm(f => ({ ...f, quantidade: e.target.value }))} />
+              <Input label="Quantidade *" type="number" min="0" step="0.001" value={pedForm.quantidade} onChange={v => setPedForm(f => ({ ...f, quantidade: v }))} />
               <div>
                 <label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: "block", marginBottom: 4 }}>Unidade</label>
                 <select value={pedForm.unidade} onChange={e => setPedForm(f => ({ ...f, unidade: e.target.value }))} style={selectStyle}>
@@ -294,12 +294,12 @@ export default function Suprimentos() {
               </select>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-              <Input label="Data do pedido" type="date" value={pedForm.data_pedido} onChange={e => setPedForm(f => ({ ...f, data_pedido: e.target.value }))} />
-              <Input label="Previsão entrega" type="date" value={pedForm.data_entrega} onChange={e => setPedForm(f => ({ ...f, data_entrega: e.target.value }))} />
+              <Input label="Data do pedido" type="date" value={pedForm.data_pedido} onChange={v => setPedForm(f => ({ ...f, data_pedido: v }))} />
+              <Input label="Previsão entrega" type="date" value={pedForm.data_entrega} onChange={v => setPedForm(f => ({ ...f, data_entrega: v }))} />
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-              <Input label="Solicitante" value={pedForm.solicitante} onChange={e => setPedForm(f => ({ ...f, solicitante: e.target.value }))} placeholder="Nome" />
-              <Input label="Valor unitário (R$)" type="number" min="0" step="0.01" value={pedForm.valor_unitario} onChange={e => setPedForm(f => ({ ...f, valor_unitario: e.target.value }))} />
+              <Input label="Solicitante" value={pedForm.solicitante} onChange={v => setPedForm(f => ({ ...f, solicitante: v }))} placeholder="Nome" />
+              <Input label="Valor unitário (R$)" type="number" min="0" step="0.01" value={pedForm.valor_unitario} onChange={v => setPedForm(f => ({ ...f, valor_unitario: v }))} />
             </div>
             <div><label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: "block", marginBottom: 4 }}>Observações</label><textarea value={pedForm.obs} onChange={e => setPedForm(f => ({ ...f, obs: e.target.value }))} rows={2} style={{ width: "100%", background: C.dark, border: `1px solid ${C.border}`, borderRadius: 6, padding: "8px 10px", color: C.text, fontSize: 14, fontFamily: "inherit", resize: "vertical", boxSizing: "border-box" }} /></div>
             <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 4 }}>
@@ -314,9 +314,9 @@ export default function Suprimentos() {
       {estModal && (
         <Modal onClose={() => setEstModal(false)} title={estEdit ? "Editar Item" : "Novo Item de Estoque"}>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            <Input label="Item *" value={estForm.item} onChange={e => setEstForm(f => ({ ...f, item: e.target.value }))} placeholder="Ex: Parafuso autobrocante 4.2" />
+            <Input label="Item *" value={estForm.item} onChange={v => setEstForm(f => ({ ...f, item: v }))} placeholder="Ex: Parafuso autobrocante 4.2" />
             <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 12 }}>
-              <Input label="Quantidade inicial" type="number" min="0" step="0.001" value={estForm.quantidade} onChange={e => setEstForm(f => ({ ...f, quantidade: e.target.value }))} />
+              <Input label="Quantidade inicial" type="number" min="0" step="0.001" value={estForm.quantidade} onChange={v => setEstForm(f => ({ ...f, quantidade: v }))} />
               <div>
                 <label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: "block", marginBottom: 4 }}>Unidade</label>
                 <select value={estForm.unidade} onChange={e => setEstForm(f => ({ ...f, unidade: e.target.value }))} style={selectStyle}>
@@ -325,10 +325,10 @@ export default function Suprimentos() {
               </div>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-              <Input label="Estoque mínimo" type="number" min="0" step="0.001" value={estForm.estoque_minimo} onChange={e => setEstForm(f => ({ ...f, estoque_minimo: e.target.value }))} />
-              <Input label="Valor unitário (R$)" type="number" min="0" step="0.01" value={estForm.valor_unitario} onChange={e => setEstForm(f => ({ ...f, valor_unitario: e.target.value }))} />
+              <Input label="Estoque mínimo" type="number" min="0" step="0.001" value={estForm.estoque_minimo} onChange={v => setEstForm(f => ({ ...f, estoque_minimo: v }))} />
+              <Input label="Valor unitário (R$)" type="number" min="0" step="0.01" value={estForm.valor_unitario} onChange={v => setEstForm(f => ({ ...f, valor_unitario: v }))} />
             </div>
-            <Input label="Localização (almoxarifado)" value={estForm.localizacao} onChange={e => setEstForm(f => ({ ...f, localizacao: e.target.value }))} placeholder="Ex: Prateleira A3" />
+            <Input label="Localização (almoxarifado)" value={estForm.localizacao} onChange={v => setEstForm(f => ({ ...f, localizacao: v }))} placeholder="Ex: Prateleira A3" />
             <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 4 }}>
               <Btn variant="ghost" onClick={() => setEstModal(false)}>Cancelar</Btn>
               <Btn onClick={salvarEst} disabled={!estForm.item}>Salvar</Btn>
@@ -350,7 +350,7 @@ export default function Suprimentos() {
                   <option value="saida">Saída</option>
                 </select>
               </div>
-              <Input label="Quantidade" type="number" min="0.001" step="0.001" value={movForm.quantidade} onChange={e => setMovForm(f => ({ ...f, quantidade: e.target.value }))} />
+              <Input label="Quantidade" type="number" min="0.001" step="0.001" value={movForm.quantidade} onChange={v => setMovForm(f => ({ ...f, quantidade: v }))} />
             </div>
             <div><label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: "block", marginBottom: 4 }}>Observação</label><textarea value={movForm.obs} onChange={e => setMovForm(f => ({ ...f, obs: e.target.value }))} rows={2} placeholder="Ex: Retirado para obra Res. São Paulo" style={{ width: "100%", background: C.dark, border: `1px solid ${C.border}`, borderRadius: 6, padding: "8px 10px", color: C.text, fontSize: 14, fontFamily: "inherit", resize: "vertical", boxSizing: "border-box" }} /></div>
             <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 4 }}>
