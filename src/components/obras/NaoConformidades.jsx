@@ -21,6 +21,7 @@ const SUGESTOES_NCR = [
   "Instalação hidráulica ou elétrica sem passador de proteção no perfil",
   "Radier sem nível adequado para assentamento da guia",
   "Placa de fachada fixada sem espaçamento mínimo do solo",
+  "Tabica de forro mal executada",
 ];
 
 const inputStyle = {
