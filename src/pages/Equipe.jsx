@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { ClipboardList, DollarSign, Pencil, Phone, Trash2 } from "../components/ui/Icon";
+import Certificacoes from "../components/equipe/Certificacoes";
 import { printHtml } from "../utils/printHtml";
 import { LOGO_STICKFRAME } from "../utils/cdn";
 import { useToast } from "../hooks/useToast";
@@ -564,6 +565,7 @@ export default function Equipe() {
           <Tab label="🔨 Empreiteiros" active={tab === "empreiteiros"} onClick={() => setTab("empreiteiros")} />
           <Tab label="📋 Alocações"    active={tab === "alocacoes"}    onClick={() => setTab("alocacoes")} />
           <Tab label="⏱ Horas"        active={tab === "horas"}        onClick={() => setTab("horas")} />
+          <Tab label="🛡️ Compliance"  active={tab === "compliance"}   onClick={() => setTab("compliance")} />
         </div>
 
         {/* ══ Tab: Equipe ══ */}
@@ -915,6 +917,11 @@ export default function Equipe() {
               </div>
             )}
           </div>
+        )}
+
+        {/* ══ Tab: Compliance ══ */}
+        {tab === "compliance" && (
+          <Certificacoes />
         )}
       </div>
     </>

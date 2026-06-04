@@ -5,6 +5,7 @@ export async function verificarAlertas(empresaId, userId) {
   try {
     const hoje = new Date().toISOString().split("T")[0];
     const em7dias = new Date(Date.now() + 7 * 86400000).toISOString().split("T")[0];
+    const em30dias = new Date(Date.now() + 30 * 86400000).toISOString().split("T")[0];
 
     const { data: garantias } = await sb
       .from("garantias")
