@@ -2139,6 +2139,7 @@ export default function GestaoObras() {
                   {[
                     ["Status",    obra.status],
                     ["Fase",      obra.fase],
+                    ["Contrato",  obra.contrato ? Number(obra.contrato).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) : "—"],
                     ["Início",    obra.prazo_inicio ? new Date(obra.prazo_inicio + "T00:00").toLocaleDateString("pt-BR") : "—"],
                     ["Entrega",   obra.prazo_fim    ? new Date(obra.prazo_fim    + "T00:00").toLocaleDateString("pt-BR") : "—"],
                     ["Concluído", `${obra.progresso}%`],
