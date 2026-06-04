@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useAppStore } from "../store/appStore";
+import useAppStore from "../store/useAppStore";
 import { useModuleLoad } from "../hooks/useModuleLoad";
 import { Card, Btn, Modal, Input, Textarea } from "../components/ui";
 import { C } from "../utils/constants";
