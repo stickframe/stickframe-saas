@@ -1495,6 +1495,7 @@ export default function GestaoObras() {
                                 <a href={a.url} target="_blank" rel="noreferrer" style={{ background: "#4a9eff22", border: "1px solid #4a9eff44", borderRadius: 6, color: "#4a9eff", fontSize: 11, fontWeight: 700, padding: "4px 10px", textDecoration: "none", textAlign: "center" }}>↓</a>
                               )}
                               <button onClick={() => setVersaoModal({ id: a.id, nome: a.nome })} style={{ background: "#4a9eff22", border: "1px solid #4a9eff44", borderRadius: 6, color: "#4a9eff", fontSize: 11, fontWeight: 700, cursor: "pointer", padding: "4px 10px", fontFamily: "inherit", whiteSpace: "nowrap" }}>📋 Versões</button>
+                              <button onClick={() => setApontamentoModal(a)} style={{fontSize:11, padding:"2px 8px", background:"#f59e0b", color:"#fff", border:"none", borderRadius:4, cursor:"pointer", marginLeft:4}}>📌 Apontamentos</button>
                               <button onClick={() => setPdfViewer(a)} style={{ fontSize: 11, padding: "4px 10px", background: "#6366f1", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap" }}>🖊 Anotar</button>
                               <button onClick={() => deleteArquivo(obraId, a.id, a.path)} style={{ background: C.danger + "22", border: `1px solid ${C.danger}44`, borderRadius: 6, color: C.danger, fontSize: 11, fontWeight: 700, cursor: "pointer", padding: "4px 10px", fontFamily: "inherit" }}><Trash2 size={13} /></button>
                             </div>
@@ -2174,6 +2175,14 @@ export default function GestaoObras() {
           arquivoNome={versaoModal.nome}
           obraId={obraId}
           onClose={() => setVersaoModal(null)}
+        />
+      )}
+
+      {apontamentoModal && (
+        <PlantaApontamentos
+          arquivo={apontamentoModal}
+          obraId={obraId}
+          onClose={() => setApontamentoModal(null)}
         />
       )}
 
