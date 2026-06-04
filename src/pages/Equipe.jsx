@@ -454,13 +454,13 @@ export default function Equipe() {
               <LabelField required>Colaborador</LabelField>
               <Select value={alocForm.colaborador_id}
                 onChange={(v) => setAlocForm((f) => ({ ...f, colaborador_id: v }))}
-                options={colaboradores.filter(c => c.status === "Ativo").map((c) => ({ value: c.id, label: c.nome }))} />
+                options={[{ value: "", label: "Selecionar colaborador..." }, ...colaboradores.filter(c => c.status === "Ativo").map((c) => ({ value: c.id, label: c.nome }))]} />
             </div>
             <div>
               <LabelField required>Obra</LabelField>
               <Select value={alocForm.obra_id}
                 onChange={(v) => setAlocForm((f) => ({ ...f, obra_id: v }))}
-                options={obras.map((o) => ({ value: o.id, label: o.nome?.split("—")[0]?.trim() }))} />
+                options={[{ value: "", label: "Selecionar obra..." }, ...obras.map((o) => ({ value: o.id, label: o.nome?.split("—")[0]?.trim() }))]} />
             </div>
             <div>
               <LabelField>Função na obra</LabelField>
@@ -496,13 +496,13 @@ export default function Equipe() {
               <LabelField required>Colaborador</LabelField>
               <Select value={horaForm.colaborador_id}
                 onChange={(v) => setHoraForm((f) => ({ ...f, colaborador_id: v }))}
-                options={colaboradores.map((c) => ({ value: c.id, label: c.nome }))} />
+                options={[{ value: "", label: "Selecionar colaborador..." }, ...colaboradores.map((c) => ({ value: c.id, label: c.nome }))]} />
             </div>
             <div>
               <LabelField required>Obra</LabelField>
               <Select value={horaForm.obra_id}
                 onChange={(v) => setHoraForm((f) => ({ ...f, obra_id: v }))}
-                options={obras.map((o) => ({ value: o.id, label: o.nome?.split("—")[0]?.trim() }))} />
+                options={[{ value: "", label: "Selecionar obra..." }, ...obras.map((o) => ({ value: o.id, label: o.nome?.split("—")[0]?.trim() }))]} />
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
               <div>
