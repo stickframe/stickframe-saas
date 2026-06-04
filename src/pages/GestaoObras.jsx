@@ -1,4 +1,6 @@
 import ObraMembros from "../components/obras/ObraMembros";
+import NaoConformidades from "../components/obras/NaoConformidades";
+import { RDOForm } from "../components/obras/RDOForm";
 import Comentarios from "../components/ui/Comentarios";
 import ChangeOrders from "../components/obras/ChangeOrders";
 import { ArquivoVersoes } from "../components/obras/ArquivoVersoes";
@@ -361,6 +363,7 @@ export default function GestaoObras() {
   const [chamadoSaving, setChamadoSaving] = useState(false);
   const [versaoModal,   setVersaoModal]   = useState(null);
   const [apontamentoModal, setApontamentoModal] = useState(null);
+  const [showRDO,       setShowRDO]       = useState(false);
   const [pdfViewer,     setPdfViewer]     = useState(null);
 
   useEffect(() => {
@@ -1050,7 +1053,7 @@ export default function GestaoObras() {
               <div>
                 {/* Abas */}
                 <div style={{ display: "flex", borderBottom: `1px solid ${C.border}` }}>
-                  {[["fases", "📋 Fases"], ["financeiro", "💰 Financeiro"], ["fluxo", "📈 Fluxo"], ["cronograma", "📅 Cronograma"], ["diario", "📓 Diário"], ["fotos", "📷 Fotos"], ["arquivos", "📁 Arquivos"], ["rastreio", "🏷️ Rastreio"], ["historico", "🕑 Histórico"], ...(obra.status === "Concluída" ? [["garantia", "🛠️ Garantia"]] : []), ...(perfil === "diretor" ? [["membros", "👥 Membros"]] : []), ["comentarios", "💬 Comentários"]].map(([k, l]) => (
+                  {[["fases", "📋 Fases"], ["financeiro", "💰 Financeiro"], ["fluxo", "📈 Fluxo"], ["cronograma", "📅 Cronograma"], ["diario", "📓 Diário"], ["fotos", "📷 Fotos"], ["arquivos", "📁 Arquivos"], ["ncr", "⚠️ NCR"], ["rastreio", "🏷️ Rastreio"], ["historico", "🕑 Histórico"], ...(obra.status === "Concluída" ? [["garantia", "🛠️ Garantia"]] : []), ...(perfil === "diretor" ? [["membros", "👥 Membros"]] : []), ["comentarios", "💬 Comentários"]].map(([k, l]) => (
                     <button key={k} onClick={() => {
                       if (k === "diario" && userId) {
                         const pendentes = arqObra.filter((a) => a.disciplina && a.status_doc !== "Desatualizado" && !(a.cientes_uids || []).includes(userId));

@@ -1,4 +1,47 @@
 import { useState, useMemo, useEffect } from "react";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+
+function CurvaS({ medicoes }) {
+  const meses = {};
+  (medicoes || []).forEach(m => {
+    const mes = (m.data || m.created_at || "").substring(0, 7);
+    if (!mes) return;
+    if (!meses[mes]) meses[mes] = { mes, total: 0, count: 0 };
+    meses[mes].total += (m.percentual_acumulado || m.percentual || 0);
+    meses[mes].count += 1;
+  });
+
+  const sorted = Object.values(meses).sort((a, b) => a.mes.localeCompare(b.mes));
+  const dados = sorted.map((m, i) => ({
+    mes: m.mes,
+    realizado: Math.min(100, Math.round(m.total / m.count)),
+    previsto: Math.round(((i + 1) / Math.max(sorted.length, 1)) * 100),
+  }));
+
+  if (dados.length < 2) return (
+    <div style={{ background: "var(--bg-card)", borderRadius: 12, padding: 24, marginBottom: 20, textAlign: "center", color: "var(--text-muted)" }}>
+      <p style={{ fontSize: 32, margin: "0 0 8px" }}>📈</p>
+      <p style={{ margin: 0 }}>Curva S disponível após registrar medições em 2+ meses.</p>
+    </div>
+  );
+
+  return (
+    <div style={{ background: "var(--bg-card)", borderRadius: 12, padding: 24, marginBottom: 20 }}>
+      <h3 style={{ margin: "0 0 16px", fontSize: 15, fontWeight: 700 }}>📈 Curva S — Progresso Físico</h3>
+      <ResponsiveContainer width="100%" height={260}>
+        <LineChart data={dados}>
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+          <XAxis dataKey="mes" tick={{ fontSize: 11 }} />
+          <YAxis unit="%" tick={{ fontSize: 11 }} domain={[0, 100]} />
+          <Tooltip formatter={v => `${v}%`} />
+          <Legend />
+          <Line type="monotone" dataKey="previsto" name="Previsto" stroke="#3b82f6" strokeDasharray="5 5" strokeWidth={2} dot={false} />
+          <Line type="monotone" dataKey="realizado" name="Realizado" stroke="#22c55e" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
 import Comentarios from "../components/ui/Comentarios";
 import { Link, Ruler } from "../components/ui/Icon";
 import { C } from "../utils/constants";
@@ -183,6 +226,8 @@ export default function Medicoes() {
             <div style={{ height: 8, width: `${Math.min(pctMedido, 100)}%`, background: `linear-gradient(90deg,${C.red},#6e1210)`, borderRadius: 4, transition: "width .5s" }} />
           </div>
         </div>
+
+        <CurvaS medicoes={lista} />
 
         {lista.length === 0 ? (
           <div style={{ background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", border: `1px solid ${C.border}`, padding: "48px 0", textAlign: "center" }}>
