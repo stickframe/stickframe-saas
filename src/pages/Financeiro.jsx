@@ -266,7 +266,45 @@ function FormLancamento({ tipo, form, setForm, onSave, onCancel }) {
 // ─── Financeiro ───────────────────────────────────────────────────────────────
 const FORM_VAZIO = { categoria: "Materiais", valor: "", data: "", descricao: "", data_vencimento: "" };
 
-function FolhaPagamento({ folhaMes, setFolhaMes, folhaDados, folhaLoading, folhaPagos, setFolhaPagos, colaboradores, C }) {
+function FolhaPagamento({ folhaMes, setFolhaMes, folhaDados, folhaLoading, folhaPagos, setFolhaPagos, colaboradores, C, addLancamento }) {
+
+  async function marcarPago(c) {
+    const col = (colaboradores || []).find(x => x.id === c.id || x.nome === c.nome);
+    const tipoContrato = col?.tipo_contrato || "CLT";
+    if (tipoContrato === "Empreiteiro") return; // não aplica
+
+    const sal = col?.salario || 0;
+    const valProd = col?.valor_producao || 0;
+
+    // Obra com mais horas no período
+    const obraHoras = {};
+    (c.pontos || []).forEach(p => {
+      if (p.obra_id) obraHoras[p.obra_id] = (obraHoras[p.obra_id] || 0) + 1;
+    });
+    const obraId = Object.entries(obraHoras).sort((a, b) => b[1] - a[1])[0]?.[0] || null;
+
+    // Valor a lançar
+    let valor = 0;
+    if (tipoContrato === "CLT") {
+      valor = sal; // salário integral
+    } else if (tipoContrato === "Horista") {
+      valor = c.totalHoras * (valProd || (sal / 220)); // valor/hora × horas
+    }
+
+    if (valor > 0 && obraId && addLancamento) {
+      const [ano, mes] = folhaMes.split("-");
+      await addLancamento(obraId, {
+        tipo: "despesa",
+        categoria: "Mão de Obra",
+        descricao: `Salário — ${c.nome} — ${mes}/${ano}`,
+        valor,
+        data: new Date().toISOString().slice(0, 10),
+      });
+    }
+
+    setFolhaPagos(p => ({ ...p, [c.id]: true }));
+  }
+
   function imprimirHolerite(c) {
     const col = (colaboradores || []).find(x => x.id === c.id || x.nome === c.nome);
     const sal = col?.salario || 0;
@@ -365,7 +403,12 @@ function FolhaPagamento({ folhaMes, setFolhaMes, folhaDados, folhaLoading, folha
                     </td>
                     <td style={{ padding: "10px 14px" }}>
                       <div style={{ display: "flex", gap: 6 }}>
-                        {!pago && <button onClick={() => setFolhaPagos(p => ({ ...p, [c.id]: true }))} style={{ padding: "5px 10px", borderRadius: 7, border: `1px solid ${C.success}`, background: C.success+"18", color: C.success, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>Marcar pago</button>}
+                        {!pago && col?.tipo_contrato !== "Empreiteiro" && (
+                          <button onClick={() => marcarPago(c)} style={{ padding: "5px 10px", borderRadius: 7, border: `1px solid ${C.success}`, background: C.success+"18", color: C.success, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>Marcar pago</button>
+                        )}
+                        {col?.tipo_contrato === "Empreiteiro" && !pago && (
+                          <span style={{ fontSize: 11, color: C.muted }}>Via medição</span>
+                        )}
                         <button onClick={() => imprimirHolerite(c)} style={{ padding: "5px 10px", borderRadius: 7, border: `1px solid ${C.border}`, background: "transparent", color: C.muted, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>🖨️ Holerite</button>
                       </div>
                     </td>
@@ -443,7 +486,7 @@ export default function Financeiro() {
             });
             if (dayHoras > 0) { totalHoras += dayHoras; diasTrabalhados++; }
           });
-          return { ...c, totalHoras, diasTrabalhados };
+          return { ...c, totalHoras, diasTrabalhados, pontos: c.pontos };
         }));
         setFolhaLoading(false);
       });
@@ -750,6 +793,7 @@ export default function Financeiro() {
             folhaDados={folhaDados} folhaLoading={folhaLoading}
             folhaPagos={folhaPagos} setFolhaPagos={setFolhaPagos}
             colaboradores={colaboradores} C={C}
+            addLancamento={addLancamento}
           />
         ) : (<>
 
