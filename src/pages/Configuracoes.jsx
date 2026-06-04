@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { sb } from "../services/supabase";
 import { TrendingUp } from "../components/ui/Icon";
 import * as Sentry from "@sentry/react";
 import { useToast } from "../hooks/useToast";
@@ -89,6 +90,12 @@ export default function Configuracoes() {
   const [convite, setConvite] = useState({ email: "", nome: "", perfil: "comercial" });
   const [convidando, setConvidando] = useState(false);
 
+  // API Key
+  const [apiKey, setApiKey] = useState("");
+  const [apiKeyCreatedAt, setApiKeyCreatedAt] = useState(null);
+  const [apiKeyRevealed, setApiKeyRevealed] = useState(false);
+  const [gerandoChave, setGerandoChave] = useState(false);
+
   // Perfis customizados (para dropdown de usuários)
   const perfisCustomizados = useAppStore((s) => s.perfisCustomizados);
 
@@ -98,17 +105,21 @@ export default function Configuracoes() {
   useEffect(() => {
     if (!empresaId) return;
     buscarEmpresa().then((data) => {
-      if (data) setEmpresa({
-        nome:     data.nome      || "",
-        cnpj:     data.cnpj      || "",
-        cidade:   data.cidade    || "",
-        telefone: data.telefone  || "",
-        email:    data.email     || "",
-        segmento: data.segmento  || "",
-        site:             data.site             || "",
-        logo_url:         data.logo_url         || "",
-        whatsapp_alertas: data.whatsapp_alertas || "",
-      });
+      if (data) {
+        setEmpresa({
+          nome:     data.nome      || "",
+          cnpj:     data.cnpj      || "",
+          cidade:   data.cidade    || "",
+          telefone: data.telefone  || "",
+          email:    data.email     || "",
+          segmento: data.segmento  || "",
+          site:             data.site             || "",
+          logo_url:         data.logo_url         || "",
+          whatsapp_alertas: data.whatsapp_alertas || "",
+        });
+        if (data.api_key) setApiKey(data.api_key);
+        if (data.api_key_created_at) setApiKeyCreatedAt(data.api_key_created_at);
+      }
     }).catch(() => {});
     listarUsuariosEmpresa().then((data) => { if (data) setUsuarios(data); }).catch(() => {});
   }, [empresaId]);
@@ -224,6 +235,28 @@ export default function Configuracoes() {
       mostrarToast("✅ Biometria removida!");
     } catch (e) {
       mostrarToast("Erro: " + e.message, true);
+    }
+  }
+
+  async function gerarApiKey() {
+    setGerandoChave(true);
+    try {
+      const { data: newKey, error: rpcError } = await sb.rpc("generate_api_key");
+      if (rpcError) throw rpcError;
+      const now = new Date().toISOString();
+      const { error: updateError } = await sb
+        .from("empresas")
+        .update({ api_key: newKey, api_key_created_at: now })
+        .eq("id", empresaId);
+      if (updateError) throw updateError;
+      setApiKey(newKey);
+      setApiKeyCreatedAt(now);
+      setApiKeyRevealed(true);
+      mostrarToast("✅ Nova chave gerada com sucesso!");
+    } catch (e) {
+      mostrarToast("❌ Erro ao gerar chave: " + e.message, true);
+    } finally {
+      setGerandoChave(false);
     }
   }
 
@@ -735,103 +768,185 @@ export default function Configuracoes() {
 
       {/* ══ Aba: API pública (somente diretores) ══ */}
       {tab === "api" && user?.perfil === "diretor" && (
-        <Card title="API pública" subtitle="Integre o StickFrame com sistemas externos via REST API.">
-          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-            {/* Base URL */}
-            <div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 8, textTransform: "uppercase" }}>URL base</div>
-              <div style={{ display: "flex", gap: 8 }}>
-                <input
-                  readOnly
-                  value={`${import.meta.env.VITE_SUPABASE_URL || "https://<projeto>.supabase.co"}/functions/v1/api`}
-                  style={{
-                    flex: 1, padding: "10px 13px", background: C.darker,
-                    border: `1px solid ${C.border}`, borderRadius: 8,
-                    fontFamily: "monospace", fontSize: 12, color: C.text,
-                  }}
-                />
-                <button
-                  onClick={() => navigator.clipboard.writeText(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/api`)}
-                  style={{
-                    padding: "10px 14px", background: C.darker, border: `1px solid ${C.border}`,
-                    borderRadius: 8, cursor: "pointer", fontFamily: "inherit", fontSize: 12, color: C.text,
-                  }}
-                >
-                  Copiar
-                </button>
+        <>
+          {/* API Key management */}
+          <Card title="Chave de API" subtitle="Use esta chave para autenticar requisições à API pública do StickFrame.">
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              {/* Current key display */}
+              <div>
+                <LabelF>Sua chave de API</LabelF>
+                {apiKey ? (
+                  <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                    <input
+                      readOnly
+                      value={apiKeyRevealed ? apiKey : "sf_live_" + "•".repeat(40)}
+                      style={{
+                        flex: 1, padding: "10px 13px", background: C.darker,
+                        border: `1px solid ${C.border}`, borderRadius: 8,
+                        fontFamily: "monospace", fontSize: 12, color: C.text,
+                      }}
+                    />
+                    <button
+                      onClick={() => setApiKeyRevealed((v) => !v)}
+                      style={{
+                        padding: "10px 14px", background: C.darker, border: `1px solid ${C.border}`,
+                        borderRadius: 8, cursor: "pointer", fontFamily: "inherit", fontSize: 12, color: C.text,
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {apiKeyRevealed ? "Ocultar" : "Revelar"}
+                    </button>
+                    <button
+                      onClick={() => { navigator.clipboard.writeText(apiKey); mostrarToast("✅ Chave copiada!"); }}
+                      style={{
+                        padding: "10px 14px", background: C.darker, border: `1px solid ${C.border}`,
+                        borderRadius: 8, cursor: "pointer", fontFamily: "inherit", fontSize: 12, color: C.text,
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      Copiar
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ fontSize: 13, color: C.muted, padding: "10px 0" }}>
+                    Nenhuma chave gerada ainda. Clique em "Gerar nova chave" para criar.
+                  </div>
+                )}
+                {apiKeyCreatedAt && (
+                  <div style={{ fontSize: 11, color: C.muted, marginTop: 6 }}>
+                    Criada em: {new Date(apiKeyCreatedAt).toLocaleString("pt-BR")}
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <Btn onClick={gerarApiKey} disabled={gerandoChave}>
+                  {gerandoChave ? "Gerando…" : apiKey ? "🔄 Gerar nova chave" : "🔑 Gerar chave de API"}
+                </Btn>
+                {apiKey && (
+                  <div style={{ fontSize: 11, color: C.warning, marginTop: 6 }}>
+                    Atenção: gerar uma nova chave invalida a chave atual imediatamente.
+                  </div>
+                )}
               </div>
             </div>
+          </Card>
 
-            {/* Autenticação */}
-            <div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 8, textTransform: "uppercase" }}>Autenticação</div>
-              <div style={{
-                background: C.darker, border: `1px solid ${C.border}`, borderRadius: 8,
-                padding: "12px 16px", fontFamily: "monospace", fontSize: 12,
-              }}>
-                x-api-key: sua-chave
+          <Card title="API pública" subtitle="Integre o StickFrame com ERPs e sistemas externos via REST API.">
+            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+              {/* Base URL */}
+              <div>
+                <LabelF>URL base</LabelF>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <input
+                    readOnly
+                    value={`${import.meta.env.VITE_SUPABASE_URL || "https://<projeto>.supabase.co"}/functions/v1/api`}
+                    style={{
+                      flex: 1, padding: "10px 13px", background: C.darker,
+                      border: `1px solid ${C.border}`, borderRadius: 8,
+                      fontFamily: "monospace", fontSize: 12, color: C.text,
+                    }}
+                  />
+                  <button
+                    onClick={() => { navigator.clipboard.writeText(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/api`); mostrarToast("✅ URL copiada!"); }}
+                    style={{
+                      padding: "10px 14px", background: C.darker, border: `1px solid ${C.border}`,
+                      borderRadius: 8, cursor: "pointer", fontFamily: "inherit", fontSize: 12, color: C.text,
+                    }}
+                  >
+                    Copiar
+                  </button>
+                </div>
               </div>
-              <div style={{ fontSize: 11, color: C.muted, marginTop: 6 }}>
-                Gere sua chave de API em Configurações → Equipe → seu perfil
-              </div>
-            </div>
 
-            {/* Endpoints */}
-            <div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 8, textTransform: "uppercase" }}>Endpoints disponíveis</div>
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
-                <thead>
-                  <tr>
-                    {["Método", "Rota", "Descrição"].map((h) => (
-                      <th key={h} style={{
-                        textAlign: "left", padding: "8px 12px", fontWeight: 700,
-                        color: C.muted, borderBottom: `1px solid ${C.border}`, fontSize: 10,
-                        letterSpacing: 0.8, textTransform: "uppercase",
-                      }}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {[
-                    ["GET", "/obras",      "Lista todas as obras (máx. 100)"],
-                    ["GET", "/obras/:id",  "Detalha uma obra específica"],
-                    ["GET", "/clientes",   "Lista todos os clientes (máx. 100)"],
-                  ].map(([method, route, desc]) => (
-                    <tr key={route}>
-                      <td style={{ padding: "10px 12px", borderBottom: `1px solid ${C.border}` }}>
-                        <span style={{
-                          fontFamily: "monospace", fontSize: 11, fontWeight: 700,
-                          padding: "2px 7px", borderRadius: 5,
-                          background: C.success + "22", color: C.success,
-                        }}>{method}</span>
-                      </td>
-                      <td style={{ padding: "10px 12px", fontFamily: "monospace", color: C.text, borderBottom: `1px solid ${C.border}` }}>{route}</td>
-                      <td style={{ padding: "10px 12px", color: C.muted, borderBottom: `1px solid ${C.border}` }}>{desc}</td>
+              {/* Autenticação */}
+              <div>
+                <LabelF>Autenticação</LabelF>
+                <div style={{
+                  background: C.darker, border: `1px solid ${C.border}`, borderRadius: 8,
+                  padding: "12px 16px", fontFamily: "monospace", fontSize: 12,
+                }}>
+                  Authorization: Bearer sf_live_sua_chave_aqui
+                </div>
+                <div style={{ fontSize: 11, color: C.muted, marginTop: 6 }}>
+                  Envie a chave no header <code>Authorization</code> com o prefixo <code>Bearer</code>.
+                </div>
+              </div>
+
+              {/* Endpoints */}
+              <div>
+                <LabelF>Endpoints disponíveis</LabelF>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                  <thead>
+                    <tr>
+                      {["Método", "Rota", "Descrição"].map((h) => (
+                        <th key={h} style={{
+                          textAlign: "left", padding: "8px 12px", fontWeight: 700,
+                          color: C.muted, borderBottom: `1px solid ${C.border}`, fontSize: 10,
+                          letterSpacing: 0.8, textTransform: "uppercase",
+                        }}>{h}</th>
+                      ))}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {[
+                      ["GET",  "/obras",                "Lista todas as obras da empresa"],
+                      ["GET",  "/obras/:id",            "Detalha uma obra específica"],
+                      ["GET",  "/obras/:id/financeiro", "Lançamentos financeiros de uma obra"],
+                      ["GET",  "/clientes",             "Lista todos os clientes"],
+                      ["GET",  "/financeiro",           "Lista lançamentos financeiros (máx. 100)"],
+                      ["POST", "/webhooks/test",        "Testa o endpoint de webhooks"],
+                    ].map(([method, route, desc]) => (
+                      <tr key={route}>
+                        <td style={{ padding: "10px 12px", borderBottom: `1px solid ${C.border}` }}>
+                          <span style={{
+                            fontFamily: "monospace", fontSize: 11, fontWeight: 700,
+                            padding: "2px 7px", borderRadius: 5,
+                            background: method === "GET" ? C.success + "22" : C.warning + "22",
+                            color: method === "GET" ? C.success : C.warning,
+                          }}>{method}</span>
+                        </td>
+                        <td style={{ padding: "10px 12px", fontFamily: "monospace", color: C.text, borderBottom: `1px solid ${C.border}` }}>{route}</td>
+                        <td style={{ padding: "10px 12px", color: C.muted, borderBottom: `1px solid ${C.border}` }}>{desc}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
 
-            {/* Exemplo */}
-            <div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 8, textTransform: "uppercase" }}>Exemplo de requisição</div>
-              <pre style={{
-                background: C.darker, border: `1px solid ${C.border}`, borderRadius: 8,
-                padding: "14px 16px", fontFamily: "monospace", fontSize: 11,
-                color: C.text, overflow: "auto", margin: 0,
-              }}>{`curl -H "x-api-key: sua-chave" \\
-  ${import.meta.env.VITE_SUPABASE_URL || "https://<projeto>.supabase.co"}/functions/v1/api/obras`}</pre>
+              {/* Exemplo curl */}
+              <div>
+                <LabelF>Exemplo de requisição (curl)</LabelF>
+                <pre style={{
+                  background: C.darker, border: `1px solid ${C.border}`, borderRadius: 8,
+                  padding: "14px 16px", fontFamily: "monospace", fontSize: 11,
+                  color: C.text, overflow: "auto", margin: 0,
+                }}>{`curl -H "Authorization: Bearer ${apiKey || "{sua_chave}"}" \\
+  ${import.meta.env.VITE_SUPABASE_URL || "https://gpzmglcxmbboxxogbibq.supabase.co"}/functions/v1/api/obras`}</pre>
+                {apiKey && (
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(`curl -H "Authorization: Bearer ${apiKey}" \\\n  ${import.meta.env.VITE_SUPABASE_URL}/functions/v1/api/obras`);
+                      mostrarToast("✅ Exemplo copiado!");
+                    }}
+                    style={{
+                      marginTop: 8, padding: "6px 12px", background: C.darker, border: `1px solid ${C.border}`,
+                      borderRadius: 7, cursor: "pointer", fontFamily: "inherit", fontSize: 11, color: C.text,
+                    }}
+                  >
+                    Copiar exemplo
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
-        </Card>
+          </Card>
+        </>
       )}
     </>
   );
 }
 
 // ─── Aba Robô IA ─────────────────────────────────────────────────────────────
-import { sb } from "../services/supabase";
 
 function AbaRoboIA({ empresaId, mostrarToast }) {
   const [cfg,    setCfg]    = useState({ openai_key: "", waba_token: "", phone_number_id: "", sistema_prompt: "", modelo_openai: "gpt-4o-mini", ativo: false, verify_token: "" });
