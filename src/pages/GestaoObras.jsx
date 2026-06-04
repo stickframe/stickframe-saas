@@ -1073,10 +1073,10 @@ export default function GestaoObras() {
           </div>
 
           {obra && (
-            <div style={{ display: "grid", gridTemplateColumns: "1fr minmax(0,220px)", gap: 14 }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 14, alignItems: "flex-start" }}>
 
               {/* Coluna principal */}
-              <div>
+              <div style={{ flex: "1 1 600px", minWidth: 0 }}>
                 {/* Abas */}
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: `1px solid ${C.border}` }}>
                 <div style={{ display: "flex", flex: 1, overflowX: "auto", scrollbarWidth: "thin" }}>
@@ -2029,7 +2029,7 @@ export default function GestaoObras() {
               </div>
 
               {/* Coluna lateral */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 14, width: 220, flexShrink: 0 }}>
 
                 {/* Ações rápidas */}
                 <div style={{ background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", border: `1px solid ${C.border}`, padding: 18 }}>
