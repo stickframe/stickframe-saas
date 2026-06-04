@@ -40,6 +40,7 @@ export const NAV = [
   { key: "checklists",         label: "Checklist SF",     icon: "CheckSquare" },
   { key: "equipe",             label: "Equipe",           icon: "HardHat" },
   { key: "inteligencia",       label: "Inteligência",     icon: "Brain", perfis: ["diretor", "engenheiro"] },
+  { key: "analise",            label: "Análise",          icon: "BarChart2", perfis: ["diretor"] },
   { key: "configuracoes",      label: "Configurações",    icon: "Settings" },
 ];
 
@@ -48,7 +49,7 @@ export const PERFIS = {
   diretor: {
     label: "Diretor",
     cor: C.red,
-    paginas: ["dashboard","agenda","crm","orcamentos","obras","cronograma","medicoes","diario","vistorias","bim","quantitativos","financeiro","contratos","historico","fornecedores","monitor_precos","calculadora","orcamento_tecnico","equipamentos","checklists","equipe","inteligencia","configuracoes"],
+    paginas: ["dashboard","agenda","crm","orcamentos","obras","cronograma","medicoes","diario","vistorias","bim","quantitativos","financeiro","contratos","historico","fornecedores","monitor_precos","calculadora","orcamento_tecnico","equipamentos","checklists","equipe","inteligencia","analise","configuracoes"],
   },
   comercial: {
     label: "Comercial",

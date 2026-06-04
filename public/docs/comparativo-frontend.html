@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Comparativo de Frontend — Mercado de Gestão de Obras</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=DM+Sans:wght@400;600;700;800&family=Barlow+Condensed:wght@700;800&family=Roboto:wght@300;400;500;700&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet"/>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: #0c0d10;
+  color: #e8eaf0;
+  font-size: 13px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── PAGE HEADER ── */
+.page-header {
+  padding: 48px 48px 32px;
+  border-bottom: 1px solid #1e2028;
+}
+.page-tag {
+  font-size: 10px; font-weight: 700; letter-spacing: 2.5px;
+  text-transform: uppercase; color: #7b8394;
+  margin-bottom: 12px;
+}
+.page-title {
+  font-size: 28px; font-weight: 800; color: #fff;
+  margin-bottom: 8px;
+}
+.page-sub { font-size: 14px; color: #7b8394; max-width: 600px; }
+
+/* ── GRID DE PRODUTOS ── */
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  padding: 32px 48px;
+}
+
+@media (max-width: 1200px) {
+  .products-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 700px) {
+  .products-grid { grid-template-columns: 1fr; padding: 20px; }
+  .page-header { padding: 32px 20px 24px; }
+}
+
+.product-card {
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid #1e2028;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── PRODUCT META ── */
+.product-meta {
+  padding: 16px 18px;
+  display: flex; align-items: center; gap: 12px;
+}
+.product-logo {
+  width: 32px; height: 32px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 900; flex-shrink: 0;
+}
+.product-info { flex: 1; }
+.product-name { font-size: 14px; font-weight: 800; color: #fff; }
+.product-desc { font-size: 10px; color: #7b8394; margin-top: 1px; }
+.product-badges { display: flex; gap: 6px; flex-wrap: wrap; }
+.product-badge {
+  font-size: 9px; font-weight: 700; letter-spacing: 0.5px;
+  text-transform: uppercase; padding: 2px 7px;
+  border-radius: 10px;
+}
+
+/* ── MOCKUP FRAME ── */
+.mockup-frame {
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 0 14px 14px;
+  border: 1px solid rgba(255,255,255,0.06);
+  position: relative;
+}
+
+/* ── ANÁLISE SECTION ── */
+.analysis-section {
+  border-top: 1px solid #1e2028;
+  padding: 48px 48px 64px;
+}
+.analysis-title {
+  font-size: 20px; font-weight: 800; color: #fff;
+  margin-bottom: 4px;
+}
+.analysis-sub { font-size: 13px; color: #7b8394; margin-bottom: 32px; }
+
+.analysis-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+.analysis-card {
+  background: #13151a;
+  border: 1px solid #1e2028;
+  border-radius: 12px;
+  padding: 20px;
+}
+.analysis-card-header {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 14px;
+}
+.analysis-dot {
+  width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+}
+.analysis-card-name { font-size: 13px; font-weight: 800; color: #fff; }
+.analysis-rows { display: flex; flex-direction: column; gap: 8px; }
+.analysis-row {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 11px;
+}
+.analysis-row-label { color: #7b8394; }
+.analysis-row-value { font-weight: 600; }
+.val-green  { color: #22c55e; }
+.val-yellow { color: #f59e0b; }
+.val-red    { color: #ef4444; }
+.val-blue   { color: #60a5fa; }
+
+/* ── SCORE BAR ── */
+.score-row-bar {
+  display: flex; align-items: center; gap: 10px;
+  margin-top: 14px;
+}
+.score-label { font-size: 10px; color: #7b8394; font-weight: 600; width: 80px; text-align: right; }
+.score-bar-bg {
+  flex: 1; height: 5px; border-radius: 3px; background: #1e2028;
+}
+.score-bar-fill { height: 100%; border-radius: 3px; }
+.score-num { font-size: 10px; font-weight: 800; width: 24px; text-align: right; }
+
+/* ── SEPARADOR ── */
+.sep { border: none; border-top: 1px solid #1e2028; margin: 0 48px; }
+
+/* ── FOOTER ── */
+.footer-note {
+  padding: 24px 48px;
+  font-size: 10px; color: #3d4150;
+  text-align: center;
+}
+
+/* ════════════════════════════════════════
+   MOCKUP DESIGNS — cada produto tem seu próprio estilo
+   ════════════════════════════════════════ */
+
+/* ── STICKFRAME MOCKUP ── */
+.sf-mockup {
+  background: #f5f6f8;
+  font-family: 'DM Sans', sans-serif;
+  display: flex;
+  height: 320px;
+}
+.sf-sidebar {
+  width: 56px;
+  background: #1a1a1a;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 0;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.sf-sidebar-full {
+  width: 150px;
+  background: #1a1a1a;
+  display: flex;
+  flex-direction: column;
+  padding: 12px 0;
+  flex-shrink: 0;
+}
+.sf-logo-area {
+  padding: 8px 14px 10px;
+  border-bottom: 1px solid #2a2a2a;
+  margin-bottom: 8px;
+}
+.sf-logo-text {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 2px;
+}
+.sf-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  font-size: 11px;
+  color: #6b7280;
+  cursor: pointer;
+  border-left: 3px solid transparent;
+}
+.sf-nav-item.active {
+  background: rgba(152,25,21,0.12);
+  border-left-color: #981915;
+  color: #1a1a1a;
+  font-weight: 600;
+}
+.sf-nav-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: #981915; flex-shrink: 0;
+}
+.sf-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.sf-topbar {
+  background: #fff;
+  padding: 10px 16px;
+  border-bottom: 1px solid #e2e4ea;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.sf-topbar-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+.sf-content {
+  flex: 1;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow: hidden;
+}
+.sf-kpis {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.sf-kpi {
+  background: #fff;
+  border-radius: 12px;
+  padding: 10px 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+.sf-kpi-val {
+  font-size: 18px;
+  font-weight: 800;
+  color: #981915;
+  line-height: 1;
+}
+.sf-kpi-lbl {
+  font-size: 9px;
+  color: #6b7280;
+  margin-top: 3px;
+  font-weight: 600;
+}
+.sf-table {
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  flex: 1;
+}
+.sf-table-row {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  gap: 8px;
+  border-bottom: 1px solid #f3f4f6;
+  font-size: 10px;
+}
+.sf-table-row:first-child {
+  background: #f9fafb;
+  font-weight: 700;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #6b7280;
+}
+.sf-badge {
+  padding: 2px 7px;
+  border-radius: 10px;
+  font-size: 9px;
+  font-weight: 700;
+}
+.sf-btn {
+  background: #981915;
+  color: #fff;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* ── PROCORE MOCKUP ── */
+.procore-mockup {
+  background: #f7f8fa;
+  font-family: 'Inter', sans-serif;
+  display: flex;
+  height: 320px;
+}
+.procore-sidebar {
+  width: 44px;
+  background: #f36c21;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 0;
+  gap: 16px;
+  flex-shrink: 0;
+}
+.procore-icon {
+  width: 28px; height: 28px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px;
+}
+.procore-icon.active { background: rgba(255,255,255,0.4); }
+.procore-main {
+  flex: 1; display: flex; flex-direction: column; overflow: hidden;
+}
+.procore-topbar {
+  background: #fff;
+  padding: 8px 14px;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex; align-items: center; gap: 8px;
+}
+.procore-breadcrumb {
+  font-size: 10px; color: #6b7280;
+}
+.procore-breadcrumb span { color: #f36c21; font-weight: 600; }
+.procore-content {
+  flex: 1; padding: 12px; overflow: hidden;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.procore-header {
+  display: flex; justify-content: space-between; align-items: center;
+}
+.procore-title { font-size: 14px; font-weight: 700; color: #1f2937; }
+.procore-btn {
+  background: #f36c21; color: #fff; border: none;
+  padding: 5px 12px; border-radius: 4px; font-size: 10px; font-weight: 600;
+  cursor: pointer;
+}
+.procore-tabs {
+  display: flex; gap: 0; border-bottom: 1px solid #e5e7eb;
+}
+.procore-tab {
+  padding: 6px 12px; font-size: 10px; color: #6b7280; cursor: pointer;
+  border-bottom: 2px solid transparent;
+}
+.procore-tab.active { color: #f36c21; border-bottom-color: #f36c21; font-weight: 600; }
+.procore-table {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  overflow: hidden;
+  flex: 1;
+}
+.procore-tr {
+  display: flex; align-items: center;
+  padding: 7px 12px; gap: 8px;
+  border-bottom: 1px solid #f3f4f6;
+  font-size: 10px; color: #374151;
+}
+.procore-tr:first-child {
+  background: #f9fafb;
+  font-size: 9px; font-weight: 700; color: #6b7280;
+  text-transform: uppercase; letter-spacing: 0.5px;
+}
+.procore-status {
+  padding: 2px 6px; border-radius: 3px;
+  font-size: 9px; font-weight: 600;
+}
+
+/* ── VOBI MOCKUP ── */
+.vobi-mockup {
+  background: #fafafa;
+  font-family: 'Open Sans', sans-serif;
+  display: flex;
+  height: 320px;
+}
+.vobi-sidebar {
+  width: 150px;
+  background: #1a1a2e;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  flex-shrink: 0;
+}
+.vobi-logo-area {
+  padding: 14px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  margin-bottom: 6px;
+}
+.vobi-logo {
+  font-size: 16px; font-weight: 800;
+  color: #fff; letter-spacing: -0.5px;
+}
+.vobi-logo span { color: #6366f1; }
+.vobi-nav-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 14px; font-size: 11px;
+  color: rgba(255,255,255,0.5); cursor: pointer;
+  border-radius: 0;
+}
+.vobi-nav-item.active {
+  background: rgba(99,102,241,0.15);
+  color: #fff; font-weight: 600;
+  border-right: 3px solid #6366f1;
+}
+.vobi-main {
+  flex: 1; display: flex; flex-direction: column; overflow: hidden;
+}
+.vobi-topbar {
+  background: #fff; padding: 10px 14px;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.vobi-topbar-title { font-size: 13px; font-weight: 700; color: #111827; }
+.vobi-btn {
+  background: #6366f1; color: #fff; border: none;
+  padding: 5px 12px; border-radius: 6px;
+  font-size: 10px; font-weight: 700; cursor: pointer;
+}
+.vobi-content {
+  flex: 1; padding: 12px; overflow: hidden;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.vobi-kpis {
+  display: grid; grid-template-columns: repeat(3,1fr); gap: 8px;
+}
+.vobi-kpi {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px; padding: 10px;
+}
+.vobi-kpi-val { font-size: 17px; font-weight: 800; color: #6366f1; line-height: 1; }
+.vobi-kpi-lbl { font-size: 9px; color: #6b7280; margin-top: 2px; }
+.vobi-cards {
+  display: grid; grid-template-columns: repeat(2,1fr); gap: 8px; flex: 1;
+}
+.vobi-card {
+  background: #fff; border: 1px solid #e5e7eb;
+  border-radius: 8px; padding: 10px;
+}
+.vobi-card-title { font-size: 10px; font-weight: 700; color: #111; margin-bottom: 8px; }
+.vobi-item {
+  display: flex; justify-content: space-between;
+  font-size: 10px; padding: 4px 0;
+  border-bottom: 1px solid #f3f4f6;
+  color: #374151;
+}
+
+/* ── CONSTRUCODE MOCKUP ── */
+.cc-mockup {
+  background: #141414;
+  font-family: 'Open Sans', sans-serif;
+  display: flex;
+  flex-direction: column;
+  height: 320px;
+}
+.cc-topbar {
+  background: #1e1e1e; padding: 10px 14px;
+  border-bottom: 1px solid #2e2e2e;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.cc-logo {
+  font-size: 13px; font-weight: 700; color: #FFEE4D;
+  letter-spacing: 0.5px;
+}
+.cc-logo span { color: #fff; }
+.cc-nav {
+  display: flex; gap: 4px;
+}
+.cc-nav-item {
+  padding: 5px 10px; border-radius: 6px;
+  font-size: 10px; color: rgba(255,255,255,0.5);
+  cursor: pointer;
+}
+.cc-nav-item.active {
+  background: rgba(255,238,77,0.15);
+  color: #FFEE4D; font-weight: 700;
+}
+.cc-content {
+  flex: 1; padding: 12px;
+  display: flex; gap: 10px; overflow: hidden;
+}
+.cc-left {
+  width: 180px; flex-shrink: 0;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.cc-plant-panel {
+  flex: 1;
+  background: #1e1e1e; border-radius: 8px;
+  border: 1px solid #2e2e2e;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.cc-panel-header {
+  padding: 8px 10px;
+  border-bottom: 1px solid #2e2e2e;
+  font-size: 10px; font-weight: 700; color: #fff;
+  display: flex; justify-content: space-between;
+}
+.cc-doc-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px; border-bottom: 1px solid #252525;
+  font-size: 10px; color: rgba(255,255,255,0.7); cursor: pointer;
+}
+.cc-doc-badge {
+  padding: 1px 5px; border-radius: 3px;
+  font-size: 8px; font-weight: 700;
+  background: rgba(255,238,77,0.2); color: #FFEE4D;
+  margin-left: auto;
+}
+.cc-plant-view {
+  flex: 1; background: #2a2a2a;
+  position: relative; overflow: hidden;
+}
+.cc-plant-grid {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+.cc-plant-line {
+  position: absolute; background: rgba(255,238,77,0.4);
+}
+.cc-qr-btn {
+  position: absolute; bottom: 8px; right: 8px;
+  background: #FFEE4D; color: #141414;
+  border: none; padding: 5px 8px; border-radius: 6px;
+  font-size: 9px; font-weight: 800; cursor: pointer;
+}
+.cc-pin {
+  position: absolute;
+  width: 18px; height: 18px;
+  background: #ef4444; border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  display: flex; align-items: center; justify-content: center;
+}
+.cc-pin span {
+  transform: rotate(45deg);
+  font-size: 8px; font-weight: 800; color: #fff;
+}
+.cc-widget {
+  background: #1e1e1e; border: 1px solid #2e2e2e;
+  border-radius: 8px; padding: 10px;
+}
+.cc-widget-title { font-size: 9px; font-weight: 700; color: rgba(255,255,255,0.4); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+.cc-stat { font-size: 20px; font-weight: 800; color: #FFEE4D; }
+.cc-stat-lbl { font-size: 9px; color: rgba(255,255,255,0.5); }
+
+/* ── SIENGE MOCKUP ── */
+.sienge-mockup {
+  background: #f0f2f5;
+  font-family: 'Roboto', sans-serif;
+  display: flex;
+  height: 320px;
+}
+.sienge-sidebar {
+  width: 46px;
+  background: #003770;
+  display: flex; flex-direction: column;
+  align-items: center; padding: 10px 0;
+  gap: 12px; flex-shrink: 0;
+}
+.sienge-icon {
+  width: 28px; height: 28px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; cursor: pointer;
+}
+.sienge-icon.active {
+  background: rgba(255,255,255,0.25);
+}
+.sienge-main {
+  flex: 1; display: flex; flex-direction: column; overflow: hidden;
+}
+.sienge-topbar {
+  background: #fff; padding: 8px 14px;
+  border-bottom: 1px solid #d1d5db;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.sienge-logo-text {
+  font-size: 14px; font-weight: 700; color: #003770;
+  letter-spacing: 1px; font-family: 'Roboto', sans-serif;
+}
+.sienge-menu-bar {
+  background: #003770; padding: 0 14px;
+  display: flex; gap: 0;
+}
+.sienge-menu-item {
+  padding: 7px 12px; font-size: 10px; color: rgba(255,255,255,0.6);
+  cursor: pointer; border-bottom: 2px solid transparent;
+}
+.sienge-menu-item.active { color: #fff; border-bottom-color: #ffb400; }
+.sienge-content {
+  flex: 1; padding: 10px 12px; overflow: hidden;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.sienge-page-title {
+  font-size: 12px; font-weight: 700; color: #003770;
+  padding-bottom: 6px; border-bottom: 1px solid #e5e7eb;
+}
+.sienge-filters {
+  display: flex; gap: 6px;
+}
+.sienge-filter {
+  background: #fff; border: 1px solid #d1d5db;
+  padding: 4px 8px; border-radius: 3px;
+  font-size: 9px; color: #374151;
+  display: flex; align-items: center; gap: 3px;
+}
+.sienge-table {
+  background: #fff; border: 1px solid #d1d5db;
+  border-radius: 4px; overflow: hidden; flex: 1;
+}
+.sienge-tr {
+  display: flex; padding: 6px 10px; gap: 6px;
+  border-bottom: 1px solid #f3f4f6;
+  font-size: 9px; color: #374151; align-items: center;
+}
+.sienge-tr:first-child {
+  background: #003770;
+  color: rgba(255,255,255,0.8); font-weight: 700;
+  font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px;
+}
+.sienge-status {
+  padding: 1px 5px; border-radius: 2px; font-size: 8px; font-weight: 700;
+}
+.sienge-pagination {
+  display: flex; align-items: center; justify-content: flex-end;
+  gap: 4px; margin-top: 4px;
+}
+.sienge-page-btn {
+  width: 20px; height: 20px; border-radius: 3px; border: 1px solid #d1d5db;
+  background: #fff; font-size: 9px; color: #374151;
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+}
+.sienge-page-btn.active { background: #003770; color: #fff; border-color: #003770; }
+
+/* ── RATING BARS ── */
+.rating-section {
+  padding: 0 48px 48px;
+}
+.rating-title { font-size: 18px; font-weight: 800; color: #fff; margin-bottom: 20px; }
+.rating-table {
+  background: #13151a;
+  border: 1px solid #1e2028;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.rating-header {
+  display: grid;
+  grid-template-columns: 180px repeat(5, 1fr);
+  background: #1e2028;
+  padding: 10px 16px;
+  font-size: 10px; font-weight: 800; color: #7b8394;
+  text-transform: uppercase; letter-spacing: 1px;
+}
+.rating-row {
+  display: grid;
+  grid-template-columns: 180px repeat(5, 1fr);
+  padding: 10px 16px;
+  border-top: 1px solid #1e2028;
+  align-items: center;
+}
+.rating-row:hover { background: #16181f; }
+.rating-criterion { font-size: 12px; color: #9ca3af; font-weight: 500; }
+.rating-cell { display: flex; align-items: center; justify-content: center; }
+.dot-rating {
+  display: flex; gap: 3px;
+}
+.dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #1e2028;
+}
+.dot.filled { background: #22c55e; }
+.dot.half   { background: #f59e0b; }
+.dot.red    { background: #ef4444; }
+
+/* ── CONCLUSION ── */
+.conclusion-section {
+  padding: 0 48px 64px;
+}
+.conclusion-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+.conclusion-card {
+  background: #13151a;
+  border: 1px solid #1e2028;
+  border-radius: 12px;
+  padding: 20px;
+}
+.conclusion-card-title {
+  font-size: 13px; font-weight: 800; color: #fff;
+  margin-bottom: 4px;
+}
+.conclusion-card-tag {
+  font-size: 9px; font-weight: 700; letter-spacing: 1.5px;
+  text-transform: uppercase; margin-bottom: 12px;
+}
+.conclusion-card-body {
+  font-size: 12px; color: #7b8394; line-height: 1.7;
+}
+
+</style>
+</head>
+<body>
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+  <div class="page-tag">Análise de Design de Produto · Junho 2026</div>
+  <h1 class="page-title">Comparativo de Frontend — Gestão de Obras</h1>
+  <p class="page-sub">Análise visual e de UX dos principais produtos do mercado baseada no design system real de cada plataforma. Mockups fiéis à identidade visual pública de cada produto.</p>
+</div>
+
+<!-- PRODUCTS GRID -->
+<div class="products-grid">
+
+  <!-- ══ STICKFRAME ══ -->
+  <div class="product-card" style="border-color:#981915; background: #13090900; border-width:2px;">
+    <div class="product-meta" style="background: rgba(152,25,21,0.08);">
+      <div class="product-logo" style="background:#981915; font-family:'Barlow Condensed',sans-serif; letter-spacing:1px;">SF</div>
+      <div class="product-info">
+        <div class="product-name">StickFrame</div>
+        <div class="product-desc">React · Vite · Supabase · Steel Frame BR</div>
+      </div>
+    </div>
+    <div class="product-badges" style="padding: 0 18px 10px; gap:6px; display:flex; flex-wrap:wrap;">
+      <span class="product-badge" style="background:rgba(152,25,21,0.15);color:#f87171;">Você</span>
+      <span class="product-badge" style="background:rgba(34,197,94,0.1);color:#22c55e;">Stack moderna</span>
+      <span class="product-badge" style="background:rgba(59,130,246,0.1);color:#60a5fa;">Nicho SF</span>
+    </div>
+    <div class="mockup-frame">
+      <div class="sf-mockup">
+        <!-- Sidebar -->
+        <div class="sf-sidebar-full">
+          <div class="sf-logo-area">
+            <div class="sf-logo-text">
+              <span style="color:#ccc">STICK</span><span style="color:#981915">FRAME</span>
+            </div>
+            <div style="font-size:7px;color:#444;letter-spacing:1.5px;margin-top:2px">SISTEMAS CONSTRUTIVOS</div>
+          </div>
+          <div class="sf-nav-item active"><div class="sf-nav-dot"></div> Dashboard</div>
+          <div class="sf-nav-item"><div style="width:6px;height:6px;border-radius:50%;background:#3d3d3d;flex-shrink:0"></div> Obras</div>
+          <div class="sf-nav-item"><div style="width:6px;height:6px;border-radius:50%;background:#3d3d3d;flex-shrink:0"></div> Clientes</div>
+          <div class="sf-nav-item"><div style="width:6px;height:6px;border-radius:50%;background:#3d3d3d;flex-shrink:0"></div> Financeiro</div>
+          <div class="sf-nav-item"><div style="width:6px;height:6px;border-radius:50%;background:#3d3d3d;flex-shrink:0"></div> Orçamentos</div>
+          <div class="sf-nav-item"><div style="width:6px;height:6px;border-radius:50%;background:#3d3d3d;flex-shrink:0"></div> Calculadora SF</div>
+          <div class="sf-nav-item"><div style="width:6px;height:6px;border-radius:50%;background:#3d3d3d;flex-shrink:0"></div> Contratos</div>
+        </div>
+        <!-- Main -->
+        <div class="sf-main">
+          <div class="sf-topbar">
+            <div class="sf-topbar-title">Dashboard</div>
+            <button class="sf-btn">+ Nova Obra</button>
+          </div>
+          <div class="sf-content">
+            <div class="sf-kpis">
+              <div class="sf-kpi">
+                <div class="sf-kpi-val">12</div>
+                <div class="sf-kpi-lbl">Obras ativas</div>
+              </div>
+              <div class="sf-kpi">
+                <div class="sf-kpi-val" style="color:#2e9e5b">R$847k</div>
+                <div class="sf-kpi-lbl">Receita mês</div>
+              </div>
+              <div class="sf-kpi">
+                <div class="sf-kpi-val" style="color:#b97a00">3</div>
+                <div class="sf-kpi-lbl">Leads novos</div>
+              </div>
+            </div>
+            <div class="sf-table">
+              <div class="sf-table-row">
+                <div style="flex:2">Obra</div>
+                <div style="flex:1">Cliente</div>
+                <div style="flex:1">Status</div>
+                <div style="flex:1">Prazo</div>
+              </div>
+              <div class="sf-table-row">
+                <div style="flex:2;font-weight:600">Casa Vila Madalena</div>
+                <div style="flex:1;color:#6b7280">Família Silva</div>
+                <div style="flex:1"><span class="sf-badge" style="background:#dcfce7;color:#166534">Em andamento</span></div>
+                <div style="flex:1;color:#6b7280">14/08</div>
+              </div>
+              <div class="sf-table-row">
+                <div style="flex:2;font-weight:600">Galpão Ind. ABC</div>
+                <div style="flex:1;color:#6b7280">ABC Ltda</div>
+                <div style="flex:1"><span class="sf-badge" style="background:#fef9c3;color:#854d0e">Pausada</span></div>
+                <div style="flex:1;color:#6b7280">22/10</div>
+              </div>
+              <div class="sf-table-row">
+                <div style="flex:2;font-weight:600">Res. Alphaville</div>
+                <div style="flex:1;color:#6b7280">J. Mendes</div>
+                <div style="flex:1"><span class="sf-badge" style="background:#dcfce7;color:#166534">Em andamento</span></div>
+                <div style="flex:1;color:#6b7280">03/12</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="padding: 12px 18px 16px; font-size:11px; color:#7b8394; line-height:1.7;">
+      <strong style="color:#fff; display:block; margin-bottom:4px">✅ Pontos fortes de design</strong>
+      Sidebar escura com marca própria · Topbar limpa · Cards com bordas suaves (r-16) · DM Sans + Barlow Condensed · Palette #981915 consistente · Densidade de informação equilibrada
+    </div>
+  </div>
+
+  <!-- ══ PROCORE ══ -->
+  <div class="product-card" style="background:#0f1014">
+    <div class="product-meta" style="background: rgba(243,108,33,0.06);">
+      <div class="product-logo" style="background:#f36c21; color:#fff; font-size:10px; font-family:'Inter',sans-serif; font-weight:800;">PRO</div>
+      <div class="product-info">
+        <div class="product-name">Procore</div>
+        <div class="product-desc">EUA · US$ 10B · Enterprise global</div>
+      </div>
+    </div>
+    <div class="product-badges" style="padding: 0 18px 10px; gap:6px; display:flex; flex-wrap:wrap;">
+      <span class="product-badge" style="background:rgba(243,108,33,0.1);color:#fb923c;">Líder mundial</span>
+      <span class="product-badge" style="background:rgba(255,255,255,0.05);color:#9ca3af;">Stack legada</span>
+      <span class="product-badge" style="background:rgba(99,102,241,0.1);color:#818cf8;">Enterprise</span>
+    </div>
+    <div class="mockup-frame">
+      <div class="procore-mockup">
+        <!-- Icon sidebar -->
+        <div class="procore-sidebar">
+          <div style="font-size:18px; font-weight:900; color:#fff; margin-bottom:4px">⬡</div>
+          <div class="procore-icon active">📊</div>
+          <div class="procore-icon">🏗️</div>
+          <div class="procore-icon">📄</div>
+          <div class="procore-icon">💰</div>
+          <div class="procore-icon">🔔</div>
+        </div>
+        <!-- Main -->
+        <div class="procore-main">
+          <div class="procore-topbar">
+            <div class="procore-breadcrumb">Projects / <span>Downtown Tower</span> / Daily Log</div>
+            <div style="display:flex;gap:6px">
+              <button class="procore-btn">+ Create</button>
+              <div style="font-size:10px;color:#6b7280;padding:5px">⚙ ⓘ</div>
+            </div>
+          </div>
+          <div class="procore-content">
+            <div class="procore-header">
+              <div class="procore-title">Daily Log</div>
+            </div>
+            <div class="procore-tabs">
+              <div class="procore-tab active">Overview</div>
+              <div class="procore-tab">RFIs</div>
+              <div class="procore-tab">Submittals</div>
+              <div class="procore-tab">Change Orders</div>
+            </div>
+            <div class="procore-table">
+              <div class="procore-tr">
+                <div style="flex:2">Item</div>
+                <div style="flex:1">Assigned To</div>
+                <div style="flex:1">Due Date</div>
+                <div style="flex:1">Status</div>
+              </div>
+              <div class="procore-tr">
+                <div style="flex:2">RFI #042 — Rebar spec</div>
+                <div style="flex:1;color:#6b7280">J. Martinez</div>
+                <div style="flex:1;color:#6b7280">Jun 12</div>
+                <div style="flex:1"><span class="procore-status" style="background:#fef3c7;color:#92400e">Open</span></div>
+              </div>
+              <div class="procore-tr">
+                <div style="flex:2">Submittal #017</div>
+                <div style="flex:1;color:#6b7280">K. Chen</div>
+                <div style="flex:1;color:#6b7280">Jun 15</div>
+                <div style="flex:1"><span class="procore-status" style="background:#d1fae5;color:#065f46">Approved</span></div>
+              </div>
+              <div class="procore-tr">
+                <div style="flex:2">Change Order #08</div>
+                <div style="flex:1;color:#6b7280">Owner</div>
+                <div style="flex:1;color:#ef4444">Jun 08</div>
+                <div style="flex:1"><span class="procore-status" style="background:#fee2e2;color:#991b1b">Overdue</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="padding: 12px 18px 16px; font-size:11px; color:#7b8394; line-height:1.7;">
+      <strong style="color:#fff; display:block; margin-bottom:4px">⚠️ Design funcional, não premium</strong>
+      Interface densa e utilitária · Orange #f36c21 agressivo · Tipografia Inter genérica · Layout em grid rígido · Visual de software enterprise dos anos 2010 · Pouca personalidade visual · Muitos cliques para chegar à informação
+    </div>
+  </div>
+
+  <!-- ══ VOBI ══ -->
+  <div class="product-card" style="background:#0f1014">
+    <div class="product-meta" style="background: rgba(99,102,241,0.06);">
+      <div class="product-logo" style="background:#6366f1; color:#fff; font-size:11px; font-weight:800;">V</div>
+      <div class="product-info">
+        <div class="product-name">Vobi</div>
+        <div class="product-desc">Brasil · PME · Concorrente direto</div>
+      </div>
+    </div>
+    <div class="product-badges" style="padding: 0 18px 10px; gap:6px; display:flex; flex-wrap:wrap;">
+      <span class="product-badge" style="background:rgba(99,102,241,0.1);color:#818cf8;">Concorrente direto</span>
+      <span class="product-badge" style="background:rgba(34,197,94,0.1);color:#22c55e;">App nativo</span>
+      <span class="product-badge" style="background:rgba(245,158,11,0.1);color:#fbbf24;">SINAPI nativo</span>
+    </div>
+    <div class="mockup-frame">
+      <div class="vobi-mockup">
+        <!-- Sidebar -->
+        <div class="vobi-sidebar">
+          <div class="vobi-logo-area">
+            <div class="vobi-logo">vo<span>bi</span></div>
+            <div style="font-size:8px;color:rgba(255,255,255,0.3);margin-top:1px">Gestão de obras</div>
+          </div>
+          <div class="vobi-nav-item active">📊 Dashboard</div>
+          <div class="vobi-nav-item">🏗️ Projetos</div>
+          <div class="vobi-nav-item">📋 Orçamentos</div>
+          <div class="vobi-nav-item">💰 Financeiro</div>
+          <div class="vobi-nav-item">📅 Cronograma</div>
+          <div class="vobi-nav-item">👤 Clientes</div>
+        </div>
+        <!-- Main -->
+        <div class="vobi-main">
+          <div class="vobi-topbar">
+            <div class="vobi-topbar-title">Visão Geral</div>
+            <button class="vobi-btn">+ Novo Projeto</button>
+          </div>
+          <div class="vobi-content">
+            <div class="vobi-kpis">
+              <div class="vobi-kpi">
+                <div class="vobi-kpi-val">8</div>
+                <div class="vobi-kpi-lbl">Projetos ativos</div>
+              </div>
+              <div class="vobi-kpi">
+                <div class="vobi-kpi-val" style="color:#22c55e">R$412k</div>
+                <div class="vobi-kpi-lbl">Faturamento</div>
+              </div>
+              <div class="vobi-kpi">
+                <div class="vobi-kpi-val" style="color:#f59e0b">5</div>
+                <div class="vobi-kpi-lbl">A aprovar</div>
+              </div>
+            </div>
+            <div class="vobi-cards">
+              <div class="vobi-card">
+                <div class="vobi-card-title">Projetos em andamento</div>
+                <div class="vobi-item"><span>Residência Jardins</span><span style="color:#22c55e">72%</span></div>
+                <div class="vobi-item"><span>Comercial Centro</span><span style="color:#f59e0b">38%</span></div>
+                <div class="vobi-item"><span>Casa Praia</span><span style="color:#6366f1">91%</span></div>
+              </div>
+              <div class="vobi-card">
+                <div class="vobi-card-title">Tarefas do dia</div>
+                <div class="vobi-item"><span>Aprovar orçamento #12</span><span style="color:#ef4444">⚠</span></div>
+                <div class="vobi-item"><span>RDO — Jardins</span><span style="color:#6b7280">pendente</span></div>
+                <div class="vobi-item"><span>Reunião cliente</span><span style="color:#22c55e">14h</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="padding: 12px 18px 16px; font-size:11px; color:#7b8394; line-height:1.7;">
+      <strong style="color:#fff; display:block; margin-bottom:4px">🟡 Design moderno mas genérico</strong>
+      Sidebar escura com indigo · Open Sans standard · Cards com borda · Layout limpo e funcional · Identidade visual fraca (poderia ser qualquer SaaS) · Sem personalidade de marca forte · Muito similar ao Notion/Linear no estilo
+    </div>
+  </div>
+
+  <!-- ══ CONSTRUCODE ══ -->
+  <div class="product-card" style="background:#0f1014">
+    <div class="product-meta" style="background: rgba(255,238,77,0.04);">
+      <div class="product-logo" style="background:#FFEE4D; color:#141414; font-size:9px; font-weight:800; font-family:'Open Sans',sans-serif;">CC</div>
+      <div class="product-info">
+        <div class="product-name">Construcode</div>
+        <div class="product-desc">Brasil · Gestão técnica de canteiro</div>
+      </div>
+    </div>
+    <div class="product-badges" style="padding: 0 18px 10px; gap:6px; display:flex; flex-wrap:wrap;">
+      <span class="product-badge" style="background:rgba(255,238,77,0.1);color:#fef08a;">Complementar</span>
+      <span class="product-badge" style="background:rgba(34,197,94,0.1);color:#22c55e;">Dark theme</span>
+      <span class="product-badge" style="background:rgba(255,255,255,0.05);color:#9ca3af;">Markup plantas</span>
+    </div>
+    <div class="mockup-frame">
+      <div class="cc-mockup">
+        <!-- Topbar -->
+        <div class="cc-topbar">
+          <div class="cc-logo"><span>Constru</span>Code</div>
+          <div class="cc-nav">
+            <div class="cc-nav-item active">Docs</div>
+            <div class="cc-nav-item">Tasks</div>
+            <div class="cc-nav-item">Field</div>
+            <div class="cc-nav-item">Check</div>
+          </div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.4)">📂 Obra Alfa · Rev C</div>
+        </div>
+        <!-- Content -->
+        <div class="cc-content">
+          <!-- Lista de docs -->
+          <div class="cc-left">
+            <div class="cc-plant-panel">
+              <div class="cc-panel-header">
+                <span>Projetos</span>
+                <span style="color:#FFEE4D;font-size:8px">+ Upload</span>
+              </div>
+              <div class="cc-doc-item">📐 Arquitetônico <span class="cc-doc-badge">Rev C</span></div>
+              <div class="cc-doc-item" style="background:rgba(255,238,77,0.05)">⚙️ Estrutural <span class="cc-doc-badge">Rev B</span></div>
+              <div class="cc-doc-item">⚡ Elétrico <span class="cc-doc-badge">Rev A</span></div>
+              <div class="cc-doc-item">💧 Hidráulico <span class="cc-doc-badge">Rev A</span></div>
+            </div>
+            <div class="cc-widget">
+              <div class="cc-widget-title">Apontamentos</div>
+              <div class="cc-stat">7</div>
+              <div class="cc-stat-lbl">abertos</div>
+            </div>
+          </div>
+          <!-- Plant view -->
+          <div class="cc-plant-view">
+            <div class="cc-plant-grid"></div>
+            <!-- Plant lines simulating floor plan -->
+            <div class="cc-plant-line" style="width:120px;height:1px;top:50px;left:30px"></div>
+            <div class="cc-plant-line" style="width:1px;height:80px;top:50px;left:30px"></div>
+            <div class="cc-plant-line" style="width:120px;height:1px;top:130px;left:30px"></div>
+            <div class="cc-plant-line" style="width:1px;height:80px;top:50px;left:150px"></div>
+            <div class="cc-plant-line" style="width:60px;height:1px;top:90px;left:70px"></div>
+            <div class="cc-plant-line" style="width:1px;height:40px;top:90px;left:70px"></div>
+            <div class="cc-plant-line" style="width:1px;height:40px;top:90px;left:130px"></div>
+            <div class="cc-plant-line" style="width:60px;height:1px;top:90px;left:200px;opacity:0.3"></div>
+            <!-- Pins -->
+            <div class="cc-pin" style="top:52px;left:55px"><span>1</span></div>
+            <div class="cc-pin" style="top:82px;left:120px;background:#f59e0b"><span>2</span></div>
+            <div class="cc-pin" style="top:105px;left:80px;background:#22c55e"><span>3</span></div>
+            <button class="cc-qr-btn">📱 QR Code</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="padding: 12px 18px 16px; font-size:11px; color:#7b8394; line-height:1.7;">
+      <strong style="color:#fff; display:block; margin-bottom:4px">🟢 Design mais distinto do mercado</strong>
+      Dark theme nativo com accent amarelo-neon (#FFEE4D) · Foco total na planta como elemento central · Pins de apontamento visuais · Interface de canteiro, não de escritório · Identidade visual marcante e única · Open Sauce font custom
+    </div>
+  </div>
+
+  <!-- ══ SIENGE ══ -->
+  <div class="product-card" style="background:#0f1014">
+    <div class="product-meta" style="background: rgba(0,55,112,0.15);">
+      <div class="product-logo" style="background:#003770; color:#fff; font-size:9px; font-weight:800; letter-spacing:0.5px; font-family:'Roboto',sans-serif;">SNG</div>
+      <div class="product-info">
+        <div class="product-name">Sienge</div>
+        <div class="product-desc">Brasil · ERP enterprise · Líder nacional</div>
+      </div>
+    </div>
+    <div class="product-badges" style="padding: 0 18px 10px; gap:6px; display:flex; flex-wrap:wrap;">
+      <span class="product-badge" style="background:rgba(0,55,112,0.3);color:#93c5fd;">ERP completo</span>
+      <span class="product-badge" style="background:rgba(255,180,0,0.1);color:#fbbf24;">Líder nacional</span>
+      <span class="product-badge" style="background:rgba(255,255,255,0.05);color:#6b7280;">UI datada</span>
+    </div>
+    <div class="mockup-frame">
+      <div class="sienge-mockup">
+        <!-- Icon sidebar -->
+        <div class="sienge-sidebar">
+          <div style="font-size:13px;font-weight:900;color:#fff;margin-bottom:6px;font-family:'Roboto',sans-serif;">S</div>
+          <div class="sienge-icon active">🏗️</div>
+          <div class="sienge-icon">💰</div>
+          <div class="sienge-icon">📦</div>
+          <div class="sienge-icon">📊</div>
+          <div class="sienge-icon">⚙️</div>
+          <div class="sienge-icon">👥</div>
+        </div>
+        <!-- Main -->
+        <div class="sienge-main">
+          <div class="sienge-topbar">
+            <div class="sienge-logo-text">SIENGE</div>
+            <div style="font-size:9px;color:#6b7280">Empresa: Construtora XYZ | 👤 Admin | 🔔</div>
+          </div>
+          <div class="sienge-menu-bar">
+            <div class="sienge-menu-item active">Engenharia</div>
+            <div class="sienge-menu-item">Suprimentos</div>
+            <div class="sienge-menu-item">Financeiro</div>
+            <div class="sienge-menu-item">Comercial</div>
+            <div class="sienge-menu-item">Contabilidade</div>
+          </div>
+          <div class="sienge-content">
+            <div class="sienge-page-title">Obras em andamento — Módulo Engenharia</div>
+            <div class="sienge-filters">
+              <div class="sienge-filter">📅 Período ▾</div>
+              <div class="sienge-filter">🏗️ Status ▾</div>
+              <div class="sienge-filter">📍 UF ▾</div>
+              <div class="sienge-filter" style="background:#003770;color:#fff;border-color:#003770">🔍 Filtrar</div>
+            </div>
+            <div class="sienge-table">
+              <div class="sienge-tr">
+                <div style="flex:0.5">Cód</div>
+                <div style="flex:2">Descrição da Obra</div>
+                <div style="flex:1">Contrato</div>
+                <div style="flex:1">% Físico</div>
+                <div style="flex:1">Status</div>
+              </div>
+              <div class="sienge-tr">
+                <div style="flex:0.5;color:#003770;font-weight:700">001</div>
+                <div style="flex:2">Residencial Parque das Flores</div>
+                <div style="flex:1;color:#6b7280">R$ 2,4M</div>
+                <div style="flex:1;color:#003770;font-weight:700">67%</div>
+                <div style="flex:1"><span class="sienge-status" style="background:#d1fae5;color:#065f46">Ativa</span></div>
+              </div>
+              <div class="sienge-tr">
+                <div style="flex:0.5;color:#003770;font-weight:700">002</div>
+                <div style="flex:2">Galpão Industrial Zona Norte</div>
+                <div style="flex:1;color:#6b7280">R$ 890k</div>
+                <div style="flex:1;color:#003770;font-weight:700">23%</div>
+                <div style="flex:1"><span class="sienge-status" style="background:#dbeafe;color:#1e40af">Iniciando</span></div>
+              </div>
+            </div>
+            <div class="sienge-pagination">
+              <span style="font-size:9px;color:#6b7280">Exibindo 1-2 de 47 registros</span>
+              <div class="sienge-page-btn">‹</div>
+              <div class="sienge-page-btn active">1</div>
+              <div class="sienge-page-btn">2</div>
+              <div class="sienge-page-btn">›</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="padding: 12px 18px 16px; font-size:11px; color:#7b8394; line-height:1.7;">
+      <strong style="color:#fff; display:block; margin-bottom:4px">🔴 UI de ERP clássico — funcional, sem UX</strong>
+      Azul corporativo #003770 · Roboto genérico · Menu bar horizontal tipo SAP · Tabelas densas com paginação · Filtros dropdown empilhados · Interface de 2012 modernizada · Nenhuma animação · Usuários precisam de treinamento formal · Design orientado a dados, não a pessoas
+    </div>
+  </div>
+
+</div><!-- /products-grid -->
+
+<hr class="sep"/>
+
+<!-- RATING TABLE -->
+<div class="rating-section" style="padding-top:40px">
+  <div class="rating-title">Avaliação por Critério de Design</div>
+  <div class="rating-table">
+    <div class="rating-header">
+      <div>Critério</div>
+      <div style="text-align:center;color:#981915">StickFrame</div>
+      <div style="text-align:center;color:#f36c21">Procore</div>
+      <div style="text-align:center;color:#6366f1">Vobi</div>
+      <div style="text-align:center;color:#FFEE4D">Construcode</div>
+      <div style="text-align:center;color:#93c5fd">Sienge</div>
+    </div>
+
+    <!-- Identidade visual -->
+    <div class="rating-row">
+      <div class="rating-criterion">Identidade visual</div>
+      <div class="rating-cell"><div class="dot-rating"><div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div><div class="dot"></div></div></div>
+      <div class="rating-cell"><div class="dot-rating"><div class="dot filled half"></div><div class="dot filled half"></div><div class="dot filled half"></div><div class="dot"></div><div class="dot"></div></div></div>
+      <div class="rating-cell"><div class="dot-rating"><div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div><div class="dot"></div><div class="dot"></div></div></div>
+      <div class="rating-cell"><div class="dot-rating"><div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div></div></div>
+      <div class="rating-cell"><div class="dot-rating"><div class="dot filled half"></div><div class="dot filled half"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>
+    </div>
+
+    <!-- Modernidade do design -->
+    <div class="rating-row">
+      <div class="rating-criterion">Modernidade</div>
+      <div class="rating-cell"><div class="dot-rating"><div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div><div class="dot"></div></div></div>
+      <div class="rating-cell"><div class="dot-rating"><div class="dot filled half"></div><div class="dot filled half"></div><div class="dot filled half"></div><div class="dot"></div><div class="dot"></div></div></div>
+      <div class="rating-cell"><div class="dot-rating"><div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div><div class="dot"></div></div></div>
+      <div class="rating-cell"><div class="dot-rating"><div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div><div class="dot"></div></div></div>
+      <div class="rating-cell"><div class="dot-rating"><div class="dot filled half"></div><div class="dot filled half"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>
+    </div>
+
+    <!-- Densidade de informação -->
+    <div class="rating-row">
+      <div class="rating-criterion">Hierarquia visual</div>
+      <div class="rating-cell"><div class="dot-rating"><div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div><div class="dot"></div></div></div>
+      <div class="rating-cell"><div class="dot-rating"><div class="dot filled half"></div><div class="dot filled half"></div><div class="dot filled half"></div><div class="dot half"></div><div class="dot"></div></div></div>
+      <div class="rating-cell"><div class="dot-rating"><div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div><div class="dot"></div></div></div>
+      <div class="rating-cell"><div class="dot-rating"><div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div><div class="dot"></div><div class="dot"></div></div></div>
+      <div class="rating-cell"><div class="dot-rating"><div class="dot filled half"></div><div class="dot filled half"></div><div class="dot filled half"></div><div class="dot"></div><div class="dot"></div></div></div>
+    </div>
+
+    <!-- Facilidade de uso -->
+    <div class="rating-row">
+      <div class="rating-criterion">Facilidade de uso</div>
+      <div class="rating-cell"><div class="dot-rating"><div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div><div class="dot"></div></div></div>
+      <div class="rating-cell"><div class="dot-rating"><div class="dot filled half"></div><div class="dot filled half"></div><div class="dot filled half"></div><div class="dot"></div><div class="dot"></div></div></div>
+      <div class="rating-cell"><div class="dot-rating"><div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div></div></div>
+      <div class="rating-cell"><div class="dot-rating"><div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div><div class="dot"></div></div></div>
+      <div class="rating-cell"><div class="dot-rating"><div class="dot filled half"></div><div class="dot filled half"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>
+    </div>
+
+    <!-- UX mobile -->
+    <div class="rating-row">
+      <div class="rating-criterion">UX Mobile</div>
+      <div class="rating-cell"><div class="dot-rating"><div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div><div class="dot"></div><div class="dot"></div></div></div>
+      <div class="rating-cell"><div class="dot-rating"><div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div></div></div>
+      <div class="rating-cell"><div class="dot-rating"><div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div></div></div>
+      <div class="rating-cell"><div class="dot-rating"><div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div><div class="dot"></div></div></div>
+      <div class="rating-cell"><div class="dot-rating"><div class="dot filled half"></div><div class="dot filled half"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>
+    </div>
+
+    <!-- Premium feel -->
+    <div class="rating-row">
+      <div class="rating-criterion">Sensação premium</div>
+      <div class="rating-cell"><div class="dot-rating"><div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div><div class="dot"></div></div></div>
+      <div class="rating-cell"><div class="dot-rating"><div class="dot filled half"></div><div class="dot filled half"></div><div class="dot half"></div><div class="dot"></div><div class="dot"></div></div></div>
+      <div class="rating-cell"><div class="dot-rating"><div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div><div class="dot"></div><div class="dot"></div></div></div>
+      <div class="rating-cell"><div class="dot-rating"><div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div><div class="dot"></div></div></div>
+      <div class="rating-cell"><div class="dot-rating"><div class="dot filled half"></div><div class="dot half"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>
+    </div>
+
+  </div>
+</div>
+
+<hr class="sep"/>
+
+<!-- CONCLUSION -->
+<div class="conclusion-section" style="padding-top:40px">
+  <div class="analysis-title" style="font-size:20px;font-weight:800;color:#fff;margin-bottom:4px">Diagnóstico Visual</div>
+  <div class="analysis-sub" style="margin-bottom:28px">O que cada produto comunica através do seu design</div>
+  <div class="conclusion-grid">
+
+    <div class="conclusion-card" style="border-color:rgba(152,25,21,0.4)">
+      <div class="conclusion-card-tag" style="color:#981915">✅ Você</div>
+      <div class="conclusion-card-title">StickFrame</div>
+      <div class="conclusion-card-body">Design mais cuidado do mercado nacional. DM Sans + Barlow Condensed criam personalidade única. O uso consistente do #981915 na sidebar, nos CTAs e nos destaques cria coerência visual que o Vobi e o Procore não têm.<br><br><strong style="color:#fff">O que falta:</strong> Micro-animações, skeleton loaders, modo escuro como opção, e mais uso de gradientes sutis nos cards de KPI para elevar o nível de "premium".</div>
+    </div>
+
+    <div class="conclusion-card" style="border-color:rgba(99,102,241,0.3)">
+      <div class="conclusion-card-tag" style="color:#6366f1">🟡 Concorrente direto</div>
+      <div class="conclusion-card-title">Vobi</div>
+      <div class="conclusion-card-body">Interface limpa e moderna, mas sem personalidade. Poderia ser qualquer SaaS — ClickUp, Notion, Linear. A escolha do indigo (#6366f1) é segura mas genérica. O design não comunica "construção civil".<br><br><strong style="color:#fff">Fraqueza:</strong> Visualmente o StickFrame tem mais identidade. O Vobi ganha no produto (SINAPI, app nativo), mas perde no branding.</div>
+    </div>
+
+    <div class="conclusion-card" style="border-color:rgba(255,238,77,0.2)">
+      <div class="conclusion-card-tag" style="color:#FFEE4D">🟢 Complementar</div>
+      <div class="conclusion-card-title">Construcode</div>
+      <div class="conclusion-card-body">O design mais único e corajoso. Dark theme com amarelo-neon é arriscado mas funciona para o contexto de canteiro (tela ao sol, modo noturno no canteiro). A planta como elemento central da UI é o diferencial visual que nenhum outro produto tem.<br><br><strong style="color:#fff">Inspiração:</strong> O conceito de "planta como canvas principal" poderia ser implementado no StickFrame para o módulo de BIM/Obras.</div>
+    </div>
+
+  </div>
+</div>
+
+<div class="footer-note">
+  Análise baseada nos design systems públicos de cada plataforma e no código fonte real do StickFrame · Junho 2026
+</div>
+
+</body>
+</html>
