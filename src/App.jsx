@@ -54,6 +54,7 @@ const Analise           = lazyWithRetry(() => import("./pages/Analise"));
 const QRObra            = lazyWithRetry(() => import("./pages/QRObra"));
 const Inteligencia      = lazyWithRetry(() => import("./pages/Inteligencia"));
 const CalculadoraPublica   = lazyWithRetry(() => import("./pages/CalculadoraPublica"));
+const AnalisePublica       = lazyWithRetry(() => import("./pages/AnalisePublica"));
 const ConcorrenciaPublica  = lazyWithRetry(() => import("./pages/ConcorrenciaPublica"));
 const PontoColaborador     = lazyWithRetry(() => import("./pages/PontoColaborador"));
 const AmbienteQR           = lazyWithRetry(() => import("./pages/AmbienteQR"));
@@ -200,6 +201,7 @@ export default function App() {
           <Route path="/contrato/:token" element={<ContratoOnline />} />
           <Route path="/qr/obra/:obraId" element={<QRObra />} />
           <Route path="/calcular" element={<CalculadoraPublica />} />
+          <Route path="/docs-publicos" element={<AnalisePublica />} />
           <Route path="/concorrencia/:token" element={<ConcorrenciaPublica />} />
           <Route path="/ponto/:token"       element={<PontoColaborador />} />
           <Route path="/ambiente/:token"    element={<AmbienteQR />} />
