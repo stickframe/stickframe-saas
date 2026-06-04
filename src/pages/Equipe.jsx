@@ -280,11 +280,12 @@ export default function Equipe() {
 
     const certBadges = certs.length > 0
       ? `<div class="certs-row">${certs.map((cert) => {
-          const nrVal = cert.nr || cert.nome || "";
-          const key = Object.keys(NR_ICONES).find((k) => nrVal.includes(k));
+          const nrVal = (cert.nr != null && cert.nr !== "" && cert.nr !== "undefined") ? String(cert.nr) : "";
+          const key = nrVal ? Object.keys(NR_ICONES).find((k) => nrVal.includes(k)) : undefined;
           const info = key ? NR_ICONES[key] : null;
           const icon = info ? `<i class="fas ${info.icon}"></i>` : "🏅";
-          const label = info?.label || nrVal.replace(/\(.*\)/, "").trim().slice(0, 7);
+          const rawLabel = nrVal.replace(/\s*\(.*\)/, "").trim();
+          const label = info?.label || (rawLabel && rawLabel !== "undefined" ? rawLabel.slice(0, 7) : "NR");
           const valid = cert.data_validade ? new Date(cert.data_validade) > new Date() : true;
           return `<div class="cert-badge ${valid ? "" : "cert-vencido"}" title="${nrVal}">${icon}<span>${label}</span></div>`;
         }).join("")}</div>`
