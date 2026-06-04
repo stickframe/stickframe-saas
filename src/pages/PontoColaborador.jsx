@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { Building2 } from "lucide-react";
 import { sb } from "../services/supabase";
 import { LOGO_STICKFRAME } from "../utils/cdn";
 
@@ -134,7 +135,7 @@ export default function PontoColaborador() {
         {etapa === "obra" && (obras || []).length > 1 && (
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             <div style={{ textAlign: "center", padding: "8px 0 4px" }}>
-              <div style={{ fontSize: 28, marginBottom: 6 }}>🏗</div>
+              <div style={{ marginBottom: 6, display: "flex", justifyContent: "center" }}><Building2 size={32} color={C.red} /></div>
               <div style={{ fontSize: 17, fontWeight: 800, color: C.text }}>Em qual obra você está?</div>
               <div style={{ fontSize: 13, color: C.muted, marginTop: 4 }}>Selecione para registrar seu ponto</div>
             </div>
@@ -156,7 +157,7 @@ export default function PontoColaborador() {
                   onMouseLeave={(e) => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.06)"; }}
                 >
                   <div style={{ width: 40, height: 40, borderRadius: 10, background: C.red + "15", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                    <span style={{ fontSize: 20 }}>🏢</span>
+                    <Building2 size={20} color={C.red} />
                   </div>
                   <div>
                     <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{o.nome}</div>
@@ -175,7 +176,7 @@ export default function PontoColaborador() {
             {/* Obra selecionada (se houver) — com botão voltar */}
             {obraSelecionada && (obras || []).length > 1 && (
               <div style={{ display: "flex", alignItems: "center", gap: 12, background: "#fff", borderRadius: 14, border: `1px solid ${C.border}`, padding: "12px 16px" }}>
-                <span style={{ fontSize: 22 }}>🏗</span>
+                <Building2 size={22} color={C.red} />
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 11, color: C.muted, fontWeight: 700, textTransform: "uppercase", letterSpacing: .8 }}>Obra selecionada</div>
                   <div style={{ fontSize: 14, fontWeight: 800, color: C.text, marginTop: 2 }}>{obraSelecionada.nome}</div>
@@ -192,7 +193,7 @@ export default function PontoColaborador() {
             {/* Obra única exibida como info */}
             {obraSelecionada && (obras || []).length === 1 && (
               <div style={{ display: "flex", alignItems: "center", gap: 12, background: "#fff", borderRadius: 14, border: `1px solid ${C.border}`, padding: "12px 16px" }}>
-                <span style={{ fontSize: 22 }}>🏗</span>
+                <Building2 size={22} color={C.red} />
                 <div>
                   <div style={{ fontSize: 11, color: C.muted, fontWeight: 700, textTransform: "uppercase", letterSpacing: .8 }}>Obra</div>
                   <div style={{ fontSize: 14, fontWeight: 800, color: C.text, marginTop: 2 }}>{obraSelecionada.nome}</div>
