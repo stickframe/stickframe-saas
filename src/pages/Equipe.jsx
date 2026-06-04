@@ -252,7 +252,21 @@ export default function Equipe() {
   useEffect(() => { recarregarCerts(); }, [recarregarCerts]);
 
   // ── Crachá / QR Ponto ────────────────────────────────────────────────────
-  function gerarCracha(c) {
+  const NR_ICONES = {
+    "NR-01": { icon: "fa-clipboard-check", label: "PGR" },
+    "NR-05": { icon: "fa-users",           label: "CIPA" },
+    "NR-06": { icon: "fa-hard-hat",        label: "EPI" },
+    "NR-10": { icon: "fa-bolt",            label: "NR-10" },
+    "NR-12": { icon: "fa-cog",             label: "NR-12" },
+    "NR-17": { icon: "fa-chair",           label: "Ergon." },
+    "NR-18": { icon: "fa-hard-hat",        label: "NR-18" },
+    "NR-23": { icon: "fa-fire-extinguisher", label: "NR-23" },
+    "NR-35": { icon: "fa-user-shield",     label: "Altura" },
+    "ASO":   { icon: "fa-heartbeat",       label: "ASO" },
+    "Habilitação": { icon: "fa-id-card",   label: "CNH" },
+  };
+
+  function gerarCracha(c, certs = []) {
     if (!c.token_ponto) return;
     const url = `${window.location.origin}/ponto/${c.token_ponto}`;
     const qr  = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}`;
@@ -260,7 +274,20 @@ export default function Equipe() {
     const avatarHtml = c.foto_url
       ? `<img src="${c.foto_url}" class="avatar-foto"/>`
       : `<div class="avatar">${inicial}</div>`;
+
+    const certBadges = certs.length > 0
+      ? `<div class="certs-row">${certs.map((cert) => {
+          const key = Object.keys(NR_ICONES).find((k) => cert.nome?.includes(k) || k === cert.nome);
+          const info = key ? NR_ICONES[key] : null;
+          const icon = info ? `<i class="fas ${info.icon}"></i>` : "🏅";
+          const label = info?.label || cert.nome?.replace("Treinamento ", "").slice(0, 7);
+          const valid = cert.validade ? new Date(cert.validade) > new Date() : true;
+          return `<div class="cert-badge ${valid ? "" : "cert-vencido"}" title="${cert.nome}">${icon}<span>${label}</span></div>`;
+        }).join("")}</div>`
+      : "";
+
     printHtml(`
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
       <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { display:flex; align-items:center; justify-content:center; min-height:100vh; background:#f5f5f7; font-family:Inter,Arial,sans-serif; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
@@ -272,6 +299,11 @@ export default function Equipe() {
         .cargo { font-size:11px; color:#6b7280; margin-bottom:16px; text-transform:uppercase; letter-spacing:.8px; }
         .qr { width:160px; height:160px; margin:0 auto 14px; display:block; border:1px solid #eee; border-radius:8px; padding:4px; }
         .label { font-size:9px; font-weight:700; letter-spacing:2px; color:#9ca3af; text-transform:uppercase; }
+        .certs-row { display:flex; flex-wrap:wrap; justify-content:center; gap:6px; margin-top:14px; }
+        .cert-badge { display:flex; flex-direction:column; align-items:center; gap:2px; background:#f1f5f9; border-radius:8px; padding:6px 8px; min-width:44px; }
+        .cert-badge i { font-size:16px; color:#981915; }
+        .cert-badge span { font-size:8px; font-weight:700; color:#374151; letter-spacing:.4px; text-transform:uppercase; }
+        .cert-vencido { opacity:.45; }
         @media print { body { background:#fff; min-height:unset; } .card { box-shadow:none; } }
       </style>
       <div class="card">
@@ -281,6 +313,7 @@ export default function Equipe() {
         <div class="cargo">${c.cargo || c.especialidade || "Colaborador"}</div>
         <img src="${qr}" class="qr"/>
         <div class="label">⏱ Ponto Eletrônico</div>
+        ${certBadges}
       </div>
     `, `cracha-${c.nome}`);
   }
@@ -729,7 +762,7 @@ export default function Equipe() {
                       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                         <Btn variant="ghost" size="sm" onClick={() => abrirEditar(c)}><Pencil size={13} /> Editar</Btn>
                         {c.token_ponto && (
-                          <Btn variant="ghost" size="sm" onClick={() => gerarCracha(c)}>🪪 Crachá</Btn>
+                          <Btn variant="ghost" size="sm" onClick={() => gerarCracha(c, certsByColab[c.id] || [])}>🪪 Crachá</Btn>
                         )}
                         <button onClick={() => setConfirm(c.id)} style={{
                           padding: "6px 12px", background: C.danger + "22",
