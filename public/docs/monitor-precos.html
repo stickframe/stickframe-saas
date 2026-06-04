@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Monitor de Preços em Tempo Real — StickFrame</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --sf-red: #981915;
+    --dark: #0f1117;
+    --card: #16191f;
+    --border: #252830;
+    --text: #e8eaf0;
+    --muted: #7b8394;
+    --green: #22c55e;
+    --yellow: #f59e0b;
+    --red: #ef4444;
+    --blue: #3b82f6;
+    --radius: 14px;
+  }
+  body { font-family: 'Inter', sans-serif; background: var(--dark); color: var(--text); font-size: 14px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+  a { color: var(--sf-red); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  .nav { padding: 16px 48px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+  .nav-back { font-size: 13px; color: var(--muted); transition: color 0.15s; }
+  .nav-back:hover { color: var(--text); text-decoration: none; }
+  .nav-sep { color: var(--border); }
+  .nav-current { font-size: 13px; color: var(--text); font-weight: 500; }
+
+  .page-header {
+    background: linear-gradient(135deg, #0f1117 0%, #1a0f0e 60%, #0f1117 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 56px 48px 48px; position: relative; overflow: hidden;
+  }
+  .page-header::before {
+    content: ''; position: absolute; top: -80px; right: -80px;
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(152,25,21,0.18) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .header-inner { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
+  .header-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--sf-red); background: rgba(152,25,21,0.15); border: 1px solid rgba(152,25,21,0.3);
+    padding: 5px 14px; border-radius: 20px; margin-bottom: 20px;
+  }
+  .header-title { font-size: clamp(28px, 4vw, 44px); font-weight: 800; color: #fff; line-height: 1.15; margin-bottom: 12px; letter-spacing: -0.5px; }
+  .header-sub { color: var(--muted); font-size: 15px; max-width: 580px; line-height: 1.7; }
+  .header-highlight {
+    display: inline-flex; align-items: center; gap: 8px; margin-top: 18px;
+    background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3);
+    border-radius: 8px; padding: 8px 14px; font-size: 13px; color: var(--red); font-weight: 700;
+  }
+
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 48px; }
+  section { padding: 52px 0; border-bottom: 1px solid var(--border); }
+  section:last-of-type { border-bottom: none; }
+
+  .sec-header { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; }
+  .sec-icon { font-size: 22px; }
+  .sec-title { font-size: 20px; font-weight: 800; color: #fff; }
+  .sec-badge { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; padding: 3px 10px; border-radius: 20px; margin-left: auto; white-space: nowrap; }
+  .badge-red { background: rgba(239,68,68,0.15); color: var(--red); border: 1px solid rgba(239,68,68,0.3); }
+  .badge-green { background: rgba(34,197,94,0.15); color: var(--green); border: 1px solid rgba(34,197,94,0.3); }
+
+  /* PRICE TABLE */
+  .tbl-wrap { overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: 12px; }
+  table { width: 100%; border-collapse: collapse; }
+  thead th { background: #1e2128; padding: 12px 18px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); text-align: left; }
+  tbody tr { border-top: 1px solid var(--border); transition: background 0.15s; }
+  tbody tr:nth-child(even) { background: rgba(255,255,255,0.02); }
+  tbody tr:hover { background: rgba(152,25,21,0.06); }
+  tbody td { padding: 13px 18px; font-size: 13px; color: var(--text); vertical-align: middle; }
+  .price-old { color: var(--muted); text-decoration: line-through; font-size: 12px; }
+  .price-new { color: #fff; font-weight: 700; }
+  .var-chip { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 800; padding: 3px 9px; border-radius: 20px; }
+  .var-high { background: rgba(239,68,68,0.15); color: var(--red); border: 1px solid rgba(239,68,68,0.3); }
+  .var-mid { background: rgba(245,158,11,0.15); color: var(--yellow); border: 1px solid rgba(245,158,11,0.3); }
+  .var-low { background: rgba(249,115,22,0.12); color: #f97316; border: 1px solid rgba(249,115,22,0.3); }
+
+  /* DASHBOARD MOCKUP */
+  .dashboard-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 22px; margin-bottom: 0;
+  }
+  .dash-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+  .dash-title { font-size: 13px; font-weight: 700; color: #fff; }
+  .dash-live { display: flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--green); }
+  .live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .dash-rows { display: flex; flex-direction: column; gap: 8px; }
+  .dash-row { display: grid; grid-template-columns: 1fr auto auto; gap: 14px; align-items: center; padding: 10px 14px; border-radius: 8px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); }
+  .dash-product { font-size: 12px; color: var(--text); }
+  .dash-product span { font-size: 10px; color: var(--muted); display: block; }
+  .dash-price-col { text-align: right; }
+  .dash-price-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); }
+  .dash-price-val { font-size: 13px; font-weight: 700; color: #fff; }
+
+  /* COMPARISON */
+  .comp-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .comp-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+  .comp-card.highlight { border-color: rgba(152,25,21,0.4); border-left: 4px solid var(--sf-red); }
+  .comp-name { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 12px; }
+  .comp-item { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: var(--muted); margin-bottom: 7px; line-height: 1.5; }
+  .icon-yes { color: var(--green); }
+  .icon-no { color: var(--red); }
+
+  .pitch {
+    background: rgba(152,25,21,0.08); border-left: 4px solid var(--sf-red);
+    border-radius: 0 10px 10px 0; padding: 18px 22px;
+    font-size: 13px; color: var(--text); font-style: italic; line-height: 1.8;
+  }
+  .pitch::before { content: '"'; font-size: 20px; font-weight: 800; color: var(--sf-red); margin-right: 4px; font-style: normal; vertical-align: -3px; }
+
+  .source-note { font-size: 11px; color: var(--muted); margin-top: 8px; }
+  .source-note strong { color: var(--text); }
+
+  footer { border-top: 1px solid var(--border); padding: 32px 48px; text-align: center; }
+  footer p { font-size: 12px; color: var(--muted); }
+  footer strong { color: var(--text); }
+
+  @media (max-width: 768px) {
+    .nav, .page-header, .container, footer { padding-left: 20px; padding-right: 20px; }
+    .comp-row { grid-template-columns: 1fr; }
+    .dash-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/" class="nav-back">← Voltar ao sistema</a>
+  <span class="nav-sep">/</span>
+  <span class="nav-current">Monitor de Preços</span>
+</nav>
+
+<header class="page-header">
+  <div class="header-inner">
+    <div class="header-badge">&#9733; Diferencial StickFrame</div>
+    <h1 class="header-title">Monitor de Preços em Tempo Real</h1>
+    <p class="header-sub">Painel no Dashboard que exibe variações de preço de insumos de Steel Frame diretamente na tela inicial — sem navegar, sem pesquisa manual, sem planilha.</p>
+    <div class="header-highlight">
+      ↑ +19,1% Montante LSF 90×0,8×3000mm — dado real jun/2026
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- DADOS REAIS -->
+  <section>
+    <div class="container">
+      <div class="sec-header">
+        <span class="sec-icon">📊</span>
+        <h2 class="sec-title">Dados Capturados — Amostra Real (jun/2026)</h2>
+        <span class="sec-badge badge-red">Unicidade: Altíssima</span>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Produto</th>
+              <th>De</th>
+              <th>Para</th>
+              <th>Variação</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Montante Light Steel Frame 90×0,8×3000mm LE 230MPA/Z275G/m²</td>
+              <td><span class="price-old">R$ 45,90</span></td>
+              <td><span class="price-new">R$ 54,65</span></td>
+              <td><span class="var-chip var-high">↑ +19,1%</span></td>
+            </tr>
+            <tr>
+              <td>Casa Mauá Basic 100m²</td>
+              <td><span class="price-old">R$ 203.388,70</span></td>
+              <td><span class="price-new">R$ 225.761,46</span></td>
+              <td><span class="var-chip var-mid">↑ +11,0%</span></td>
+            </tr>
+            <tr>
+              <td>Smart Membrana Typar 910×30480mm 27,74m²</td>
+              <td><span class="price-old">R$ 480,82</span></td>
+              <td><span class="price-new">R$ 527,67</span></td>
+              <td><span class="var-chip var-mid">↑ +9,7%</span></td>
+            </tr>
+            <tr>
+              <td>Montante Light Steel Frame 90×0,95×6000mm</td>
+              <td><span class="price-old">R$ 119,07</span></td>
+              <td><span class="price-new">R$ 130,03</span></td>
+              <td><span class="var-chip var-low">↑ +9,2%</span></td>
+            </tr>
+            <tr>
+              <td>Montante Light Steel Frame 90×0,95×3000mm</td>
+              <td><span class="price-old">R$ 60,19</span></td>
+              <td><span class="price-new">R$ 65,01</span></td>
+              <td><span class="var-chip var-low">↑ +8,0%</span></td>
+            </tr>
+            <tr>
+              <td>Casa Mauá Plus 100m²</td>
+              <td><span class="price-old">R$ 418.088,70</span></td>
+              <td><span class="price-new">R$ 451.535,80</span></td>
+              <td><span class="var-chip var-low">↑ +8,0%</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="source-note"><strong>Fonte:</strong> espacosmart.com.br — dados coletados em junho/2026</p>
+    </div>
+  </section>
+
+  <!-- DASHBOARD MOCKUP -->
+  <section>
+    <div class="container">
+      <div class="sec-header">
+        <span class="sec-icon">🖥️</span>
+        <h2 class="sec-title">Visão no Dashboard</h2>
+      </div>
+      <div class="dashboard-card">
+        <div class="dash-header">
+          <span class="dash-title">Monitor de Preços — Steel Frame</span>
+          <span class="dash-live"><span class="live-dot"></span>Ao vivo</span>
+        </div>
+        <div class="dash-rows">
+          <div class="dash-row">
+            <div class="dash-product">Montante LSF 90×0,8×3000mm<span>Perfil galvanizado Z275</span></div>
+            <div class="dash-price-col"><div class="dash-price-label">Anterior</div><div class="dash-price-val" style="color:var(--muted);text-decoration:line-through;font-size:11px;">R$ 45,90</div></div>
+            <div class="dash-price-col"><div class="dash-price-label">Atual</div><div class="dash-price-val">R$ 54,65 <span class="var-chip var-high" style="font-size:9px;">+19,1%</span></div></div>
+          </div>
+          <div class="dash-row">
+            <div class="dash-product">Casa Mauá Basic 100m²<span>Kit completo fornecedor</span></div>
+            <div class="dash-price-col"><div class="dash-price-label">Anterior</div><div class="dash-price-val" style="color:var(--muted);text-decoration:line-through;font-size:11px;">R$ 203.388,70</div></div>
+            <div class="dash-price-col"><div class="dash-price-label">Atual</div><div class="dash-price-val">R$ 225.761,46 <span class="var-chip var-mid" style="font-size:9px;">+11,0%</span></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ONDE APARECE -->
+  <section>
+    <div class="container">
+      <div class="sec-header">
+        <span class="sec-icon">📍</span>
+        <h2 class="sec-title">Onde Aparece no Sistema</h2>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;">
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:18px;border-top:3px solid var(--sf-red);">
+          <div style="font-size:12px;font-weight:700;color:#fff;margin-bottom:6px;">Dashboard — card "Monitor de Preços"</div>
+          <div style="font-size:12px;color:var(--muted);">Visível imediatamente após o login. Sem navegação adicional.</div>
+        </div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:18px;border-top:3px solid var(--blue);">
+          <div style="font-size:12px;font-weight:700;color:#fff;margin-bottom:6px;">Fornecedores → Monitor Preços</div>
+          <div style="font-size:12px;color:var(--muted);">Histórico completo de variações com filtros por produto e período.</div>
+        </div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:18px;border-top:3px solid var(--yellow);">
+          <div style="font-size:12px;font-weight:700;color:#fff;margin-bottom:6px;">Alertas automáticos</div>
+          <div style="font-size:12px;color:var(--muted);">Notificação quando variação supera threshold configurado pela construtora.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- COMPARATIVO -->
+  <section>
+    <div class="container">
+      <div class="sec-header">
+        <span class="sec-icon">⚖️</span>
+        <h2 class="sec-title">Comparativo com Procore / Autodesk</h2>
+      </div>
+      <div class="comp-row">
+        <div class="comp-card highlight">
+          <div class="comp-name">StickFrame — Único no mercado</div>
+          <div class="comp-item"><span class="icon-yes">✓</span> Monitoramento de preços de insumos de Steel Frame</div>
+          <div class="comp-item"><span class="icon-yes">✓</span> Feed de mercado de insumos brasileiro (espacosmart)</div>
+          <div class="comp-item"><span class="icon-yes">✓</span> Visível no Dashboard — zero configuração</div>
+          <div class="comp-item"><span class="icon-yes">✓</span> Alertas automáticos por threshold</div>
+          <div class="comp-item"><span class="icon-yes">✓</span> Conecta custo de obra com tendência de mercado</div>
+        </div>
+        <div class="comp-card">
+          <div class="comp-name">Procore / Autodesk / Nacionais</div>
+          <div class="comp-item"><span class="icon-no">✗</span> Procore: sem monitoramento de preços de insumos brasileiros</div>
+          <div class="comp-item"><span class="icon-no">✗</span> Autodesk: sem feed de mercado local</div>
+          <div class="comp-item"><span class="icon-no">✗</span> Sienge: sem variação de mercado no dashboard</div>
+          <div class="comp-item"><span class="icon-no">✗</span> Obra Prima / Volare: sem monitor de preços</div>
+          <div class="comp-item"><span class="icon-no">✗</span> Dado disponível apenas via pesquisa manual</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PITCH -->
+  <section>
+    <div class="container">
+      <div class="sec-header">
+        <span class="sec-icon">🎯</span>
+        <h2 class="sec-title">Pitch para Apresentações</h2>
+      </div>
+      <div class="pitch">Enquanto o Procore exige integrações customizadas para dados de mercado, o StickFrame já traz na tela inicial a variação de preço dos principais insumos de Steel Frame — em tempo real, sem configuração.</div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="container">
+    <p><strong>StickFrame</strong> &copy; 2026 — Plataforma de gestão para construtoras de Steel Frame</p>
+  </div>
+</footer>
+
+</body>
+</html>
