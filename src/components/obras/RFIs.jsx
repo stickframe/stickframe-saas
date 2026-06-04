@@ -15,21 +15,41 @@ const COR_URGENCIA = {
 const DISCIPLINAS = ["Civil", "Elétrico", "Hidráulico", "Estrutural", "Acabamento", "Outro"];
 const URGENCIAS = ["Normal", "Alta", "Crítica"];
 const SUGESTOES_TITULO = [
-  "Esclarecimento de detalhe de ligação de perfil",
-  "Cota de vão divergente entre projeto e execução",
+  // Projeto / especificação
   "Especificação de perfil não indicada no projeto",
-  "Definição de espessura da placa de fachada",
-  "Conflito entre projeto estrutural e instalações",
-  "Aprovação de material substituto para perfil",
-  "Detalhe de remate em cumeeira não definido",
-  "Definição de sistema de fixação de esquadria",
-  "Passagem de tubulação hidráulica sem detalhe",
-  "Travamento lateral de montante não especificado",
+  "Cota de vão divergente entre projeto e execução",
+  "Espaçamento de montantes não definido para a carga",
+  "Detalhe de ligação de perfil não especificado",
+  "Seção de reforço em vão de porta/janela não detalhada",
+  "Contravento não especificado em projeto",
+  "Travamento lateral de montante não indicado",
+  "Detalhe de cumeeira ou espigão ausente no projeto",
+  // Fechamento / placas
+  "Definição de espessura e tipo de placa de fachada",
+  "Detalhe de junta de movimentação de placas ausente",
   "Detalhe de remate entre painéis distintos",
-  "Carga de vento não considerada em projeto",
-  "Detalhe de impermeabilização de rodapé ausente",
-  "Definição de isolamento em área molhada",
-  "Ancoragem de guia em fundação não detalhada",
+  "Especificação de fita e massa para juntas",
+  // Forro / cobertura
+  "Detalhe de forro suspenso não especificado",
+  "Espaçamento de penduramento de forro não definido",
+  "Definição de sistema de cobertura em aço",
+  // Isolamento / estanqueidade
+  "Definição de isolamento termoacústico em área molhada",
+  "Detalhe de barreira de vapor não especificado",
+  "Impermeabilização de rodapé não detalhada",
+  "Ancoragem de guia em radier não detalhada",
+  // Esquadrias / aberturas
+  "Definição de sistema de fixação de esquadria",
+  "Detalhe de contramarco em parede steel frame",
+  "Especificação de peitoril e pingadeira",
+  // Instalações
+  "Passagem de tubulação hidráulica sem detalhe no painel",
+  "Eletroduto em painel steel frame sem especificação",
+  "Conflito entre projeto estrutural e instalações",
+  // Aprovações
+  "Aprovação de perfil substituto",
+  "Aprovação de placa de fachada alternativa",
+  "Aprovação de fornecedor de esquadria",
 ];
 
 function Badge({ label, cor }) {

@@ -6,23 +6,50 @@ const COR_G = { Baixa: C.muted, Media: "#4a9eff", Alta: "#e67e22", Critica: C.da
 const COR_S = { Aberta: C.danger, "Em análise": C.warning, "Em correção": "#e67e22", Verificando: "#4a9eff", Fechada: C.success };
 const DISCIPLINAS = ["Civil", "Elétrico", "Hidráulico", "Estrutural", "Acabamento", "Outro"];
 const SUGESTOES_NCR = [
-  "Montagem de perfil fora de prumo ou esquadro",
-  "Espaçamento entre perfis diferente do projeto",
-  "Parafuso ausente ou incorreto na ligação",
-  "Placa de OSB ou drywall fixada sem folga de dilatação",
-  "Isolamento termoacústico não instalado conforme projeto",
-  "Barreira de vapor instalada de forma incorreta",
+  // Estrutura / perfis
+  "Montante fora de prumo",
+  "Guia fora de nível",
+  "Espaçamento entre montantes diferente do projeto",
   "Perfil com corte irregular ou sem tratamento de corte",
-  "Fixação de guia no piso/laje sem selante acústico",
-  "Montante desalinhado com abertura de vão",
-  "Revestimento externo com juntas sem fita de vedação",
+  "Parafuso ausente ou tipo incorreto na ligação",
   "Contravento ou travamento lateral ausente",
-  "Caixilho de janela/porta fora de nível",
-  "Instalação hidráulica ou elétrica sem passador de proteção no perfil",
-  "Radier sem nível adequado para assentamento da guia",
+  "Reforço de vão de porta/janela não executado",
+  "Perfil com amassado ou deformação estrutural",
+  "Sobreposição de guias sem parafusamento adequado",
+  // Fechamento / placas
+  "Placa de OSB fixada sem folga de dilatação",
+  "Placa de drywall fixada sem folga de dilatação",
+  "Juntas de placas sem fita e massa de acabamento",
   "Placa de fachada fixada sem espaçamento mínimo do solo",
-  "Tabica de forro mal executada",
+  "Placa externa com junta sem fita de vedação",
+  "Parafuso de fixação de placa afundado em excesso",
+  "Placa com dano ou umidade antes da instalação",
+  // Forro
   "Forro fora de nível",
+  "Tabica de forro mal executada",
+  "Pendural de forro fora de espaçamento",
+  "Forro sem travamento perimetral",
+  "Junta de dilatação de forro ausente",
+  // Isolamento / estanqueidade
+  "Lã de vidro ou rocha não instalada conforme projeto",
+  "Barreira de vapor instalada de forma incorreta",
+  "Manta impermeabilizante com emenda inadequada",
+  "Fixação de guia sem selante acústico no piso",
+  "Passagem de tubulação sem vedação na placa",
+  // Esquadrias / aberturas
+  "Caixilho de janela fora de nível ou prumo",
+  "Porta com folga excessiva no batente",
+  "Contramarco não fixado nos montantes de reforço",
+  "Peitoril sem caimento para drenagem",
+  // Instalações
+  "Tubulação hidráulica sem luva de proteção no perfil",
+  "Eletroduto sem bucha de proteção no perfil",
+  "Ponto elétrico desalinhado com projeto",
+  // Acabamento externo
+  "Revestimento de fachada com desalinhamento de junta",
+  "Rufo ou arremate metálico mal fixado",
+  "Calha sem caimento adequado",
+  "Pingadeira ausente em abertura",
 ];
 
 const inputStyle = {
