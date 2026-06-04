@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { ClipboardList, DollarSign, Pencil, Phone, Trash2 } from "../components/ui/Icon";
 import Certificacoes from "../components/equipe/Certificacoes";
 import { printHtml } from "../utils/printHtml";
@@ -50,12 +50,50 @@ const FORM_VAZIO = {
   nome: "", cargo: "", email: "", telefone: "",
   especialidade: "Montador", status: "Ativo", salario: "", observacoes: "",
   tipo_contrato: "CLT", valor_producao: "", unidade_producao: "m²",
+  foto_url: "",
 };
 
 function FormColaborador({ form, setForm, onSave, onCancel, btnLabel }) {
   const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
+  const [uploadingFoto, setUploadingFoto] = React.useState(false);
+
+  async function handleFotoUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploadingFoto(true);
+    try {
+      const { sb, getEmpresaId } = await import("../services/supabase");
+      const path = `${getEmpresaId()}/colaboradores/${Date.now()}-${file.name}`;
+      const { error } = await sb.storage.from("arquivos").upload(path, file, { upsert: true });
+      if (error) throw error;
+      const { data: { publicUrl } } = sb.storage.from("arquivos").getPublicUrl(path);
+      set("foto_url")(publicUrl);
+    } catch (err) {
+      console.warn("Erro ao fazer upload da foto:", err);
+    } finally {
+      setUploadingFoto(false);
+    }
+  }
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      {/* Foto do colaborador */}
+      <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+        <div style={{ width: 64, height: 64, borderRadius: "50%", background: form.foto_url ? "transparent" : C.red, overflow: "hidden", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          {form.foto_url
+            ? <img src={form.foto_url} alt="foto" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            : <span style={{ color: "#fff", fontSize: 24, fontWeight: 900 }}>{form.nome?.[0]?.toUpperCase() || "?"}</span>
+          }
+        </div>
+        <div>
+          <label style={{ display: "inline-block", padding: "7px 14px", borderRadius: 6, border: `1px solid ${C.border}`, fontSize: 12, fontWeight: 600, cursor: "pointer", color: C.muted }}>
+            {uploadingFoto ? "Enviando..." : "📷 Foto do colaborador"}
+            <input type="file" accept="image/*" style={{ display: "none" }} onChange={handleFotoUpload} disabled={uploadingFoto} />
+          </label>
+          {form.foto_url && <button onClick={() => set("foto_url")("")} style={{ marginLeft: 8, background: "none", border: "none", color: C.danger, fontSize: 11, cursor: "pointer" }}>Remover</button>}
+          <div style={{ fontSize: 10, color: C.muted, marginTop: 4 }}>Aparece no crachá de ponto</div>
+        </div>
+      </div>
       <div>
         <LabelField required>Nome</LabelField>
         <Input value={form.nome} onChange={set("nome")} placeholder="Nome completo" />
@@ -219,13 +257,17 @@ export default function Equipe() {
     const url = `${window.location.origin}/ponto/${c.token_ponto}`;
     const qr  = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}`;
     const inicial = c.nome[0].toUpperCase();
+    const avatarHtml = c.foto_url
+      ? `<img src="${c.foto_url}" class="avatar-foto"/>`
+      : `<div class="avatar">${inicial}</div>`;
     printHtml(`
       <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { display:flex; align-items:center; justify-content:center; min-height:100vh; background:#f5f5f7; font-family:Inter,Arial,sans-serif; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
         .card { width:240px; background:#fff; border-radius:16px; padding:28px 20px 20px; text-align:center; box-shadow:0 4px 20px rgba(0,0,0,.12); border-top:6px solid #981915; }
         .logo { height:32px; margin-bottom:16px; display:block; margin-left:auto; margin-right:auto; }
-        .avatar { width:60px; height:60px; border-radius:50%; background:#981915; color:#fff; font-size:24px; font-weight:900; line-height:60px; text-align:center; margin:0 auto 12px; display:block; }
+        .avatar { width:72px; height:72px; border-radius:50%; background:#981915; color:#fff; font-size:28px; font-weight:900; line-height:72px; text-align:center; margin:0 auto 12px; display:block; }
+        .avatar-foto { width:72px; height:72px; border-radius:50%; object-fit:cover; margin:0 auto 12px; display:block; border:3px solid #981915; }
         .nome { font-size:15px; font-weight:800; color:#1a1a1a; margin-bottom:4px; letter-spacing:.3px; }
         .cargo { font-size:11px; color:#6b7280; margin-bottom:16px; text-transform:uppercase; letter-spacing:.8px; }
         .qr { width:160px; height:160px; margin:0 auto 14px; display:block; border:1px solid #eee; border-radius:8px; padding:4px; }
@@ -234,7 +276,7 @@ export default function Equipe() {
       </style>
       <div class="card">
         <img src="${LOGO_STICKFRAME}" class="logo" onerror="this.style.display='none'"/>
-        <div class="avatar">${inicial}</div>
+        ${avatarHtml}
         <div class="nome">${c.nome}</div>
         <div class="cargo">${c.cargo || c.especialidade || "Colaborador"}</div>
         <img src="${qr}" class="qr"/>
@@ -253,6 +295,7 @@ export default function Equipe() {
       telefone: c.telefone || "", especialidade: c.especialidade || "Montador",
       status: c.status || "Ativo", salario: c.salario || "", observacoes: c.observacoes || "",
       tipo_contrato: c.tipo_contrato || "CLT", valor_producao: c.valor_producao || "", unidade_producao: c.unidade_producao || "m²",
+      foto_url: c.foto_url || "",
     });
     setModal("editar");
   }
