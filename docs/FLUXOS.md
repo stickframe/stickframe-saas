@@ -108,8 +108,11 @@ Financeiro
       ├─ Seletor mês/ano
       ├─ Importa pontos automáticos do período
       ├─ Calcula dias trabalhados + horas totais por colaborador
-      ├─ Cruza com salário base → valor a pagar proporcional
-      ├─ Marcar como pago (status por colaborador)
+      ├─ Cruza com salário base → valor a pagar por tipo de contrato
+      │   ├─ CLT → salário integral lançado na obra de maior presença
+      │   ├─ Horista → horas × valor/hora lançado na obra correspondente
+      │   └─ Empreiteiro → "Via medição" (não aplica ponto)
+      ├─ Marcar como pago → cria despesa "Mão de Obra" na obra automaticamente
       └─ Imprimir holerite individual
 ```
 
