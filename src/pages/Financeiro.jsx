@@ -12,6 +12,8 @@ import Btn from "../components/ui/Btn";
 import Input from "../components/ui/Input";
 import Select from "../components/ui/Select";
 import Modal from "../components/ui/Modal";
+import { ImportCSV } from "../components/ui/ImportCSV";
+import { sb, getEmpresaId } from "../services/supabase";
 
 // ─── Fluxo de Caixa Dinâmico ─────────────────────────────────────────────────
 function FluxoCaixa({ lancamentos }) {
@@ -280,6 +282,7 @@ export default function Financeiro() {
   const { toast, mostrarToast } = useToast();
   const [editOrc,     setEditOrc]     = useState(false); // editar orçamento por categoria
   const [orcForm,     setOrcForm]     = useState({});    // { [categoria]: valor }
+  const [showImportFinanceiro, setShowImportFinanceiro] = useState(false);
 
   function exportarRelatorio() {
     const o   = obras.find((x) => x.id === obraId);
@@ -453,6 +456,36 @@ export default function Financeiro() {
         </Modal>
       )}
 
+      {showImportFinanceiro && (
+        <ImportCSV
+          titulo="Lançamentos"
+          campos={[
+            { key: "descricao", label: "Descrição", required: true },
+            { key: "valor", label: "Valor", required: true, aliases: ["value", "amount"] },
+            { key: "tipo", label: "Tipo (receita/despesa)", aliases: ["type"] },
+            { key: "data", label: "Data", aliases: ["date", "vencimento"] },
+            { key: "categoria", label: "Categoria" },
+          ]}
+          onImportar={async (rows) => {
+            let ok = 0, erro = 0;
+            for (const row of rows) {
+              const valor = parseFloat(String(row.valor || "0").replace(/[^\d.,]/g, "").replace(",", ".")) || 0;
+              const { error } = await sb.from("financeiro").insert({
+                descricao: row.descricao,
+                valor,
+                tipo: row.tipo?.toLowerCase().includes("receita") ? "receita" : "despesa",
+                data: row.data || new Date().toISOString().split("T")[0],
+                categoria: row.categoria || "Outros",
+                empresa_id: getEmpresaId(),
+              });
+              if (error) erro++; else ok++;
+            }
+            return { ok, erro };
+          }}
+          onClose={() => setShowImportFinanceiro(false)}
+        />
+      )}
+
       <div>
         {/* Header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 22, flexWrap: "wrap", gap: 12 }}>
@@ -473,6 +506,12 @@ export default function Financeiro() {
               color: "#4a9eff", fontSize: 12, fontWeight: 700,
               cursor: "pointer", fontFamily: "inherit",
             }}>📄 Exportar PDF</button>
+            <button onClick={() => setShowImportFinanceiro(true)} style={{
+              padding: "8px 16px", background: "#8b5cf622",
+              border: "1px solid #8b5cf644", borderRadius: 8,
+              color: "#8b5cf6", fontSize: 12, fontWeight: 700,
+              cursor: "pointer", fontFamily: "inherit",
+            }}>⬆️ Importar CSV</button>
             <Btn
               onClick={() => abrirModal("receita")}
               style={{ background: C.success + "22", border: `1px solid ${C.success}44`, color: C.success }}

@@ -1891,6 +1891,12 @@ export default function GestaoObras() {
                   </div>
                 )}
 
+                {abaAtiva === "garantias" && (
+                  <div style={{ background: C.surface, borderRadius: "0 0 12px 12px", border: `1px solid ${C.border}`, borderTop: "none", padding: 22 }}>
+                    <Garantias obraId={obraId} />
+                  </div>
+                )}
+
                 {abaAtiva === "comentarios" && (
                   <div style={{ padding: "20px 0" }}>
                     <Comentarios entidade="obra" entidadeId={obraId} />
