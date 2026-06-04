@@ -781,7 +781,7 @@ export default function CRM() {
         {/* View Content */}
         <div>
           {view === "funnel" ? (
-            <div style={{ display: "flex", gap: 16, overflowX: "auto", paddingBottom: 16, minHeight: 600 }}>
+            <div style={{ display: "flex", gap: 12, overflowX: "auto", paddingBottom: 16 }}>
               {STATUS_OPTS.map(status => {
                 const clientesColuna = clientes.filter(c => c.status === status);
                 return (
@@ -800,7 +800,7 @@ export default function CRM() {
                       }
                     }}
                     style={{ 
-                      minWidth: 260, flex: 1, background: C.surface, borderRadius: 14, border: `1px solid ${C.border}`,
+                      width: 220, flexShrink: 0, background: C.surface, borderRadius: 14, border: `1px solid ${C.border}`,
                       display: "flex", flexDirection: "column"
                     }}
                   >
@@ -812,7 +812,7 @@ export default function CRM() {
                       <Badge label={clientesColuna.length.toString()} color={C.muted} />
                     </div>
                     
-                    <div style={{ padding: 12, display: "flex", flexDirection: "column", gap: 10, flex: 1, overflowY: "auto", maxHeight: "calc(100vh - 350px)" }}>
+                    <div style={{ padding: 12, display: "flex", flexDirection: "column", gap: 10, overflowY: "auto", minHeight: 120, maxHeight: "calc(100vh - 320px)" }}>
                       {clientesColuna.map(c => {
                         const atrasado = c.proximo_contato && c.proximo_contato <= hojeStr && status !== "Fechado" && status !== "Em execução";
                         return (
