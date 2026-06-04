@@ -330,7 +330,15 @@ const FORM_VAZIO = {
 };
 
 export default function CRM() {
-  useModuleLoad("clientes");
+  const loadClientes = useAppStore((s) => s.loadClientes);
+
+  // Always re-fetch on mount so deletions by other users are reflected
+  useEffect(() => {
+    useAppStore.setState((s) => ({ loaded: { ...s.loaded, clientes: false } }));
+    loadClientes();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const clientes       = useAppStore((s) => s.clientes);
   const addCliente     = useAppStore((s) => s.addCliente);
   const updateCliente  = useAppStore((s) => s.updateCliente);
