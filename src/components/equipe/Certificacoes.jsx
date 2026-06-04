@@ -34,7 +34,8 @@ const STATUS_CONFIG = {
 
 const FORM_VAZIO = {
   colaborador_id: "",
-  nr: "",
+  nrs: [],        // multi-select
+  nr: "",         // free-text override
   descricao: "",
   data_emissao: "",
   data_validade: "",
@@ -100,20 +101,30 @@ export default function Certificacoes({ colaboradorId = null }) {
   const vigentes  = certs.filter(c => c.status === "Vigente");
   const ordenados = [...vencidas, ...vencendo, ...vigentes];
 
+  function enrich(c) {
+    return { ...c, diasRestantes: Math.ceil((new Date(c.data_validade) - new Date()) / 86400000), status: calcStatus(c.data_validade) };
+  }
+
   async function salvar() {
-    if (!form.data_validade || !form.nr || !form.colaborador_id) return;
+    const nrList = form.nrs.length > 0 ? form.nrs : form.nr ? [form.nr] : [];
+    if (!form.data_validade || nrList.length === 0 || !form.colaborador_id) return;
     setSaving(true);
     try {
-      const payload = {
-        ...form,
-        carga_horaria: form.carga_horaria ? parseInt(form.carga_horaria, 10) : null,
+      const base = {
+        colaborador_id: form.colaborador_id,
+        descricao:      form.descricao,
+        data_emissao:   form.data_emissao || null,
+        data_validade:  form.data_validade,
+        instituicao:    form.instituicao,
+        carga_horaria:  form.carga_horaria ? parseInt(form.carga_horaria, 10) : null,
+        observacoes:    form.observacoes,
       };
       if (modal === "editar" && editId) {
-        const updated = await atualizarCertificacao(editId, payload);
-        setCerts(cs => cs.map(c => c.id === editId ? { ...updated, diasRestantes: Math.ceil((new Date(updated.data_validade) - new Date()) / 86400000), status: calcStatus(updated.data_validade) } : c));
+        const updated = await atualizarCertificacao(editId, { ...base, nr: nrList[0] });
+        setCerts(cs => cs.map(c => c.id === editId ? enrich(updated) : c));
       } else {
-        const created = await criarCertificacao(payload);
-        setCerts(cs => [...cs, { ...created, diasRestantes: Math.ceil((new Date(created.data_validade) - new Date()) / 86400000), status: calcStatus(created.data_validade) }]);
+        const created = await Promise.all(nrList.map(nr => criarCertificacao({ ...base, nr })));
+        setCerts(cs => [...cs, ...created.map(enrich)]);
       }
       setModal(null);
       setForm(FORM_VAZIO);
@@ -139,9 +150,11 @@ export default function Certificacoes({ colaboradorId = null }) {
 
   function abrirEditar(c) {
     setEditId(c.id);
+    const isPreset = NR_PRESETS.includes(c.nr);
     setForm({
       colaborador_id: c.colaborador_id || "",
-      nr: c.nr || "",
+      nrs: isPreset ? [c.nr] : [],
+      nr: isPreset ? "" : (c.nr || ""),
       descricao: c.descricao || "",
       data_emissao: c.data_emissao || "",
       data_validade: c.data_validade || "",
@@ -255,21 +268,35 @@ export default function Certificacoes({ colaboradorId = null }) {
               />
             </div>
 
-            {/* NR quick-select chips */}
+            {/* NR quick-select chips — multi-select */}
             <div>
               <LabelField required>NR / Certificação</LabelField>
+              <div style={{ fontSize: 11, color: C.muted, marginBottom: 6 }}>Selecione uma ou mais:</div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 8 }}>
-                {NR_PRESETS.map(nr => (
-                  <button key={nr} onClick={() => set("nr")(nr)} style={{
-                    padding: "4px 10px", borderRadius: 16, fontSize: 11, cursor: "pointer",
-                    fontFamily: "inherit", fontWeight: form.nr === nr ? 700 : 400,
-                    border: `1px solid ${form.nr === nr ? C.red : C.border}`,
-                    background: form.nr === nr ? C.red + "18" : "transparent",
-                    color: form.nr === nr ? C.red : C.muted,
-                  }}>{nr}</button>
-                ))}
+                {NR_PRESETS.map(nr => {
+                  const sel = form.nrs.includes(nr);
+                  return (
+                    <button key={nr} onClick={() => {
+                      set("nrs")(sel ? form.nrs.filter(x => x !== nr) : [...form.nrs, nr]);
+                      if (!sel) set("nr")(""); // clear free-text when chip selected
+                    }} style={{
+                      padding: "4px 10px", borderRadius: 16, fontSize: 11, cursor: "pointer",
+                      fontFamily: "inherit", fontWeight: sel ? 700 : 400,
+                      border: `1px solid ${sel ? C.red : C.border}`,
+                      background: sel ? C.red + "18" : "transparent",
+                      color: sel ? C.red : C.muted,
+                    }}>{nr}</button>
+                  );
+                })}
               </div>
-              <Input value={form.nr} onChange={set("nr")} placeholder="Ou digite livremente..." />
+              {form.nrs.length === 0 && (
+                <Input value={form.nr} onChange={v => { set("nr")(v); }} placeholder="Ou digite livremente..." />
+              )}
+              {form.nrs.length > 0 && (
+                <div style={{ fontSize: 11, color: C.muted }}>
+                  {form.nrs.length} selecionada(s) — será criada uma certificação para cada NR
+                </div>
+              )}
             </div>
 
             {/* Descrição */}
@@ -322,7 +349,7 @@ export default function Certificacoes({ colaboradorId = null }) {
 
             <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", paddingTop: 12, borderTop: `1px solid ${C.border}` }}>
               <Btn variant="ghost" onClick={() => { setModal(null); setForm(FORM_VAZIO); }}>Cancelar</Btn>
-              <Btn disabled={!form.nr || !form.data_validade || !form.colaborador_id || saving} onClick={salvar}>
+              <Btn disabled={(form.nrs.length === 0 && !form.nr) || !form.data_validade || !form.colaborador_id || saving} onClick={salvar}>
                 {saving ? "Salvando..." : modal === "editar" ? "Salvar alterações" : "Criar certificação"}
               </Btn>
             </div>
