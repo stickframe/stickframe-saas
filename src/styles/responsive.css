@@ -125,6 +125,27 @@
   }
 }
 
+/* ── Touch targets (mobile) ────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  /* Garante área de toque mínima de 44px em todos os botões */
+  .sf-btn, .btn, button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Exceção: botões muito pequenos dentro de tabelas/cards ficam menores */
+  table button, .compact-btn {
+    min-height: 32px;
+    min-width: unset;
+  }
+
+  /* Inputs também recebem altura mínima */
+  input, select, textarea {
+    min-height: 44px;
+    font-size: 16px !important; /* evita zoom automático do iOS */
+  }
+}
+
 /* ── Extra small (360px) ───────────────────────────────────────────────────── */
 @media (max-width: 360px) {
   .kpi-grid-6,
