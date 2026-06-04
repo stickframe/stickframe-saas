@@ -6,20 +6,21 @@ const COR_G = { Baixa: C.muted, Media: "#4a9eff", Alta: "#e67e22", Critica: C.da
 const COR_S = { Aberta: C.danger, "Em análise": C.warning, "Em correção": "#e67e22", Verificando: "#4a9eff", Fechada: C.success };
 const DISCIPLINAS = ["Civil", "Elétrico", "Hidráulico", "Estrutural", "Acabamento", "Outro"];
 const SUGESTOES_NCR = [
-  "Execução fora de esquadro",
-  "Revestimento com defeito ou trincado",
-  "Contrapiso com nível incorreto",
-  "Impermeabilização inadequada",
-  "Fixação de estrutura não conforme",
-  "Prumo de parede fora do tolerado",
-  "Instalação elétrica em desacordo com projeto",
-  "Tubulação hidráulica fora de posição",
-  "Argamassa fora de traço especificado",
-  "Concreto sem espaçador de cobrimento",
-  "Alinhamento de fachada irregular",
-  "Armadura exposta ou oxidada",
-  "Espessura de reboco fora do especificado",
-  "Material aplicado diferente do especificado",
+  "Montagem de perfil fora de prumo ou esquadro",
+  "Espaçamento entre perfis diferente do projeto",
+  "Parafuso ausente ou incorreto na ligação",
+  "Placa de OSB ou drywall fixada sem folga de dilatação",
+  "Isolamento termoacústico não instalado conforme projeto",
+  "Barreira de vapor instalada de forma incorreta",
+  "Perfil com corte irregular ou sem tratamento de corte",
+  "Fixação de guia no piso/laje sem selante acústico",
+  "Montante desalinhado com abertura de vão",
+  "Revestimento externo com juntas sem fita de vedação",
+  "Contravento ou travamento lateral ausente",
+  "Caixilho de janela/porta fora de nível",
+  "Instalação hidráulica ou elétrica sem passador de proteção no perfil",
+  "Fundação/radier sem nível para assentamento da guia",
+  "Placa cimentícia fixada sem espaçamento mínimo do solo",
 ];
 
 const inputStyle = {

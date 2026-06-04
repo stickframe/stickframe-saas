@@ -15,20 +15,21 @@ const COR_URGENCIA = {
 const DISCIPLINAS = ["Civil", "Elétrico", "Hidráulico", "Estrutural", "Acabamento", "Outro"];
 const URGENCIAS = ["Normal", "Alta", "Crítica"];
 const SUGESTOES_TITULO = [
-  "Definição de especificação de material",
-  "Esclarecimento de detalhe construtivo",
-  "Conflito entre projetos",
-  "Dimensionamento de elemento estrutural",
-  "Alteração de layout aprovado",
-  "Compatibilização elétrica e hidráulica",
-  "Cota divergente em projeto",
-  "Falta de detalhe no projeto executivo",
-  "Aprovação de material substituto",
-  "Interferência de tubulação",
-  "Definição de acabamento",
-  "Nível de piso divergente",
-  "Revisão de memória de cálculo",
-  "Pendência de aprovação de fornecedor",
+  "Esclarecimento de detalhe de ligação de perfil",
+  "Cota de vão divergente entre projeto e execução",
+  "Especificação de perfil não indicada no projeto",
+  "Definição de espessura da placa de fachada",
+  "Conflito entre projeto estrutural e instalações",
+  "Aprovação de material substituto para perfil",
+  "Detalhe de remate em cumeeira não definido",
+  "Definição de sistema de fixação de esquadria",
+  "Passagem de tubulação hidráulica sem detalhe",
+  "Travamento lateral de montante não especificado",
+  "Detalhe de transição steel frame e alvenaria",
+  "Carga de vento não considerada em projeto",
+  "Detalhe de impermeabilização de rodapé ausente",
+  "Definição de isolamento em área molhada",
+  "Ancoragem de guia em fundação não detalhada",
 ];
 
 function Badge({ label, cor }) {
