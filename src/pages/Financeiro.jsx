@@ -6,6 +6,8 @@ import { fmt, fmtPct } from "../utils/format";
 import { exportarFinanceiroExcel } from "../utils/exportExcel";
 import useAppStore from "../store/useAppStore";
 import { useModuleLoad } from "../hooks/useModuleLoad";
+import { DRE } from "../components/financeiro/DRE";
+import { FluxoCaixa as FluxoCaixaMensal } from "../components/financeiro/FluxoCaixa";
 import Btn from "../components/ui/Btn";
 import Input from "../components/ui/Input";
 import Select from "../components/ui/Select";
@@ -272,7 +274,7 @@ export default function Financeiro() {
   const updateObra    = useAppStore((s) => s.updateObra);
 
   const [obraId,      setObraId]      = useState(null);
-  const [finTab,      setFinTab]      = useState("lancamentos"); // "lancamentos" | "fluxo"
+  const [finTab,      setFinTab]      = useState("lancamentos"); // "lancamentos" | "fluxo" | "dre" | "fluxo-mensal"
   const [modal,       setModal]       = useState(null); // "receita" | "despesa"
   const [form,        setForm]        = useState(FORM_VAZIO);
   const { toast, mostrarToast } = useToast();
@@ -522,7 +524,7 @@ export default function Financeiro() {
 
         {/* Tabs */}
         <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
-          {[["lancamentos", "📊 Análise"], ["fluxo", "📅 Fluxo de Caixa"]].map(([k, label]) => (
+          {[["lancamentos", "📊 Análise"], ["fluxo", "📅 Fluxo de Caixa"], ["dre", "📊 DRE"], ["fluxo-mensal", "💸 Fluxo Mensal"]].map(([k, label]) => (
             <button key={k} onClick={() => setFinTab(k)} style={{
               padding: "7px 16px", borderRadius: 8, border: `1px solid ${finTab === k ? C.red : C.border}`,
               background: finTab === k ? C.red + "18" : "transparent",
@@ -532,7 +534,11 @@ export default function Financeiro() {
           ))}
         </div>
 
-        {finTab === "fluxo" ? (
+        {finTab === "dre" ? (
+          <DRE obraId={obraId} />
+        ) : finTab === "fluxo-mensal" ? (
+          <FluxoCaixaMensal obraId={obraId} />
+        ) : finTab === "fluxo" ? (
           <FluxoCaixa lancamentos={Object.values(financeiro).flatMap((f) => f.lancamentos || [])} />
         ) : (<>
 
