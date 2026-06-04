@@ -18,6 +18,7 @@ import Select from "../components/ui/Select";
 import Badge from "../components/ui/Badge";
 import Modal from "../components/ui/Modal";
 import { listarQuantitativos } from "../services/repositories/quantitativoRepository";
+import { gerarRelatorioObra } from "../services/relatorioService";
 
 const ICONE_TIPO  = { pdf: "📄", imagem: "🖼️", outro: "📎" };
 const CATS        = ["Projeto", "Foto", "Documento", "Outro"];
@@ -1076,7 +1077,13 @@ export default function GestaoObras() {
                           {obra.cliente || "Sem cliente"} · Prazo: {obra.prazo}
                         </div>
                       </div>
-                      <Badge label={obra.status} color={statusColor(obra.status)} />
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <button
+                          onClick={() => gerarRelatorioObra(obra, financeiro[obraId]?.lancamentos || [])}
+                          style={{ padding: "5px 12px", borderRadius: 7, border: "none", background: "#b41e1e", color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}
+                        >📄 PDF</button>
+                        <Badge label={obra.status} color={statusColor(obra.status)} />
+                      </div>
                     </div>
 
                     {/* Barra de progresso */}

@@ -1,5 +1,5 @@
 /* Grid helpers */
-.kpi-grid-6 { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-bottom: 22px; }
+.kpi-grid-6 { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 22px; }
 .kpi-grid-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 20px; }
 .kpi-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 26px; }
 .two-col    { display: grid; grid-template-columns: 1fr 1fr;         gap: 18px; }
@@ -13,7 +13,6 @@
 
 /* Tablet */
 @media (max-width: 1024px) {
-  .kpi-grid-6 { grid-template-columns: repeat(3, 1fr); }
   .three-col  { grid-template-columns: 1fr 1fr; }
 }
 
