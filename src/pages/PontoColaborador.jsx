@@ -12,8 +12,10 @@ export default function PontoColaborador() {
   const [enviando,  setEnviando]  = useState(false);
   const [resultado, setResultado] = useState(null);
   const [erro,      setErro]      = useState(null);
-  const [gpsStatus, setGpsStatus] = useState("idle"); // idle | obtendo | ok | negado
+  const [gpsStatus, setGpsStatus] = useState("idle");
   const [obraId,    setObraId]    = useState("");
+  // etapa: "obra" | "checkin"
+  const [etapa,     setEtapa]     = useState("obra");
 
   useEffect(() => {
     if (!token) { setErro("Token inválido."); setLoading(false); return; }
@@ -21,8 +23,14 @@ export default function PontoColaborador() {
       .then(({ data, error }) => {
         if (error || !data) { setErro("Colaborador não encontrado."); return; }
         setDados(data);
-        // Pré-seleciona a única obra se só tiver uma
-        if (data.obras?.length === 1) setObraId(data.obras[0].id);
+        if (!data.obras?.length) {
+          // sem obras alocadas: vai direto para checkin
+          setEtapa("checkin");
+        } else if (data.obras.length === 1) {
+          setObraId(data.obras[0].id);
+          setEtapa("checkin");
+        }
+        // múltiplas obras: fica em "obra" para selecionar
       })
       .catch(() => setErro("Erro ao carregar."))
       .finally(() => setLoading(false));
@@ -52,7 +60,10 @@ export default function PontoColaborador() {
     setResultado(data);
     setDados((prev) => ({
       ...prev,
-      pontos_hoje: [{ tipo: data.tipo, created_at: new Date().toISOString(), lat, lng, distancia_obra_m: data.distancia_m }, ...(prev?.pontos_hoje || [])],
+      pontos_hoje: [
+        { tipo: data.tipo, created_at: new Date().toISOString(), lat, lng, distancia_obra_m: data.distancia_m },
+        ...(prev?.pontos_hoje || []),
+      ],
     }));
     setEnviando(false);
   }
@@ -93,7 +104,6 @@ export default function PontoColaborador() {
   const salarioDiario = colaborador.salario ? colaborador.salario / 26 : null;
   const custoDia = salarioDiario && horas > 0 ? (salarioDiario / 8) * horas : 0;
   const obraSelecionada = (obras || []).find((o) => o.id === obraId);
-  const podeRegistrar = (obras || []).length === 0 || obraId;
 
   return (
     <div style={{ minHeight: "100vh", background: C.dark, fontFamily: "Inter, system-ui, sans-serif", paddingBottom: 40 }}>
@@ -120,109 +130,140 @@ export default function PontoColaborador() {
 
       <div style={{ maxWidth: 420, margin: "0 auto", padding: "20px 16px", display: "flex", flexDirection: "column", gap: 16 }}>
 
-        {/* Seletor de obra */}
-        {(obras || []).length > 0 && (
-          <div style={{ background: "#fff", borderRadius: 14, border: `1px solid ${C.border}`, overflow: "hidden" }}>
-            <div style={{ padding: "12px 16px", background: C.dark, borderBottom: `1px solid ${C.border}` }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: 1, textTransform: "uppercase" }}>🏗 Obra</div>
+        {/* ── ETAPA 1: selecionar obra ── */}
+        {etapa === "obra" && (obras || []).length > 1 && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <div style={{ textAlign: "center", padding: "8px 0 4px" }}>
+              <div style={{ fontSize: 28, marginBottom: 6 }}>🏗</div>
+              <div style={{ fontSize: 17, fontWeight: 800, color: C.text }}>Em qual obra você está?</div>
+              <div style={{ fontSize: 13, color: C.muted, marginTop: 4 }}>Selecione para registrar seu ponto</div>
             </div>
-            <div style={{ padding: "12px 16px" }}>
-              {obras.length === 1 ? (
-                <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>{obras[0].nome}</div>
-              ) : (
-                <select
-                  value={obraId}
-                  onChange={(e) => setObraId(e.target.value)}
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {obras.map((o) => (
+                <button
+                  key={o.id}
+                  onClick={() => { setObraId(o.id); setEtapa("checkin"); }}
                   style={{
-                    width: "100%", padding: "10px 12px", borderRadius: 10, border: `1.5px solid ${obraId ? C.red : C.border}`,
-                    fontSize: 14, fontWeight: 600, color: obraId ? C.text : C.muted,
-                    background: "#fff", fontFamily: "inherit", outline: "none", appearance: "none",
-                    backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7280' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E\")",
-                    backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center",
+                    width: "100%", padding: "16px 20px", borderRadius: 14,
+                    border: `2px solid ${C.border}`, background: "#fff",
+                    textAlign: "left", cursor: "pointer", fontFamily: "inherit",
+                    display: "flex", alignItems: "center", gap: 14,
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+                    transition: "border-color .15s, box-shadow .15s",
                   }}
+                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = C.red; e.currentTarget.style.boxShadow = "0 4px 16px rgba(152,25,21,0.12)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.06)"; }}
                 >
-                  <option value="">Selecione a obra...</option>
-                  {obras.map((o) => (
-                    <option key={o.id} value={o.id}>{o.nome}</option>
-                  ))}
-                </select>
-              )}
-              {!obraId && obras.length > 1 && (
-                <div style={{ marginTop: 6, fontSize: 11, color: C.red, fontWeight: 600 }}>⚠️ Selecione a obra para registrar o ponto</div>
-              )}
+                  <div style={{ width: 40, height: 40, borderRadius: 10, background: C.red + "15", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <span style={{ fontSize: 20 }}>🏢</span>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{o.nome}</div>
+                    {o.status && <div style={{ fontSize: 11, color: C.muted, marginTop: 2, textTransform: "uppercase", letterSpacing: .6 }}>{o.status}</div>}
+                  </div>
+                  <div style={{ marginLeft: "auto", color: C.muted, fontSize: 18 }}>›</div>
+                </button>
+              ))}
             </div>
           </div>
         )}
 
-        {/* Resultado flash */}
-        {resultado && (
-          <div style={{ background: resultado.tipo === "entrada" ? "#f0fdf4" : "#fef9ec", border: `1px solid ${resultado.tipo === "entrada" ? "#86efac" : "#fde68a"}`, borderRadius: 14, padding: "18px 20px", textAlign: "center" }}>
-            <div style={{ fontSize: 40, marginBottom: 8 }}>{resultado.tipo === "entrada" ? "✅" : "👋"}</div>
-            <div style={{ fontSize: 20, fontWeight: 900, color: resultado.tipo === "entrada" ? C.success : "#92400e" }}>
-              {resultado.tipo === "entrada" ? "Entrada registrada!" : "Saída registrada!"}
-            </div>
-            <div style={{ fontSize: 16, color: C.muted, marginTop: 4 }}>{resultado.hora}</div>
-            {obraSelecionada && (
-              <div style={{ marginTop: 8, fontSize: 13, color: C.muted }}>🏗 {obraSelecionada.nome}</div>
-            )}
-            {resultado.distancia_m != null && (
-              <div style={{ marginTop: 10, padding: "8px 12px", borderRadius: 8, background: resultado.fora_da_obra ? "#fef2f2" : "#f0fdf4", border: `1px solid ${resultado.fora_da_obra ? "#fca5a5" : "#86efac"}` }}>
-                <span style={{ fontSize: 13, fontWeight: 700, color: resultado.fora_da_obra ? C.red : C.success }}>
-                  {resultado.fora_da_obra ? "⚠️" : "📍"} {resultado.distancia_m}m da obra
-                  {resultado.fora_da_obra && " — fora do perímetro"}
-                </span>
+        {/* ── ETAPA 2: check-in ── */}
+        {etapa === "checkin" && (
+          <>
+            {/* Obra selecionada (se houver) — com botão voltar */}
+            {obraSelecionada && (obras || []).length > 1 && (
+              <div style={{ display: "flex", alignItems: "center", gap: 12, background: "#fff", borderRadius: 14, border: `1px solid ${C.border}`, padding: "12px 16px" }}>
+                <span style={{ fontSize: 22 }}>🏗</span>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 11, color: C.muted, fontWeight: 700, textTransform: "uppercase", letterSpacing: .8 }}>Obra selecionada</div>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: C.text, marginTop: 2 }}>{obraSelecionada.nome}</div>
+                </div>
+                <button
+                  onClick={() => { setObraId(""); setEtapa("obra"); setResultado(null); }}
+                  style={{ background: "none", border: "none", cursor: "pointer", fontSize: 12, color: C.muted, fontFamily: "inherit", padding: "4px 8px", borderRadius: 6, background: C.dark }}
+                >
+                  Trocar
+                </button>
               </div>
             )}
-            {gpsStatus === "negado" && (
-              <div style={{ marginTop: 8, fontSize: 11, color: C.muted }}>📵 GPS não disponível — localização não verificada</div>
-            )}
-          </div>
-        )}
 
-        {/* Botão principal */}
-        <button onClick={registrar} disabled={enviando || !podeRegistrar} style={{
-          width: "100%", padding: "18px", borderRadius: 14, border: "none",
-          background: !podeRegistrar ? "#e5e7eb" : enviando ? "#ccc" : proximoTipo === "entrada" ? C.success : C.red,
-          color: !podeRegistrar ? C.muted : "#fff", fontSize: 18, fontWeight: 800,
-          cursor: !podeRegistrar || enviando ? "not-allowed" : "pointer",
-          fontFamily: "inherit", boxShadow: podeRegistrar ? "0 4px 16px rgba(0,0,0,0.12)" : "none",
-          transition: "background .2s",
-        }}>
-          {!podeRegistrar
-            ? "Selecione a obra primeiro"
-            : enviando && gpsStatus === "obtendo"
-            ? "📡 Obtendo GPS..."
-            : enviando
-            ? "Registrando..."
-            : proximoTipo === "entrada"
-            ? "▶ Registrar Entrada"
-            : "⏹ Registrar Saída"}
-        </button>
-
-        {/* Resumo do dia */}
-        {(pontos_hoje || []).length > 0 && (
-          <div style={{ background: "#fff", borderRadius: 14, border: `1px solid ${C.border}`, overflow: "hidden" }}>
-            <div style={{ padding: "14px 16px", borderBottom: `1px solid ${C.border}`, background: C.dark, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div style={{ fontSize: 13, fontWeight: 700 }}>Registros de hoje</div>
-              {horas > 0 && (
-                <div style={{ textAlign: "right" }}>
-                  <div style={{ fontSize: 14, fontWeight: 900, color: C.success }}>{horas.toFixed(1)}h</div>
-                  {custoDia > 0 && <div style={{ fontSize: 11, color: C.muted }}>≈ R$ {custoDia.toFixed(2)}</div>}
+            {/* Obra única exibida como info */}
+            {obraSelecionada && (obras || []).length === 1 && (
+              <div style={{ display: "flex", alignItems: "center", gap: 12, background: "#fff", borderRadius: 14, border: `1px solid ${C.border}`, padding: "12px 16px" }}>
+                <span style={{ fontSize: 22 }}>🏗</span>
+                <div>
+                  <div style={{ fontSize: 11, color: C.muted, fontWeight: 700, textTransform: "uppercase", letterSpacing: .8 }}>Obra</div>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: C.text, marginTop: 2 }}>{obraSelecionada.nome}</div>
                 </div>
-              )}
-            </div>
-            {(pontos_hoje || []).map((p, i) => (
-              <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 16px", borderBottom: i < pontos_hoje.length - 1 ? `1px solid ${C.border}` : "none" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <span style={{ fontSize: 18 }}>{p.tipo === "entrada" ? "▶" : "⏹"}</span>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: p.tipo === "entrada" ? C.success : C.red, textTransform: "capitalize" }}>{p.tipo}</span>
-                </div>
-                <span style={{ fontSize: 14, fontWeight: 700, color: C.muted }}>
-                  {new Date(p.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
-                </span>
               </div>
-            ))}
-          </div>
+            )}
+
+            {/* Resultado flash */}
+            {resultado && (
+              <div style={{ background: resultado.tipo === "entrada" ? "#f0fdf4" : "#fef9ec", border: `1px solid ${resultado.tipo === "entrada" ? "#86efac" : "#fde68a"}`, borderRadius: 14, padding: "18px 20px", textAlign: "center" }}>
+                <div style={{ fontSize: 40, marginBottom: 8 }}>{resultado.tipo === "entrada" ? "✅" : "👋"}</div>
+                <div style={{ fontSize: 20, fontWeight: 900, color: resultado.tipo === "entrada" ? C.success : "#92400e" }}>
+                  {resultado.tipo === "entrada" ? "Entrada registrada!" : "Saída registrada!"}
+                </div>
+                <div style={{ fontSize: 16, color: C.muted, marginTop: 4 }}>{resultado.hora}</div>
+                {resultado.distancia_m != null && (
+                  <div style={{ marginTop: 10, padding: "8px 12px", borderRadius: 8, background: resultado.fora_da_obra ? "#fef2f2" : "#f0fdf4", border: `1px solid ${resultado.fora_da_obra ? "#fca5a5" : "#86efac"}` }}>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: resultado.fora_da_obra ? C.red : C.success }}>
+                      {resultado.fora_da_obra ? "⚠️" : "📍"} {resultado.distancia_m}m da obra
+                      {resultado.fora_da_obra && " — fora do perímetro"}
+                    </span>
+                  </div>
+                )}
+                {gpsStatus === "negado" && (
+                  <div style={{ marginTop: 8, fontSize: 11, color: C.muted }}>📵 GPS não disponível — localização não verificada</div>
+                )}
+              </div>
+            )}
+
+            {/* Botão principal */}
+            <button onClick={registrar} disabled={enviando} style={{
+              width: "100%", padding: "20px", borderRadius: 14, border: "none",
+              background: enviando ? "#ccc" : proximoTipo === "entrada" ? C.success : C.red,
+              color: "#fff", fontSize: 19, fontWeight: 800, cursor: enviando ? "wait" : "pointer",
+              fontFamily: "inherit", boxShadow: "0 4px 16px rgba(0,0,0,0.12)",
+            }}>
+              {enviando && gpsStatus === "obtendo"
+                ? "📡 Obtendo GPS..."
+                : enviando
+                ? "Registrando..."
+                : proximoTipo === "entrada"
+                ? "▶ Registrar Entrada"
+                : "⏹ Registrar Saída"}
+            </button>
+
+            {/* Registros do dia */}
+            {(pontos_hoje || []).length > 0 && (
+              <div style={{ background: "#fff", borderRadius: 14, border: `1px solid ${C.border}`, overflow: "hidden" }}>
+                <div style={{ padding: "14px 16px", borderBottom: `1px solid ${C.border}`, background: C.dark, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div style={{ fontSize: 13, fontWeight: 700 }}>Registros de hoje</div>
+                  {horas > 0 && (
+                    <div style={{ textAlign: "right" }}>
+                      <div style={{ fontSize: 14, fontWeight: 900, color: C.success }}>{horas.toFixed(1)}h</div>
+                      {custoDia > 0 && <div style={{ fontSize: 11, color: C.muted }}>≈ R$ {custoDia.toFixed(2)}</div>}
+                    </div>
+                  )}
+                </div>
+                {(pontos_hoje || []).map((p, i) => (
+                  <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 16px", borderBottom: i < pontos_hoje.length - 1 ? `1px solid ${C.border}` : "none" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <span style={{ fontSize: 18 }}>{p.tipo === "entrada" ? "▶" : "⏹"}</span>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: p.tipo === "entrada" ? C.success : C.red, textTransform: "capitalize" }}>{p.tipo}</span>
+                    </div>
+                    <span style={{ fontSize: 14, fontWeight: 700, color: C.muted }}>
+                      {new Date(p.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
         )}
 
         <div style={{ textAlign: "center", fontSize: 11, color: C.muted, letterSpacing: 1, textTransform: "uppercase" }}>
