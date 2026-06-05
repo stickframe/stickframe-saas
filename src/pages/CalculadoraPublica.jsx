@@ -29,9 +29,9 @@ const INSUMOS_KIT = [
   { categoria: "Acabamentos",           nome: "Forro drywall ST",                   un: "m²",  base: 0.90,  preco: 42.00 },
   { categoria: "Projetos e Engenharia", nome: "Proj. Arquitetônico + Estrutural",   un: "m²",  base: 1.00,  preco: 46.00 },
   { categoria: "Projetos e Engenharia", nome: "Proj. Elétrico + Hidrossanitário",   un: "m²",  base: 1.00,  preco: 14.00 },
-  { categoria: "Mão de Obra",           nome: "Montagem estrutura LSF",             un: "m²",  base: 1.00,  preco: 85.00 },
-  { categoria: "Mão de Obra",           nome: "Instalação vedações",                un: "m²",  base: 1.00,  preco: 45.00 },
-  { categoria: "Mão de Obra",           nome: "Cobertura + acabamentos",            un: "m²",  base: 1.00,  preco: 110.0 },
+  { categoria: "Mão de Obra",           nome: "Montagem estrutura LSF",             un: "m²",  base: 1.00,  preco: 400.00 },
+  { categoria: "Mão de Obra",           nome: "Instalação vedações",                un: "m²",  base: 1.00,  preco: 200.00 },
+  { categoria: "Mão de Obra",           nome: "Cobertura + acabamentos",            un: "m²",  base: 1.00,  preco: 300.00 },
 ];
 
 const CATS_ORDEM_KIT = [
