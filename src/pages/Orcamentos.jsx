@@ -1099,55 +1099,79 @@ export default function Orcamentos() {
                 <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>Leads da calculadora aguardando sua análise</div>
               </div>
             </div>
-            {preOrcamentos.map((p) => (
-              <div key={p.id} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 8, padding: "12px 16px", marginBottom: 8, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 700 }}>{p.nome}</div>
-                  <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>
-                    {p.area}m² · {p.padrao} · {p.pavimentos} · {p.cidade || "—"}
+            {preOrcamentos.map((p) => {
+              const kitId = p.origem?.startsWith("Kit-") ? p.origem.replace("Kit-", "") : null;
+              const KIT_NOMES = { studio: "Studio Compact 42m²", vila: "Vila 78m²", casa120: "Casa Serena 120m²", sobrado160: "Sobrado Vivo 160m²", alto200: "Residência Alto 200m²", vigo273: "Casa Vigo 273m²" };
+              const kitNome = kitId ? KIT_NOMES[kitId] : null;
+              return (
+              <div key={p.id} style={{ background: C.surface, border: `1px solid ${kitId ? "#981915" : C.border}`, borderRadius: 8, padding: "12px 16px", marginBottom: 8 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
+                      <span style={{ fontSize: 13, fontWeight: 700 }}>{p.nome}</span>
+                      {kitNome && (
+                        <span style={{ fontSize: 10, fontWeight: 800, background: "#98191518", color: "#981915", borderRadius: 4, padding: "2px 7px", border: "1px solid #98191533" }}>
+                          🏠 Kit: {kitNome}
+                        </span>
+                      )}
+                    </div>
+                    <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>
+                      {p.area}m² · {p.padrao} · {p.pavimentos || "—"} · {p.cidade || "—"}
+                    </div>
+                    <div style={{ fontSize: 11, color: "#2e9e5b", marginTop: 2, fontWeight: 700 }}>
+                      R$ {Number(p.valor_min).toLocaleString("pt-BR")} – R$ {Number(p.valor_max).toLocaleString("pt-BR")}
+                    </div>
+                    <div style={{ fontSize: 10, color: C.muted, marginTop: 2 }}>
+                      {new Date(p.created_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })} · {p.contato}
+                    </div>
                   </div>
-                  <div style={{ fontSize: 11, color: "#2e9e5b", marginTop: 2, fontWeight: 700 }}>
-                    R$ {Number(p.valor_min).toLocaleString("pt-BR")} – R$ {Number(p.valor_max).toLocaleString("pt-BR")}
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6, flexShrink: 0 }}>
+                    {kitId && (
+                      <button onClick={() => {
+                        localStorage.setItem("sf_kit_lead", JSON.stringify({ kitId, padrao: p.padrao }));
+                        setActivePage("calculadora");
+                      }} style={{ background: "#98191518", border: "1px solid #98191544", borderRadius: 6, color: "#981915", fontSize: 11, fontWeight: 700, padding: "6px 12px", cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap" }}>
+                        🔧 Simular na Calculadora
+                      </button>
+                    )}
+                    <button onClick={() => {
+                      let clienteId = p.cliente_id;
+                      if (!clienteId) {
+                        const existing = clientes.find((c) => c.contato === p.contato || c.nome === p.nome);
+                        clienteId = existing?.id || clientes[0]?.id || "";
+                      }
+                      setForm({
+                        ...FORM_VAZIO,
+                        cliente_id: clienteId,
+                        area: p.area_m2 || p.area || 48,
+                        padrao: p.padrao || "Padrão",
+                        unidades: 1,
+                      });
+                      setPreOrcAtivo(p.id);
+                      setModal("novo");
+                    }} style={{ background: "#2e9e5b22", border: "1px solid #2e9e5b44", borderRadius: 6, color: "#2e9e5b", fontSize: 11, fontWeight: 700, padding: "6px 12px", cursor: "pointer", fontFamily: "inherit" }}>
+                      ✓ Criar Orçamento
+                    </button>
+                    <div style={{ display: "flex", gap: 6 }}>
+                      <button onClick={async () => {
+                        await sb.from("pre_orcamentos").update({ status: "Analisado" }).eq("id", p.id);
+                        setPreOrcamentos((prev) => prev.filter((x) => x.id !== p.id));
+                      }} style={{ background: "#99999918", border: "1px solid #99999933", borderRadius: 6, color: "#999", fontSize: 11, fontWeight: 700, padding: "5px 10px", cursor: "pointer", fontFamily: "inherit", flex: 1 }}>
+                        ✕ Dispensar
+                      </button>
+                      <button onClick={() => {
+                        const num = (p.contato || "").replace(/\D/g, "");
+                        const msg = `Olá ${p.nome}! 👋\n\nRecebi sua simulação de Steel Frame${kitNome ? ` — ${kitNome}` : ` (${p.area}m² · ${p.padrao})`}.\n\nVou preparar uma proposta detalhada para você. Posso entrar em contato agora?\n\nStick Frame · Santo André/SP`;
+                        window.open(`https://wa.me/${num.startsWith("55") ? num : "55" + num}?text=${encodeURIComponent(msg)}`, "_blank");
+                      }} style={{ background: "#25D36622", border: "1px solid #25D36644", borderRadius: 6, color: "#25D366", fontSize: 11, fontWeight: 700, padding: "5px 10px", cursor: "pointer", fontFamily: "inherit", flex: 1 }}>
+                        <Smartphone size={13} />
+                      </button>
+                    </div>
                   </div>
-                  <div style={{ fontSize: 10, color: C.muted, marginTop: 2 }}>
-                    {new Date(p.created_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })} · {p.contato}
-                  </div>
-                </div>
-                <div style={{ display: "flex", gap: 8 }}>
-                  <button onClick={() => {
-                    let clienteId = p.cliente_id;
-                    if (!clienteId) {
-                      const existing = clientes.find((c) => c.contato === p.contato || c.nome === p.nome);
-                      clienteId = existing?.id || clientes[0]?.id || "";
-                    }
-                    setForm({
-                      ...FORM_VAZIO,
-                      cliente_id: clienteId,
-                      area: p.area_m2 || p.area || 48,
-                      padrao: p.padrao || "Padrão",
-                      unidades: 1,
-                    });
-                    setPreOrcAtivo(p.id);
-                    setModal("novo");
-                  }} style={{ background: "#2e9e5b22", border: "1px solid #2e9e5b44", borderRadius: 6, color: "#2e9e5b", fontSize: 11, fontWeight: 700, padding: "6px 12px", cursor: "pointer", fontFamily: "inherit" }}>
-                    ✓ Criar Orçamento
-                  </button>
-                  <button onClick={async () => {
-                    await sb.from("pre_orcamentos").update({ status: "Analisado" }).eq("id", p.id);
-                    setPreOrcamentos((prev) => prev.filter((x) => x.id !== p.id));
-                  }} style={{ background: "#99999918", border: "1px solid #99999933", borderRadius: 6, color: "#999", fontSize: 11, fontWeight: 700, padding: "6px 12px", cursor: "pointer", fontFamily: "inherit" }}>
-                    ✕ Dispensar
-                  </button>
-                  <button onClick={() => {
-                    const num = (p.contato || "").replace(/\D/g, "");
-                    const msg = `Olá ${p.nome}! 👋\n\nRecebi sua simulação de Steel Frame (${p.area}m² · ${p.padrao}).\n\nVou preparar uma proposta detalhada para você. Posso entrar em contato agora?\n\nStick Frame · Santo André/SP`;
-                    window.open(`https://wa.me/${num.startsWith("55") ? num : "55" + num}?text=${encodeURIComponent(msg)}`, "_blank");
-                  }} style={{ background: "#25D36622", border: "1px solid #25D36644", borderRadius: 6, color: "#25D366", fontSize: 11, fontWeight: 700, padding: "6px 12px", cursor: "pointer", fontFamily: "inherit" }}>
-                    <Smartphone size={13} /> WhatsApp
-                  </button>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
 

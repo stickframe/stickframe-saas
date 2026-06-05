@@ -572,6 +572,22 @@ function CalcKits({ onEnviarOrcamento }) {
     Object.fromEntries(CATS_ORDEM.map(c => [c, true]))
   );
 
+  // Pré-seleciona kit vindo do lead (Orcamentos.jsx seta sf_kit_lead)
+  useEffect(() => {
+    try {
+      const salvo = JSON.parse(localStorage.getItem("sf_kit_lead") || "null");
+      if (!salvo) return;
+      localStorage.removeItem("sf_kit_lead");
+      const kit = KITS.find(k => k.id === salvo.kitId);
+      if (kit) {
+        const k = salvo.padrao ? { ...kit, padrao: salvo.padrao } : kit;
+        calcularKit(k);
+        setTimeout(() => document.getElementById("kit-result-scroll")?.scrollIntoView({ behavior: "smooth" }), 200);
+      }
+    } catch (_) {}
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   function toggleCat(cat) {
     setCatsAtivas(prev => ({ ...prev, [cat]: !prev[cat] }));
   }
@@ -669,7 +685,7 @@ function CalcKits({ onEnviarOrcamento }) {
           .filter(i => i.categoria !== "Mão de Obra")
           .reduce((s, i) => s + i.total, 0);
         return (
-        <div style={{ animation: "fadeUp .4s ease" }}>
+        <div id="kit-result-scroll" style={{ animation: "fadeUp .4s ease" }}>
           <div style={{
             background: "linear-gradient(135deg,#1a0a0a,#981915)",
             borderRadius: 20, padding: "28px 32px", marginBottom: 16, color: "#fff",
@@ -773,7 +789,9 @@ function CalcKits({ onEnviarOrcamento }) {
 
 export default function Calculadora() {
   const setActivePage = useAppStore((s) => s.setActivePage);
-  const [modo, setModo] = useState("steelframe");
+  const [modo, setModo] = useState(() =>
+    localStorage.getItem("sf_kit_lead") ? "kits" : "steelframe"
+  );
 
   const [area,      setArea]      = useState("");
   const [pavs,      setPavs]      = useState(1);
