@@ -82,8 +82,9 @@ export default function Suprimentos() {
   }
   function abrirEditPed(p) { setPedEdit(p.id); setPedForm({ ...p, obra_id: p.obra_id || "", valor_unitario: p.valor_unitario || "" }); setPedModal(true); }
   async function salvarPed() {
+    const { obra, ...rest } = pedForm;
     const payload = {
-      ...pedForm,
+      ...rest,
       obra_id: pedForm.obra_id || null,
       data_entrega: pedForm.data_entrega || null,
       quantidade: Number(pedForm.quantidade),
