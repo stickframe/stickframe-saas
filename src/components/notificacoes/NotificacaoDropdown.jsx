@@ -44,6 +44,23 @@ function useMsgsPendentes() {
   return msgs;
 }
 
+function useOrcamentosAceitos() {
+  const [aceitos, setAceitos] = useState([]);
+  useEffect(() => {
+    const empId = getEmpresaId();
+    if (!empId) return;
+    const em7d = new Date(Date.now() - 7 * 86400000).toISOString();
+    sb.from("orcamentos").select("id, cliente, ref, aceite_nome, aceite_data").eq("empresa_id", empId).eq("status", "Aprovado").gte("aceite_data", em7d).order("aceite_data", { ascending: false })
+      .then(({ data }) => setAceitos(data || []));
+    const ch = sb.channel("orcamentos-aceite-notif")
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "orcamentos", filter: `empresa_id=eq.${empId}` },
+        () => sb.from("orcamentos").select("id, cliente, ref, aceite_nome, aceite_data").eq("empresa_id", empId).eq("status", "Aprovado").gte("aceite_data", em7d).order("aceite_data", { ascending: false }).then(({ data }) => setAceitos(data || [])))
+      .subscribe();
+    return () => ch.unsubscribe();
+  }, []);
+  return aceitos;
+}
+
 function useAlertas() {
   const obras           = useAppStore((s) => s.obras);
   const orcamentos      = useAppStore((s) => s.orcamentos);
@@ -53,6 +70,7 @@ function useAlertas() {
   const clientes        = useAppStore((s) => s.clientes);
   const preOrcs         = usePreOrcamentos();
   const msgsPendentes   = useMsgsPendentes();
+  const orcAceitos      = useOrcamentosAceitos();
 
   return useMemo(() => {
     const alertas = [];
@@ -133,6 +151,16 @@ function useAlertas() {
       });
     });
 
+    // 7b. Propostas aceitas pelo cliente (últimos 7 dias)
+    orcAceitos.forEach((o) => {
+      const quando = o.aceite_data ? new Date(o.aceite_data).toLocaleDateString("pt-BR") : "—";
+      alertas.push({
+        categoria: "orcamento", tipo: "sucesso", cor: "#2e9e5b", icon: "🎉",
+        titulo: "Proposta aceita!",
+        texto: `${o.cliente} assinou a proposta ${o.ref || ""} em ${quando}`,
+      });
+    });
+
     // 8. Mensagens do portal não lidas
     msgsPendentes.forEach((m) => {
       const obra = obras.find((o) => o.id === m.obra_id);
@@ -144,7 +172,7 @@ function useAlertas() {
     });
 
     return alertas;
-  }, [obras, orcamentos, medicoes, vistorias, bimApontamentos, clientes, preOrcs, msgsPendentes]);
+  }, [obras, orcamentos, medicoes, vistorias, bimApontamentos, clientes, preOrcs, msgsPendentes, orcAceitos]);
 }
 
 function useAlertasOperacionais() {

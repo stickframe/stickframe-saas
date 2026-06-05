@@ -13,6 +13,7 @@ export default function PropostaOnline() {
   const { token } = useParams();
   const [orc,     setOrc]     = useState(null);
   const [cliente, setCliente] = useState(null);
+  const [empresa, setEmpresa] = useState(null);
   const [loading, setLoading] = useState(true);
   const [aceite,  setAceite]  = useState({ nome: "", aceito: false });
   const [enviando,setEnviando]= useState(false);
@@ -53,7 +54,7 @@ export default function PropostaOnline() {
     (async () => {
       try {
         const { data } = await sb.rpc("get_proposta_data", { p_token: token });
-        if (data) { setOrc(data.orcamento); setCliente(data.cliente); }
+        if (data) { setOrc(data.orcamento); setCliente(data.cliente); setEmpresa(data.empresa); }
       } finally { setLoading(false); }
     })();
   }, [token]);
@@ -317,7 +318,7 @@ export default function PropostaOnline() {
         <div style={{ background: "#1A1A1A", borderRadius: 14, padding: "20px", textAlign: "center", marginBottom: 12 }}>
           <div style={{ fontSize: 11, color: "#555", letterSpacing: 1, marginBottom: 8 }}>DÚVIDAS SOBRE A PROPOSTA?</div>
           <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", marginBottom: 14 }}>Fale com nossa equipe</div>
-          <a href="https://wa.me/5511940000000" target="_blank" rel="noreferrer"
+          <a href={`https://wa.me/${(empresa?.telefone || "").replace(/\D/g, "") || "5511940000000"}`} target="_blank" rel="noreferrer"
             style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#25D366", color: "#fff", borderRadius: 8, padding: "10px 24px", fontSize: 13, fontWeight: 700, textDecoration: "none" }}>
             💬 WhatsApp
           </a>
