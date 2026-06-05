@@ -162,26 +162,49 @@ function CalcParedeDrywall() {
       </div>
 
       {result && (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))", gap: 16, marginBottom: 24 }}>
-          {[
-            { label: "Placas Drywall", qtd: `${result.placas} chp`, sub: `${TIPOS[tipo].label} · ${result.area.toFixed(1)} m²`, val: result.totalPlacas },
-            { label: "Montantes (C 90)", qtd: `${result.montantes} pç`, sub: `espaç. ${esp}mm`, val: result.totalMont },
-            { label: "Guias (U 92)", qtd: `${result.guias} m`, sub: "superior + inferior", val: result.totalGuia },
-            { label: "Parafusos TEX", qtd: `${result.cxPar} cx`, sub: `${result.parafusos} pçs (~15/m²)`, val: result.totalPar },
-            { label: "Massa para Juntas", qtd: `${Math.ceil(result.massa)} saco`, sub: `${(result.massa).toFixed(1)} × 15kg`, val: result.totalMassa },
-            { label: "Fita para Juntas", qtd: `${result.fita} m`, sub: `~1,2 m/m² de placa`, val: result.totalFita },
-          ].map(({ label, qtd, sub, val }) => (
-            <div key={label} style={{ background: "#fff", borderRadius: 12, border: `1px solid ${C.border}`, padding: "16px 18px" }}>
-              <div style={{ fontSize: 11, color: C.muted, fontWeight: 700, letterSpacing: 1, marginBottom: 6 }}>{label.toUpperCase()}</div>
-              <div style={{ fontSize: 22, fontWeight: 800, color: C.text }}>{qtd}</div>
-              <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{sub}</div>
-              <div style={{ fontSize: 13, color: C.success, fontWeight: 700, marginTop: 6 }}>{fmtR(val)}</div>
+        <div style={{ animation: "fadeUp .35s ease" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+            <div style={{ height: 3, flex: 1, background: "linear-gradient(90deg,#981915,transparent)", borderRadius: 2 }} />
+            <span style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: 1, textTransform: "uppercase" }}>Resultado</span>
+            <div style={{ height: 3, flex: 1, background: "linear-gradient(270deg,#981915,transparent)", borderRadius: 2 }} />
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(190px,1fr))", gap: 12, marginBottom: 16 }}>
+            {[
+              { icon: "⬜", label: "Placas Drywall",    qtd: `${result.placas} chp`,    sub: `${TIPOS[tipo].label} · ${result.area.toFixed(1)} m²`, val: result.totalPlacas },
+              { icon: "⠿",  label: "Montantes (C 90)",  qtd: `${result.montantes} pç`,  sub: `espaç. ${esp}mm`,                                      val: result.totalMont },
+              { icon: "—",  label: "Guias (U 92)",       qtd: `${result.guias} m`,       sub: "superior + inferior",                                  val: result.totalGuia },
+              { icon: "⬡",  label: "Parafusos TEX",     qtd: `${result.cxPar} cx`,      sub: `${result.parafusos} pçs (~15/m²)`,                     val: result.totalPar },
+              { icon: "◎",  label: "Massa p/ Juntas",   qtd: `${Math.ceil(result.massa)} saco`, sub: `${(result.massa).toFixed(1)} × 15kg`,          val: result.totalMassa },
+              { icon: "〜", label: "Fita p/ Juntas",    qtd: `${result.fita} m`,         sub: `~1,2 m/m² de placa`,                                  val: result.totalFita },
+            ].map(({ icon, label, qtd, sub, val }) => (
+              <div key={label} style={{
+                background: "#fff", borderRadius: 14, border: `1px solid ${C.border}`,
+                padding: "16px 18px", transition: "transform .15s, box-shadow .15s",
+                boxShadow: "0 2px 8px rgba(0,0,0,.04)",
+              }}
+                onMouseEnter={e => { e.currentTarget.style.transform="translateY(-2px)"; e.currentTarget.style.boxShadow="0 6px 20px rgba(0,0,0,.1)"; }}
+                onMouseLeave={e => { e.currentTarget.style.transform="none"; e.currentTarget.style.boxShadow="0 2px 8px rgba(0,0,0,.04)"; }}
+              >
+                <div style={{ fontSize: 20, marginBottom: 8 }}>{icon}</div>
+                <div style={{ fontSize: 10, color: C.muted, fontWeight: 700, letterSpacing: 1, marginBottom: 4, textTransform: "uppercase" }}>{label}</div>
+                <div style={{ fontSize: 24, fontWeight: 900, color: C.text, lineHeight: 1 }}>{qtd}</div>
+                <div style={{ fontSize: 11, color: C.muted, marginTop: 4 }}>{sub}</div>
+                <div style={{ marginTop: 8, paddingTop: 8, borderTop: `1px solid ${C.border}`, fontSize: 13, color: "#2e9e5b", fontWeight: 700 }}>{fmtR(val)}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{
+            background: "linear-gradient(135deg,#981915,#c0392b)",
+            borderRadius: 16, padding: "20px 28px", color: "#fff",
+            display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12,
+            boxShadow: "0 8px 32px rgba(152,25,21,.35)",
+          }}>
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", opacity: .7, marginBottom: 4 }}>Total estimado de materiais</div>
+              <div style={{ fontSize: 36, fontWeight: 900, letterSpacing: -1 }}>{fmtR(total)}</div>
+              <div style={{ fontSize: 12, opacity: .6, marginTop: 2 }}>preços de referência · desperdício incluso</div>
             </div>
-          ))}
-          <div style={{ background: C.red, borderRadius: 12, padding: "16px 18px", color: "#fff" }}>
-            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, marginBottom: 6, opacity: .8 }}>TOTAL ESTIMADO</div>
-            <div style={{ fontSize: 26, fontWeight: 900 }}>{fmtR(total)}</div>
-            <div style={{ fontSize: 11, opacity: .8, marginTop: 2 }}>materiais · preços de referência</div>
+            <div style={{ fontSize: 48 }}>🏗</div>
           </div>
         </div>
       )}
@@ -286,26 +309,48 @@ function CalcForroDrywall() {
       </div>
 
       {result && (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))", gap: 16, marginBottom: 24 }}>
-          {[
-            { label: "Placas Drywall", qtd: `${result.placas} chp`, sub: `${TIPOS[tipo].label}`, val: result.totalPlacas },
-            { label: "Perfil T47 (subestrutura)", qtd: `${result.perfis} m`, sub: `módulo ${modulo}`, val: result.totalPerfis },
-            { label: "Pendurais + Tirantes", qtd: `${result.pendurais} pç`, sub: "1 a cada 1,2 m²", val: result.totalPend },
-            { label: "Parafusos TEX", qtd: `${result.cxPar} cx`, sub: "~8 por m²", val: result.totalPar },
-            { label: "Massa para Juntas", qtd: `${Math.ceil(result.massa / 15)} saco`, sub: `${result.massa} kg`, val: result.totalMassa },
-            { label: "Fita para Juntas", qtd: `${result.fita} m`, sub: "1 m/m² de forro", val: result.totalFita },
-          ].map(({ label, qtd, sub, val }) => (
-            <div key={label} style={{ background: "#fff", borderRadius: 12, border: `1px solid ${C.border}`, padding: "16px 18px" }}>
-              <div style={{ fontSize: 11, color: C.muted, fontWeight: 700, letterSpacing: 1, marginBottom: 6 }}>{label.toUpperCase()}</div>
-              <div style={{ fontSize: 22, fontWeight: 800 }}>{qtd}</div>
-              <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{sub}</div>
-              <div style={{ fontSize: 13, color: C.success, fontWeight: 700, marginTop: 6 }}>{fmtR(val)}</div>
+        <div style={{ animation: "fadeUp .35s ease" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+            <div style={{ height: 3, flex: 1, background: "linear-gradient(90deg,#981915,transparent)", borderRadius: 2 }} />
+            <span style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: 1, textTransform: "uppercase" }}>Resultado</span>
+            <div style={{ height: 3, flex: 1, background: "linear-gradient(270deg,#981915,transparent)", borderRadius: 2 }} />
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))", gap: 12, marginBottom: 16 }}>
+            {[
+              { icon: "⬜", label: "Placas Drywall",       qtd: `${result.placas} chp`,                   sub: TIPOS[tipo].label,             val: result.totalPlacas },
+              { icon: "⠿",  label: "Perfil T47",            qtd: `${result.perfis} m`,                     sub: `módulo ${modulo}`,             val: result.totalPerfis },
+              { icon: "⬇",  label: "Pendurais + Tirantes",  qtd: `${result.pendurais} pç`,                 sub: "1 a cada 1,2 m²",             val: result.totalPend },
+              { icon: "⬡",  label: "Parafusos TEX",        qtd: `${result.cxPar} cx`,                     sub: "~8 por m²",                   val: result.totalPar },
+              { icon: "◎",  label: "Massa p/ Juntas",      qtd: `${Math.ceil(result.massa/15)} saco`,     sub: `${result.massa} kg`,          val: result.totalMassa },
+              { icon: "〜", label: "Fita p/ Juntas",       qtd: `${result.fita} m`,                       sub: "1 m/m² de forro",             val: result.totalFita },
+            ].map(({ icon, label, qtd, sub, val }) => (
+              <div key={label} style={{
+                background: "#fff", borderRadius: 14, border: `1px solid ${C.border}`, padding: "16px 18px",
+                boxShadow: "0 2px 8px rgba(0,0,0,.04)", transition: "transform .15s,box-shadow .15s",
+              }}
+                onMouseEnter={e => { e.currentTarget.style.transform="translateY(-2px)"; e.currentTarget.style.boxShadow="0 6px 20px rgba(0,0,0,.1)"; }}
+                onMouseLeave={e => { e.currentTarget.style.transform="none"; e.currentTarget.style.boxShadow="0 2px 8px rgba(0,0,0,.04)"; }}
+              >
+                <div style={{ fontSize: 20, marginBottom: 8 }}>{icon}</div>
+                <div style={{ fontSize: 10, color: C.muted, fontWeight: 700, letterSpacing: 1, marginBottom: 4, textTransform: "uppercase" }}>{label}</div>
+                <div style={{ fontSize: 24, fontWeight: 900, color: C.text, lineHeight: 1 }}>{qtd}</div>
+                <div style={{ fontSize: 11, color: C.muted, marginTop: 4 }}>{sub}</div>
+                <div style={{ marginTop: 8, paddingTop: 8, borderTop: `1px solid ${C.border}`, fontSize: 13, color: "#2e9e5b", fontWeight: 700 }}>{fmtR(val)}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{
+            background: "linear-gradient(135deg,#981915,#c0392b)",
+            borderRadius: 16, padding: "20px 28px", color: "#fff",
+            display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12,
+            boxShadow: "0 8px 32px rgba(152,25,21,.35)",
+          }}>
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", opacity: .7, marginBottom: 4 }}>Total estimado de materiais</div>
+              <div style={{ fontSize: 36, fontWeight: 900, letterSpacing: -1 }}>{fmtR(total)}</div>
+              <div style={{ fontSize: 12, opacity: .6, marginTop: 2 }}>preços de referência · desperdício incluso</div>
             </div>
-          ))}
-          <div style={{ background: C.red, borderRadius: 12, padding: "16px 18px", color: "#fff" }}>
-            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, marginBottom: 6, opacity: .8 }}>TOTAL ESTIMADO</div>
-            <div style={{ fontSize: 26, fontWeight: 900 }}>{fmtR(total)}</div>
-            <div style={{ fontSize: 11, opacity: .8, marginTop: 2 }}>materiais · preços de referência</div>
+            <div style={{ fontSize: 48 }}>⬜</div>
           </div>
         </div>
       )}
@@ -347,27 +392,60 @@ function CalcComparativo() {
       </div>
 
       {result && (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 16 }}>
-          {result.sistemas.map(s => (
-            <div key={s.tipo} style={{ background: "#fff", borderRadius: 16, border: `2px solid ${s.cor}22`, padding: "20px 22px" }}>
-              <div style={{ fontWeight: 800, fontSize: 15, color: s.cor, marginBottom: 8 }}>{s.tipo}</div>
-              <div style={{ fontSize: 12, color: C.muted, marginBottom: 16, lineHeight: 1.5 }}>{s.desc}</div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                <div style={{ background: C.darker, borderRadius: 8, padding: "10px 12px" }}>
-                  <div style={{ fontSize: 10, color: C.muted, marginBottom: 2 }}>PLACAS</div>
-                  <div style={{ fontSize: 18, fontWeight: 800 }}>{s.placas} chp</div>
+        <div style={{ animation: "fadeUp .35s ease" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+            <div style={{ height: 3, flex: 1, background: "linear-gradient(90deg,#981915,transparent)", borderRadius: 2 }} />
+            <span style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: 1, textTransform: "uppercase" }}>Comparativo de sistemas</span>
+            <div style={{ height: 3, flex: 1, background: "linear-gradient(270deg,#981915,transparent)", borderRadius: 2 }} />
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 16 }}>
+            {result.sistemas.map((s, i) => {
+              const maxTotal = Math.max(...result.sistemas.map(x => x.total));
+              const pct = (s.total / maxTotal) * 100;
+              return (
+                <div key={s.tipo} style={{
+                  background: "#fff", borderRadius: 16,
+                  border: `2px solid ${s.cor}33`, padding: "22px",
+                  boxShadow: `0 4px 20px ${s.cor}18`,
+                  transition: "transform .2s,box-shadow .2s",
+                }}
+                  onMouseEnter={e => { e.currentTarget.style.transform="translateY(-3px)"; e.currentTarget.style.boxShadow=`0 12px 32px ${s.cor}30`; }}
+                  onMouseLeave={e => { e.currentTarget.style.transform="none"; e.currentTarget.style.boxShadow=`0 4px 20px ${s.cor}18`; }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                    <div style={{ width: 10, height: 10, borderRadius: "50%", background: s.cor, flexShrink: 0 }} />
+                    <div style={{ fontWeight: 800, fontSize: 14, color: C.text }}>{s.tipo}</div>
+                  </div>
+                  <div style={{ fontSize: 11, color: C.muted, marginBottom: 16, lineHeight: 1.5 }}>{s.desc}</div>
+
+                  {/* barra de custo relativo */}
+                  <div style={{ marginBottom: 14 }}>
+                    <div style={{ fontSize: 10, color: C.muted, marginBottom: 4, fontWeight: 700, letterSpacing: .5 }}>CUSTO RELATIVO</div>
+                    <div style={{ height: 8, background: C.border, borderRadius: 4, overflow: "hidden" }}>
+                      <div style={{ height: "100%", width: `${pct}%`, background: `linear-gradient(90deg,${s.cor}88,${s.cor})`, borderRadius: 4, transition: "width .6s ease" }} />
+                    </div>
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
+                    <div style={{ background: C.darker, borderRadius: 10, padding: "10px 12px" }}>
+                      <div style={{ fontSize: 9, color: C.muted, marginBottom: 2, fontWeight: 700, letterSpacing: .5 }}>PLACAS</div>
+                      <div style={{ fontSize: 20, fontWeight: 900, color: C.text }}>{s.placas}</div>
+                      <div style={{ fontSize: 10, color: C.muted }}>chapas</div>
+                    </div>
+                    <div style={{ background: C.darker, borderRadius: 10, padding: "10px 12px" }}>
+                      <div style={{ fontSize: 9, color: C.muted, marginBottom: 2, fontWeight: 700, letterSpacing: .5 }}>CUSTO/m²</div>
+                      <div style={{ fontSize: 20, fontWeight: 900, color: C.text }}>{fmtR(s.totalM2)}</div>
+                    </div>
+                  </div>
+                  <div style={{ background: `linear-gradient(135deg,${s.cor}18,${s.cor}08)`, borderRadius: 10, padding: "12px 14px", textAlign: "center", border: `1px solid ${s.cor}22` }}>
+                    <div style={{ fontSize: 10, color: C.muted, marginBottom: 2 }}>TOTAL MATERIAIS</div>
+                    <div style={{ fontSize: 22, fontWeight: 900, color: s.cor }}>{fmtR(s.total)}</div>
+                  </div>
+                  {i === 0 && <div style={{ marginTop: 8, textAlign: "center", fontSize: 10, fontWeight: 700, color: s.cor, letterSpacing: .5 }}>✓ MAIS ECONÔMICO</div>}
                 </div>
-                <div style={{ background: C.darker, borderRadius: 8, padding: "10px 12px" }}>
-                  <div style={{ fontSize: 10, color: C.muted, marginBottom: 2 }}>CUSTO/m²</div>
-                  <div style={{ fontSize: 18, fontWeight: 800 }}>{fmtR(s.totalM2)}</div>
-                </div>
-              </div>
-              <div style={{ marginTop: 12, background: s.cor + "18", borderRadius: 8, padding: "10px 14px", textAlign: "center" }}>
-                <div style={{ fontSize: 11, color: C.muted }}>Total materiais</div>
-                <div style={{ fontSize: 20, fontWeight: 900, color: s.cor }}>{fmtR(s.total)}</div>
-              </div>
-            </div>
-          ))}
+              );
+            })}
+          </div>
         </div>
       )}
     </div>
@@ -542,28 +620,78 @@ export default function Calculadora() {
   const totalGeral = resultado?.items.reduce((s, i) => s + i.total, 0) || 0;
 
   return (
-    <div style={{ maxWidth: 880, margin: "0 auto", padding: "24px 16px" }}>
-      <h2 style={{ fontSize: 22, fontWeight: 800, marginBottom: 4 }}>Calculadora de Materiais</h2>
-      <p style={{ color: C.muted, fontSize: 13, marginBottom: 20 }}>
-        Quantitativos e custos de referência para Steel Frame e Drywall
-      </p>
+    <div style={{ maxWidth: 960, margin: "0 auto", padding: "0 0 40px" }}>
 
-      {/* ── Seletor de modo ── */}
-      <div style={{ display: "flex", gap: 8, marginBottom: 28, flexWrap: "wrap" }}>
+      {/* ── HERO ── */}
+      <div style={{
+        background: "linear-gradient(135deg, #1a0a0a 0%, #2d0f0f 40%, #981915 100%)",
+        borderRadius: 24, padding: "48px 40px 40px", marginBottom: 32,
+        position: "relative", overflow: "hidden",
+      }}>
+        {/* grade decorativa */}
+        <div style={{
+          position: "absolute", inset: 0, opacity: .07,
+          backgroundImage: "linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)",
+          backgroundSize: "40px 40px",
+        }} />
+        {/* círculo brilho */}
+        <div style={{
+          position: "absolute", right: -60, top: -60,
+          width: 300, height: 300, borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(255,255,255,.12) 0%, transparent 70%)",
+        }} />
+
+        <div style={{ position: "relative" }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(255,255,255,.12)", borderRadius: 20, padding: "4px 14px", marginBottom: 16 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: "#fff", letterSpacing: 1.5, textTransform: "uppercase" }}>✦ Calculadora Profissional</span>
+          </div>
+          <h1 style={{ fontSize: 36, fontWeight: 900, color: "#fff", lineHeight: 1.1, marginBottom: 12, letterSpacing: -.5 }}>
+            Calcule seus materiais<br />
+            <span style={{ color: "#ffb3b0" }}>em segundos.</span>
+          </h1>
+          <p style={{ color: "rgba(255,255,255,.65)", fontSize: 15, maxWidth: 480, lineHeight: 1.6, marginBottom: 28 }}>
+            Steel Frame, Parede Drywall, Forro — quantitativos precisos com fator de desperdício configurável e export direto para orçamento.
+          </p>
+          {/* Stats */}
+          <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
+            {[
+              { val: "16+", label: "insumos SF" },
+              { val: "3",   label: "tipos de placa" },
+              { val: "0%",  label: "erro de cálculo" },
+            ].map(({ val, label }) => (
+              <div key={label}>
+                <div style={{ fontSize: 24, fontWeight: 900, color: "#fff" }}>{val}</div>
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,.5)", textTransform: "uppercase", letterSpacing: 1 }}>{label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Seletor de modo — cards grandes ── */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))", gap: 12, marginBottom: 32 }}>
         {[
-          { key: "steelframe",  label: "🏗 Steel Frame" },
-          { key: "parede",      label: "🧱 Parede Drywall" },
-          { key: "forro",       label: "⬜ Forro Drywall" },
-          { key: "comparativo", label: "📊 Comparativo ST/RU/RF" },
-        ].map(({ key, label }) => (
-          <button key={key} onClick={() => setModo(key)} style={{
-            padding: "9px 20px", borderRadius: 10, fontSize: 13, fontWeight: modo === key ? 700 : 500,
-            background: modo === key ? C.red : "transparent",
-            color: modo === key ? "#fff" : C.muted,
-            border: `1px solid ${modo === key ? C.red : C.border}`,
-            cursor: "pointer", fontFamily: "inherit", transition: "all .15s",
-          }}>{label}</button>
-        ))}
+          { key: "steelframe",  icon: "🏗", title: "Steel Frame",        sub: "Obra completa por m²" },
+          { key: "parede",      icon: "🧱", title: "Parede Drywall",     sub: "Placas, perfis e fixação" },
+          { key: "forro",       icon: "⬜", title: "Forro Drywall",      sub: "T47, pendurais e placas" },
+          { key: "comparativo", icon: "📊", title: "Comparativo",        sub: "ST vs RU vs RF" },
+        ].map(({ key, icon, title, sub }) => {
+          const active = modo === key;
+          return (
+            <button key={key} onClick={() => setModo(key)} style={{
+              background: active ? "linear-gradient(135deg,#981915,#c0392b)" : "#fff",
+              border: `2px solid ${active ? "#981915" : C.border}`,
+              borderRadius: 16, padding: "18px 20px", textAlign: "left",
+              cursor: "pointer", fontFamily: "inherit", transition: "all .2s",
+              boxShadow: active ? "0 8px 24px rgba(152,25,21,.3)" : "0 2px 8px rgba(0,0,0,.05)",
+              transform: active ? "translateY(-2px)" : "none",
+            }}>
+              <div style={{ fontSize: 28, marginBottom: 8 }}>{icon}</div>
+              <div style={{ fontSize: 14, fontWeight: 800, color: active ? "#fff" : C.text, marginBottom: 2 }}>{title}</div>
+              <div style={{ fontSize: 11, color: active ? "rgba(255,255,255,.7)" : C.muted }}>{sub}</div>
+            </button>
+          );
+        })}
       </div>
 
       {modo === "parede"      && <CalcParedeDrywall />}
@@ -1078,7 +1206,11 @@ export default function Calculadora() {
         </>
       )}
 
-      <style>{`@media print { button { display: none !important; } }`}</style>
+      <style>{`
+        @media print { button { display: none !important; } }
+        @keyframes fadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:none; } }
+        @keyframes countUp { from { opacity:0; } to { opacity:1; } }
+      `}</style>
       </>)}
     </div>
   );
