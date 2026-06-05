@@ -684,6 +684,7 @@ export default function Orcamentos() {
   const [converterOrc, setConverterOrc] = useState(null);
   const [calculadora,  setCalculadora]  = useState(false);
   const [preOrcamentos, setPreOrcamentos] = useState([]);
+  const [preOrcAtivo, setPreOrcAtivo] = useState(null); // ID do lead sendo convertido
   const [estimativo, setEstimativoRaw] = useState(() => {
     try { return JSON.parse(localStorage.getItem("sf_estimativo") || "null"); } catch { return null; }
   });
@@ -757,7 +758,7 @@ export default function Orcamentos() {
     addOrcamento({
       ref:        gerarRef(),
       cliente:    clienteSel?.nome || "—",
-      cliente_id: form.cliente_id,         // UUID string — sem Number()!
+      cliente_id: form.cliente_id,
       valor:      calc.valor_total,
       unidades:   Number(form.unidades),
       area:       Number(form.area),
@@ -765,6 +766,11 @@ export default function Orcamentos() {
       status:     form.status,
       criado:     new Date().toLocaleDateString("pt-BR"),
     });
+    if (preOrcAtivo) {
+      sb.from("pre_orcamentos").update({ status: "Analisado" }).eq("id", preOrcAtivo).then(() => {});
+      setPreOrcamentos((prev) => prev.filter((x) => x.id !== preOrcAtivo));
+      setPreOrcAtivo(null);
+    }
     setModal(false);
     mostrarToast("✅ Orçamento gerado com sucesso!");
   }
@@ -954,7 +960,7 @@ export default function Orcamentos() {
 
       {/* Modais */}
       {modal === "novo" && (
-        <Modal title="Novo orçamento" onClose={() => setModal(false)}>
+        <Modal title="Novo orçamento" onClose={() => { setModal(false); setPreOrcAtivo(null); }}>
           {estimativo && (
             <div style={{ background: C.red + "0d", border: `1px solid ${C.red}33`, borderRadius: 10, padding: "12px 16px", marginBottom: 16 }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: C.red, marginBottom: 4 }}><Zap size={13} /> Estimativo — {estimativo.tipo === "residencial" ? "Residencial" : "Galpão/Comercial"} · {estimativo.area}m²</div>
@@ -966,7 +972,7 @@ export default function Orcamentos() {
           )}
           <FormOrc
             form={form} setForm={setForm} clientes={clientes}
-            onSave={salvarNovo} onCancel={() => { setModal(false); setEstimativo(null); }}
+            onSave={salvarNovo} onCancel={() => { setModal(false); setEstimativo(null); setPreOrcAtivo(null); }}
             btnLabel="Gerar orçamento"
           />
         </Modal>
@@ -1108,14 +1114,12 @@ export default function Orcamentos() {
                   </div>
                 </div>
                 <div style={{ display: "flex", gap: 8 }}>
-                  <button onClick={async () => {
-                    // Find or create cliente from lead
+                  <button onClick={() => {
                     let clienteId = p.cliente_id;
                     if (!clienteId) {
                       const existing = clientes.find((c) => c.contato === p.contato || c.nome === p.nome);
                       clienteId = existing?.id || clientes[0]?.id || "";
                     }
-                    // Pre-fill new orçamento with lead data
                     setForm({
                       ...FORM_VAZIO,
                       cliente_id: clienteId,
@@ -1123,11 +1127,16 @@ export default function Orcamentos() {
                       padrao: p.padrao || "Padrão",
                       unidades: 1,
                     });
+                    setPreOrcAtivo(p.id);
                     setModal("novo");
+                  }} style={{ background: "#2e9e5b22", border: "1px solid #2e9e5b44", borderRadius: 6, color: "#2e9e5b", fontSize: 11, fontWeight: 700, padding: "6px 12px", cursor: "pointer", fontFamily: "inherit" }}>
+                    ✓ Criar Orçamento
+                  </button>
+                  <button onClick={async () => {
                     await sb.from("pre_orcamentos").update({ status: "Analisado" }).eq("id", p.id);
                     setPreOrcamentos((prev) => prev.filter((x) => x.id !== p.id));
-                  }} style={{ background: "#2e9e5b22", border: "1px solid #2e9e5b44", borderRadius: 6, color: "#2e9e5b", fontSize: 11, fontWeight: 700, padding: "6px 12px", cursor: "pointer", fontFamily: "inherit" }}>
-                    ✓ Analisar
+                  }} style={{ background: "#99999918", border: "1px solid #99999933", borderRadius: 6, color: "#999", fontSize: 11, fontWeight: 700, padding: "6px 12px", cursor: "pointer", fontFamily: "inherit" }}>
+                    ✕ Dispensar
                   </button>
                   <button onClick={() => {
                     const num = (p.contato || "").replace(/\D/g, "");
