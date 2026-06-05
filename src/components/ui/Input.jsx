@@ -1,7 +1,7 @@
 import { C } from "../../utils/constants";
 
-export default function Input({ value, onChange, placeholder, type = "text", hasError, ...rest }) {
-  return (
+export default function Input({ value, onChange, placeholder, type = "text", hasError, label, ...rest }) {
+  const input = (
     <input
       type={type}
       value={value}
@@ -17,5 +17,12 @@ export default function Input({ value, onChange, placeholder, type = "text", has
       }}
       {...rest}
     />
+  );
+  if (!label) return input;
+  return (
+    <div>
+      <label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: "block", marginBottom: 4 }}>{label}</label>
+      {input}
+    </div>
   );
 }
