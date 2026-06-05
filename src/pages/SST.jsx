@@ -114,14 +114,15 @@ export default function SST() {
   const mesAtual = hoje.slice(0, 7);
 
   const diasSemAcidente = (() => {
-    const acidentes = inc.filter(i => i.tipo === "Acidente").sort((a,b) => b.data.localeCompare(a.data));
+    const acidentes = inc.filter(i => i.tipo === "Acidente" || i.tipo === "Incidente").sort((a,b) => b.data.localeCompare(a.data));
     if (!acidentes.length) return "∞";
-    return Math.floor((new Date() - new Date(acidentes[0].data)) / 86400000);
+    return Math.floor((new Date() - new Date(acidentes[0].data + "T12:00:00")) / 86400000);
   })();
 
   const ddsMes       = dds.filter(d => d.data?.startsWith(mesAtual)).length;
   const incAbertos   = inc.filter(i => i.status !== "Fechado").length;
-  const episVencendo = epis.filter(e => {
+  const episVencidos  = epis.filter(e => e.validade && Math.ceil((new Date(e.validade) - new Date()) / 86400000) < 0).length;
+  const episVencendo  = epis.filter(e => {
     if (!e.validade) return false;
     const dias = Math.ceil((new Date(e.validade) - new Date()) / 86400000);
     return dias >= 0 && dias <= 30;
@@ -216,9 +217,13 @@ export default function SST() {
           <div style={{ fontSize: 26, fontWeight: 900, color: incAbertos > 0 ? C.danger : C.success }}>{incAbertos}</div>
           <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>Incidentes abertos</div>
         </div>
-        <div style={kpiStyle(episVencendo > 0 ? C.warning : C.success)}>
-          <div style={{ fontSize: 26, fontWeight: 900, color: episVencendo > 0 ? C.warning : C.success }}>{episVencendo}</div>
-          <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>EPIs vencendo em 30d</div>
+        <div style={kpiStyle(episVencidos > 0 ? C.danger : episVencendo > 0 ? C.warning : C.success)}>
+          <div style={{ fontSize: 26, fontWeight: 900, color: episVencidos > 0 ? C.danger : episVencendo > 0 ? C.warning : C.success }}>
+            {episVencidos > 0 ? episVencidos : episVencendo}
+          </div>
+          <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>
+            {episVencidos > 0 ? "EPIs VENCIDOS" : "EPIs vencendo em 30d"}
+          </div>
         </div>
       </div>
 
