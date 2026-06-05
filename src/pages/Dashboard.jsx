@@ -1,4 +1,5 @@
 import { useEffect, useState, lazy, Suspense } from "react";
+import { sb, getEmpresaId } from "../services/supabase";
 import { AlertTriangle, BarChart2, CalendarDays, CheckCircle, TrendingUp } from "../components/ui/Icon";
 import { listarMonitorados } from "../services/repositories/precosRepository";
 import { C, CATEGORIAS_DESPESA, FASES } from "../utils/constants";
@@ -232,6 +233,69 @@ export default function Dashboard() {
       ) : (
         <DashboardDiretor />
       )}
+    </div>
+  );
+}
+
+function OperacionalKpis() {
+  const [kpis, setKpis] = useState(null);
+  useEffect(() => {
+    const empId = getEmpresaId();
+    if (!empId) return;
+    const hoje = new Date().toISOString().slice(0, 10);
+    const em30 = new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10);
+    Promise.all([
+      sb.from("sst_incidentes").select("id, data, tipo").eq("empresa_id", empId).neq("status", "Fechado"),
+      sb.from("sst_epis").select("id, validade").eq("empresa_id", empId).lte("validade", em30),
+      sb.from("suprimentos_pedidos").select("id, status, urgencia").eq("empresa_id", empId).neq("status", "Entregue").neq("status", "Cancelado"),
+      sb.from("suprimentos_estoque").select("id, quantidade, estoque_minimo").eq("empresa_id", empId).gt("estoque_minimo", 0),
+    ]).then(([inc, epis, peds, est]) => {
+      const incList = inc.data || [];
+      const episList = epis.data || [];
+      const pedsList = peds.data || [];
+      const estList = est.data || [];
+
+      const ultimoAcidente = incList.filter(i => i.tipo === "Acidente" || i.tipo === "Incidente").sort((a,b) => b.data.localeCompare(a.data))[0];
+      const diasSemAcidente = ultimoAcidente
+        ? Math.floor((new Date() - new Date(ultimoAcidente.data + "T00:00:00")) / 86400000)
+        : "∞";
+
+      setKpis({
+        diasSemAcidente,
+        episVencidos: episList.filter(e => e.validade < hoje).length,
+        episVencendo: episList.filter(e => e.validade >= hoje).length,
+        incAbertos: incList.length,
+        pedPendentes: pedsList.filter(p => p.status === "Pendente").length,
+        pedCriticos: pedsList.filter(p => p.urgencia === "Crítico").length,
+        estoqueAbaixo: estList.filter(e => e.quantidade <= e.estoque_minimo).length,
+      });
+    }).catch(() => {});
+  }, []);
+
+  if (!kpis) return null;
+
+  const kpiOp = [
+    { label: "Dias sem acidente", value: kpis.diasSemAcidente, icon: "🦺", cor: kpis.diasSemAcidente === "∞" || kpis.diasSemAcidente > 30 ? C.success : kpis.diasSemAcidente > 7 ? C.warning : C.danger },
+    { label: "EPIs vencidos", value: kpis.episVencidos, icon: "⛔", cor: kpis.episVencidos > 0 ? C.danger : C.success },
+    { label: "EPIs vencendo 30d", value: kpis.episVencendo, icon: "⏰", cor: kpis.episVencendo > 0 ? C.warning : C.success },
+    { label: "Incidentes abertos", value: kpis.incAbertos, icon: "⚠️", cor: kpis.incAbertos > 0 ? C.danger : C.success },
+    { label: "Pedidos pendentes", value: kpis.pedPendentes, icon: "📦", cor: kpis.pedPendentes > 0 ? C.warning : C.success },
+    { label: "Pedidos críticos", value: kpis.pedCriticos, icon: "🚨", cor: kpis.pedCriticos > 0 ? C.danger : C.success },
+    { label: "Estoque abaixo mín", value: kpis.estoqueAbaixo, icon: "🏭", cor: kpis.estoqueAbaixo > 0 ? C.warning : C.success },
+  ];
+
+  return (
+    <div style={{ background: C.surface, borderRadius: 16, padding: 20, border: `1px solid ${C.border}`, marginBottom: 16 }}>
+      <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 14 }}>SST & SUPRIMENTOS</div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: 10 }}>
+        {kpiOp.map(k => (
+          <div key={k.label} style={{ background: k.cor + "12", borderRadius: 10, padding: "12px 14px", borderLeft: `3px solid ${k.cor}` }}>
+            <div style={{ fontSize: 18, marginBottom: 4 }}>{k.icon}</div>
+            <div style={{ fontSize: 20, fontWeight: 900, color: k.cor }}>{k.value}</div>
+            <div style={{ fontSize: 10, color: C.muted, marginTop: 2, lineHeight: 1.3 }}>{k.label}</div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -1157,6 +1221,9 @@ ${obrasAndamento.length > 0 ? `
           </div>
         );
       })()}
+
+      {/* ── Operacional: SST + Suprimentos ── */}
+      <OperacionalKpis />
 
       {/* Atividade Recente */}
       {historico && historico.length > 0 && (
