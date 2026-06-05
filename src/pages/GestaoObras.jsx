@@ -675,6 +675,7 @@ export default function GestaoObras() {
   const [relPdfModal,   setRelPdfModal]   = useState(false);
   const [relPdfOpcoes,  setRelPdfOpcoes]  = useState({ resumo: true, diario: true, financeiro: true, fotos: false, cronograma: false });
   const [relPdfWaLink,  setRelPdfWaLink]  = useState(null);
+  const [showQR,        setShowQR]        = useState(false);
 
   useEffect(() => {
     if (!obraId && obras.length > 0) setObraId(obras[0].id);
@@ -2491,6 +2492,15 @@ export default function GestaoObras() {
                           <button onClick={gerarTokenPortal} title="Gerar novo token" style={{ background: "none", border: "none", cursor: "pointer", color: "#4a9eff66", fontSize: 12, padding: 2 }}>↺</button>
                         </div>
                       )}
+                      <button onClick={async () => {
+                        if (!obra.token_portal) { await gerarTokenPortal(); }
+                        setShowQR(true);
+                      }} style={{
+                        width: "100%", padding: "8px 0",
+                        background: "#7c3aed22", border: "1px solid #7c3aed44",
+                        borderRadius: 6, color: "#7c3aed", fontSize: 12, fontWeight: 700,
+                        cursor: "pointer", fontFamily: "inherit",
+                      }}>📱 QR Code</button>
                     </div>
                     {/* Chat do Portal */}
                     {obra?.token_portal && (
@@ -2750,6 +2760,37 @@ export default function GestaoObras() {
           </div>
         );
       })()}
+
+      {/* Modal QR Code do Portal */}
+      {showQR && obra?.token_portal && (
+        <div onClick={() => setShowQR(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: 28, width: 340, boxShadow: "0 20px 60px rgba(0,0,0,0.4)", textAlign: "center" }}>
+            <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 4 }}>📱 QR Code do Portal</div>
+            <div style={{ fontSize: 12, color: C.muted, marginBottom: 16 }}>{obra.nome}</div>
+            <img
+              src={`https://chart.googleapis.com/chart?chs=300x300&cht=qr&chl=${encodeURIComponent(`${window.location.origin}/portal/${obra.token_portal}`)}&choe=UTF-8`}
+              alt="QR Code"
+              style={{ width: 220, height: 220, borderRadius: 8, border: `1px solid ${C.border}` }}
+            />
+            <div style={{ fontSize: 11, color: C.muted, margin: "12px 0 16px", wordBreak: "break-all" }}>
+              {window.location.origin}/portal/{obra.token_portal}
+            </div>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button onClick={() => {
+                const a = document.createElement("a");
+                a.href = `https://chart.googleapis.com/chart?chs=300x300&cht=qr&chl=${encodeURIComponent(`${window.location.origin}/portal/${obra.token_portal}`)}&choe=UTF-8`;
+                a.download = `qrcode-${obra.nome}.png`;
+                a.click();
+              }} style={{ flex: 1, padding: "10px 0", background: "#7c3aed", border: "none", borderRadius: 8, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+                ⬇ Baixar
+              </button>
+              <button onClick={() => setShowQR(false)} style={{ flex: 1, padding: "10px 0", background: C.dark, border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal Relatório PDF */}
       {relPdfModal && obra && (

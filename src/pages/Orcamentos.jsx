@@ -718,6 +718,8 @@ export default function Orcamentos() {
     else localStorage.removeItem("sf_estimativo");
   }
   const [obraForm,   setObraForm]   = useState({ nome: "", prazo_inicio: "", prazo_fim: "" });
+  const [modoComparar, setModoComparar] = useState(false);
+  const [selecionados, setSelecionados] = useState([]);
 
 
 
@@ -1086,6 +1088,15 @@ export default function Orcamentos() {
             }}>
               <Zap size={13} /> Calculadora estimativa
             </button>
+            <button onClick={() => { setModoComparar(v => !v); setSelecionados([]); }} style={{
+              background: modoComparar ? "#2563eb22" : "none",
+              border: `1px solid ${modoComparar ? "#2563eb" : C.border}`,
+              color: modoComparar ? "#2563eb" : C.muted,
+              borderRadius: 8, padding: "9px 16px", fontSize: 13, fontWeight: 700,
+              cursor: "pointer", fontFamily: "inherit",
+            }}>
+              ⚖️ Comparar
+            </button>
             <Btn onClick={abrirNovo}>+ Novo orçamento</Btn>
           </div>
         </div>
@@ -1271,6 +1282,21 @@ export default function Orcamentos() {
 
                   {/* Ações */}
                   <div style={{ display: "flex", gap: 8, marginTop: 14, flexWrap: "wrap" }}>
+                    {modoComparar && (
+                      <button onClick={() => setSelecionados(prev => {
+                        if (prev.includes(o.id)) return prev.filter(id => id !== o.id);
+                        if (prev.length >= 2) return prev;
+                        return [...prev, o.id];
+                      })} style={{
+                        padding: "6px 14px",
+                        background: selecionados.includes(o.id) ? "#2563eb" : "#2563eb22",
+                        border: `1px solid #2563eb44`, borderRadius: 6,
+                        color: selecionados.includes(o.id) ? "#fff" : "#2563eb",
+                        fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
+                      }}>
+                        {selecionados.includes(o.id) ? "✓ Selecionado" : "Selecionar"}
+                      </button>
+                    )}
                     <Btn variant="ghost" size="sm" onClick={() => abrirEditar(o)}><Pencil size={13} /> Editar</Btn>
                     <button
                       onClick={() => gerarPDF(o)}
@@ -1392,6 +1418,69 @@ export default function Orcamentos() {
           </div>
         )}
       </div>
+
+      {/* Painel Comparativo */}
+      {modoComparar && selecionados.length === 2 && (() => {
+        const [idA, idB] = selecionados;
+        const a = orcamentos.find(o => o.id === idA);
+        const b = orcamentos.find(o => o.id === idB);
+        if (!a || !b) return null;
+        const cA = clientes.find(c => c.id === a.cliente_id);
+        const cB = clientes.find(c => c.id === b.cliente_id);
+        const calcA = calcOrcamento({ area: a.area, unidades: a.unidades, padrao: a.padrao });
+        const calcB = calcOrcamento({ area: b.area, unidades: b.unidades, padrao: b.padrao });
+        const betterArea = Number(a.area) >= Number(b.area) ? "a" : "b";
+        const betterM2 = calcA.valor_m2 <= calcB.valor_m2 ? "a" : "b";
+        const betterTotal = calcA.valor_total <= calcB.valor_total ? "a" : "b";
+
+        const rows = [
+          { label: "Cliente",    vA: cA?.nome || "—",                    vB: cB?.nome || "—",                    highlight: null },
+          { label: "Área (m²)",  vA: `${a.area} m²`,                     vB: `${b.area} m²`,                     highlight: betterArea },
+          { label: "Padrão",     vA: a.padrao,                            vB: b.padrao,                           highlight: null },
+          { label: "Unidades",   vA: a.unidades,                          vB: b.unidades,                         highlight: null },
+          { label: "Valor/m²",   vA: fmt.moeda(calcA.valor_m2),          vB: fmt.moeda(calcB.valor_m2),          highlight: betterM2 },
+          { label: "Valor total",vA: fmt.moeda(calcA.valor_total),       vB: fmt.moeda(calcB.valor_total),       highlight: betterTotal },
+          { label: "Status",     vA: a.status || "—",                    vB: b.status || "—",                    highlight: null },
+        ];
+
+        return (
+          <div style={{ marginTop: 24, background: C.surface, border: `1px solid #2563eb44`, borderRadius: 16, padding: 24, boxShadow: "0 4px 24px rgba(37,99,235,0.08)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
+              <div style={{ fontSize: 15, fontWeight: 800, color: "#2563eb" }}>⚖️ Comparativo de Orçamentos</div>
+              <button onClick={() => { setModoComparar(false); setSelecionados([]); }} style={{
+                background: "none", border: `1px solid ${C.border}`, borderRadius: 8,
+                padding: "6px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", color: C.muted,
+              }}>Fechar comparativo</button>
+            </div>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+              <thead>
+                <tr>
+                  <th style={{ textAlign: "left", padding: "8px 12px", color: C.muted, fontWeight: 700, fontSize: 11, letterSpacing: 1, borderBottom: `1px solid ${C.border}` }}>CAMPO</th>
+                  <th style={{ textAlign: "left", padding: "8px 12px", color: "#2563eb", fontWeight: 700, fontSize: 11, letterSpacing: 1, borderBottom: `1px solid ${C.border}`, background: "#2563eb08", borderRadius: "8px 0 0 0" }}>Orçamento A — {a.nome || `#${String(a.id).slice(0,6)}`}</th>
+                  <th style={{ textAlign: "left", padding: "8px 12px", color: "#7c3aed", fontWeight: 700, fontSize: 11, letterSpacing: 1, borderBottom: `1px solid ${C.border}`, background: "#7c3aed08", borderRadius: "0 8px 0 0" }}>Orçamento B — {b.nome || `#${String(b.id).slice(0,6)}`}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map(({ label, vA, vB, highlight }) => (
+                  <tr key={label} style={{ borderBottom: `1px solid ${C.border}` }}>
+                    <td style={{ padding: "10px 12px", fontWeight: 600, color: C.muted, fontSize: 12 }}>{label}</td>
+                    <td style={{
+                      padding: "10px 12px", fontWeight: highlight === "a" ? 800 : 400,
+                      color: highlight === "a" ? "#2e9e5b" : undefined,
+                      background: highlight === "a" ? "#2e9e5b0a" : "#2563eb06",
+                    }}>{vA}{highlight === "a" && <span style={{ marginLeft: 6, fontSize: 11, color: "#2e9e5b" }}>✓</span>}</td>
+                    <td style={{
+                      padding: "10px 12px", fontWeight: highlight === "b" ? 800 : 400,
+                      color: highlight === "b" ? "#2e9e5b" : undefined,
+                      background: highlight === "b" ? "#2e9e5b0a" : "#7c3aed06",
+                    }}>{vB}{highlight === "b" && <span style={{ marginLeft: 6, fontSize: 11, color: "#2e9e5b" }}>✓</span>}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        );
+      })()}
     </>
   );
 }

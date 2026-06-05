@@ -653,16 +653,36 @@ ${obrasAndamento.length > 0 ? `
           }}>Dashboard</h2>
           <p style={{ color: C.muted, fontSize: 13, letterSpacing: 0.3 }}>Visão consolidada — {mesAno()}</p>
         </div>
-        <button
-          onClick={gerarRelatorioMensal}
-          style={{
-            padding: "8px 18px", background: "#981915", border: "none",
-            borderRadius: 8, color: "#fff", fontWeight: 700,
-            fontSize: 12, cursor: "pointer", fontFamily: "inherit",
-          }}
-        >
-          📄 Relatório Mensal
-        </button>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button
+            onClick={gerarRelatorioMensal}
+            style={{
+              padding: "8px 18px", background: "#981915", border: "none",
+              borderRadius: 8, color: "#fff", fontWeight: 700,
+              fontSize: 12, cursor: "pointer", fontFamily: "inherit",
+            }}
+          >
+            📄 Relatório Mensal
+          </button>
+          <button
+            onClick={async () => {
+              try {
+                const { error } = await sb.functions.invoke("relatorio-mensal");
+                if (error) throw error;
+                alert("Relatório enviado por email com sucesso!");
+              } catch (e) {
+                alert("Erro ao enviar relatório: " + (e?.message || String(e)));
+              }
+            }}
+            style={{
+              padding: "8px 18px", background: "#1a6e3c", border: "none",
+              borderRadius: 8, color: "#fff", fontWeight: 700,
+              fontSize: 12, cursor: "pointer", fontFamily: "inherit",
+            }}
+          >
+            📊 Enviar relatório
+          </button>
+        </div>
       </div>
 
       {/* Smart Alerts */}
