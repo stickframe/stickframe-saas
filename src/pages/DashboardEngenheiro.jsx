@@ -179,8 +179,6 @@ export default function DashboardEngenheiro() {
 
       {/* KPIs */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 12, marginBottom: 24 }}>
-        <KpiCard label="Obras ativas"   value={String(obrasAtivas.length)}   sub={`de ${obras.length} total`}          accent={C.red}     />
-        <KpiCard label="Med. pendentes" value={String(medPendentes.length)}   sub={`${fmt(medPendentes.reduce((a,m) => a+(m.valor||0),0))} a faturar`} accent={C.warning}  />
         <KpiCard label="Obras atrasadas" value={String(atrasadas.length)}     sub="prazo vencido"                       accent={atrasadas.length > 0 ? C.danger : C.success} />
         <KpiCard label="Apontamentos !" value={String(apontAbertos.length)}   sub="BIM — alta prioridade"               accent={apontAbertos.length > 0 ? C.danger : C.success} />
       </div>
