@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import * as XLSX from "xlsx";
 import { ClipboardList, DollarSign, Pencil, Phone, Trash2 } from "../components/ui/Icon";
 import Certificacoes from "../components/equipe/Certificacoes";
 import { printHtml } from "../utils/printHtml";
@@ -231,10 +232,75 @@ export default function Equipe() {
   const [horaFiltroColaborador, setHoraFiltroColaborador] = useState("");
   const [horaFiltroObra, setHoraFiltroObra] = useState("");
 
+  // Relatório de Horas (registros_ponto)
+  const [relAno,     setRelAno]     = useState(() => new Date().getFullYear());
+  const [relMes,     setRelMes]     = useState(() => new Date().getMonth() + 1);
+  const [relDados,   setRelDados]   = useState([]);
+  const [relLoading, setRelLoading] = useState(false);
+
   useEffect(() => {
     loadAlocacoes();
     loadHorasTrabalhadas();
   }, [loadAlocacoes, loadHorasTrabalhadas]);
+
+  const carregarRelatorio = useCallback(async () => {
+    setRelLoading(true);
+    try {
+      const { sb, getEmpresaId } = await import("../services/supabase");
+      const startOfMonth = new Date(relAno, relMes - 1, 1).toISOString();
+      const endOfMonth   = new Date(relAno, relMes,     1).toISOString();
+      const { data, error } = await sb
+        .from("registros_ponto")
+        .select("*, colaborador:colaboradores(nome)")
+        .eq("empresa_id", getEmpresaId())
+        .gte("entrada", startOfMonth)
+        .lt("entrada", endOfMonth);
+      if (error) throw error;
+      const mapa = {};
+      (data || []).forEach((r) => {
+        const id = r.colaborador_id;
+        if (!mapa[id]) mapa[id] = { id, nome: r.colaborador?.nome || id, totalHoras: 0, dias: new Set(), obras: new Set() };
+        if (r.entrada && r.saida) {
+          const h = (new Date(r.saida) - new Date(r.entrada)) / 3600000;
+          if (h > 0) mapa[id].totalHoras += h;
+        }
+        if (r.entrada) mapa[id].dias.add(r.entrada.slice(0, 10));
+        if (r.obra_id) mapa[id].obras.add(r.obra_id);
+      });
+      const linhas = Object.values(mapa).map((row) => ({
+        id:          row.id,
+        nome:        row.nome,
+        totalHoras:  row.totalHoras,
+        diasCount:   row.dias.size,
+        mediaDiaria: row.dias.size > 0 ? row.totalHoras / row.dias.size : 0,
+        obrasNomes:  [...row.obras].map((oid) => obras.find((o) => o.id === oid)?.nome?.split("—")[0]?.trim() || oid).join(", "),
+      })).sort((a, b) => b.totalHoras - a.totalHoras);
+      setRelDados(linhas);
+    } catch (e) {
+      console.error("Erro ao carregar relatório de horas:", e);
+    } finally {
+      setRelLoading(false);
+    }
+  }, [relAno, relMes, obras]);
+
+  useEffect(() => {
+    if (tab === "relatorio") carregarRelatorio();
+  }, [tab, carregarRelatorio]);
+
+  function exportarRelatorioExcel() {
+    const mesNome = new Date(relAno, relMes - 1, 1).toLocaleString("pt-BR", { month: "long" });
+    const rows = relDados.map((r) => ({
+      "Nome":             r.nome,
+      "Total de Horas":   parseFloat(r.totalHoras.toFixed(2)),
+      "Dias Trabalhados": r.diasCount,
+      "Média Diária (h)": parseFloat(r.mediaDiaria.toFixed(2)),
+      "Obras":            r.obrasNomes || "—",
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Horas");
+    XLSX.writeFile(wb, `relatorio-horas-${mesNome}-${relAno}.xlsx`);
+  }
 
   // Certificações para badges nos cards
   const [certsByColab, setCertsByColab] = useState({});
@@ -673,6 +739,7 @@ export default function Equipe() {
           <Tab label="📋 Alocações"    active={tab === "alocacoes"}    onClick={() => setTab("alocacoes")} />
           <Tab label="⏱ Horas"        active={tab === "horas"}        onClick={() => setTab("horas")} />
           <Tab label="🛡️ Compliance"  active={tab === "compliance"}   onClick={() => setTab("compliance")} />
+          <Tab label="📊 Horas"       active={tab === "relatorio"}    onClick={() => setTab("relatorio")} />
         </div>
 
         {/* ══ Tab: Equipe ══ */}
@@ -1056,6 +1123,103 @@ export default function Equipe() {
         {/* ══ Tab: Compliance ══ */}
         {tab === "compliance" && (
           <Certificacoes onSaved={recarregarCerts} />
+        )}
+
+        {/* ══ Tab: Relatório de Horas ══ */}
+        {tab === "relatorio" && (
+          <div>
+            {/* Controls */}
+            <div style={{ display: "flex", gap: 10, marginBottom: 20, alignItems: "center", flexWrap: "wrap" }}>
+              <select
+                value={relMes}
+                onChange={(e) => setRelMes(Number(e.target.value))}
+                style={{ padding: "8px 12px", borderRadius: 8, border: `1px solid ${C.border}`, background: C.surface, color: C.text, fontSize: 12, fontFamily: "inherit" }}
+              >
+                {["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"].map((m, i) => (
+                  <option key={i + 1} value={i + 1}>{m}</option>
+                ))}
+              </select>
+              <select
+                value={relAno}
+                onChange={(e) => setRelAno(Number(e.target.value))}
+                style={{ padding: "8px 12px", borderRadius: 8, border: `1px solid ${C.border}`, background: C.surface, color: C.text, fontSize: 12, fontFamily: "inherit" }}
+              >
+                {[new Date().getFullYear() - 1, new Date().getFullYear(), new Date().getFullYear() + 1].map((y) => (
+                  <option key={y} value={y}>{y}</option>
+                ))}
+              </select>
+              <button
+                onClick={carregarRelatorio}
+                style={{ padding: "8px 18px", borderRadius: 8, border: `1px solid ${C.red}`, background: C.red + "18", color: C.red, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}
+              >{relLoading ? "Carregando..." : "🔄 Atualizar"}</button>
+              {relDados.length > 0 && (
+                <button
+                  onClick={exportarRelatorioExcel}
+                  style={{ padding: "8px 18px", borderRadius: 8, border: `1px solid ${C.success}`, background: C.success + "18", color: C.success, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}
+                >📥 Exportar Excel</button>
+              )}
+            </div>
+
+            {relLoading ? (
+              <div style={{ textAlign: "center", padding: "50px 0", color: C.muted, fontSize: 13 }}>Carregando dados...</div>
+            ) : relDados.length === 0 ? (
+              <div style={{ background: C.surface, borderRadius: 16, border: `1px solid ${C.border}`, padding: "60px 0", textAlign: "center" }}>
+                <div style={{ fontSize: 36, marginBottom: 12 }}>📊</div>
+                <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 8 }}>Nenhum registro de ponto no período</div>
+                <div style={{ fontSize: 12, color: C.muted }}>Selecione outro mês ou verifique os registros de ponto eletrônico.</div>
+              </div>
+            ) : (
+              <>
+                {/* Bar chart */}
+                <div style={{ background: C.surface, borderRadius: 14, border: `1px solid ${C.border}`, padding: "20px 24px", marginBottom: 20 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, textTransform: "uppercase", marginBottom: 14 }}>Horas por colaborador</div>
+                  {(() => {
+                    const maxH = Math.max(...relDados.map((r) => r.totalHoras), 1);
+                    return relDados.map((r) => (
+                      <div key={r.id} style={{ marginBottom: 10 }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 4 }}>
+                          <span style={{ fontWeight: 600 }}>{r.nome}</span>
+                          <span style={{ fontWeight: 700, color: "#4a9eff" }}>{r.totalHoras.toFixed(1)} h</span>
+                        </div>
+                        <div style={{ height: 10, borderRadius: 6, background: C.darker, overflow: "hidden" }}>
+                          <div style={{
+                            height: "100%", borderRadius: 6,
+                            background: "linear-gradient(90deg, #4a9eff, #2563eb)",
+                            width: `${(r.totalHoras / maxH) * 100}%`,
+                            transition: "width .4s ease",
+                          }} />
+                        </div>
+                      </div>
+                    ));
+                  })()}
+                </div>
+
+                {/* Table */}
+                <div style={{ background: C.surface, borderRadius: 16, border: `1px solid ${C.border}`, overflow: "hidden" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                    <thead>
+                      <tr style={{ background: C.darker }}>
+                        {["Nome", "Total de Horas", "Dias Trabalhados", "Média Diária", "Obras"].map((h) => (
+                          <th key={h} style={{ padding: "10px 16px", textAlign: "left", fontSize: 10, fontWeight: 700, letterSpacing: 1, color: C.muted, textTransform: "uppercase" }}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {relDados.map((r, i) => (
+                        <tr key={r.id} style={{ borderTop: i > 0 ? `1px solid ${C.border}` : "none" }}>
+                          <td style={{ padding: "12px 16px", fontWeight: 700 }}>{r.nome}</td>
+                          <td style={{ padding: "12px 16px", fontWeight: 800, color: "#4a9eff" }}>{r.totalHoras.toFixed(1)} h</td>
+                          <td style={{ padding: "12px 16px", color: C.muted }}>{r.diasCount}</td>
+                          <td style={{ padding: "12px 16px", color: C.muted }}>{r.mediaDiaria.toFixed(1)} h/dia</td>
+                          <td style={{ padding: "12px 16px", color: C.muted, fontSize: 12 }}>{r.obrasNomes || "—"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            )}
+          </div>
         )}
       </div>
     </>
