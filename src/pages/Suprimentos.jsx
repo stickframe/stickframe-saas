@@ -42,8 +42,17 @@ export default function Suprimentos() {
   const [estModal, setEstModal]       = useState(false);
   const [estEdit, setEstEdit]         = useState(null);
   const [estForm, setEstForm]         = useState({ item: "", unidade: "un", quantidade: 0, estoque_minimo: 0, localizacao: "", valor_unitario: "" });
-  const [movModal, setMovModal]       = useState(null); // item do estoque
+  const [movModal, setMovModal]       = useState(null);
   const [movForm, setMovForm]         = useState({ tipo: "entrada", quantidade: 1, obs: "" });
+
+  // Dar entrada (pedido → estoque)
+  const [entradaModal, setEntradaModal] = useState(null); // pedido
+  const [entradaEstoqueId, setEntradaEstoqueId] = useState("");
+
+  // Relatório de movimentações
+  const [movimentos, setMovimentos]   = useState([]);
+  const [movLoading, setMovLoading]   = useState(false);
+  const [relFiltro, setRelFiltro]     = useState({ tipo: "", item: "", de: "", ate: "" });
 
   const [confirm, setConfirm]         = useState(null);
 
@@ -62,11 +71,25 @@ export default function Suprimentos() {
     try { setEstoque(await listarEstoque()); } finally { setEstLoading(false); }
   }, []);
 
+  const loadMovimentos = useCallback(async () => {
+    setMovLoading(true);
+    try {
+      const { data } = await sb
+        .from("suprimentos_movimentos")
+        .select("*, estoque:suprimentos_estoque(item, unidade)")
+        .eq("empresa_id", getEmpresaId())
+        .order("created_at", { ascending: false })
+        .limit(500);
+      setMovimentos(data || []);
+    } finally { setMovLoading(false); }
+  }, []);
+
   useEffect(() => { loadObras(); }, [loadObras]);
   useEffect(() => {
     if (aba === "pedidos") loadPedidos();
     if (aba === "estoque") loadEstoque();
-  }, [aba, loadPedidos, loadEstoque]);
+    if (aba === "relatorio") { loadMovimentos(); loadEstoque(); }
+  }, [aba, loadPedidos, loadEstoque, loadMovimentos]);
 
   // ── KPIs ──────────────────────────────────────────────────────────────────
   const pedPendentes  = pedidos.filter(p => p.status === "Pendente").length;
@@ -92,6 +115,27 @@ export default function Suprimentos() {
     };
     if (pedEdit) await atualizarPedido(pedEdit, payload); else await criarPedido(payload);
     setPedModal(false); loadPedidos();
+  }
+
+  // ── Dar entrada no estoque ────────────────────────────────────────────────
+  async function darEntrada() {
+    if (!entradaModal || !entradaEstoqueId) return;
+    const ped = entradaModal;
+    const item = estoque.find(e => e.id === entradaEstoqueId);
+    if (!item) return;
+    const qtd = Number(ped.quantidade);
+    await sb.from("suprimentos_movimentos").insert({
+      empresa_id: getEmpresaId(),
+      estoque_id: item.id,
+      tipo: "entrada",
+      quantidade: qtd,
+      obs: `Entrada via pedido: ${ped.item}${ped.obra?.nome ? ` — ${ped.obra.nome}` : ""}`,
+    });
+    await sb.from("suprimentos_estoque").update({ quantidade: item.quantidade + qtd }).eq("id", item.id);
+    setEntradaModal(null);
+    setEntradaEstoqueId("");
+    loadPedidos();
+    loadEstoque();
   }
 
   // ── Estoque handlers ──────────────────────────────────────────────────────
@@ -125,6 +169,18 @@ export default function Suprimentos() {
     if (confirm.tipo === "estoque") loadEstoque();
   }
 
+  // ── Relatório filtrado ────────────────────────────────────────────────────
+  const movFiltrados = movimentos.filter(m => {
+    if (relFiltro.tipo && m.tipo !== relFiltro.tipo) return false;
+    if (relFiltro.item && !(m.estoque?.item || "").toLowerCase().includes(relFiltro.item.toLowerCase())) return false;
+    if (relFiltro.de && m.created_at < relFiltro.de) return false;
+    if (relFiltro.ate && m.created_at > relFiltro.ate + "T23:59:59") return false;
+    return true;
+  });
+
+  const totalEntradas = movFiltrados.filter(m => m.tipo === "entrada").reduce((s, m) => s + m.quantidade, 0);
+  const totalSaidas   = movFiltrados.filter(m => m.tipo === "saida").reduce((s, m) => s + m.quantidade, 0);
+
   const tabStyle = (k) => ({
     padding: "8px 18px", borderRadius: 8, cursor: "pointer", fontWeight: 600, fontSize: 14,
     background: aba === k ? C.red : "transparent",
@@ -133,9 +189,10 @@ export default function Suprimentos() {
   });
 
   const fmt   = (d) => d ? new Date(d + "T12:00:00").toLocaleDateString("pt-BR") : "—";
+  const fmtDT = (d) => d ? new Date(d).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" }) : "—";
   const fmtR$ = (v) => v != null ? Number(v).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) : "—";
 
-  const selectStyle = { width: "100%", padding: "10px 12px", borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 14 };
+  const selectStyle = { width: "100%", padding: "10px 12px", borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 14, background: C.dark, color: C.text };
 
   return (
     <div style={{ padding: "0 0 40px" }}>
@@ -166,7 +223,7 @@ export default function Suprimentos() {
 
       {/* Tabs */}
       <div className="tab-row" style={{ display: "flex", gap: 6, marginBottom: 20, background: C.dark, borderRadius: 10, padding: 4 }}>
-        {[["pedidos","Pedidos"],["estoque","Estoque"]].map(([k,l]) => (
+        {[["pedidos","Pedidos"],["estoque","Estoque"],["relatorio","Relatório"]].map(([k,l]) => (
           <button key={k} style={tabStyle(k)} onClick={() => setAba(k)}>{l}</button>
         ))}
       </div>
@@ -181,36 +238,41 @@ export default function Suprimentos() {
           {pedLoading ? <p style={{ color: C.muted }}>Carregando...</p> : pedidos.length === 0 ? (
             <p style={{ color: C.muted, textAlign: "center", padding: 32 }}>Nenhum pedido registrado.</p>
           ) : (
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
-              <thead>
-                <tr style={{ borderBottom: `2px solid ${C.border}` }}>
-                  {["Item","Qtd","Urgência","Obra","Pedido","Entrega","Status",""].map(h => (
-                    <th key={h} style={{ textAlign: "left", padding: "8px 10px", color: C.muted, fontWeight: 600, fontSize: 12 }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {pedidos.map(p => (
-                  <tr key={p.id} style={{ borderBottom: `1px solid ${C.border}` }}>
-                    <td style={{ padding: "10px 10px", fontWeight: 600 }}>{p.item}</td>
-                    <td style={{ padding: "10px 10px", color: C.muted }}>{p.quantidade} {p.unidade}</td>
-                    <td style={{ padding: "10px 10px" }}>
-                      <span style={{ background: (corUrgencia[p.urgencia] || C.muted) + "20", color: corUrgencia[p.urgencia] || C.muted, borderRadius: 6, padding: "2px 8px", fontSize: 12, fontWeight: 700 }}>{p.urgencia}</span>
-                    </td>
-                    <td style={{ padding: "10px 10px", color: C.muted }}>{p.obra?.nome || "—"}</td>
-                    <td style={{ padding: "10px 10px", color: C.muted }}>{fmt(p.data_pedido)}</td>
-                    <td style={{ padding: "10px 10px", color: C.muted }}>{fmt(p.data_entrega)}</td>
-                    <td style={{ padding: "10px 10px" }}>
-                      <span style={{ background: (corStatus[p.status] || C.muted) + "20", color: corStatus[p.status] || C.muted, borderRadius: 6, padding: "2px 8px", fontSize: 12, fontWeight: 700 }}>{p.status}</span>
-                    </td>
-                    <td style={{ padding: "10px 10px", whiteSpace: "nowrap" }}>
-                      <Btn variant="ghost" size="sm" onClick={() => abrirEditPed(p)}>Editar</Btn>
-                      <Btn variant="ghost" size="sm" style={{ color: C.danger }} onClick={() => setConfirm({ id: p.id, tipo: "pedido", label: p.item })}>Excluir</Btn>
-                    </td>
+            <div style={{ overflowX: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
+                <thead>
+                  <tr style={{ borderBottom: `2px solid ${C.border}` }}>
+                    {["Item","Qtd","Urgência","Obra","Pedido","Entrega","Status",""].map(h => (
+                      <th key={h} style={{ textAlign: "left", padding: "8px 10px", color: C.muted, fontWeight: 600, fontSize: 12 }}>{h}</th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {pedidos.map(p => (
+                    <tr key={p.id} style={{ borderBottom: `1px solid ${C.border}` }}>
+                      <td style={{ padding: "10px 10px", fontWeight: 600 }}>{p.item}</td>
+                      <td style={{ padding: "10px 10px", color: C.muted }}>{p.quantidade} {p.unidade}</td>
+                      <td style={{ padding: "10px 10px" }}>
+                        <span style={{ background: (corUrgencia[p.urgencia] || C.muted) + "20", color: corUrgencia[p.urgencia] || C.muted, borderRadius: 6, padding: "2px 8px", fontSize: 12, fontWeight: 700 }}>{p.urgencia}</span>
+                      </td>
+                      <td style={{ padding: "10px 10px", color: C.muted }}>{p.obra?.nome || "—"}</td>
+                      <td style={{ padding: "10px 10px", color: C.muted }}>{fmt(p.data_pedido)}</td>
+                      <td style={{ padding: "10px 10px", color: C.muted }}>{fmt(p.data_entrega)}</td>
+                      <td style={{ padding: "10px 10px" }}>
+                        <span style={{ background: (corStatus[p.status] || C.muted) + "20", color: corStatus[p.status] || C.muted, borderRadius: 6, padding: "2px 8px", fontSize: 12, fontWeight: 700 }}>{p.status}</span>
+                      </td>
+                      <td style={{ padding: "10px 10px", whiteSpace: "nowrap" }}>
+                        {p.status === "Entregue" && (
+                          <Btn variant="ghost" size="sm" style={{ color: C.success }} onClick={() => { setEntradaModal(p); setEntradaEstoqueId(""); loadEstoque(); }}>📦 Dar entrada</Btn>
+                        )}
+                        <Btn variant="ghost" size="sm" onClick={() => abrirEditPed(p)}>Editar</Btn>
+                        <Btn variant="ghost" size="sm" style={{ color: C.danger }} onClick={() => setConfirm({ id: p.id, tipo: "pedido", label: p.item })}>Excluir</Btn>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       )}
@@ -225,37 +287,116 @@ export default function Suprimentos() {
           {estLoading ? <p style={{ color: C.muted }}>Carregando...</p> : estoque.length === 0 ? (
             <p style={{ color: C.muted, textAlign: "center", padding: 32 }}>Nenhum item cadastrado no estoque.</p>
           ) : (
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
-              <thead>
-                <tr style={{ borderBottom: `2px solid ${C.border}` }}>
-                  {["Item","Saldo","Mínimo","Localização","Vlr unitário","",""].map(h => (
-                    <th key={h} style={{ textAlign: "left", padding: "8px 10px", color: C.muted, fontWeight: 600, fontSize: 12 }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {estoque.map(e => {
-                  const abaixo = e.estoque_minimo > 0 && e.quantidade <= e.estoque_minimo;
-                  return (
-                    <tr key={e.id} style={{ borderBottom: `1px solid ${C.border}`, background: abaixo ? C.danger + "08" : "transparent" }}>
-                      <td style={{ padding: "10px 10px", fontWeight: 600 }}>{e.item}</td>
-                      <td style={{ padding: "10px 10px", color: abaixo ? C.danger : C.text, fontWeight: abaixo ? 700 : 400 }}>{e.quantidade} {e.unidade}</td>
-                      <td style={{ padding: "10px 10px", color: C.muted }}>{e.estoque_minimo > 0 ? `${e.estoque_minimo} ${e.unidade}` : "—"}</td>
-                      <td style={{ padding: "10px 10px", color: C.muted }}>{e.localizacao || "—"}</td>
-                      <td style={{ padding: "10px 10px", color: C.muted }}>{fmtR$(e.valor_unitario)}</td>
-                      <td style={{ padding: "10px 10px" }}>
-                        <Btn variant="ghost" size="sm" onClick={() => { setMovModal(e); setMovForm({ tipo: "entrada", quantidade: 1, obs: "" }); }}>Movimentar</Btn>
-                      </td>
-                      <td style={{ padding: "10px 10px", whiteSpace: "nowrap" }}>
-                        <Btn variant="ghost" size="sm" onClick={() => abrirEditEst(e)}>Editar</Btn>
-                        <Btn variant="ghost" size="sm" style={{ color: C.danger }} onClick={() => setConfirm({ id: e.id, tipo: "estoque", label: e.item })}>Excluir</Btn>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+            <div style={{ overflowX: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
+                <thead>
+                  <tr style={{ borderBottom: `2px solid ${C.border}` }}>
+                    {["Item","Saldo","Mínimo","Localização","Vlr unitário","",""].map(h => (
+                      <th key={h} style={{ textAlign: "left", padding: "8px 10px", color: C.muted, fontWeight: 600, fontSize: 12 }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {estoque.map(e => {
+                    const abaixo = e.estoque_minimo > 0 && e.quantidade <= e.estoque_minimo;
+                    return (
+                      <tr key={e.id} style={{ borderBottom: `1px solid ${C.border}`, background: abaixo ? C.danger + "08" : "transparent" }}>
+                        <td style={{ padding: "10px 10px", fontWeight: 600 }}>{e.item}</td>
+                        <td style={{ padding: "10px 10px", color: abaixo ? C.danger : C.text, fontWeight: abaixo ? 700 : 400 }}>{e.quantidade} {e.unidade}</td>
+                        <td style={{ padding: "10px 10px", color: C.muted }}>{e.estoque_minimo > 0 ? `${e.estoque_minimo} ${e.unidade}` : "—"}</td>
+                        <td style={{ padding: "10px 10px", color: C.muted }}>{e.localizacao || "—"}</td>
+                        <td style={{ padding: "10px 10px", color: C.muted }}>{fmtR$(e.valor_unitario)}</td>
+                        <td style={{ padding: "10px 10px" }}>
+                          <Btn variant="ghost" size="sm" onClick={() => { setMovModal(e); setMovForm({ tipo: "entrada", quantidade: 1, obs: "" }); }}>Movimentar</Btn>
+                        </td>
+                        <td style={{ padding: "10px 10px", whiteSpace: "nowrap" }}>
+                          <Btn variant="ghost" size="sm" onClick={() => abrirEditEst(e)}>Editar</Btn>
+                          <Btn variant="ghost" size="sm" style={{ color: C.danger }} onClick={() => setConfirm({ id: e.id, tipo: "estoque", label: e.item })}>Excluir</Btn>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           )}
+        </div>
+      )}
+
+      {/* ── Relatório de Movimentações ── */}
+      {aba === "relatorio" && (
+        <div>
+          {/* Filtros */}
+          <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: 16, marginBottom: 16 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12 }}>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: "block", marginBottom: 4 }}>Tipo</label>
+                <select value={relFiltro.tipo} onChange={e => setRelFiltro(f => ({ ...f, tipo: e.target.value }))} style={selectStyle}>
+                  <option value="">Todos</option>
+                  <option value="entrada">Entrada</option>
+                  <option value="saida">Saída</option>
+                </select>
+              </div>
+              <Input label="Item" value={relFiltro.item} onChange={v => setRelFiltro(f => ({ ...f, item: v }))} placeholder="Filtrar por item..." />
+              <Input label="De" type="date" value={relFiltro.de} onChange={v => setRelFiltro(f => ({ ...f, de: v }))} />
+              <Input label="Até" type="date" value={relFiltro.ate} onChange={v => setRelFiltro(f => ({ ...f, ate: v }))} />
+            </div>
+          </div>
+
+          {/* KPIs do relatório */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 16 }}>
+            <div style={kpiStyle(C.muted)}>
+              <div style={{ fontSize: 22, fontWeight: 900, color: C.text }}>{movFiltrados.length}</div>
+              <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>Movimentações</div>
+            </div>
+            <div style={kpiStyle(C.success)}>
+              <div style={{ fontSize: 22, fontWeight: 900, color: C.success }}>{totalEntradas.toLocaleString("pt-BR")}</div>
+              <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>Total entradas (un)</div>
+            </div>
+            <div style={kpiStyle(C.danger)}>
+              <div style={{ fontSize: 22, fontWeight: 900, color: C.danger }}>{totalSaidas.toLocaleString("pt-BR")}</div>
+              <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>Total saídas (un)</div>
+            </div>
+          </div>
+
+          {/* Tabela */}
+          <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: 20 }}>
+            <h3 style={{ fontWeight: 700, marginBottom: 16 }}>Histórico de Movimentações</h3>
+            {movLoading ? <p style={{ color: C.muted }}>Carregando...</p> : movFiltrados.length === 0 ? (
+              <p style={{ color: C.muted, textAlign: "center", padding: 32 }}>Nenhuma movimentação registrada.</p>
+            ) : (
+              <div style={{ overflowX: "auto" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
+                  <thead>
+                    <tr style={{ borderBottom: `2px solid ${C.border}` }}>
+                      {["Data/Hora","Item","Tipo","Quantidade","Observação"].map(h => (
+                        <th key={h} style={{ textAlign: "left", padding: "8px 10px", color: C.muted, fontWeight: 600, fontSize: 12 }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {movFiltrados.map(m => (
+                      <tr key={m.id} style={{ borderBottom: `1px solid ${C.border}` }}>
+                        <td style={{ padding: "10px 10px", color: C.muted, whiteSpace: "nowrap" }}>{fmtDT(m.created_at)}</td>
+                        <td style={{ padding: "10px 10px", fontWeight: 600 }}>{m.estoque?.item || "—"}</td>
+                        <td style={{ padding: "10px 10px" }}>
+                          <span style={{
+                            background: (m.tipo === "entrada" ? C.success : C.danger) + "20",
+                            color: m.tipo === "entrada" ? C.success : C.danger,
+                            borderRadius: 6, padding: "2px 10px", fontSize: 12, fontWeight: 700, textTransform: "capitalize"
+                          }}>{m.tipo}</span>
+                        </td>
+                        <td style={{ padding: "10px 10px", fontWeight: 600, color: m.tipo === "entrada" ? C.success : C.danger }}>
+                          {m.tipo === "entrada" ? "+" : "-"}{m.quantidade} {m.estoque?.unidade || ""}
+                        </td>
+                        <td style={{ padding: "10px 10px", color: C.muted }}>{m.obs || "—"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -306,6 +447,32 @@ export default function Suprimentos() {
             <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 4 }}>
               <Btn variant="ghost" onClick={() => setPedModal(false)}>Cancelar</Btn>
               <Btn onClick={salvarPed} disabled={!pedForm.item || !pedForm.quantidade}>Salvar</Btn>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* ── Modal Dar Entrada no Estoque ── */}
+      {entradaModal && (
+        <Modal onClose={() => setEntradaModal(null)} title="Dar Entrada no Estoque">
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <div style={{ background: C.dark, borderRadius: 8, padding: 14, fontSize: 14 }}>
+              <div><strong>{entradaModal.item}</strong></div>
+              <div style={{ color: C.muted, marginTop: 4 }}>Quantidade: <strong>{entradaModal.quantidade} {entradaModal.unidade}</strong></div>
+            </div>
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: "block", marginBottom: 4 }}>Vincular ao item de estoque *</label>
+              <select value={entradaEstoqueId} onChange={e => setEntradaEstoqueId(e.target.value)} style={selectStyle}>
+                <option value="">— Selecione o item do estoque —</option>
+                {estoque.map(e => (
+                  <option key={e.id} value={e.id}>{e.item} (saldo: {e.quantidade} {e.unidade})</option>
+                ))}
+              </select>
+            </div>
+            <p style={{ fontSize: 12, color: C.muted }}>A entrada será registrada automaticamente no histórico de movimentações.</p>
+            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+              <Btn variant="ghost" onClick={() => setEntradaModal(null)}>Cancelar</Btn>
+              <Btn onClick={darEntrada} disabled={!entradaEstoqueId}>📦 Confirmar entrada</Btn>
             </div>
           </div>
         </Modal>
