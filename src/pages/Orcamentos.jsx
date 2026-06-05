@@ -718,6 +718,8 @@ export default function Orcamentos() {
     else localStorage.removeItem("sf_estimativo");
   }
   const [obraForm,   setObraForm]   = useState({ nome: "", prazo_inicio: "", prazo_fim: "" });
+  const [modoComparar, setModoComparar] = useState(false);
+  const [selecionados, setSelecionados] = useState([]);
 
 
 
@@ -1086,6 +1088,15 @@ export default function Orcamentos() {
             }}>
               <Zap size={13} /> Calculadora estimativa
             </button>
+            <button onClick={() => { setModoComparar(v => !v); setSelecionados([]); }} style={{
+              background: modoComparar ? "#2563eb22" : "none",
+              border: `1px solid ${modoComparar ? "#2563eb" : C.border}`,
+              color: modoComparar ? "#2563eb" : C.muted,
+              borderRadius: 8, padding: "9px 16px", fontSize: 13, fontWeight: 700,
+              cursor: "pointer", fontFamily: "inherit",
+            }}>
+              ⚖️ Comparar
+            </button>
             <Btn onClick={abrirNovo}>+ Novo orçamento</Btn>
           </div>
         </div>
@@ -1271,6 +1282,21 @@ export default function Orcamentos() {
 
                   {/* Ações */}
                   <div style={{ display: "flex", gap: 8, marginTop: 14, flexWrap: "wrap" }}>
+                    {modoComparar && (
+                      <button onClick={() => setSelecionados(prev => {
+                        if (prev.includes(o.id)) return prev.filter(id => id !== o.id);
+                        if (prev.length >= 2) return prev;
+                        return [...prev, o.id];
+                      })} style={{
+                        padding: "6px 14px",
+                        background: selecionados.includes(o.id) ? "#2563eb" : "#2563eb22",
+                        border: `1px solid #2563eb44`, borderRadius: 6,
+                        color: selecionados.includes(o.id) ? "#fff" : "#2563eb",
+                        fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
+                      }}>
+                        {selecionados.includes(o.id) ? "✓ Selecionado" : "Selecionar"}
+                      </button>
+                    )}
                     <Btn variant="ghost" size="sm" onClick={() => abrirEditar(o)}><Pencil size={13} /> Editar</Btn>
                     <button
                       onClick={() => gerarPDF(o)}
