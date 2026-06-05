@@ -680,6 +680,16 @@ export default function GestaoObras() {
     if (!obraId && obras.length > 0) setObraId(obras[0].id);
   }, [obras, obraId]);
 
+  const obraParaToken = obras.find((o) => o.id === obraId);
+  useEffect(() => {
+    if (!obraId || !obraParaToken || obraParaToken.token_portal) return;
+    const base = (obraParaToken.nome || "obra")
+      .toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
+      .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 20);
+    const token = `${base}-${new Date().getFullYear()}`;
+    updateObra(obraId, { token_portal: token });
+  }, [obraId, obraParaToken?.token_portal]);
+
   // Chat do portal: carrega + Realtime
   useEffect(() => {
     if (!obraId) return;

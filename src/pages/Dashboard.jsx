@@ -599,6 +599,18 @@ ${obrasAndamento.length > 0 ? `
   // ── Evolução mensal de receitas ───────────────────────────────────────────
   const evolucao = evolucaoMensal(allLancamentos, "receita", 6);
 
+  // ── Propostas por mês (enviadas vs aprovadas) ─────────────────────────────
+  const evolucaoPropostas = (() => {
+    const agora = new Date();
+    return Array.from({ length: 6 }, (_, i) => {
+      const d = new Date(agora.getFullYear(), agora.getMonth() - (5 - i), 1);
+      const y = d.getFullYear(), m = d.getMonth();
+      const enviadas  = orcamentos.filter(o => { const c = new Date(o.created_at); return c.getFullYear() === y && c.getMonth() === m; }).length;
+      const aprovadas = orcamentos.filter(o => { const c = new Date(o.created_at); return c.getFullYear() === y && c.getMonth() === m && o.status === "Aprovado"; }).length;
+      return { label: MESES[m], rec: enviadas, desp: aprovadas };
+    });
+  })();
+
   // ── Despesas por categoria ────────────────────────────────────────────────
   const despCats = CATEGORIAS_DESPESA.map((cat) => ({
     label: cat.split(" ")[0],
@@ -817,6 +829,15 @@ ${obrasAndamento.length > 0 ? `
           ) : (
             <GraficoLinha data={evolucao} height={80} color={C.success} />
           )}
+        </div>
+        {/* Evolução mensal de propostas */}
+        <div style={{ background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", padding: 20, border: `1px solid ${C.border}` }}>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 4 }}>PROPOSTAS — 6 MESES</div>
+          <div style={{ display: "flex", gap: 16, marginBottom: 10 }}>
+            <div style={{ fontSize: 13, fontWeight: 700 }}><span style={{ display: "inline-block", width: 10, height: 10, borderRadius: 2, background: C.success, marginRight: 4 }} />Enviadas</div>
+            <div style={{ fontSize: 13, fontWeight: 700 }}><span style={{ display: "inline-block", width: 10, height: 10, borderRadius: 2, background: C.red, marginRight: 4 }} />Aprovadas</div>
+          </div>
+          <GraficoBarras data={evolucaoPropostas} height={80} />
         </div>
       </div>
 
