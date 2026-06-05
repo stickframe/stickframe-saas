@@ -62,6 +62,17 @@ export default function SST() {
   const [assEpiModal, setAssEpiModal] = useState(null); // epi object
   const [assDdsModal, setAssDdsModal] = useState(null); // dds object
   const [assDdsNome, setAssDdsNome]   = useState("");
+  const [verAssModal, setVerAssModal] = useState(null); // dds object para ver assinaturas
+  const [verAssLista, setVerAssLista] = useState([]);
+  const [verAssLoading, setVerAssLoading] = useState(false);
+
+  async function abrirVerAss(d) {
+    setVerAssModal(d);
+    setVerAssLoading(true);
+    const { data } = await sb.from("sst_dds_assinaturas").select("*").eq("dds_id", d.id).order("created_at");
+    setVerAssLista(data || []);
+    setVerAssLoading(false);
+  }
 
   async function salvarAssEpi(base64) {
     await sb.from("sst_epis").update({ assinatura_base64: base64, assinado: true }).eq("id", assEpiModal.id);
@@ -226,7 +237,7 @@ export default function SST() {
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
               <thead>
                 <tr style={{ borderBottom: `2px solid ${C.border}` }}>
-                  {["Data","Tema","Facilitador","Obra","Participantes",""].map(h => (
+                  {["Data","Tema","Facilitador","Obra","Participantes","Assinaturas",""].map(h => (
                     <th key={h} style={{ textAlign: "left", padding: "8px 10px", color: C.muted, fontWeight: 600, fontSize: 12 }}>{h}</th>
                   ))}
                 </tr>
@@ -239,6 +250,11 @@ export default function SST() {
                     <td style={{ padding: "10px 10px", color: C.muted }}>{d.facilitador || "—"}</td>
                     <td style={{ padding: "10px 10px", color: C.muted }}>{d.obra?.nome || "—"}</td>
                     <td style={{ padding: "10px 10px", color: C.muted }}>{(d.participantes || []).length} pessoa(s)</td>
+                    <td style={{ padding: "10px 10px" }}>
+                      <Btn variant="ghost" size="sm" onClick={() => abrirVerAss(d)} style={{ color: "#4a9eff" }}>
+                        🖊 Ver ({d.assinaturas_count ?? "—"})
+                      </Btn>
+                    </td>
                     <td style={{ padding: "10px 10px", whiteSpace: "nowrap" }}>
                       <Btn variant="ghost" size="sm" onClick={() => { setAssDdsModal(d); setAssDdsNome(""); }} style={{ color: C.warning }}>✍ Assinar</Btn>
                       <Btn variant="ghost" size="sm" onClick={() => abrirEditDDS(d)}>Editar</Btn>
@@ -505,6 +521,41 @@ export default function SST() {
               </div>
             )}
           </div>
+        </Modal>
+      )}
+
+      {/* ── Modal Ver Assinaturas DDS ── */}
+      {verAssModal && (
+        <Modal onClose={() => setVerAssModal(null)} title={`🖊 Assinaturas — ${verAssModal.tema}`}>
+          {verAssLoading ? (
+            <p style={{ color: C.muted }}>Carregando...</p>
+          ) : verAssLista.length === 0 ? (
+            <div style={{ textAlign: "center", padding: 32 }}>
+              <p style={{ color: C.muted, marginBottom: 16 }}>Nenhuma assinatura registrada ainda.</p>
+              <Btn onClick={() => { setVerAssModal(null); setAssDdsModal(verAssModal); setAssDdsNome(""); }}>✍ Assinar agora</Btn>
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+              <p style={{ color: C.muted, fontSize: 13 }}>{verAssLista.length} assinatura(s) registrada(s)</p>
+              {verAssLista.map((ass, i) => (
+                <div key={ass.id} style={{ border: `1px solid ${C.border}`, borderRadius: 10, overflow: "hidden" }}>
+                  <div style={{ background: C.dark, padding: "10px 14px", fontWeight: 700, fontSize: 13 }}>
+                    {i + 1}. {ass.nome}
+                    <span style={{ fontWeight: 400, color: C.muted, marginLeft: 10, fontSize: 11 }}>
+                      {new Date(ass.created_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                    </span>
+                  </div>
+                  <div style={{ background: "#fff", padding: 8 }}>
+                    <img src={ass.assinatura_base64} alt={`Assinatura de ${ass.nome}`} style={{ width: "100%", display: "block", borderRadius: 4 }} />
+                  </div>
+                </div>
+              ))}
+              <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+                <Btn variant="ghost" onClick={() => setVerAssModal(null)}>Fechar</Btn>
+                <Btn onClick={() => { setVerAssModal(null); setAssDdsModal(verAssModal); setAssDdsNome(""); }}>✍ + Adicionar assinatura</Btn>
+              </div>
+            </div>
+          )}
         </Modal>
       )}
 

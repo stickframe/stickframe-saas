@@ -3,13 +3,13 @@ import { sb, getEmpresaId } from "../supabase";
 // ── DDS ──────────────────────────────────────────────────────────────────────
 export async function listarDDS(filters = {}) {
   let q = sb.from("sst_dds")
-    .select("*, obra:obras(nome)")
+    .select("*, obra:obras(nome), assinaturas_count:sst_dds_assinaturas(count)")
     .eq("empresa_id", getEmpresaId())
     .order("data", { ascending: false });
   if (filters.obra_id) q = q.eq("obra_id", filters.obra_id);
   const { data, error } = await q;
   if (error) throw error;
-  return data || [];
+  return (data || []).map(d => ({ ...d, assinaturas_count: Array.isArray(d.assinaturas_count) ? (d.assinaturas_count[0]?.count ?? 0) : (d.assinaturas_count ?? 0) }));
 }
 
 export async function criarDDS(d) {
