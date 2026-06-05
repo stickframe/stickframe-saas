@@ -145,13 +145,18 @@ export default function SST() {
   function abrirNovoInc() { setIncEdit(null); setIncForm({ data: hoje, tipo: "Quase-acidente", gravidade: "Baixa", descricao: "", acao_corretiva: "", status: "Aberto", obra_id: "", colaborador_id: "" }); setIncModal(true); }
   function abrirEditInc(i) { setIncEdit(i.id); setIncForm({ ...i, obra_id: i.obra_id || "", colaborador_id: i.colaborador_id || "" }); setIncModal(true); }
   async function salvarInc() {
+    const { obra, colaborador, ...rest } = incForm;
     const payload = {
-      ...incForm,
+      ...rest,
       obra_id: incForm.obra_id || null,
       colaborador_id: incForm.colaborador_id || null,
     };
-    if (incEdit) await atualizarIncidente(incEdit, payload); else await criarIncidente(payload);
-    setIncModal(false); loadInc();
+    try {
+      if (incEdit) await atualizarIncidente(incEdit, payload); else await criarIncidente(payload);
+      setIncModal(false); loadInc();
+    } catch (e) {
+      alert("Erro ao salvar incidente: " + (e.message || e));
+    }
   }
 
   // ── EPI handlers ──────────────────────────────────────────────────────────
