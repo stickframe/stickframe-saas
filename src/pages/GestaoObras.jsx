@@ -11,8 +11,8 @@ import { ArquivoVersoes } from "../components/obras/ArquivoVersoes";
 import { PlantaApontamentos } from "../components/obras/PlantaApontamentos";
 import { PdfViewer } from "../components/obras/PdfViewer";
 import { useObraPermission, useObrasVisiveis } from "../hooks/useObraPermission";
-import { sb } from "../services/supabase";
-import { useState, useEffect, useMemo } from "react";
+import { sb, getEmpresaId } from "../services/supabase";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { AlertTriangle, BarChart2, ClipboardList, DollarSign, HardHat, Pencil, Ruler, Search, Trash2, TrendingUp } from "../components/ui/Icon";
 import { useToast } from "../hooks/useToast";
 import { C, FASES } from "../utils/constants";
@@ -423,6 +423,165 @@ const FORM_VAZIO = {
   prazo_inicio: "", prazo_fim: "", contrato: 0, progresso: 0, retencao_pct: 5,
 };
 
+
+// ── helpers para chat ──────────────────────────────────────────────────────
+function chatAvatarColor(nome) {
+  if (!nome) return "#981915";
+  const colors = ["#981915", "#2e9e5b", "#4a7af8", "#b97a00", "#7c3aed", "#0891b2"];
+  let h = 0;
+  for (let i = 0; i < nome.length; i++) h = (h * 31 + nome.charCodeAt(i)) >>> 0;
+  return colors[h % colors.length];
+}
+function chatInitials(nome) {
+  if (!nome) return "?";
+  const p = nome.trim().split(" ");
+  if (p.length === 1) return p[0][0].toUpperCase();
+  return (p[0][0] + p[p.length - 1][0]).toUpperCase();
+}
+function chatTimeAgo(dateStr) {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const min = Math.floor(diff / 60000);
+  if (min < 1) return "agora";
+  if (min < 60) return `há ${min} min`;
+  const h = Math.floor(min / 60);
+  if (h < 24) return `há ${h}h`;
+  const d = Math.floor(h / 24);
+  return `há ${d} dia${d > 1 ? "s" : ""}`;
+}
+
+function ObraChatPanel({ obraId, userName, userPerfil, empresaId }) {
+  const [msgs, setMsgs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [text, setText] = useState("");
+  const [sending, setSending] = useState(false);
+  const bottomRef = useRef(null);
+
+  useEffect(() => {
+    if (!obraId) return;
+    setLoading(true);
+    sb.from("obra_chat")
+      .select("*")
+      .eq("obra_id", obraId)
+      .order("created_at", { ascending: true })
+      .then(({ data }) => { setMsgs(data || []); setLoading(false); });
+
+    const channel = sb
+      .channel(`obra-chat-${obraId}`)
+      .on("postgres_changes", {
+        event: "INSERT",
+        schema: "public",
+        table: "obra_chat",
+        filter: `obra_id=eq.${obraId}`,
+      }, (payload) => {
+        setMsgs((prev) => [...prev, payload.new]);
+      })
+      .subscribe();
+
+    return () => { sb.removeChannel(channel); };
+  }, [obraId]);
+
+  useEffect(() => {
+    if (bottomRef.current) bottomRef.current.scrollIntoView({ behavior: "smooth" });
+  }, [msgs]);
+
+  async function send() {
+    const msg = text.trim();
+    if (!msg || sending) return;
+    setSending(true);
+    setText("");
+    const empId = empresaId || getEmpresaId();
+    await sb.from("obra_chat").insert({
+      obra_id: obraId,
+      empresa_id: empId,
+      autor_nome: userName || "Usuário",
+      autor_perfil: userPerfil || null,
+      mensagem: msg,
+    });
+    setSending(false);
+  }
+
+  function handleKey(e) {
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
+  }
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: 520 }}>
+      {/* messages area */}
+      <div style={{ flex: 1, overflowY: "auto", padding: "16px 0", display: "flex", flexDirection: "column", gap: 12 }}>
+        {loading && <div style={{ color: C.muted, fontSize: 13, textAlign: "center", marginTop: 40 }}>Carregando mensagens…</div>}
+        {!loading && msgs.length === 0 && (
+          <div style={{ color: C.muted, fontSize: 13, textAlign: "center", marginTop: 40 }}>
+            Nenhuma mensagem ainda. Inicie a conversa!
+          </div>
+        )}
+        {msgs.map((m) => {
+          const isOwn = m.autor_nome === userName;
+          return (
+            <div key={m.id} style={{ display: "flex", flexDirection: isOwn ? "row-reverse" : "row", alignItems: "flex-end", gap: 8, padding: "0 4px" }}>
+              <div style={{
+                width: 32, height: 32, borderRadius: "50%",
+                background: chatAvatarColor(m.autor_nome),
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: 12, fontWeight: 700, color: "#fff", flexShrink: 0,
+              }}>
+                {chatInitials(m.autor_nome)}
+              </div>
+              <div style={{ maxWidth: "65%", display: "flex", flexDirection: "column", alignItems: isOwn ? "flex-end" : "flex-start", gap: 3 }}>
+                <div style={{ display: "flex", gap: 6, alignItems: "baseline", flexDirection: isOwn ? "row-reverse" : "row" }}>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: C.text }}>{m.autor_nome}</span>
+                  {m.autor_perfil && <span style={{ fontSize: 11, color: C.muted }}>{m.autor_perfil}</span>}
+                  <span style={{ fontSize: 11, color: C.muted }}>{chatTimeAgo(m.created_at)}</span>
+                </div>
+                <div style={{
+                  background: isOwn ? C.red : C.surface,
+                  border: `1px solid ${isOwn ? C.red : C.border}`,
+                  borderRadius: isOwn ? "14px 14px 4px 14px" : "14px 14px 14px 4px",
+                  padding: "8px 12px",
+                  fontSize: 13, color: isOwn ? "#fff" : C.text,
+                  lineHeight: 1.5, whiteSpace: "pre-wrap", wordBreak: "break-word",
+                }}>
+                  {m.mensagem}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+        <div ref={bottomRef} />
+      </div>
+      {/* input */}
+      <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: 12, display: "flex", gap: 8, alignItems: "flex-end" }}>
+        <textarea
+          value={text}
+          onChange={v => setText(v.target.value)}
+          onKeyDown={handleKey}
+          placeholder="Escreva uma mensagem…"
+          rows={2}
+          style={{
+            flex: 1, boxSizing: "border-box",
+            background: C.surface, border: `1px solid ${C.border}`,
+            borderRadius: 8, padding: "10px 13px",
+            color: C.text, fontSize: 13, outline: "none",
+            fontFamily: "inherit", resize: "none",
+          }}
+        />
+        <button
+          onClick={send}
+          disabled={!text.trim() || sending}
+          style={{
+            padding: "10px 18px", borderRadius: 8, border: "none",
+            background: text.trim() && !sending ? C.red : C.border,
+            color: "#fff", fontSize: 13, fontWeight: 700,
+            cursor: text.trim() && !sending ? "pointer" : "default",
+            fontFamily: "inherit", flexShrink: 0,
+          }}
+        >
+          Enviar
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function GestaoObras() {
   const { toast, mostrarToast } = useToast();
   useModuleLoad("obras");
@@ -444,6 +603,7 @@ export default function GestaoObras() {
   const financeiro        = useAppStore((s) => s.financeiro);
   const perfil            = useAppStore((s) => s.user?.perfil);
   const userId            = useAppStore((s) => s.user?.uid);
+  const userName          = useAppStore((s) => s.user?.nome);
   const empresaId         = useAppStore((s) => s.empresaId);
   const marcarCiente      = useAppStore((s) => s.marcarCiente);
   const medicoes          = useAppStore((s) => s.medicoes);
@@ -1302,7 +1462,7 @@ export default function GestaoObras() {
                 {/* Abas */}
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: `1px solid ${C.border}` }}>
                 <div style={{ display: "flex", flex: 1, overflowX: "auto", scrollbarWidth: "thin" }}>
-                  {[["fases", "Fases"], ["financeiro", "Financeiro"], ["fluxo", "Fluxo"], ["cronograma", "Cronograma"], ["diario", "Diário"], ["fotos", "Fotos"], ["arquivos", "Arquivos"], ["ncr", "NCR"], ["rfis", "RFIs"], ["rastreio", "Rastreio"], ["historico", "Histórico"], ...(obra.status === "Concluída" ? [["garantia", "Garantia"]] : []), ["garantias", "Garantias"], ...(perfil === "diretor" ? [["membros", "Membros"]] : []), ["presenca", "Presença"], ["comentarios", "Comentários"]].map(([k, l]) => (
+                  {[["fases", "Fases"], ["financeiro", "Financeiro"], ["fluxo", "Fluxo"], ["cronograma", "Cronograma"], ["diario", "Diário"], ["fotos", "Fotos"], ["arquivos", "Arquivos"], ["ncr", "NCR"], ["rfis", "RFIs"], ["rastreio", "Rastreio"], ["historico", "Histórico"], ...(obra.status === "Concluída" ? [["garantia", "Garantia"]] : []), ["garantias", "Garantias"], ...(perfil === "diretor" ? [["membros", "Membros"]] : []), ["presenca", "Presença"], ["comentarios", "Comentários"], ["chat", "💬 Chat"]].map(([k, l]) => (
                     <button key={k} onClick={() => {
                       if (k === "diario" && userId) {
                         const pendentes = arqObra.filter((a) => a.disciplina && a.status_doc !== "Desatualizado" && !(a.cientes_uids || []).includes(userId));
@@ -2247,6 +2407,10 @@ export default function GestaoObras() {
                   <div style={{ padding: "20px 0" }}>
                     <Comentarios entidade="obra" entidadeId={obraId} />
                   </div>
+                )}
+
+                {abaAtiva === "chat" && (
+                  <ObraChatPanel obraId={obraId} userName={userName} userPerfil={perfil} empresaId={empresaId} />
                 )}
 
               </div>
