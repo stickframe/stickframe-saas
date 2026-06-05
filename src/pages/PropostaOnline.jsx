@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { CheckCircle } from "../components/ui/Icon";
 import { useParams } from "react-router-dom";
 import { sb } from "../services/supabase";
@@ -17,6 +17,35 @@ export default function PropostaOnline() {
   const [aceite,  setAceite]  = useState({ nome: "", aceito: false });
   const [enviando,setEnviando]= useState(false);
   const [aceiteFeito, setAceiteFeito] = useState(false);
+  const [assinando, setAssinando] = useState(false);
+  const [assinaturaDone, setAssinaturaDone] = useState(false);
+  const canvasRef = useRef(null);
+  const [desenhando, setDesenhando] = useState(false);
+  const [canvasVazio, setCanvasVazio] = useState(true);
+
+  useEffect(() => {
+    if (!assinando || !canvasRef.current) return;
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.strokeStyle = "#1a1a1a";
+    ctx.lineWidth = 2.5;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+  }, [assinando]);
+
+  function getPos(e, canvas) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    if (e.touches) return { x: (e.touches[0].clientX - rect.left) * scaleX, y: (e.touches[0].clientY - rect.top) * scaleY };
+    return { x: (e.clientX - rect.left) * scaleX, y: (e.clientY - rect.top) * scaleY };
+  }
+
+  function getAssinaturaBase64() {
+    return canvasRef.current?.toDataURL("image/png") || null;
+  }
   const hoje = new Date().toLocaleDateString("pt-BR");
 
   useEffect(() => {
@@ -36,6 +65,7 @@ export default function PropostaOnline() {
       await sb.from("orcamentos").update({
         aceite_nome: aceite.nome,
         aceite_data: new Date().toISOString(),
+        aceite_assinatura: getAssinaturaBase64(),
         status: "Aprovado",
       }).eq("proposta_token", token);
       setAceiteFeito(true);
@@ -216,6 +246,46 @@ export default function PropostaOnline() {
                 placeholder="Digite seu nome completo para assinar"
                 style={{ width: "100%", padding: "12px 14px", borderRadius: 8, border: "1px solid #ddd", fontSize: 13, fontFamily: "inherit", marginBottom: 12, outline: "none" }}
               />
+
+              {/* Canvas de assinatura */}
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "#888", marginBottom: 8, letterSpacing: 1 }}>ASSINATURA DIGITAL</div>
+                {assinaturaDone ? (
+                  <div style={{ border: "1px solid #86efac", borderRadius: 8, overflow: "hidden", background: "#f0fdf4", padding: 8 }}>
+                    <canvas ref={canvasRef} width={500} height={150} style={{ width: "100%", height: 150, display: "block" }} />
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 6 }}>
+                      <span style={{ fontSize: 11, color: "#2e9e5b", fontWeight: 700 }}>✅ Assinatura registrada</span>
+                      <button onClick={() => { setAssinaturaDone(false); setCanvasVazio(true); setAssinando(true); }} style={{ fontSize: 11, color: "#888", background: "none", border: "none", cursor: "pointer" }}>Refazer</button>
+                    </div>
+                  </div>
+                ) : assinando ? (
+                  <div>
+                    <div style={{ border: "2px solid #ddd", borderRadius: 8, overflow: "hidden", background: "#fff", touchAction: "none" }}>
+                      <canvas
+                        ref={canvasRef} width={500} height={150}
+                        style={{ width: "100%", height: 150, display: "block", cursor: "crosshair" }}
+                        onMouseDown={(e) => { e.preventDefault(); const c = canvasRef.current; const ctx = c.getContext("2d"); const p = getPos(e, c); ctx.beginPath(); ctx.moveTo(p.x, p.y); setDesenhando(true); setCanvasVazio(false); }}
+                        onMouseMove={(e) => { if (!desenhando) return; e.preventDefault(); const c = canvasRef.current; const ctx = c.getContext("2d"); const p = getPos(e, c); ctx.lineTo(p.x, p.y); ctx.stroke(); }}
+                        onMouseUp={() => setDesenhando(false)}
+                        onMouseLeave={() => setDesenhando(false)}
+                        onTouchStart={(e) => { e.preventDefault(); const c = canvasRef.current; const ctx = c.getContext("2d"); const p = getPos(e, c); ctx.beginPath(); ctx.moveTo(p.x, p.y); setDesenhando(true); setCanvasVazio(false); }}
+                        onTouchMove={(e) => { if (!desenhando) return; e.preventDefault(); const c = canvasRef.current; const ctx = c.getContext("2d"); const p = getPos(e, c); ctx.lineTo(p.x, p.y); ctx.stroke(); }}
+                        onTouchEnd={() => setDesenhando(false)}
+                      />
+                    </div>
+                    <div style={{ display: "flex", gap: 8, marginTop: 8, justifyContent: "flex-end" }}>
+                      <button onClick={() => { const c = canvasRef.current; const ctx = c.getContext("2d"); ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, c.width, c.height); setCanvasVazio(true); }} style={{ padding: "6px 14px", borderRadius: 6, border: "1px solid #ddd", background: "#fff", cursor: "pointer", fontSize: 12 }}>Limpar</button>
+                      <button onClick={() => { setAssinando(false); setAssinaturaDone(false); }} style={{ padding: "6px 14px", borderRadius: 6, border: "1px solid #ddd", background: "#fff", cursor: "pointer", fontSize: 12 }}>Cancelar</button>
+                      <button disabled={canvasVazio} onClick={() => { setAssinaturaDone(true); setAssinando(false); }} style={{ padding: "6px 14px", borderRadius: 6, border: "none", background: canvasVazio ? "#ccc" : "#981915", color: "#fff", cursor: canvasVazio ? "not-allowed" : "pointer", fontSize: 12, fontWeight: 700 }}>✅ Confirmar</button>
+                    </div>
+                  </div>
+                ) : (
+                  <button onClick={() => setAssinando(true)} style={{ width: "100%", padding: "12px", borderRadius: 8, border: "2px dashed #ddd", background: "#fafafa", cursor: "pointer", fontSize: 13, color: "#888", fontFamily: "inherit" }}>
+                    ✍ Clique aqui para assinar digitalmente
+                  </button>
+                )}
+              </div>
+
               <label style={{ display: "flex", alignItems: "flex-start", gap: 10, cursor: "pointer", marginBottom: 16 }}>
                 <input type="checkbox" checked={aceite.aceito} onChange={(e) => setAceite((a) => ({ ...a, aceito: e.target.checked }))} style={{ marginTop: 2, flexShrink: 0 }} />
                 <span style={{ fontSize: 12, color: "#555", lineHeight: 1.5 }}>

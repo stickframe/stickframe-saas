@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import * as XLSX from "xlsx";
 import { ClipboardList, DollarSign, Pencil, Phone, Trash2 } from "../components/ui/Icon";
 import Certificacoes from "../components/equipe/Certificacoes";
 import { printHtml } from "../utils/printHtml";
@@ -231,10 +232,75 @@ export default function Equipe() {
   const [horaFiltroColaborador, setHoraFiltroColaborador] = useState("");
   const [horaFiltroObra, setHoraFiltroObra] = useState("");
 
+  // Relatório de Horas (registros_ponto)
+  const [relAno,     setRelAno]     = useState(() => new Date().getFullYear());
+  const [relMes,     setRelMes]     = useState(() => new Date().getMonth() + 1);
+  const [relDados,   setRelDados]   = useState([]);
+  const [relLoading, setRelLoading] = useState(false);
+
   useEffect(() => {
     loadAlocacoes();
     loadHorasTrabalhadas();
   }, [loadAlocacoes, loadHorasTrabalhadas]);
+
+  const carregarRelatorio = useCallback(async () => {
+    setRelLoading(true);
+    try {
+      const { sb, getEmpresaId } = await import("../services/supabase");
+      const startOfMonth = new Date(relAno, relMes - 1, 1).toISOString();
+      const endOfMonth   = new Date(relAno, relMes,     1).toISOString();
+      const { data, error } = await sb
+        .from("registros_ponto")
+        .select("*, colaborador:colaboradores(nome)")
+        .eq("empresa_id", getEmpresaId())
+        .gte("entrada", startOfMonth)
+        .lt("entrada", endOfMonth);
+      if (error) throw error;
+      const mapa = {};
+      (data || []).forEach((r) => {
+        const id = r.colaborador_id;
+        if (!mapa[id]) mapa[id] = { id, nome: r.colaborador?.nome || id, totalHoras: 0, dias: new Set(), obras: new Set() };
+        if (r.entrada && r.saida) {
+          const h = (new Date(r.saida) - new Date(r.entrada)) / 3600000;
+          if (h > 0) mapa[id].totalHoras += h;
+        }
+        if (r.entrada) mapa[id].dias.add(r.entrada.slice(0, 10));
+        if (r.obra_id) mapa[id].obras.add(r.obra_id);
+      });
+      const linhas = Object.values(mapa).map((row) => ({
+        id:          row.id,
+        nome:        row.nome,
+        totalHoras:  row.totalHoras,
+        diasCount:   row.dias.size,
+        mediaDiaria: row.dias.size > 0 ? row.totalHoras / row.dias.size : 0,
+        obrasNomes:  [...row.obras].map((oid) => obras.find((o) => o.id === oid)?.nome?.split("—")[0]?.trim() || oid).join(", "),
+      })).sort((a, b) => b.totalHoras - a.totalHoras);
+      setRelDados(linhas);
+    } catch (e) {
+      console.error("Erro ao carregar relatório de horas:", e);
+    } finally {
+      setRelLoading(false);
+    }
+  }, [relAno, relMes, obras]);
+
+  useEffect(() => {
+    if (tab === "relatorio") carregarRelatorio();
+  }, [tab, carregarRelatorio]);
+
+  function exportarRelatorioExcel() {
+    const mesNome = new Date(relAno, relMes - 1, 1).toLocaleString("pt-BR", { month: "long" });
+    const rows = relDados.map((r) => ({
+      "Nome":             r.nome,
+      "Total de Horas":   parseFloat(r.totalHoras.toFixed(2)),
+      "Dias Trabalhados": r.diasCount,
+      "Média Diária (h)": parseFloat(r.mediaDiaria.toFixed(2)),
+      "Obras":            r.obrasNomes || "—",
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Horas");
+    XLSX.writeFile(wb, `relatorio-horas-${mesNome}-${relAno}.xlsx`);
+  }
 
   // Certificações para badges nos cards
   const [certsByColab, setCertsByColab] = useState({});
@@ -272,7 +338,7 @@ export default function Equipe() {
   function gerarCracha(c, certs = []) {
     if (!c.token_ponto) return;
     const url = `${window.location.origin}/ponto/${c.token_ponto}`;
-    const qr  = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}`;
+    const qr  = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(url)}`;
     const inicial = c.nome[0].toUpperCase();
     const avatarHtml = c.foto_url
       ? `<img src="${c.foto_url}" class="avatar-foto"/>`
@@ -302,21 +368,22 @@ export default function Equipe() {
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
       <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { display:flex; align-items:center; justify-content:center; min-height:100vh; background:#f5f5f7; font-family:Inter,Arial,sans-serif; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
-        .card { width:240px; background:#fff; border-radius:16px; padding:28px 20px 20px; text-align:center; box-shadow:0 4px 20px rgba(0,0,0,.12); border-top:6px solid #981915; }
-        .logo { height:48px; margin-bottom:16px; display:block; margin-left:auto; margin-right:auto; }
-        .avatar { width:72px; height:72px; border-radius:50%; background:#981915; color:#fff; font-size:28px; font-weight:900; line-height:72px; text-align:center; margin:0 auto 12px; display:block; }
-        .avatar-foto { width:72px; height:72px; border-radius:50%; object-fit:cover; margin:0 auto 12px; display:block; border:3px solid #981915; }
-        .nome { font-size:15px; font-weight:800; color:#1a1a1a; margin-bottom:4px; letter-spacing:.3px; }
-        .cargo { font-size:11px; color:#6b7280; margin-bottom:16px; text-transform:uppercase; letter-spacing:.8px; }
-        .qr { width:160px; height:160px; margin:0 auto 14px; display:block; border:1px solid #eee; border-radius:8px; padding:4px; }
-        .label { font-size:9px; font-weight:700; letter-spacing:2px; color:#9ca3af; text-transform:uppercase; }
-        .certs-row { display:flex; flex-wrap:wrap; justify-content:center; gap:6px; margin-top:14px; }
-        .cert-badge { display:flex; flex-direction:column; align-items:center; gap:2px; background:#f1f5f9; border-radius:8px; padding:6px 8px; min-width:44px; }
-        .cert-badge i { font-size:16px; color:#981915; }
-        .cert-badge span { font-size:8px; font-weight:700; color:#374151; letter-spacing:.4px; text-transform:uppercase; }
+        @page { size: 85.6mm 120mm; margin: 0; }
+        body { display:flex; align-items:center; justify-content:center; width:85.6mm; height:120mm; background:#f5f5f7; font-family:Inter,Arial,sans-serif; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+        .card { width:85.6mm; height:120mm; background:#fff; border-radius:8px; padding:10px 10px 8px; text-align:center; box-shadow:0 2px 10px rgba(0,0,0,.12); border-top:5px solid #981915; overflow:hidden; }
+        .logo { height:22px; margin-bottom:6px; display:block; margin-left:auto; margin-right:auto; }
+        .avatar { width:44px; height:44px; border-radius:50%; background:#981915; color:#fff; font-size:17px; font-weight:900; line-height:44px; text-align:center; margin:0 auto 5px; display:block; }
+        .avatar-foto { width:44px; height:44px; border-radius:50%; object-fit:cover; margin:0 auto 5px; display:block; border:2px solid #981915; }
+        .nome { font-size:9px; font-weight:800; color:#1a1a1a; margin-bottom:2px; letter-spacing:.2px; text-transform:uppercase; }
+        .cargo { font-size:7.5px; color:#6b7280; margin-bottom:6px; text-transform:uppercase; letter-spacing:.7px; }
+        .qr { width:72px; height:72px; margin:0 auto 4px; display:block; border:1px solid #eee; border-radius:4px; padding:2px; }
+        .label { font-size:6.5px; font-weight:700; letter-spacing:1.5px; color:#9ca3af; text-transform:uppercase; }
+        .certs-row { display:flex; flex-wrap:wrap; justify-content:center; gap:3px; margin-top:5px; }
+        .cert-badge { display:flex; flex-direction:column; align-items:center; gap:1px; background:#f1f5f9; border-radius:5px; padding:3px 4px; min-width:30px; }
+        .cert-badge i { font-size:10px; color:#981915; }
+        .cert-badge span { font-size:5.5px; font-weight:700; color:#374151; letter-spacing:.3px; text-transform:uppercase; }
         .cert-vencido { opacity:.45; }
-        @media print { body { background:#fff; min-height:unset; } .card { box-shadow:none; } }
+        @media print { body { background:#fff; } .card { box-shadow:none; border-radius:0; } }
       </style>
       <div class="card">
         <img src="${LOGO_STICKFRAME}" class="logo" onerror="this.style.display='none'"/>
@@ -672,6 +739,7 @@ export default function Equipe() {
           <Tab label="📋 Alocações"    active={tab === "alocacoes"}    onClick={() => setTab("alocacoes")} />
           <Tab label="⏱ Horas"        active={tab === "horas"}        onClick={() => setTab("horas")} />
           <Tab label="🛡️ Compliance"  active={tab === "compliance"}   onClick={() => setTab("compliance")} />
+          <Tab label="📊 Horas"       active={tab === "relatorio"}    onClick={() => setTab("relatorio")} />
         </div>
 
         {/* ══ Tab: Equipe ══ */}
@@ -782,6 +850,9 @@ export default function Equipe() {
                         <Btn variant="ghost" size="sm" onClick={() => abrirEditar(c)}><Pencil size={13} /> Editar</Btn>
                         {c.token_ponto && (
                           <Btn variant="ghost" size="sm" onClick={() => gerarCracha(c, certsByColab[c.id] || [])}>🪪 Crachá</Btn>
+                        )}
+                        {c.token_ponto && (
+                          <Btn variant="ghost" size="sm" onClick={() => window.open(`${window.location.origin}/portal/${c.token_ponto}`, "_blank")}>🌐 Portal</Btn>
                         )}
                         <button onClick={() => setConfirm(c.id)} style={{
                           padding: "6px 12px", background: C.danger + "22",
@@ -1052,6 +1123,103 @@ export default function Equipe() {
         {/* ══ Tab: Compliance ══ */}
         {tab === "compliance" && (
           <Certificacoes onSaved={recarregarCerts} />
+        )}
+
+        {/* ══ Tab: Relatório de Horas ══ */}
+        {tab === "relatorio" && (
+          <div>
+            {/* Controls */}
+            <div style={{ display: "flex", gap: 10, marginBottom: 20, alignItems: "center", flexWrap: "wrap" }}>
+              <select
+                value={relMes}
+                onChange={(e) => setRelMes(Number(e.target.value))}
+                style={{ padding: "8px 12px", borderRadius: 8, border: `1px solid ${C.border}`, background: C.surface, color: C.text, fontSize: 12, fontFamily: "inherit" }}
+              >
+                {["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"].map((m, i) => (
+                  <option key={i + 1} value={i + 1}>{m}</option>
+                ))}
+              </select>
+              <select
+                value={relAno}
+                onChange={(e) => setRelAno(Number(e.target.value))}
+                style={{ padding: "8px 12px", borderRadius: 8, border: `1px solid ${C.border}`, background: C.surface, color: C.text, fontSize: 12, fontFamily: "inherit" }}
+              >
+                {[new Date().getFullYear() - 1, new Date().getFullYear(), new Date().getFullYear() + 1].map((y) => (
+                  <option key={y} value={y}>{y}</option>
+                ))}
+              </select>
+              <button
+                onClick={carregarRelatorio}
+                style={{ padding: "8px 18px", borderRadius: 8, border: `1px solid ${C.red}`, background: C.red + "18", color: C.red, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}
+              >{relLoading ? "Carregando..." : "🔄 Atualizar"}</button>
+              {relDados.length > 0 && (
+                <button
+                  onClick={exportarRelatorioExcel}
+                  style={{ padding: "8px 18px", borderRadius: 8, border: `1px solid ${C.success}`, background: C.success + "18", color: C.success, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}
+                >📥 Exportar Excel</button>
+              )}
+            </div>
+
+            {relLoading ? (
+              <div style={{ textAlign: "center", padding: "50px 0", color: C.muted, fontSize: 13 }}>Carregando dados...</div>
+            ) : relDados.length === 0 ? (
+              <div style={{ background: C.surface, borderRadius: 16, border: `1px solid ${C.border}`, padding: "60px 0", textAlign: "center" }}>
+                <div style={{ fontSize: 36, marginBottom: 12 }}>📊</div>
+                <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 8 }}>Nenhum registro de ponto no período</div>
+                <div style={{ fontSize: 12, color: C.muted }}>Selecione outro mês ou verifique os registros de ponto eletrônico.</div>
+              </div>
+            ) : (
+              <>
+                {/* Bar chart */}
+                <div style={{ background: C.surface, borderRadius: 14, border: `1px solid ${C.border}`, padding: "20px 24px", marginBottom: 20 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, textTransform: "uppercase", marginBottom: 14 }}>Horas por colaborador</div>
+                  {(() => {
+                    const maxH = Math.max(...relDados.map((r) => r.totalHoras), 1);
+                    return relDados.map((r) => (
+                      <div key={r.id} style={{ marginBottom: 10 }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 4 }}>
+                          <span style={{ fontWeight: 600 }}>{r.nome}</span>
+                          <span style={{ fontWeight: 700, color: "#4a9eff" }}>{r.totalHoras.toFixed(1)} h</span>
+                        </div>
+                        <div style={{ height: 10, borderRadius: 6, background: C.darker, overflow: "hidden" }}>
+                          <div style={{
+                            height: "100%", borderRadius: 6,
+                            background: "linear-gradient(90deg, #4a9eff, #2563eb)",
+                            width: `${(r.totalHoras / maxH) * 100}%`,
+                            transition: "width .4s ease",
+                          }} />
+                        </div>
+                      </div>
+                    ));
+                  })()}
+                </div>
+
+                {/* Table */}
+                <div style={{ background: C.surface, borderRadius: 16, border: `1px solid ${C.border}`, overflow: "hidden" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                    <thead>
+                      <tr style={{ background: C.darker }}>
+                        {["Nome", "Total de Horas", "Dias Trabalhados", "Média Diária", "Obras"].map((h) => (
+                          <th key={h} style={{ padding: "10px 16px", textAlign: "left", fontSize: 10, fontWeight: 700, letterSpacing: 1, color: C.muted, textTransform: "uppercase" }}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {relDados.map((r, i) => (
+                        <tr key={r.id} style={{ borderTop: i > 0 ? `1px solid ${C.border}` : "none" }}>
+                          <td style={{ padding: "12px 16px", fontWeight: 700 }}>{r.nome}</td>
+                          <td style={{ padding: "12px 16px", fontWeight: 800, color: "#4a9eff" }}>{r.totalHoras.toFixed(1)} h</td>
+                          <td style={{ padding: "12px 16px", color: C.muted }}>{r.diasCount}</td>
+                          <td style={{ padding: "12px 16px", color: C.muted }}>{r.mediaDiaria.toFixed(1)} h/dia</td>
+                          <td style={{ padding: "12px 16px", color: C.muted, fontSize: 12 }}>{r.obrasNomes || "—"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            )}
+          </div>
         )}
       </div>
     </>

@@ -6,8 +6,8 @@ import { useNotificacoes } from "../../hooks/useNotificacoes";
 import { sb, getEmpresaId } from "../../services/supabase";
 
 const TIPO_ICON = { info: "ℹ️", sucesso: "✅", alerta: "⚠️", erro: "⛔" };
-const CAT_LABELS = { prazo: "Prazos", medicao: "Medições", vistoria: "Vistorias", orcamento: "Orçamentos", bim: "BIM", followup: "Follow-ups", lead: "Novos Leads", chat: "Mensagens", epi: "EPIs", incidente: "Incidentes", suprimentos: "Suprimentos", estoque: "Estoque" };
-const CAT_ICONS  = { prazo: "⏰", medicao: "📐", vistoria: "🔍", orcamento: "📋", bim: "🧊", followup: "📅", lead: "🎯", chat: "💬", epi: "🦺", incidente: "⚠️", suprimentos: "📦", estoque: "🏭" };
+const CAT_LABELS = { prazo: "Prazos", medicao: "Medições", vistoria: "Vistorias", orcamento: "Orçamentos", bim: "BIM", followup: "Follow-ups", lead: "Novos Leads", chat: "Mensagens", epi: "EPIs", incidente: "Incidentes", suprimentos: "Suprimentos", estoque: "Estoque", certificacao: "Cert. NR" };
+const CAT_ICONS  = { prazo: "⏰", medicao: "📐", vistoria: "🔍", orcamento: "📋", bim: "🧊", followup: "📅", lead: "🎯", chat: "💬", epi: "🦺", incidente: "⚠️", suprimentos: "📦", estoque: "🏭", certificacao: "🛡️" };
 
 function usePreOrcamentos() {
   const [preOrcs, setPreOrcs] = useState([]);
@@ -166,7 +166,11 @@ function useAlertasOperacionais() {
       sb.from("suprimentos_pedidos").select("item, urgencia, status").eq("empresa_id", empId).eq("urgencia", "Crítico").neq("status", "Entregue").neq("status", "Cancelado"),
       // Estoque abaixo do mínimo
       sb.from("suprimentos_estoque").select("item, quantidade, estoque_minimo").eq("empresa_id", empId).gt("estoque_minimo", 0),
-    ]).then(([episVenc, episVend, incAbertos, pedCrit, estoqueItems]) => {
+      // Certificações NR vencidas
+      sb.from("certificacoes").select("id, nr, validade, colaborador:colaboradores(nome)").eq("empresa_id", empId).lt("validade", hoje),
+      // Certificações NR vencendo em 30d
+      sb.from("certificacoes").select("id, nr, validade, colaborador:colaboradores(nome)").eq("empresa_id", empId).gte("validade", hoje).lte("validade", em30),
+    ]).then(([episVenc, episVend, incAbertos, pedCrit, estoqueItems, certVenc, certVend]) => {
       const result = [];
       (episVenc.data || []).forEach(e => result.push({
         categoria: "epi", tipo: "erro", cor: "#e74c3c", icon: "🦺",
@@ -197,6 +201,22 @@ function useAlertasOperacionais() {
         titulo: "Estoque abaixo do mínimo",
         texto: `${e.item} — saldo: ${e.quantidade} (mín: ${e.estoque_minimo})`,
       }));
+      (certVenc.data || []).forEach(c => result.push({
+        id: `cert-${c.id}-expired`,
+        categoria: "certificacao", tipo: "erro", cor: "#e74c3c", icon: "🛡️",
+        titulo: "Cert. NR VENCIDA",
+        texto: `Cert. ${c.nr} de ${c.colaborador?.nome || "Colaborador"} VENCIDA`,
+      }));
+      (certVend.data || []).forEach(c => {
+        const diasRestantes = Math.ceil((new Date(c.validade) - new Date()) / 86400000);
+        result.push({
+          id: `cert-${c.id}-expiring`,
+          categoria: "certificacao", tipo: diasRestantes <= 7 ? "erro" : "alerta",
+          cor: diasRestantes <= 7 ? "#e74c3c" : "#e67e22", icon: "🛡️",
+          titulo: "Cert. NR vencendo",
+          texto: `Cert. ${c.nr} de ${c.colaborador?.nome || "Colaborador"} vence em ${diasRestantes} dia(s)`,
+        });
+      });
       setAlertas(result);
     }).catch(() => {});
   }, []);

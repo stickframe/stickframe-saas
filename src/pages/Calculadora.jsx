@@ -8,24 +8,65 @@ import {
 } from "../services/repositories/retalhosRepository";
 
 // ─── Insumos por m² de área construída ───────────────────────────────────────
-// grupo = chave usada pelo módulo de Orçamentos (sf_estimativo)
+// fund:true = não multiplica por pavs/padrão | serv:true = mão de obra (não é material)
 const INSUMOS = [
-  { categoria: "Estrutura de Aço", grupo: "Estrutura",        nome: "Montante C 90×40×15×1,25mm",         un: "pç",  base: 1.50, preco: 18.50, desc: "Espaçamento 600mm, pé-direito 2,80m" },
-  { categoria: "Estrutura de Aço", grupo: "Estrutura",        nome: "Guia U 92×40×1,25mm",                un: "m",   base: 1.10, preco: 12.00, desc: "Superior e inferior" },
-  { categoria: "Estrutura de Aço", grupo: "Estrutura",        nome: "Montante C 140×40×15×1,25mm",        un: "pç",  base: 0.30, preco: 24.00, desc: "Vergas e contravergas" },
-  { categoria: "Fechamento",       grupo: "Vedação externa",  nome: "Chapa OSB 11,1mm (1,22×2,44)",       un: "chp", base: 0.38, preco: 52.00, desc: "Contraventamento estrutural" },
-  { categoria: "Fechamento",       grupo: "Vedação interna",  nome: "Placa de Gesso BA 13mm (1,20×2,40)", un: "chp", base: 0.85, preco: 17.00, desc: "Faces internas das paredes" },
-  { categoria: "Fechamento",       grupo: "Vedação externa",  nome: "Placa Cimentícia 10mm (1,20×2,40)",  un: "chp", base: 0.18, preco: 65.00, desc: "Fachada externa" },
-  { categoria: "Isolamento",       grupo: "Isolamento",       nome: "Lã de Vidro 50mm",                   un: "m²",  base: 1.30, preco: 16.00, desc: "Interior das paredes e laje" },
-  { categoria: "Isolamento",       grupo: "Isolamento",       nome: "Manta EPDM (fita adesiva 50mm)",     un: "m",   base: 1.10, preco:  5.50, desc: "Vedação de juntas" },
-  { categoria: "Isolamento",       grupo: "Impermeabilização",nome: "Impermeabilizante flexível",         un: "m²",  base: 0.15, preco: 35.00, desc: "Áreas molhadas" },
-  { categoria: "Fixação",          grupo: "Fixação",          nome: "Parafuso TEX 4,2×16mm (flangeado)",  un: "cx",  base: 0.40, preco: 48.00, desc: "Caixa c/ 500 pçs — gesso" },
-  { categoria: "Fixação",          grupo: "Fixação",          nome: "Parafuso TEX 4,2×38mm",              un: "cx",  base: 0.80, preco: 52.00, desc: "Caixa c/ 500 pçs — OSB/cimentícia" },
-  { categoria: "Fixação",          grupo: "Fixação",          nome: "Parafuso TEX 6,3×19mm",              un: "cx",  base: 0.16, preco: 58.00, desc: "Caixa c/ 500 pçs — emenda perfis" },
-  { categoria: "Fundação (Radier)", grupo: "Fundação",        nome: "Concreto C-25",                      un: "m³",  base: 0.10, preco: 420.0, desc: "Espessura 10cm" },
-  { categoria: "Fundação (Radier)", grupo: "Fundação",        nome: "Ferragem CA-50 ⌀6,3mm",              un: "kg",  base: 6.00, preco:  6.50, desc: "~6 kg/m²" },
-  { categoria: "Fundação (Radier)", grupo: "Fundação",        nome: "Tela soldada Q-92 (3×2m)",           un: "pç",  base: 0.17, preco: 68.00, desc: "1 tela = 6m²" },
-  { categoria: "Fundação (Radier)", grupo: "Fundação",        nome: "Forma lateral (tábua 3ª)",           un: "m",   base: 0.40, preco:  8.00, desc: "Perímetro do radier" },
+  // Estrutura
+  { categoria: "Estrutura de Aço",   grupo: "Estrutura",          nome: "Montante C 90×40×15×1,25mm",          un: "pç",  base: 1.50,  preco: 18.50, desc: "Espaçamento 600mm, pé-direito 2,80m" },
+  { categoria: "Estrutura de Aço",   grupo: "Estrutura",          nome: "Guia U 92×40×1,25mm",                 un: "m",   base: 1.10,  preco: 12.00, desc: "Superior e inferior" },
+  { categoria: "Estrutura de Aço",   grupo: "Estrutura",          nome: "Montante C 140×40×15×1,25mm",         un: "pç",  base: 0.30,  preco: 24.00, desc: "Vergas e contravergas" },
+  // Fechamento
+  { categoria: "Fechamento",         grupo: "Vedação externa",    nome: "Chapa OSB 11,1mm (1,22×2,44)",        un: "chp", base: 0.38,  preco: 52.00, desc: "Contraventamento estrutural" },
+  { categoria: "Fechamento",         grupo: "Vedação interna",    nome: "Placa de Gesso ST 13mm (1,20×2,40)",  un: "chp", base: 0.85,  preco: 17.00, desc: "Faces internas das paredes" },
+  { categoria: "Fechamento",         grupo: "Vedação externa",    nome: "Placa Cimentícia 10mm (1,20×2,40)",   un: "chp", base: 0.18,  preco: 65.00, desc: "Fachada externa" },
+  // Isolamento
+  { categoria: "Isolamento",         grupo: "Isolamento",         nome: "Lã de Vidro 50mm",                    un: "m²",  base: 1.30,  preco: 16.00, desc: "Interior das paredes e laje" },
+  { categoria: "Isolamento",         grupo: "Isolamento",         nome: "Manta EPDM (fita adesiva 50mm)",      un: "m",   base: 1.10,  preco:  5.50, desc: "Vedação de juntas" },
+  { categoria: "Isolamento",         grupo: "Impermeabilização",  nome: "Impermeabilizante flexível",          un: "m²",  base: 0.15,  preco: 35.00, desc: "Áreas molhadas" },
+  // Fixação
+  { categoria: "Fixação",            grupo: "Fixação",            nome: "Parafuso TEX 4,2×16mm (flangeado)",   un: "cx",  base: 0.40,  preco: 48.00, desc: "Caixa c/ 500 pçs — gesso" },
+  { categoria: "Fixação",            grupo: "Fixação",            nome: "Parafuso TEX 4,2×38mm",               un: "cx",  base: 0.80,  preco: 52.00, desc: "Caixa c/ 500 pçs — OSB/cimentícia" },
+  { categoria: "Fixação",            grupo: "Fixação",            nome: "Parafuso TEX 6,3×19mm",               un: "cx",  base: 0.16,  preco: 58.00, desc: "Caixa c/ 500 pçs — emenda perfis" },
+  // Fundação
+  { categoria: "Fundação (Radier)",  grupo: "Fundação",           nome: "Concreto C-25",                       un: "m³",  base: 0.10,  preco: 420.0, desc: "Espessura 10cm",   fund: true },
+  { categoria: "Fundação (Radier)",  grupo: "Fundação",           nome: "Ferragem CA-50 ⌀6,3mm",               un: "kg",  base: 6.00,  preco:  6.50, desc: "~6 kg/m²",         fund: true },
+  { categoria: "Fundação (Radier)",  grupo: "Fundação",           nome: "Tela soldada Q-92 (3×2m)",            un: "pç",  base: 0.17,  preco: 68.00, desc: "1 tela = 6m²",     fund: true },
+  { categoria: "Fundação (Radier)",  grupo: "Fundação",           nome: "Forma lateral (tábua 3ª)",            un: "m",   base: 0.40,  preco:  8.00, desc: "Perímetro do radier", fund: true },
+  // Cobertura
+  { categoria: "Cobertura",         grupo: "Cobertura",           nome: "Telha shingle (fardo 3m²)",           un: "fd",  base: 0.38,  preco: 185.0, desc: "Cobertura principal" },
+  { categoria: "Cobertura",         grupo: "Cobertura",           nome: "Manta subcobertura 1,5m",             un: "m²",  base: 1.05,  preco:  8.50, desc: "Barreira térmica/hídrica" },
+  { categoria: "Cobertura",         grupo: "Cobertura",           nome: "Perfil de cumeeira/rincão",           un: "m",   base: 0.25,  preco: 22.00, desc: "Acabamento de telhado" },
+  { categoria: "Cobertura",         grupo: "Cobertura",           nome: "Calha PVC 150mm",                     un: "m",   base: 0.30,  preco: 28.00, desc: "Captação de águas pluviais" },
+  { categoria: "Cobertura",         grupo: "Cobertura",           nome: "Rufo e contra-rufo em aço",           un: "m",   base: 0.20,  preco: 35.00, desc: "Vedação perimetral" },
+  // Esquadrias
+  { categoria: "Esquadrias",        grupo: "Esquadrias",          nome: "Janela alumínio c/ vidro (1,20×1,20)",un: "un",  base: 0.055, preco: 680.0, desc: "~1 janela a cada 18m²" },
+  { categoria: "Esquadrias",        grupo: "Esquadrias",          nome: "Porta interna 0,80×2,10",             un: "un",  base: 0.08,  preco: 420.0, desc: "~1 porta a cada 12m²" },
+  { categoria: "Esquadrias",        grupo: "Esquadrias",          nome: "Porta externa blindada",              un: "un",  base: 0.008, preco:2200.0, desc: "~1 porta externa a cada 120m²" },
+  // Instalações
+  { categoria: "Instalações Elétricas", grupo: "Elétrica",       nome: "Conduíte + fios + caixas",            un: "m²",  base: 1.00,  preco: 62.00, desc: "~R$62/m² elétrica embutida" },
+  { categoria: "Instalações Elétricas", grupo: "Elétrica",       nome: "Quadro de distribuição",              un: "un",  base: 0.012, preco:1800.0, desc: "~1 QD a cada 80m²" },
+  { categoria: "Inst. Hidrossanitárias", grupo: "Hidráulica",    nome: "Tubulação PVC água fria/quente",      un: "m²",  base: 1.00,  preco: 38.00, desc: "~R$38/m² hidráulica" },
+  { categoria: "Inst. Hidrossanitárias", grupo: "Hidráulica",    nome: "Tubulação esgoto + ventilação",       un: "m²",  base: 1.00,  preco: 22.00, desc: "~R$22/m² esgoto" },
+  // Acabamentos
+  { categoria: "Acabamentos",       grupo: "Acabamentos",         nome: "Piso vinílico click 4mm",             un: "m²",  base: 0.90,  preco: 58.00, desc: "90% da área útil" },
+  { categoria: "Acabamentos",       grupo: "Acabamentos",         nome: "Revestimento porcelanato banheiro",   un: "m²",  base: 0.08,  preco: 85.00, desc: "Banheiros (~8% da área)" },
+  { categoria: "Acabamentos",       grupo: "Acabamentos",         nome: "Massa corrida + pintura látex",       un: "m²",  base: 2.80,  preco:  9.50, desc: "Paredes e teto interno" },
+  { categoria: "Acabamentos",       grupo: "Acabamentos",         nome: "Forro drywall ST (teto)",             un: "m²",  base: 0.90,  preco: 42.00, desc: "90% da área útil" },
+  { categoria: "Acabamentos",       grupo: "Acabamentos",         nome: "Rodapé MDF 10cm",                     un: "m",   base: 1.80,  preco: 12.00, desc: "Perimetral interno" },
+  // Projetos
+  { categoria: "Projetos e Engenharia", grupo: "Projetos",       nome: "Projeto Arquitetônico",               un: "m²",  base: 1.00,  preco: 28.00, desc: "Inclui implantação e cortes" },
+  { categoria: "Projetos e Engenharia", grupo: "Projetos",       nome: "Projeto Estrutural LSF",              un: "m²",  base: 1.00,  preco: 18.00, desc: "Memorial + detalhamento" },
+  { categoria: "Projetos e Engenharia", grupo: "Projetos",       nome: "Projeto Elétrico + Hidro",            un: "m²",  base: 1.00,  preco: 14.00, desc: "Aprovação em concessionária" },
+  // Mão de Obra
+  { categoria: "Mão de Obra",       grupo: "Mão de Obra",        nome: "Montagem estrutura LSF",              un: "m²",  base: 1.00,  preco: 85.00, desc: "Equipe especializada" },
+  { categoria: "Mão de Obra",       grupo: "Mão de Obra",        nome: "Instalação vedações (OSB/gesso/cim)", un: "m²",  base: 1.00,  preco: 45.00, desc: "Fechamento interno e externo" },
+  { categoria: "Mão de Obra",       grupo: "Mão de Obra",        nome: "Cobertura (telha shingle)",           un: "m²",  base: 1.00,  preco: 38.00, desc: "Montagem e impermeabilização" },
+  { categoria: "Mão de Obra",       grupo: "Mão de Obra",        nome: "Acabamentos e instalações",           un: "m²",  base: 1.00,  preco: 72.00, desc: "Piso, pintura, elétrica, hidro" },
+];
+
+const CATS_ORDEM = [
+  "Estrutura de Aço","Fechamento","Isolamento","Fixação","Fundação (Radier)",
+  "Cobertura","Esquadrias","Instalações Elétricas","Inst. Hidrossanitárias",
+  "Acabamentos","Projetos e Engenharia","Mão de Obra",
 ];
 
 const PADROES = {
@@ -34,7 +75,76 @@ const PADROES = {
   "Alto Padrão": { fator: 1.20 },
 };
 
-const CATS_ORDEM = ["Estrutura de Aço","Fechamento","Isolamento","Fixação","Fundação (Radier)"];
+// ─── Kits de modelos de casa ──────────────────────────────────────────────────
+const KITS = [
+  {
+    id: "studio",
+    nome: "Studio Compact",
+    area: 42, pavs: 1, padrao: "Padrão",
+    tag: "MAIS VENDIDO",
+    tagCor: "#2e9e5b",
+    descricao: "Ideal para uso individual, home office ou kitnet. Layout inteligente e construção rápida.",
+    quartos: 1, banheiros: 1, salas: 1,
+    emoji: "🏠",
+    destaques: ["Entrega em 45 dias", "Kit completo estrutural", "Perfeito para kitnet"],
+  },
+  {
+    id: "vila",
+    nome: "Vila 78m²",
+    area: 78, pavs: 1, padrao: "Padrão",
+    tag: "POPULAR",
+    tagCor: "#4a9eff",
+    descricao: "Casa térrea completa para família pequena. Conforto e economia em um só projeto.",
+    quartos: 2, banheiros: 1, salas: 1,
+    emoji: "🏡",
+    destaques: ["2 quartos confortáveis", "Varanda integrada", "Custo-benefício ótimo"],
+  },
+  {
+    id: "casa120",
+    nome: "Casa Serena 120m²",
+    area: 120, pavs: 1, padrao: "Padrão",
+    tag: "RECOMENDADO",
+    tagCor: "#981915",
+    descricao: "O modelo mais completo para família de 4 pessoas. Suíte master, sala ampla e área gourmet.",
+    quartos: 3, banheiros: 2, salas: 2,
+    emoji: "🏘",
+    destaques: ["Suíte master com closet", "Área gourmet", "Sala de TV + jantar"],
+  },
+  {
+    id: "sobrado160",
+    nome: "Sobrado Vivo 160m²",
+    area: 160, pavs: 2, padrao: "Padrão",
+    tag: "2 PAVIMENTOS",
+    tagCor: "#8b5cf6",
+    descricao: "Sobrado moderno com térreo social e pavimento superior privativo. Máxima privacidade.",
+    quartos: 3, banheiros: 3, salas: 2,
+    emoji: "🏗",
+    destaques: ["Térreo social separado", "3 suítes no andar", "Sacada com guarda-corpo"],
+  },
+  {
+    id: "alto200",
+    nome: "Residência Alto 200m²",
+    area: 200, pavs: 1, padrao: "Alto Padrão",
+    tag: "ALTO PADRÃO",
+    tagCor: "#e07020",
+    descricao: "Para quem não abre mão do melhor. Acabamentos superiores, ambientes generosos e projeto exclusivo.",
+    quartos: 4, banheiros: 3, salas: 3,
+    emoji: "🏛",
+    destaques: ["4 suítes amplas", "Home theater", "Piscina prevista"],
+  },
+  {
+    id: "vigo273",
+    nome: "Casa Vigo 273m²",
+    area: 273, pavs: 2, padrao: "Alto Padrão",
+    tag: "PREMIUM",
+    tagCor: "#c0392b",
+    descricao: "Nossa flagship — o lar dos sonhos em Steel Frame. Projeto inspirado em casas européias modernas.",
+    quartos: 4, banheiros: 4, salas: 3,
+    emoji: "🏰",
+    destaques: ["Estilo europeu moderno", "Pé-direito duplo na sala", "Área total de lazer"],
+  },
+];
+
 
 const fmtR  = (v) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 const fmtMm = (mm) => mm >= 1000 ? `${(mm / 1000).toFixed(2).replace(".", ",")} m` : `${mm} mm`;
@@ -57,8 +167,613 @@ function otimizarCorte(pecas, tamBarra) {
   return barras;
 }
 
+// ─── Calculadora Parede Drywall ───────────────────────────────────────────────
+function CalcParedeDrywall() {
+  const [comp,     setComp]     = useState("");
+  const [alt,      setAlt]      = useState("2.80");
+  const [faces,    setFaces]    = useState("2");
+  const [tipo,     setTipo]     = useState("BA");
+  const [esp,      setEsp]      = useState("90");
+  const [desperd,  setDesperd]  = useState("10");
+  const [result,   setResult]   = useState(null);
+
+  const TIPOS = {
+    BA:  { label: "ST (Standard)",         preco_placa: 17.00, massa_m2: 0.50, fita_m2: 1.20 },
+    RU:  { label: "RU (Resistente Umidade)", preco_placa: 22.00, massa_m2: 0.55, fita_m2: 1.20 },
+    RF:  { label: "RF (Resistente Fogo)",   preco_placa: 28.00, massa_m2: 0.55, fita_m2: 1.20 },
+  };
+
+  function calcular() {
+    const c = parseFloat(String(comp).replace(",","."));
+    const h = parseFloat(String(alt).replace(",","."));
+    const f = parseInt(faces);
+    const d = 1 + parseInt(desperd) / 100;
+    if (!c || !h) return;
+
+    const area      = c * h * f;
+    const areaComp  = area * d;
+    const e         = parseInt(esp);
+    const PLACA     = 1.20 * 2.40; // m²
+    const placas    = Math.ceil(areaComp / PLACA);
+    // Montantes: espaçamento + guias
+    const montantes = Math.ceil((c / (e / 1000)) + 1) * f;
+    const guias     = Math.ceil(c * 2 * f);                 // metros (superior+inferior)
+    // Fixação: ~15 parafusos/m²
+    const parafusos = Math.ceil(areaComp * 15);
+    const cxPar     = Math.ceil(parafusos / 500); // cx c/ 500
+    // Massa e fita
+    const t         = TIPOS[tipo];
+    const massa     = Math.ceil(areaComp * t.massa_m2 * 5) / 5; // arredonda 0.2 saco (15kg)
+    const fita      = Math.ceil(areaComp * t.fita_m2);
+
+    setResult({
+      area, areaComp, placas, montantes, guias, parafusos, cxPar, massa, fita,
+      totalPlacas: placas * t.preco_placa,
+      totalMont: montantes * 18.50,
+      totalGuia: guias * 12.00,
+      totalPar: cxPar * 48.00,
+      totalMassa: Math.ceil(massa) * 38.00,
+      totalFita: fita * 3.80,
+    });
+  }
+
+  const total = result ? result.totalPlacas + result.totalMont + result.totalGuia + result.totalPar + result.totalMassa + result.totalFita : 0;
+
+  return (
+    <div>
+      <div style={{ background: "#fff", borderRadius: 16, border: `1px solid ${C.border}`, padding: "22px 26px", marginBottom: 24 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(140px,1fr))", gap: 14, marginBottom: 16 }}>
+          {[
+            { label: "COMPRIMENTO DA PAREDE (m)", val: comp, set: setComp, ph: "Ex: 10" },
+            { label: "PÉ-DIREITO (m)", val: alt, set: setAlt, ph: "Ex: 2.80" },
+          ].map(({ label, val, set, ph }) => (
+            <div key={label}>
+              <label style={{ fontSize: 11, fontWeight: 700, color: C.muted, display: "block", marginBottom: 6, letterSpacing: 1 }}>{label}</label>
+              <input type="number" value={val} onChange={e => set(e.target.value)} placeholder={ph}
+                style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 15, fontWeight: 700, fontFamily: "inherit", outline: "none", boxSizing: "border-box" }} />
+            </div>
+          ))}
+          <div>
+            <label style={{ fontSize: 11, fontWeight: 700, color: C.muted, display: "block", marginBottom: 6, letterSpacing: 1 }}>FACES</label>
+            <select value={faces} onChange={e => setFaces(e.target.value)}
+              style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 14, fontFamily: "inherit", outline: "none" }}>
+              <option value="1">1 face</option>
+              <option value="2">2 faces (parede)</option>
+            </select>
+          </div>
+          <div>
+            <label style={{ fontSize: 11, fontWeight: 700, color: C.muted, display: "block", marginBottom: 6, letterSpacing: 1 }}>TIPO DE PLACA</label>
+            <select value={tipo} onChange={e => setTipo(e.target.value)}
+              style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 14, fontFamily: "inherit", outline: "none" }}>
+              {Object.entries(TIPOS).map(([k,v]) => <option key={k} value={k}>{v.label}</option>)}
+            </select>
+          </div>
+          <div>
+            <label style={{ fontSize: 11, fontWeight: 700, color: C.muted, display: "block", marginBottom: 6, letterSpacing: 1 }}>ESPAÇ. MONTANTES (mm)</label>
+            <select value={esp} onChange={e => setEsp(e.target.value)}
+              style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 14, fontFamily: "inherit", outline: "none" }}>
+              <option value="400">400 mm</option>
+              <option value="600">600 mm (padrão)</option>
+            </select>
+          </div>
+          <div>
+            <label style={{ fontSize: 11, fontWeight: 700, color: C.muted, display: "block", marginBottom: 6, letterSpacing: 1 }}>DESPERDÍCIO (%)</label>
+            <select value={desperd} onChange={e => setDesperd(e.target.value)}
+              style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 14, fontFamily: "inherit", outline: "none" }}>
+              <option value="5">5%</option>
+              <option value="10">10% (recomendado)</option>
+              <option value="15">15%</option>
+            </select>
+          </div>
+        </div>
+        <button onClick={calcular} style={{ padding: "12px 32px", background: C.red, color: "#fff", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+          Calcular
+        </button>
+      </div>
+
+      {result && (
+        <div style={{ animation: "fadeUp .35s ease" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+            <div style={{ height: 3, flex: 1, background: "linear-gradient(90deg,#981915,transparent)", borderRadius: 2 }} />
+            <span style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: 1, textTransform: "uppercase" }}>Resultado</span>
+            <div style={{ height: 3, flex: 1, background: "linear-gradient(270deg,#981915,transparent)", borderRadius: 2 }} />
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(190px,1fr))", gap: 12, marginBottom: 16 }}>
+            {[
+              { icon: "⬜", label: "Placas Drywall",    qtd: `${result.placas} chp`,    sub: `${TIPOS[tipo].label} · ${result.area.toFixed(1)} m²`, val: result.totalPlacas },
+              { icon: "⠿",  label: "Montantes (C 90)",  qtd: `${result.montantes} pç`,  sub: `espaç. ${esp}mm`,                                      val: result.totalMont },
+              { icon: "—",  label: "Guias (U 92)",       qtd: `${result.guias} m`,       sub: "superior + inferior",                                  val: result.totalGuia },
+              { icon: "⬡",  label: "Parafusos TEX",     qtd: `${result.cxPar} cx`,      sub: `${result.parafusos} pçs (~15/m²)`,                     val: result.totalPar },
+              { icon: "◎",  label: "Massa p/ Juntas",   qtd: `${Math.ceil(result.massa)} saco`, sub: `${(result.massa).toFixed(1)} × 15kg`,          val: result.totalMassa },
+              { icon: "〜", label: "Fita p/ Juntas",    qtd: `${result.fita} m`,         sub: `~1,2 m/m² de placa`,                                  val: result.totalFita },
+            ].map(({ icon, label, qtd, sub, val }) => (
+              <div key={label} style={{
+                background: "#fff", borderRadius: 14, border: `1px solid ${C.border}`,
+                padding: "16px 18px", transition: "transform .15s, box-shadow .15s",
+                boxShadow: "0 2px 8px rgba(0,0,0,.04)",
+              }}
+                onMouseEnter={e => { e.currentTarget.style.transform="translateY(-2px)"; e.currentTarget.style.boxShadow="0 6px 20px rgba(0,0,0,.1)"; }}
+                onMouseLeave={e => { e.currentTarget.style.transform="none"; e.currentTarget.style.boxShadow="0 2px 8px rgba(0,0,0,.04)"; }}
+              >
+                <div style={{ fontSize: 20, marginBottom: 8 }}>{icon}</div>
+                <div style={{ fontSize: 10, color: C.muted, fontWeight: 700, letterSpacing: 1, marginBottom: 4, textTransform: "uppercase" }}>{label}</div>
+                <div style={{ fontSize: 24, fontWeight: 900, color: C.text, lineHeight: 1 }}>{qtd}</div>
+                <div style={{ fontSize: 11, color: C.muted, marginTop: 4 }}>{sub}</div>
+                <div style={{ marginTop: 8, paddingTop: 8, borderTop: `1px solid ${C.border}`, fontSize: 13, color: "#2e9e5b", fontWeight: 700 }}>{fmtR(val)}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{
+            background: "linear-gradient(135deg,#981915,#c0392b)",
+            borderRadius: 16, padding: "20px 28px", color: "#fff",
+            display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12,
+            boxShadow: "0 8px 32px rgba(152,25,21,.35)",
+          }}>
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", opacity: .7, marginBottom: 4 }}>Total estimado de materiais</div>
+              <div style={{ fontSize: 36, fontWeight: 900, letterSpacing: -1 }}>{fmtR(total)}</div>
+              <div style={{ fontSize: 12, opacity: .6, marginTop: 2 }}>preços de referência · desperdício incluso</div>
+            </div>
+            <div style={{ fontSize: 48 }}>🏗</div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Calculadora Forro Drywall ─────────────────────────────────────────────────
+function CalcForroDrywall() {
+  const [compA,    setCompA]    = useState("");
+  const [compB,    setCompB]    = useState("");
+  const [tipo,     setTipo]     = useState("BA");
+  const [modulo,   setModulo]   = useState("60x60");
+  const [desperd,  setDesperd]  = useState("10");
+  const [result,   setResult]   = useState(null);
+
+  const TIPOS = {
+    BA: { label: "ST (Standard)",          preco: 17.00 },
+    RU: { label: "RU (Resistente Umidade)", preco: 22.00 },
+    RF: { label: "RF (Resistente Fogo)",    preco: 28.00 },
+  };
+
+  const MODULOS = {
+    "60x60": { label: "60×60 cm (padrão)",   placa_m2: 0.36, perfil_m_m2: 3.33 },
+    "62.5x125": { label: "62,5×125 cm",      placa_m2: 0.78, perfil_m_m2: 2.40 },
+  };
+
+  function calcular() {
+    const a = parseFloat(String(compA).replace(",","."));
+    const b = parseFloat(String(compB).replace(",","."));
+    if (!a || !b) return;
+    const area  = a * b;
+    const d     = 1 + parseInt(desperd) / 100;
+    const mod   = MODULOS[modulo];
+    const t     = TIPOS[tipo];
+    const PLACA = 1.20 * 2.40;
+
+    const placas    = Math.ceil(area * d / PLACA);
+    const perfis    = Math.ceil(area * mod.perfil_m_m2 * d); // m de perfil (T47)
+    // Pendurais: 1 a cada 1,2m² aprox
+    const pendurais = Math.ceil(area / 1.2);
+    // Parafusos: ~8/m²
+    const cxPar     = Math.ceil(area * 8 / 500);
+    // Massa e fita
+    const massa     = Math.ceil(area * 0.4 * d);
+    const fita      = Math.ceil(area * 1.0 * d);
+
+    setResult({
+      area, placas, perfis, pendurais, cxPar, massa, fita,
+      totalPlacas: placas * t.preco,
+      totalPerfis: perfis * 8.50,
+      totalPend:   pendurais * 2.80,
+      totalPar:    cxPar * 48.00,
+      totalMassa:  Math.ceil(massa / 15) * 38.00,
+      totalFita:   fita * 3.80,
+    });
+  }
+
+  const total = result ? result.totalPlacas + result.totalPerfis + result.totalPend + result.totalPar + result.totalMassa + result.totalFita : 0;
+
+  return (
+    <div>
+      <div style={{ background: "#fff", borderRadius: 16, border: `1px solid ${C.border}`, padding: "22px 26px", marginBottom: 24 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", gap: 14, marginBottom: 16 }}>
+          {[
+            { label: "COMPRIMENTO (m)", val: compA, set: setCompA, ph: "Ex: 8" },
+            { label: "LARGURA (m)",     val: compB, set: setCompB, ph: "Ex: 6" },
+          ].map(({ label, val, set, ph }) => (
+            <div key={label}>
+              <label style={{ fontSize: 11, fontWeight: 700, color: C.muted, display: "block", marginBottom: 6, letterSpacing: 1 }}>{label}</label>
+              <input type="number" value={val} onChange={e => set(e.target.value)} placeholder={ph}
+                style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 15, fontWeight: 700, fontFamily: "inherit", outline: "none", boxSizing: "border-box" }} />
+            </div>
+          ))}
+          <div>
+            <label style={{ fontSize: 11, fontWeight: 700, color: C.muted, display: "block", marginBottom: 6, letterSpacing: 1 }}>TIPO DE PLACA</label>
+            <select value={tipo} onChange={e => setTipo(e.target.value)}
+              style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 14, fontFamily: "inherit", outline: "none" }}>
+              {Object.entries(TIPOS).map(([k,v]) => <option key={k} value={k}>{v.label}</option>)}
+            </select>
+          </div>
+          <div>
+            <label style={{ fontSize: 11, fontWeight: 700, color: C.muted, display: "block", marginBottom: 6, letterSpacing: 1 }}>MÓDULO DO FORRO</label>
+            <select value={modulo} onChange={e => setModulo(e.target.value)}
+              style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 14, fontFamily: "inherit", outline: "none" }}>
+              {Object.entries(MODULOS).map(([k,v]) => <option key={k} value={k}>{v.label}</option>)}
+            </select>
+          </div>
+          <div>
+            <label style={{ fontSize: 11, fontWeight: 700, color: C.muted, display: "block", marginBottom: 6, letterSpacing: 1 }}>DESPERDÍCIO (%)</label>
+            <select value={desperd} onChange={e => setDesperd(e.target.value)}
+              style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 14, fontFamily: "inherit", outline: "none" }}>
+              <option value="5">5%</option>
+              <option value="10">10% (recomendado)</option>
+              <option value="15">15%</option>
+            </select>
+          </div>
+        </div>
+        <button onClick={calcular} style={{ padding: "12px 32px", background: C.red, color: "#fff", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+          Calcular
+        </button>
+      </div>
+
+      {result && (
+        <div style={{ animation: "fadeUp .35s ease" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+            <div style={{ height: 3, flex: 1, background: "linear-gradient(90deg,#981915,transparent)", borderRadius: 2 }} />
+            <span style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: 1, textTransform: "uppercase" }}>Resultado</span>
+            <div style={{ height: 3, flex: 1, background: "linear-gradient(270deg,#981915,transparent)", borderRadius: 2 }} />
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))", gap: 12, marginBottom: 16 }}>
+            {[
+              { icon: "⬜", label: "Placas Drywall",       qtd: `${result.placas} chp`,                   sub: TIPOS[tipo].label,             val: result.totalPlacas },
+              { icon: "⠿",  label: "Perfil T47",            qtd: `${result.perfis} m`,                     sub: `módulo ${modulo}`,             val: result.totalPerfis },
+              { icon: "⬇",  label: "Pendurais + Tirantes",  qtd: `${result.pendurais} pç`,                 sub: "1 a cada 1,2 m²",             val: result.totalPend },
+              { icon: "⬡",  label: "Parafusos TEX",        qtd: `${result.cxPar} cx`,                     sub: "~8 por m²",                   val: result.totalPar },
+              { icon: "◎",  label: "Massa p/ Juntas",      qtd: `${Math.ceil(result.massa/15)} saco`,     sub: `${result.massa} kg`,          val: result.totalMassa },
+              { icon: "〜", label: "Fita p/ Juntas",       qtd: `${result.fita} m`,                       sub: "1 m/m² de forro",             val: result.totalFita },
+            ].map(({ icon, label, qtd, sub, val }) => (
+              <div key={label} style={{
+                background: "#fff", borderRadius: 14, border: `1px solid ${C.border}`, padding: "16px 18px",
+                boxShadow: "0 2px 8px rgba(0,0,0,.04)", transition: "transform .15s,box-shadow .15s",
+              }}
+                onMouseEnter={e => { e.currentTarget.style.transform="translateY(-2px)"; e.currentTarget.style.boxShadow="0 6px 20px rgba(0,0,0,.1)"; }}
+                onMouseLeave={e => { e.currentTarget.style.transform="none"; e.currentTarget.style.boxShadow="0 2px 8px rgba(0,0,0,.04)"; }}
+              >
+                <div style={{ fontSize: 20, marginBottom: 8 }}>{icon}</div>
+                <div style={{ fontSize: 10, color: C.muted, fontWeight: 700, letterSpacing: 1, marginBottom: 4, textTransform: "uppercase" }}>{label}</div>
+                <div style={{ fontSize: 24, fontWeight: 900, color: C.text, lineHeight: 1 }}>{qtd}</div>
+                <div style={{ fontSize: 11, color: C.muted, marginTop: 4 }}>{sub}</div>
+                <div style={{ marginTop: 8, paddingTop: 8, borderTop: `1px solid ${C.border}`, fontSize: 13, color: "#2e9e5b", fontWeight: 700 }}>{fmtR(val)}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{
+            background: "linear-gradient(135deg,#981915,#c0392b)",
+            borderRadius: 16, padding: "20px 28px", color: "#fff",
+            display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12,
+            boxShadow: "0 8px 32px rgba(152,25,21,.35)",
+          }}>
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", opacity: .7, marginBottom: 4 }}>Total estimado de materiais</div>
+              <div style={{ fontSize: 36, fontWeight: 900, letterSpacing: -1 }}>{fmtR(total)}</div>
+              <div style={{ fontSize: 12, opacity: .6, marginTop: 2 }}>preços de referência · desperdício incluso</div>
+            </div>
+            <div style={{ fontSize: 48 }}>⬜</div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Comparativo BA × RU × RF ─────────────────────────────────────────────────
+function CalcComparativo() {
+  const [area, setArea] = useState("");
+  const [result, setResult] = useState(null);
+
+  function calcular() {
+    const a = parseFloat(String(area).replace(",","."));
+    if (!a) return;
+    const PLACA = 1.20 * 2.40;
+    const placas = Math.ceil(a * 1.10 / PLACA);
+    setResult({
+      area: a,
+      sistemas: [
+        { tipo: "ST — Standard", preco: 17.00, desc: "Uso geral, ambientes secos, paredes internas", cor: "#4a9eff" },
+        { tipo: "RU — Resistente Umidade", preco: 22.00, desc: "Banheiros, cozinhas, áreas úmidas", cor: "#2e9e5b" },
+        { tipo: "RF — Resistente Fogo", preco: 28.00, desc: "Corredores, saída de emergência, CPTEC", cor: "#e07020" },
+      ].map(s => ({ ...s, placas, total: placas * s.preco, totalM2: (placas * s.preco) / a })),
+    });
+  }
+
+  return (
+    <div>
+      <div style={{ background: "#fff", borderRadius: 16, border: `1px solid ${C.border}`, padding: "22px 26px", marginBottom: 24, display: "flex", gap: 16, alignItems: "flex-end", flexWrap: "wrap" }}>
+        <div style={{ flex: "1 1 180px" }}>
+          <label style={{ fontSize: 11, fontWeight: 700, color: C.muted, display: "block", marginBottom: 6, letterSpacing: 1 }}>ÁREA DE PAREDE (m²)</label>
+          <input type="number" value={area} onChange={e => setArea(e.target.value)} placeholder="Ex: 50"
+            style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 15, fontWeight: 700, fontFamily: "inherit", outline: "none", boxSizing: "border-box" }} />
+        </div>
+        <button onClick={calcular} style={{ padding: "12px 32px", background: C.red, color: "#fff", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+          Comparar
+        </button>
+      </div>
+
+      {result && (
+        <div style={{ animation: "fadeUp .35s ease" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+            <div style={{ height: 3, flex: 1, background: "linear-gradient(90deg,#981915,transparent)", borderRadius: 2 }} />
+            <span style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: 1, textTransform: "uppercase" }}>Comparativo de sistemas</span>
+            <div style={{ height: 3, flex: 1, background: "linear-gradient(270deg,#981915,transparent)", borderRadius: 2 }} />
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 16 }}>
+            {result.sistemas.map((s, i) => {
+              const maxTotal = Math.max(...result.sistemas.map(x => x.total));
+              const pct = (s.total / maxTotal) * 100;
+              return (
+                <div key={s.tipo} style={{
+                  background: "#fff", borderRadius: 16,
+                  border: `2px solid ${s.cor}33`, padding: "22px",
+                  boxShadow: `0 4px 20px ${s.cor}18`,
+                  transition: "transform .2s,box-shadow .2s",
+                }}
+                  onMouseEnter={e => { e.currentTarget.style.transform="translateY(-3px)"; e.currentTarget.style.boxShadow=`0 12px 32px ${s.cor}30`; }}
+                  onMouseLeave={e => { e.currentTarget.style.transform="none"; e.currentTarget.style.boxShadow=`0 4px 20px ${s.cor}18`; }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                    <div style={{ width: 10, height: 10, borderRadius: "50%", background: s.cor, flexShrink: 0 }} />
+                    <div style={{ fontWeight: 800, fontSize: 14, color: C.text }}>{s.tipo}</div>
+                  </div>
+                  <div style={{ fontSize: 11, color: C.muted, marginBottom: 16, lineHeight: 1.5 }}>{s.desc}</div>
+
+                  {/* barra de custo relativo */}
+                  <div style={{ marginBottom: 14 }}>
+                    <div style={{ fontSize: 10, color: C.muted, marginBottom: 4, fontWeight: 700, letterSpacing: .5 }}>CUSTO RELATIVO</div>
+                    <div style={{ height: 8, background: C.border, borderRadius: 4, overflow: "hidden" }}>
+                      <div style={{ height: "100%", width: `${pct}%`, background: `linear-gradient(90deg,${s.cor}88,${s.cor})`, borderRadius: 4, transition: "width .6s ease" }} />
+                    </div>
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
+                    <div style={{ background: C.darker, borderRadius: 10, padding: "10px 12px" }}>
+                      <div style={{ fontSize: 9, color: C.muted, marginBottom: 2, fontWeight: 700, letterSpacing: .5 }}>PLACAS</div>
+                      <div style={{ fontSize: 20, fontWeight: 900, color: C.text }}>{s.placas}</div>
+                      <div style={{ fontSize: 10, color: C.muted }}>chapas</div>
+                    </div>
+                    <div style={{ background: C.darker, borderRadius: 10, padding: "10px 12px" }}>
+                      <div style={{ fontSize: 9, color: C.muted, marginBottom: 2, fontWeight: 700, letterSpacing: .5 }}>CUSTO/m²</div>
+                      <div style={{ fontSize: 20, fontWeight: 900, color: C.text }}>{fmtR(s.totalM2)}</div>
+                    </div>
+                  </div>
+                  <div style={{ background: `linear-gradient(135deg,${s.cor}18,${s.cor}08)`, borderRadius: 10, padding: "12px 14px", textAlign: "center", border: `1px solid ${s.cor}22` }}>
+                    <div style={{ fontSize: 10, color: C.muted, marginBottom: 2 }}>TOTAL MATERIAIS</div>
+                    <div style={{ fontSize: 22, fontWeight: 900, color: s.cor }}>{fmtR(s.total)}</div>
+                  </div>
+                  {i === 0 && <div style={{ marginTop: 8, textAlign: "center", fontSize: 10, fontWeight: 700, color: s.cor, letterSpacing: .5 }}>✓ MAIS ECONÔMICO</div>}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Calculadora Kits ─────────────────────────────────────────────────────────
+const CATS_OPCIONAIS = ["Projetos e Engenharia", "Mão de Obra"];
+
+function CalcKits({ onEnviarOrcamento }) {
+  const [kitSel, setKitSel] = useState(null);
+  const [result, setResult] = useState(null);
+  const [catsAtivas, setCatsAtivas] = useState(
+    Object.fromEntries(CATS_ORDEM.map(c => [c, true]))
+  );
+
+  function toggleCat(cat) {
+    setCatsAtivas(prev => ({ ...prev, [cat]: !prev[cat] }));
+  }
+
+  function calcularKit(kit) {
+    setKitSel(kit);
+    const fatorPadrao = PADROES[kit.padrao].fator;
+    const items = INSUMOS.map((ins) => {
+      const fator = ins.fund ? 1 : fatorPadrao * kit.pavs;
+      const qtd = Math.ceil(ins.base * kit.area * fator);
+      return { ...ins, qtd, total: qtd * ins.preco };
+    });
+    setResult({ ...kit, items });
+  }
+
+  const totalAtivo = result
+    ? result.items.filter(i => catsAtivas[i.categoria]).reduce((s, i) => s + i.total, 0)
+    : 0;
+  const totalSoMateriais = result
+    ? result.items.filter(i => !["Projetos e Engenharia","Mão de Obra"].includes(i.categoria)).reduce((s, i) => s + i.total, 0)
+    : 0;
+
+  return (
+    <div>
+      {/* Grid de kits */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(280px,1fr))", gap: 20, marginBottom: 32 }}>
+        {KITS.map((kit) => {
+          const sel = kitSel?.id === kit.id;
+          const totalRef = INSUMOS.reduce((s, ins) => {
+            const f = ins.fund ? 1 : PADROES[kit.padrao].fator * kit.pavs;
+            return s + Math.ceil(ins.base * kit.area * f) * ins.preco;
+          }, 0);
+          return (
+            <div key={kit.id} onClick={() => calcularKit(kit)} style={{
+              background: sel ? "linear-gradient(135deg,#1a0a0a,#2d0f0f)" : "#fff",
+              border: `2px solid ${sel ? "#981915" : C.border}`,
+              borderRadius: 20, padding: "22px", cursor: "pointer",
+              transition: "all .2s", position: "relative", overflow: "hidden",
+              boxShadow: sel ? "0 12px 40px rgba(152,25,21,.3)" : "0 2px 12px rgba(0,0,0,.06)",
+              transform: sel ? "translateY(-3px)" : "none",
+            }}
+              onMouseEnter={e => { if (!sel) { e.currentTarget.style.transform="translateY(-2px)"; e.currentTarget.style.boxShadow="0 8px 28px rgba(0,0,0,.12)"; }}}
+              onMouseLeave={e => { if (!sel) { e.currentTarget.style.transform="none"; e.currentTarget.style.boxShadow="0 2px 12px rgba(0,0,0,.06)"; }}}
+            >
+              {/* tag */}
+              <div style={{ position: "absolute", top: 14, right: 14, background: kit.tagCor, color: "#fff", fontSize: 9, fontWeight: 800, padding: "3px 8px", borderRadius: 20, letterSpacing: .8 }}>
+                {kit.tag}
+              </div>
+
+              <div style={{ fontSize: 40, marginBottom: 12 }}>{kit.emoji}</div>
+              <div style={{ fontSize: 18, fontWeight: 900, color: sel ? "#fff" : C.text, marginBottom: 4 }}>{kit.nome}</div>
+              <div style={{ fontSize: 12, color: sel ? "rgba(255,255,255,.6)" : C.muted, marginBottom: 14, lineHeight: 1.5 }}>{kit.descricao}</div>
+
+              {/* specs */}
+              <div style={{ display: "flex", gap: 12, marginBottom: 14, flexWrap: "wrap" }}>
+                {[
+                  { icon: "📐", val: `${kit.area} m²` },
+                  { icon: "🛏", val: `${kit.quartos} qts` },
+                  { icon: "🚿", val: `${kit.banheiros} ban` },
+                  { icon: "🏠", val: `${kit.pavs}P` },
+                ].map(({ icon, val }) => (
+                  <div key={val} style={{ display: "flex", alignItems: "center", gap: 4, background: sel ? "rgba(255,255,255,.1)" : C.darker, borderRadius: 8, padding: "4px 10px" }}>
+                    <span style={{ fontSize: 12 }}>{icon}</span>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: sel ? "#fff" : C.text }}>{val}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* destaques */}
+              <div style={{ marginBottom: 16 }}>
+                {kit.destaques.map(d => (
+                  <div key={d} style={{ fontSize: 11, color: sel ? "rgba(255,255,255,.7)" : C.muted, marginBottom: 3 }}>✓ {d}</div>
+                ))}
+              </div>
+
+              {/* preço ref */}
+              <div style={{ borderTop: `1px solid ${sel ? "rgba(255,255,255,.15)" : C.border}`, paddingTop: 12, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <div>
+                  <div style={{ fontSize: 9, color: sel ? "rgba(255,255,255,.5)" : C.muted, letterSpacing: .8, marginBottom: 2 }}>MATERIAIS A PARTIR DE</div>
+                  <div style={{ fontSize: 20, fontWeight: 900, color: sel ? "#ffb3b0" : "#981915" }}>{fmtR(totalRef)}</div>
+                </div>
+                <div style={{ background: sel ? "rgba(255,255,255,.15)" : "#981915", color: "#fff", fontSize: 11, fontWeight: 700, padding: "8px 16px", borderRadius: 10 }}>
+                  {sel ? "✓ Selecionado" : "Calcular"}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Resultado do kit selecionado */}
+      {result && (() => {
+        const totalCompleto = result.items.reduce((s, i) => s + i.total, 0);
+        const totalComProjetos = result.items
+          .filter(i => i.categoria !== "Mão de Obra")
+          .reduce((s, i) => s + i.total, 0);
+        return (
+        <div style={{ animation: "fadeUp .4s ease" }}>
+          <div style={{
+            background: "linear-gradient(135deg,#1a0a0a,#981915)",
+            borderRadius: 20, padding: "28px 32px", marginBottom: 16, color: "#fff",
+          }}>
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 16, marginBottom: 20 }}>
+              <div>
+                <div style={{ fontSize: 11, opacity: .6, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 6 }}>Kit selecionado</div>
+                <div style={{ fontSize: 26, fontWeight: 900, marginBottom: 4 }}>{result.nome}</div>
+                <div style={{ fontSize: 14, opacity: .7 }}>{result.area} m² · {result.pavs} pav. · Padrão {result.padrao}</div>
+              </div>
+              <div style={{ textAlign: "right" }}>
+                <div style={{ fontSize: 11, opacity: .6, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }}>Total incluído</div>
+                <div style={{ fontSize: 38, fontWeight: 900, letterSpacing: -1 }}>{fmtR(totalAtivo)}</div>
+              </div>
+            </div>
+            {/* toggles de categorias opcionais */}
+            <div style={{ borderTop: "1px solid rgba(255,255,255,.15)", paddingTop: 16, display: "flex", flexWrap: "wrap", gap: 10 }}>
+              {CATS_OPCIONAIS.map(cat => {
+                const sub = result.items.filter(i => i.categoria === cat).reduce((s, i) => s + i.total, 0);
+                const ativo = catsAtivas[cat];
+                return (
+                  <button key={cat} onClick={() => toggleCat(cat)} style={{
+                    display: "flex", alignItems: "center", gap: 8,
+                    padding: "8px 14px", borderRadius: 10, cursor: "pointer", fontFamily: "inherit",
+                    border: `1px solid ${ativo ? "rgba(255,255,255,.4)" : "rgba(255,255,255,.15)"}`,
+                    background: ativo ? "rgba(255,255,255,.15)" : "rgba(0,0,0,.2)",
+                    color: ativo ? "#fff" : "rgba(255,255,255,.45)",
+                    fontSize: 12, fontWeight: 700, transition: "all .2s",
+                  }}>
+                    <span style={{ fontSize: 14 }}>{ativo ? "☑" : "☐"}</span>
+                    <span>{cat}</span>
+                    <span style={{ opacity: .7 }}>{fmtR(sub)}</span>
+                  </button>
+                );
+              })}
+            </div>
+            {/* breakdown referência */}
+            <div style={{ borderTop: "1px solid rgba(255,255,255,.1)", marginTop: 14, paddingTop: 14, display: "flex", flexWrap: "wrap", gap: 20 }}>
+              <div>
+                <div style={{ fontSize: 10, opacity: .5, textTransform: "uppercase", letterSpacing: 1, marginBottom: 2 }}>Só materiais</div>
+                <div style={{ fontSize: 15, fontWeight: 800 }}>{fmtR(totalSoMateriais)}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: 10, opacity: .5, textTransform: "uppercase", letterSpacing: 1, marginBottom: 2 }}>+ Projetos</div>
+                <div style={{ fontSize: 15, fontWeight: 800 }}>{fmtR(totalComProjetos)}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: 10, opacity: .5, textTransform: "uppercase", letterSpacing: 1, marginBottom: 2 }}>Obra completa</div>
+                <div style={{ fontSize: 15, fontWeight: 800 }}>{fmtR(totalCompleto)}</div>
+              </div>
+            </div>
+          </div>
+
+          {/* tabela de insumos por categoria */}
+          {CATS_ORDEM.map(cat => {
+            const itens = result.items.filter(i => i.categoria === cat);
+            if (!itens.length) return null;
+            const subtotal = itens.reduce((s, i) => s + i.total, 0);
+            const ativa = catsAtivas[cat];
+            return (
+              <div key={cat} style={{ background: "#fff", borderRadius: 16, border: `1px solid ${C.border}`, marginBottom: 12, overflow: "hidden", opacity: ativa ? 1 : 0.35, transition: "opacity .2s" }}>
+                <div style={{ background: C.darker, padding: "10px 18px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: 12, fontWeight: 800, color: C.text, letterSpacing: .5 }}>{cat}</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: "#981915" }}>{fmtR(subtotal)}{!ativa && <span style={{ marginLeft: 8, fontSize: 10, color: C.muted }}>(excluído)</span>}</span>
+                </div>
+                {itens.map(i => (
+                  <div key={i.nome} style={{ display: "grid", gridTemplateColumns: "1fr auto auto auto", gap: 12, padding: "10px 18px", borderTop: `1px solid ${C.border}`, alignItems: "center" }}>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{i.nome}</div>
+                      <div style={{ fontSize: 11, color: C.muted }}>{i.desc}</div>
+                    </div>
+                    <div style={{ textAlign: "right", fontSize: 13, fontWeight: 700, color: C.text }}>{i.qtd} {i.un}</div>
+                    <div style={{ textAlign: "right", fontSize: 11, color: C.muted }}>{fmtR(i.preco)}/{i.un}</div>
+                    <div style={{ textAlign: "right", fontSize: 13, fontWeight: 700, color: "#2e9e5b" }}>{fmtR(i.total)}</div>
+                  </div>
+                ))}
+              </div>
+            );
+          })}
+
+          <div style={{ display: "flex", gap: 12, justifyContent: "flex-end", marginTop: 8 }}>
+            <button onClick={() => {
+              const rows = result.items.map(i => ({ Categoria: i.categoria, Material: i.nome, Un: i.un, Qtd: i.qtd, "Preço Ref": i.preco, Total: i.total }));
+              const ws = XLSX.utils.json_to_sheet(rows);
+              const wb = XLSX.utils.book_new();
+              XLSX.utils.book_append_sheet(wb, ws, "Kit");
+              XLSX.writeFile(wb, `kit-${result.id}-${result.area}m2.xlsx`);
+            }} style={{ padding: "12px 22px", background: C.darker, border: `1px solid ${C.border}`, borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", color: C.text }}>
+              📥 Exportar Excel
+            </button>
+            <button onClick={() => onEnviarOrcamento(result)} style={{ padding: "12px 28px", background: "linear-gradient(135deg,#981915,#c0392b)", color: "#fff", border: "none", borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", boxShadow: "0 4px 16px rgba(152,25,21,.3)" }}>
+              📋 Enviar para Orçamento
+            </button>
+          </div>
+        </div>
+        );
+      })()}
+    </div>
+  );
+}
+
 export default function Calculadora() {
   const setActivePage = useAppStore((s) => s.setActivePage);
+  const [modo, setModo] = useState("steelframe");
 
   const [area,      setArea]      = useState("");
   const [pavs,      setPavs]      = useState(1);
@@ -128,7 +843,7 @@ export default function Calculadora() {
     if (!a || a <= 0) return;
     const fatorPadrao = PADROES[padrao].fator;
     const items = INSUMOS.map((ins) => {
-      const ehFundacao = ins.categoria === "Fundação (Radier)";
+      const ehFundacao = ins.fund;
       const fator      = ehFundacao ? 1 : fatorPadrao * pavs;
       const qtd        = Math.ceil(ins.base * a * fator);
       return { ...ins, qtd, total: qtd * ins.preco };
@@ -224,8 +939,91 @@ export default function Calculadora() {
   const totalGeral = resultado?.items.reduce((s, i) => s + i.total, 0) || 0;
 
   return (
-    <div style={{ maxWidth: 880, margin: "0 auto", padding: "24px 16px" }}>
-      <h2 style={{ fontSize: 22, fontWeight: 800, marginBottom: 4 }}>Calculadora Steel Frame</h2>
+    <div style={{ maxWidth: 960, margin: "0 auto", padding: "0 0 40px" }}>
+
+      {/* ── HERO ── */}
+      <div style={{
+        background: "linear-gradient(135deg, #1a0a0a 0%, #2d0f0f 40%, #981915 100%)",
+        borderRadius: 24, padding: "48px 40px 40px", marginBottom: 32,
+        position: "relative", overflow: "hidden",
+      }}>
+        {/* grade decorativa */}
+        <div style={{
+          position: "absolute", inset: 0, opacity: .07,
+          backgroundImage: "linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)",
+          backgroundSize: "40px 40px",
+        }} />
+        {/* círculo brilho */}
+        <div style={{
+          position: "absolute", right: -60, top: -60,
+          width: 300, height: 300, borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(255,255,255,.12) 0%, transparent 70%)",
+        }} />
+
+        <div style={{ position: "relative" }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(255,255,255,.12)", borderRadius: 20, padding: "4px 14px", marginBottom: 16 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: "#fff", letterSpacing: 1.5, textTransform: "uppercase" }}>✦ Calculadora Profissional</span>
+          </div>
+          <h1 style={{ fontSize: 36, fontWeight: 900, color: "#fff", lineHeight: 1.1, marginBottom: 12, letterSpacing: -.5 }}>
+            Calcule seus materiais<br />
+            <span style={{ color: "#ffb3b0" }}>em segundos.</span>
+          </h1>
+          <p style={{ color: "rgba(255,255,255,.65)", fontSize: 15, maxWidth: 480, lineHeight: 1.6, marginBottom: 28 }}>
+            Steel Frame, Parede Drywall, Forro — quantitativos precisos com fator de desperdício configurável e export direto para orçamento.
+          </p>
+          {/* Stats */}
+          <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
+            {[
+              { val: "16+", label: "insumos SF" },
+              { val: "3",   label: "tipos de placa" },
+              { val: "0%",  label: "erro de cálculo" },
+            ].map(({ val, label }) => (
+              <div key={label}>
+                <div style={{ fontSize: 24, fontWeight: 900, color: "#fff" }}>{val}</div>
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,.5)", textTransform: "uppercase", letterSpacing: 1 }}>{label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Seletor de modo — cards grandes ── */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))", gap: 12, marginBottom: 32 }}>
+        {[
+          { key: "kits",        icon: "🏠", title: "Kits de Casa",       sub: "Modelos prontos p/ orçar" },
+          { key: "steelframe",  icon: "🏗", title: "Steel Frame",        sub: "Obra completa por m²" },
+          { key: "parede",      icon: "🧱", title: "Parede Drywall",     sub: "Placas, perfis e fixação" },
+          { key: "forro",       icon: "⬜", title: "Forro Drywall",      sub: "T47, pendurais e placas" },
+          { key: "comparativo", icon: "📊", title: "Comparativo",        sub: "ST vs RU vs RF" },
+        ].map(({ key, icon, title, sub }) => {
+          const active = modo === key;
+          return (
+            <button key={key} onClick={() => setModo(key)} style={{
+              background: active ? "linear-gradient(135deg,#981915,#c0392b)" : "#fff",
+              border: `2px solid ${active ? "#981915" : C.border}`,
+              borderRadius: 16, padding: "18px 20px", textAlign: "left",
+              cursor: "pointer", fontFamily: "inherit", transition: "all .2s",
+              boxShadow: active ? "0 8px 24px rgba(152,25,21,.3)" : "0 2px 8px rgba(0,0,0,.05)",
+              transform: active ? "translateY(-2px)" : "none",
+            }}>
+              <div style={{ fontSize: 28, marginBottom: 8 }}>{icon}</div>
+              <div style={{ fontSize: 14, fontWeight: 800, color: active ? "#fff" : C.text, marginBottom: 2 }}>{title}</div>
+              <div style={{ fontSize: 11, color: active ? "rgba(255,255,255,.7)" : C.muted }}>{sub}</div>
+            </button>
+          );
+        })}
+      </div>
+
+      {modo === "kits"        && <CalcKits onEnviarOrcamento={(res) => {
+        const itens = res.items.map(i => ({ grupo: i.grupo, item: i.nome, un: i.un, qtd: i.qtd, precoUnit: i.preco }));
+        localStorage.setItem("sf_estimativo", JSON.stringify({ itens, totalGeral: res.total, area: res.area, tipo: res.padrao }));
+        setActivePage("orcamentos");
+      }} />}
+      {modo === "parede"      && <CalcParedeDrywall />}
+      {modo === "forro"       && <CalcForroDrywall />}
+      {modo === "comparativo" && <CalcComparativo />}
+      {modo !== "steelframe" && modo !== "parede" && modo !== "forro" && modo !== "comparativo" && modo !== "kits" && null}
+      {modo !== "steelframe" ? null : (<>
       <p style={{ color: C.muted, fontSize: 13, marginBottom: 24 }}>
         Estimativa de insumos e custos de referência por área construída — 10% de perda já incluídos
       </p>
@@ -733,7 +1531,12 @@ export default function Calculadora() {
         </>
       )}
 
-      <style>{`@media print { button { display: none !important; } }`}</style>
+      <style>{`
+        @media print { button { display: none !important; } }
+        @keyframes fadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:none; } }
+        @keyframes countUp { from { opacity:0; } to { opacity:1; } }
+      `}</style>
+      </>)}
     </div>
   );
 }

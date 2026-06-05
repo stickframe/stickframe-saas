@@ -206,6 +206,7 @@ export default function App() {
           <Route path="/docs-publicos" element={<AnalisePublica />} />
           <Route path="/concorrencia/:token" element={<ConcorrenciaPublica />} />
           <Route path="/ponto/:token"       element={<PontoColaborador />} />
+          <Route path="/portal/:token"      element={<PortalColaborador />} />
           <Route path="/ambiente/:token"    element={<AmbienteQR />} />
           <Route path="/painel/:token"      element={<PainelQR />} />
           <Route path="/login" element={<LoginScreen />} />

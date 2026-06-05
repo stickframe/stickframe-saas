@@ -243,13 +243,83 @@ export default function Agenda() {
   const obras = obrasAlocadas.length ? obrasAlocadas : allObras;
 
 
-  const [modal,     setModal]     = useState(false);
-  const [verEvento, setVerEvento] = useState(null);
-  const [filtro,    setFiltro]    = useState("todos");
-  const [form,      setForm]      = useState(FORM_VAZIO);
-  const [viewMode,  setViewMode]  = useState("lista"); // "lista" | "calendario"
-  const [mesRef,    setMesRef]    = useState(() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1); });
-  const [diaModal,  setDiaModal]  = useState(null); // { iso, eventos }
+  const [modal,       setModal]       = useState(false);
+  const [verEvento,   setVerEvento]   = useState(null);
+  const [filtro,      setFiltro]      = useState("todos");
+  const [form,        setForm]        = useState(FORM_VAZIO);
+  const [viewMode,    setViewMode]    = useState("lista"); // "lista" | "calendario"
+  const [mesRef,      setMesRef]      = useState(() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1); });
+  const [diaModal,    setDiaModal]    = useState(null); // { iso, eventos }
+  const [exportMenu,  setExportMenu]  = useState(false);
+
+  // ── iCal helpers ─────────────────────────────────────────────────────────────
+  function toICalDate(dataISO, hora = "09:00") {
+    const [y, m, d] = dataISO.split("-");
+    const [hh, mm]  = hora.split(":");
+    return `${y}${m.padStart(2,"0")}${d.padStart(2,"0")}T${hh.padStart(2,"0")}${mm.padStart(2,"0")}00Z`;
+  }
+
+  function addOneHour(icalDate) {
+    // Simple +1h: increment the HH portion
+    const hh = parseInt(icalDate.slice(9, 11), 10);
+    return icalDate.slice(0, 9) + String((hh + 1) % 24).padStart(2, "0") + icalDate.slice(11);
+  }
+
+  function gerarICS(evts) {
+    const lines = [
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "PRODID:-//StickFrame//Agenda//PT",
+      "CALSCALE:GREGORIAN",
+      "METHOD:PUBLISH",
+    ];
+    evts.forEach((e) => {
+      const iso   = toISO(e.data);
+      const dtStart = toICalDate(iso, e.hora || "09:00");
+      const dtEnd   = addOneHour(dtStart);
+      const vevent = [
+        "BEGIN:VEVENT",
+        `UID:${e.id || Math.random().toString(36).slice(2)}@stickframe`,
+        `SUMMARY:${(e.titulo || "Compromisso").replace(/[\r\n]/g, " ")}`,
+        `DTSTART:${dtStart}`,
+        `DTEND:${dtEnd}`,
+        e.obs  ? `DESCRIPTION:${e.obs.replace(/[\r\n]/g, "\\n")}` : "DESCRIPTION:",
+        e.obra ? `LOCATION:${e.obra.replace(/[\r\n]/g, " ")}` : null,
+        "END:VEVENT",
+      ].filter(Boolean);
+      lines.push(...vevent);
+    });
+    lines.push("END:VCALENDAR");
+    return lines.join("\r\n");
+  }
+
+  function baixarICS() {
+    const icsContent = gerarICS(eventosFiltro.length ? eventosFiltro : eventos);
+    const blob = new Blob([icsContent], { type: "text/calendar" });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement("a");
+    a.href = url; a.download = "agenda-stickframe.ics"; a.click();
+    URL.revokeObjectURL(url);
+    setExportMenu(false);
+  }
+
+  function abrirGoogleCalendar() {
+    const sortFnLocal = (a, b) => toISO(a.data).localeCompare(toISO(b.data));
+    const proximo = [...eventos].filter((e) => toISO(e.data) >= hoje).sort(sortFnLocal)[0];
+    if (!proximo) { mostrarToast("Nenhum evento futuro encontrado."); setExportMenu(false); return; }
+    const iso     = toISO(proximo.data);
+    const dtStart = toICalDate(iso, proximo.hora || "09:00");
+    const dtEnd   = addOneHour(dtStart);
+    const params  = new URLSearchParams({
+      action:  "TEMPLATE",
+      text:    proximo.titulo || "Compromisso",
+      dates:   `${dtStart}/${dtEnd}`,
+      details: [proximo.tipo, proximo.obs].filter(Boolean).join(" — "),
+      location: proximo.obra || "",
+    });
+    window.open(`https://calendar.google.com/calendar/render?${params.toString()}`, "_blank");
+    setExportMenu(false);
+  }
 
   function abrirNovo() {
     setForm({ ...FORM_VAZIO, data: new Date().toISOString().slice(0, 10) });
@@ -382,6 +452,51 @@ export default function Agenda() {
                   border: "none", cursor: "pointer", fontFamily: "inherit",
                 }}>{l}</button>
               ))}
+            </div>
+            {/* Export button */}
+            <div style={{ position: "relative" }}>
+              <button
+                onClick={() => setExportMenu((v) => !v)}
+                style={{
+                  padding: "7px 14px", fontSize: 12, fontWeight: 600,
+                  background: exportMenu ? C.surface : "transparent",
+                  border: `1px solid ${C.border}`, borderRadius: 8,
+                  color: C.text, cursor: "pointer", fontFamily: "inherit",
+                  display: "flex", alignItems: "center", gap: 5,
+                }}
+              >
+                📅 Exportar
+              </button>
+              {exportMenu && (
+                <>
+                  {/* backdrop */}
+                  <div onClick={() => setExportMenu(false)} style={{ position: "fixed", inset: 0, zIndex: 49 }} />
+                  <div style={{
+                    position: "absolute", top: "calc(100% + 6px)", right: 0,
+                    background: C.surface, border: `1px solid ${C.border}`,
+                    borderRadius: 10, boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
+                    zIndex: 50, minWidth: 200, overflow: "hidden",
+                  }}>
+                    {[
+                      { icon: "⬇️", label: "Baixar .ics", action: baixarICS },
+                      { icon: "📆", label: "Abrir no Google Calendar", action: abrirGoogleCalendar },
+                    ].map(({ icon, label, action }) => (
+                      <button key={label} onClick={action} style={{
+                        width: "100%", padding: "12px 16px", textAlign: "left",
+                        background: "transparent", border: "none", cursor: "pointer",
+                        fontFamily: "inherit", fontSize: 13, color: C.text,
+                        display: "flex", alignItems: "center", gap: 10,
+                        borderBottom: label === "Baixar .ics" ? `1px solid ${C.border}` : "none",
+                      }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = C.darker}
+                        onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
+                      >
+                        <span style={{ fontSize: 16 }}>{icon}</span> {label}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
             <Btn onClick={abrirNovo}>+ Novo compromisso</Btn>
           </div>

@@ -11,8 +11,8 @@ import { ArquivoVersoes } from "../components/obras/ArquivoVersoes";
 import { PlantaApontamentos } from "../components/obras/PlantaApontamentos";
 import { PdfViewer } from "../components/obras/PdfViewer";
 import { useObraPermission, useObrasVisiveis } from "../hooks/useObraPermission";
-import { sb } from "../services/supabase";
-import { useState, useEffect, useMemo } from "react";
+import { sb, getEmpresaId } from "../services/supabase";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { AlertTriangle, BarChart2, ClipboardList, DollarSign, HardHat, Pencil, Ruler, Search, Trash2, TrendingUp } from "../components/ui/Icon";
 import { useToast } from "../hooks/useToast";
 import { C, FASES } from "../utils/constants";
@@ -26,6 +26,7 @@ import Badge from "../components/ui/Badge";
 import Modal from "../components/ui/Modal";
 import { listarQuantitativos } from "../services/repositories/quantitativoRepository";
 import { gerarRelatorioObra } from "../services/relatorioService";
+import { printHtml } from "../utils/printHtml";
 
 const ICONE_TIPO  = { pdf: "📄", imagem: "🖼️", outro: "📎" };
 const CATS        = ["Projeto", "Foto", "Documento", "Outro"];
@@ -279,11 +280,307 @@ function DiarioAba({ obraId, obra, diario, addDiario }) {
   );
 }
 
+// ─── Galeria por Ambiente ──────────────────────────────────────────────────────
+const AMBIENTES = ["Sala", "Quarto", "Banheiro", "Cozinha", "Estrutura", "Fachada", "Cobertura", "Fundação", "Outro"];
+const STATUS_FOTO = ["Em andamento", "Concluído", "Com problema"];
+const STATUS_FOTO_COR = { "Concluído": "#2e9e5b", "Em andamento": "#b97a00", "Com problema": "#c0392b" };
+
+function GaleriaAmbiente({ obraId }) {
+  const storageKey = `fotos_ambientes_${obraId}`;
+  const [fotos, setFotos] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(storageKey) || "[]"); } catch { return []; }
+  });
+  const [modalAberto, setModalAberto] = useState(false);
+  const [form, setForm] = useState({ url: "", ambiente: "Sala", legenda: "", status: "Em andamento" });
+  const [fotoAmpliada, setFotoAmpliada] = useState(null);
+
+  const salvarFoto = () => {
+    if (!form.url.trim()) return;
+    const nova = [...fotos, { ...form, id: Date.now() }];
+    setFotos(nova);
+    localStorage.setItem(storageKey, JSON.stringify(nova));
+    setForm({ url: "", ambiente: "Sala", legenda: "", status: "Em andamento" });
+    setModalAberto(false);
+  };
+
+  const removerFoto = (id) => {
+    const nova = fotos.filter((f) => f.id !== id);
+    setFotos(nova);
+    localStorage.setItem(storageKey, JSON.stringify(nova));
+  };
+
+  const grupos = AMBIENTES
+    .map((amb) => ({ amb, fotos: fotos.filter((f) => f.ambiente === amb) }))
+    .filter((g) => g.fotos.length > 0);
+
+  return (
+    <div style={{ marginTop: 28 }}>
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+        <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>📸 Galeria por Ambiente</div>
+        <button
+          onClick={() => setModalAberto(true)}
+          style={{ padding: "7px 16px", background: C.red, color: "#fff", border: "none", borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}
+        >
+          + Foto
+        </button>
+      </div>
+
+      {grupos.length === 0 && (
+        <div style={{ textAlign: "center", padding: "24px 0", color: C.muted, fontSize: 13 }}>
+          Nenhuma foto cadastrada. Clique em "+ Foto" para adicionar.
+        </div>
+      )}
+
+      {grupos.map(({ amb, fotos: gFotos }) => (
+        <div key={amb} style={{ marginBottom: 24 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: 1, color: C.muted, textTransform: "uppercase", marginBottom: 10, display: "flex", alignItems: "center", gap: 8 }}>
+            {amb}
+            <span style={{ background: C.dark, borderRadius: 10, padding: "1px 8px", fontSize: 11, fontWeight: 600, color: C.muted }}>{gFotos.length}</span>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 12 }}>
+            {gFotos.map((f) => (
+              <div key={f.id} style={{ background: C.dark, borderRadius: 10, border: `1px solid ${C.border}`, overflow: "hidden", position: "relative" }}>
+                <img
+                  src={f.url}
+                  alt={f.legenda || amb}
+                  onClick={() => setFotoAmpliada(f.url)}
+                  style={{ width: "100%", height: 120, objectFit: "cover", display: "block", cursor: "zoom-in" }}
+                  onError={(e) => { e.target.style.background = C.border; e.target.style.height = "120px"; }}
+                />
+                <div style={{ padding: "8px 10px" }}>
+                  {f.legenda && <div style={{ fontSize: 12, color: C.text, marginBottom: 6, lineHeight: 1.4 }}>{f.legenda}</div>}
+                  <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
+                    <span style={{ fontSize: 10, fontWeight: 700, background: C.surface, border: `1px solid ${C.border}`, borderRadius: 6, padding: "2px 7px", color: C.muted }}>{f.ambiente}</span>
+                    <span style={{ fontSize: 10, fontWeight: 700, background: STATUS_FOTO_COR[f.status] + "22", border: `1px solid ${STATUS_FOTO_COR[f.status]}44`, borderRadius: 6, padding: "2px 7px", color: STATUS_FOTO_COR[f.status] }}>{f.status}</span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => removerFoto(f.id)}
+                  style={{ position: "absolute", top: 6, right: 6, background: "rgba(0,0,0,0.5)", border: "none", borderRadius: 6, color: "#fff", fontSize: 12, width: 22, height: 22, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1 }}
+                  title="Remover foto"
+                >✕</button>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+
+      {/* Modal adicionar foto */}
+      {modalAberto && (
+        <Modal title="Adicionar Foto" onClose={() => setModalAberto(false)}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <div>
+              <Label required>URL da foto</Label>
+              <Input value={form.url} onChange={(v) => setForm((f) => ({ ...f, url: v }))} placeholder="https://..." />
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <div>
+                <Label>Ambiente</Label>
+                <Select
+                  value={form.ambiente}
+                  onChange={(v) => setForm((f) => ({ ...f, ambiente: v }))}
+                  options={AMBIENTES.map((a) => ({ value: a, label: a }))}
+                />
+              </div>
+              <div>
+                <Label>Status</Label>
+                <Select
+                  value={form.status}
+                  onChange={(v) => setForm((f) => ({ ...f, status: v }))}
+                  options={STATUS_FOTO.map((s) => ({ value: s, label: s }))}
+                />
+              </div>
+            </div>
+            <div>
+              <Label>Legenda</Label>
+              <Input value={form.legenda} onChange={(v) => setForm((f) => ({ ...f, legenda: v }))} placeholder="Descrição opcional..." />
+            </div>
+            {form.url && (
+              <img src={form.url} alt="preview" style={{ maxWidth: "100%", maxHeight: 180, borderRadius: 8, objectFit: "cover", border: `1px solid ${C.border}` }} />
+            )}
+            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+              <button onClick={() => setModalAberto(false)} style={{ padding: "8px 18px", background: C.dark, border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, cursor: "pointer", fontFamily: "inherit", color: C.text }}>Cancelar</button>
+              <button onClick={salvarFoto} disabled={!form.url.trim()} style={{ padding: "8px 18px", background: C.red, color: "#fff", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "inherit", opacity: form.url.trim() ? 1 : 0.5 }}>💾 Salvar</button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* Lightbox */}
+      {fotoAmpliada && (
+        <div onClick={() => setFotoAmpliada(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", cursor: "zoom-out" }}>
+          <img src={fotoAmpliada} alt="ampliada" style={{ maxWidth: "90vw", maxHeight: "90vh", borderRadius: 10 }} />
+        </div>
+      )}
+    </div>
+  );
+}
+
 const FORM_VAZIO = {
   nome: "", cliente_id: "", cliente: "", email_cliente: "",
   status: "Planejamento", fase: "Projeto executivo",
   prazo_inicio: "", prazo_fim: "", contrato: 0, progresso: 0, retencao_pct: 5,
 };
+
+
+// ── helpers para chat ──────────────────────────────────────────────────────
+function chatAvatarColor(nome) {
+  if (!nome) return "#981915";
+  const colors = ["#981915", "#2e9e5b", "#4a7af8", "#b97a00", "#7c3aed", "#0891b2"];
+  let h = 0;
+  for (let i = 0; i < nome.length; i++) h = (h * 31 + nome.charCodeAt(i)) >>> 0;
+  return colors[h % colors.length];
+}
+function chatInitials(nome) {
+  if (!nome) return "?";
+  const p = nome.trim().split(" ");
+  if (p.length === 1) return p[0][0].toUpperCase();
+  return (p[0][0] + p[p.length - 1][0]).toUpperCase();
+}
+function chatTimeAgo(dateStr) {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const min = Math.floor(diff / 60000);
+  if (min < 1) return "agora";
+  if (min < 60) return `há ${min} min`;
+  const h = Math.floor(min / 60);
+  if (h < 24) return `há ${h}h`;
+  const d = Math.floor(h / 24);
+  return `há ${d} dia${d > 1 ? "s" : ""}`;
+}
+
+function ObraChatPanel({ obraId, userName, userPerfil, empresaId }) {
+  const [msgs, setMsgs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [text, setText] = useState("");
+  const [sending, setSending] = useState(false);
+  const bottomRef = useRef(null);
+
+  useEffect(() => {
+    if (!obraId) return;
+    setLoading(true);
+    sb.from("obra_chat")
+      .select("*")
+      .eq("obra_id", obraId)
+      .order("created_at", { ascending: true })
+      .then(({ data }) => { setMsgs(data || []); setLoading(false); });
+
+    const channel = sb
+      .channel(`obra-chat-${obraId}`)
+      .on("postgres_changes", {
+        event: "INSERT",
+        schema: "public",
+        table: "obra_chat",
+        filter: `obra_id=eq.${obraId}`,
+      }, (payload) => {
+        setMsgs((prev) => [...prev, payload.new]);
+      })
+      .subscribe();
+
+    return () => { sb.removeChannel(channel); };
+  }, [obraId]);
+
+  useEffect(() => {
+    if (bottomRef.current) bottomRef.current.scrollIntoView({ behavior: "smooth" });
+  }, [msgs]);
+
+  async function send() {
+    const msg = text.trim();
+    if (!msg || sending) return;
+    setSending(true);
+    setText("");
+    const empId = empresaId || getEmpresaId();
+    await sb.from("obra_chat").insert({
+      obra_id: obraId,
+      empresa_id: empId,
+      autor_nome: userName || "Usuário",
+      autor_perfil: userPerfil || null,
+      mensagem: msg,
+    });
+    setSending(false);
+  }
+
+  function handleKey(e) {
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
+  }
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: 520 }}>
+      {/* messages area */}
+      <div style={{ flex: 1, overflowY: "auto", padding: "16px 0", display: "flex", flexDirection: "column", gap: 12 }}>
+        {loading && <div style={{ color: C.muted, fontSize: 13, textAlign: "center", marginTop: 40 }}>Carregando mensagens…</div>}
+        {!loading && msgs.length === 0 && (
+          <div style={{ color: C.muted, fontSize: 13, textAlign: "center", marginTop: 40 }}>
+            Nenhuma mensagem ainda. Inicie a conversa!
+          </div>
+        )}
+        {msgs.map((m) => {
+          const isOwn = m.autor_nome === userName;
+          return (
+            <div key={m.id} style={{ display: "flex", flexDirection: isOwn ? "row-reverse" : "row", alignItems: "flex-end", gap: 8, padding: "0 4px" }}>
+              <div style={{
+                width: 32, height: 32, borderRadius: "50%",
+                background: chatAvatarColor(m.autor_nome),
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: 12, fontWeight: 700, color: "#fff", flexShrink: 0,
+              }}>
+                {chatInitials(m.autor_nome)}
+              </div>
+              <div style={{ maxWidth: "65%", display: "flex", flexDirection: "column", alignItems: isOwn ? "flex-end" : "flex-start", gap: 3 }}>
+                <div style={{ display: "flex", gap: 6, alignItems: "baseline", flexDirection: isOwn ? "row-reverse" : "row" }}>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: C.text }}>{m.autor_nome}</span>
+                  {m.autor_perfil && <span style={{ fontSize: 11, color: C.muted }}>{m.autor_perfil}</span>}
+                  <span style={{ fontSize: 11, color: C.muted }}>{chatTimeAgo(m.created_at)}</span>
+                </div>
+                <div style={{
+                  background: isOwn ? C.red : C.surface,
+                  border: `1px solid ${isOwn ? C.red : C.border}`,
+                  borderRadius: isOwn ? "14px 14px 4px 14px" : "14px 14px 14px 4px",
+                  padding: "8px 12px",
+                  fontSize: 13, color: isOwn ? "#fff" : C.text,
+                  lineHeight: 1.5, whiteSpace: "pre-wrap", wordBreak: "break-word",
+                }}>
+                  {m.mensagem}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+        <div ref={bottomRef} />
+      </div>
+      {/* input */}
+      <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: 12, display: "flex", gap: 8, alignItems: "flex-end" }}>
+        <textarea
+          value={text}
+          onChange={v => setText(v.target.value)}
+          onKeyDown={handleKey}
+          placeholder="Escreva uma mensagem…"
+          rows={2}
+          style={{
+            flex: 1, boxSizing: "border-box",
+            background: C.surface, border: `1px solid ${C.border}`,
+            borderRadius: 8, padding: "10px 13px",
+            color: C.text, fontSize: 13, outline: "none",
+            fontFamily: "inherit", resize: "none",
+          }}
+        />
+        <button
+          onClick={send}
+          disabled={!text.trim() || sending}
+          style={{
+            padding: "10px 18px", borderRadius: 8, border: "none",
+            background: text.trim() && !sending ? C.red : C.border,
+            color: "#fff", fontSize: 13, fontWeight: 700,
+            cursor: text.trim() && !sending ? "pointer" : "default",
+            fontFamily: "inherit", flexShrink: 0,
+          }}
+        >
+          Enviar
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export default function GestaoObras() {
   const { toast, mostrarToast } = useToast();
@@ -306,6 +603,7 @@ export default function GestaoObras() {
   const financeiro        = useAppStore((s) => s.financeiro);
   const perfil            = useAppStore((s) => s.user?.perfil);
   const userId            = useAppStore((s) => s.user?.uid);
+  const userName          = useAppStore((s) => s.user?.nome);
   const empresaId         = useAppStore((s) => s.empresaId);
   const marcarCiente      = useAppStore((s) => s.marcarCiente);
   const medicoes          = useAppStore((s) => s.medicoes);
@@ -374,6 +672,9 @@ export default function GestaoObras() {
   const [apontamentoModal, setApontamentoModal] = useState(null);
   const [showRDO,       setShowRDO]       = useState(false);
   const [pdfViewer,     setPdfViewer]     = useState(null);
+  const [relPdfModal,   setRelPdfModal]   = useState(false);
+  const [relPdfOpcoes,  setRelPdfOpcoes]  = useState({ resumo: true, diario: true, financeiro: true, fotos: false, cronograma: false });
+  const [relPdfWaLink,  setRelPdfWaLink]  = useState(null);
 
   useEffect(() => {
     if (!obraId && obras.length > 0) setObraId(obras[0].id);
@@ -774,6 +1075,87 @@ export default function GestaoObras() {
     setTimeout(() => win.print(), 600);
   }
 
+  function gerarRelatorioSimples(opcoes) {
+    if (!obra) return;
+    const fmtR = (v) => (v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    const hoje = new Date().toLocaleDateString("pt-BR");
+    const lans = financeiro[obraId]?.lancamentos || [];
+    const receitas = lans.filter((l) => l.tipo === "receita").reduce((a, l) => a + (l.valor || 0), 0);
+    const despesas = lans.filter((l) => l.tipo === "despesa").reduce((a, l) => a + (l.valor || 0), 0);
+    const saldo = receitas - despesas;
+    const diarioObra = (diario[obraId] || []).slice(0, 5);
+
+    const secResumo = opcoes.resumo ? `
+      <section>
+        <h2 style="font-size:14px;font-weight:700;color:#e63329;border-bottom:2px solid #e63329;padding-bottom:6px;margin-top:28px">Resumo Geral</h2>
+        <table style="width:100%;border-collapse:collapse;font-size:13px;margin-top:10px">
+          <tr><td style="padding:6px 8px;color:#555;width:40%">Área</td><td style="padding:6px 8px;font-weight:600">${obra.area || "—"} m²</td></tr>
+          <tr style="background:#f9f9f9"><td style="padding:6px 8px;color:#555">Fase atual</td><td style="padding:6px 8px;font-weight:600">${obra.fase || "—"}</td></tr>
+          <tr><td style="padding:6px 8px;color:#555">Início previsto</td><td style="padding:6px 8px;font-weight:600">${obra.prazo_inicio || "—"}</td></tr>
+          <tr style="background:#f9f9f9"><td style="padding:6px 8px;color:#555">Fim previsto</td><td style="padding:6px 8px;font-weight:600">${obra.prazo_fim || obra.prazo || "—"}</td></tr>
+          <tr><td style="padding:6px 8px;color:#555">Progresso</td><td style="padding:6px 8px;font-weight:600">${obra.progresso || 0}%</td></tr>
+        </table>
+        <div style="margin-top:10px;background:#eee;border-radius:4px;height:10px"><div style="width:${Math.min(obra.progresso||0,100)}%;height:10px;background:#e63329;border-radius:4px"></div></div>
+      </section>` : "";
+
+    const secDiario = opcoes.diario && diarioObra.length > 0 ? `
+      <section>
+        <h2 style="font-size:14px;font-weight:700;color:#e63329;border-bottom:2px solid #e63329;padding-bottom:6px;margin-top:28px">Últimas Entradas do Diário</h2>
+        ${diarioObra.map((r) => `
+          <div style="border:1px solid #e5e7eb;border-radius:8px;padding:12px 16px;margin-top:10px">
+            <div style="font-size:11px;color:#888;margin-bottom:4px">${r.data || ""} ${r.turno ? `· ${r.turno}` : ""}</div>
+            <div style="font-size:13px;color:#1a1a1a">${r.texto || r.observacoes || "—"}</div>
+          </div>`).join("")}
+      </section>` : "";
+
+    const secFinanceiro = opcoes.financeiro ? `
+      <section>
+        <h2 style="font-size:14px;font-weight:700;color:#e63329;border-bottom:2px solid #e63329;padding-bottom:6px;margin-top:28px">Resumo Financeiro</h2>
+        <div style="display:flex;gap:12px;margin-top:10px;flex-wrap:wrap">
+          <div style="flex:1;min-width:120px;background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:12px;text-align:center">
+            <div style="font-size:11px;color:#555;margin-bottom:4px">Receitas</div>
+            <div style="font-size:16px;font-weight:800;color:#2e9e5b">${fmtR(receitas)}</div>
+          </div>
+          <div style="flex:1;min-width:120px;background:#fff5f5;border:1px solid #fca5a5;border-radius:8px;padding:12px;text-align:center">
+            <div style="font-size:11px;color:#555;margin-bottom:4px">Despesas</div>
+            <div style="font-size:16px;font-weight:800;color:#e63329">${fmtR(despesas)}</div>
+          </div>
+          <div style="flex:1;min-width:120px;background:${saldo>=0?"#f0fdf4":"#fff5f5"};border:1px solid ${saldo>=0?"#86efac":"#fca5a5"};border-radius:8px;padding:12px;text-align:center">
+            <div style="font-size:11px;color:#555;margin-bottom:4px">Saldo</div>
+            <div style="font-size:16px;font-weight:800;color:${saldo>=0?"#2e9e5b":"#e63329"}">${fmtR(saldo)}</div>
+          </div>
+        </div>
+      </section>` : "";
+
+    const contrato = Number(obra.contrato) || 0;
+    const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+      <title>Relatório — ${obra.nome}</title>
+      <style>
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{font-family:'Segoe UI',Arial,sans-serif;color:#1a1a1a;background:#fff;padding:40px;max-width:860px;margin:auto}
+        @media print{body{padding:20px}}
+      </style>
+    </head><body>
+      <div style="background:linear-gradient(135deg,#e63329,#6e1210);color:#fff;border-radius:12px;padding:32px 36px;margin-bottom:24px">
+        <div style="font-size:11px;letter-spacing:2px;opacity:0.7;margin-bottom:8px">RELATÓRIO DE OBRA</div>
+        <div style="font-size:22px;font-weight:800;margin-bottom:6px">${obra.nome}</div>
+        <div style="font-size:13px;opacity:0.85">${obra.cliente || "Sem cliente"} · Status: ${obra.status || "—"} · Contrato: ${fmtR(contrato)}</div>
+        <div style="margin-top:16px;background:rgba(255,255,255,0.2);border-radius:4px;height:8px">
+          <div style="width:${Math.min(obra.progresso||0,100)}%;height:8px;background:#fff;border-radius:4px;opacity:0.9"></div>
+        </div>
+        <div style="font-size:11px;margin-top:6px;opacity:0.75">${obra.progresso||0}% concluído</div>
+      </div>
+      ${secResumo}${secDiario}${secFinanceiro}
+      <div style="margin-top:40px;padding-top:16px;border-top:1px solid #e5e7eb;font-size:11px;color:#aaa;text-align:center">
+        Gerado em ${hoje} — StickFrame
+      </div>
+    </body></html>`;
+
+    printHtml(html, `relatorio-${obra.nome.replace(/\s+/g, "-").toLowerCase()}`);
+    const encoded = encodeURIComponent(`Relatório da obra ${obra.nome} gerado em ${hoje}`);
+    setRelPdfWaLink(`https://wa.me/?text=${encoded}`);
+  }
+
   function handleFiles(files) {
     const lista = Array.from(files);
     if (!lista.length) return;
@@ -1080,7 +1462,7 @@ export default function GestaoObras() {
                 {/* Abas */}
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: `1px solid ${C.border}` }}>
                 <div style={{ display: "flex", flex: 1, overflowX: "auto", scrollbarWidth: "thin" }}>
-                  {[["fases", "Fases"], ["financeiro", "Financeiro"], ["fluxo", "Fluxo"], ["cronograma", "Cronograma"], ["diario", "Diário"], ["fotos", "Fotos"], ["arquivos", "Arquivos"], ["ncr", "NCR"], ["rfis", "RFIs"], ["rastreio", "Rastreio"], ["historico", "Histórico"], ...(obra.status === "Concluída" ? [["garantia", "Garantia"]] : []), ["garantias", "Garantias"], ...(perfil === "diretor" ? [["membros", "Membros"]] : []), ["presenca", "Presença"], ["comentarios", "Comentários"]].map(([k, l]) => (
+                  {[["fases", "Fases"], ["financeiro", "Financeiro"], ["fluxo", "Fluxo"], ["cronograma", "Cronograma"], ["diario", "Diário"], ["fotos", "Fotos"], ["arquivos", "Arquivos"], ["ncr", "NCR"], ["rfis", "RFIs"], ["rastreio", "Rastreio"], ["historico", "Histórico"], ...(obra.status === "Concluída" ? [["garantia", "Garantia"]] : []), ["garantias", "Garantias"], ...(perfil === "diretor" ? [["membros", "Membros"]] : []), ["presenca", "Presença"], ["comentarios", "Comentários"], ["chat", "💬 Chat"]].map(([k, l]) => (
                     <button key={k} onClick={() => {
                       if (k === "diario" && userId) {
                         const pendentes = arqObra.filter((a) => a.disciplina && a.status_doc !== "Desatualizado" && !(a.cientes_uids || []).includes(userId));
@@ -1583,6 +1965,7 @@ export default function GestaoObras() {
                       diario={diario[obraId] || []}
                       addDiario={addDiario}
                     />
+                    <GaleriaAmbiente obraId={obraId} />
                   </div>
                 )}
 
@@ -2026,6 +2409,10 @@ export default function GestaoObras() {
                   </div>
                 )}
 
+                {abaAtiva === "chat" && (
+                  <ObraChatPanel obraId={obraId} userName={userName} userPerfil={perfil} empresaId={empresaId} />
+                )}
+
               </div>
 
               {/* Coluna lateral */}
@@ -2053,6 +2440,12 @@ export default function GestaoObras() {
                       borderRadius: 6, color: "#2e9e5b", fontSize: 12, fontWeight: 700,
                       cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
                     }}>📄 Dossiê</button>
+                    <button onClick={() => { setRelPdfWaLink(null); setRelPdfModal(true); }} style={{
+                      width: "100%", padding: "8px 0",
+                      background: C.red + "18", border: `1px solid ${C.red}44`,
+                      borderRadius: 6, color: C.red, fontSize: 12, fontWeight: 700,
+                      cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+                    }}>📄 Relatório</button>
                     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                       <button onClick={copiarLinkPortal} style={{
                         width: "100%", padding: "8px 0",
@@ -2329,6 +2722,43 @@ export default function GestaoObras() {
           </div>
         );
       })()}
+
+      {/* Modal Relatório PDF */}
+      {relPdfModal && obra && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 14, padding: 28, width: 360, boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
+            <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 4 }}>📄 Relatório PDF</div>
+            <div style={{ fontSize: 12, color: C.muted, marginBottom: 20 }}>Selecione as seções a incluir no relatório.</div>
+            {[
+              ["resumo", "Resumo Geral"],
+              ["diario", "Diário de Obra"],
+              ["financeiro", "Resumo Financeiro"],
+            ].map(([key, label]) => (
+              <label key={key} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12, cursor: "pointer", fontSize: 13 }}>
+                <input
+                  type="checkbox"
+                  checked={relPdfOpcoes[key]}
+                  onChange={v => setRelPdfOpcoes((p) => ({ ...p, [key]: v.target.checked }))}
+                  style={{ width: 16, height: 16, accentColor: C.red }}
+                />
+                {label}
+              </label>
+            ))}
+            {relPdfWaLink && (
+              <div style={{ marginTop: 4, marginBottom: 16 }}>
+                <button
+                  onClick={() => window.open(relPdfWaLink, "_blank")}
+                  style={{ width: "100%", padding: "9px 0", background: "#25d36622", border: "1px solid #25d36644", borderRadius: 8, fontSize: 13, fontWeight: 700, color: "#25d366", cursor: "pointer", fontFamily: "inherit" }}
+                >📲 Compartilhar via WhatsApp</button>
+              </div>
+            )}
+            <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
+              <button onClick={() => setRelPdfModal(false)} style={{ flex: 1, padding: "9px 0", background: C.darker, border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, cursor: "pointer", fontFamily: "inherit", color: C.text }}>Cancelar</button>
+              <button onClick={() => gerarRelatorioSimples(relPdfOpcoes)} style={{ flex: 1, padding: "9px 0", background: C.red, border: "none", borderRadius: 8, fontSize: 13, fontWeight: 700, color: "#fff", cursor: "pointer", fontFamily: "inherit" }}>Gerar PDF</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal Relatório Mensal */}
       {relMensalModal && (

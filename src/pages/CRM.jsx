@@ -323,6 +323,8 @@ const FormCliente = memo(function FormCliente({ form, setForm, onSave, onCancel,
 });
 
 // ─── CRM principal ───────────────────────────────────────────────────────────
+const FILTERS_VAZIO = { status: "", origem: "", valorMin: "", valorMax: "", busca: "" };
+
 const FORM_VAZIO = {
   nome: "", cidade: "", contato: "", email: "", origem: "Indicação",
   status: "Lead", unidades: "", area_m2: "", valor: 0, valorDisplay: "", observacoes: "",
@@ -372,10 +374,41 @@ export default function CRM() {
   const [criarObraModal, setCriarObraModal] = useState(null); // cliente para criar obra
   const addObra = useAppStore((s) => s.addObra);
 
-  // Saved views
-  const [crmFilters, setCrmFilters] = useState({ status: "", busca: "" });
+  // Saved views & filters
+  const [crmFilters, setCrmFilters] = useState(FILTERS_VAZIO);
   const { loadViews } = useSavedViews("crm");
   useEffect(() => { loadViews(); }, [loadViews]);
+
+  // Derived unique origins from leads
+  const origensUnicas = useMemo(() => {
+    const s = new Set(clientes.map((c) => c.origem).filter(Boolean));
+    return Array.from(s).sort();
+  }, [clientes]);
+
+  // Filtered leads
+  const clientesFiltrados = useMemo(() => {
+    return clientes.filter((c) => {
+      if (crmFilters.status && c.status !== crmFilters.status) return false;
+      if (crmFilters.origem && c.origem !== crmFilters.origem) return false;
+      if (crmFilters.busca) {
+        const q = crmFilters.busca.toLowerCase();
+        if (
+          !c.nome?.toLowerCase().includes(q) &&
+          !c.cidade?.toLowerCase().includes(q) &&
+          !c.email?.toLowerCase().includes(q)
+        ) return false;
+      }
+      if (crmFilters.valorMin !== "" && !isNaN(Number(crmFilters.valorMin))) {
+        if ((c.valor || 0) < Number(crmFilters.valorMin)) return false;
+      }
+      if (crmFilters.valorMax !== "" && !isNaN(Number(crmFilters.valorMax))) {
+        if ((c.valor || 0) > Number(crmFilters.valorMax)) return false;
+      }
+      return true;
+    });
+  }, [clientes, crmFilters]);
+
+  const hasActiveFilters = Object.values(crmFilters).some((v) => v !== "");
 
   const cliente = useMemo(() => clientes.find((c) => c.id === sel), [clientes, sel]);
 
@@ -702,13 +735,85 @@ export default function CRM() {
         </div>
       </div>
 
+      {/* Filter Bar */}
+      <div style={{
+        background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12,
+        padding: "12px 16px", marginBottom: 12,
+        display: "flex", flexWrap: "wrap", gap: 10, alignItems: "flex-end",
+      }}>
+        {/* Busca por nome/empresa */}
+        <div style={{ flex: "2 1 180px" }}>
+          <div style={{ fontSize: 10, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 4 }}>BUSCA</div>
+          <Input
+            value={crmFilters.busca}
+            onChange={(v) => setCrmFilters((f) => ({ ...f, busca: v }))}
+            placeholder="Nome ou cidade…"
+          />
+        </div>
+
+        {/* Origem */}
+        <div style={{ flex: "1 1 140px" }}>
+          <div style={{ fontSize: 10, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 4 }}>ORIGEM</div>
+          <Select
+            value={crmFilters.origem}
+            onChange={(v) => setCrmFilters((f) => ({ ...f, origem: v }))}
+            options={[
+              { value: "", label: "Todas" },
+              ...origensUnicas.map((o) => ({ value: o, label: o })),
+            ]}
+          />
+        </div>
+
+        {/* Fase */}
+        <div style={{ flex: "1 1 160px" }}>
+          <div style={{ fontSize: 10, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 4 }}>FASE</div>
+          <Select
+            value={crmFilters.status}
+            onChange={(v) => setCrmFilters((f) => ({ ...f, status: v }))}
+            options={[
+              { value: "", label: "Todas" },
+              ...STATUS_OPTS.map((s) => ({ value: s, label: s })),
+            ]}
+          />
+        </div>
+
+        {/* Valor min */}
+        <div style={{ flex: "1 1 110px" }}>
+          <div style={{ fontSize: 10, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 4 }}>VALOR MÍN (R$)</div>
+          <Input
+            type="number"
+            value={crmFilters.valorMin}
+            onChange={(v) => setCrmFilters((f) => ({ ...f, valorMin: v }))}
+            placeholder="0"
+          />
+        </div>
+
+        {/* Valor max */}
+        <div style={{ flex: "1 1 110px" }}>
+          <div style={{ fontSize: 10, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 4 }}>VALOR MÁX (R$)</div>
+          <Input
+            type="number"
+            value={crmFilters.valorMax}
+            onChange={(v) => setCrmFilters((f) => ({ ...f, valorMax: v }))}
+            placeholder="∞"
+          />
+        </div>
+
+        {/* Botões */}
+        <div style={{ display: "flex", gap: 8, alignItems: "flex-end", marginTop: 2 }}>
+          {hasActiveFilters && (
+            <Btn variant="ghost" onClick={() => setCrmFilters(FILTERS_VAZIO)}>Limpar filtros</Btn>
+          )}
+        </div>
+      </div>
+
       {/* Saved Views Bar */}
       <SavedViewsBar
         module="crm"
         activeFilters={crmFilters}
         onApplyView={(filters) => {
-          if (filters) setCrmFilters((prev) => ({ ...prev, ...filters }));
-          else setCrmFilters({ status: "", busca: "" });
+          if (filters) setCrmFilters((prev) => ({ ...FILTERS_VAZIO, ...filters }));
+          else setCrmFilters(FILTERS_VAZIO);
         }}
       />
 
@@ -783,7 +888,7 @@ export default function CRM() {
           {view === "funnel" ? (
             <div style={{ display: "flex", gap: 12, overflowX: "auto", paddingBottom: 16 }}>
               {STATUS_OPTS.map(status => {
-                const clientesColuna = clientes.filter(c => c.status === status);
+                const clientesColuna = clientesFiltrados.filter(c => c.status === status);
                 return (
                   <div 
                     key={status}
@@ -902,11 +1007,11 @@ export default function CRM() {
             </div>
           ) : (
             <div style={{ background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", border: `1px solid ${C.border}`, overflow: "hidden" }}>
-              {clientes.length === 0 ? (
+              {clientesFiltrados.length === 0 ? (
                 <div style={{ padding: 48, textAlign: "center", color: C.muted }}>
                   <div style={{ fontSize: 32, marginBottom: 12 }}>◈</div>
-                  <div style={{ fontSize: 14, fontWeight: 600 }}>Nenhum cliente ainda</div>
-                  <div style={{ fontSize: 12, marginTop: 4 }}>Clique em "+ Nova oportunidade" para começar</div>
+                  <div style={{ fontSize: 14, fontWeight: 600 }}>{clientes.length === 0 ? "Nenhum cliente ainda" : "Nenhum resultado para os filtros"}</div>
+                  <div style={{ fontSize: 12, marginTop: 4 }}>{clientes.length === 0 ? 'Clique em "+ Nova oportunidade" para começar' : "Tente ajustar ou limpar os filtros"}</div>
                 </div>
               ) : (
                 <div style={{ overflowX: "auto" }}>
@@ -921,7 +1026,7 @@ export default function CRM() {
                       </tr>
                     </thead>
                     <tbody>
-                      {clientes.map((c) => {
+                      {clientesFiltrados.map((c) => {
                         const atrasado = c.proximo_contato && c.proximo_contato <= hojeStr && c.status !== "Fechado" && c.status !== "Em execução";
                         return (
                           <tr
