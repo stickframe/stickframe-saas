@@ -91,13 +91,17 @@ export default function PropostaOnline() {
   const jaAceito = !!orc.aceite_nome || aceiteFeito;
   const validade = orc.validade_dias || 30;
 
+  const valorTotal = Number(orc.valor) || 0;
+  const areaTotal = Number(orc.area) || 1;
+  const unidades = Number(orc.unidades) || 1;
+
   const itens = [
-    { desc: "Projeto executivo Steel Frame", un: "vb", qtd: 1, unit: orc.valor_total * 0.08 },
-    { desc: `Fundação (${orc.area} m²)`, un: "m²", qtd: orc.area, unit: (orc.valor_total * 0.12) / orc.area },
-    { desc: `Estrutura Steel Frame (${orc.unidades}x ${orc.area} m²)`, un: "m²", qtd: orc.area * orc.unidades, unit: (orc.valor_total * 0.35) / (orc.area * orc.unidades) },
-    { desc: "Fechamentos e painéis", un: "m²", qtd: orc.area * orc.unidades, unit: (orc.valor_total * 0.20) / (orc.area * orc.unidades) },
-    { desc: "Instalações elétricas e hidráulicas", un: "vb", qtd: 1, unit: orc.valor_total * 0.12 },
-    { desc: "Acabamento e entrega", un: "vb", qtd: 1, unit: orc.valor_total * 0.13 },
+    { desc: "Projeto executivo Steel Frame", un: "vb", qtd: 1, unit: valorTotal * 0.08 },
+    { desc: `Fundação (${areaTotal} m²)`, un: "m²", qtd: areaTotal, unit: (valorTotal * 0.12) / areaTotal },
+    { desc: `Estrutura Steel Frame (${unidades}x ${areaTotal} m²)`, un: "m²", qtd: areaTotal * unidades, unit: (valorTotal * 0.35) / (areaTotal * unidades) },
+    { desc: "Fechamentos e painéis", un: "m²", qtd: areaTotal * unidades, unit: (valorTotal * 0.20) / (areaTotal * unidades) },
+    { desc: "Instalações elétricas e hidráulicas", un: "vb", qtd: 1, unit: valorTotal * 0.12 },
+    { desc: "Acabamento e entrega", un: "vb", qtd: 1, unit: valorTotal * 0.13 },
   ];
 
   return (
@@ -133,7 +137,7 @@ export default function PropostaOnline() {
             Residência em Steel Frame
           </div>
           <div style={{ fontSize: 14, opacity: .85 }}>
-            Preparada para: <strong>{cliente?.nome || orc.cliente_nome || "Cliente"}</strong>
+            Preparada para: <strong>{cliente?.nome || orc.cliente || "Cliente"}</strong>
           </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12, marginTop: 24 }}>
@@ -156,9 +160,9 @@ export default function PropostaOnline() {
         {/* Valor destaque */}
         <div style={{ background: "#fff", borderRadius: 14, padding: "24px", marginBottom: 14, boxShadow: "0 2px 12px rgba(0,0,0,.06)", textAlign: "center" }}>
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: "#888", marginBottom: 8 }}>INVESTIMENTO TOTAL</div>
-          <div style={{ fontSize: 42, fontWeight: 800, color: "#981915", lineHeight: 1 }}>{fmt(orc.valor_total)}</div>
+          <div style={{ fontSize: 42, fontWeight: 800, color: "#981915", lineHeight: 1 }}>{fmt(valorTotal)}</div>
           <div style={{ fontSize: 13, color: "#888", marginTop: 8 }}>
-            {fmt(orc.valor_m2 || (orc.valor_total / orc.area))}/m² · {orc.area} m² · {orc.unidades || 1} unidade(s)
+            {fmt(valorTotal / areaTotal)}/m² · {areaTotal} m² · {unidades} unidade(s)
           </div>
         </div>
 
@@ -185,7 +189,7 @@ export default function PropostaOnline() {
               ))}
               <tr style={{ background: "#f9f9f9" }}>
                 <td colSpan={4} style={{ padding: "12px 8px", fontWeight: 700, fontSize: 13 }}>Total</td>
-                <td style={{ padding: "12px 8px", textAlign: "right", fontWeight: 800, fontSize: 15, color: "#981915" }}>{fmt(orc.valor_total)}</td>
+                <td style={{ padding: "12px 8px", textAlign: "right", fontWeight: 800, fontSize: 15, color: "#981915" }}>{fmt(valorTotal)}</td>
               </tr>
             </tbody>
           </table>
@@ -289,7 +293,7 @@ export default function PropostaOnline() {
               <label style={{ display: "flex", alignItems: "flex-start", gap: 10, cursor: "pointer", marginBottom: 16 }}>
                 <input type="checkbox" checked={aceite.aceito} onChange={(e) => setAceite((a) => ({ ...a, aceito: e.target.checked }))} style={{ marginTop: 2, flexShrink: 0 }} />
                 <span style={{ fontSize: 12, color: "#555", lineHeight: 1.5 }}>
-                  Confirmo que sou <strong>{cliente?.nome || "o cliente"}</strong> e aceito os termos desta proposta no valor de <strong>{fmt(orc.valor_total)}</strong>.
+                  Confirmo que sou <strong>{cliente?.nome || orc.cliente || "o cliente"}</strong> e aceito os termos desta proposta no valor de <strong>{fmt(valorTotal)}</strong>.
                 </span>
               </label>
               <button
