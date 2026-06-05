@@ -26,6 +26,7 @@ import Badge from "../components/ui/Badge";
 import Modal from "../components/ui/Modal";
 import { listarQuantitativos } from "../services/repositories/quantitativoRepository";
 import { gerarRelatorioObra } from "../services/relatorioService";
+import { printHtml } from "../utils/printHtml";
 
 const ICONE_TIPO  = { pdf: "📄", imagem: "🖼️", outro: "📎" };
 const CATS        = ["Projeto", "Foto", "Documento", "Outro"];
@@ -374,6 +375,9 @@ export default function GestaoObras() {
   const [apontamentoModal, setApontamentoModal] = useState(null);
   const [showRDO,       setShowRDO]       = useState(false);
   const [pdfViewer,     setPdfViewer]     = useState(null);
+  const [relPdfModal,   setRelPdfModal]   = useState(false);
+  const [relPdfOpcoes,  setRelPdfOpcoes]  = useState({ resumo: true, diario: true, financeiro: true, fotos: false, cronograma: false });
+  const [relPdfWaLink,  setRelPdfWaLink]  = useState(null);
 
   useEffect(() => {
     if (!obraId && obras.length > 0) setObraId(obras[0].id);
@@ -772,6 +776,87 @@ export default function GestaoObras() {
     win.document.write(html);
     win.document.close();
     setTimeout(() => win.print(), 600);
+  }
+
+  function gerarRelatorioSimples(opcoes) {
+    if (!obra) return;
+    const fmtR = (v) => (v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    const hoje = new Date().toLocaleDateString("pt-BR");
+    const lans = financeiro[obraId]?.lancamentos || [];
+    const receitas = lans.filter((l) => l.tipo === "receita").reduce((a, l) => a + (l.valor || 0), 0);
+    const despesas = lans.filter((l) => l.tipo === "despesa").reduce((a, l) => a + (l.valor || 0), 0);
+    const saldo = receitas - despesas;
+    const diarioObra = (diario[obraId] || []).slice(0, 5);
+
+    const secResumo = opcoes.resumo ? `
+      <section>
+        <h2 style="font-size:14px;font-weight:700;color:#e63329;border-bottom:2px solid #e63329;padding-bottom:6px;margin-top:28px">Resumo Geral</h2>
+        <table style="width:100%;border-collapse:collapse;font-size:13px;margin-top:10px">
+          <tr><td style="padding:6px 8px;color:#555;width:40%">Área</td><td style="padding:6px 8px;font-weight:600">${obra.area || "—"} m²</td></tr>
+          <tr style="background:#f9f9f9"><td style="padding:6px 8px;color:#555">Fase atual</td><td style="padding:6px 8px;font-weight:600">${obra.fase || "—"}</td></tr>
+          <tr><td style="padding:6px 8px;color:#555">Início previsto</td><td style="padding:6px 8px;font-weight:600">${obra.prazo_inicio || "—"}</td></tr>
+          <tr style="background:#f9f9f9"><td style="padding:6px 8px;color:#555">Fim previsto</td><td style="padding:6px 8px;font-weight:600">${obra.prazo_fim || obra.prazo || "—"}</td></tr>
+          <tr><td style="padding:6px 8px;color:#555">Progresso</td><td style="padding:6px 8px;font-weight:600">${obra.progresso || 0}%</td></tr>
+        </table>
+        <div style="margin-top:10px;background:#eee;border-radius:4px;height:10px"><div style="width:${Math.min(obra.progresso||0,100)}%;height:10px;background:#e63329;border-radius:4px"></div></div>
+      </section>` : "";
+
+    const secDiario = opcoes.diario && diarioObra.length > 0 ? `
+      <section>
+        <h2 style="font-size:14px;font-weight:700;color:#e63329;border-bottom:2px solid #e63329;padding-bottom:6px;margin-top:28px">Últimas Entradas do Diário</h2>
+        ${diarioObra.map((r) => `
+          <div style="border:1px solid #e5e7eb;border-radius:8px;padding:12px 16px;margin-top:10px">
+            <div style="font-size:11px;color:#888;margin-bottom:4px">${r.data || ""} ${r.turno ? `· ${r.turno}` : ""}</div>
+            <div style="font-size:13px;color:#1a1a1a">${r.texto || r.observacoes || "—"}</div>
+          </div>`).join("")}
+      </section>` : "";
+
+    const secFinanceiro = opcoes.financeiro ? `
+      <section>
+        <h2 style="font-size:14px;font-weight:700;color:#e63329;border-bottom:2px solid #e63329;padding-bottom:6px;margin-top:28px">Resumo Financeiro</h2>
+        <div style="display:flex;gap:12px;margin-top:10px;flex-wrap:wrap">
+          <div style="flex:1;min-width:120px;background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:12px;text-align:center">
+            <div style="font-size:11px;color:#555;margin-bottom:4px">Receitas</div>
+            <div style="font-size:16px;font-weight:800;color:#2e9e5b">${fmtR(receitas)}</div>
+          </div>
+          <div style="flex:1;min-width:120px;background:#fff5f5;border:1px solid #fca5a5;border-radius:8px;padding:12px;text-align:center">
+            <div style="font-size:11px;color:#555;margin-bottom:4px">Despesas</div>
+            <div style="font-size:16px;font-weight:800;color:#e63329">${fmtR(despesas)}</div>
+          </div>
+          <div style="flex:1;min-width:120px;background:${saldo>=0?"#f0fdf4":"#fff5f5"};border:1px solid ${saldo>=0?"#86efac":"#fca5a5"};border-radius:8px;padding:12px;text-align:center">
+            <div style="font-size:11px;color:#555;margin-bottom:4px">Saldo</div>
+            <div style="font-size:16px;font-weight:800;color:${saldo>=0?"#2e9e5b":"#e63329"}">${fmtR(saldo)}</div>
+          </div>
+        </div>
+      </section>` : "";
+
+    const contrato = Number(obra.contrato) || 0;
+    const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+      <title>Relatório — ${obra.nome}</title>
+      <style>
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{font-family:'Segoe UI',Arial,sans-serif;color:#1a1a1a;background:#fff;padding:40px;max-width:860px;margin:auto}
+        @media print{body{padding:20px}}
+      </style>
+    </head><body>
+      <div style="background:linear-gradient(135deg,#e63329,#6e1210);color:#fff;border-radius:12px;padding:32px 36px;margin-bottom:24px">
+        <div style="font-size:11px;letter-spacing:2px;opacity:0.7;margin-bottom:8px">RELATÓRIO DE OBRA</div>
+        <div style="font-size:22px;font-weight:800;margin-bottom:6px">${obra.nome}</div>
+        <div style="font-size:13px;opacity:0.85">${obra.cliente || "Sem cliente"} · Status: ${obra.status || "—"} · Contrato: ${fmtR(contrato)}</div>
+        <div style="margin-top:16px;background:rgba(255,255,255,0.2);border-radius:4px;height:8px">
+          <div style="width:${Math.min(obra.progresso||0,100)}%;height:8px;background:#fff;border-radius:4px;opacity:0.9"></div>
+        </div>
+        <div style="font-size:11px;margin-top:6px;opacity:0.75">${obra.progresso||0}% concluído</div>
+      </div>
+      ${secResumo}${secDiario}${secFinanceiro}
+      <div style="margin-top:40px;padding-top:16px;border-top:1px solid #e5e7eb;font-size:11px;color:#aaa;text-align:center">
+        Gerado em ${hoje} — StickFrame
+      </div>
+    </body></html>`;
+
+    printHtml(html, `relatorio-${obra.nome.replace(/\s+/g, "-").toLowerCase()}`);
+    const encoded = encodeURIComponent(`Relatório da obra ${obra.nome} gerado em ${hoje}`);
+    setRelPdfWaLink(`https://wa.me/?text=${encoded}`);
   }
 
   function handleFiles(files) {
@@ -2053,6 +2138,12 @@ export default function GestaoObras() {
                       borderRadius: 6, color: "#2e9e5b", fontSize: 12, fontWeight: 700,
                       cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
                     }}>📄 Dossiê</button>
+                    <button onClick={() => { setRelPdfWaLink(null); setRelPdfModal(true); }} style={{
+                      width: "100%", padding: "8px 0",
+                      background: C.red + "18", border: `1px solid ${C.red}44`,
+                      borderRadius: 6, color: C.red, fontSize: 12, fontWeight: 700,
+                      cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+                    }}>📄 Relatório</button>
                     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                       <button onClick={copiarLinkPortal} style={{
                         width: "100%", padding: "8px 0",
@@ -2329,6 +2420,43 @@ export default function GestaoObras() {
           </div>
         );
       })()}
+
+      {/* Modal Relatório PDF */}
+      {relPdfModal && obra && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 14, padding: 28, width: 360, boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
+            <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 4 }}>📄 Relatório PDF</div>
+            <div style={{ fontSize: 12, color: C.muted, marginBottom: 20 }}>Selecione as seções a incluir no relatório.</div>
+            {[
+              ["resumo", "Resumo Geral"],
+              ["diario", "Diário de Obra"],
+              ["financeiro", "Resumo Financeiro"],
+            ].map(([key, label]) => (
+              <label key={key} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12, cursor: "pointer", fontSize: 13 }}>
+                <input
+                  type="checkbox"
+                  checked={relPdfOpcoes[key]}
+                  onChange={v => setRelPdfOpcoes((p) => ({ ...p, [key]: v.target.checked }))}
+                  style={{ width: 16, height: 16, accentColor: C.red }}
+                />
+                {label}
+              </label>
+            ))}
+            {relPdfWaLink && (
+              <div style={{ marginTop: 4, marginBottom: 16 }}>
+                <button
+                  onClick={() => window.open(relPdfWaLink, "_blank")}
+                  style={{ width: "100%", padding: "9px 0", background: "#25d36622", border: "1px solid #25d36644", borderRadius: 8, fontSize: 13, fontWeight: 700, color: "#25d366", cursor: "pointer", fontFamily: "inherit" }}
+                >📲 Compartilhar via WhatsApp</button>
+              </div>
+            )}
+            <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
+              <button onClick={() => setRelPdfModal(false)} style={{ flex: 1, padding: "9px 0", background: C.darker, border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, cursor: "pointer", fontFamily: "inherit", color: C.text }}>Cancelar</button>
+              <button onClick={() => gerarRelatorioSimples(relPdfOpcoes)} style={{ flex: 1, padding: "9px 0", background: C.red, border: "none", borderRadius: 8, fontSize: 13, fontWeight: 700, color: "#fff", cursor: "pointer", fontFamily: "inherit" }}>Gerar PDF</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal Relatório Mensal */}
       {relMensalModal && (
