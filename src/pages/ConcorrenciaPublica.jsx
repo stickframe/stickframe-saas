@@ -38,7 +38,7 @@ export default function ConcorrenciaPublica() {
     setEnviando(true);
     const payload = dados.itens.map((it) => ({
       concorrencia_item_id: it.id,
-      preco_unitario: parseFloat(String(precos[it.id]?.preco || "0").replace(",", ".")) || null,
+      preco_unitario: parseFloat(String(precos[it.id]?.preco || "0").replace(/\./g, "").replace(",", ".")) || null,
       observacao: precos[it.id]?.obs || null,
     }));
     const { error } = await sb.rpc("concorrencia_enviar_proposta", { p_token: token, p_propostas: JSON.stringify(payload) });
@@ -141,7 +141,7 @@ export default function ConcorrenciaPublica() {
                       <div style={{ position: "relative" }}>
                         <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", fontSize: 13, color: ST.muted, pointerEvents: "none" }}>R$</span>
                         <input
-                          type="number" min="0" step="0.01"
+                          type="text" inputMode="decimal"
                           value={precos[it.id]?.preco ?? ""}
                           onChange={(e) => setPrecos((p) => ({ ...p, [it.id]: { ...p[it.id], preco: e.target.value } }))}
                           placeholder="0,00"
@@ -193,11 +193,11 @@ export default function ConcorrenciaPublica() {
               })()}
 
               <button
-                disabled={enviando || itens.every((it) => !precos[it.id]?.preco)}
+                disabled={enviando || itens.every((it) => !precos[it.id]?.preco || precos[it.id]?.preco === "0" || precos[it.id]?.preco === "0,00")}
                 onClick={enviar}
                 style={{
                   marginTop: 20, width: "100%", padding: "14px",
-                  background: enviando || itens.every((it) => !precos[it.id]?.preco) ? "#ccc" : ST.red,
+                  background: enviando || itens.every((it) => !precos[it.id]?.preco || precos[it.id]?.preco === "0" || precos[it.id]?.preco === "0,00") ? "#ccc" : ST.red,
                   border: "none", borderRadius: 10, color: "#fff",
                   fontSize: 15, fontWeight: 800, cursor: "pointer", fontFamily: "inherit",
                   transition: "background .15s",
