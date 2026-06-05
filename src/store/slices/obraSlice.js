@@ -28,7 +28,7 @@ export const createObraSlice = (set, get) => ({
   avancarFase: async (obraId, novaFase, progresso) => {
     const anterior = get().obras.find((x) => x.id === obraId);
     await atualizarFase(obraId, novaFase, progresso);
-    set((s) => ({ obras: s.obras.map((o) => o.id === obraId ? { ...o, fase: novaFase, progresso } : o) }));
+    set((s) => ({ obras: s.obras.map((o) => o.id === obraId ? { ...o, fase: novaFase, progresso, ...(progresso >= 100 ? { status: "Concluída" } : {}) } : o) }));
     const o = get().obras.find((x) => x.id === obraId);
     const nome = o?.nome?.split("—")[0]?.trim();
     get().registrar("obra", "fase", `Obra ${nome} avançou para: ${novaFase}`, obraId, {

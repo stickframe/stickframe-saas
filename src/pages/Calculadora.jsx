@@ -57,9 +57,9 @@ const INSUMOS = [
   { categoria: "Projetos e Engenharia", grupo: "Projetos",       nome: "Projeto Estrutural LSF",              un: "m²",  base: 1.00,  preco: 18.00, desc: "Memorial + detalhamento" },
   { categoria: "Projetos e Engenharia", grupo: "Projetos",       nome: "Projeto Elétrico + Hidro",            un: "m²",  base: 1.00,  preco: 14.00, desc: "Aprovação em concessionária" },
   // Mão de Obra
-  { categoria: "Mão de Obra",       grupo: "Mão de Obra",        nome: "Montagem estrutura LSF",              un: "m²",  base: 1.00,  preco: 85.00, desc: "Equipe especializada" },
-  { categoria: "Mão de Obra",       grupo: "Mão de Obra",        nome: "Instalação vedações (OSB/gesso/cim)", un: "m²",  base: 1.00,  preco: 45.00, desc: "Fechamento interno e externo" },
-  { categoria: "Mão de Obra",       grupo: "Mão de Obra",        nome: "Cobertura (telha shingle)",           un: "m²",  base: 1.00,  preco: 38.00, desc: "Montagem e impermeabilização" },
+  { categoria: "Mão de Obra",       grupo: "Mão de Obra",        nome: "Montagem estrutura LSF",              un: "m²",  base: 1.00,  preco: 400.00, desc: "Equipe especializada" },
+  { categoria: "Mão de Obra",       grupo: "Mão de Obra",        nome: "Instalação vedações (OSB/gesso/cim)", un: "m²",  base: 1.00,  preco: 200.00, desc: "Fechamento interno e externo" },
+  { categoria: "Mão de Obra",       grupo: "Mão de Obra",        nome: "Cobertura (telha shingle)",           un: "m²",  base: 1.00,  preco: 300.00, desc: "Montagem e impermeabilização" },
   { categoria: "Mão de Obra",       grupo: "Mão de Obra",        nome: "Acabamentos e instalações",           un: "m²",  base: 1.00,  preco: 72.00, desc: "Piso, pintura, elétrica, hidro" },
 ];
 

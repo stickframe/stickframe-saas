@@ -20,7 +20,9 @@ export async function deletarObra(id) {
   if (error) throw error;
 }
 export async function atualizarFase(id, fase, progresso) {
-  const { data, error } = await sb.from("obras").update({ fase, progresso, updated_at: new Date() }).eq("id", id).select().single();
+  const updates = { fase, progresso, updated_at: new Date() };
+  if (progresso >= 100) updates.status = "Concluída";
+  const { data, error } = await sb.from("obras").update(updates).eq("id", id).select().single();
   if (error) throw error;
   return data;
 }
@@ -50,6 +52,7 @@ export async function aprovarMedicao(id) {
   return data;
 }
 export async function listarArquivos(obraId) {
+  if (!obraId) return [];
   const { data, error } = await sb.from("arquivos").select("*").eq("obra_id", obraId).order("created_at", { ascending: false });
   if (error) throw error;
   return (data || []).map((row) => ({

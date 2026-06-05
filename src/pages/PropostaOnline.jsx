@@ -13,6 +13,7 @@ export default function PropostaOnline() {
   const { token } = useParams();
   const [orc,     setOrc]     = useState(null);
   const [cliente, setCliente] = useState(null);
+  const [empresa, setEmpresa] = useState(null);
   const [loading, setLoading] = useState(true);
   const [aceite,  setAceite]  = useState({ nome: "", aceito: false });
   const [enviando,setEnviando]= useState(false);
@@ -53,7 +54,7 @@ export default function PropostaOnline() {
     (async () => {
       try {
         const { data } = await sb.rpc("get_proposta_data", { p_token: token });
-        if (data) { setOrc(data.orcamento); setCliente(data.cliente); }
+        if (data) { setOrc(data.orcamento); setCliente(data.cliente); setEmpresa(data.empresa); }
       } finally { setLoading(false); }
     })();
   }, [token]);
@@ -91,13 +92,17 @@ export default function PropostaOnline() {
   const jaAceito = !!orc.aceite_nome || aceiteFeito;
   const validade = orc.validade_dias || 30;
 
+  const valorTotal = Number(orc.valor) || 0;
+  const areaTotal = Number(orc.area) || 1;
+  const unidades = Number(orc.unidades) || 1;
+
   const itens = [
-    { desc: "Projeto executivo Steel Frame", un: "vb", qtd: 1, unit: orc.valor_total * 0.08 },
-    { desc: `Fundação (${orc.area} m²)`, un: "m²", qtd: orc.area, unit: (orc.valor_total * 0.12) / orc.area },
-    { desc: `Estrutura Steel Frame (${orc.unidades}x ${orc.area} m²)`, un: "m²", qtd: orc.area * orc.unidades, unit: (orc.valor_total * 0.35) / (orc.area * orc.unidades) },
-    { desc: "Fechamentos e painéis", un: "m²", qtd: orc.area * orc.unidades, unit: (orc.valor_total * 0.20) / (orc.area * orc.unidades) },
-    { desc: "Instalações elétricas e hidráulicas", un: "vb", qtd: 1, unit: orc.valor_total * 0.12 },
-    { desc: "Acabamento e entrega", un: "vb", qtd: 1, unit: orc.valor_total * 0.13 },
+    { desc: "Projeto executivo Steel Frame", un: "vb", qtd: 1, unit: valorTotal * 0.08 },
+    { desc: `Fundação (${areaTotal} m²)`, un: "m²", qtd: areaTotal, unit: (valorTotal * 0.12) / areaTotal },
+    { desc: `Estrutura Steel Frame (${unidades}x ${areaTotal} m²)`, un: "m²", qtd: areaTotal * unidades, unit: (valorTotal * 0.35) / (areaTotal * unidades) },
+    { desc: "Fechamentos e painéis", un: "m²", qtd: areaTotal * unidades, unit: (valorTotal * 0.20) / (areaTotal * unidades) },
+    { desc: "Instalações elétricas e hidráulicas", un: "vb", qtd: 1, unit: valorTotal * 0.12 },
+    { desc: "Acabamento e entrega", un: "vb", qtd: 1, unit: valorTotal * 0.13 },
   ];
 
   return (
@@ -106,6 +111,7 @@ export default function PropostaOnline() {
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700;800&display=swap');
         *{box-sizing:border-box;margin:0;padding:0}
         @keyframes spin{to{transform:rotate(360deg)}}
+        @media print{.no-print{display:none !important;}}
       `}</style>
 
       {/* Header */}
@@ -133,7 +139,7 @@ export default function PropostaOnline() {
             Residência em Steel Frame
           </div>
           <div style={{ fontSize: 14, opacity: .85 }}>
-            Preparada para: <strong>{cliente?.nome || orc.cliente_nome || "Cliente"}</strong>
+            Preparada para: <strong>{cliente?.nome || orc.cliente || "Cliente"}</strong>
           </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12, marginTop: 24 }}>
@@ -156,9 +162,9 @@ export default function PropostaOnline() {
         {/* Valor destaque */}
         <div style={{ background: "#fff", borderRadius: 14, padding: "24px", marginBottom: 14, boxShadow: "0 2px 12px rgba(0,0,0,.06)", textAlign: "center" }}>
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: "#888", marginBottom: 8 }}>INVESTIMENTO TOTAL</div>
-          <div style={{ fontSize: 42, fontWeight: 800, color: "#981915", lineHeight: 1 }}>{fmt(orc.valor_total)}</div>
+          <div style={{ fontSize: 42, fontWeight: 800, color: "#981915", lineHeight: 1 }}>{fmt(valorTotal)}</div>
           <div style={{ fontSize: 13, color: "#888", marginTop: 8 }}>
-            {fmt(orc.valor_m2 || (orc.valor_total / orc.area))}/m² · {orc.area} m² · {orc.unidades || 1} unidade(s)
+            {fmt(valorTotal / areaTotal)}/m² · {areaTotal} m² · {unidades} unidade(s)
           </div>
         </div>
 
@@ -185,7 +191,7 @@ export default function PropostaOnline() {
               ))}
               <tr style={{ background: "#f9f9f9" }}>
                 <td colSpan={4} style={{ padding: "12px 8px", fontWeight: 700, fontSize: 13 }}>Total</td>
-                <td style={{ padding: "12px 8px", textAlign: "right", fontWeight: 800, fontSize: 15, color: "#981915" }}>{fmt(orc.valor_total)}</td>
+                <td style={{ padding: "12px 8px", textAlign: "right", fontWeight: 800, fontSize: 15, color: "#981915" }}>{fmt(valorTotal)}</td>
               </tr>
             </tbody>
           </table>
@@ -289,10 +295,11 @@ export default function PropostaOnline() {
               <label style={{ display: "flex", alignItems: "flex-start", gap: 10, cursor: "pointer", marginBottom: 16 }}>
                 <input type="checkbox" checked={aceite.aceito} onChange={(e) => setAceite((a) => ({ ...a, aceito: e.target.checked }))} style={{ marginTop: 2, flexShrink: 0 }} />
                 <span style={{ fontSize: 12, color: "#555", lineHeight: 1.5 }}>
-                  Confirmo que sou <strong>{cliente?.nome || "o cliente"}</strong> e aceito os termos desta proposta no valor de <strong>{fmt(orc.valor_total)}</strong>.
+                  Confirmo que sou <strong>{cliente?.nome || orc.cliente || "o cliente"}</strong> e aceito os termos desta proposta no valor de <strong>{fmt(valorTotal)}</strong>.
                 </span>
               </label>
               <button
+                className="no-print"
                 onClick={confirmarAceite}
                 disabled={!aceite.nome.trim() || !aceite.aceito || enviando}
                 style={{
@@ -313,7 +320,7 @@ export default function PropostaOnline() {
         <div style={{ background: "#1A1A1A", borderRadius: 14, padding: "20px", textAlign: "center", marginBottom: 12 }}>
           <div style={{ fontSize: 11, color: "#555", letterSpacing: 1, marginBottom: 8 }}>DÚVIDAS SOBRE A PROPOSTA?</div>
           <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", marginBottom: 14 }}>Fale com nossa equipe</div>
-          <a href="https://wa.me/5511940000000" target="_blank" rel="noreferrer"
+          <a href={`https://wa.me/${(empresa?.telefone || "").replace(/\D/g, "") || "5511940000000"}`} target="_blank" rel="noreferrer"
             style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#25D366", color: "#fff", borderRadius: 8, padding: "10px 24px", fontSize: 13, fontWeight: 700, textDecoration: "none" }}>
             💬 WhatsApp
           </a>
@@ -324,6 +331,23 @@ export default function PropostaOnline() {
           Proposta válida por {validade} dias · {hoje}
         </div>
       </div>
+
+      {/* Floating PDF download button */}
+      <button
+        className="no-print"
+        onClick={() => window.print()}
+        style={{
+          position: "fixed", bottom: 24, right: 24,
+          background: "#981915", color: "#fff",
+          borderRadius: 10, padding: "12px 20px",
+          fontSize: 13, fontWeight: 700,
+          cursor: "pointer", border: "none",
+          boxShadow: "0 4px 16px rgba(152,25,21,0.4)",
+          zIndex: 100,
+        }}
+      >
+        📄 Baixar PDF
+      </button>
     </div>
   );
 }

@@ -949,9 +949,10 @@ export default function CRM() {
                               <span style={{ background: C.darker, padding: "2px 6px", borderRadius: 4 }}>{c.origem || "Indicação"}</span>
                               {atrasado && <span style={{ color: C.danger, fontWeight: 700, fontSize: 10, background: C.danger+"22", padding: "2px 6px", borderRadius: 4 }}>⚠️ FOLLOW-UP</span>}
                             </div>
-                            {c.origem === "Calculadora" && (() => {
-                              const KIT_IDS = { 42: "studio", 78: "vila", 120: "casa120", 160: "sobrado160", 200: "alto200", 273: "vigo273" };
-                              const kitId = KIT_IDS[Number(c.area_m2)];
+                            {(c.origem === "Calculadora" || c.origem?.startsWith("Kit-")) && (() => {
+                              const kitId = c.origem?.startsWith("Kit-")
+                                ? c.origem.replace("Kit-", "")
+                                : ({ 42: "studio", 78: "vila", 120: "casa120", 160: "sobrado160", 200: "alto200", 273: "vigo273" })[Number(c.area_m2)];
                               if (!kitId) return null;
                               const padrao = (c.observacoes || "").match(/Padrão:\s*([^|]+)/)?.[1]?.trim() || "Padrão";
                               return (

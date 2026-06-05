@@ -44,6 +44,23 @@ function useMsgsPendentes() {
   return msgs;
 }
 
+function useOrcamentosAceitos() {
+  const [aceitos, setAceitos] = useState([]);
+  useEffect(() => {
+    const empId = getEmpresaId();
+    if (!empId) return;
+    const em7d = new Date(Date.now() - 7 * 86400000).toISOString();
+    sb.from("orcamentos").select("id, cliente, ref, aceite_nome, aceite_data").eq("empresa_id", empId).eq("status", "Aprovado").gte("aceite_data", em7d).order("aceite_data", { ascending: false })
+      .then(({ data }) => setAceitos(data || []));
+    const ch = sb.channel("orcamentos-aceite-notif")
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "orcamentos", filter: `empresa_id=eq.${empId}` },
+        () => sb.from("orcamentos").select("id, cliente, ref, aceite_nome, aceite_data").eq("empresa_id", empId).eq("status", "Aprovado").gte("aceite_data", em7d).order("aceite_data", { ascending: false }).then(({ data }) => setAceitos(data || [])))
+      .subscribe();
+    return () => ch.unsubscribe();
+  }, []);
+  return aceitos;
+}
+
 function useAlertas() {
   const obras           = useAppStore((s) => s.obras);
   const orcamentos      = useAppStore((s) => s.orcamentos);
@@ -53,6 +70,7 @@ function useAlertas() {
   const clientes        = useAppStore((s) => s.clientes);
   const preOrcs         = usePreOrcamentos();
   const msgsPendentes   = useMsgsPendentes();
+  const orcAceitos      = useOrcamentosAceitos();
 
   return useMemo(() => {
     const alertas = [];
@@ -133,6 +151,16 @@ function useAlertas() {
       });
     });
 
+    // 7b. Propostas aceitas pelo cliente (últimos 7 dias)
+    orcAceitos.forEach((o) => {
+      const quando = o.aceite_data ? new Date(o.aceite_data).toLocaleDateString("pt-BR") : "—";
+      alertas.push({
+        categoria: "orcamento", tipo: "sucesso", cor: "#2e9e5b", icon: "🎉",
+        titulo: "Proposta aceita!",
+        texto: `${o.cliente} assinou a proposta ${o.ref || ""} em ${quando}`,
+      });
+    });
+
     // 8. Mensagens do portal não lidas
     msgsPendentes.forEach((m) => {
       const obra = obras.find((o) => o.id === m.obra_id);
@@ -144,7 +172,7 @@ function useAlertas() {
     });
 
     return alertas;
-  }, [obras, orcamentos, medicoes, vistorias, bimApontamentos, clientes, preOrcs, msgsPendentes]);
+  }, [obras, orcamentos, medicoes, vistorias, bimApontamentos, clientes, preOrcs, msgsPendentes, orcAceitos]);
 }
 
 function useAlertasOperacionais() {
@@ -167,9 +195,9 @@ function useAlertasOperacionais() {
       // Estoque abaixo do mínimo
       sb.from("suprimentos_estoque").select("item, quantidade, estoque_minimo").eq("empresa_id", empId).gt("estoque_minimo", 0),
       // Certificações NR vencidas
-      sb.from("certificacoes").select("id, nr, validade, colaborador:colaboradores(nome)").eq("empresa_id", empId).lt("validade", hoje),
+      sb.from("certificacoes").select("id, nr, data_validade, colaborador_id").eq("empresa_id", empId).lt("data_validade", hoje),
       // Certificações NR vencendo em 30d
-      sb.from("certificacoes").select("id, nr, validade, colaborador:colaboradores(nome)").eq("empresa_id", empId).gte("validade", hoje).lte("validade", em30),
+      sb.from("certificacoes").select("id, nr, data_validade, colaborador_id").eq("empresa_id", empId).gte("data_validade", hoje).lte("data_validade", em30),
     ]).then(([episVenc, episVend, incAbertos, pedCrit, estoqueItems, certVenc, certVend]) => {
       const result = [];
       (episVenc.data || []).forEach(e => result.push({
@@ -205,16 +233,16 @@ function useAlertasOperacionais() {
         id: `cert-${c.id}-expired`,
         categoria: "certificacao", tipo: "erro", cor: "#e74c3c", icon: "🛡️",
         titulo: "Cert. NR VENCIDA",
-        texto: `Cert. ${c.nr} de ${c.colaborador?.nome || "Colaborador"} VENCIDA`,
+        texto: `Cert. ${c.nr} — VENCIDA`,
       }));
       (certVend.data || []).forEach(c => {
-        const diasRestantes = Math.ceil((new Date(c.validade) - new Date()) / 86400000);
+        const diasRestantes = Math.ceil((new Date(c.data_validade) - new Date()) / 86400000);
         result.push({
           id: `cert-${c.id}-expiring`,
           categoria: "certificacao", tipo: diasRestantes <= 7 ? "erro" : "alerta",
           cor: diasRestantes <= 7 ? "#e74c3c" : "#e67e22", icon: "🛡️",
           titulo: "Cert. NR vencendo",
-          texto: `Cert. ${c.nr} de ${c.colaborador?.nome || "Colaborador"} vence em ${diasRestantes} dia(s)`,
+          texto: `Cert. ${c.nr} vence em ${diasRestantes} dia(s)`,
         });
       });
       setAlertas(result);
