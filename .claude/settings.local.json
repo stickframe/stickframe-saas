@@ -19,7 +19,11 @@
       "Bash(cp /root/.claude/uploads/ce57fd33-fe63-45b3-86cf-c6c207d0eb7e/d9be16ab-analise_do_projeto.html /home/user/stickframe-saas/public/docs/analise-projeto.html)",
       "Bash(cp /root/.claude/uploads/ce57fd33-fe63-45b3-86cf-c6c207d0eb7e/2c521324-stickframeXprocore.html /home/user/stickframe-saas/public/docs/stickframe-vs-procore.html)",
       "Bash(cp /root/.claude/uploads/ce57fd33-fe63-45b3-86cf-c6c207d0eb7e/b74dabb1-frontend.html /home/user/stickframe-saas/public/docs/comparativo-frontend.html)",
-      "mcp__a5a69f48-5aaa-426d-9f3d-9d336c39d902__list_tables"
+      "mcp__a5a69f48-5aaa-426d-9f3d-9d336c39d902__list_tables",
+      "Bash(mkdir -p /home/user/stickframe-saas/public/brand)",
+      "Bash(cp /root/.claude/uploads/b7b8ee81-8628-4aef-9437-b63adfe99b88/9489d8d1-LOGOSTICKFRAMEvetor.pdf /home/user/stickframe-saas/public/brand/logo-vetorial.pdf)",
+      "Bash(cp /root/.claude/uploads/b7b8ee81-8628-4aef-9437-b63adfe99b88/ea7129ca-camisa_stick_frame.pdf /home/user/stickframe-saas/public/brand/camisa-mockup.pdf)",
+      "Bash(cp /root/.claude/uploads/b7b8ee81-8628-4aef-9437-b63adfe99b88/5d0420c2-capacete_stick_frame.pdf /home/user/stickframe-saas/public/brand/capacete-mockup.pdf)"
     ]
   }
 }
