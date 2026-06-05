@@ -1016,7 +1016,8 @@ export default function Calculadora() {
 
       {modo === "kits"        && <CalcKits onEnviarOrcamento={(res) => {
         const itens = res.items.map(i => ({ grupo: i.grupo, item: i.nome, un: i.un, qtd: i.qtd, precoUnit: i.preco }));
-        localStorage.setItem("sf_estimativo", JSON.stringify({ itens, totalGeral: res.total, area: res.area, tipo: res.padrao }));
+        const totalGeral = res.items.reduce((s, i) => s + i.total, 0);
+        localStorage.setItem("sf_estimativo", JSON.stringify({ itens, totalGeral, area: res.area, tipo: res.padrao }));
         setActivePage("orcamentos");
       }} />}
       {modo === "parede"      && <CalcParedeDrywall />}
