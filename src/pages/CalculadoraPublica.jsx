@@ -188,6 +188,8 @@ export default function CalculadoraPublica() {
     setSfMidValue(Math.round(sfValor));
     setStep("result");
     window.scrollTo({ top: 0, behavior: "smooth" });
+    // Tracking: usuário viu o resultado
+    try { window.dataLayer?.push({ event: "view_simulacao", value: Math.round(sfValor), padrao, area }); } catch (_) {}
   }
 
   async function handleContact(e) {
@@ -226,9 +228,23 @@ export default function CalculadoraPublica() {
         });
       }
 
+      // WhatsApp automático para o LEAD com resultado da simulação
+      sb.functions.invoke("whatsapp-lead", {
+        body: {
+          nome, whatsapp,
+          area, padrao,
+          valorSF:  Math.round(sfValor),
+          valorAlv: Math.round(ALVENARIA[padrao] * area),
+          prazo:    PRAZOS_SF[padrao] || "5–8 meses",
+        },
+      }).catch(() => {});
+
+      // Tracking via GTM dataLayer — configure as tags no painel GTM
+      try { window.dataLayer?.push({ event: "lead_gerado", value: Math.round(sfValor), currency: "BRL", padrao, area, cidade }); } catch (_) {}
+
       // Open WhatsApp notification to empresa owner
       try {
-        const msg = `<Bell size={13} /> *Novo lead via Calculadora!*\n\n👤 *${nome}*\n📱 ${whatsapp}\n📍 ${cidade || "—"}\n\n<HardHat size={13} /> *Projeto:*\n• Área: ${area}m² · ${pavimentos}\n• Padrão: ${padrao}\n• Estimativa: R$ ${Math.round(sfValor * 0.92).toLocaleString("pt-BR")} – R$ ${Math.round(sfValor * 1.12).toLocaleString("pt-BR")}\n\nAcesse o sistema para responder: https://stickframe.com.br`;
+        const msg = `🔔 *Novo lead via Calculadora!*\n\n👤 *${nome}*\n📱 ${whatsapp}\n📍 ${cidade || "—"}\n\n🏗 *Projeto:*\n• Área: ${area}m² · ${pavimentos}\n• Padrão: ${padrao}\n• Estimativa: R$ ${Math.round(sfValor * 0.92).toLocaleString("pt-BR")} – R$ ${Math.round(sfValor * 1.12).toLocaleString("pt-BR")}\n\nAcesse o sistema para responder: https://stickframe.com.br`;
         const { data: waNum } = await sb.rpc("get_empresa_whatsapp_alertas");
         const numLimpo = (waNum || "").replace(/\D/g, "");
         if (numLimpo) {
