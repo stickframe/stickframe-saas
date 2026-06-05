@@ -111,6 +111,7 @@ export default function PropostaOnline() {
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700;800&display=swap');
         *{box-sizing:border-box;margin:0;padding:0}
         @keyframes spin{to{transform:rotate(360deg)}}
+        @media print{.no-print{display:none !important;}}
       `}</style>
 
       {/* Header */}
@@ -298,6 +299,7 @@ export default function PropostaOnline() {
                 </span>
               </label>
               <button
+                className="no-print"
                 onClick={confirmarAceite}
                 disabled={!aceite.nome.trim() || !aceite.aceito || enviando}
                 style={{
@@ -329,6 +331,23 @@ export default function PropostaOnline() {
           Proposta válida por {validade} dias · {hoje}
         </div>
       </div>
+
+      {/* Floating PDF download button */}
+      <button
+        className="no-print"
+        onClick={() => window.print()}
+        style={{
+          position: "fixed", bottom: 24, right: 24,
+          background: "#981915", color: "#fff",
+          borderRadius: 10, padding: "12px 20px",
+          fontSize: 13, fontWeight: 700,
+          cursor: "pointer", border: "none",
+          boxShadow: "0 4px 16px rgba(152,25,21,0.4)",
+          zIndex: 100,
+        }}
+      >
+        📄 Baixar PDF
+      </button>
     </div>
   );
 }
