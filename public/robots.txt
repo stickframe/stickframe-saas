@@ -1,0 +1,16 @@
+User-agent: *
+Allow: /calcular
+Allow: /
+
+# Bloquear rotas privadas do app
+Disallow: /login
+Disallow: /dashboard
+Disallow: /obras
+Disallow: /financeiro
+Disallow: /crm
+Disallow: /orcamentos
+Disallow: /agenda
+Disallow: /equipe
+Disallow: /configuracoes
+
+Sitemap: https://stickframe.com.br/sitemap.xml
