@@ -41,7 +41,7 @@ export default function ConcorrenciaPublica() {
       preco_unitario: parseFloat(String(precos[it.id]?.preco || "0").replace(/\./g, "").replace(",", ".")) || null,
       observacao: precos[it.id]?.obs || null,
     }));
-    const { error } = await sb.rpc("concorrencia_enviar_proposta", { p_token: token, p_propostas: JSON.stringify(payload) });
+    const { error } = await sb.rpc("concorrencia_enviar_proposta", { p_token: token, p_propostas: payload });
     if (error) { alert("Erro ao enviar: " + error.message); setEnviando(false); return; }
     setEnviado(true);
     setEnviando(false);
