@@ -1,6 +1,67 @@
 import { useState } from "react";
-import { Bell, CheckCircle, HardHat, Zap } from "../components/ui/Icon";
+import { CheckCircle, Zap } from "../components/ui/Icon";
 import { sb } from "../services/supabase";
+
+// ─── Kit data (shared with internal Calculadora) ─────────────────────────────
+const INSUMOS_KIT = [
+  { categoria: "Estrutura de Aço",      nome: "Montante C 90×40×15×1,25mm",         un: "pç",  base: 1.50,  preco: 18.50 },
+  { categoria: "Estrutura de Aço",      nome: "Guia U 92×40×1,25mm",                un: "m",   base: 1.10,  preco: 12.00 },
+  { categoria: "Estrutura de Aço",      nome: "Montante C 140×40×15×1,25mm",        un: "pç",  base: 0.30,  preco: 24.00 },
+  { categoria: "Fechamento",            nome: "Chapa OSB 11,1mm",                   un: "chp", base: 0.38,  preco: 52.00 },
+  { categoria: "Fechamento",            nome: "Placa de Gesso ST 13mm",             un: "chp", base: 0.85,  preco: 17.00 },
+  { categoria: "Fechamento",            nome: "Placa Cimentícia 10mm",              un: "chp", base: 0.18,  preco: 65.00 },
+  { categoria: "Isolamento",            nome: "Lã de Vidro 50mm",                   un: "m²",  base: 1.30,  preco: 16.00 },
+  { categoria: "Isolamento",            nome: "Impermeabilizante flexível",         un: "m²",  base: 0.15,  preco: 35.00 },
+  { categoria: "Fixação",               nome: "Parafuso TEX 4,2×16mm",              un: "cx",  base: 0.40,  preco: 48.00 },
+  { categoria: "Fixação",               nome: "Parafuso TEX 4,2×38mm",              un: "cx",  base: 0.80,  preco: 52.00 },
+  { categoria: "Fundação (Radier)",     nome: "Concreto C-25",                      un: "m³",  base: 0.10,  preco: 420.0, fund: true },
+  { categoria: "Fundação (Radier)",     nome: "Ferragem CA-50",                     un: "kg",  base: 6.00,  preco:  6.50, fund: true },
+  { categoria: "Fundação (Radier)",     nome: "Tela soldada Q-92",                  un: "pç",  base: 0.17,  preco: 68.00, fund: true },
+  { categoria: "Cobertura",             nome: "Telha shingle (fardo 3m²)",          un: "fd",  base: 0.38,  preco: 185.0 },
+  { categoria: "Cobertura",             nome: "Manta subcobertura",                 un: "m²",  base: 1.05,  preco:  8.50 },
+  { categoria: "Cobertura",             nome: "Calha PVC 150mm",                    un: "m",   base: 0.30,  preco: 28.00 },
+  { categoria: "Esquadrias",            nome: "Janela alumínio 1,20×1,20",          un: "un",  base: 0.055, preco: 680.0 },
+  { categoria: "Esquadrias",            nome: "Porta interna 0,80×2,10",            un: "un",  base: 0.08,  preco: 420.0 },
+  { categoria: "Instalações Elétricas", nome: "Conduíte + fios + caixas",           un: "m²",  base: 1.00,  preco: 62.00 },
+  { categoria: "Inst. Hidrossanitárias",nome: "Tubulação PVC + esgoto",             un: "m²",  base: 1.00,  preco: 60.00 },
+  { categoria: "Acabamentos",           nome: "Piso vinílico + revestimento",       un: "m²",  base: 0.90,  preco: 58.00 },
+  { categoria: "Acabamentos",           nome: "Massa corrida + pintura",            un: "m²",  base: 2.80,  preco:  9.50 },
+  { categoria: "Acabamentos",           nome: "Forro drywall ST",                   un: "m²",  base: 0.90,  preco: 42.00 },
+  { categoria: "Projetos e Engenharia", nome: "Proj. Arquitetônico + Estrutural",   un: "m²",  base: 1.00,  preco: 46.00 },
+  { categoria: "Projetos e Engenharia", nome: "Proj. Elétrico + Hidrossanitário",   un: "m²",  base: 1.00,  preco: 14.00 },
+  { categoria: "Mão de Obra",           nome: "Montagem estrutura LSF",             un: "m²",  base: 1.00,  preco: 85.00 },
+  { categoria: "Mão de Obra",           nome: "Instalação vedações",                un: "m²",  base: 1.00,  preco: 45.00 },
+  { categoria: "Mão de Obra",           nome: "Cobertura + acabamentos",            un: "m²",  base: 1.00,  preco: 110.0 },
+];
+
+const CATS_ORDEM_KIT = [
+  "Estrutura de Aço","Fechamento","Isolamento","Fixação","Fundação (Radier)",
+  "Cobertura","Esquadrias","Instalações Elétricas","Inst. Hidrossanitárias",
+  "Acabamentos","Projetos e Engenharia","Mão de Obra",
+];
+const CATS_OPCIONAIS_KIT = ["Projetos e Engenharia", "Mão de Obra"];
+
+const PADROES_KIT = { "Econômico": { fator: 0.85 }, "Padrão": { fator: 1.00 }, "Alto Padrão": { fator: 1.20 } };
+
+const KITS = [
+  { id: "studio",    nome: "Studio Compact",       area: 42,  pavs: 1, padrao: "Padrão",      tag: "MAIS VENDIDO",  tagCor: "#2e9e5b", emoji: "🏠", quartos: 1, banheiros: 1, descricao: "Ideal para uso individual, home office ou kitnet. Layout inteligente e construção rápida.", destaques: ["Entrega em 45 dias","Kit completo estrutural","Perfeito para kitnet"] },
+  { id: "vila",      nome: "Vila 78m²",             area: 78,  pavs: 1, padrao: "Padrão",      tag: "POPULAR",       tagCor: "#4a9eff", emoji: "🏡", quartos: 2, banheiros: 1, descricao: "Casa térrea completa para família pequena. Conforto e economia em um só projeto.", destaques: ["2 quartos confortáveis","Varanda integrada","Custo-benefício ótimo"] },
+  { id: "casa120",   nome: "Casa Serena 120m²",     area: 120, pavs: 1, padrao: "Padrão",      tag: "RECOMENDADO",   tagCor: "#981915", emoji: "🏘", quartos: 3, banheiros: 2, descricao: "O modelo mais completo para família de 4 pessoas. Suíte master, sala ampla e área gourmet.", destaques: ["Suíte master com closet","Área gourmet","Sala de TV + jantar"] },
+  { id: "sobrado160",nome: "Sobrado Vivo 160m²",    area: 160, pavs: 2, padrao: "Padrão",      tag: "2 PAVIMENTOS",  tagCor: "#8b5cf6", emoji: "🏗", quartos: 3, banheiros: 3, descricao: "Sobrado moderno com térreo social e pavimento superior privativo.", destaques: ["Térreo social separado","3 suítes no andar","Sacada com guarda-corpo"] },
+  { id: "alto200",   nome: "Residência Alto 200m²", area: 200, pavs: 1, padrao: "Alto Padrão", tag: "ALTO PADRÃO",   tagCor: "#e07020", emoji: "🏛", quartos: 4, banheiros: 3, descricao: "Para quem não abre mão do melhor. Acabamentos superiores e projeto exclusivo.", destaques: ["4 suítes amplas","Home theater","Piscina prevista"] },
+  { id: "vigo273",   nome: "Casa Vigo 273m²",       area: 273, pavs: 2, padrao: "Alto Padrão", tag: "PREMIUM",       tagCor: "#c0392b", emoji: "🏰", quartos: 4, banheiros: 4, descricao: "Nossa flagship — o lar dos sonhos em Steel Frame. Projeto inspirado em casas europeias.", destaques: ["Estilo europeu moderno","Pé-direito duplo na sala","Área total de lazer"] },
+];
+
+const fmtR = (v) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 0, maximumFractionDigits: 0 });
+
+function calcKit(kit) {
+  const fator = PADROES_KIT[kit.padrao].fator;
+  return INSUMOS_KIT.map((ins) => {
+    const f = ins.fund ? 1 : fator * kit.pavs;
+    const qtd = Math.ceil(ins.base * kit.area * f);
+    return { ...ins, qtd, total: qtd * ins.preco };
+  });
+}
 
 // Pricing constants
 const STEEL_FRAME = { "Econômico": 2800, "Padrão": 3500, "Alto Padrão": 5200 };
@@ -40,6 +101,29 @@ function applyPhoneMask(value) {
 }
 
 export default function CalculadoraPublica() {
+  // "metro" | "kits"
+  const [modo, setModo] = useState("metro");
+
+  // Kit states
+  const [kitSel, setKitSel] = useState(null);
+  const [kitItems, setKitItems] = useState(null);
+  const [catsAtivas, setCatsAtivas] = useState(Object.fromEntries(CATS_ORDEM_KIT.map(c => [c, true])));
+  const [kitStep, setKitStep] = useState("lista"); // "lista" | "result" | "contact" | "success"
+
+  function selecionarKit(kit) {
+    setKitSel(kit);
+    setKitItems(calcKit(kit));
+    setCatsAtivas(Object.fromEntries(CATS_ORDEM_KIT.map(c => [c, true])));
+    setKitStep("result");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+  function toggleCatKit(cat) { setCatsAtivas(prev => ({ ...prev, [cat]: !prev[cat] })); }
+
+  const totalAtivo = kitItems ? kitItems.filter(i => catsAtivas[i.categoria]).reduce((s, i) => s + i.total, 0) : 0;
+  const totalSoMateriais = kitItems ? kitItems.filter(i => !CATS_OPCIONAIS_KIT.includes(i.categoria)).reduce((s, i) => s + i.total, 0) : 0;
+  const totalCompleto = kitItems ? kitItems.reduce((s, i) => s + i.total, 0) : 0;
+  const totalComProjetos = kitItems ? kitItems.filter(i => i.categoria !== "Mão de Obra").reduce((s, i) => s + i.total, 0) : 0;
+
   // Step: "form" | "result" | "success"
   const [step, setStep] = useState("form");
 
@@ -56,12 +140,41 @@ export default function CalculadoraPublica() {
   const [alMax, setAlMax] = useState(0);
   const [sfMidValue, setSfMidValue] = useState(0);
 
-  // Contact
+  // Contact (shared for both flows)
   const [nome, setNome] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [email, setEmail] = useState("");
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState("");
+
+  async function handleKitContact(e) {
+    e.preventDefault();
+    setSendError(""); setSending(true);
+    try {
+      const { error } = await sb.rpc("captar_lead_publico", {
+        p_nome: nome, p_contato: whatsapp, p_email: email || null,
+        p_cidade: null, p_area: kitSel.area, p_padrao: kitSel.padrao,
+        p_valor_estimado: Math.round(totalAtivo),
+        p_origem: `Kit-${kitSel.id}`,
+        p_pavimentos: `${kitSel.pavs} pav.`,
+        p_valor_min: Math.round(totalSoMateriais),
+        p_valor_max: Math.round(totalCompleto),
+      });
+      if (error) throw error;
+      try {
+        const { data: waNum } = await sb.rpc("get_empresa_whatsapp_alertas");
+        const numLimpo = (waNum || "").replace(/\D/g, "");
+        if (numLimpo) {
+          const msg = `🏠 *Novo lead — Kit ${kitSel.nome}*\n\n👤 *${nome}*\n📱 ${whatsapp}\n\n💰 Estimativa: ${fmtR(totalAtivo)}\n🏗 ${kitSel.area}m² · ${kitSel.pavs} pav. · ${kitSel.padrao}\n\nAcesse: https://stickframe.com.br`;
+          window.open(`https://wa.me/${numLimpo.startsWith("55") ? numLimpo : "55" + numLimpo}?text=${encodeURIComponent(msg)}`, "_blank");
+        }
+      } catch (_) {}
+      setKitStep("success");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch (err) {
+      setSendError("Erro ao enviar. Tente novamente.");
+    } finally { setSending(false); }
+  }
 
   function handleCalculate(e) {
     e.preventDefault();
@@ -396,6 +509,32 @@ export default function CalculadoraPublica() {
         }
         .btn-outline:hover { background: #981915; color: #fff; }
         .divider { height: 1px; background: #eee; margin: 20px 0; }
+        .mode-tabs { display: flex; gap: 0; margin-bottom: 20px; border-radius: 10px; overflow: hidden; border: 1.5px solid #ddd; }
+        .mode-tab { flex: 1; padding: 11px 8px; font-size: 14px; font-weight: 700; font-family: inherit; cursor: pointer; border: none; background: #fff; color: #666; transition: background .15s, color .15s; }
+        .mode-tab.active { background: #981915; color: #fff; }
+        .kit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 8px; }
+        @media (max-width: 400px) { .kit-grid { grid-template-columns: 1fr; } }
+        .kit-card { border: 2px solid #e5e5e5; border-radius: 12px; padding: 16px 14px; cursor: pointer; background: #fff; transition: border-color .15s, box-shadow .15s; }
+        .kit-card:hover { border-color: #981915; box-shadow: 0 2px 12px rgba(152,25,21,.12); }
+        .kit-tag { display: inline-block; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 20px; color: #fff; margin-bottom: 8px; letter-spacing: .5px; }
+        .kit-emoji { font-size: 28px; margin-bottom: 6px; }
+        .kit-name { font-size: 14px; font-weight: 800; margin-bottom: 4px; }
+        .kit-desc { font-size: 11px; color: #666; line-height: 1.4; margin-bottom: 10px; }
+        .kit-meta { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 10px; }
+        .kit-chip { background: #f4f4f4; border-radius: 20px; padding: 3px 8px; font-size: 11px; color: #555; font-weight: 600; }
+        .kit-price-label { font-size: 10px; color: #999; text-transform: uppercase; letter-spacing: .5px; }
+        .kit-price { font-size: 17px; font-weight: 900; color: #981915; }
+        .kit-btn { width: 100%; background: #981915; color: #fff; border: none; border-radius: 7px; padding: 9px; font-size: 13px; font-weight: 700; font-family: inherit; cursor: pointer; margin-top: 8px; }
+        .kit-result-banner { background: linear-gradient(135deg,#1a0a0a,#981915); border-radius: 12px; padding: 20px; color: #fff; margin-bottom: 16px; }
+        .kit-toggles { border-top: 1px solid rgba(255,255,255,.15); padding-top: 12px; display: flex; flex-wrap: wrap; gap: 8px; }
+        .kit-toggle-btn { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-family: inherit; font-size: 12px; font-weight: 700; transition: all .2s; }
+        .kit-breakdown { border-top: 1px solid rgba(255,255,255,.1); margin-top: 12px; padding-top: 12px; display: flex; flex-wrap: wrap; gap: 16px; }
+        .kit-breakdown-item { }
+        .kit-breakdown-label { font-size: 10px; opacity: .5; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; }
+        .kit-breakdown-val { font-size: 14px; font-weight: 800; }
+        .kit-cat-block { background: #fff; border-radius: 10px; border: 1px solid #e5e5e5; margin-bottom: 10px; overflow: hidden; transition: opacity .2s; }
+        .kit-cat-header { background: #f9f9f9; padding: 8px 14px; display: flex; justify-content: space-between; align-items: center; }
+        .kit-cat-row { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; padding: 8px 14px; border-top: 1px solid #f0f0f0; align-items: center; font-size: 12px; }
         .back-link {
           display: inline-block;
           font-size: 13px;
@@ -415,8 +554,148 @@ export default function CalculadoraPublica() {
 
         <div className="calc-body">
 
+          {/* ============ MODO TABS ============ */}
+          {(step === "form" || modo === "kits") && (
+            <div className="mode-tabs">
+              <button className={`mode-tab${modo === "metro" ? " active" : ""}`} onClick={() => { setModo("metro"); setStep("form"); }}>📐 Simular por m²</button>
+              <button className={`mode-tab${modo === "kits" ? " active" : ""}`} onClick={() => { setModo("kits"); setKitStep("lista"); }}>🏠 Kits de Casa</button>
+            </div>
+          )}
+
+          {/* ============ MODO KITS ============ */}
+          {modo === "kits" && kitStep === "lista" && (
+            <div>
+              <div className="calc-card" style={{ paddingBottom: 8 }}>
+                <h1 className="calc-title">Kits de Casa prontos</h1>
+                <p className="calc-subtitle">Escolha um modelo e veja o orçamento completo de materiais em segundos</p>
+              </div>
+              <div className="kit-grid">
+                {KITS.map(kit => {
+                  const items = calcKit(kit);
+                  const total = items.reduce((s, i) => s + i.total, 0);
+                  return (
+                    <div key={kit.id} className="kit-card">
+                      <div className="kit-tag" style={{ background: kit.tagCor }}>{kit.tag}</div>
+                      <div className="kit-emoji">{kit.emoji}</div>
+                      <div className="kit-name">{kit.nome}</div>
+                      <div className="kit-desc">{kit.descricao}</div>
+                      <div className="kit-meta">
+                        <span className="kit-chip">📐 {kit.area} m²</span>
+                        <span className="kit-chip">🛏 {kit.quartos} qts</span>
+                        <span className="kit-chip">🚿 {kit.banheiros} ban</span>
+                        <span className="kit-chip">🏠 {kit.pavs}P</span>
+                      </div>
+                      <div className="kit-price-label">Materiais a partir de</div>
+                      <div className="kit-price">{fmtR(items.filter(i => !["Projetos e Engenharia","Mão de Obra"].includes(i.categoria)).reduce((s,i)=>s+i.total,0))}</div>
+                      <button className="kit-btn" onClick={() => selecionarKit(kit)}>Calcular →</button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {modo === "kits" && kitStep === "result" && kitSel && (
+            <div>
+              <span className="back-link" onClick={() => setKitStep("lista")}>← Voltar aos modelos</span>
+              <div className="kit-result-banner">
+                <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 12, marginBottom: 16 }}>
+                  <div>
+                    <div style={{ fontSize: 10, opacity: .6, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 4 }}>Kit selecionado</div>
+                    <div style={{ fontSize: 22, fontWeight: 900, marginBottom: 2 }}>{kitSel.nome}</div>
+                    <div style={{ fontSize: 13, opacity: .7 }}>{kitSel.area} m² · {kitSel.pavs} pav. · {kitSel.padrao}</div>
+                  </div>
+                  <div style={{ textAlign: "right" }}>
+                    <div style={{ fontSize: 10, opacity: .6, letterSpacing: 1, textTransform: "uppercase", marginBottom: 2 }}>Total incluído</div>
+                    <div style={{ fontSize: 32, fontWeight: 900, letterSpacing: -1 }}>{fmtR(totalAtivo)}</div>
+                  </div>
+                </div>
+                <div className="kit-toggles">
+                  {CATS_OPCIONAIS_KIT.map(cat => {
+                    const sub = kitItems.filter(i => i.categoria === cat).reduce((s,i) => s+i.total, 0);
+                    const ativo = catsAtivas[cat];
+                    return (
+                      <button key={cat} onClick={() => toggleCatKit(cat)} className="kit-toggle-btn" style={{
+                        border: `1px solid ${ativo ? "rgba(255,255,255,.4)" : "rgba(255,255,255,.15)"}`,
+                        background: ativo ? "rgba(255,255,255,.15)" : "rgba(0,0,0,.2)",
+                        color: ativo ? "#fff" : "rgba(255,255,255,.45)",
+                      }}>
+                        <span>{ativo ? "☑" : "☐"}</span>
+                        <span>{cat}</span>
+                        <span style={{ opacity: .7, fontSize: 11 }}>{fmtR(sub)}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="kit-breakdown">
+                  {[["Só materiais", totalSoMateriais],["+Projetos", totalComProjetos],["Obra completa", totalCompleto]].map(([label, val]) => (
+                    <div key={label} className="kit-breakdown-item">
+                      <div className="kit-breakdown-label">{label}</div>
+                      <div className="kit-breakdown-val">{fmtR(val)}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {CATS_ORDEM_KIT.map(cat => {
+                const itens = kitItems.filter(i => i.categoria === cat);
+                if (!itens.length) return null;
+                const subtotal = itens.reduce((s, i) => s + i.total, 0);
+                const ativa = catsAtivas[cat];
+                return (
+                  <div key={cat} className="kit-cat-block" style={{ opacity: ativa ? 1 : 0.35 }}>
+                    <div className="kit-cat-header">
+                      <span style={{ fontSize: 11, fontWeight: 800, color: "#333" }}>{cat}</span>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: "#981915" }}>{fmtR(subtotal)}{!ativa && <span style={{ marginLeft: 6, fontSize: 10, color: "#999" }}>(excluído)</span>}</span>
+                    </div>
+                    {itens.map(i => (
+                      <div key={i.nome} className="kit-cat-row">
+                        <div style={{ fontWeight: 600, color: "#333" }}>{i.nome}</div>
+                        <div style={{ color: "#555", whiteSpace: "nowrap" }}>{i.qtd} {i.un}</div>
+                        <div style={{ fontWeight: 700, color: "#2e9e5b", whiteSpace: "nowrap" }}>{fmtR(i.total)}</div>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })}
+
+              <button className="calc-btn" style={{ marginTop: 8 }} onClick={() => { setNome(""); setWhatsapp(""); setEmail(""); setKitStep("contact"); window.scrollTo({top:0,behavior:"smooth"}); }}>
+                📋 Solicitar orçamento completo
+              </button>
+            </div>
+          )}
+
+          {modo === "kits" && kitStep === "contact" && (
+            <div>
+              <span className="back-link" onClick={() => setKitStep("result")}>← Voltar ao resultado</span>
+              <div className="calc-card">
+                <div className="cta-heading">Solicitar orçamento — {kitSel?.nome}</div>
+                <p className="cta-sub">Preencha abaixo e nossa equipe entra em contato em até 24h com proposta detalhada.</p>
+                <form onSubmit={handleKitContact}>
+                  <label className="calc-label">Nome completo</label>
+                  <input className="calc-input" type="text" placeholder="Seu nome" value={nome} onChange={e => setNome(e.target.value)} required />
+                  <label className="calc-label">WhatsApp</label>
+                  <input className="calc-input" type="tel" placeholder="(11) 99999-9999" value={whatsapp} onChange={e => setWhatsapp(applyPhoneMask(e.target.value))} required />
+                  <label className="calc-label">E-mail <span style={{ color: "#888", fontWeight: 400 }}>(opcional)</span></label>
+                  <input className="calc-input" type="email" placeholder="seu@email.com" value={email} onChange={e => setEmail(e.target.value)} />
+                  {sendError && <p className="error-msg">{sendError}</p>}
+                  <button className="calc-btn" type="submit" disabled={sending}>{sending ? "Enviando..." : "Receber proposta grátis"}</button>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {modo === "kits" && kitStep === "success" && (
+            <div className="calc-card">
+              <div className="success-icon">✅</div>
+              <div className="success-title">Recebemos seu contato!</div>
+              <p className="success-msg">Nossa equipe vai entrar em contato em até 24h pelo WhatsApp <strong>{whatsapp}</strong> com a proposta do kit <strong>{kitSel?.nome}</strong>.</p>
+              <button className="btn-outline" onClick={() => { setModo("kits"); setKitStep("lista"); setKitSel(null); setKitItems(null); }}>Ver outros modelos</button>
+            </div>
+          )}
+
           {/* ============ STEP: FORM ============ */}
-          {step === "form" && (
+          {modo === "metro" && step === "form" && (
             <div className="calc-card">
               <h1 className="calc-title">Calcule o custo da sua obra</h1>
               <p className="calc-subtitle">Compare Steel Frame vs Alvenaria em segundos</p>
@@ -475,7 +754,7 @@ export default function CalculadoraPublica() {
           )}
 
           {/* ============ STEP: RESULT ============ */}
-          {step === "result" && (
+          {modo === "metro" && step === "result" && (
             <>
               <span className="back-link" onClick={handleReset}>← Nova simulação</span>
 
@@ -563,7 +842,7 @@ export default function CalculadoraPublica() {
           )}
 
           {/* ============ STEP: SUCCESS ============ */}
-          {step === "success" && (
+          {modo === "metro" && step === "success" && (
             <div className="calc-card">
               <div className="success-icon"><CheckCircle size={14} /></div>
               <div className="success-title">Recebemos seu contato!</div>
