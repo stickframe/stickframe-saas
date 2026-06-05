@@ -61,6 +61,7 @@ const PainelQR             = lazyWithRetry(() => import("./pages/PainelQR"));
 const BI                   = lazyWithRetry(() => import("./pages/BI"));
 const SST                  = lazyWithRetry(() => import("./pages/SST"));
 const Suprimentos          = lazyWithRetry(() => import("./pages/Suprimentos"));
+const PortalColaborador    = lazyWithRetry(() => import("./pages/PortalColaborador"));
 
 const PAGES = {
   dashboard:  Dashboard,
@@ -198,18 +199,18 @@ export default function App() {
       <OnboardingTour />
       <Suspense fallback={<LoadingScreen />}>
         <Routes>
-          <Route path="/portal/:token"   element={<PortalOnline />} />
-          <Route path="/proposta/:token"  element={<PropostaOnline />} />
-          <Route path="/contrato/:token" element={<ContratoOnline />} />
-          <Route path="/qr/obra/:obraId" element={<QRObra />} />
-          <Route path="/calcular" element={<CalculadoraPublica />} />
-          <Route path="/docs-publicos" element={<AnalisePublica />} />
-          <Route path="/concorrencia/:token" element={<ConcorrenciaPublica />} />
-          <Route path="/ponto/:token"       element={<PontoColaborador />} />
-          <Route path="/portal/:token"      element={<PortalColaborador />} />
-          <Route path="/ambiente/:token"    element={<AmbienteQR />} />
-          <Route path="/painel/:token"      element={<PainelQR />} />
-          <Route path="/login" element={<LoginScreen />} />
+          <Route path="/portal/:token"        element={<PortalOnline />} />
+          <Route path="/proposta/:token"      element={<PropostaOnline />} />
+          <Route path="/contrato/:token"      element={<ContratoOnline />} />
+          <Route path="/qr/obra/:obraId"      element={<QRObra />} />
+          <Route path="/calcular"             element={<CalculadoraPublica />} />
+          <Route path="/docs-publicos"        element={<AnalisePublica />} />
+          <Route path="/concorrencia/:token"  element={<ConcorrenciaPublica />} />
+          <Route path="/ponto/:token"         element={<PontoColaborador />} />
+          <Route path="/colaborador/:token"   element={<PortalColaborador />} />
+          <Route path="/ambiente/:token"      element={<AmbienteQR />} />
+          <Route path="/painel/:token"        element={<PainelQR />} />
+          <Route path="/login"                element={<LoginScreen />} />
           <Route path="/*" element={
             <RequireAuth>
               <AuthenticatedApp />
