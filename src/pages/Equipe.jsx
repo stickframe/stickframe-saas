@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { ClipboardList, DollarSign, Pencil, Phone, Trash2 } from "../components/ui/Icon";
+import Certificacoes from "../components/equipe/Certificacoes";
 import { printHtml } from "../utils/printHtml";
 import { LOGO_STICKFRAME } from "../utils/cdn";
 import { useToast } from "../hooks/useToast";
@@ -8,6 +9,7 @@ import { fmt } from "../utils/format";
 import { mesAno } from "../utils/date";
 import useAppStore from "../store/useAppStore";
 import { useModuleLoad } from "../hooks/useModuleLoad";
+import { listarCertificacoes } from "../services/repositories/certificacaoRepository";
 import Btn from "../components/ui/Btn";
 import Input from "../components/ui/Input";
 import Select from "../components/ui/Select";
@@ -48,12 +50,50 @@ const FORM_VAZIO = {
   nome: "", cargo: "", email: "", telefone: "",
   especialidade: "Montador", status: "Ativo", salario: "", observacoes: "",
   tipo_contrato: "CLT", valor_producao: "", unidade_producao: "m²",
+  foto_url: "",
 };
 
 function FormColaborador({ form, setForm, onSave, onCancel, btnLabel }) {
   const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
+  const [uploadingFoto, setUploadingFoto] = React.useState(false);
+
+  async function handleFotoUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploadingFoto(true);
+    try {
+      const { sb, getEmpresaId } = await import("../services/supabase");
+      const path = `${getEmpresaId()}/colaboradores/${Date.now()}-${file.name}`;
+      const { error } = await sb.storage.from("arquivos").upload(path, file, { upsert: true });
+      if (error) throw error;
+      const { data: { publicUrl } } = sb.storage.from("arquivos").getPublicUrl(path);
+      set("foto_url")(publicUrl);
+    } catch (err) {
+      console.warn("Erro ao fazer upload da foto:", err);
+    } finally {
+      setUploadingFoto(false);
+    }
+  }
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      {/* Foto do colaborador */}
+      <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+        <div style={{ width: 64, height: 64, borderRadius: "50%", background: form.foto_url ? "transparent" : C.red, overflow: "hidden", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          {form.foto_url
+            ? <img src={form.foto_url} alt="foto" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            : <span style={{ color: "#fff", fontSize: 24, fontWeight: 900 }}>{form.nome?.[0]?.toUpperCase() || "?"}</span>
+          }
+        </div>
+        <div>
+          <label style={{ display: "inline-block", padding: "7px 14px", borderRadius: 6, border: `1px solid ${C.border}`, fontSize: 12, fontWeight: 600, cursor: "pointer", color: C.muted }}>
+            {uploadingFoto ? "Enviando..." : "📷 Foto do colaborador"}
+            <input type="file" accept="image/*" style={{ display: "none" }} onChange={handleFotoUpload} disabled={uploadingFoto} />
+          </label>
+          {form.foto_url && <button onClick={() => set("foto_url")("")} style={{ marginLeft: 8, background: "none", border: "none", color: C.danger, fontSize: 11, cursor: "pointer" }}>Remover</button>}
+          <div style={{ fontSize: 10, color: C.muted, marginTop: 4 }}>Aparece no crachá de ponto</div>
+        </div>
+      </div>
       <div>
         <LabelField required>Nome</LabelField>
         <Input value={form.nome} onChange={set("nome")} placeholder="Nome completo" />
@@ -196,30 +236,96 @@ export default function Equipe() {
     loadHorasTrabalhadas();
   }, [loadAlocacoes, loadHorasTrabalhadas]);
 
+  // Certificações para badges nos cards
+  const [certsByColab, setCertsByColab] = useState({});
+  const recarregarCerts = useCallback(async () => {
+    try {
+      const all = await listarCertificacoes();
+      const map = {};
+      all.forEach(c => {
+        if (!map[c.colaborador_id]) map[c.colaborador_id] = [];
+        map[c.colaborador_id].push(c);
+      });
+      setCertsByColab(map);
+    } catch {}
+  }, []);
+  useEffect(() => { recarregarCerts(); }, [recarregarCerts]);
+
   // ── Crachá / QR Ponto ────────────────────────────────────────────────────
-  function gerarCracha(c) {
+  const NR_ICONES = {
+    "NR-01": { icon: "fa-clipboard-check",   label: "PGR" },
+    "NR-05": { icon: "fa-users",             label: "CIPA" },
+    "NR-06": { icon: "fa-hard-hat",          label: "EPI" },
+    "NR-6":  { icon: "fa-hard-hat",          label: "EPI" },
+    "NR-10": { icon: "fa-bolt",              label: "NR-10" },
+    "NR-12": { icon: "fa-cog",               label: "NR-12" },
+    "NR-17": { icon: "fa-chair",             label: "Ergon." },
+    "NR-18": { icon: "fa-hard-hat",          label: "NR-18" },
+    "NR-20": { icon: "fa-fire",              label: "NR-20" },
+    "NR-23": { icon: "fa-fire-extinguisher", label: "NR-23" },
+    "NR-33": { icon: "fa-wind",              label: "NR-33" },
+    "NR-35": { icon: "fa-user-shield",       label: "Altura" },
+    "ASO":   { icon: "fa-heartbeat",         label: "ASO" },
+    "Habilitação": { icon: "fa-id-card",     label: "CNH" },
+  };
+
+  function gerarCracha(c, certs = []) {
     if (!c.token_ponto) return;
     const url = `${window.location.origin}/ponto/${c.token_ponto}`;
     const qr  = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}`;
+    const inicial = c.nome[0].toUpperCase();
+    const avatarHtml = c.foto_url
+      ? `<img src="${c.foto_url}" class="avatar-foto"/>`
+      : `<div class="avatar">${inicial}</div>`;
+
+    // Deduplica por nr no crachá — mantém o mais recente
+    const certsUniq = Object.values(certs.reduce((acc, c) => {
+      const k = c.nr || "";
+      if (!acc[k] || (c.data_validade || "") > (acc[k].data_validade || "")) acc[k] = c;
+      return acc;
+    }, {}));
+
+    const certBadges = certsUniq.length > 0
+      ? `<div class="certs-row">${certsUniq.map((cert) => {
+          const nrVal = (cert.nr != null && cert.nr !== "" && cert.nr !== "undefined") ? String(cert.nr) : "";
+          const key = nrVal ? Object.keys(NR_ICONES).find((k) => nrVal.includes(k)) : undefined;
+          const info = key ? NR_ICONES[key] : null;
+          const icon = info ? `<i class="fas ${info.icon}"></i>` : "🏅";
+          const rawLabel = nrVal.replace(/\s*\(.*\)/, "").trim();
+          const label = info?.label || (rawLabel && rawLabel !== "undefined" ? rawLabel.slice(0, 7) : "NR");
+          const valid = cert.data_validade ? new Date(cert.data_validade) > new Date() : true;
+          return `<div class="cert-badge ${valid ? "" : "cert-vencido"}" title="${nrVal}">${icon}<span>${label}</span></div>`;
+        }).join("")}</div>`
+      : "";
+
     printHtml(`
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
       <style>
-        body { margin:0; display:flex; align-items:center; justify-content:center; min-height:100vh; background:#f5f5f7; font-family:Inter,system-ui,sans-serif; }
-        .card { width:220px; background:#fff; border-radius:16px; padding:24px 20px; text-align:center; box-shadow:0 4px 20px rgba(0,0,0,.12); border-top:6px solid #981915; }
-        .logo { height:22px; margin-bottom:14px; }
-        .avatar { width:54px; height:54px; border-radius:50%; background:#981915; color:#fff; font-size:22px; font-weight:900; display:flex; align-items:center; justify-content:center; margin:0 auto 10px; }
-        .nome { font-size:16px; font-weight:800; color:#1a1a1a; margin-bottom:3px; }
-        .cargo { font-size:11px; color:#6b7280; margin-bottom:14px; }
-        .qr { width:160px; height:160px; margin:0 auto 12px; display:block; }
-        .label { font-size:9px; font-weight:700; letter-spacing:1.5px; color:#6b7280; text-transform:uppercase; }
-        @media print { body { background:#fff; } .card { box-shadow:none; } }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { display:flex; align-items:center; justify-content:center; min-height:100vh; background:#f5f5f7; font-family:Inter,Arial,sans-serif; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+        .card { width:240px; background:#fff; border-radius:16px; padding:28px 20px 20px; text-align:center; box-shadow:0 4px 20px rgba(0,0,0,.12); border-top:6px solid #981915; }
+        .logo { height:48px; margin-bottom:16px; display:block; margin-left:auto; margin-right:auto; }
+        .avatar { width:72px; height:72px; border-radius:50%; background:#981915; color:#fff; font-size:28px; font-weight:900; line-height:72px; text-align:center; margin:0 auto 12px; display:block; }
+        .avatar-foto { width:72px; height:72px; border-radius:50%; object-fit:cover; margin:0 auto 12px; display:block; border:3px solid #981915; }
+        .nome { font-size:15px; font-weight:800; color:#1a1a1a; margin-bottom:4px; letter-spacing:.3px; }
+        .cargo { font-size:11px; color:#6b7280; margin-bottom:16px; text-transform:uppercase; letter-spacing:.8px; }
+        .qr { width:160px; height:160px; margin:0 auto 14px; display:block; border:1px solid #eee; border-radius:8px; padding:4px; }
+        .label { font-size:9px; font-weight:700; letter-spacing:2px; color:#9ca3af; text-transform:uppercase; }
+        .certs-row { display:flex; flex-wrap:wrap; justify-content:center; gap:6px; margin-top:14px; }
+        .cert-badge { display:flex; flex-direction:column; align-items:center; gap:2px; background:#f1f5f9; border-radius:8px; padding:6px 8px; min-width:44px; }
+        .cert-badge i { font-size:16px; color:#981915; }
+        .cert-badge span { font-size:8px; font-weight:700; color:#374151; letter-spacing:.4px; text-transform:uppercase; }
+        .cert-vencido { opacity:.45; }
+        @media print { body { background:#fff; min-height:unset; } .card { box-shadow:none; } }
       </style>
       <div class="card">
         <img src="${LOGO_STICKFRAME}" class="logo" onerror="this.style.display='none'"/>
-        <div class="avatar">${c.nome[0].toUpperCase()}</div>
+        ${avatarHtml}
         <div class="nome">${c.nome}</div>
         <div class="cargo">${c.cargo || c.especialidade || "Colaborador"}</div>
         <img src="${qr}" class="qr"/>
         <div class="label">⏱ Ponto Eletrônico</div>
+        ${certBadges}
       </div>
     `, `cracha-${c.nome}`);
   }
@@ -234,6 +340,7 @@ export default function Equipe() {
       telefone: c.telefone || "", especialidade: c.especialidade || "Montador",
       status: c.status || "Ativo", salario: c.salario || "", observacoes: c.observacoes || "",
       tipo_contrato: c.tipo_contrato || "CLT", valor_producao: c.valor_producao || "", unidade_producao: c.unidade_producao || "m²",
+      foto_url: c.foto_url || "",
     });
     setModal("editar");
   }
@@ -453,13 +560,13 @@ export default function Equipe() {
               <LabelField required>Colaborador</LabelField>
               <Select value={alocForm.colaborador_id}
                 onChange={(v) => setAlocForm((f) => ({ ...f, colaborador_id: v }))}
-                options={colaboradores.filter(c => c.status === "Ativo").map((c) => ({ value: c.id, label: c.nome }))} />
+                options={[{ value: "", label: "Selecionar colaborador..." }, ...colaboradores.filter(c => c.status === "Ativo").map((c) => ({ value: c.id, label: c.nome }))]} />
             </div>
             <div>
               <LabelField required>Obra</LabelField>
               <Select value={alocForm.obra_id}
                 onChange={(v) => setAlocForm((f) => ({ ...f, obra_id: v }))}
-                options={obras.map((o) => ({ value: o.id, label: o.nome?.split("—")[0]?.trim() }))} />
+                options={[{ value: "", label: "Selecionar obra..." }, ...obras.map((o) => ({ value: o.id, label: o.nome?.split("—")[0]?.trim() }))]} />
             </div>
             <div>
               <LabelField>Função na obra</LabelField>
@@ -495,13 +602,13 @@ export default function Equipe() {
               <LabelField required>Colaborador</LabelField>
               <Select value={horaForm.colaborador_id}
                 onChange={(v) => setHoraForm((f) => ({ ...f, colaborador_id: v }))}
-                options={colaboradores.map((c) => ({ value: c.id, label: c.nome }))} />
+                options={[{ value: "", label: "Selecionar colaborador..." }, ...colaboradores.map((c) => ({ value: c.id, label: c.nome }))]} />
             </div>
             <div>
               <LabelField required>Obra</LabelField>
               <Select value={horaForm.obra_id}
                 onChange={(v) => setHoraForm((f) => ({ ...f, obra_id: v }))}
-                options={obras.map((o) => ({ value: o.id, label: o.nome?.split("—")[0]?.trim() }))} />
+                options={[{ value: "", label: "Selecionar obra..." }, ...obras.map((o) => ({ value: o.id, label: o.nome?.split("—")[0]?.trim() }))]} />
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
               <div>
@@ -564,6 +671,7 @@ export default function Equipe() {
           <Tab label="🔨 Empreiteiros" active={tab === "empreiteiros"} onClick={() => setTab("empreiteiros")} />
           <Tab label="📋 Alocações"    active={tab === "alocacoes"}    onClick={() => setTab("alocacoes")} />
           <Tab label="⏱ Horas"        active={tab === "horas"}        onClick={() => setTab("horas")} />
+          <Tab label="🛡️ Compliance"  active={tab === "compliance"}   onClick={() => setTab("compliance")} />
         </div>
 
         {/* ══ Tab: Equipe ══ */}
@@ -602,9 +710,17 @@ export default function Equipe() {
             ) : lista.length === 0 ? (
               <div style={{ textAlign: "center", padding: "40px 0", color: C.muted, fontSize: 13 }}>Nenhum resultado para os filtros aplicados.</div>
             ) : (
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 14 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(300px, 100%), 1fr))", gap: 14 }}>
                 {lista.map((c) => {
                   const alocAtivas = alocacoes.filter((a) => a.colaborador_id === c.id);
+                  const certsRaw = certsByColab[c.id] || [];
+                  // Deduplica por nr — mantém o mais recente (maior data_validade)
+                  const certsMap = {};
+                  certsRaw.forEach(cert => {
+                    const key = cert.nr || "";
+                    if (!certsMap[key] || (cert.data_validade || "") > (certsMap[key].data_validade || "")) certsMap[key] = cert;
+                  });
+                  const certs = Object.values(certsMap);
                   return (
                     <div key={c.id} style={{
                       background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", padding: "18px 20px",
@@ -640,6 +756,22 @@ export default function Equipe() {
                         </div>
                       )}
 
+                      {certs.length > 0 && (
+                        <div style={{ marginBottom: 10, display: "flex", flexWrap: "wrap", gap: 4 }}>
+                          {certs.map(cert => {
+                            const cor = cert.status === "Vencida" ? "#ef4444" : cert.status === "Vencendo" ? "#f59e0b" : "#22c55e";
+                            const short = cert.nr.replace(/\s*\(.*\)/, "");
+                            return (
+                              <span key={cert.id} title={`${cert.nr} · ${cert.status}`} style={{
+                                fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 10,
+                                background: cor + "20", color: cor, border: `1px solid ${cor}40`,
+                                cursor: "default",
+                              }}>{short}</span>
+                            );
+                          })}
+                        </div>
+                      )}
+
                       {c.observacoes && (
                         <div style={{ fontSize: 11, color: C.muted, background: C.darker, borderRadius: 6, padding: "8px 10px", marginBottom: 12, lineHeight: 1.5 }}>
                           {c.observacoes}
@@ -649,7 +781,10 @@ export default function Equipe() {
                       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                         <Btn variant="ghost" size="sm" onClick={() => abrirEditar(c)}><Pencil size={13} /> Editar</Btn>
                         {c.token_ponto && (
-                          <Btn variant="ghost" size="sm" onClick={() => gerarCracha(c)}>🪪 Crachá</Btn>
+                          <Btn variant="ghost" size="sm" onClick={() => gerarCracha(c, certsByColab[c.id] || [])}>🪪 Crachá</Btn>
+                        )}
+                        {c.token_ponto && (
+                          <Btn variant="ghost" size="sm" onClick={() => window.open(`${window.location.origin}/portal/${c.token_ponto}`, "_blank")}>🌐 Portal</Btn>
                         )}
                         <button onClick={() => setConfirm(c.id)} style={{
                           padding: "6px 12px", background: C.danger + "22",
@@ -915,6 +1050,11 @@ export default function Equipe() {
               </div>
             )}
           </div>
+        )}
+
+        {/* ══ Tab: Compliance ══ */}
+        {tab === "compliance" && (
+          <Certificacoes onSaved={recarregarCerts} />
         )}
       </div>
     </>

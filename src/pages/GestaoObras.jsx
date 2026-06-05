@@ -1,9 +1,17 @@
+import { RelatorioFotografico } from "../components/obras/RelatorioFotografico";
+import PresencaObra from "../components/obras/PresencaObra";
 import ObraMembros from "../components/obras/ObraMembros";
+import NaoConformidades from "../components/obras/NaoConformidades";
+import RFIs from "../components/obras/RFIs";
+import Garantias from "../components/obras/Garantias";
+import { RDOForm } from "../components/obras/RDOForm";
+import Comentarios from "../components/ui/Comentarios";
 import ChangeOrders from "../components/obras/ChangeOrders";
 import { ArquivoVersoes } from "../components/obras/ArquivoVersoes";
 import { PlantaApontamentos } from "../components/obras/PlantaApontamentos";
 import { PdfViewer } from "../components/obras/PdfViewer";
 import { useObraPermission, useObrasVisiveis } from "../hooks/useObraPermission";
+import { sb } from "../services/supabase";
 import { useState, useEffect, useMemo } from "react";
 import { AlertTriangle, BarChart2, ClipboardList, DollarSign, HardHat, Pencil, Ruler, Search, Trash2, TrendingUp } from "../components/ui/Icon";
 import { useToast } from "../hooks/useToast";
@@ -17,6 +25,7 @@ import Select from "../components/ui/Select";
 import Badge from "../components/ui/Badge";
 import Modal from "../components/ui/Modal";
 import { listarQuantitativos } from "../services/repositories/quantitativoRepository";
+import { gerarRelatorioObra } from "../services/relatorioService";
 
 const ICONE_TIPO  = { pdf: "📄", imagem: "🖼️", outro: "📎" };
 const CATS        = ["Projeto", "Foto", "Documento", "Outro"];
@@ -292,6 +301,7 @@ export default function GestaoObras() {
   const avancarFase       = useAppStore((s) => s.avancarFase);
   const addArquivos       = useAppStore((s) => s.addArquivos);
   const deleteArquivo     = useAppStore((s) => s.deleteArquivo);
+  const loadArquivos      = useAppStore((s) => s.loadArquivos);
   const loadHistoricoObra = useAppStore((s) => s.loadHistoricoObra);
   const financeiro        = useAppStore((s) => s.financeiro);
   const perfil            = useAppStore((s) => s.user?.perfil);
@@ -300,6 +310,7 @@ export default function GestaoObras() {
   const marcarCiente      = useAppStore((s) => s.marcarCiente);
   const medicoes          = useAppStore((s) => s.medicoes);
   const diario            = useAppStore((s) => s.diario);
+  const addDiario         = useAppStore((s) => s.addDiario);
   const loadMedicoes      = useAppStore((s) => s.loadMedicoes);
   const loadDiario        = useAppStore((s) => s.loadDiario);
   const vistorias         = useAppStore((s) => s.vistorias);
@@ -313,6 +324,9 @@ export default function GestaoObras() {
   const [confirm,     setConfirm]     = useState(false);
   const [dragOver,    setDragOver]    = useState(false);
   const [abaAtiva,    setAbaAtiva]    = useState("fases");
+  const [pontosObra,    setPontosObra]    = useState([]);
+  const [pontosLoading, setPontosLoading] = useState(false);
+  const [pontosPeriodo, setPontosPeriodo] = useState("hoje");
   const [catFiltro,   setCatFiltro]   = useState("Todos");
   const [discFiltro,  setDiscFiltro]  = useState("Todos");
   const [statusDocFiltro, setStatusDocFiltro] = useState("Todos");
@@ -344,6 +358,7 @@ export default function GestaoObras() {
   const [portalMsgs,   setPortalMsgs]   = useState([]);
   const [portalReply,  setPortalReply]  = useState("");
   const [portalSending, setPortalSending] = useState(false);
+  const [verVersoes,   setVerVersoes]   = useState(null);
 
   // Garantia
   const chamados      = useAppStore((s) => s.chamados);
@@ -357,6 +372,7 @@ export default function GestaoObras() {
   const [chamadoSaving, setChamadoSaving] = useState(false);
   const [versaoModal,   setVersaoModal]   = useState(null);
   const [apontamentoModal, setApontamentoModal] = useState(null);
+  const [showRDO,       setShowRDO]       = useState(false);
   const [pdfViewer,     setPdfViewer]     = useState(null);
 
   useEffect(() => {
@@ -386,6 +402,23 @@ export default function GestaoObras() {
       loadHistoricoObra(obraId).then((d) => { setHistObra(d); setHistLoading(false); });
     }
   }, [abaAtiva, obraId]);
+
+  useEffect(() => {
+    if (abaAtiva !== "presenca" || !obraId) return;
+    setPontosLoading(true);
+    let query = sb.from("pontos").select("*").eq("obra_id", obraId).order("created_at", { ascending: false });
+    const now = new Date();
+    if (pontosPeriodo === "hoje") {
+      query = query.gte("created_at", new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString());
+    } else if (pontosPeriodo === "semana") {
+      const d = new Date(now); d.setDate(d.getDate() - 7);
+      query = query.gte("created_at", d.toISOString());
+    } else {
+      const d = new Date(now); d.setDate(1); d.setHours(0, 0, 0, 0);
+      query = query.gte("created_at", d.toISOString());
+    }
+    query.then(({ data }) => { setPontosObra(data || []); setPontosLoading(false); });
+  }, [abaAtiva, obraId, pontosPeriodo]);
 
   async function gerarTokenPortal() {
     const base = (obra.nome || "obra")
@@ -773,6 +806,16 @@ export default function GestaoObras() {
 
   return (
     <>
+      {/* Modal de versões de arquivo */}
+      {verVersoes && (
+        <ArquivoVersoes
+          arquivo={verVersoes}
+          obraId={obraId}
+          onClose={() => setVerVersoes(null)}
+          onNovaVersao={() => { loadArquivos(obraId); setVerVersoes(null); }}
+        />
+      )}
+
       {/* Toast */}
       {toast && (
         <div style={{
@@ -1030,13 +1073,14 @@ export default function GestaoObras() {
           </div>
 
           {obra && (
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 260px", gap: 18 }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 14, alignItems: "flex-start" }}>
 
               {/* Coluna principal */}
-              <div>
+              <div style={{ flex: "1 1 600px", minWidth: 0 }}>
                 {/* Abas */}
-                <div style={{ display: "flex", borderBottom: `1px solid ${C.border}` }}>
-                  {[["fases", "📋 Fases"], ["financeiro", "💰 Financeiro"], ["fluxo", "📈 Fluxo"], ["cronograma", "📅 Cronograma"], ["diario", "📓 Diário"], ["fotos", "📷 Fotos"], ["arquivos", "📁 Arquivos"], ["rastreio", "🏷️ Rastreio"], ["historico", "🕑 Histórico"], ...(obra.status === "Concluída" ? [["garantia", "🛠️ Garantia"]] : []), ...(perfil === "diretor" ? [["membros", "👥 Membros"]] : [])].map(([k, l]) => (
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: `1px solid ${C.border}` }}>
+                <div style={{ display: "flex", flex: 1, overflowX: "auto", scrollbarWidth: "thin" }}>
+                  {[["fases", "Fases"], ["financeiro", "Financeiro"], ["fluxo", "Fluxo"], ["cronograma", "Cronograma"], ["diario", "Diário"], ["fotos", "Fotos"], ["arquivos", "Arquivos"], ["ncr", "NCR"], ["rfis", "RFIs"], ["rastreio", "Rastreio"], ["historico", "Histórico"], ...(obra.status === "Concluída" ? [["garantia", "Garantia"]] : []), ["garantias", "Garantias"], ...(perfil === "diretor" ? [["membros", "Membros"]] : []), ["presenca", "Presença"], ["comentarios", "Comentários"]].map(([k, l]) => (
                     <button key={k} onClick={() => {
                       if (k === "diario" && userId) {
                         const pendentes = arqObra.filter((a) => a.disciplina && a.status_doc !== "Desatualizado" && !(a.cientes_uids || []).includes(userId));
@@ -1044,13 +1088,18 @@ export default function GestaoObras() {
                       }
                       setAbaAtiva(k);
                     }} style={{
-                      padding: "10px 20px", background: "transparent", border: "none",
+                      padding: "10px 14px", background: "transparent", border: "none",
                       borderBottom: `2px solid ${abaAtiva === k ? C.red : "transparent"}`,
                       color: abaAtiva === k ? C.text : C.muted,
                       fontSize: 13, fontWeight: abaAtiva === k ? 700 : 400,
                       cursor: "pointer", fontFamily: "inherit", transition: "all .15s",
+                      whiteSpace: "nowrap",
                     }}>{l}</button>
                   ))}
+                </div>
+                  <div style={{ padding: "0 12px", flexShrink: 0 }}>
+                    <PresencaObra obraId={obraId} />
+                  </div>
                 </div>
 
                 {/* ABA FASES */}
@@ -1063,7 +1112,13 @@ export default function GestaoObras() {
                           {obra.cliente || "Sem cliente"} · Prazo: {obra.prazo}
                         </div>
                       </div>
-                      <Badge label={obra.status} color={statusColor(obra.status)} />
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <button
+                          onClick={() => gerarRelatorioObra(obra, financeiro[obraId]?.lancamentos || [])}
+                          style={{ padding: "5px 12px", borderRadius: 7, border: "none", background: "#b41e1e", color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}
+                        >📄 PDF</button>
+                        <Badge label={obra.status} color={statusColor(obra.status)} />
+                      </div>
                     </div>
 
                     {/* Barra de progresso */}
@@ -1203,7 +1258,7 @@ export default function GestaoObras() {
                       )}
                     {/* Aditivos de contrato */}
                       <div style={{ marginTop: 24 }}>
-                        <ChangeOrders obraId={obraId} />
+                        <ChangeOrders obraId={obraId} userPerfil={perfil} />
                       </div>
                     </div>
                   );
@@ -1416,6 +1471,9 @@ export default function GestaoObras() {
                 {/* ABA ARQUIVOS */}
                 {abaAtiva === "arquivos" && (
                   <div style={{ background: C.surface, borderRadius: "0 0 12px 12px", border: `1px solid ${C.border}`, borderTop: "none", padding: 22 }}>
+                    <div style={{ marginBottom: 16 }}>
+                      <RelatorioFotografico obra={obra} arquivos={arqObra} />
+                    </div>
                     <label style={{
                       display: "block",
                       border: `2px dashed ${dragOver ? C.red : C.border}`,
@@ -1491,6 +1549,7 @@ export default function GestaoObras() {
                               {precisaCiencia && (
                                 <button onClick={async () => { await marcarCiente(obraId, a.id, userId); mostrarToast("✅ Ciência registrada!"); }} style={{ background: C.success + "22", border: `1px solid ${C.success}44`, borderRadius: 6, color: C.success, fontSize: 11, fontWeight: 700, cursor: "pointer", padding: "4px 10px", fontFamily: "inherit", whiteSpace: "nowrap" }}>✓ Ciente</button>
                               )}
+                              <button onClick={() => setVerVersoes(a)} style={{ background: "#b97a0022", border: "1px solid #b97a0044", borderRadius: 6, color: "#b97a00", fontSize: 11, fontWeight: 700, cursor: "pointer", padding: "4px 10px", fontFamily: "inherit", whiteSpace: "nowrap" }}>📋 Versões</button>
                               {a.url && (
                                 <a href={a.url} target="_blank" rel="noreferrer" style={{ background: "#4a9eff22", border: "1px solid #4a9eff44", borderRadius: 6, color: "#4a9eff", fontSize: 11, fontWeight: 700, padding: "4px 10px", textDecoration: "none", textAlign: "center" }}>↓</a>
                               )}
@@ -1508,12 +1567,23 @@ export default function GestaoObras() {
                 )}
                 {/* ABA DIÁRIO */}
                 {abaAtiva === "diario" && (
-                  <DiarioAba
-                    obraId={obraId}
-                    obra={obra}
-                    diario={diario[obraId] || []}
-                    addDiario={addDiario}
-                  />
+                  <div>
+                    <div style={{ padding: "16px 0 0" }}>
+                      {!showRDO ? (
+                        <button onClick={() => setShowRDO(true)} style={{ padding:"8px 16px", background:"#b41e1e", color:"#fff", border:"none", borderRadius:8, cursor:"pointer", fontWeight:600, marginBottom:16 }}>📋 Novo RDO</button>
+                      ) : (
+                        <div style={{ marginBottom: 16 }}>
+                          <RDOForm obraId={obraId} obraName={obra?.nome} onSaved={() => {}} onClose={() => setShowRDO(false)} />
+                        </div>
+                      )}
+                    </div>
+                    <DiarioAba
+                      obraId={obraId}
+                      obra={obra}
+                      diario={diario[obraId] || []}
+                      addDiario={addDiario}
+                    />
+                  </div>
                 )}
 
                 {/* ABA HISTÓRICO */}
@@ -1844,10 +1914,122 @@ export default function GestaoObras() {
                   </div>
                 )}
 
+                {/* ABA NCR */}
+                {abaAtiva === "ncr" && (
+                  <div style={{ background: C.surface, borderRadius: "0 0 12px 12px", border: `1px solid ${C.border}`, borderTop: "none", padding: 22 }}>
+                    <NaoConformidades obraId={obraId} />
+                  </div>
+                )}
+
+                {/* ABA RFIs */}
+                {abaAtiva === "rfis" && (
+                  <div style={{ background: C.surface, borderRadius: "0 0 12px 12px", border: `1px solid ${C.border}`, borderTop: "none", padding: 22 }}>
+                    <RFIs obraId={obraId} userPerfil={perfil} />
+                  </div>
+                )}
+
+                {abaAtiva === "garantias" && (
+                  <div style={{ background: C.surface, borderRadius: "0 0 12px 12px", border: `1px solid ${C.border}`, borderTop: "none", padding: 22 }}>
+                    <Garantias obraId={obraId} />
+                  </div>
+                )}
+
+                {abaAtiva === "presenca" && (() => {
+                  // Load effect handled outside JSX — see useEffect below
+                  const byColab = {};
+                  pontosObra.forEach(p => {
+                    const date = new Date(p.created_at).toLocaleDateString("pt-BR");
+                    const key = `${p.nome}-${date}`;
+                    if (!byColab[key]) byColab[key] = { nome: p.nome, date, pontos: [] };
+                    byColab[key].pontos.push(p);
+                  });
+                  const rows = Object.values(byColab).map(g => {
+                    const sorted = g.pontos.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+                    const entrada = sorted.find(p => p.tipo === "entrada");
+                    const saida = sorted.filter(p => p.tipo === "saida").at(-1);
+                    const horas = entrada && saida ? ((new Date(saida.created_at) - new Date(entrada.created_at)) / 3600000) : null;
+                    const emObra = entrada && !saida;
+                    return { nome: g.nome, date: g.date, entrada, saida, horas, emObra };
+                  });
+                  const totalColabs = new Set(rows.map(r => r.nome)).size;
+                  const totalHoras = rows.reduce((acc, r) => acc + (r.horas || 0), 0);
+                  return (
+                    <div style={{ padding: "20px 0" }}>
+                      {/* Period filter */}
+                      <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
+                        {[["hoje", "Hoje"], ["semana", "Semana"], ["mes", "Mês"]].map(([v, l]) => (
+                          <button key={v} onClick={() => setPontosPeriodo(v)} style={{
+                            padding: "6px 16px", borderRadius: 8, border: `1px solid ${pontosPeriodo === v ? C.red : C.border}`,
+                            background: pontosPeriodo === v ? C.red : C.surface, color: pontosPeriodo === v ? "#fff" : C.text,
+                            fontSize: 13, fontWeight: pontosPeriodo === v ? 700 : 400, cursor: "pointer", fontFamily: "inherit",
+                          }}>{l}</button>
+                        ))}
+                      </div>
+                      {/* Summary cards */}
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 20 }}>
+                        <div style={{ background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, padding: "14px 18px" }}>
+                          <div style={{ fontSize: 11, color: C.muted, fontWeight: 700, letterSpacing: 1, marginBottom: 4 }}>COLABORADORES</div>
+                          <div style={{ fontSize: 26, fontWeight: 800, color: C.text }}>{totalColabs}</div>
+                        </div>
+                        <div style={{ background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, padding: "14px 18px" }}>
+                          <div style={{ fontSize: 11, color: C.muted, fontWeight: 700, letterSpacing: 1, marginBottom: 4 }}>HORAS TOTAIS</div>
+                          <div style={{ fontSize: 26, fontWeight: 800, color: C.text }}>{totalHoras.toFixed(1)}h</div>
+                        </div>
+                      </div>
+                      {/* Table */}
+                      {pontosLoading ? (
+                        <div style={{ color: C.muted, textAlign: "center", padding: 32 }}>Carregando...</div>
+                      ) : rows.length === 0 ? (
+                        <div style={{ color: C.muted, textAlign: "center", padding: 40, background: C.surface, borderRadius: 12, border: `1px solid ${C.border}` }}>
+                          Nenhum registro de presença neste período
+                        </div>
+                      ) : (
+                        <div style={{ background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, overflow: "hidden" }}>
+                          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                            <thead>
+                              <tr style={{ borderBottom: `1px solid ${C.border}` }}>
+                                {["Colaborador", "Data", "Entrada", "Saída", "Horas", "Status"].map(h => (
+                                  <th key={h} style={{ padding: "10px 14px", textAlign: "left", fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted }}>{h.toUpperCase()}</th>
+                                ))}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {rows.map((r, i) => (
+                                <tr key={i} style={{ borderBottom: `1px solid ${C.border}`, background: i % 2 === 0 ? "transparent" : "rgba(0,0,0,0.02)" }}>
+                                  <td style={{ padding: "10px 14px", fontSize: 13, fontWeight: 600, color: C.text }}>{r.nome || "—"}</td>
+                                  <td style={{ padding: "10px 14px", fontSize: 13, color: C.muted }}>{r.date}</td>
+                                  <td style={{ padding: "10px 14px", fontSize: 13, color: C.text }}>{r.entrada ? new Date(r.entrada.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : "—"}</td>
+                                  <td style={{ padding: "10px 14px", fontSize: 13, color: C.text }}>{r.saida ? new Date(r.saida.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : "—"}</td>
+                                  <td style={{ padding: "10px 14px", fontSize: 13, color: C.text }}>{r.horas != null ? `${r.horas.toFixed(1)}h` : "—"}</td>
+                                  <td style={{ padding: "10px 14px" }}>
+                                    {r.emObra ? (
+                                      <span style={{ background: "#d1fae5", color: "#065f46", borderRadius: 6, padding: "3px 10px", fontSize: 12, fontWeight: 700 }}>Em obra</span>
+                                    ) : r.entrada ? (
+                                      <span style={{ background: "#e5e7eb", color: "#374151", borderRadius: 6, padding: "3px 10px", fontSize: 12, fontWeight: 700 }}>Saiu</span>
+                                    ) : (
+                                      <span style={{ color: C.muted, fontSize: 12 }}>—</span>
+                                    )}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+
+                {abaAtiva === "comentarios" && (
+                  <div style={{ padding: "20px 0" }}>
+                    <Comentarios entidade="obra" entidadeId={obraId} />
+                  </div>
+                )}
+
               </div>
 
               {/* Coluna lateral */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 14, width: 220, flexShrink: 0 }}>
 
                 {/* Ações rápidas */}
                 <div style={{ background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", border: `1px solid ${C.border}`, padding: 18 }}>
@@ -1869,16 +2051,16 @@ export default function GestaoObras() {
                       width: "100%", padding: "8px 0",
                       background: "#2e9e5b22", border: "1px solid #2e9e5b44",
                       borderRadius: 6, color: "#2e9e5b", fontSize: 12, fontWeight: 700,
-                      cursor: "pointer", fontFamily: "inherit",
-                    }}>📄 Dossiê de Obra</button>
+                      cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+                    }}>📄 Dossiê</button>
                     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                       <button onClick={copiarLinkPortal} style={{
                         width: "100%", padding: "8px 0",
                         background: "#4a9eff22", border: "1px solid #4a9eff44",
                         borderRadius: 6, color: "#4a9eff", fontSize: 12, fontWeight: 700,
-                        cursor: "pointer", fontFamily: "inherit",
+                        cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
                       }}>
-                        {obra.token_portal ? "🔗 Copiar link do portal" : "🔗 Gerar link do portal"}
+                        {obra.token_portal ? "🔗 Link do portal" : "🔗 Gerar link"}
                       </button>
                       {obra.token_portal && (
                         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -1959,6 +2141,7 @@ export default function GestaoObras() {
                   {[
                     ["Status",    obra.status],
                     ["Fase",      obra.fase],
+                    ["Contrato",  obra.contrato ? Number(obra.contrato).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) : "—"],
                     ["Início",    obra.prazo_inicio ? new Date(obra.prazo_inicio + "T00:00").toLocaleDateString("pt-BR") : "—"],
                     ["Entrega",   obra.prazo_fim    ? new Date(obra.prazo_fim    + "T00:00").toLocaleDateString("pt-BR") : "—"],
                     ["Concluído", `${obra.progresso}%`],

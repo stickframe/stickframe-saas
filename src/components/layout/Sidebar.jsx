@@ -19,7 +19,11 @@ export default function Sidebar({ open, onClose }) {
   const clientes      = useAppStore((s) => s.clientes);
   const [confirm, setConfirm] = useState(false);
 
-  const perfil    = PERFIS[user?.perfil] || PERFIS.diretor;
+  const perfisCustomizados = useAppStore((s) => s.perfisCustomizados);
+  const perfilCustom = !PERFIS[user?.perfil]
+    ? perfisCustomizados.find((p) => p.id === user?.perfil)
+    : null;
+  const perfil    = PERFIS[user?.perfil] || perfilCustom || PERFIS.diretor;
   const navFiltro = NAV.filter((n) => perfil.paginas.includes(n.key));
   const active    = perfil.paginas.includes(activePage) ? activePage : "dashboard";
 
@@ -59,57 +63,69 @@ export default function Sidebar({ open, onClose }) {
 
       {/* Nav */}
       <nav style={{ flex: 1, padding: "12px 0", overflowY: "auto" }}>
-        {navFiltro.map((n) => {
-          const isActive = active === n.key;
-          const iconColor = isActive ? C.red : C.muted;
-          return (
-            <button
-              key={n.key}
-              onClick={() => { setActivePage(n.key); onClose?.(); }}
-              style={{
-                display: "flex", alignItems: "center", gap: 12, width: "100%",
-                padding: "11px 20px",
-                background: isActive ? C.red + "18" : "transparent",
-                borderTop: "none", borderRight: "none", borderBottom: "none",
-                borderLeft: `3px solid ${isActive ? C.red : "transparent"}`,
-                cursor: "pointer",
-                color: isActive ? C.text : C.muted,
-                fontSize: 13, fontWeight: isActive ? 600 : 400,
-                textAlign: "left", transition: "all .15s",
-              }}
-            >
-              <NavIcon name={n.icon} color={iconColor} />
-              <span style={{ flex: 1 }}>{n.label}</span>
-              {n.key === "crm" && followupsVencidos > 0 && (
-                <span style={{ background: C.red, color: "#fff", borderRadius: 10, fontSize: 10, fontWeight: 700, padding: "1px 6px", minWidth: 18, textAlign: "center" }}>
-                  {followupsVencidos}
-                </span>
-              )}
-              {n.key === "orcamentos" && preOrcCount > 0 && (
-                <span style={{ background: "#2e9e5b", color: "#fff", borderRadius: 10, fontSize: 10, fontWeight: 700, padding: "1px 6px", minWidth: 18, textAlign: "center" }}>
-                  {preOrcCount}
-                </span>
-              )}
-            </button>
-          );
-        })}
+        {(() => {
+          // Group keys for dividers between logical sections
+          const GROUP_BREAKS = new Set(["obras", "financeiro", "calculadora", "configuracoes"]);
+          const items = [];
+          navFiltro.forEach((n, idx) => {
+            if (idx > 0 && GROUP_BREAKS.has(n.key)) {
+              items.push(
+                <div key={`div-${n.key}`} style={{ margin: "6px 16px", borderTop: `1px solid ${C.border}`, opacity: 0.5 }} />
+              );
+            }
+            const isActive = active === n.key;
+            const iconColor = isActive ? C.red : C.muted;
+            items.push(
+              <button
+                key={n.key}
+                onClick={() => { setActivePage(n.key); onClose?.(); }}
+                style={{
+                  display: "flex", alignItems: "center", gap: 12, width: "100%",
+                  padding: "11px 20px",
+                  background: isActive ? C.red + "22" : "transparent",
+                  borderTop: "none", borderRight: "none", borderBottom: "none",
+                  borderLeft: `3px solid ${isActive ? C.red : "transparent"}`,
+                  cursor: "pointer",
+                  color: isActive ? C.text : C.muted,
+                  fontSize: 13, fontWeight: isActive ? 600 : 400,
+                  textAlign: "left", transition: "all .15s",
+                }}
+              >
+                <NavIcon name={n.icon} color={iconColor} />
+                <span style={{ flex: 1 }}>{n.label}</span>
+                {n.key === "crm" && followupsVencidos > 0 && (
+                  <span style={{ background: C.red, color: "#fff", borderRadius: 10, fontSize: 10, fontWeight: 700, padding: "1px 6px", minWidth: 18, textAlign: "center" }}>
+                    {followupsVencidos}
+                  </span>
+                )}
+                {n.key === "orcamentos" && preOrcCount > 0 && (
+                  <span style={{ background: "#2e9e5b", color: "#fff", borderRadius: 10, fontSize: 10, fontWeight: 700, padding: "1px 6px", minWidth: 18, textAlign: "center" }}>
+                    {preOrcCount}
+                  </span>
+                )}
+              </button>
+            );
+          });
+          return items;
+        })()}
       </nav>
 
       {/* User */}
-      <div style={{ padding: "14px 20px", borderTop: `1px solid ${C.border}` }}>
+      <div style={{ padding: "14px 20px", borderTop: `2px solid ${C.border}`, background: C.darker }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-          <div style={{ width: 32, height: 32, borderRadius: "50%", background: perfil.cor + "33", border: `2px solid ${perfil.cor}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: perfil.cor, flexShrink: 0 }}>
+          <div style={{ width: 34, height: 34, borderRadius: "50%", background: perfil.cor + "33", border: `2px solid ${perfil.cor}55`, boxShadow: `0 0 0 3px ${perfil.cor}18`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: perfil.cor, flexShrink: 0 }}>
             {user?.nome?.[0] || "U"}
           </div>
           <div style={{ overflow: "hidden", flex: 1 }}>
-            <div style={{ fontSize: 12, fontWeight: 700, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{user?.nome}</div>
-            <div style={{ fontSize: 10, color: C.muted }}>{user?.cargo}</div>
+            <div style={{ fontSize: 12, fontWeight: 700, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", color: C.text }}>{user?.nome}</div>
+            <div style={{ fontSize: 10, color: C.muted, marginTop: 1 }}>{user?.cargo}</div>
           </div>
-        </div>
-        <div style={{ marginBottom: 10 }}>
-          <span style={{ background: perfil.cor + "22", color: perfil.cor, border: `1px solid ${perfil.cor}44`, borderRadius: 4, padding: "2px 10px", fontSize: 10, fontWeight: 700 }}>
+          <span style={{ background: perfil.cor + "22", color: perfil.cor, border: `1px solid ${perfil.cor}44`, borderRadius: 4, padding: "2px 8px", fontSize: 9, fontWeight: 700, letterSpacing: 0.5, flexShrink: 0 }}>
             {perfil.label}
           </span>
+        </div>
+        <div style={{ marginBottom: 10, display: "none" }}>
+          {/* role badge moved inline above */}
         </div>
         {confirm ? (
           <div style={{ fontSize: 11, color: C.muted }}>

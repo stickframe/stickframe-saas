@@ -276,7 +276,7 @@ ${(c.observacoes || poForm.observacoes_po) ? `
         <div style={{ display: "flex", flex: 1, overflow: "hidden", position: "relative" }}>
 
           {/* ── Painel esquerdo ── */}
-          <div style={{ width: 300, flexShrink: 0, borderRight: `1px solid ${C.border}`, display: "flex", flexDirection: "column", height: "100%" }}>
+          <div style={{ width: window.innerWidth < 768 ? "100%" : 300, flexShrink: 0, borderRight: `1px solid ${C.border}`, display: window.innerWidth < 768 && sel ? "none" : "flex", flexDirection: "column", height: "100%" }}>
             <div style={{ padding: "20px 16px 12px", borderBottom: `1px solid ${C.border}` }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
                 <div>
@@ -300,14 +300,17 @@ ${(c.observacoes || poForm.observacoes_po) ? `
           </div>
 
           {/* ── Painel direito ── */}
-          <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+          <div style={{ flex: 1, display: window.innerWidth < 768 && !sel ? "none" : "flex", flexDirection: "column", overflow: "hidden" }}>
             {!sel ? (
               <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: C.muted, fontSize: 14 }}>
                 Selecione um fornecedor para ver os detalhes
               </div>
             ) : (
               <>
-                <div style={{ padding: "20px 24px 0", borderBottom: `1px solid ${C.border}` }}>
+                <div style={{ padding: "16px 16px 0", borderBottom: `1px solid ${C.border}` }}>
+                  {window.innerWidth < 768 && (
+                    <button onClick={() => setSel(null)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 13, fontWeight: 700, color: C.red, padding: "0 0 12px", fontFamily: "inherit" }}>← Voltar</button>
+                  )}
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
                     <div>
                       <h3 style={{ fontSize: 20, fontWeight: 800 }}>{sel.nome}</h3>

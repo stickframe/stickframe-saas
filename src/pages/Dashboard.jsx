@@ -1,4 +1,5 @@
 import { useEffect, useState, lazy, Suspense } from "react";
+import { sb, getEmpresaId } from "../services/supabase";
 import { AlertTriangle, BarChart2, CalendarDays, CheckCircle, TrendingUp } from "../components/ui/Icon";
 import { listarMonitorados } from "../services/repositories/precosRepository";
 import { C, CATEGORIAS_DESPESA, FASES } from "../utils/constants";
@@ -8,11 +9,48 @@ import useAppStore from "../store/useAppStore";
 import { useModuleLoad } from "../hooks/useModuleLoad";
 import { useToast } from "../hooks/useToast";
 import { emailAlertaInadimplencia } from "../services/emailService";
+import { gerarRelatorioMensal as gerarPdfMensal } from "../services/relatorioService";
 import SmartAlerts from "../components/ui/SmartAlerts";
 
-const DashboardComercial   = lazy(() => import("./DashboardComercial"));
-const DashboardEngenheiro  = lazy(() => import("./DashboardEngenheiro"));
-const DashboardFinanceiro  = lazy(() => import("./DashboardFinanceiro"));
+// ─── Mini Sparkline ───────────────────────────────────────────────────────────
+function Sparkline({ data = [], color = C.success, height = 32, width = 64 }) {
+  if (!data || data.length < 2) return null;
+  const max = Math.max(...data, 1);
+  const min = Math.min(...data, 0);
+  const range = max - min || 1;
+  const pts = data.map((v, i) => {
+    const x = (i / (data.length - 1)) * width;
+    const y = height - ((v - min) / range) * (height * 0.85);
+    return `${x},${y}`;
+  });
+  return (
+    <svg viewBox={`0 0 ${width} ${height}`} style={{ width, height, display: "block" }} preserveAspectRatio="none">
+      <defs>
+        <linearGradient id={`sp-${color.replace("#","")}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity=".25" />
+          <stop offset="100%" stopColor={color} stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <path d={`M ${pts.join(" L ")} L ${width},${height} L 0,${height} Z`} fill={`url(#sp-${color.replace("#","")})`} />
+      <polyline points={pts.join(" ")} fill="none" stroke={color} strokeWidth="1.5" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+// Reloads page on chunk fetch failure (stale service worker cache after deploy)
+function lazyWithRetry(fn) {
+  return lazy(() => fn().catch((e) => {
+    if (e?.message?.includes("fetch") || e?.message?.includes("Failed")) {
+      window.location.reload();
+    }
+    throw e;
+  }));
+}
+
+const DashboardComercial   = lazyWithRetry(() => import("./DashboardComercial"));
+const DashboardEngenheiro  = lazyWithRetry(() => import("./DashboardEngenheiro"));
+const DashboardFinanceiro  = lazyWithRetry(() => import("./DashboardFinanceiro"));
+const DashboardAnalytics   = lazyWithRetry(() => import("./DashboardAnalytics"));
 
 // ─── Gráfico de barras ────────────────────────────────────────────────────────
 function GraficoBarras({ data, height = 120 }) {
@@ -83,18 +121,45 @@ function GraficoLinha({ data, height = 80, color = C.red }) {
 }
 
 // ─── KPI Card ────────────────────────────────────────────────────────────────
-function KpiCard({ label, value, sub, accent, icon }) {
+function KpiCard({ label, value, sub, accent, icon, trend, sparkData }) {
+  const [hovered, setHovered] = useState(false);
+  const isPositive = trend && trend >= 0;
   return (
-    <div style={{
-      background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", padding: "16px 14px",
-      border: `1px solid ${C.border}`, borderTop: `3px solid ${accent}`,
-    }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-        <div style={{ fontSize: 10, color: C.muted, letterSpacing: 1 }}>{label.toUpperCase()}</div>
-        <div style={{ fontSize: 13, color: accent, fontWeight: 700 }}>{icon}</div>
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        background: C.surface,
+        borderRadius: 16,
+        boxShadow: hovered ? "0 8px 24px rgba(0,0,0,0.12)" : "0 2px 8px rgba(0,0,0,0.05)",
+        padding: "16px 14px",
+        border: `1px solid ${C.border}`,
+        borderLeft: `4px solid ${accent}`,
+        transition: "box-shadow .2s ease, transform .2s ease",
+        transform: hovered ? "translateY(-2px)" : "translateY(0)",
+        cursor: "default",
+        position: "relative",
+        overflow: "hidden",
+      }}
+    >
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+        <div style={{ fontSize: 10, fontWeight: 700, color: C.muted, letterSpacing: 1, textTransform: "uppercase" }}>{label}</div>
+        <div style={{ fontSize: 18, color: accent, opacity: 0.8 }}>{icon}</div>
       </div>
-      <div style={{ fontSize: 17, fontWeight: 800, color: accent === C.border ? C.text : accent }}>{value}</div>
-      <div style={{ fontSize: 10, color: C.muted, marginTop: 4 }}>{sub}</div>
+      <div style={{ fontSize: 20, fontWeight: 900, color: accent === C.border ? C.text : accent, lineHeight: 1.1, marginBottom: 4 }}>{value}</div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+        <div>
+          <div style={{ fontSize: 10, color: C.muted, marginTop: 2 }}>{sub}</div>
+          {trend !== undefined && trend !== null && (
+            <div style={{ fontSize: 11, fontWeight: 700, color: isPositive ? C.success : C.danger, marginTop: 4, display: "flex", alignItems: "center", gap: 2 }}>
+              {isPositive ? "↑" : "↓"} {Math.abs(trend).toFixed(1)}% vs mês ant.
+            </div>
+          )}
+        </div>
+        {sparkData && sparkData.length >= 2 && (
+          <Sparkline data={sparkData} color={accent} height={28} width={56} />
+        )}
+      </div>
     </div>
   );
 }
@@ -124,10 +189,115 @@ function evolucaoMensal(lancamentos, tipo = "receita", mesesAtras = 6) {
 // ─── Dashboard (roteador por perfil) ─────────────────────────────────────────
 export default function Dashboard() {
   const perfil = useAppStore((s) => s.user?.perfil);
+  const [tab, setTab] = useState("visao-geral");
+
   if (perfil === "comercial")  return <Suspense fallback={null}><DashboardComercial /></Suspense>;
   if (perfil === "engenheiro") return <Suspense fallback={null}><DashboardEngenheiro /></Suspense>;
   if (perfil === "financeiro") return <Suspense fallback={null}><DashboardFinanceiro /></Suspense>;
-  return <DashboardDiretor />;
+
+  // Diretor: tab switcher
+  return (
+    <div>
+      <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
+        <button
+          onClick={() => setTab("visao-geral")}
+          style={{
+            padding: "8px 18px", borderRadius: 8, fontSize: 12, fontWeight: tab === "visao-geral" ? 800 : 500,
+            cursor: "pointer", fontFamily: "inherit",
+            background: tab === "visao-geral" ? C.red : "transparent",
+            color: tab === "visao-geral" ? "#fff" : C.muted,
+            border: `1.5px solid ${tab === "visao-geral" ? C.red : C.border}`,
+            transition: "all .15s ease",
+          }}
+        >
+          Visao geral
+        </button>
+        <button
+          onClick={() => setTab("analytics")}
+          style={{
+            padding: "8px 18px", borderRadius: 8, fontSize: 12, fontWeight: tab === "analytics" ? 800 : 500,
+            cursor: "pointer", fontFamily: "inherit",
+            background: tab === "analytics" ? C.red : "transparent",
+            color: tab === "analytics" ? "#fff" : C.muted,
+            border: `1.5px solid ${tab === "analytics" ? C.red : C.border}`,
+            transition: "all .15s ease",
+          }}
+        >
+          Analytics
+        </button>
+      </div>
+      {tab === "analytics" ? (
+        <Suspense fallback={<div style={{ color: C.muted, fontSize: 13 }}>Carregando...</div>}>
+          <DashboardAnalytics />
+        </Suspense>
+      ) : (
+        <DashboardDiretor />
+      )}
+    </div>
+  );
+}
+
+function OperacionalKpis() {
+  const [kpis, setKpis] = useState(null);
+  useEffect(() => {
+    const empId = getEmpresaId();
+    if (!empId) return;
+    const hoje = new Date().toISOString().slice(0, 10);
+    const em30 = new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10);
+    Promise.all([
+      sb.from("sst_incidentes").select("id, data, tipo").eq("empresa_id", empId).neq("status", "Fechado"),
+      sb.from("sst_epis").select("id, validade").eq("empresa_id", empId).lte("validade", em30),
+      sb.from("suprimentos_pedidos").select("id, status, urgencia").eq("empresa_id", empId).neq("status", "Entregue").neq("status", "Cancelado"),
+      sb.from("suprimentos_estoque").select("id, quantidade, estoque_minimo").eq("empresa_id", empId).gt("estoque_minimo", 0),
+    ]).then(([inc, epis, peds, est]) => {
+      const incList = inc.data || [];
+      const episList = epis.data || [];
+      const pedsList = peds.data || [];
+      const estList = est.data || [];
+
+      const ultimoAcidente = incList.filter(i => i.tipo === "Acidente" || i.tipo === "Incidente").sort((a,b) => b.data.localeCompare(a.data))[0];
+      const diasSemAcidente = ultimoAcidente
+        ? Math.floor((new Date() - new Date(ultimoAcidente.data + "T00:00:00")) / 86400000)
+        : "∞";
+
+      setKpis({
+        diasSemAcidente,
+        episVencidos: episList.filter(e => e.validade < hoje).length,
+        episVencendo: episList.filter(e => e.validade >= hoje).length,
+        incAbertos: incList.length,
+        pedPendentes: pedsList.filter(p => p.status === "Pendente").length,
+        pedCriticos: pedsList.filter(p => p.urgencia === "Crítico").length,
+        estoqueAbaixo: estList.filter(e => e.quantidade <= e.estoque_minimo).length,
+      });
+    }).catch(() => {});
+  }, []);
+
+  if (!kpis) return null;
+
+  const kpiOp = [
+    { label: "Dias sem acidente", value: kpis.diasSemAcidente, icon: "🦺", cor: kpis.diasSemAcidente === "∞" || kpis.diasSemAcidente > 30 ? C.success : kpis.diasSemAcidente > 7 ? C.warning : C.danger },
+    { label: "EPIs vencidos", value: kpis.episVencidos, icon: "⛔", cor: kpis.episVencidos > 0 ? C.danger : C.success },
+    { label: "EPIs vencendo 30d", value: kpis.episVencendo, icon: "⏰", cor: kpis.episVencendo > 0 ? C.warning : C.success },
+    { label: "Incidentes abertos", value: kpis.incAbertos, icon: "⚠️", cor: kpis.incAbertos > 0 ? C.danger : C.success },
+    { label: "Pedidos pendentes", value: kpis.pedPendentes, icon: "📦", cor: kpis.pedPendentes > 0 ? C.warning : C.success },
+    { label: "Pedidos críticos", value: kpis.pedCriticos, icon: "🚨", cor: kpis.pedCriticos > 0 ? C.danger : C.success },
+    { label: "Estoque abaixo mín", value: kpis.estoqueAbaixo, icon: "🏭", cor: kpis.estoqueAbaixo > 0 ? C.warning : C.success },
+  ];
+
+  return (
+    <div style={{ background: C.surface, borderRadius: 16, padding: 20, border: `1px solid ${C.border}`, marginBottom: 16 }}>
+      <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 14 }}>SST & SUPRIMENTOS</div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: 10 }}>
+        {kpiOp.map(k => (
+          <div key={k.label} style={{ background: k.cor + "12", borderRadius: 10, padding: "12px 14px", borderLeft: `3px solid ${k.cor}` }}>
+            <div style={{ fontSize: 18, marginBottom: 4 }}>{k.icon}</div>
+            <div style={{ fontSize: 20, fontWeight: 900, color: k.cor }}>{k.value}</div>
+            <div style={{ fontSize: 10, color: C.muted, marginTop: 2, lineHeight: 1.3 }}>{k.label}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 function DashboardDiretor() {
@@ -136,6 +306,7 @@ function DashboardDiretor() {
   useModuleLoad("obras");
   useModuleLoad("financeiro");
   useModuleLoad("contratos");
+  useModuleLoad("historico");
 
   const clientes    = useAppStore((s) => s.clientes);
   const orcamentos  = useAppStore((s) => s.orcamentos);
@@ -144,6 +315,7 @@ function DashboardDiretor() {
   const contratos   = useAppStore((s) => s.contratos);
   const medicoes    = useAppStore((s) => s.medicoes);
   const empresa     = useAppStore((s) => s.empresa);
+  const historico   = useAppStore((s) => s.historico);
   const { toast: toastInadimpl, mostrarToast: toastMsg } = useToast();
   const loadMedicoes = useAppStore((s) => s.loadMedicoes);
   const setActivePage = useAppStore((s) => s.setActivePage);
@@ -171,13 +343,26 @@ function DashboardDiretor() {
     .reduce((a, o) => a + (o.valor || 0), 0);
 
   // ── VGV — funil financeiro completo ──────────────────────────────────────
+  // "Qualificados" = Negociação, Proposta Enviada, Em Execução (excluindo leads brutos)
+  const STATUS_QUALIFICADO = ["Negociação", "Proposta Enviada", "Em Execução"];
+  const leadsQualificados  = clientes.filter((c) => STATUS_QUALIFICADO.includes(c.status));
+  const leadsBrutos        = clientes.filter((c) => c.status === "Lead");
+
   const vgvFunil = [
     {
-      label:   "Pipeline CRM",
-      sublabel: "leads + negociações",
-      valor:   clientes.filter((c) => c.status !== "Fechado").reduce((a, c) => a + (c.valor || 0), 0),
-      count:   clientes.filter((c) => c.status !== "Fechado").length,
-      color:   "#4a9eff",
+      label:    "Oportunidades",
+      sublabel: "negociação + proposta enviada",
+      valor:    leadsQualificados.reduce((a, c) => a + (c.valor || 0), 0),
+      count:    leadsQualificados.length,
+      color:    "#4a9eff",
+    },
+    {
+      label:    "Leads novos",
+      sublabel: "aguardando qualificação",
+      valor:    leadsBrutos.reduce((a, c) => a + (c.valor || 0), 0),
+      count:    leadsBrutos.length,
+      color:    "#94a3b8",
+      bruto:    true,
     },
     {
       label:   "Orçamentos",
@@ -211,7 +396,9 @@ function DashboardDiretor() {
       color:   C.success,
     },
   ];
-  const vgvTotal = vgvFunil.reduce((a, f) => a + f.valor, 0);
+  // VGV = só oportunidades qualificadas (exclui leads brutos que distorcem o número)
+  const vgvTotal = vgvFunil.filter((f) => !f.bruto).reduce((a, f) => a + f.valor, 0);
+  const vgvComLeads = vgvFunil.reduce((a, f) => a + f.valor, 0);
 
   // ── Medições pendentes ────────────────────────────────────────────────────
   const allMedicoes     = Object.values(medicoes).flat();
@@ -258,13 +445,42 @@ function DashboardDiretor() {
   // ── KPIs ──────────────────────────────────────────────────────────────────
   const obrasAtivas = obras.filter((o) => o.status === "Em andamento").length;
 
+  // ── Trend: comparar mês atual vs mês anterior ─────────────────────────────
+  const agora2 = new Date();
+  const mesAtual   = agora2.getMonth();
+  const anoAtual   = agora2.getFullYear();
+  const mesPrev    = mesAtual === 0 ? 11 : mesAtual - 1;
+  const anoPrev    = mesAtual === 0 ? anoAtual - 1 : anoAtual;
+
+  function somarMes(tipo, mes, ano) {
+    return allLancamentos
+      .filter((l) => {
+        const d = new Date(l.created_at || l.data);
+        return l.tipo === tipo && d.getMonth() === mes && d.getFullYear() === ano;
+      })
+      .reduce((a, l) => a + (l.valor || 0), 0);
+  }
+  const recAtual  = somarMes("receita",  mesAtual, anoAtual);
+  const recPrev   = somarMes("receita",  mesPrev,  anoPrev);
+  const despAtual = somarMes("despesa",  mesAtual, anoAtual);
+  const despPrev  = somarMes("despesa",  mesPrev,  anoPrev);
+
+  function trend(atual, prev) {
+    if (prev === 0) return null;
+    return ((atual - prev) / prev) * 100;
+  }
+
+  // ── Sparklines: últimos 6 meses ───────────────────────────────────────────
+  const sparkRec  = evolucaoMensal(allLancamentos, "receita",  6).map((d) => d.value);
+  const sparkDesp = evolucaoMensal(allLancamentos, "despesa",  6).map((d) => d.value);
+
   const kpis = [
-    { label: "Clientes",     value: String(clientes.length),  sub: `${clientes.filter(c => c.status === "Fechado").length} fechados`,    accent: "#4a9eff",    icon: "◈" },
-    { label: "Orçamentos",   value: String(orcamentos.length),sub: `pipeline ${fmt(pipelineOrc)}`,                                        accent: C.warning,    icon: "◻" },
-    { label: "Obras ativas", value: String(obrasAtivas),      sub: `de ${obras.length} total`,                                            accent: C.red,        icon: "◆" },
-    { label: "Receitas",     value: fmt(totalRec),            sub: "total recebido",                                                       accent: C.success,    icon: "↑" },
-    { label: "Despesas",     value: fmt(totalDesp),           sub: "total lançado",                                                        accent: C.danger,     icon: "↓" },
-    { label: "Margem",       value: `${margem}%`,             sub: `saldo ${fmt(saldo)}`,                                                  accent: Number(margem) >= 20 ? C.success : C.warning, icon: "%" },
+    { label: "Clientes",     value: String(clientes.length),  sub: `${clientes.filter(c => c.status === "Fechado").length} fechados`,    accent: "#4a9eff",    icon: "◈", trend: null },
+    { label: "Orçamentos",   value: String(orcamentos.length),sub: `pipeline ${fmt(pipelineOrc)}`,                                        accent: C.warning,    icon: "◻", trend: null },
+    { label: "Obras ativas", value: String(obrasAtivas),      sub: `de ${obras.length} total`,                                            accent: C.red,        icon: "◆", trend: null },
+    { label: "Receitas",     value: fmt(totalRec),            sub: "total recebido",                                                       accent: C.success,    icon: "↑", trend: trend(recAtual, recPrev),  sparkData: sparkRec },
+    { label: "Despesas",     value: fmt(totalDesp),           sub: "total lançado",                                                        accent: C.danger,     icon: "↓", trend: trend(despAtual, despPrev), sparkData: sparkDesp },
+    { label: "Margem",       value: `${margem}%`,             sub: `saldo ${fmt(saldo)}`,                                                  accent: Number(margem) >= 20 ? C.success : C.warning, icon: "%", trend: null },
   ];
 
   // ── Relatório executivo mensal ────────────────────────────────────────────
@@ -417,8 +633,13 @@ ${obrasAndamento.length > 0 ? `
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 24 }}>
         <div>
-          <h2 style={{ fontSize: 22, fontWeight: 800, marginBottom: 2 }}>Dashboard</h2>
-          <p style={{ color: C.muted, fontSize: 13 }}>Visão consolidada — {mesAno()}</p>
+          <h2 style={{
+            fontSize: 28, fontWeight: 900, marginBottom: 2,
+            background: "linear-gradient(135deg, #981915 0%, #c0392b 50%, #4a9eff 100%)",
+            WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+            backgroundClip: "text",
+          }}>Dashboard</h2>
+          <p style={{ color: C.muted, fontSize: 13, letterSpacing: 0.3 }}>Visão consolidada — {mesAno()}</p>
         </div>
         <button
           onClick={gerarRelatorioMensal}
@@ -436,12 +657,17 @@ ${obrasAndamento.length > 0 ? `
       <SmartAlerts onNavigate={setActivePage} />
 
       {/* VGV — Funil financeiro */}
-      <div style={{ background: C.surface, borderRadius: 14, padding: "20px 24px", border: `1px solid ${C.border}`, marginBottom: 20, borderTop: `3px solid ${C.red}` }}>
+      <div style={{ background: `linear-gradient(135deg, rgba(152,25,21,0.04) 0%, transparent 60%)`, borderRadius: 14, padding: "20px 24px", border: `1px solid ${C.border}`, marginBottom: 20, borderTop: `3px solid ${C.red}` }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 18, flexWrap: "wrap", gap: 8 }}>
           <div>
             <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.5, color: C.muted }}>VGV — VALOR GERAL DE VENDAS</div>
             <div style={{ fontSize: 28, fontWeight: 900, color: C.text, marginTop: 4 }}>{fmt(vgvTotal)}</div>
-            <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>soma de todo o pipeline até as obras concluídas</div>
+            <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>oportunidades qualificadas · pipeline até obras concluídas</div>
+            {vgvComLeads > vgvTotal && (
+              <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 3 }}>
+                + {fmt(vgvComLeads - vgvTotal)} em leads não qualificados
+              </div>
+            )}
           </div>
           <div style={{ textAlign: "right" }}>
             <div style={{ fontSize: 11, color: C.muted }}>Receita realizada</div>
@@ -450,24 +676,58 @@ ${obrasAndamento.length > 0 ? `
           </div>
         </div>
 
-        {/* Barra de funil */}
-        <div style={{ display: "flex", gap: 3, height: 10, borderRadius: 5, overflow: "hidden", marginBottom: 14 }}>
-          {vgvFunil.map((f, i) => {
-            const pct = vgvTotal > 0 ? (f.valor / vgvTotal) * 100 : 0;
-            if (pct < 1) return null;
-            return (
-              <div key={i} style={{ width: `${pct}%`, background: f.color, minWidth: 4, transition: "width .4s ease" }} />
-            );
-          })}
-          {vgvTotal === 0 && <div style={{ flex: 1, background: C.darker }} />}
+        {/* Barra de funil — com rótulos de % */}
+        <div style={{ marginBottom: 14 }}>
+          <div style={{ display: "flex", gap: 0, height: 14, borderRadius: 7, overflow: "hidden", marginBottom: 4, background: C.darker }}>
+            {vgvFunil.map((f, i) => {
+              const base = vgvComLeads > 0 ? vgvComLeads : 1;
+              const pct = (f.valor / base) * 100;
+              if (pct < 0.5) return null;
+              return (
+                <div key={i} title={`${f.label}: ${pct.toFixed(1)}%`} style={{
+                  width: `${pct}%`, minWidth: 6,
+                  background: f.bruto
+                    ? `repeating-linear-gradient(45deg, ${f.color}55, ${f.color}55 4px, ${f.color}33 4px, ${f.color}33 8px)`
+                    : `linear-gradient(90deg, ${f.color}dd, ${f.color})`,
+                  transition: "width .4s ease",
+                  borderRight: i < vgvFunil.length - 1 ? "1px solid rgba(255,255,255,0.2)" : "none",
+                }} />
+              );
+            })}
+            {vgvComLeads === 0 && <div style={{ flex: 1, background: C.darker }} />}
+          </div>
+          {/* Labels de % */}
+          <div style={{ display: "flex", gap: 0, marginTop: 2 }}>
+            {vgvFunil.map((f, i) => {
+              const base = vgvComLeads > 0 ? vgvComLeads : 1;
+              const pct = (f.valor / base) * 100;
+              if (pct < 0.5) return null;
+              return (
+                <div key={i} style={{ width: `${pct}%`, minWidth: 6, display: "flex", justifyContent: "center" }}>
+                  {pct >= 5 && (
+                    <span style={{ fontSize: 9, color: f.bruto ? C.muted : f.color, fontWeight: 700 }}>
+                      {pct.toFixed(0)}%
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
 
         {/* Etapas */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 8 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 8 }}>
           {vgvFunil.map((f, i) => (
-            <div key={i} style={{ borderLeft: `3px solid ${f.color}`, paddingLeft: 10 }}>
-              <div style={{ fontSize: 9, fontWeight: 700, color: f.color, letterSpacing: 1, marginBottom: 2 }}>{f.label.toUpperCase()}</div>
-              <div style={{ fontSize: 14, fontWeight: 800, color: C.text }}>{fmt(f.valor)}</div>
+            <div key={i} style={{
+              borderLeft: `3px solid ${f.color}`, paddingLeft: 10,
+              opacity: f.bruto ? 0.6 : 1,
+            }}>
+              <div style={{ fontSize: 9, fontWeight: 700, color: f.color, letterSpacing: 1, marginBottom: 2 }}>
+                {f.label.toUpperCase()}
+                {f.bruto && <span style={{ marginLeft: 4, fontSize: 8, color: "#94a3b8" }}>NÃO QUALIF.</span>}
+              </div>
+              <div style={{ fontSize: 14, fontWeight: 800, color: f.bruto ? C.muted : C.text }}>{fmt(f.valor)}</div>
+              <div style={{ fontSize: 10, color: C.muted }}>{f.sublabel}</div>
               <div style={{ fontSize: 10, color: C.muted }}>{f.count} {f.count === 1 ? "item" : "itens"}</div>
             </div>
           ))}
@@ -961,6 +1221,29 @@ ${obrasAndamento.length > 0 ? `
           </div>
         );
       })()}
+
+      {/* ── Operacional: SST + Suprimentos ── */}
+      <OperacionalKpis />
+
+      {/* Atividade Recente */}
+      {historico && historico.length > 0 && (
+        <div style={{ background: C.surface, borderRadius: 12, padding: 20, marginTop: 0, marginBottom: 16, border: `1px solid ${C.border}` }}>
+          <h3 style={{ margin: "0 0 16px", fontSize: 15, fontWeight: 700 }}>🕐 Atividade Recente</h3>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {historico.slice(0, 5).map((h, i) => (
+              <div key={h.id || i} style={{ display: "flex", gap: 12, alignItems: "flex-start", paddingBottom: 10, borderBottom: i < 4 ? `1px solid ${C.border}` : "none" }}>
+                <div style={{ width: 32, height: 32, borderRadius: "50%", background: C.darker, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0 }}>
+                  {h.tipo === "obra" ? "🏗️" : h.tipo === "cliente" ? "👤" : h.tipo === "financeiro" ? "💰" : "📋"}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <p style={{ margin: 0, fontSize: 13, fontWeight: 600 }}>{h.descricao || h.titulo || "Ação registrada"}</p>
+                  <p style={{ margin: "2px 0 0", fontSize: 12, color: C.muted }}>{h.created_at ? new Date(h.created_at).toLocaleDateString("pt-BR") : ""}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Progresso das obras */}
       <div style={{ background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", padding: 20, border: `1px solid ${C.border}` }}>

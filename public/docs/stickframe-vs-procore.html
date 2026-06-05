@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>StickFrame vs Procore — Comparativo Técnico</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Barlow+Condensed:wght@700;800&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --sf-red:     #981915;
+    --sf-red-lt:  #fde8e8;
+    --procore:    #f36c21;
+    --procore-lt: #fff0e6;
+    --dark:       #0f1117;
+    --card:       #16191f;
+    --border:     #252830;
+    --text:       #e8eaf0;
+    --muted:      #7b8394;
+    --green:      #22c55e;
+    --yellow:     #f59e0b;
+    --red:        #ef4444;
+    --blue:       #3b82f6;
+    --radius:     14px;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--dark);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    background: linear-gradient(135deg, #0f1117 0%, #1a0f0e 50%, #0f1117 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 64px 48px 48px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -80px; right: -80px;
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(152,25,21,0.18) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero::after {
+    content: '';
+    position: absolute;
+    bottom: -60px; left: 40%;
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, rgba(243,108,33,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-inner { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
+  .hero-tag {
+    display: inline-block;
+    font-size: 10px; font-weight: 700; letter-spacing: 2.5px; text-transform: uppercase;
+    color: var(--sf-red); background: var(--sf-red-lt);
+    padding: 5px 14px; border-radius: 20px; margin-bottom: 20px;
+  }
+  .hero-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: clamp(36px, 5vw, 60px);
+    font-weight: 800; line-height: 1.05;
+    letter-spacing: -1px;
+    margin-bottom: 16px;
+  }
+  .hero-title .sf  { color: #fff; }
+  .hero-title .vs  { color: var(--muted); font-size: 0.65em; margin: 0 10px; }
+  .hero-title .pro { color: var(--procore); }
+  .hero-sub {
+    color: var(--muted); font-size: 15px; max-width: 560px; line-height: 1.7;
+    margin-bottom: 32px;
+  }
+  .hero-badges { display: flex; gap: 12px; flex-wrap: wrap; }
+  .hero-badge {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 16px;
+    font-size: 12px; color: var(--muted);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .hero-badge strong { color: var(--text); font-size: 13px; }
+  .hero-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--procore); }
+  .hero-badge .dot-sf { background: var(--sf-red); }
+
+  /* ── LAYOUT ── */
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 48px; }
+  section { padding: 56px 0; border-bottom: 1px solid var(--border); }
+  section:last-of-type { border-bottom: none; }
+
+  /* ── SECTION HEADER ── */
+  .sec-header { display: flex; align-items: center; gap: 12px; margin-bottom: 32px; }
+  .sec-icon { font-size: 24px; }
+  .sec-title { font-size: 22px; font-weight: 800; color: #fff; }
+  .sec-num {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: var(--sf-red); color: #fff;
+    font-size: 12px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  /* ── SCOREBOARD ── */
+  .scoreboard { display: flex; flex-direction: column; gap: 10px; }
+  .score-row {
+    display: grid; grid-template-columns: 1fr 1fr 1fr 120px;
+    gap: 1px; background: var(--border);
+    border-radius: 10px; overflow: hidden;
+    transition: transform 0.15s;
+  }
+  .score-row:hover { transform: translateX(3px); }
+  .score-row > div { background: var(--card); padding: 14px 18px; }
+  .score-dim { font-weight: 600; color: var(--text); font-size: 13px; }
+  .score-val { font-size: 13px; display: flex; align-items: center; gap: 8px; }
+  .score-gap {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.5px;
+    text-transform: uppercase; text-align: center;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .gap-critical { background: rgba(239,68,68,0.15) !important; color: var(--red); }
+  .gap-big      { background: rgba(245,158,11,0.1) !important; color: var(--yellow); }
+  .gap-tie      { background: rgba(34,197,94,0.1) !important; color: var(--green); }
+  .score-header > div { background: #1e2128 !important; }
+  .score-header .score-dim { color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; }
+
+  /* ── VS CARDS ── */
+  .vs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 20px; }
+  .vs-card { background: var(--card); padding: 24px; }
+  .vs-card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; padding-bottom: 14px; border-bottom: 1px solid var(--border); }
+  .vs-logo { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; flex-shrink: 0; }
+  .vs-logo-sf  { background: var(--sf-red); color: #fff; }
+  .vs-logo-pro { background: var(--procore); color: #fff; }
+  .vs-name { font-weight: 700; font-size: 14px; color: #fff; }
+  .vs-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+  .vs-list li { font-size: 13px; color: var(--muted); display: flex; align-items: flex-start; gap: 8px; line-height: 1.5; }
+  .vs-list li::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--muted); flex-shrink: 0; margin-top: 7px; }
+  .vs-list li strong { color: var(--text); font-weight: 600; }
+  .vs-card-procore .vs-list li::before { background: var(--procore); }
+  .vs-card-sf     .vs-list li::before { background: var(--sf-red); }
+
+  /* ── GAP REAL ── */
+  .gap-box {
+    background: linear-gradient(135deg, rgba(152,25,21,0.12), rgba(152,25,21,0.04));
+    border: 1px solid rgba(152,25,21,0.3);
+    border-radius: 10px; padding: 18px 22px;
+    display: flex; gap: 14px; align-items: flex-start;
+  }
+  .gap-box-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+  .gap-box-text { font-size: 13px; color: var(--muted); line-height: 1.7; }
+  .gap-box-text strong { color: #fff; }
+
+  /* ── VANTAGENS ── */
+  .advantages-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+  .adv-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 10px; padding: 18px;
+    border-left: 3px solid var(--green);
+    transition: border-color 0.15s, transform 0.15s;
+  }
+  .adv-card:hover { border-left-color: var(--sf-red); transform: translateY(-2px); }
+  .adv-title { font-weight: 700; font-size: 13px; color: #fff; margin-bottom: 6px; }
+  .adv-desc  { font-size: 12px; color: var(--muted); line-height: 1.6; }
+
+  /* ── ROADMAP ── */
+  .roadmap { display: flex; gap: 16px; }
+  .rm-phase {
+    flex: 1; background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 24px; position: relative;
+    overflow: hidden;
+  }
+  .rm-phase::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+  .rm-1::before { background: var(--green); }
+  .rm-2::before { background: var(--yellow); }
+  .rm-3::before { background: var(--sf-red); }
+  .rm-label { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+  .rm-title { font-size: 15px; font-weight: 800; color: #fff; margin-bottom: 4px; }
+  .rm-sub   { font-size: 11px; color: var(--muted); margin-bottom: 18px; }
+  .rm-list  { list-style: none; display: flex; flex-direction: column; gap: 9px; }
+  .rm-list li { font-size: 12px; color: var(--muted); display: flex; gap: 8px; align-items: flex-start; line-height: 1.5; }
+  .rm-check {
+    width: 16px; height: 16px; border-radius: 4px;
+    border: 1.5px solid var(--border); flex-shrink: 0; margin-top: 1px;
+  }
+
+  /* ── ESTRATÉGIA FINAL ── */
+  .strategy-box {
+    background: linear-gradient(135deg, var(--card) 0%, #1a1220 100%);
+    border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 36px 40px; text-align: center; position: relative; overflow: hidden;
+  }
+  .strategy-box::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 50% 0%, rgba(152,25,21,0.12) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .strategy-eyebrow { font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--sf-red); margin-bottom: 16px; }
+  .strategy-title { font-size: 28px; font-weight: 800; color: #fff; line-height: 1.25; margin-bottom: 16px; }
+  .strategy-title em { color: var(--sf-red); font-style: normal; }
+  .strategy-text { font-size: 14px; color: var(--muted); max-width: 600px; margin: 0 auto 28px; line-height: 1.8; }
+  .strategy-highlight {
+    display: inline-block;
+    background: rgba(152,25,21,0.15); border: 1px solid rgba(152,25,21,0.4);
+    border-radius: 8px; padding: 14px 24px;
+    font-size: 13px; color: #fff; font-weight: 500; line-height: 1.7;
+  }
+  .strategy-highlight strong { color: var(--sf-red); }
+
+  /* ── BADGES ── */
+  .badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+  .badge-green  { background: rgba(34,197,94,0.15);  color: var(--green); }
+  .badge-yellow { background: rgba(245,158,11,0.15); color: var(--yellow); }
+  .badge-red    { background: rgba(239,68,68,0.15);  color: var(--red); }
+
+  /* ── FOOTER ── */
+  .footer {
+    border-top: 1px solid var(--border);
+    padding: 28px 48px;
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 11px; color: var(--muted);
+    max-width: 100%;
+  }
+  .footer-brand { font-family: 'Barlow Condensed', sans-serif; font-size: 15px; font-weight: 800; letter-spacing: 1.5px; }
+  .footer-brand span { color: var(--sf-red); }
+
+  /* ── PRINT ── */
+  @media print {
+    body { background: #fff; color: #111; }
+    .hero { background: #fff; border-bottom: 2px solid #981915; }
+    .hero-title .sf  { color: #111; }
+    .hero-title .pro { color: var(--procore); }
+    .card, .vs-card, .rm-phase, .adv-card, .strategy-box { background: #f9f9f9 !important; border-color: #ddd !important; }
+    :root { --card: #f9f9f9; --border: #ddd; --text: #111; --muted: #555; --dark: #fff; }
+  }
+
+  @media (max-width: 768px) {
+    .hero { padding: 40px 24px 32px; }
+    .container { padding: 0 24px; }
+    .vs-grid { grid-template-columns: 1fr; }
+    .roadmap { flex-direction: column; }
+    .score-row { grid-template-columns: 1fr; }
+    .advantages-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-tag">Comparativo Técnico — 2026</div>
+    <h1 class="hero-title">
+      <span class="sf">StickFrame</span>
+      <span class="vs">vs</span>
+      <span class="pro">Procore</span>
+    </h1>
+    <p class="hero-sub">
+      Análise honesta de 9 dimensões técnicas entre o SaaS de gestão de obras brasileiro especializado em Steel Frame e o líder global de construction management.
+    </p>
+    <div class="hero-badges">
+      <div class="hero-badge">
+        <div class="dot-sf dot"></div>
+        <div><strong>StickFrame</strong> · v2.0 · React/Vite/Supabase</div>
+      </div>
+      <div class="hero-badge">
+        <div class="dot"></div>
+        <div><strong>Procore</strong> · ~US$ 10B market cap · 16.000+ clientes globais</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PLACAR GERAL -->
+<section>
+  <div class="container">
+    <div class="sec-header">
+      <div class="sec-icon">📊</div>
+      <div class="sec-title">Placar Geral por Dimensão</div>
+    </div>
+    <div class="scoreboard">
+      <div class="score-row score-header">
+        <div class="score-dim">Dimensão</div>
+        <div class="score-dim">StickFrame</div>
+        <div class="score-dim">Procore</div>
+        <div class="score-dim" style="text-align:center">Gap</div>
+      </div>
+      <div class="score-row">
+        <div class="score-dim">Módulos funcionais</div>
+        <div class="score-val">✅ Completo</div>
+        <div class="score-val">✅ Completo</div>
+        <div class="score-gap gap-tie">Empate</div>
+      </div>
+      <div class="score-row">
+        <div class="score-dim">Experiência mobile</div>
+        <div class="score-val">🟡 PWA</div>
+        <div class="score-val">✅ App nativo iOS/Android</div>
+        <div class="score-gap gap-critical">Crítico</div>
+      </div>
+      <div class="score-row">
+        <div class="score-dim">Colaboração em tempo real</div>
+        <div class="score-val">🟡 Parcial</div>
+        <div class="score-val">✅ Presença + cursores</div>
+        <div class="score-gap gap-big">Grande</div>
+      </div>
+      <div class="score-row">
+        <div class="score-dim">Gestão de documentos</div>
+        <div class="score-val">🟡 Básica</div>
+        <div class="score-val">✅ Versionamento + markup</div>
+        <div class="score-gap gap-big">Grande</div>
+      </div>
+      <div class="score-row">
+        <div class="score-dim">Contratos e financeiro</div>
+        <div class="score-val">🟡 Básico</div>
+        <div class="score-val">✅ SOV, Change Orders, Pay Apps</div>
+        <div class="score-gap gap-big">Grande</div>
+      </div>
+      <div class="score-row">
+        <div class="score-dim">Analytics &amp; BI</div>
+        <div class="score-val">🔴 Ausente</div>
+        <div class="score-val">✅ Procore Analytics (produto separado)</div>
+        <div class="score-gap gap-critical">Crítico</div>
+      </div>
+      <div class="score-row">
+        <div class="score-dim">Permissões granulares</div>
+        <div class="score-val">🔴 4 perfis fixos</div>
+        <div class="score-val">✅ RBAC por módulo/projeto</div>
+        <div class="score-gap gap-big">Grande</div>
+      </div>
+      <div class="score-row">
+        <div class="score-dim">Integrações &amp; API</div>
+        <div class="score-val">🔴 Fechado</div>
+        <div class="score-val">✅ 500+ integrações + API pública</div>
+        <div class="score-gap gap-critical">Crítico</div>
+      </div>
+      <div class="score-row">
+        <div class="score-dim">IA &amp; Automação</div>
+        <div class="score-val">🔴 Ausente</div>
+        <div class="score-val">✅ Procore Copilot (2024)</div>
+        <div class="score-gap gap-big">Grande</div>
+      </div>
+      <div class="score-row">
+        <div class="score-dim">Segurança enterprise</div>
+        <div class="score-val">🟡 RLS Supabase</div>
+        <div class="score-val">✅ SOC 2 Type II, ISO 27001, SSO/SAML</div>
+        <div class="score-gap gap-big">Grande</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SEÇÕES COMPARATIVAS -->
+
+<!-- 1. MOBILE -->
+<section>
+  <div class="container">
+    <div class="sec-header">
+      <div class="sec-num">1</div>
+      <div class="sec-icon">📱</div>
+      <div class="sec-title">Experiência Mobile</div>
+      <span class="badge badge-red">Crítico</span>
+    </div>
+    <div class="vs-grid">
+      <div class="vs-card vs-card-procore">
+        <div class="vs-card-header">
+          <div class="vs-logo vs-logo-pro">P</div>
+          <div class="vs-name" style="color:var(--procore)">Procore</div>
+        </div>
+        <ul class="vs-list">
+          <li>Apps nativos iOS e Android com codebase separado</li>
+          <li>Funciona <strong>100% offline</strong> com sync automático ao reconectar</li>
+          <li>Câmera integrada com <strong>anotação diretamente sobre plantas</strong></li>
+          <li>Reconhecimento de voz para preencher diário em campo</li>
+          <li>Push notifications nativas com deep links para o item exato</li>
+        </ul>
+      </div>
+      <div class="vs-card vs-card-sf">
+        <div class="vs-card-header">
+          <div class="vs-logo vs-logo-sf">SF</div>
+          <div class="vs-name" style="color:var(--sf-red)">StickFrame</div>
+        </div>
+        <ul class="vs-list">
+          <li>PWA funcional, instala na tela inicial do celular</li>
+          <li>Offline básico via Service Worker + IndexedDB</li>
+          <li>Interface responsiva, mas projetada para desktop</li>
+          <li>Push notifications via Web Push API</li>
+        </ul>
+      </div>
+    </div>
+    <div class="gap-box">
+      <div class="gap-box-icon">⚡</div>
+      <div class="gap-box-text">
+        O engenheiro no topo de uma laje, com luva, no sol, vai usar o celular. App nativo com câmera integrada → foto tirada, anotada e vinculada ao checklist em <strong>10 segundos</strong>. No PWA são 4–5 passos manuais. Em construção, <strong>1 clique a menos salva 10 minutos por dia por colaborador</strong>.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 2. COLABORAÇÃO -->
+<section>
+  <div class="container">
+    <div class="sec-header">
+      <div class="sec-num">2</div>
+      <div class="sec-icon">🤝</div>
+      <div class="sec-title">Colaboração em Tempo Real</div>
+      <span class="badge badge-yellow">Grande</span>
+    </div>
+    <div class="vs-grid">
+      <div class="vs-card vs-card-procore">
+        <div class="vs-card-header">
+          <div class="vs-logo vs-logo-pro">P</div>
+          <div class="vs-name" style="color:var(--procore)">Procore</div>
+        </div>
+        <ul class="vs-list">
+          <li>Presença visual: <strong>avatares mostram quem está no mesmo documento</strong></li>
+          <li>Comentários threaded em qualquer item (foto, planta, tarefa, RFI)</li>
+          <li>@menção que dispara notificação e e-mail</li>
+          <li>Histórico de comentários com timestamp e usuário</li>
+          <li>Fluxo de revisão/aprovação com log de quem aprovou</li>
+        </ul>
+      </div>
+      <div class="vs-card vs-card-sf">
+        <div class="vs-card-header">
+          <div class="vs-logo vs-logo-sf">SF</div>
+          <div class="vs-name" style="color:var(--sf-red)">StickFrame</div>
+        </div>
+        <ul class="vs-list">
+          <li>Realtime configurado no Supabase para <strong>obras, diário e notificações</strong></li>
+          <li>Sem presença visual de usuários ativos</li>
+          <li>Sem comentários contextuais por item</li>
+          <li>Sem fluxo de revisão/aprovação</li>
+        </ul>
+      </div>
+    </div>
+    <div class="gap-box">
+      <div class="gap-box-icon">⚡</div>
+      <div class="gap-box-text">
+        3 engenheiros editando o mesmo diário de obra simultaneamente, sem presença visual, sobrescrevem o trabalho um do outro. O Procore evita com locks otimistas e merge visual. <strong>O Supabase Realtime já está configurado no StickFrame</strong> — falta apenas a camada de presença.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 3. DOCUMENTOS -->
+<section>
+  <div class="container">
+    <div class="sec-header">
+      <div class="sec-num">3</div>
+      <div class="sec-icon">📄</div>
+      <div class="sec-title">Gestão de Documentos</div>
+      <span class="badge badge-yellow">Grande</span>
+    </div>
+    <div class="vs-grid">
+      <div class="vs-card vs-card-procore">
+        <div class="vs-card-header">
+          <div class="vs-logo vs-logo-pro">P</div>
+          <div class="vs-name" style="color:var(--procore)">Procore</div>
+        </div>
+        <ul class="vs-list">
+          <li><strong>Versionamento automático</strong>: versões anteriores sempre acessíveis</li>
+          <li><strong>Markup de plantas</strong>: anotações diretas sobre PDF/DWG no browser ou app</li>
+          <li><strong>RFIs</strong>: fluxo formal de perguntas técnicas com status, prazo e histórico</li>
+          <li><strong>Submittals</strong>: aprovação formal de materiais antes do uso em obra</li>
+          <li><strong>Punch List</strong>: pendências pós-obra com foto, rastreadas até fechamento</li>
+        </ul>
+      </div>
+      <div class="vs-card vs-card-sf">
+        <div class="vs-card-header">
+          <div class="vs-logo vs-logo-sf">SF</div>
+          <div class="vs-name" style="color:var(--sf-red)">StickFrame</div>
+        </div>
+        <ul class="vs-list">
+          <li>Upload de arquivos vinculados à obra</li>
+          <li>Categorização básica por tipo</li>
+          <li>Sem versionamento automático</li>
+          <li>Sem markup nativo de plantas</li>
+          <li>Sem RFI/Submittal como fluxo formal</li>
+        </ul>
+      </div>
+    </div>
+    <div class="gap-box">
+      <div class="gap-box-icon">⚡</div>
+      <div class="gap-box-text">
+        RFI e Submittal não são burocracia — são <strong>proteção jurídica</strong>. "Aprovei o uso deste material em 14/03 às 10h, assinado pelo engenheiro responsável" é o tipo de rastreabilidade que evita processos milionários em construtoras de médio porte.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 4. FINANCEIRO -->
+<section>
+  <div class="container">
+    <div class="sec-header">
+      <div class="sec-num">4</div>
+      <div class="sec-icon">💰</div>
+      <div class="sec-title">Contratos e Financeiro</div>
+      <span class="badge badge-yellow">Grande</span>
+    </div>
+    <div class="vs-grid">
+      <div class="vs-card vs-card-procore">
+        <div class="vs-card-header">
+          <div class="vs-logo vs-logo-pro">P</div>
+          <div class="vs-name" style="color:var(--procore)">Procore</div>
+        </div>
+        <ul class="vs-list">
+          <li><strong>Schedule of Values (SOV)</strong>: planilha de valores por item contratual vinculada ao cronograma</li>
+          <li><strong>Change Orders</strong>: fluxo formal de aditivo com aprovação, impacto no contrato e cronograma</li>
+          <li><strong>Pay Applications</strong>: solicitação de pagamento por medição com base no SOV aprovado</li>
+          <li><strong>Budget Forecasting</strong>: projeção do custo final com base no realizado + comprometido</li>
+          <li>Integração nativa com QuickBooks, Sage, SAP, Oracle ERP</li>
+        </ul>
+      </div>
+      <div class="vs-card vs-card-sf">
+        <div class="vs-card-header">
+          <div class="vs-logo vs-logo-sf">SF</div>
+          <div class="vs-name" style="color:var(--sf-red)">StickFrame</div>
+        </div>
+        <ul class="vs-list">
+          <li>Lançamentos financeiros (receita/despesa) por obra</li>
+          <li>Medições por percentual de conclusão</li>
+          <li>Contratos com status básico</li>
+          <li>Sem Change Orders formais</li>
+          <li>Sem integração com ERP</li>
+        </ul>
+      </div>
+    </div>
+    <div class="gap-box">
+      <div class="gap-box-icon">⚡</div>
+      <div class="gap-box-text">
+        O que mais custa nas construtoras não é a obra — são os <strong>aditivos não controlados</strong>. Change order sem processo formal vira briga judicial na hora do acerto. O Procore rastreia cada alteração com assinatura digital, justificativa e impacto no contrato original.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 5. ANALYTICS -->
+<section>
+  <div class="container">
+    <div class="sec-header">
+      <div class="sec-num">5</div>
+      <div class="sec-icon">📊</div>
+      <div class="sec-title">Analytics e Business Intelligence</div>
+      <span class="badge badge-red">Crítico</span>
+    </div>
+    <div class="vs-grid">
+      <div class="vs-card vs-card-procore">
+        <div class="vs-card-header">
+          <div class="vs-logo vs-logo-pro">P</div>
+          <div class="vs-name" style="color:var(--procore)">Procore Analytics</div>
+          <span style="font-size:10px;color:var(--muted);margin-left:4px">~US$ 15k/ano</span>
+        </div>
+        <ul class="vs-list">
+          <li>Dashboard executivo com dados agregados de <strong>todas as obras simultâneas</strong></li>
+          <li>Produtividade: horas trabalhadas vs. progresso por fase</li>
+          <li>Desvio de custo médio por categoria, tipo de obra e período</li>
+          <li><strong>Modelo preditivo de ML</strong>: probabilidade de atraso com 30 dias de antecedência</li>
+          <li>Export para Power BI, Tableau, Google Data Studio</li>
+        </ul>
+      </div>
+      <div class="vs-card vs-card-sf">
+        <div class="vs-card-header">
+          <div class="vs-logo vs-logo-sf">SF</div>
+          <div class="vs-name" style="color:var(--sf-red)">StickFrame</div>
+        </div>
+        <ul class="vs-list">
+          <li>Dashboard com KPIs gerais da empresa</li>
+          <li>Sem visão cross-projeto agregada</li>
+          <li>Sem histórico comparativo entre períodos</li>
+          <li>Sem camada de BI externa ou exportação para Power BI</li>
+        </ul>
+      </div>
+    </div>
+    <div class="gap-box">
+      <div class="gap-box-icon">⚡</div>
+      <div class="gap-box-text">
+        O diretor de uma construtora com 8 obras simultâneas precisa responder: <strong>"Qual obra está com maior risco de estourar o orçamento nos próximos 30 dias?"</strong> Sem analytics, é uma reunião de 2 horas com planilha. Com Procore Analytics, é uma tela de 5 segundos.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 6. PERMISSÕES -->
+<section>
+  <div class="container">
+    <div class="sec-header">
+      <div class="sec-num">6</div>
+      <div class="sec-icon">🔐</div>
+      <div class="sec-title">Permissões Granulares</div>
+      <span class="badge badge-yellow">Grande</span>
+    </div>
+    <div class="vs-grid">
+      <div class="vs-card vs-card-procore">
+        <div class="vs-card-header">
+          <div class="vs-logo vs-logo-pro">P</div>
+          <div class="vs-name" style="color:var(--procore)">Procore</div>
+        </div>
+        <ul class="vs-list">
+          <li><strong>RBAC por módulo e por projeto</strong>: mesmo usuário com acesso diferente em cada obra</li>
+          <li>Permissões por ação: ver / criar / editar / deletar / aprovar — independentes</li>
+          <li>Templates de permissão por função, sobrescrevíveis por projeto</li>
+          <li>Subcontratados acessam apenas o escopo do seu contrato</li>
+          <li>Log de auditoria: quem acessou o quê e quando</li>
+        </ul>
+      </div>
+      <div class="vs-card vs-card-sf">
+        <div class="vs-card-header">
+          <div class="vs-logo vs-logo-sf">SF</div>
+          <div class="vs-name" style="color:var(--sf-red)">StickFrame</div>
+        </div>
+        <ul class="vs-list">
+          <li>4 perfis globais fixos: Diretor, Comercial, Engenheiro, Financeiro</li>
+          <li>Perfil aplica-se igual em <strong>todas</strong> as obras</li>
+          <li>Sem granularidade por projeto</li>
+          <li>Sem permissões por ação individual</li>
+        </ul>
+      </div>
+    </div>
+    <div class="gap-box">
+      <div class="gap-box-icon">⚡</div>
+      <div class="gap-box-text">
+        Uma construtora com 20 obras e 50 usuários precisa que o pedreiro só veja o diário da obra dele, o subcontratado só veja as plantas do seu escopo e o contador só veja o financeiro. Com <strong>4 perfis globais fixos, isso é impossível de implementar com segurança</strong>.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 7. API -->
+<section>
+  <div class="container">
+    <div class="sec-header">
+      <div class="sec-num">7</div>
+      <div class="sec-icon">🔌</div>
+      <div class="sec-title">Integrações e API</div>
+      <span class="badge badge-red">Crítico</span>
+    </div>
+    <div class="vs-grid">
+      <div class="vs-card vs-card-procore">
+        <div class="vs-card-header">
+          <div class="vs-logo vs-logo-pro">P</div>
+          <div class="vs-name" style="color:var(--procore)">Procore</div>
+        </div>
+        <ul class="vs-list">
+          <li><strong>API REST pública</strong> com OAuth 2.0, documentação completa, SDK em Python/Ruby/JS</li>
+          <li>Marketplace com <strong>500+ integrações</strong>: Autodesk, Bluebeam, Teams, SAP, Oracle, Trimble</li>
+          <li>Webhooks granulares: assinar eventos específicos por módulo</li>
+          <li>Zapier/Make native: qualquer ferramenta sem código</li>
+          <li>Open Data: exportar tudo para data lake do cliente</li>
+        </ul>
+      </div>
+      <div class="vs-card vs-card-sf">
+        <div class="vs-card-header">
+          <div class="vs-logo vs-logo-sf">SF</div>
+          <div class="vs-name" style="color:var(--sf-red)">StickFrame</div>
+        </div>
+        <ul class="vs-list">
+          <li>API de uso interno apenas</li>
+          <li>Sem marketplace de integrações</li>
+          <li>Sem webhooks para clientes</li>
+          <li>Sem OAuth público</li>
+        </ul>
+      </div>
+    </div>
+    <div class="gap-box">
+      <div class="gap-box-icon">⚡</div>
+      <div class="gap-box-text">
+        Construtoras maiores <strong>não trocam de ERP</strong> para usar um novo SaaS — elas exigem integração. Sem API pública, o StickFrame é descartado no primeiro processo de seleção enterprise, antes mesmo de mostrar o produto.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 8. IA -->
+<section>
+  <div class="container">
+    <div class="sec-header">
+      <div class="sec-num">8</div>
+      <div class="sec-icon">🤖</div>
+      <div class="sec-title">IA e Automação</div>
+      <span class="badge badge-yellow">Grande</span>
+    </div>
+    <div class="vs-grid">
+      <div class="vs-card vs-card-procore">
+        <div class="vs-card-header">
+          <div class="vs-logo vs-logo-pro">P</div>
+          <div class="vs-name" style="color:var(--procore)">Procore Copilot</div>
+          <span style="font-size:10px;color:var(--muted);margin-left:4px">lançado 2024</span>
+        </div>
+        <ul class="vs-list">
+          <li>Geração de RFIs a partir de linguagem natural</li>
+          <li>Resumo automático de documentos técnicos longos</li>
+          <li><strong>Classificação automática de fotos</strong>: segurança, progresso ou defeito</li>
+          <li>Detecção de risco em texto de e-mails e RFIs antes de formalizar</li>
+          <li>Sugestão de change order quando diário diverge do escopo contratado</li>
+          <li>Automação de workflows: ações encadeadas por eventos</li>
+        </ul>
+      </div>
+      <div class="vs-card vs-card-sf">
+        <div class="vs-card-header">
+          <div class="vs-logo vs-logo-sf">SF</div>
+          <div class="vs-name" style="color:var(--sf-red)">StickFrame</div>
+        </div>
+        <ul class="vs-list">
+          <li>Sem IA implementada</li>
+          <li>Sem automações configuráveis pelo usuário</li>
+          <li>Sem workflow engine</li>
+          <li>Módulo "Inteligência" existente, mas sem funcionalidades descritas</li>
+        </ul>
+      </div>
+    </div>
+    <div class="gap-box">
+      <div class="gap-box-icon">⚡</div>
+      <div class="gap-box-text">
+        O Procore Copilot não é ChatGPT colado na barra lateral — é IA <strong>dentro do contexto do projeto</strong>, que conhece o contrato, o cronograma e o histórico da obra. Isso é o que separa IA de verdade de IA de marketing.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 9. SEGURANÇA -->
+<section>
+  <div class="container">
+    <div class="sec-header">
+      <div class="sec-num">9</div>
+      <div class="sec-icon">🛡️</div>
+      <div class="sec-title">Segurança e Compliance Enterprise</div>
+      <span class="badge badge-yellow">Grande</span>
+    </div>
+    <div class="vs-grid">
+      <div class="vs-card vs-card-procore">
+        <div class="vs-card-header">
+          <div class="vs-logo vs-logo-pro">P</div>
+          <div class="vs-name" style="color:var(--procore)">Procore</div>
+        </div>
+        <ul class="vs-list">
+          <li><strong>SOC 2 Type II</strong>: auditoria anual por terceiros independentes</li>
+          <li><strong>ISO 27001</strong>: certificação internacional de segurança da informação</li>
+          <li><strong>SSO/SAML</strong>: login via Active Directory da empresa</li>
+          <li>2FA obrigatório por política de empresa</li>
+          <li>Data residency: escolher região dos dados (relevante para LGPD)</li>
+          <li>SLA de uptime 99.9% com créditos contratuais</li>
+          <li>DPA (Data Processing Agreement) pronto para LGPD/GDPR</li>
+        </ul>
+      </div>
+      <div class="vs-card vs-card-sf">
+        <div class="vs-card-header">
+          <div class="vs-logo vs-logo-sf">SF</div>
+          <div class="vs-name" style="color:var(--sf-red)">StickFrame</div>
+        </div>
+        <ul class="vs-list">
+          <li>RLS Supabase (sólido para multitenancy por empresa)</li>
+          <li>Auth Supabase com e-mail/senha</li>
+          <li>Sem certificações formais (SOC 2, ISO 27001)</li>
+          <li>Sem SSO enterprise</li>
+          <li>Sem SLA contratual</li>
+          <li>Sem DPA formal</li>
+        </ul>
+      </div>
+    </div>
+    <div class="gap-box">
+      <div class="gap-box-icon">⚡</div>
+      <div class="gap-box-text">
+        Uma construtora que assina um contrato de R$ 50M com uma incorporadora vai exigir que <strong>todos os fornecedores de software passem por due diligence de segurança</strong>. Sem SOC 2 e sem DPA, o StickFrame não passa da triagem do departamento de TI.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- VANTAGENS STICKFRAME -->
+<section>
+  <div class="container">
+    <div class="sec-header">
+      <div class="sec-icon">🏆</div>
+      <div class="sec-title">Onde o StickFrame Já Supera o Procore</div>
+    </div>
+    <div class="advantages-grid">
+      <div class="adv-card">
+        <div class="adv-title">💸 Preço</div>
+        <div class="adv-desc">10–50x mais barato. Acessível para pequenas e médias construtoras que o Procore simplesmente ignora.</div>
+      </div>
+      <div class="adv-card">
+        <div class="adv-title">🏗️ Especialização em Steel Frame</div>
+        <div class="adv-desc">Calculadora específica, insumos SF, terminologia correta. O Procore é genérico e nunca será especializado no nicho.</div>
+      </div>
+      <div class="adv-card">
+        <div class="adv-title">🚀 Onboarding</div>
+        <div class="adv-desc">Funciona em minutos. O Procore exige dias de treinamento formal e frequentemente contrata consultores para implementação.</div>
+      </div>
+      <div class="adv-card">
+        <div class="adv-title">🔗 Portal Tokenizado</div>
+        <div class="adv-desc">Proposta, contrato e portal do cliente com link direto. O Procore não possui esse fluxo de forma nativa.</div>
+      </div>
+      <div class="adv-card">
+        <div class="adv-title">📋 Concorrência Pública</div>
+        <div class="adv-desc">Módulo específico para o contexto brasileiro. O Procore simplesmente não tem equivalente.</div>
+      </div>
+      <div class="adv-card">
+        <div class="adv-title">⚡ Stack Moderna</div>
+        <div class="adv-desc">React/Vite/Supabase vs. Rails + Angular legado do Procore. O StickFrame entrega features em dias, o Procore em trimestres.</div>
+      </div>
+      <div class="adv-card">
+        <div class="adv-title">🔧 Customização</div>
+        <div class="adv-desc">Codebase acessível e controlado vs. SaaS completamente fechado. Adaptar ao nicho sem depender de roadmap externo.</div>
+      </div>
+      <div class="adv-card">
+        <div class="adv-title">🇧🇷 Contexto Brasileiro</div>
+        <div class="adv-desc">SINAPI, NR-18, LGPD, notas fiscais, integração com bancos brasileiros — o Procore precisa de parceiros locais para isso.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ROADMAP -->
+<section>
+  <div class="container">
+    <div class="sec-header">
+      <div class="sec-icon">🗺️</div>
+      <div class="sec-title">Roadmap para Fechar o Gap</div>
+    </div>
+    <div class="roadmap">
+      <div class="rm-phase rm-1">
+        <div class="rm-label">Fase 1</div>
+        <div class="rm-title">Consolidar Base</div>
+        <div class="rm-sub">0 – 3 meses</div>
+        <ul class="rm-list">
+          <li><div class="rm-check"></div>Presença em tempo real nas obras (Supabase já configurado)</li>
+          <li><div class="rm-check"></div>Permissões por projeto — não só perfil global</li>
+          <li><div class="rm-check"></div>Comentários contextuais por item</li>
+          <li><div class="rm-check"></div>API REST básica com autenticação</li>
+        </ul>
+      </div>
+      <div class="rm-phase rm-2">
+        <div class="rm-label">Fase 2</div>
+        <div class="rm-title">Diferenciação</div>
+        <div class="rm-sub">3 – 9 meses</div>
+        <ul class="rm-list">
+          <li><div class="rm-check"></div>Change Orders com fluxo de aprovação</li>
+          <li><div class="rm-check"></div>Versionamento de documentos</li>
+          <li><div class="rm-check"></div>Analytics cross-projeto</li>
+          <li><div class="rm-check"></div>Webhooks para clientes</li>
+          <li><div class="rm-check"></div>PWA offline-first com sync de conflito</li>
+        </ul>
+      </div>
+      <div class="rm-phase rm-3">
+        <div class="rm-label">Fase 3</div>
+        <div class="rm-title">Enterprise</div>
+        <div class="rm-sub">9 – 18 meses</div>
+        <ul class="rm-list">
+          <li><div class="rm-check"></div>SSO/SAML via Supabase Auth</li>
+          <li><div class="rm-check"></div>IA contextual (desvio, alertas, RFI)</li>
+          <li><div class="rm-check"></div>SOC 2 Type II — auditoria formal</li>
+          <li><div class="rm-check"></div>App nativo React Native</li>
+          <li><div class="rm-check"></div>Marketplace: Conta Azul, Omie, Totvs</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ESTRATÉGIA FINAL -->
+<section style="border-bottom:none">
+  <div class="container">
+    <div class="strategy-box">
+      <div class="strategy-eyebrow">A Estratégia Certa</div>
+      <h2 class="strategy-title">
+        Seja o <em>Procore do Steel Frame</em><br/>brasileiro
+      </h2>
+      <p class="strategy-text">
+        O Procore <strong style="color:#fff">nunca será barato</strong> e <strong style="color:#fff">nunca vai entender Steel Frame</strong>. Profissional o suficiente para passar due diligence enterprise, específico o suficiente para ser insubstituível no nicho, barato o suficiente para chegar onde o Procore não chega.
+      </p>
+      <div class="strategy-highlight">
+        O gap técnico mais urgente não é feature —<br/>
+        é <strong>API pública + permissões granulares</strong>.<br/>
+        Esses dois itens destravam o mercado enterprise sem reconstruir o produto.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<div class="footer">
+  <div class="footer-brand">STICK<span>FRAME</span> · Análise Comparativa</div>
+  <div>Junho 2026 · Uso interno</div>
+</div>
+
+</body>
+</html>

@@ -330,11 +330,20 @@ const FORM_VAZIO = {
 };
 
 export default function CRM() {
-  useModuleLoad("clientes");
+  const loadClientes = useAppStore((s) => s.loadClientes);
+
+  // Always re-fetch on mount so deletions by other users are reflected
+  useEffect(() => {
+    useAppStore.setState((s) => ({ loaded: { ...s.loaded, clientes: false } }));
+    loadClientes();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const clientes       = useAppStore((s) => s.clientes);
   const addCliente     = useAppStore((s) => s.addCliente);
   const updateCliente  = useAppStore((s) => s.updateCliente);
   const setActivePage  = useAppStore((s) => s.setActivePage);
+  const userPerfil     = useAppStore((s) => s.user?.perfil);
 
   function abrirOrcamentoTecnico(c) {
     localStorage.setItem(CRM_LEAD_KEY, JSON.stringify({ id: c.id, nome: c.nome, area: c.unidades ? null : null }));
@@ -767,12 +776,12 @@ export default function CRM() {
       </div>
 
       {/* Layout principal */}
-      <div style={{ display: "grid", gridTemplateColumns: sel && view === "list" ? "1fr min(320px,100%)" : "1fr", gap: 18 }}>
+      <div style={{ display: "grid", gridTemplateColumns: sel && view === "list" ? "1fr min(min(320px, 42vw), 100%)" : "1fr", gap: 18 }}>
 
         {/* View Content */}
         <div>
           {view === "funnel" ? (
-            <div style={{ display: "flex", gap: 16, overflowX: "auto", paddingBottom: 16, minHeight: 600 }}>
+            <div style={{ display: "flex", gap: 12, overflowX: "auto", paddingBottom: 16 }}>
               {STATUS_OPTS.map(status => {
                 const clientesColuna = clientes.filter(c => c.status === status);
                 return (
@@ -791,7 +800,7 @@ export default function CRM() {
                       }
                     }}
                     style={{ 
-                      minWidth: 260, flex: 1, background: C.surface, borderRadius: 14, border: `1px solid ${C.border}`,
+                      width: 220, flexShrink: 0, background: C.surface, borderRadius: 14, border: `1px solid ${C.border}`,
                       display: "flex", flexDirection: "column"
                     }}
                   >
@@ -803,7 +812,7 @@ export default function CRM() {
                       <Badge label={clientesColuna.length.toString()} color={C.muted} />
                     </div>
                     
-                    <div style={{ padding: 12, display: "flex", flexDirection: "column", gap: 10, flex: 1, overflowY: "auto", maxHeight: "calc(100vh - 350px)" }}>
+                    <div style={{ padding: 12, display: "flex", flexDirection: "column", gap: 10, overflowY: "auto", minHeight: 120, maxHeight: "calc(100vh - 320px)" }}>
                       {clientesColuna.map(c => {
                         const atrasado = c.proximo_contato && c.proximo_contato <= hojeStr && status !== "Fechado" && status !== "Em execução";
                         return (
@@ -867,8 +876,8 @@ export default function CRM() {
                 )
               })}
 
-              {/* Zona lixeira — aparece só durante drag */}
-              {dragging && (
+              {/* Zona lixeira — aparece só durante drag, apenas para diretor */}
+              {dragging && userPerfil === "diretor" && (
                 <div
                   onDragOver={e => { e.preventDefault(); setTrashOver(true); }}
                   onDragLeave={() => setTrashOver(false)}
@@ -1127,14 +1136,16 @@ export default function CRM() {
 
             <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
               <Btn variant="ghost" size="sm" onClick={() => abrirEditar(cliente)} fullWidth><Pencil size={13} /> Editar</Btn>
-              <button onClick={() => setConfirm(true)} style={{
-                flex: 1, padding: "7px 0",
-                background: C.danger + "22", border: `1px solid ${C.danger}44`,
-                borderRadius: 6, color: C.danger, fontSize: 12,
-                fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
-              }}>
-                🗑 Deletar
-              </button>
+              {userPerfil === "diretor" && (
+                <button onClick={() => setConfirm(true)} style={{
+                  flex: 1, padding: "7px 0",
+                  background: C.danger + "22", border: `1px solid ${C.danger}44`,
+                  borderRadius: 6, color: C.danger, fontSize: 12,
+                  fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
+                }}>
+                  🗑 Deletar
+                </button>
+              )}
             </div>
 
             {cliente.contato && (

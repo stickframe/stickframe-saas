@@ -56,7 +56,7 @@ export async function gerarAlertas(empresaId) {
 
     // ── 3. Diário de obra sem registro há mais de 15 dias ──
     const { data: diarios } = await sb
-      .from("diario_obra")
+      .from("diario")
       .select("obra_id, data")
       .eq("empresa_id", empresaId)
       .order("data", { ascending: false });

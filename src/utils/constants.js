@@ -39,7 +39,10 @@ export const NAV = [
   { key: "equipamentos",       label: "Equipamentos",     icon: "Wrench" },
   { key: "checklists",         label: "Checklist SF",     icon: "CheckSquare" },
   { key: "equipe",             label: "Equipe",           icon: "HardHat" },
+  { key: "sst",               label: "SST",              icon: "ShieldAlert" },
+  { key: "suprimentos",       label: "Suprimentos",      icon: "PackageOpen" },
   { key: "inteligencia",       label: "Inteligência",     icon: "Brain", perfis: ["diretor", "engenheiro"] },
+  { key: "bi",                 label: "BI",               icon: "TrendingUp", perfis: ["diretor"] },
   { key: "configuracoes",      label: "Configurações",    icon: "Settings" },
 ];
 
@@ -48,7 +51,7 @@ export const PERFIS = {
   diretor: {
     label: "Diretor",
     cor: C.red,
-    paginas: ["dashboard","agenda","crm","orcamentos","obras","cronograma","medicoes","diario","vistorias","bim","quantitativos","financeiro","contratos","historico","fornecedores","monitor_precos","calculadora","orcamento_tecnico","equipamentos","checklists","equipe","inteligencia","configuracoes"],
+    paginas: ["dashboard","agenda","crm","orcamentos","obras","cronograma","medicoes","diario","vistorias","bim","quantitativos","financeiro","contratos","historico","fornecedores","monitor_precos","calculadora","orcamento_tecnico","equipamentos","checklists","equipe","sst","suprimentos","inteligencia","bi","configuracoes"],
   },
   comercial: {
     label: "Comercial",
@@ -60,7 +63,7 @@ export const PERFIS = {
     label: "Engenheiro",
     cor: "#4a9eff",
     // Foco em entrega: sem CRM, financeiro global ou pipeline comercial
-    paginas: ["dashboard","obras","cronograma","medicoes","diario","vistorias","bim","quantitativos","fornecedores","monitor_precos","calculadora","orcamento_tecnico","equipamentos","checklists","historico","inteligencia","configuracoes"],
+    paginas: ["dashboard","obras","cronograma","medicoes","diario","vistorias","bim","quantitativos","fornecedores","monitor_precos","calculadora","orcamento_tecnico","equipamentos","checklists","equipe","sst","suprimentos","historico","inteligencia","configuracoes"],
   },
   financeiro: {
     label: "Financeiro",

@@ -3,6 +3,7 @@ import { useDebounce } from "../hooks/useDebounce";
 import { C } from "../utils/constants";
 import useAppStore from "../store/useAppStore";
 import { useModuleLoad } from "../hooks/useModuleLoad";
+import { limparHistorico } from "../services/repositories/historicoRepository";
 
 const TIPO_CONFIG = {
   cliente:    { cor: "#2e9e5b", icone: "◈", label: "Cliente"    },
@@ -49,9 +50,17 @@ export default function Historico() {
 
   const tiposPermitidos = TIPOS_PERFIL[perfil] || null;
 
+  const setHistorico = useAppStore((s) => s.setHistorico || ((h) => {}));
+
   const [filtroTipo, setFiltroTipo] = useState("todos");
   const [busca,      setBusca]      = useState("");
   const [soMinhas,   setSoMinhas]   = useState(false);
+
+  async function handleLimpar() {
+    if (!confirm("Limpar todo o histórico? Esta ação não pode ser desfeita.")) return;
+    await limparHistorico();
+    window.location.reload();
+  }
   const buscaDebounced = useDebounce(busca, 300);
 
   const titulo = TITULO_PERFIL[perfil] || "Histórico de Atividades";
@@ -69,6 +78,7 @@ export default function Historico() {
     <div>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4, flexWrap: "wrap", gap: 8 }}>
         <h2 style={{ fontSize: 22, fontWeight: 800 }}>{titulo}</h2>
+        <div style={{ display: "flex", gap: 8 }}>
         {!tiposPermitidos && (
           <button onClick={() => setSoMinhas((v) => !v)} style={{
             padding: "7px 14px", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
@@ -79,6 +89,15 @@ export default function Historico() {
             {soMinhas ? "● Minhas atividades" : "○ Minhas atividades"}
           </button>
         )}
+        {!tiposPermitidos && (
+          <button onClick={handleLimpar} style={{
+            padding: "7px 14px", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
+            border: `1px solid ${C.danger}44`, background: C.danger + "18", color: C.danger,
+          }}>
+            🗑 Limpar histórico
+          </button>
+        )}
+        </div>
       </div>
       <p style={{ color: C.muted, fontSize: 13, marginBottom: 22 }}>
         {itens.length} {itens.length !== historico.length ? `de ${historico.length} ` : ""}registro{itens.length !== 1 ? "s" : ""} no sistema

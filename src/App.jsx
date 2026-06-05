@@ -56,7 +56,6 @@ const CalculadoraPublica   = lazyWithRetry(() => import("./pages/CalculadoraPubl
 const AnalisePublica       = lazyWithRetry(() => import("./pages/AnalisePublica"));
 const ConcorrenciaPublica  = lazyWithRetry(() => import("./pages/ConcorrenciaPublica"));
 const PontoColaborador     = lazyWithRetry(() => import("./pages/PontoColaborador"));
-const PortalColaborador    = lazyWithRetry(() => import("./pages/PortalColaborador"));
 const AmbienteQR           = lazyWithRetry(() => import("./pages/AmbienteQR"));
 const PainelQR             = lazyWithRetry(() => import("./pages/PainelQR"));
 const BI                   = lazyWithRetry(() => import("./pages/BI"));

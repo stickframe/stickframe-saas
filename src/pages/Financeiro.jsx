@@ -6,10 +6,14 @@ import { fmt, fmtPct } from "../utils/format";
 import { exportarFinanceiroExcel } from "../utils/exportExcel";
 import useAppStore from "../store/useAppStore";
 import { useModuleLoad } from "../hooks/useModuleLoad";
+import { DRE } from "../components/financeiro/DRE";
+import { FluxoCaixa as FluxoCaixaMensal } from "../components/financeiro/FluxoCaixa";
 import Btn from "../components/ui/Btn";
 import Input from "../components/ui/Input";
 import Select from "../components/ui/Select";
 import Modal from "../components/ui/Modal";
+import { ImportCSV } from "../components/ui/ImportCSV";
+import { sb, getEmpresaId } from "../services/supabase";
 
 // ─── Fluxo de Caixa Dinâmico ─────────────────────────────────────────────────
 function FluxoCaixa({ lancamentos }) {
@@ -262,22 +266,231 @@ function FormLancamento({ tipo, form, setForm, onSave, onCancel }) {
 // ─── Financeiro ───────────────────────────────────────────────────────────────
 const FORM_VAZIO = { categoria: "Materiais", valor: "", data: "", descricao: "", data_vencimento: "" };
 
+function FolhaPagamento({ folhaMes, setFolhaMes, folhaDados, folhaLoading, folhaPagos, setFolhaPagos, colaboradores, C, addLancamento }) {
+
+  async function marcarPago(c) {
+    const col = (colaboradores || []).find(x => x.id === c.id || x.nome === c.nome);
+    const tipoContrato = col?.tipo_contrato || "CLT";
+    if (tipoContrato === "Empreiteiro") return; // não aplica
+
+    const sal = col?.salario || 0;
+    const valProd = col?.valor_producao || 0;
+
+    // Obra com mais horas no período
+    const obraHoras = {};
+    (c.pontos || []).forEach(p => {
+      if (p.obra_id) obraHoras[p.obra_id] = (obraHoras[p.obra_id] || 0) + 1;
+    });
+    const obraId = Object.entries(obraHoras).sort((a, b) => b[1] - a[1])[0]?.[0] || null;
+
+    // Valor a lançar
+    let valor = 0;
+    if (tipoContrato === "CLT") {
+      valor = sal; // salário integral
+    } else if (tipoContrato === "Horista") {
+      valor = c.totalHoras * (valProd || (sal / 220)); // valor/hora × horas
+    }
+
+    if (valor > 0 && obraId && addLancamento) {
+      const [ano, mes] = folhaMes.split("-");
+      await addLancamento(obraId, {
+        tipo: "despesa",
+        categoria: "Mão de Obra",
+        descricao: `Salário — ${c.nome} — ${mes}/${ano}`,
+        valor,
+        data: new Date().toISOString().slice(0, 10),
+      });
+    }
+
+    setFolhaPagos(p => ({ ...p, [c.id]: true }));
+  }
+
+  function imprimirHolerite(c) {
+    const col = (colaboradores || []).find(x => x.id === c.id || x.nome === c.nome);
+    const sal = col?.salario || 0;
+    const valor = sal ? (sal / 26) * c.diasTrabalhados : 0;
+    const w = window.open("", "_blank", "width=600,height=700");
+    w.document.write(`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+      <title>Holerite — ${c.nome}</title>
+      <style>
+        body{font-family:Arial,sans-serif;margin:0;padding:32px;color:#1a1a1a}
+        .logo{font-size:20px;font-weight:900;letter-spacing:3px;margin-bottom:4px}
+        .logo span{color:#981915}
+        h2{margin:24px 0 4px}
+        table{width:100%;border-collapse:collapse;margin-top:16px;font-size:13px}
+        th{background:#f0f0f3;padding:8px 12px;text-align:left;font-size:11px;color:#6b7280}
+        td{padding:8px 12px;border-bottom:1px solid #e4e4ea}
+        .total{font-size:18px;font-weight:800;color:#2e9e5b;margin-top:24px}
+        @media print{button{display:none}}
+      </style></head><body>
+      <div class="logo">STICK<span>FRAME</span></div>
+      <div style="font-size:11px;color:#6b7280">HOLERITE</div>
+      <h2>${c.nome}</h2>
+      <div style="font-size:13px;color:#6b7280">Competência: ${folhaMes}</div>
+      <table>
+        <thead><tr><th>ITEM</th><th style="text-align:right">VALOR</th></tr></thead>
+        <tbody>
+          <tr><td>Dias trabalhados</td><td style="text-align:right">${c.diasTrabalhados}</td></tr>
+          <tr><td>Horas totais</td><td style="text-align:right">${c.totalHoras.toFixed(1)}h</td></tr>
+          <tr><td>Salário base</td><td style="text-align:right">R$ ${sal.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})}</td></tr>
+        </tbody>
+      </table>
+      <div class="total">Valor a pagar: R$ ${valor.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
+      <div style="margin-top:40px;font-size:11px;color:#6b7280">Gerado em ${new Date().toLocaleDateString("pt-BR")} · StickFrame</div>
+      <br><button onclick="window.print()">🖨️ Imprimir</button>
+    </body></html>`);
+    w.document.close();
+  }
+
+  const totalColabs = folhaDados.length;
+  const totalHoras  = folhaDados.reduce((a, c) => a + c.totalHoras, 0);
+  const totalPagar  = folhaDados.reduce((a, c) => {
+    const col = (colaboradores || []).find(x => x.id === c.id || x.nome === c.nome);
+    const sal = col?.salario || 0;
+    return a + (sal ? (sal / 26) * c.diasTrabalhados : 0);
+  }, 0);
+
+  return (
+    <div>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
+        <span style={{ fontSize: 12, color: C.muted }}>Competência:</span>
+        <input type="month" value={folhaMes} onChange={e => setFolhaMes(e.target.value)}
+          style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 8, color: C.text, fontSize: 13, padding: "6px 12px", fontFamily: "inherit" }} />
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12, marginBottom: 20 }}>
+        {[
+          { label: "Colaboradores", value: totalColabs, color: C.border },
+          { label: "Horas Totais",  value: `${totalHoras.toFixed(1)}h`, color: C.warning },
+          { label: "Total a Pagar", value: `R$ ${totalPagar.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})}`, color: C.success },
+        ].map((k, i) => (
+          <div key={i} style={{ background: C.surface, borderRadius: 14, padding: "16px 18px", border: `1px solid ${C.border}`, borderTop: `3px solid ${k.color}` }}>
+            <div style={{ fontSize: 10, color: C.muted, letterSpacing: 1, marginBottom: 8 }}>{k.label.toUpperCase()}</div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: k.color === C.border ? C.text : k.color }}>{k.value}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{ background: C.surface, borderRadius: 14, border: `1px solid ${C.border}`, overflow: "hidden" }}>
+        {folhaLoading ? (
+          <div style={{ padding: 40, textAlign: "center", color: C.muted }}>Carregando pontos…</div>
+        ) : folhaDados.length === 0 ? (
+          <div style={{ padding: 40, textAlign: "center", color: C.muted }}>Nenhum ponto registrado neste período.</div>
+        ) : (
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+            <thead>
+              <tr>
+                {["Nome","Dias","Horas","Salário Base","A Pagar","Status","Ações"].map(h => (
+                  <th key={h} style={{ padding: "10px 14px", textAlign: "left", fontSize: 10, color: C.muted, letterSpacing: 1, background: C.darker, borderBottom: `1px solid ${C.border}` }}>{h.toUpperCase()}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {folhaDados.map(c => {
+                const col   = (colaboradores || []).find(x => x.id === c.id || x.nome === c.nome);
+                const sal   = col?.salario || 0;
+                const valor = sal ? (sal / 26) * c.diasTrabalhados : 0;
+                const pago  = !!folhaPagos[c.id];
+                return (
+                  <tr key={c.id} style={{ borderBottom: `1px solid ${C.border}`, opacity: pago ? 0.7 : 1 }}>
+                    <td style={{ padding: "10px 14px", fontWeight: 600 }}>{c.nome || c.id}</td>
+                    <td style={{ padding: "10px 14px", color: C.muted }}>{c.diasTrabalhados}</td>
+                    <td style={{ padding: "10px 14px", color: C.muted }}>{c.totalHoras.toFixed(1)}h</td>
+                    <td style={{ padding: "10px 14px", color: C.muted }}>{sal ? `R$ ${sal.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})}` : "—"}</td>
+                    <td style={{ padding: "10px 14px", fontWeight: 700, color: C.success }}>{valor ? `R$ ${valor.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})}` : "—"}</td>
+                    <td style={{ padding: "10px 14px" }}>
+                      {pago
+                        ? <span style={{ background: C.success+"22", color: C.success, padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700 }}>✅ Pago</span>
+                        : <span style={{ background: C.warning+"22", color: C.warning, padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700 }}>Pendente</span>}
+                    </td>
+                    <td style={{ padding: "10px 14px" }}>
+                      <div style={{ display: "flex", gap: 6 }}>
+                        {!pago && col?.tipo_contrato !== "Empreiteiro" && (
+                          <button onClick={() => marcarPago(c)} style={{ padding: "5px 10px", borderRadius: 7, border: `1px solid ${C.success}`, background: C.success+"18", color: C.success, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>Marcar pago</button>
+                        )}
+                        {col?.tipo_contrato === "Empreiteiro" && !pago && (
+                          <span style={{ fontSize: 11, color: C.muted }}>Via medição</span>
+                        )}
+                        <button onClick={() => imprimirHolerite(c)} style={{ padding: "5px 10px", borderRadius: 7, border: `1px solid ${C.border}`, background: "transparent", color: C.muted, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>🖨️ Holerite</button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function Financeiro() {
   useModuleLoad("obras");
   useModuleLoad("financeiro");
+  useModuleLoad("colaboradores");
 
   const obras         = useAppStore((s) => s.obras);
   const financeiro    = useAppStore((s) => s.financeiro);
+  const colaboradores = useAppStore((s) => s.colaboradores);
   const addLancamento = useAppStore((s) => s.addLancamento);
   const updateObra    = useAppStore((s) => s.updateObra);
 
   const [obraId,      setObraId]      = useState(null);
-  const [finTab,      setFinTab]      = useState("lancamentos"); // "lancamentos" | "fluxo"
+  const [finTab,      setFinTab]      = useState("lancamentos"); // "lancamentos" | "fluxo" | "dre" | "fluxo-mensal" | "folha"
   const [modal,       setModal]       = useState(null); // "receita" | "despesa"
   const [form,        setForm]        = useState(FORM_VAZIO);
   const { toast, mostrarToast } = useToast();
   const [editOrc,     setEditOrc]     = useState(false); // editar orçamento por categoria
   const [orcForm,     setOrcForm]     = useState({});    // { [categoria]: valor }
+  const [showImportFinanceiro, setShowImportFinanceiro] = useState(false);
+
+  // ── Folha de Pagamento ──────────────────────────────────────────────────────
+  const [folhaMes, setFolhaMes] = useState(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
+  });
+  const [folhaDados,   setFolhaDados]   = useState([]);
+  const [folhaLoading, setFolhaLoading] = useState(false);
+  const [folhaPagos,   setFolhaPagos]   = useState({}); // { colaboradorId: true }
+
+  useEffect(() => {
+    if (finTab !== "folha") return;
+    setFolhaLoading(true);
+    const [ano, mes] = folhaMes.split("-").map(Number);
+    const inicio = new Date(ano, mes-1, 1).toISOString();
+    const fim    = new Date(ano, mes,   1).toISOString();
+    sb.from("pontos")
+      .select("colaborador_id, nome, tipo, created_at, obra_id")
+      .gte("created_at", inicio)
+      .lt("created_at", fim)
+      .order("created_at")
+      .then(({ data }) => {
+        const byColab = {};
+        (data || []).forEach(p => {
+          if (!byColab[p.colaborador_id]) byColab[p.colaborador_id] = { id: p.colaborador_id, nome: p.nome, pontos: [] };
+          byColab[p.colaborador_id].pontos.push(p);
+        });
+        setFolhaDados(Object.values(byColab).map(c => {
+          const days = {};
+          c.pontos.forEach(p => {
+            const d = new Date(p.created_at).toLocaleDateString("pt-BR");
+            if (!days[d]) days[d] = [];
+            days[d].push(p);
+          });
+          let totalHoras = 0, diasTrabalhados = 0;
+          Object.values(days).forEach(dayPontos => {
+            const sorted = dayPontos.sort((a,b) => new Date(a.created_at)-new Date(b.created_at));
+            let last = null, dayHoras = 0;
+            sorted.forEach(p => {
+              if (p.tipo === "entrada") last = new Date(p.created_at);
+              else if (p.tipo === "saida" && last) { dayHoras += (new Date(p.created_at)-last)/3600000; last=null; }
+            });
+            if (dayHoras > 0) { totalHoras += dayHoras; diasTrabalhados++; }
+          });
+          return { ...c, totalHoras, diasTrabalhados, pontos: c.pontos };
+        }));
+        setFolhaLoading(false);
+      });
+  }, [finTab, folhaMes]);
 
   function exportarRelatorio() {
     const o   = obras.find((x) => x.id === obraId);
@@ -322,9 +535,9 @@ export default function Financeiro() {
       </div>
     </div>
     <div class="kpis">
-      <div class="kpi"><div class="label">RECEITAS</div><div class="value" style="color:#2e9e5b">R$ ${rec.toLocaleString("pt-BR",{minimumFractionDigits:2})}</div></div>
-      <div class="kpi"><div class="label">DESPESAS</div><div class="value" style="color:#c0392b">R$ ${dep.toLocaleString("pt-BR",{minimumFractionDigits:2})}</div></div>
-      <div class="kpi"><div class="label">SALDO</div><div class="value" style="color:${rec-dep>=0?"#2e9e5b":"#c0392b"}">R$ ${(rec-dep).toLocaleString("pt-BR",{minimumFractionDigits:2})}</div></div>
+      <div class="kpi"><div class="label">RECEITAS</div><div class="value" style="color:#2e9e5b">R$ ${rec.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})}</div></div>
+      <div class="kpi"><div class="label">DESPESAS</div><div class="value" style="color:#c0392b">R$ ${dep.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})}</div></div>
+      <div class="kpi"><div class="label">SALDO</div><div class="value" style="color:${rec-dep>=0?"#2e9e5b":"#c0392b"}">R$ ${(rec-dep).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})}</div></div>
     </div>
     <table><thead><tr><th>DATA</th><th>TIPO</th><th>CATEGORIA</th><th>DESCRIÇÃO</th><th style="text-align:right">VALOR</th></tr></thead>
     <tbody>${rows || '<tr><td colspan="5" style="text-align:center;color:#6b7280;padding:24px">Nenhum lançamento</td></tr>'}</tbody></table>
@@ -451,6 +664,36 @@ export default function Financeiro() {
         </Modal>
       )}
 
+      {showImportFinanceiro && (
+        <ImportCSV
+          titulo="Lançamentos"
+          campos={[
+            { key: "descricao", label: "Descrição", required: true },
+            { key: "valor", label: "Valor", required: true, aliases: ["value", "amount"] },
+            { key: "tipo", label: "Tipo (receita/despesa)", aliases: ["type"] },
+            { key: "data", label: "Data", aliases: ["date", "vencimento"] },
+            { key: "categoria", label: "Categoria" },
+          ]}
+          onImportar={async (rows) => {
+            let ok = 0, erro = 0;
+            for (const row of rows) {
+              const valor = parseFloat(String(row.valor || "0").replace(/[^\d.,]/g, "").replace(",", ".")) || 0;
+              const { error } = await sb.from("financeiro").insert({
+                descricao: row.descricao,
+                valor,
+                tipo: row.tipo?.toLowerCase().includes("receita") ? "receita" : "despesa",
+                data: row.data || new Date().toISOString().split("T")[0],
+                categoria: row.categoria || "Outros",
+                empresa_id: getEmpresaId(),
+              });
+              if (error) erro++; else ok++;
+            }
+            return { ok, erro };
+          }}
+          onClose={() => setShowImportFinanceiro(false)}
+        />
+      )}
+
       <div>
         {/* Header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 22, flexWrap: "wrap", gap: 12 }}>
@@ -471,6 +714,12 @@ export default function Financeiro() {
               color: "#4a9eff", fontSize: 12, fontWeight: 700,
               cursor: "pointer", fontFamily: "inherit",
             }}>📄 Exportar PDF</button>
+            <button onClick={() => setShowImportFinanceiro(true)} style={{
+              padding: "8px 16px", background: "#8b5cf622",
+              border: "1px solid #8b5cf644", borderRadius: 8,
+              color: "#8b5cf6", fontSize: 12, fontWeight: 700,
+              cursor: "pointer", fontFamily: "inherit",
+            }}>⬆️ Importar CSV</button>
             <Btn
               onClick={() => abrirModal("receita")}
               style={{ background: C.success + "22", border: `1px solid ${C.success}44`, color: C.success }}
@@ -522,7 +771,7 @@ export default function Financeiro() {
 
         {/* Tabs */}
         <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
-          {[["lancamentos", "📊 Análise"], ["fluxo", "📅 Fluxo de Caixa"]].map(([k, label]) => (
+          {[["lancamentos", "📊 Análise"], ["fluxo", "📅 Fluxo de Caixa"], ["dre", "📊 DRE"], ["fluxo-mensal", "💸 Fluxo Mensal"], ["folha", "💰 Folha"]].map(([k, label]) => (
             <button key={k} onClick={() => setFinTab(k)} style={{
               padding: "7px 16px", borderRadius: 8, border: `1px solid ${finTab === k ? C.red : C.border}`,
               background: finTab === k ? C.red + "18" : "transparent",
@@ -532,8 +781,20 @@ export default function Financeiro() {
           ))}
         </div>
 
-        {finTab === "fluxo" ? (
+        {finTab === "dre" ? (
+          <DRE obraId={obraId} />
+        ) : finTab === "fluxo-mensal" ? (
+          <FluxoCaixaMensal obraId={obraId} />
+        ) : finTab === "fluxo" ? (
           <FluxoCaixa lancamentos={Object.values(financeiro).flatMap((f) => f.lancamentos || [])} />
+        ) : finTab === "folha" ? (
+          <FolhaPagamento
+            folhaMes={folhaMes} setFolhaMes={setFolhaMes}
+            folhaDados={folhaDados} folhaLoading={folhaLoading}
+            folhaPagos={folhaPagos} setFolhaPagos={setFolhaPagos}
+            colaboradores={colaboradores} C={C}
+            addLancamento={addLancamento}
+          />
         ) : (<>
 
         {/* KPIs */}
@@ -722,7 +983,7 @@ export default function Financeiro() {
         )}
 
         {/* Grid: gráfico + extrato */}
-        <div style={{ display: "grid", gridTemplateColumns: "300px 1fr", gap: 18 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 18 }}>
 
           {/* Desvio por categoria */}
           <div style={{ background: C.surface, borderRadius: 14, padding: 20, border: `1px solid ${C.border}` }}>
@@ -857,6 +1118,156 @@ export default function Financeiro() {
           </div>
         </div>
       </>)} {/* end finTab === "lancamentos" */}
+
+      {/* bloco folha removido — renderizado via ternário acima */}
+      {false && (() => {
+        const totalColabs = folhaDados.length;
+        const totalHoras  = folhaDados.reduce((a, c) => a + c.totalHoras, 0);
+        const totalPagar  = folhaDados.reduce((a, c) => {
+          const col = (colaboradores || []).find(x => x.id === c.id || x.nome === c.nome);
+          const sal = col?.salario || 0;
+          return a + (sal ? (sal / 26) * c.diasTrabalhados : 0);
+        }, 0);
+
+        function imprimirHolerite(c) {
+          const col = (colaboradores || []).find(x => x.id === c.id || x.nome === c.nome);
+          const sal = col?.salario || 0;
+          const valor = sal ? (sal / 26) * c.diasTrabalhados : 0;
+          const w = window.open("", "_blank", "width=600,height=700");
+          w.document.write(`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+            <title>Holerite — ${c.nome}</title>
+            <style>
+              body{font-family:Arial,sans-serif;margin:0;padding:32px;color:#1a1a1a}
+              .logo{font-size:20px;font-weight:900;letter-spacing:3px;margin-bottom:4px}
+              .logo span{color:#981915}
+              h2{margin:24px 0 4px}
+              table{width:100%;border-collapse:collapse;margin-top:16px;font-size:13px}
+              th{background:#f0f0f3;padding:8px 12px;text-align:left;font-size:11px;color:#6b7280}
+              td{padding:8px 12px;border-bottom:1px solid #e4e4ea}
+              .total{font-size:18px;font-weight:800;color:#2e9e5b;margin-top:24px}
+              @media print{button{display:none}}
+            </style></head><body>
+            <div class="logo">STICK<span>FRAME</span></div>
+            <div style="font-size:11px;color:#6b7280">HOLERITE</div>
+            <h2>${c.nome}</h2>
+            <div style="font-size:13px;color:#6b7280">Competência: ${folhaMes}</div>
+            <table>
+              <thead><tr><th>ITEM</th><th style="text-align:right">VALOR</th></tr></thead>
+              <tbody>
+                <tr><td>Dias trabalhados</td><td style="text-align:right">${c.diasTrabalhados}</td></tr>
+                <tr><td>Horas totais</td><td style="text-align:right">${c.totalHoras.toFixed(1)}h</td></tr>
+                <tr><td>Salário base</td><td style="text-align:right">R$ ${sal.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})}</td></tr>
+              </tbody>
+            </table>
+            <div class="total">Valor a pagar: R$ ${valor.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
+            <div style="margin-top:40px;font-size:11px;color:#6b7280">Gerado em ${new Date().toLocaleDateString("pt-BR")} · StickFrame</div>
+            <br><button onclick="window.print()">🖨️ Imprimir</button>
+          </body></html>`);
+          w.document.close();
+        }
+
+        return (
+          <div>
+            {/* Seletor de mês */}
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
+              <span style={{ fontSize: 12, color: C.muted }}>Competência:</span>
+              <input
+                type="month"
+                value={folhaMes}
+                onChange={e => setFolhaMes(e.target.value)}
+                style={{
+                  background: C.surface, border: `1px solid ${C.border}`, borderRadius: 8,
+                  color: C.text, fontSize: 13, padding: "6px 12px", fontFamily: "inherit",
+                }}
+              />
+            </div>
+
+            {/* KPI summary */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12, marginBottom: 20 }}>
+              {[
+                { label: "Colaboradores", value: totalColabs, color: C.border },
+                { label: "Horas Totais",  value: `${totalHoras.toFixed(1)}h`, color: C.warning },
+                { label: "Total a Pagar", value: `R$ ${totalPagar.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})}`, color: C.success },
+              ].map((k, i) => (
+                <div key={i} style={{
+                  background: C.surface, borderRadius: 14, padding: "16px 18px",
+                  border: `1px solid ${C.border}`, borderTop: `3px solid ${k.color}`,
+                }}>
+                  <div style={{ fontSize: 10, color: C.muted, letterSpacing: 1, marginBottom: 8 }}>{k.label.toUpperCase()}</div>
+                  <div style={{ fontSize: 18, fontWeight: 800, color: k.color === C.border ? C.text : k.color }}>{k.value}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Table */}
+            <div style={{ background: C.surface, borderRadius: 14, border: `1px solid ${C.border}`, overflow: "hidden" }}>
+              {folhaLoading ? (
+                <div style={{ padding: 40, textAlign: "center", color: C.muted }}>Carregando pontos…</div>
+              ) : folhaDados.length === 0 ? (
+                <div style={{ padding: 40, textAlign: "center", color: C.muted }}>Nenhum ponto registrado neste período.</div>
+              ) : (
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                  <thead>
+                    <tr>
+                      {["Nome", "Dias Trabalhados", "Horas Totais", "Salário Base", "Valor a Pagar", "Status", "Ações"].map(h => (
+                        <th key={h} style={{
+                          padding: "10px 14px", textAlign: "left",
+                          fontSize: 10, color: C.muted, letterSpacing: 1,
+                          background: C.darker, borderBottom: `1px solid ${C.border}`,
+                        }}>{h.toUpperCase()}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {folhaDados.map(c => {
+                      const col   = (colaboradores || []).find(x => x.id === c.id || x.nome === c.nome);
+                      const sal   = col?.salario || 0;
+                      const valor = sal ? (sal / 26) * c.diasTrabalhados : 0;
+                      const pago  = !!folhaPagos[c.id];
+                      return (
+                        <tr key={c.id} style={{ borderBottom: `1px solid ${C.border}`, opacity: pago ? 0.7 : 1 }}>
+                          <td style={{ padding: "10px 14px", fontWeight: 600 }}>{c.nome || c.id}</td>
+                          <td style={{ padding: "10px 14px", color: C.muted }}>{c.diasTrabalhados}</td>
+                          <td style={{ padding: "10px 14px", color: C.muted }}>{c.totalHoras.toFixed(1)}h</td>
+                          <td style={{ padding: "10px 14px", color: C.muted }}>
+                            {sal ? `R$ ${sal.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})}` : "—"}
+                          </td>
+                          <td style={{ padding: "10px 14px", fontWeight: 700, color: C.success }}>
+                            {valor ? `R$ ${valor.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})}` : "—"}
+                          </td>
+                          <td style={{ padding: "10px 14px" }}>
+                            {pago
+                              ? <span style={{ background: C.success+"22", color: C.success, padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700 }}>✅ Pago</span>
+                              : <span style={{ background: C.warning+"22", color: C.warning, padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700 }}>Pendente</span>
+                            }
+                          </td>
+                          <td style={{ padding: "10px 14px" }}>
+                            <div style={{ display: "flex", gap: 6 }}>
+                              {!pago && (
+                                <button onClick={() => setFolhaPagos(p => ({ ...p, [c.id]: true }))} style={{
+                                  padding: "5px 10px", borderRadius: 7, border: `1px solid ${C.success}`,
+                                  background: C.success+"18", color: C.success, fontSize: 11,
+                                  fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
+                                }}>Marcar pago</button>
+                              )}
+                              <button onClick={() => imprimirHolerite(c)} style={{
+                                padding: "5px 10px", borderRadius: 7, border: `1px solid ${C.border}`,
+                                background: "transparent", color: C.muted, fontSize: 11,
+                                fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
+                              }}>🖨️ Holerite</button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
+        );
+      })()}
+
       </div>
     </>
   );

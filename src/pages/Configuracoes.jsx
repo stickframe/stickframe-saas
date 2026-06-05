@@ -1,16 +1,21 @@
 import { useState, useEffect, useRef } from "react";
+import { sb } from "../services/supabase";
 import { TrendingUp } from "../components/ui/Icon";
 import * as Sentry from "@sentry/react";
 import { useToast } from "../hooks/useToast";
 import { C, PERFIS } from "../utils/constants";
+import PerfisCustomizados from "../components/configuracoes/PerfisCustomizados";
 import useAppStore from "../store/useAppStore";
 import {
   buscarEmpresa, atualizarEmpresa, uploadLogoEmpresa,
   listarUsuariosEmpresa, atualizarPerfil, trocarSenha,
+  atualizarPerfilUsuario, convidarUsuario,
 } from "../services/repositories/empresaRepository";
+import { hasSavedCredential, removeBiometric, isWebAuthnAvailable } from "../services/webAuthnService";
 import Btn from "../components/ui/Btn";
 import Input from "../components/ui/Input";
 import Select from "../components/ui/Select";
+import WebhookConfig from "../components/configuracoes/WebhookConfig";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 function LabelF({ children, required }) {
@@ -76,23 +81,45 @@ export default function Configuracoes() {
   const [senhaForm, setSenhaForm] = useState({ nova: "", confirmar: "" });
   const [showSenha, setShowSenha] = useState(false);
 
+  // Biometria
+  const [biometriaAtiva, setBiometriaAtiva] = useState(false);
+  const [webAuthnDisponivel, setWebAuthnDisponivel] = useState(false);
+
+  // Convidar usuário
+  const [showConvite, setShowConvite] = useState(false);
+  const [convite, setConvite] = useState({ email: "", nome: "", perfil: "comercial" });
+  const [convidando, setConvidando] = useState(false);
+
+  // API Key
+  const [apiKey, setApiKey] = useState("");
+  const [apiKeyCreatedAt, setApiKeyCreatedAt] = useState(null);
+  const [apiKeyRevealed, setApiKeyRevealed] = useState(false);
+  const [gerandoChave, setGerandoChave] = useState(false);
+
+  // Perfis customizados (para dropdown de usuários)
+  const perfisCustomizados = useAppStore((s) => s.perfisCustomizados);
+
 
 
   // ── Carrega dados ─────────────────────────────────────────────────────────
   useEffect(() => {
     if (!empresaId) return;
     buscarEmpresa().then((data) => {
-      if (data) setEmpresa({
-        nome:     data.nome      || "",
-        cnpj:     data.cnpj      || "",
-        cidade:   data.cidade    || "",
-        telefone: data.telefone  || "",
-        email:    data.email     || "",
-        segmento: data.segmento  || "",
-        site:             data.site             || "",
-        logo_url:         data.logo_url         || "",
-        whatsapp_alertas: data.whatsapp_alertas || "",
-      });
+      if (data) {
+        setEmpresa({
+          nome:     data.nome      || "",
+          cnpj:     data.cnpj      || "",
+          cidade:   data.cidade    || "",
+          telefone: data.telefone  || "",
+          email:    data.email     || "",
+          segmento: data.segmento  || "",
+          site:             data.site             || "",
+          logo_url:         data.logo_url         || "",
+          whatsapp_alertas: data.whatsapp_alertas || "",
+        });
+        if (data.api_key) setApiKey(data.api_key);
+        if (data.api_key_created_at) setApiKeyCreatedAt(data.api_key_created_at);
+      }
     }).catch(() => {});
     listarUsuariosEmpresa().then((data) => { if (data) setUsuarios(data); }).catch(() => {});
   }, [empresaId]);
@@ -100,6 +127,11 @@ export default function Configuracoes() {
   useEffect(() => {
     if (user) setPerfil({ nome: user.nome || "", cargo: user.cargo || "" });
   }, [user]);
+
+  useEffect(() => {
+    isWebAuthnAvailable().then(setWebAuthnDisponivel).catch(() => {});
+    setBiometriaAtiva(hasSavedCredential());
+  }, []);
 
   // ── Logo ─────────────────────────────────────────────────────────────────
   function handleLogoChange(e) {
@@ -160,6 +192,74 @@ export default function Configuracoes() {
     } finally { setSaving(false); }
   }
 
+  async function handleAlterarPerfil(uid, novoPerfil) {
+    try {
+      await atualizarPerfilUsuario(uid, { perfil: novoPerfil });
+      setUsuarios((prev) => prev.map((u) => u.id === uid ? { ...u, perfil: novoPerfil } : u));
+      mostrarToast("✅ Perfil atualizado!");
+    } catch (e) {
+      mostrarToast("Erro: " + e.message, true);
+    }
+  }
+
+  async function handleToggleAtivo(uid, ativoAtual) {
+    try {
+      await atualizarPerfilUsuario(uid, { ativo: !ativoAtual });
+      setUsuarios((prev) => prev.map((u) => u.id === uid ? { ...u, ativo: !ativoAtual } : u));
+      mostrarToast(!ativoAtual ? "✅ Usuário ativado!" : "✅ Usuário desativado!");
+    } catch (e) {
+      mostrarToast("Erro: " + e.message, true);
+    }
+  }
+
+  async function handleConvidarUsuario() {
+    if (!convite.email || !convite.nome) return;
+    setConvidando(true);
+    try {
+      await convidarUsuario(convite.email, convite.nome, convite.perfil);
+      setShowConvite(false);
+      setConvite({ email: "", nome: "", perfil: "comercial" });
+      mostrarToast("✅ Convite enviado!");
+      listarUsuariosEmpresa().then((data) => { if (data) setUsuarios(data); }).catch(() => {});
+    } catch (e) {
+      mostrarToast("Erro: " + e.message, true);
+    } finally {
+      setConvidando(false);
+    }
+  }
+
+  async function handleRemoverBiometria() {
+    try {
+      removeBiometric();
+      setBiometriaAtiva(false);
+      mostrarToast("✅ Biometria removida!");
+    } catch (e) {
+      mostrarToast("Erro: " + e.message, true);
+    }
+  }
+
+  async function gerarApiKey() {
+    setGerandoChave(true);
+    try {
+      const { data: newKey, error: rpcError } = await sb.rpc("generate_api_key");
+      if (rpcError) throw rpcError;
+      const now = new Date().toISOString();
+      const { error: updateError } = await sb
+        .from("empresas")
+        .update({ api_key: newKey, api_key_created_at: now })
+        .eq("id", empresaId);
+      if (updateError) throw updateError;
+      setApiKey(newKey);
+      setApiKeyCreatedAt(now);
+      setApiKeyRevealed(true);
+      mostrarToast("✅ Nova chave gerada com sucesso!");
+    } catch (e) {
+      mostrarToast("❌ Erro ao gerar chave: " + e.message, true);
+    } finally {
+      setGerandoChave(false);
+    }
+  }
+
   const logoAtual = logoPreview || empresa.logo_url;
   const senhaOk   = senhaForm.nova.length >= 6 && senhaForm.nova === senhaForm.confirmar;
 
@@ -187,6 +287,12 @@ export default function Configuracoes() {
         <Tab label="👥 Usuários"  active={tab === "usuarios"} onClick={() => setTab("usuarios")} />
         <Tab label="⚙️ Sistema"   active={tab === "sistema"}  onClick={() => setTab("sistema")} />
         <Tab label="🤖 Robô IA"   active={tab === "ia"}       onClick={() => setTab("ia")} />
+        {user?.perfil === "diretor" && (
+          <Tab label="🔗 Webhooks" active={tab === "webhooks"} onClick={() => setTab("webhooks")} />
+        )}
+        {user?.perfil === "diretor" && (
+          <Tab label="🌐 API"      active={tab === "api"}      onClick={() => setTab("api")} />
+        )}
       </div>
 
       {/* ══ Aba: Empresa ══ */}
@@ -355,6 +461,23 @@ export default function Configuracoes() {
             </div>
           </Card>
 
+          {webAuthnDisponivel && (
+            <Card title="Biometria / Autenticação por dispositivo">
+              {biometriaAtiva ? (
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+                  <span style={{
+                    fontSize: 13, fontWeight: 700, padding: "6px 14px", borderRadius: 20,
+                    background: C.success + "18", color: C.success,
+                    border: `1px solid ${C.success}44`,
+                  }}>🔐 Biometria ativa neste dispositivo</span>
+                  <Btn variant="ghost" onClick={handleRemoverBiometria}>Remover biometria</Btn>
+                </div>
+              ) : (
+                <div style={{ fontSize: 13, color: C.muted }}>Biometria não ativada neste dispositivo</div>
+              )}
+            </Card>
+          )}
+
           {/* Trocar senha */}
           <Card title="Alterar senha" subtitle="Sua nova senha deve ter pelo menos 6 caracteres.">
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -418,7 +541,56 @@ export default function Configuracoes() {
       {/* ══ Aba: Usuários ══ */}
       {tab === "usuarios" && (
         <>
+          {showConvite && (
+            <div style={{
+              position: "fixed", inset: 0, background: "#0008", zIndex: 1000,
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }} onClick={() => setShowConvite(false)}>
+              <div onClick={(e) => e.stopPropagation()} style={{
+                background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16,
+                padding: "28px 32px", width: 400, maxWidth: "90vw",
+              }}>
+                <div style={{ fontSize: 16, fontWeight: 800, marginBottom: 20 }}>Convidar usuário</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                  <div>
+                    <LabelF required>E-mail</LabelF>
+                    <Input type="email" value={convite.email} onChange={(v) => setConvite((f) => ({ ...f, email: v }))} placeholder="usuario@email.com" />
+                  </div>
+                  <div>
+                    <LabelF required>Nome</LabelF>
+                    <Input value={convite.nome} onChange={(v) => setConvite((f) => ({ ...f, nome: v }))} placeholder="Nome completo" />
+                  </div>
+                  <div>
+                    <LabelF>Perfil</LabelF>
+                    <Select
+                      value={convite.perfil}
+                      onChange={(v) => setConvite((f) => ({ ...f, perfil: v }))}
+                      options={[
+                        { value: "diretor",     label: "Diretor" },
+                        { value: "comercial",   label: "Comercial" },
+                        { value: "engenheiro",  label: "Engenheiro" },
+                        { value: "financeiro",  label: "Financeiro" },
+                        ...perfisCustomizados.map((p) => ({ value: p.id, label: p.nome })),
+                      ]}
+                    />
+                  </div>
+                </div>
+                <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 24 }}>
+                  <Btn variant="ghost" onClick={() => setShowConvite(false)}>Cancelar</Btn>
+                  <Btn disabled={!convite.email || !convite.nome || convidando} onClick={handleConvidarUsuario}>
+                    {convidando ? "Enviando…" : "Enviar convite"}
+                  </Btn>
+                </div>
+              </div>
+            </div>
+          )}
+
           <Card title="Usuários da empresa" subtitle={`${usuarios.length} conta(s) cadastrada(s) nesta empresa.`}>
+            {user?.perfil === "diretor" && (
+              <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 16 }}>
+                <Btn onClick={() => setShowConvite(true)}>+ Convidar usuário</Btn>
+              </div>
+            )}
             {usuarios.length === 0 ? (
               <div style={{ textAlign: "center", padding: "32px 0", color: C.muted }}>
                 <div style={{ fontSize: 28, marginBottom: 8 }}>👥</div>
@@ -428,7 +600,7 @@ export default function Configuracoes() {
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {usuarios.map((u) => {
                   const isMe    = u.id === user?.uid;
-                  const perfilU = PERFIS[u.perfil];
+                  const perfilU = PERFIS[u.perfil] || perfisCustomizados.find((p) => p.id === u.perfil);
                   return (
                     <div key={u.id} style={{
                       display: "flex", alignItems: "center", gap: 14,
@@ -452,14 +624,39 @@ export default function Configuracoes() {
                         <div style={{ fontSize: 11, color: C.muted, marginTop: 1 }}>{u.cargo || "—"}</div>
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <span style={{
-                          fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 12,
-                          background: (perfilU?.cor || C.muted) + "22",
-                          color: perfilU?.cor || C.muted,
-                          border: `1px solid ${(perfilU?.cor || C.muted)}44`,
-                        }}>
-                          {perfilU?.label || u.perfil || "—"}
-                        </span>
+                        {user?.perfil === "diretor" && !isMe ? (
+                          <select
+                            value={u.perfil || ""}
+                            onChange={(e) => handleAlterarPerfil(u.id, e.target.value)}
+                            style={{
+                              fontSize: 11, fontWeight: 700, padding: "3px 8px", borderRadius: 12,
+                              background: (perfilU?.cor || C.muted) + "22",
+                              color: perfilU?.cor || C.muted,
+                              border: `1px solid ${(perfilU?.cor || C.muted)}44`,
+                              cursor: "pointer", fontFamily: "inherit",
+                            }}
+                          >
+                            {["diretor", "comercial", "engenheiro", "financeiro"].map((p) => (
+                              <option key={p} value={p}>{PERFIS[p]?.label || p}</option>
+                            ))}
+                            {perfisCustomizados.length > 0 && (
+                              <optgroup label="Personalizados">
+                                {perfisCustomizados.map((p) => (
+                                  <option key={p.id} value={p.id}>{p.nome}</option>
+                                ))}
+                              </optgroup>
+                            )}
+                          </select>
+                        ) : (
+                          <span style={{
+                            fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 12,
+                            background: (perfilU?.cor || C.muted) + "22",
+                            color: perfilU?.cor || C.muted,
+                            border: `1px solid ${(perfilU?.cor || C.muted)}44`,
+                          }}>
+                            {perfilU?.label || u.perfil || "—"}
+                          </span>
+                        )}
                         <span style={{
                           fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 8,
                           background: u.ativo ? C.success + "18" : C.muted + "18",
@@ -467,6 +664,20 @@ export default function Configuracoes() {
                         }}>
                           {u.ativo ? "Ativo" : "Inativo"}
                         </span>
+                        {user?.perfil === "diretor" && !isMe && (
+                          <button
+                            onClick={() => handleToggleAtivo(u.id, u.ativo)}
+                            style={{
+                              fontSize: 10, fontWeight: 700, padding: "2px 10px", borderRadius: 20,
+                              background: u.ativo ? C.danger + "18" : C.success + "18",
+                              color: u.ativo ? C.danger : C.success,
+                              border: `1px solid ${u.ativo ? C.danger : C.success}44`,
+                              cursor: "pointer", fontFamily: "inherit",
+                            }}
+                          >
+                            {u.ativo ? "Desativar" : "Ativar"}
+                          </button>
+                        )}
                       </div>
                     </div>
                   );
@@ -497,6 +708,8 @@ export default function Configuracoes() {
               ))}
             </div>
           </Card>
+
+          <PerfisCustomizados />
         </>
       )}
       {/* ══ Aba: Sistema ══ */}
@@ -545,12 +758,195 @@ export default function Configuracoes() {
       )}
       {/* ══ Aba: Robô IA / WhatsApp ══ */}
       {tab === "ia" && <AbaRoboIA empresaId={empresaId} mostrarToast={mostrarToast} />}
+
+      {/* ══ Aba: Webhooks (somente diretores) ══ */}
+      {tab === "webhooks" && user?.perfil === "diretor" && (
+        <Card title="Webhooks" subtitle="Configure endpoints externos para receber eventos automáticos do StickFrame.">
+          <WebhookConfig />
+        </Card>
+      )}
+
+      {/* ══ Aba: API pública (somente diretores) ══ */}
+      {tab === "api" && user?.perfil === "diretor" && (
+        <>
+          {/* API Key management */}
+          <Card title="Chave de API" subtitle="Use esta chave para autenticar requisições à API pública do StickFrame.">
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              {/* Current key display */}
+              <div>
+                <LabelF>Sua chave de API</LabelF>
+                {apiKey ? (
+                  <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                    <input
+                      readOnly
+                      value={apiKeyRevealed ? apiKey : "sf_live_" + "•".repeat(40)}
+                      style={{
+                        flex: 1, padding: "10px 13px", background: C.darker,
+                        border: `1px solid ${C.border}`, borderRadius: 8,
+                        fontFamily: "monospace", fontSize: 12, color: C.text,
+                      }}
+                    />
+                    <button
+                      onClick={() => setApiKeyRevealed((v) => !v)}
+                      style={{
+                        padding: "10px 14px", background: C.darker, border: `1px solid ${C.border}`,
+                        borderRadius: 8, cursor: "pointer", fontFamily: "inherit", fontSize: 12, color: C.text,
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {apiKeyRevealed ? "Ocultar" : "Revelar"}
+                    </button>
+                    <button
+                      onClick={() => { navigator.clipboard.writeText(apiKey); mostrarToast("✅ Chave copiada!"); }}
+                      style={{
+                        padding: "10px 14px", background: C.darker, border: `1px solid ${C.border}`,
+                        borderRadius: 8, cursor: "pointer", fontFamily: "inherit", fontSize: 12, color: C.text,
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      Copiar
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ fontSize: 13, color: C.muted, padding: "10px 0" }}>
+                    Nenhuma chave gerada ainda. Clique em "Gerar nova chave" para criar.
+                  </div>
+                )}
+                {apiKeyCreatedAt && (
+                  <div style={{ fontSize: 11, color: C.muted, marginTop: 6 }}>
+                    Criada em: {new Date(apiKeyCreatedAt).toLocaleString("pt-BR")}
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <Btn onClick={gerarApiKey} disabled={gerandoChave}>
+                  {gerandoChave ? "Gerando…" : apiKey ? "🔄 Gerar nova chave" : "🔑 Gerar chave de API"}
+                </Btn>
+                {apiKey && (
+                  <div style={{ fontSize: 11, color: C.warning, marginTop: 6 }}>
+                    Atenção: gerar uma nova chave invalida a chave atual imediatamente.
+                  </div>
+                )}
+              </div>
+            </div>
+          </Card>
+
+          <Card title="API pública" subtitle="Integre o StickFrame com ERPs e sistemas externos via REST API.">
+            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+              {/* Base URL */}
+              <div>
+                <LabelF>URL base</LabelF>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <input
+                    readOnly
+                    value={`${import.meta.env.VITE_SUPABASE_URL || "https://<projeto>.supabase.co"}/functions/v1/api`}
+                    style={{
+                      flex: 1, padding: "10px 13px", background: C.darker,
+                      border: `1px solid ${C.border}`, borderRadius: 8,
+                      fontFamily: "monospace", fontSize: 12, color: C.text,
+                    }}
+                  />
+                  <button
+                    onClick={() => { navigator.clipboard.writeText(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/api`); mostrarToast("✅ URL copiada!"); }}
+                    style={{
+                      padding: "10px 14px", background: C.darker, border: `1px solid ${C.border}`,
+                      borderRadius: 8, cursor: "pointer", fontFamily: "inherit", fontSize: 12, color: C.text,
+                    }}
+                  >
+                    Copiar
+                  </button>
+                </div>
+              </div>
+
+              {/* Autenticação */}
+              <div>
+                <LabelF>Autenticação</LabelF>
+                <div style={{
+                  background: C.darker, border: `1px solid ${C.border}`, borderRadius: 8,
+                  padding: "12px 16px", fontFamily: "monospace", fontSize: 12,
+                }}>
+                  Authorization: Bearer sf_live_sua_chave_aqui
+                </div>
+                <div style={{ fontSize: 11, color: C.muted, marginTop: 6 }}>
+                  Envie a chave no header <code>Authorization</code> com o prefixo <code>Bearer</code>.
+                </div>
+              </div>
+
+              {/* Endpoints */}
+              <div>
+                <LabelF>Endpoints disponíveis</LabelF>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                  <thead>
+                    <tr>
+                      {["Método", "Rota", "Descrição"].map((h) => (
+                        <th key={h} style={{
+                          textAlign: "left", padding: "8px 12px", fontWeight: 700,
+                          color: C.muted, borderBottom: `1px solid ${C.border}`, fontSize: 10,
+                          letterSpacing: 0.8, textTransform: "uppercase",
+                        }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      ["GET",  "/obras",                "Lista todas as obras da empresa"],
+                      ["GET",  "/obras/:id",            "Detalha uma obra específica"],
+                      ["GET",  "/obras/:id/financeiro", "Lançamentos financeiros de uma obra"],
+                      ["GET",  "/clientes",             "Lista todos os clientes"],
+                      ["GET",  "/financeiro",           "Lista lançamentos financeiros (máx. 100)"],
+                      ["POST", "/webhooks/test",        "Testa o endpoint de webhooks"],
+                    ].map(([method, route, desc]) => (
+                      <tr key={route}>
+                        <td style={{ padding: "10px 12px", borderBottom: `1px solid ${C.border}` }}>
+                          <span style={{
+                            fontFamily: "monospace", fontSize: 11, fontWeight: 700,
+                            padding: "2px 7px", borderRadius: 5,
+                            background: method === "GET" ? C.success + "22" : C.warning + "22",
+                            color: method === "GET" ? C.success : C.warning,
+                          }}>{method}</span>
+                        </td>
+                        <td style={{ padding: "10px 12px", fontFamily: "monospace", color: C.text, borderBottom: `1px solid ${C.border}` }}>{route}</td>
+                        <td style={{ padding: "10px 12px", color: C.muted, borderBottom: `1px solid ${C.border}` }}>{desc}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Exemplo curl */}
+              <div>
+                <LabelF>Exemplo de requisição (curl)</LabelF>
+                <pre style={{
+                  background: C.darker, border: `1px solid ${C.border}`, borderRadius: 8,
+                  padding: "14px 16px", fontFamily: "monospace", fontSize: 11,
+                  color: C.text, overflow: "auto", margin: 0,
+                }}>{`curl -H "Authorization: Bearer ${apiKey || "{sua_chave}"}" \\
+  ${import.meta.env.VITE_SUPABASE_URL || "https://gpzmglcxmbboxxogbibq.supabase.co"}/functions/v1/api/obras`}</pre>
+                {apiKey && (
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(`curl -H "Authorization: Bearer ${apiKey}" \\\n  ${import.meta.env.VITE_SUPABASE_URL}/functions/v1/api/obras`);
+                      mostrarToast("✅ Exemplo copiado!");
+                    }}
+                    style={{
+                      marginTop: 8, padding: "6px 12px", background: C.darker, border: `1px solid ${C.border}`,
+                      borderRadius: 7, cursor: "pointer", fontFamily: "inherit", fontSize: 11, color: C.text,
+                    }}
+                  >
+                    Copiar exemplo
+                  </button>
+                )}
+              </div>
+            </div>
+          </Card>
+        </>
+      )}
     </>
   );
 }
 
 // ─── Aba Robô IA ─────────────────────────────────────────────────────────────
-import { sb } from "../services/supabase";
 
 function AbaRoboIA({ empresaId, mostrarToast }) {
   const [cfg,    setCfg]    = useState({ openai_key: "", waba_token: "", phone_number_id: "", sistema_prompt: "", modelo_openai: "gpt-4o-mini", ativo: false, verify_token: "" });

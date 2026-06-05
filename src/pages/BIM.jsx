@@ -85,6 +85,139 @@ function exportarRelatorioApontamentos(apts, obraNome) {
   printHtml(html, `bim-apontamentos-${obraNome.replace(/\s+/g, "-").toLowerCase()}`);
 }
 
+// ─── Viewer DAE (Collada) ─────────────────────────────────────────────────────
+function DAEViewer({ url }) {
+  const containerRef = useRef(null);
+  const [status, setStatus] = useState("loading");
+  const [msg,    setMsg]    = useState("Carregando modelo DAE...");
+
+  useEffect(() => {
+    if (!url || !containerRef.current) return;
+    let destroyed = false;
+    let animId;
+    let renderer;
+
+    (async () => {
+      try {
+        const THREE = await import("three");
+        const { OrbitControls } = await import("three/addons/controls/OrbitControls.js");
+        const { ColladaLoader } = await import("three/addons/loaders/ColladaLoader.js");
+        if (destroyed) return;
+
+        const w = containerRef.current.clientWidth;
+        const h = containerRef.current.clientHeight;
+
+        const scene    = new THREE.Scene();
+        scene.background = new THREE.Color(0x1a1a1a);
+
+        const ambLight = new THREE.AmbientLight(0xffffff, 1.2);
+        scene.add(ambLight);
+        const dirLight = new THREE.DirectionalLight(0xffffff, 1.5);
+        dirLight.position.set(10, 20, 10);
+        scene.add(dirLight);
+
+        // Grid
+        const grid = new THREE.GridHelper(100, 50, 0x333333, 0x222222);
+        scene.add(grid);
+
+        const camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 10000);
+        camera.position.set(10, 8, 10);
+
+        renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(w, h);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        containerRef.current.appendChild(renderer.domElement);
+
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+
+        const loader = new ColladaLoader();
+        loader.load(url, (collada) => {
+          if (destroyed) return;
+          const model = collada.scene;
+
+          // Centraliza e escala automaticamente
+          const box = new THREE.Box3().setFromObject(model);
+          const center = box.getCenter(new THREE.Vector3());
+          const size   = box.getSize(new THREE.Vector3());
+          const maxDim = Math.max(size.x, size.y, size.z);
+          const scale  = maxDim > 0 ? 10 / maxDim : 1;
+          model.scale.setScalar(scale);
+          model.position.sub(center.multiplyScalar(scale));
+
+          scene.add(model);
+          const dist = maxDim * scale * 1.5;
+          camera.position.set(dist, dist * 0.6, dist);
+          controls.target.set(0, 0, 0);
+          controls.update();
+
+          setStatus("loaded");
+        }, undefined, (e) => {
+          if (!destroyed) { setStatus("error"); setMsg(String(e?.message || "Erro ao carregar DAE")); }
+        });
+
+        const animate = () => {
+          if (destroyed) return;
+          animId = requestAnimationFrame(animate);
+          controls.update();
+          renderer.render(scene, camera);
+        };
+        animate();
+
+        const onResize = () => {
+          if (!containerRef.current || destroyed) return;
+          const w2 = containerRef.current.clientWidth;
+          const h2 = containerRef.current.clientHeight;
+          camera.aspect = w2 / h2;
+          camera.updateProjectionMatrix();
+          renderer.setSize(w2, h2);
+        };
+        window.addEventListener("resize", onResize);
+        return () => window.removeEventListener("resize", onResize);
+      } catch (e) {
+        if (!destroyed) { setStatus("error"); setMsg(String(e?.message || e)); }
+      }
+    })();
+
+    return () => {
+      destroyed = true;
+      cancelAnimationFrame(animId);
+      if (renderer) { renderer.dispose(); renderer.domElement?.remove(); }
+    };
+  }, [url]);
+
+  return (
+    <div style={{ position: "relative", width: "100%", height: "100%", background: "#1a1a1a", borderRadius: 10, overflow: "hidden" }}>
+      <div ref={containerRef} style={{ width: "100%", height: "100%" }} />
+      {status !== "loaded" && (
+        <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 14, pointerEvents: "none" }}>
+          {status === "loading" && (
+            <>
+              <div style={{ width: 36, height: 36, border: "3px solid #333", borderTop: "3px solid #981915", borderRadius: "50%", animation: "spin .8s linear infinite" }} />
+              <div style={{ fontSize: 12, color: "#666" }}>{msg}</div>
+            </>
+          )}
+          {status === "error" && (
+            <div style={{ textAlign: "center", padding: 20 }}>
+              <div style={{ fontSize: 36, marginBottom: 10 }}>⚠️</div>
+              <div style={{ fontSize: 13, color: "#c0392b", marginBottom: 6 }}>Erro ao carregar modelo</div>
+              <div style={{ fontSize: 11, color: "#888", maxWidth: 300, lineHeight: 1.5 }}>{msg}</div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Smart Viewer (IFC ou DAE) ────────────────────────────────────────────────
+function ModelViewer({ url, onElementClick, highlightElementId }) {
+  if (!url) return null;
+  const ext = url.split("?")[0].split(".").pop().toLowerCase();
+  if (ext === "dae") return <DAEViewer url={url} />;
+  return <IFCViewer url={url} onElementClick={onElementClick} highlightElementId={highlightElementId} />;
+}
+
 // ─── Viewer IFC ───────────────────────────────────────────────────────────────
 function IFCViewer({ url, onElementClick, highlightElementId }) {
   const containerRef = useRef(null);
@@ -348,7 +481,7 @@ function ModalApontamento({ modelos, elementoSelecionado, onSave, onClose }) {
   );
 }
 
-// ─── Modal upload IFC ─────────────────────────────────────────────────────────
+// ─── Modal upload IFC / DAE ───────────────────────────────────────────────────
 function ModalUpload({ onSave, onClose }) {
   const [file, setFile]   = useState(null);
   const [nome, setNome]   = useState("");
@@ -356,29 +489,53 @@ function ModalUpload({ onSave, onClose }) {
   const [versao, setVer]  = useState("1");
   const [saving, setSaving] = useState(false);
 
+  const fileExt = file ? file.name.split(".").pop().toLowerCase() : null;
+  const isDAE   = fileExt === "dae";
+
+  function handleFile(f) {
+    if (!f) return;
+    setFile(f);
+    if (!nome) setNome(f.name.replace(/\.(ifc|dae)$/i, ""));
+  }
+
   return (
     <div style={{ position: "fixed", inset: 0, background: "#000b", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
       <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 14, width: "100%", maxWidth: 420 }}>
         <div style={{ padding: "20px 24px", borderBottom: `1px solid ${C.border}`, display: "flex", justifyContent: "space-between" }}>
-          <div style={{ fontSize: 15, fontWeight: 800 }}>Importar modelo IFC</div>
+          <div style={{ fontSize: 15, fontWeight: 800 }}>Importar modelo 3D</div>
           <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 20, color: C.muted }}>×</button>
         </div>
         <div style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: 14 }}>
-          <label style={{ display: "block", border: `2px dashed ${file ? C.red : C.border}`, borderRadius: 10, padding: "20px", textAlign: "center", cursor: "pointer", background: file ? C.red + "08" : C.darker }}>
-            <input type="file" accept=".ifc" style={{ display: "none" }} onChange={(e) => { const f = e.target.files[0]; if (f) { setFile(f); if (!nome) setNome(f.name.replace(".ifc", "")); } }} />
+          <label
+            style={{ display: "block", border: `2px dashed ${file ? C.red : C.border}`, borderRadius: 10, padding: "20px", textAlign: "center", cursor: "pointer", background: file ? C.red + "08" : C.darker }}
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={(e) => { e.preventDefault(); handleFile(e.dataTransfer.files[0]); }}
+          >
+            <input type="file" accept=".ifc,.dae" style={{ display: "none" }} onChange={(e) => handleFile(e.target.files[0])} />
             <div style={{ fontSize: 28, marginBottom: 6 }}><Box size={36} /></div>
             {file ? (
               <div>
                 <div style={{ fontSize: 13, fontWeight: 700, color: C.red }}>{file.name}</div>
-                <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{(file.size / 1024 / 1024).toFixed(2)} MB</div>
+                <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>
+                  {(file.size / 1024 / 1024).toFixed(2)} MB · {isDAE ? "Collada DAE" : "IFC BIM"}
+                </div>
               </div>
             ) : (
               <div>
-                <div style={{ fontSize: 13, fontWeight: 700 }}>Clique ou arraste o arquivo .IFC</div>
-                <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>Tamanho máximo: 100 MB</div>
+                <div style={{ fontSize: 13, fontWeight: 700 }}>Clique ou arraste o arquivo</div>
+                <div style={{ fontSize: 11, color: C.muted, marginTop: 4 }}>
+                  <span style={{ background: "#4a9eff22", color: "#4a9eff", borderRadius: 4, padding: "2px 8px", marginRight: 6 }}>.IFC</span>
+                  <span style={{ background: "#2e9e5b22", color: "#2e9e5b", borderRadius: 4, padding: "2px 8px" }}>.DAE</span>
+                </div>
+                <div style={{ fontSize: 10, color: C.muted, marginTop: 6 }}>Tamanho máximo: 100 MB</div>
               </div>
             )}
           </label>
+          {isDAE && (
+            <div style={{ background: "#2e9e5b18", border: "1px solid #2e9e5b33", borderRadius: 8, padding: "10px 14px", fontSize: 11, color: "#2e9e5b" }}>
+              ✓ Collada DAE · Visualização via Three.js — compatível com Blender, SketchUp e Revit exportados
+            </div>
+          )}
           <Field label="Nome do modelo *">
             <input value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Ex: Arquitetônico — Rev A" style={inp} />
           </Field>
@@ -557,7 +714,7 @@ export default function BIM() {
             </button>
           )}
           <button onClick={() => { setElementoSelecionado(null); setModalApt(true); }} style={btnGhost}>+ Apontamento</button>
-          <button onClick={() => setModalUpload(true)} style={btnPrimary}>⬆ Importar IFC</button>
+          <button onClick={() => setModalUpload(true)} style={btnPrimary}>⬆ Importar modelo</button>
         </div>
       </div>
 
@@ -578,7 +735,7 @@ export default function BIM() {
       {/* KPIs */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 20 }}>
         {[
-          ["Modelos IFC",   modelos.length,  "#4a9eff"],
+          ["Modelos 3D",    modelos.length,  "#4a9eff"],
           ["Apontamentos",  stats.total,     C.muted],
           ["Alta prioridade", stats.alta,    "#c0392b"],
           ["Resolvidos",    stats.resolvidos,"#2e9e5b"],
@@ -615,7 +772,7 @@ export default function BIM() {
             <div style={{ textAlign: "center", padding: "40px 0" }}>
               <div style={{ fontSize: 36, marginBottom: 12 }}><Box size={36} /></div>
               <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 6 }}>Nenhum modelo importado</div>
-              <div style={{ fontSize: 13, color: C.muted, marginBottom: 24 }}>Importe arquivos .IFC para visualizar em 3D.</div>
+              <div style={{ fontSize: 13, color: C.muted, marginBottom: 24 }}>Importe arquivos .IFC ou .DAE para visualizar em 3D.</div>
               <button onClick={() => setModalUpload(true)} style={btnPrimary}>⬆ Importar primeiro modelo</button>
             </div>
           ) : (
@@ -781,7 +938,7 @@ export default function BIM() {
                 </div>
               )}
               <div style={{ height: urlElementId ? "calc(100% - 56px)" : "100%" }}>
-                <IFCViewer url={modeloUrl} onElementClick={handleElementClick} highlightElementId={urlElementId} />
+                <ModelViewer url={modeloUrl} onElementClick={handleElementClick} highlightElementId={urlElementId} />
               </div>
               <div style={{ padding: "8px 14px", background: "#111", fontSize: 11, color: "#555", borderTop: "1px solid #222", display: "flex", gap: 20 }}>
                 <span>🖱 Arrastar: orbitar · Scroll: zoom · Shift+arrastar: pan</span>

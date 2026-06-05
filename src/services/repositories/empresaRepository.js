@@ -49,3 +49,16 @@ export async function trocarSenha(novaSenha) {
   const { error } = await sb.auth.updateUser({ password: novaSenha });
   if (error) throw error;
 }
+
+export async function atualizarPerfilUsuario(uid, updates) {
+  const { error } = await sb.from("usuarios").update(updates).eq("id", uid).eq("empresa_id", getEmpresaId());
+  if (error) throw error;
+}
+
+export async function convidarUsuario(email, nome, perfil) {
+  const { data, error } = await sb.functions.invoke("invite-user", {
+    body: { email, nome, perfil, empresa_id: getEmpresaId() },
+  });
+  if (error) throw error;
+  return data;
+}

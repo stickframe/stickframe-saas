@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Calculadora Pública → CRM — StickFrame</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --sf-red: #981915;
+    --dark: #0f1117;
+    --card: #16191f;
+    --border: #252830;
+    --text: #e8eaf0;
+    --muted: #7b8394;
+    --green: #22c55e;
+    --yellow: #f59e0b;
+    --red: #ef4444;
+    --blue: #3b82f6;
+    --teal: #14b8a6;
+    --radius: 14px;
+  }
+  body { font-family: 'Inter', sans-serif; background: var(--dark); color: var(--text); font-size: 14px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+  a { color: var(--sf-red); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  .nav { padding: 16px 48px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+  .nav-back { font-size: 13px; color: var(--muted); transition: color 0.15s; }
+  .nav-back:hover { color: var(--text); text-decoration: none; }
+  .nav-sep { color: var(--border); }
+  .nav-current { font-size: 13px; color: var(--text); font-weight: 500; }
+
+  .page-header {
+    background: linear-gradient(135deg, #0f1117 0%, #0f1a15 60%, #0f1117 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 56px 48px 48px; position: relative; overflow: hidden;
+  }
+  .page-header::before {
+    content: ''; position: absolute; top: -80px; right: -80px;
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(20,184,166,0.10) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .header-inner { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
+  .header-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--sf-red); background: rgba(152,25,21,0.15); border: 1px solid rgba(152,25,21,0.3);
+    padding: 5px 14px; border-radius: 20px; margin-bottom: 20px;
+  }
+  .header-title { font-size: clamp(28px, 4vw, 44px); font-weight: 800; color: #fff; line-height: 1.15; margin-bottom: 12px; letter-spacing: -0.5px; }
+  .header-sub { color: var(--muted); font-size: 15px; max-width: 580px; line-height: 1.7; }
+  .header-url {
+    display: inline-flex; align-items: center; gap: 8px; margin-top: 18px;
+    background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+    padding: 8px 14px; font-size: 12px;
+  }
+  .header-url .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+  .header-url code { color: var(--teal); font-size: 12px; }
+
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 48px; }
+  section { padding: 52px 0; border-bottom: 1px solid var(--border); }
+  section:last-of-type { border-bottom: none; }
+
+  .sec-header { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; }
+  .sec-icon { font-size: 22px; }
+  .sec-title { font-size: 20px; font-weight: 800; color: #fff; }
+  .sec-badge { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; padding: 3px 10px; border-radius: 20px; margin-left: auto; white-space: nowrap; }
+  .badge-green { background: rgba(34,197,94,0.15); color: var(--green); border: 1px solid rgba(34,197,94,0.3); }
+  .badge-teal { background: rgba(20,184,166,0.15); color: var(--teal); border: 1px solid rgba(20,184,166,0.3); }
+
+  .tbl-wrap { overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: 24px; }
+  table { width: 100%; border-collapse: collapse; }
+  thead th { background: #1e2128; padding: 12px 18px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); text-align: left; }
+  tbody tr { border-top: 1px solid var(--border); transition: background 0.15s; }
+  tbody tr:nth-child(even) { background: rgba(255,255,255,0.02); }
+  tbody tr:hover { background: rgba(20,184,166,0.04); }
+  tbody td { padding: 13px 18px; font-size: 13px; color: var(--text); vertical-align: middle; }
+  tbody td strong { color: #fff; }
+  tbody td code { font-size: 12px; background: #0d1117; border: 1px solid var(--border); border-radius: 5px; padding: 2px 7px; color: var(--teal); }
+
+  /* FUNNEL */
+  .funnel { display: flex; flex-direction: column; gap: 0; margin-bottom: 24px; }
+  .funnel-step {
+    background: var(--card); border: 1px solid var(--border);
+    padding: 18px 22px; position: relative;
+    display: grid; grid-template-columns: 36px 1fr auto; gap: 14px; align-items: center;
+  }
+  .funnel-step:first-child { border-radius: var(--radius) var(--radius) 0 0; }
+  .funnel-step:last-child { border-radius: 0 0 var(--radius) var(--radius); }
+  .funnel-step:not(:last-child) { border-bottom: none; }
+  .funnel-step::after {
+    content: '↓'; position: absolute; bottom: -14px; left: 50%;
+    transform: translateX(-50%); z-index: 2; font-size: 16px; color: var(--teal);
+    background: var(--dark); padding: 0 6px;
+  }
+  .funnel-step:last-child::after { display: none; }
+  .step-num { width: 36px; height: 36px; border-radius: 10px; background: rgba(20,184,166,0.15); border: 1px solid rgba(20,184,166,0.3); color: var(--teal); font-size: 14px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .step-title { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 2px; }
+  .step-desc { font-size: 12px; color: var(--muted); }
+  .step-badge { font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 20px; white-space: nowrap; background: rgba(20,184,166,0.1); color: var(--teal); border: 1px solid rgba(20,184,166,0.3); }
+
+  /* RESULT BOX */
+  .result-box {
+    background: linear-gradient(135deg, rgba(20,184,166,0.08), rgba(20,184,166,0.03));
+    border: 1px solid rgba(20,184,166,0.3); border-radius: var(--radius);
+    padding: 24px 28px; text-align: center; margin-bottom: 20px;
+  }
+  .result-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 8px; }
+  .result-value { font-size: 28px; font-weight: 900; color: #fff; margin-bottom: 4px; }
+  .result-value span { color: var(--teal); }
+  .result-sub { font-size: 12px; color: var(--muted); }
+
+  /* CRM FLOW */
+  .crm-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+  .crm-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; }
+  .crm-card-icon { font-size: 20px; margin-bottom: 10px; }
+  .crm-card-title { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 5px; }
+  .crm-card-desc { font-size: 12px; color: var(--muted); line-height: 1.5; }
+  .crm-tag { display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: 0.5px; padding: 2px 8px; border-radius: 5px; background: rgba(20,184,166,0.15); color: var(--teal); border: 1px solid rgba(20,184,166,0.3); margin-top: 6px; }
+
+  /* COMPARISON */
+  .comp-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .comp-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+  .comp-card.highlight { border-color: rgba(152,25,21,0.4); border-left: 4px solid var(--sf-red); }
+  .comp-name { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 12px; }
+  .comp-item { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: var(--muted); margin-bottom: 7px; line-height: 1.5; }
+  .icon-yes { color: var(--green); }
+  .icon-no { color: var(--red); }
+
+  .pitch {
+    background: rgba(152,25,21,0.08); border-left: 4px solid var(--sf-red);
+    border-radius: 0 10px 10px 0; padding: 18px 22px;
+    font-size: 13px; color: var(--text); font-style: italic; line-height: 1.8;
+  }
+  .pitch::before { content: '"'; font-size: 20px; font-weight: 800; color: var(--sf-red); margin-right: 4px; font-style: normal; vertical-align: -3px; }
+
+  footer { border-top: 1px solid var(--border); padding: 32px 48px; text-align: center; }
+  footer p { font-size: 12px; color: var(--muted); }
+  footer strong { color: var(--text); }
+
+  @media (max-width: 768px) {
+    .nav, .page-header, .container, footer { padding-left: 20px; padding-right: 20px; }
+    .comp-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/" class="nav-back">← Voltar ao sistema</a>
+  <span class="nav-sep">/</span>
+  <span class="nav-current">Calculadora Pública → CRM</span>
+</nav>
+
+<header class="page-header">
+  <div class="header-inner">
+    <div class="header-badge">&#9733; Diferencial StickFrame</div>
+    <h1 class="header-title">Calculadora Pública de Steel Frame</h1>
+    <p class="header-sub">Ferramenta pública sem login que converte visitantes em leads qualificados — com pré-orçamento instantâneo e entrada automática no CRM da construtora.</p>
+    <div class="header-url">
+      <span class="dot"></span>
+      Pública em <code>app.stickframe.com.br/calcular</code> — sem autenticação
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- CAMPOS -->
+  <section>
+    <div class="container">
+      <div class="sec-header">
+        <span class="sec-icon">📝</span>
+        <h2 class="sec-title">Campos do Formulário</h2>
+        <span class="sec-badge badge-teal">Acesso público</span>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Campo</th>
+              <th>Tipo</th>
+              <th>Exemplo</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>Padrão construtivo</strong></td><td>Seleção</td><td>Econômico / Intermediário / Alto padrão</td></tr>
+            <tr><td><strong>Área construída (m²)</strong></td><td>Numérico</td><td>120 m²</td></tr>
+            <tr><td><strong>Número de pavimentos</strong></td><td>Seleção</td><td>Térrea / 2 pavimentos / 3+</td></tr>
+            <tr><td><strong>CEP / Região</strong></td><td>Texto</td><td>01310-100 (SP)</td></tr>
+            <tr><td><strong>Nome e e-mail</strong></td><td>Texto</td><td>Para envio do orçamento</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- RESULTADO -->
+  <section>
+    <div class="container">
+      <div class="sec-header">
+        <span class="sec-icon">💰</span>
+        <h2 class="sec-title">Cálculo e Resultado</h2>
+      </div>
+      <div class="result-box">
+        <div class="result-label">Faixa estimada gerada para o cliente</div>
+        <div class="result-value"><span>R$ 288.000</span> — <span>R$ 336.000</span></div>
+        <div class="result-sub">Estimativa com variação de ±15% · Sistema aplica tabela de preço/m² por padrão construtivo</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:18px;">
+          <div style="font-size:12px;font-weight:700;color:#fff;margin-bottom:6px;">📄 PDF gerado</div>
+          <div style="font-size:12px;color:var(--muted);">Pré-orçamento para download imediato com detalhamento por padrão construtivo.</div>
+        </div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:18px;">
+          <div style="font-size:12px;font-weight:700;color:#fff;margin-bottom:6px;">💬 WhatsApp</div>
+          <div style="font-size:12px;color:var(--muted);">Botão "Falar com especialista" redireciona direto para WhatsApp da construtora.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FUNIL CRM -->
+  <section>
+    <div class="container">
+      <div class="sec-header">
+        <span class="sec-icon">🔀</span>
+        <h2 class="sec-title">Fluxo Calculadora → CRM</h2>
+      </div>
+      <div class="funnel">
+        <div class="funnel-step">
+          <div class="step-num">1</div>
+          <div><div class="step-title">Visitante acessa /calcular</div><div class="step-desc">Sem login, sem cadastro. Link do Instagram, Google Ads ou WhatsApp.</div></div>
+          <span class="step-badge">Público</span>
+        </div>
+        <div class="funnel-step">
+          <div class="step-num">2</div>
+          <div><div class="step-title">Preenche formulário</div><div class="step-desc">Padrão construtivo, área, número de pavimentos, CEP, nome e e-mail.</div></div>
+          <span class="step-badge">Self-service</span>
+        </div>
+        <div class="funnel-step">
+          <div class="step-num">3</div>
+          <div><div class="step-title">Recebe pré-orçamento</div><div class="step-desc">Faixa estimada exibida na tela + PDF gerado para download imediato.</div></div>
+          <span class="step-badge">Instantâneo</span>
+        </div>
+        <div class="funnel-step">
+          <div class="step-num">4</div>
+          <div><div class="step-title">Lead criado automaticamente no CRM</div><div class="step-desc">Nome, e-mail, área, padrão — já preenchidos. Tag <code>lead-calculadora</code> aplicada.</div></div>
+          <span class="step-badge">Automático</span>
+        </div>
+        <div class="funnel-step">
+          <div class="step-num">5</div>
+          <div><div class="step-title">Tarefa criada para o comercial</div><div class="step-desc">Follow-up com prazo de 24h para o responsável. Funil iniciado em "Pré-orçamento enviado".</div></div>
+          <span class="step-badge">24h</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CRM CARDS -->
+  <section>
+    <div class="container">
+      <div class="sec-header">
+        <span class="sec-icon">🗂️</span>
+        <h2 class="sec-title">Integração com CRM</h2>
+      </div>
+      <div class="crm-grid">
+        <div class="crm-card">
+          <div class="crm-card-icon">👤</div>
+          <div class="crm-card-title">Lead segmentado</div>
+          <div class="crm-card-desc">Criado com nome, e-mail, área construída e padrão selecionado — pronto para abordagem comercial.</div>
+          <div class="crm-tag">lead-calculadora</div>
+        </div>
+        <div class="crm-card">
+          <div class="crm-card-icon">⏰</div>
+          <div class="crm-card-title">Follow-up automático</div>
+          <div class="crm-card-desc">Tarefa criada para o responsável comercial com prazo de 24 horas após o preenchimento.</div>
+        </div>
+        <div class="crm-card">
+          <div class="crm-card-icon">🔽</div>
+          <div class="crm-card-title">Funil iniciado</div>
+          <div class="crm-card-desc">Lead entra diretamente na etapa "Pré-orçamento enviado" — sem entrada manual.</div>
+        </div>
+        <div class="crm-card">
+          <div class="crm-card-icon">⚙️</div>
+          <div class="crm-card-title">Tabela de preços ajustável</div>
+          <div class="crm-card-desc">Configurável em Configurações → Calculadora. Preço/m² por padrão construtivo atualizado pela construtora.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- COMPARATIVO -->
+  <section>
+    <div class="container">
+      <div class="sec-header">
+        <span class="sec-icon">⚖️</span>
+        <h2 class="sec-title">Comparativo com Concorrentes</h2>
+      </div>
+      <div class="comp-row">
+        <div class="comp-card highlight">
+          <div class="comp-name">StickFrame — Captação integrada</div>
+          <div class="comp-item"><span class="icon-yes">✓</span> Calculadora pública sem login</div>
+          <div class="comp-item"><span class="icon-yes">✓</span> Geração automática de lead no CRM</div>
+          <div class="comp-item"><span class="icon-yes">✓</span> PDF de pré-orçamento instantâneo</div>
+          <div class="comp-item"><span class="icon-yes">✓</span> SEO: converte tráfego orgânico</div>
+          <div class="comp-item"><span class="icon-yes">✓</span> Lead chega segmentado por área e padrão</div>
+        </div>
+        <div class="comp-card">
+          <div class="comp-name">Procore / Concorrentes Nacionais</div>
+          <div class="comp-item"><span class="icon-no">✗</span> Procore é sistema B2B — sem ferramentas públicas</div>
+          <div class="comp-item"><span class="icon-no">✗</span> Sienge: sem calculadora pública</div>
+          <div class="comp-item"><span class="icon-no">✗</span> Obra Prima: sem integração de captação</div>
+          <div class="comp-item"><span class="icon-no">✗</span> Nenhum nacional integra captação ao CRM</div>
+          <div class="comp-item"><span class="icon-no">✗</span> Lead precisa ser criado manualmente</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PITCH -->
+  <section>
+    <div class="container">
+      <div class="sec-header">
+        <span class="sec-icon">🎯</span>
+        <h2 class="sec-title">Pitch para Apresentações</h2>
+      </div>
+      <div class="pitch">Enquanto a construtora dorme, a calculadora capta leads. O visitante informa a área e o padrão, recebe um pré-orçamento em segundos e o comercial acorda com uma tarefa de follow-up já criada no CRM. Nenhum concorrente faz isso porque eles são ferramentas de gestão, não de crescimento.</div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="container">
+    <p><strong>StickFrame</strong> &copy; 2026 — Plataforma de gestão para construtoras de Steel Frame</p>
+  </div>
+</footer>
+
+</body>
+</html>

@@ -6,8 +6,8 @@ import { useNotificacoes } from "../../hooks/useNotificacoes";
 import { sb, getEmpresaId } from "../../services/supabase";
 
 const TIPO_ICON = { info: "ℹ️", sucesso: "✅", alerta: "⚠️", erro: "⛔" };
-const CAT_LABELS = { prazo: "Prazos", medicao: "Medições", vistoria: "Vistorias", orcamento: "Orçamentos", bim: "BIM", followup: "Follow-ups", lead: "Novos Leads", chat: "Mensagens" };
-const CAT_ICONS  = { prazo: "⏰", medicao: "📐", vistoria: "🔍", orcamento: "📋", bim: "🧊", followup: "📅", lead: "🎯", chat: "💬" };
+const CAT_LABELS = { prazo: "Prazos", medicao: "Medições", vistoria: "Vistorias", orcamento: "Orçamentos", bim: "BIM", followup: "Follow-ups", lead: "Novos Leads", chat: "Mensagens", epi: "EPIs", incidente: "Incidentes", suprimentos: "Suprimentos", estoque: "Estoque" };
+const CAT_ICONS  = { prazo: "⏰", medicao: "📐", vistoria: "🔍", orcamento: "📋", bim: "🧊", followup: "📅", lead: "🎯", chat: "💬", epi: "🦺", incidente: "⚠️", suprimentos: "📦", estoque: "🏭" };
 
 function usePreOrcamentos() {
   const [preOrcs, setPreOrcs] = useState([]);
@@ -147,6 +147,62 @@ function useAlertas() {
   }, [obras, orcamentos, medicoes, vistorias, bimApontamentos, clientes, preOrcs, msgsPendentes]);
 }
 
+function useAlertasOperacionais() {
+  const [alertas, setAlertas] = useState([]);
+  useEffect(() => {
+    const empId = getEmpresaId();
+    if (!empId) return;
+    const hoje = new Date().toISOString().slice(0, 10);
+    const em30 = new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10);
+
+    Promise.all([
+      // EPIs vencidos
+      sb.from("sst_epis").select("item, validade, colaborador:colaboradores(nome)").eq("empresa_id", empId).lt("validade", hoje),
+      // EPIs vencendo em 30d
+      sb.from("sst_epis").select("item, validade, colaborador:colaboradores(nome)").eq("empresa_id", empId).gte("validade", hoje).lte("validade", em30),
+      // Incidentes abertos
+      sb.from("sst_incidentes").select("tipo, gravidade, data").eq("empresa_id", empId).neq("status", "Fechado"),
+      // Pedidos críticos pendentes
+      sb.from("suprimentos_pedidos").select("item, urgencia, status").eq("empresa_id", empId).eq("urgencia", "Crítico").neq("status", "Entregue").neq("status", "Cancelado"),
+      // Estoque abaixo do mínimo
+      sb.from("suprimentos_estoque").select("item, quantidade, estoque_minimo").eq("empresa_id", empId).gt("estoque_minimo", 0),
+    ]).then(([episVenc, episVend, incAbertos, pedCrit, estoqueItems]) => {
+      const result = [];
+      (episVenc.data || []).forEach(e => result.push({
+        categoria: "epi", tipo: "erro", cor: "#e74c3c", icon: "🦺",
+        titulo: "EPI VENCIDO",
+        texto: `${e.item}${e.colaborador?.nome ? ` — ${e.colaborador.nome}` : ""} (venceu em ${new Date(e.validade + "T00:00").toLocaleDateString("pt-BR")})`,
+      }));
+      (episVend.data || []).forEach(e => {
+        const dias = Math.ceil((new Date(e.validade) - new Date()) / 86400000);
+        result.push({
+          categoria: "epi", tipo: "alerta", cor: "#e67e22", icon: "🦺",
+          titulo: "EPI vencendo",
+          texto: `${e.item}${e.colaborador?.nome ? ` — ${e.colaborador.nome}` : ""} — vence em ${dias} dia(s)`,
+        });
+      });
+      (incAbertos.data || []).forEach(i => result.push({
+        categoria: "incidente", tipo: i.gravidade === "Crítica" || i.gravidade === "Alta" ? "erro" : "alerta",
+        cor: i.gravidade === "Crítica" ? "#e74c3c" : "#e67e22", icon: "⚠️",
+        titulo: `Incidente aberto — ${i.gravidade}`,
+        texto: `${i.tipo} em ${new Date(i.data + "T00:00").toLocaleDateString("pt-BR")}`,
+      }));
+      (pedCrit.data || []).forEach(p => result.push({
+        categoria: "suprimentos", tipo: "erro", cor: "#e74c3c", icon: "📦",
+        titulo: "Pedido CRÍTICO pendente",
+        texto: `${p.item} — status: ${p.status}`,
+      }));
+      (estoqueItems.data || []).filter(e => e.quantidade <= e.estoque_minimo).forEach(e => result.push({
+        categoria: "estoque", tipo: "alerta", cor: "#e67e22", icon: "🏭",
+        titulo: "Estoque abaixo do mínimo",
+        texto: `${e.item} — saldo: ${e.quantidade} (mín: ${e.estoque_minimo})`,
+      }));
+      setAlertas(result);
+    }).catch(() => {});
+  }, []);
+  return alertas;
+}
+
 function tempoAtras(ts) {
   const diff = Math.floor((Date.now() - new Date(ts)) / 1000);
   if (diff < 60)    return "agora";
@@ -181,11 +237,13 @@ export default function NotificacaoDropdown() {
   const perfil = useAppStore((s) => s.user?.perfil);
   const { notificacoes, marcar, marcarTodas } = useNotificacoes();
   const allAlertas = useAlertas();
+  const alertasOp  = useAlertasOperacionais();
 
   const catsPermitidas = CATS_PERFIL[perfil] || null; // null = diretor vê tudo
+  const merged = [...allAlertas, ...alertasOp];
   const alertas = catsPermitidas
-    ? allAlertas.filter((a) => catsPermitidas.includes(a.categoria))
-    : allAlertas;
+    ? merged.filter((a) => catsPermitidas.includes(a.categoria))
+    : merged;
 
   const naoLidas    = notificacoes.filter((n) => !n.lida).length;
   const totalBadge  = naoLidas + alertas.length;

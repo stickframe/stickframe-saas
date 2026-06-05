@@ -166,11 +166,19 @@ export default function Concorrencias() {
 
   const analise = calcularResultado(resultado);
 
+  const isMobile = window.innerWidth < 768;
+
   return (
     <div style={{ display: "flex", height: "100%", overflow: "hidden" }}>
 
-      {/* Lista esquerda */}
-      <div style={{ width: 320, flexShrink: 0, borderRight: `1px solid ${C.border}`, display: "flex", flexDirection: "column" }}>
+      {/* Lista esquerda — oculta no mobile quando há seleção */}
+      <div style={{
+        width: isMobile ? "100%" : 320,
+        flexShrink: 0,
+        borderRight: isMobile ? "none" : `1px solid ${C.border}`,
+        display: isMobile && sel ? "none" : "flex",
+        flexDirection: "column",
+      }}>
         <div style={{ padding: "16px 16px 12px", borderBottom: `1px solid ${C.border}` }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
             <h3 style={{ fontSize: 16, fontWeight: 800, margin: 0 }}>Concorrências</h3>
@@ -209,8 +217,8 @@ export default function Concorrencias() {
         </div>
       </div>
 
-      {/* Painel direito */}
-      <div style={{ flex: 1, overflowY: "auto", padding: "24px" }}>
+      {/* Painel direito — ocupa tela toda no mobile */}
+      <div style={{ flex: 1, overflowY: "auto", padding: isMobile ? "16px" : "24px", display: isMobile && !sel ? "none" : "block" }}>
         {!sel ? (
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", color: C.muted }}>
             <div style={{ fontSize: 40, marginBottom: 12 }}>🤝</div>
@@ -221,6 +229,12 @@ export default function Concorrencias() {
           <div style={{ color: C.muted, padding: "40px 0", textAlign: "center" }}>Carregando propostas...</div>
         ) : resultado && (
           <>
+            {/* Botão voltar mobile */}
+            {isMobile && (
+              <button onClick={() => setSel(null)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 13, fontWeight: 700, color: C.red, padding: "0 0 16px", fontFamily: "inherit", display: "flex", alignItems: "center", gap: 4 }}>
+                ← Voltar
+              </button>
+            )}
             {/* Header */}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24 }}>
               <div>

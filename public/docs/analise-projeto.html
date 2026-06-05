@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Análise StickFrame SaaS</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    color: #1a1a1a;
+    background: #fff;
+    padding: 40px 48px;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  /* ── CAPA ── */
+  .cover {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 40px 0 36px;
+    border-bottom: 3px solid #981915;
+    margin-bottom: 36px;
+  }
+  .cover-tag {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #981915;
+    background: #fde8e8;
+    padding: 4px 12px;
+    border-radius: 20px;
+  }
+  .cover-title {
+    font-size: 32px;
+    font-weight: 800;
+    color: #1a1a1a;
+    line-height: 1.15;
+  }
+  .cover-title span { color: #981915; }
+  .cover-sub {
+    font-size: 14px;
+    color: #6b7280;
+    max-width: 500px;
+    line-height: 1.6;
+  }
+  .cover-meta {
+    display: flex;
+    gap: 24px;
+    margin-top: 8px;
+  }
+  .cover-meta-item { font-size: 11px; color: #6b7280; }
+  .cover-meta-item strong { color: #1a1a1a; font-weight: 600; }
+
+  /* ── SEÇÕES ── */
+  h2 {
+    font-size: 16px;
+    font-weight: 800;
+    color: #1a1a1a;
+    margin: 32px 0 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #e2e4ea;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  h3 {
+    font-size: 13px;
+    font-weight: 700;
+    color: #4b4b4b;
+    margin: 18px 0 10px;
+  }
+
+  /* ── TABELAS ── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 16px;
+    font-size: 12.5px;
+  }
+  th {
+    background: #f5f6f8;
+    padding: 8px 12px;
+    text-align: left;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: #6b7280;
+    text-transform: uppercase;
+    border-bottom: 1px solid #e2e4ea;
+  }
+  td {
+    padding: 9px 12px;
+    border-bottom: 1px solid #f0f1f3;
+    color: #1a1a1a;
+    vertical-align: top;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #fafafa; }
+
+  /* ── CARDS DE STATUS ── */
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .kpi-card {
+    background: #f5f6f8;
+    border-radius: 10px;
+    padding: 14px 16px;
+    border-left: 3px solid #981915;
+  }
+  .kpi-value { font-size: 26px; font-weight: 800; color: #981915; line-height: 1; }
+  .kpi-label { font-size: 10px; color: #6b7280; font-weight: 600; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  /* ── BADGES ── */
+  .badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 700;
+  }
+  .badge-red    { background: #fde8e8; color: #981915; }
+  .badge-yellow { background: #fff8e1; color: #b97a00; }
+  .badge-green  { background: #e6f9f0; color: #2e9e5b; }
+  .badge-blue   { background: #e8f0ff; color: #3b6def; }
+
+  /* ── ALERTAS ── */
+  .alert {
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 10px 0;
+    font-size: 12.5px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .alert-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+  .alert-red    { background: #fde8e8; border-left: 3px solid #981915; color: #7a1210; }
+  .alert-yellow { background: #fff8e1; border-left: 3px solid #b97a00; color: #7a5000; }
+  .alert-green  { background: #e6f9f0; border-left: 3px solid #2e9e5b; color: #1a6637; }
+
+  /* ── CODE ── */
+  pre {
+    background: #f5f6f8;
+    border-radius: 8px;
+    padding: 14px 16px;
+    font-family: 'Menlo', 'Consolas', monospace;
+    font-size: 11.5px;
+    color: #1a1a1a;
+    overflow-x: auto;
+    margin: 10px 0;
+    border: 1px solid #e2e4ea;
+  }
+
+  /* ── RODAPÉ ── */
+  .footer {
+    margin-top: 48px;
+    padding-top: 16px;
+    border-top: 1px solid #e2e4ea;
+    font-size: 11px;
+    color: #9ca3af;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  @media print {
+    body { padding: 28px 36px; }
+    h2 { page-break-before: auto; }
+    table { page-break-inside: avoid; }
+    .card-grid { page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<!-- CAPA -->
+<div class="cover">
+  <div class="cover-tag">Relatório Técnico</div>
+  <div class="cover-title">Análise do Projeto<br/><span>StickFrame SaaS</span></div>
+  <div class="cover-sub">Plataforma de gestão completa para construtoras de Steel Frame — análise de arquitetura, módulos, banco de dados e oportunidades de melhoria.</div>
+  <div class="cover-meta">
+    <div class="cover-meta-item"><strong>Versão</strong><br/>2.0.0</div>
+    <div class="cover-meta-item"><strong>Data</strong><br/>Junho / 2026</div>
+    <div class="cover-meta-item"><strong>Stack</strong><br/>React 18 + Vite 5 + Supabase</div>
+    <div class="cover-meta-item"><strong>Deploy</strong><br/>Vercel + PWA</div>
+  </div>
+</div>
+
+<!-- KPIs -->
+<div class="card-grid">
+  <div class="kpi-card">
+    <div class="kpi-value">38</div>
+    <div class="kpi-label">Páginas / Módulos</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-value">13</div>
+    <div class="kpi-label">Tabelas no Banco</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-value">13</div>
+    <div class="kpi-label">Slices Zustand</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-value">4</div>
+    <div class="kpi-label">Perfis de Usuário</div>
+  </div>
+</div>
+
+<!-- STACK -->
+<h2>🏗️ Stack Tecnológica</h2>
+<table>
+  <tr><th>Camada</th><th>Tecnologia</th><th>Detalhes</th></tr>
+  <tr><td>Frontend</td><td>React 18 + Vite 5</td><td>React Router 7, Lazy/Suspense, ErrorBoundary</td></tr>
+  <tr><td>Estado Global</td><td>Zustand 4</td><td>13 slices, persist (user + empresaId apenas)</td></tr>
+  <tr><td>Backend / BaaS</td><td>Supabase</td><td>Postgres + Auth + Realtime + Storage + RLS</td></tr>
+  <tr><td>PWA</td><td>vite-plugin-pwa</td><td>injectManifest, SW customizado, install banner</td></tr>
+  <tr><td>BIM</td><td>@thatopen/components</td><td>three.js 0.184 + web-ifc 0.0.77</td></tr>
+  <tr><td>Estilo</td><td>Vanilla CSS</td><td>Design system via CSS Variables + inline styles</td></tr>
+  <tr><td>Monitoring</td><td>Sentry React</td><td>@sentry/react ^10.55</td></tr>
+  <tr><td>Deploy</td><td>Vercel</td><td>vercel.json configurado</td></tr>
+  <tr><td>Virtualização</td><td>@tanstack/react-virtual</td><td>Para listas longas</td></tr>
+  <tr><td>Cache local</td><td>idb (IndexedDB)</td><td>offlineDB.js</td></tr>
+</table>
+
+<!-- MÓDULOS -->
+<h2>📁 Módulos Principais</h2>
+<table>
+  <tr><th>Módulo</th><th>Arquivo</th><th>Tamanho</th><th>Status</th></tr>
+  <tr><td>Gestão de Obras</td><td>GestaoObras.jsx</td><td>143 KB</td><td><span class="badge badge-red">⚠️ Muito grande</span></td></tr>
+  <tr><td>Orçamento Técnico</td><td>OrcamentoTecnico.jsx</td><td>97 KB</td><td><span class="badge badge-yellow">Atenção</span></td></tr>
+  <tr><td>Orçamentos</td><td>Orcamentos.jsx</td><td>75 KB</td><td><span class="badge badge-yellow">Atenção</span></td></tr>
+  <tr><td>Quantitativos</td><td>Quantitativos.jsx</td><td>55 KB</td><td><span class="badge badge-green">OK</span></td></tr>
+  <tr><td>Equipe</td><td>Equipe.jsx</td><td>53 KB</td><td><span class="badge badge-green">OK</span></td></tr>
+  <tr><td>CRM / Clientes</td><td>CRM.jsx</td><td>56 KB</td><td><span class="badge badge-green">OK</span></td></tr>
+  <tr><td>Dashboard</td><td>Dashboard.jsx</td><td>62 KB</td><td><span class="badge badge-green">OK</span></td></tr>
+  <tr><td>Financeiro</td><td>Financeiro.jsx</td><td>44 KB</td><td><span class="badge badge-green">OK</span></td></tr>
+  <tr><td>BIM</td><td>BIM.jsx</td><td>47 KB</td><td><span class="badge badge-green">OK</span></td></tr>
+  <tr><td>Monitor de Preços</td><td>MonitorPrecos.jsx</td><td>69 bytes</td><td><span class="badge badge-red">❌ Vazio</span></td></tr>
+</table>
+
+<h3>Rotas Públicas (sem autenticação)</h3>
+<table>
+  <tr><th>Rota</th><th>Propósito</th></tr>
+  <tr><td>/portal/:token</td><td>Portal do cliente</td></tr>
+  <tr><td>/proposta/:token</td><td>Proposta online</td></tr>
+  <tr><td>/contrato/:token</td><td>Contrato online para assinatura</td></tr>
+  <tr><td>/qr/obra/:obraId</td><td>QR Code da obra (acesso em campo)</td></tr>
+  <tr><td>/calcular</td><td>Calculadora pública de orçamento</td></tr>
+  <tr><td>/concorrencia/:token</td><td>Portal de concorrência pública</td></tr>
+  <tr><td>/ponto/:token</td><td>Registro de ponto do colaborador</td></tr>
+  <tr><td>/ambiente/:token</td><td>Ambiente QR (obra)</td></tr>
+  <tr><td>/painel/:token</td><td>Painel QR geral</td></tr>
+</table>
+
+<!-- BANCO -->
+<h2>🗄️ Banco de Dados</h2>
+<pre>empresas
+  └── usuários
+  └── clientes
+        └── obras
+              ├── orcamentos
+              ├── contratos
+              ├── financeiro
+              ├── medicoes
+              ├── diario
+              └── arquivos
+        └── eventos (agenda)
+  └── historico
+  └── notificacoes</pre>
+
+<table>
+  <tr><th>Recurso</th><th>Status</th></tr>
+  <tr><td>RLS habilitado em todas as tabelas</td><td><span class="badge badge-green">✅ Configurado</span></td></tr>
+  <tr><td>Isolamento multiempresa via get_empresa_id()</td><td><span class="badge badge-green">✅ OK</span></td></tr>
+  <tr><td>Realtime (obras, diario, notificacoes)</td><td><span class="badge badge-green">✅ Ativo</span></td></tr>
+  <tr><td>Índices nas FK mais consultadas</td><td><span class="badge badge-green">✅ Criados</span></td></tr>
+  <tr><td>Tabela colaboradores</td><td><span class="badge badge-red">❌ Ausente no schema</span></td></tr>
+  <tr><td>Campo onboarding_completo em empresas</td><td><span class="badge badge-red">❌ Ausente no schema</span></td></tr>
+</table>
+
+<!-- PERFIS -->
+<h2>👥 Perfis de Usuário</h2>
+<table>
+  <tr><th>Perfil</th><th>Foco</th><th>Páginas acessíveis</th></tr>
+  <tr><td><span class="badge badge-red">Diretor</span></td><td>Visão completa</td><td>Todas as 23 páginas</td></tr>
+  <tr><td><span class="badge badge-yellow">Comercial</span></td><td>Prospecção e vendas</td><td>Dashboard, Agenda, CRM, Orçamentos, Configurações</td></tr>
+  <tr><td><span class="badge badge-blue">Engenheiro</span></td><td>Entrega e campo</td><td>Obras, BIM, Medições, Diário, Vistorias, Quantitativos...</td></tr>
+  <tr><td><span class="badge badge-green">Financeiro</span></td><td>Números e contratos</td><td>Dashboard, Financeiro, Contratos, Histórico, Monitor Preços</td></tr>
+</table>
+
+<!-- PONTOS FORTES -->
+<h2>✅ Pontos Fortes</h2>
+
+<div class="alert alert-green">
+  <div class="alert-icon">🚀</div>
+  <div><strong>Code Splitting excelente</strong> — Todas as 38 páginas usam <code>lazy()</code> com <code>&lt;Suspense&gt;</code>. Prefetch inteligente das mais acessadas via <code>requestIdleCallback</code> após login.</div>
+</div>
+<div class="alert alert-green">
+  <div class="alert-icon">🔒</div>
+  <div><strong>Segurança multiempresa</strong> — RLS habilitado em todas as tabelas. Isolamento garantido via função <code>get_empresa_id()</code> no Postgres.</div>
+</div>
+<div class="alert alert-green">
+  <div class="alert-icon">📱</div>
+  <div><strong>PWA completo</strong> — Service Worker customizado com <code>injectManifest</code>, install banner implementado, suporte offline via IndexedDB.</div>
+</div>
+<div class="alert alert-green">
+  <div class="alert-icon">🔗</div>
+  <div><strong>URL-aware navigation</strong> — <code>pushState</code>, suporte ao botão Voltar/Avançar, restauração de página após reload.</div>
+</div>
+<div class="alert alert-green">
+  <div class="alert-icon">📦</div>
+  <div><strong>Chunking manual no Vite</strong> — BIM engine (<code>@thatopen</code>, <code>web-ifc</code>) e Three.js separados em chunks independentes, evitando bundle gigante.</div>
+</div>
+<div class="alert alert-green">
+  <div class="alert-icon">🌐</div>
+  <div><strong>Portais públicos tokenizados</strong> — 9 rotas públicas para cliente, proposta, contrato, QR, ponto e concorrência — sem necessidade de login.</div>
+</div>
+
+<!-- PONTOS DE ATENÇÃO -->
+<h2>⚠️ Pontos de Atenção</h2>
+
+<h3>🔴 Crítico</h3>
+<div class="alert alert-red">
+  <div class="alert-icon">🔴</div>
+  <div><strong>GestaoObras.jsx com 143 KB</strong> — Arquivo gigante com baixa manutenibilidade. Precisa ser quebrado em sub-componentes (tabs, modais, formulários).</div>
+</div>
+<div class="alert alert-red">
+  <div class="alert-icon">🔴</div>
+  <div><strong>MonitorPrecos.jsx vazio (69 bytes)</strong> — Módulo listado na sidebar mas sem implementação alguma. Causa erro silencioso de tela branca.</div>
+</div>
+<div class="alert alert-red">
+  <div class="alert-icon">🔴</div>
+  <div><strong>src/supabase.js legado</strong> — Arquivo duplicado que acessa tabela <code>lancamentos</code> que não existe no schema atual. Pode causar erros em produção.</div>
+</div>
+
+<h3>🟡 Médio</h3>
+<div class="alert alert-yellow">
+  <div class="alert-icon">🟡</div>
+  <div><strong>colaboradorSlice sem tabela</strong> — O slice Zustand para colaboradores existe mas a tabela <code>colaboradores</code> não está no schema SQL.</div>
+</div>
+<div class="alert alert-yellow">
+  <div class="alert-icon">🟡</div>
+  <div><strong>onboarding_completo ausente no schema</strong> — O campo é verificado no <code>AppLayout.jsx</code> mas não está declarado na tabela <code>empresas</code>.</div>
+</div>
+<div class="alert alert-yellow">
+  <div class="alert-icon">🟡</div>
+  <div><strong>insumosSF.js com 53 KB</strong> — Base de dados de insumos carregada estaticamente. Deveria ser lazy-loaded apenas pelos módulos que a utilizam.</div>
+</div>
+<div class="alert alert-yellow">
+  <div class="alert-icon">🟡</div>
+  <div><strong>Inline styles misturados com CSS</strong> — Sidebar.jsx e outros componentes usam estilos inline extensos em vez do design system CSS já existente.</div>
+</div>
+<div class="alert alert-yellow">
+  <div class="alert-icon">🟡</div>
+  <div><strong>Binários no repositório</strong> — <code>stickframe-v2.zip</code> (89 KB) commitado no Git. Deveria ser removido e tratado via releases ou storage externo.</div>
+</div>
+
+<!-- OPORTUNIDADES -->
+<h2>💡 Oportunidades de Melhoria</h2>
+<table>
+  <tr><th>Prioridade</th><th>Ação</th><th>Impacto estimado</th></tr>
+  <tr><td><span class="badge badge-red">Alta</span></td><td>Quebrar GestaoObras.jsx em sub-componentes</td><td>Manutenibilidade, performance de build</td></tr>
+  <tr><td><span class="badge badge-red">Alta</span></td><td>Implementar MonitorPrecos.jsx</td><td>Módulo funcional para todos os perfis</td></tr>
+  <tr><td><span class="badge badge-red">Alta</span></td><td>Remover src/supabase.js legado</td><td>Elimina risco de bugs em produção</td></tr>
+  <tr><td><span class="badge badge-red">Alta</span></td><td>Adicionar campo onboarding_completo no schema</td><td>Fluxo de onboarding funcional</td></tr>
+  <tr><td><span class="badge badge-yellow">Média</span></td><td>Criar tabela colaboradores no Supabase</td><td>Consistência store ↔ banco</td></tr>
+  <tr><td><span class="badge badge-yellow">Média</span></td><td>Lazy-load insumosSF.js</td><td>Redução de ~53 KB no bundle inicial</td></tr>
+  <tr><td><span class="badge badge-yellow">Média</span></td><td>Migrar inline styles para CSS classes</td><td>Consistência visual e manutenibilidade</td></tr>
+  <tr><td><span class="badge badge-yellow">Média</span></td><td>Ampliar cobertura de testes (Cypress)</td><td>Confiabilidade em deploys</td></tr>
+  <tr><td><span class="badge badge-green">Baixa</span></td><td>Implementar Dark Mode (CSS vars já prontas)</td><td>UX premium, diferencial SaaS</td></tr>
+  <tr><td><span class="badge badge-green">Baixa</span></td><td>Ícones PWA 192x192 e 512x512</td><td>Melhor experiência de instalação</td></tr>
+</table>
+
+<!-- SERVIÇOS -->
+<h2>🔧 Serviços e Utilitários</h2>
+<table>
+  <tr><th>Serviço</th><th>Arquivo</th><th>Propósito</th></tr>
+  <tr><td>PDF</td><td>pdfService.js (30 KB)</td><td>Geração de propostas, contratos e relatórios em PDF</td></tr>
+  <tr><td>E-mail</td><td>emailService.js (12 KB)</td><td>Envio de e-mails transacionais</td></tr>
+  <tr><td>WhatsApp</td><td>whatsappService.js</td><td>Integração para notificações via WhatsApp</td></tr>
+  <tr><td>Push</td><td>pushService.js</td><td>Web Push API — notificações em tempo real</td></tr>
+  <tr><td>Excel</td><td>exportExcel.js</td><td>Exportação para XLSX via biblioteca xlsx</td></tr>
+  <tr><td>Offline Cache</td><td>offlineDB.js</td><td>Cache local via IndexedDB (idb)</td></tr>
+  <tr><td>Insumos SF</td><td>insumosSF.js (53 KB)</td><td>Base de dados de preços e insumos Steel Frame</td></tr>
+  <tr><td>Print HTML</td><td>printHtml.js</td><td>Impressão direta de documentos HTML</td></tr>
+</table>
+
+<!-- RODAPÉ -->
+<div class="footer">
+  <span>StickFrame SaaS — Análise Técnica v2.0</span>
+  <span>Gerado em Junho / 2026</span>
+</div>
+
+</body>
+</html>

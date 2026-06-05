@@ -1,4 +1,48 @@
 import { useState, useMemo, useEffect } from "react";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+
+function CurvaS({ medicoes }) {
+  const meses = {};
+  (medicoes || []).forEach(m => {
+    const mes = (m.data || m.created_at || "").substring(0, 7);
+    if (!mes) return;
+    if (!meses[mes]) meses[mes] = { mes, total: 0, count: 0 };
+    meses[mes].total += (m.percentual_acumulado || m.percentual || 0);
+    meses[mes].count += 1;
+  });
+
+  const sorted = Object.values(meses).sort((a, b) => a.mes.localeCompare(b.mes));
+  const dados = sorted.map((m, i) => ({
+    mes: m.mes,
+    realizado: Math.min(100, Math.round(m.total / m.count)),
+    previsto: Math.round(((i + 1) / Math.max(sorted.length, 1)) * 100),
+  }));
+
+  if (dados.length < 2) return (
+    <div style={{ background: "var(--bg-card)", borderRadius: 12, padding: 24, marginBottom: 20, textAlign: "center", color: "var(--text-muted)" }}>
+      <p style={{ fontSize: 32, margin: "0 0 8px" }}>📈</p>
+      <p style={{ margin: 0 }}>Curva S disponível após registrar medições em 2+ meses.</p>
+    </div>
+  );
+
+  return (
+    <div style={{ background: "var(--bg-card)", borderRadius: 12, padding: 24, marginBottom: 20 }}>
+      <h3 style={{ margin: "0 0 16px", fontSize: 15, fontWeight: 700 }}>📈 Curva S — Progresso Físico</h3>
+      <ResponsiveContainer width="100%" height={260}>
+        <LineChart data={dados}>
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+          <XAxis dataKey="mes" tick={{ fontSize: 11 }} />
+          <YAxis unit="%" tick={{ fontSize: 11 }} domain={[0, 100]} />
+          <Tooltip formatter={v => `${v}%`} />
+          <Legend />
+          <Line type="monotone" dataKey="previsto" name="Previsto" stroke="#3b82f6" strokeDasharray="5 5" strokeWidth={2} dot={false} />
+          <Line type="monotone" dataKey="realizado" name="Realizado" stroke="#22c55e" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+import Comentarios from "../components/ui/Comentarios";
 import { Link, Ruler } from "../components/ui/Icon";
 import { C } from "../utils/constants";
 import { fmt } from "../utils/format";
@@ -10,6 +54,7 @@ import Input from "../components/ui/Input";
 import Badge from "../components/ui/Badge";
 import Modal from "../components/ui/Modal";
 import { gerarCobrancaAsaas } from "../services/repositories/obraRepository";
+import { gerarBoletimMedicao } from "../services/relatorioService";
 import { useObraPermission, useObrasVisiveis } from "../hooks/useObraPermission";
 
 export default function Medicoes() {
@@ -39,6 +84,7 @@ export default function Medicoes() {
   const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
   const { toast, mostrarToast } = useToast();
   const [asaasModal, setAsaasModal] = useState(null); // null | medicao object
+  const [comentariosModal, setComentariosModal] = useState(null); // null | medicao object
   const [cpfCnpjCliente, setCpfCnpjCliente] = useState("");
   const defaultVencimento = () => { const d = new Date(); d.setDate(d.getDate() + 30); return d.toISOString().slice(0, 10); };
   const [vencimentoAsaas, setVencimentoAsaas] = useState(defaultVencimento);
@@ -94,6 +140,12 @@ export default function Medicoes() {
         </div>
       )}
 
+      {comentariosModal && (
+        <Modal title={`💬 Comentários — Medição #${comentariosModal.numero}`} onClose={() => setComentariosModal(null)}>
+          <Comentarios entidade="medicao" entidadeId={comentariosModal.id} title={`Medição #${comentariosModal.numero} — ${comentariosModal.descricao}`} />
+        </Modal>
+      )}
+
       {asaasModal && (
         <Modal title={`Gerar cobrança — Medição #${asaasModal.numero}`} onClose={() => setAsaasModal(null)}>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -144,7 +196,13 @@ export default function Medicoes() {
             <h2 style={{ fontSize: 22, fontWeight: 800 }}>Medições de Obra</h2>
             <p style={{ color: C.muted, fontSize: 13, marginTop: 4 }}>Controle de avanço físico-financeiro por etapa</p>
           </div>
-          {podeEditar() && <Btn onClick={() => setModal(true)}>+ Nova medição</Btn>}
+          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+            <button onClick={() => gerarBoletimMedicao(obra, lista)}
+              style={{ padding: "7px 14px", background: "#b41e1e", color: "#fff", border: "none", borderRadius: 8, cursor: "pointer", fontWeight: 600, fontSize: 13, display: "inline-flex", alignItems: "center", gap: 6 }}>
+              📄 Boletim PDF
+            </button>
+            {podeEditar() && <Btn onClick={() => setModal(true)}>+ Nova medição</Btn>}
+          </div>
         </div>
 
         <div style={{ display: "flex", gap: 10, marginBottom: 22, flexWrap: "wrap" }}>
@@ -175,6 +233,8 @@ export default function Medicoes() {
             <div style={{ height: 8, width: `${Math.min(pctMedido, 100)}%`, background: `linear-gradient(90deg,${C.red},#6e1210)`, borderRadius: 4, transition: "width .5s" }} />
           </div>
         </div>
+
+        <CurvaS medicoes={lista} />
 
         {lista.length === 0 ? (
           <div style={{ background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", border: `1px solid ${C.border}`, padding: "48px 0", textAlign: "center" }}>
@@ -211,6 +271,7 @@ export default function Medicoes() {
                       {m.link_pagamento && (
                         <a href={m.link_pagamento} target="_blank" rel="noreferrer" style={{ padding: "5px 8px", background: C.border, border: `1px solid ${C.border}`, borderRadius: 6, color: C.text, fontSize: 12, textDecoration: "none" }} title="Abrir link de pagamento"><Link size={11} /></a>
                       )}
+                      <button onClick={() => setComentariosModal(m)} style={{ padding: "5px 10px", background: "transparent", border: `1px solid ${C.border}`, borderRadius: 6, color: C.muted, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>💬</button>
                     </td>
                   </tr>
                 ))}

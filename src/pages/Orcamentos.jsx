@@ -787,6 +787,22 @@ export default function Orcamentos() {
 
   function confirmarDelete(id) { setConfirm(id); }
 
+  function duplicarOrcamento(o) {
+    const clienteSel = clientes.find((c) => c.id === o.cliente_id);
+    addOrcamento({
+      ref:        gerarRef(),
+      cliente:    o.cliente,
+      cliente_id: o.cliente_id,
+      valor:      o.valor,
+      unidades:   o.unidades,
+      area:       o.area,
+      padrao:     o.padrao,
+      status:     "Aguardando resposta",
+      criado:     new Date().toLocaleDateString("pt-BR"),
+    });
+    mostrarToast("✅ Orçamento duplicado!");
+  }
+
   function abrirConverter(o) {
     const clienteSel = clientes.find((c) => c.id === o.cliente_id);
     const nomeSugerido = `${o.cliente} — ${new Date().getFullYear()}`;
@@ -1314,6 +1330,17 @@ export default function Orcamentos() {
                       </button>
                     )}
 
+                    <button
+                      onClick={() => duplicarOrcamento(o)}
+                      style={{
+                        padding: "6px 12px", background: "#4a9eff22",
+                        border: "1px solid #4a9eff44", borderRadius: 6,
+                        color: "#4a9eff", fontSize: 11, fontWeight: 700,
+                        cursor: "pointer", fontFamily: "inherit",
+                      }}
+                    >
+                      📋 Duplicar
+                    </button>
                     <button
                       onClick={() => confirmarDelete(o.id)}
                       style={{

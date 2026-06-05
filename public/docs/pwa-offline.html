@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>PWA Instalável + Push Notifications — StickFrame</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --sf-red: #981915;
+    --dark: #0f1117;
+    --card: #16191f;
+    --border: #252830;
+    --text: #e8eaf0;
+    --muted: #7b8394;
+    --green: #22c55e;
+    --yellow: #f59e0b;
+    --red: #ef4444;
+    --blue: #3b82f6;
+    --violet: #7c3aed;
+    --code-bg: #0d1117;
+    --radius: 14px;
+  }
+  body { font-family: 'Inter', sans-serif; background: var(--dark); color: var(--text); font-size: 14px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+  a { color: var(--sf-red); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code { font-family: 'Fira Code', 'Cascadia Code', 'Consolas', monospace; }
+
+  .nav { padding: 16px 48px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+  .nav-back { font-size: 13px; color: var(--muted); transition: color 0.15s; }
+  .nav-back:hover { color: var(--text); text-decoration: none; }
+  .nav-sep { color: var(--border); }
+  .nav-current { font-size: 13px; color: var(--text); font-weight: 500; }
+
+  .page-header {
+    background: linear-gradient(135deg, #0f1117 0%, #100f1a 60%, #0f1117 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 56px 48px 48px; position: relative; overflow: hidden;
+  }
+  .page-header::before {
+    content: ''; position: absolute; top: -80px; right: -80px;
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(124,58,237,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .header-inner { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
+  .header-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--sf-red); background: rgba(152,25,21,0.15); border: 1px solid rgba(152,25,21,0.3);
+    padding: 5px 14px; border-radius: 20px; margin-bottom: 20px;
+  }
+  .header-title { font-size: clamp(28px, 4vw, 44px); font-weight: 800; color: #fff; line-height: 1.15; margin-bottom: 12px; letter-spacing: -0.5px; }
+  .header-sub { color: var(--muted); font-size: 15px; max-width: 580px; line-height: 1.7; }
+  .header-meta { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+  .meta-pill { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 7px 12px; font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+  .meta-pill strong { color: var(--text); }
+  .dot-violet { width: 6px; height: 6px; border-radius: 50%; background: var(--violet); }
+  .dot-green { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 48px; }
+  section { padding: 52px 0; border-bottom: 1px solid var(--border); }
+  section:last-of-type { border-bottom: none; }
+
+  .sec-header { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; }
+  .sec-icon { font-size: 22px; }
+  .sec-title { font-size: 20px; font-weight: 800; color: #fff; }
+  .sec-badge { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; padding: 3px 10px; border-radius: 20px; margin-left: auto; white-space: nowrap; }
+  .badge-violet { background: rgba(124,58,237,0.15); color: var(--violet); border: 1px solid rgba(124,58,237,0.3); }
+  .badge-green { background: rgba(34,197,94,0.15); color: var(--green); border: 1px solid rgba(34,197,94,0.3); }
+
+  .tbl-wrap { overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: 24px; }
+  table { width: 100%; border-collapse: collapse; }
+  thead th { background: #1e2128; padding: 12px 18px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); text-align: left; }
+  tbody tr { border-top: 1px solid var(--border); transition: background 0.15s; }
+  tbody tr:nth-child(even) { background: rgba(255,255,255,0.02); }
+  tbody tr:hover { background: rgba(124,58,237,0.04); }
+  tbody td { padding: 13px 18px; font-size: 13px; color: var(--text); vertical-align: middle; }
+  tbody td strong { color: #fff; }
+  tbody td code { font-size: 12px; background: var(--code-bg); border: 1px solid var(--border); border-radius: 5px; padding: 2px 7px; color: #c9b1fd; }
+
+  /* TECH CARDS */
+  .tech-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+  .tech-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+  .tech-icon { font-size: 24px; margin-bottom: 10px; }
+  .tech-title { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+  .tech-title code { font-size: 11px; background: rgba(124,58,237,0.15); color: #c9b1fd; border: 1px solid rgba(124,58,237,0.3); border-radius: 5px; padding: 2px 7px; }
+  .tech-desc { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+  /* NOTIFICATIONS */
+  .notif-list { display: flex; flex-direction: column; gap: 10px; }
+  .notif-row {
+    background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+    padding: 14px 18px; display: grid; grid-template-columns: auto 1fr auto; gap: 14px; align-items: center;
+    transition: border-color 0.15s;
+  }
+  .notif-row:hover { border-color: rgba(124,58,237,0.3); }
+  .notif-icon { font-size: 20px; }
+  .notif-title { font-size: 13px; font-weight: 600; color: #fff; margin-bottom: 2px; }
+  .notif-desc { font-size: 11px; color: var(--muted); }
+  .notif-timing { font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 20px; white-space: nowrap; }
+
+  /* INSTALL STEPS */
+  .install-steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; background: var(--border); border-radius: var(--radius); overflow: hidden; }
+  .install-step { background: var(--card); padding: 20px; position: relative; }
+  .install-step:not(:last-child)::after {
+    content: '→'; position: absolute; right: -12px; top: 50%; transform: translateY(-50%);
+    color: var(--muted); font-size: 16px; z-index: 2; background: var(--card);
+    padding: 2px 0;
+  }
+  .install-num { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--violet); margin-bottom: 8px; }
+  .install-title { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+  .install-desc { font-size: 11px; color: var(--muted); line-height: 1.5; }
+
+  /* COMPARISON */
+  .comp-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .comp-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+  .comp-card.highlight { border-color: rgba(152,25,21,0.4); border-left: 4px solid var(--sf-red); }
+  .comp-name { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 12px; }
+  .comp-item { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: var(--muted); margin-bottom: 7px; line-height: 1.5; }
+  .icon-yes { color: var(--green); }
+  .icon-no { color: var(--red); }
+  .icon-partial { color: var(--yellow); }
+
+  /* CODE BLOCK */
+  .code-block { background: var(--code-bg); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 0; }
+  .code-block-header { background: #161b22; border-bottom: 1px solid var(--border); padding: 10px 18px; display: flex; align-items: center; justify-content: space-between; }
+  .code-lang { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #c9b1fd; }
+  .code-block pre { padding: 20px 22px; overflow-x: auto; }
+  .code-block code { font-size: 12.5px; line-height: 1.7; color: #e6edf3; }
+  .code-key { color: #79c0ff; }
+  .code-str { color: #a5d6ff; }
+  .code-bool { color: #f78166; }
+  .code-comment { color: #8b949e; }
+
+  .pitch {
+    background: rgba(152,25,21,0.08); border-left: 4px solid var(--sf-red);
+    border-radius: 0 10px 10px 0; padding: 18px 22px;
+    font-size: 13px; color: var(--text); font-style: italic; line-height: 1.8;
+  }
+  .pitch::before { content: '"'; font-size: 20px; font-weight: 800; color: var(--sf-red); margin-right: 4px; font-style: normal; vertical-align: -3px; }
+
+  footer { border-top: 1px solid var(--border); padding: 32px 48px; text-align: center; }
+  footer p { font-size: 12px; color: var(--muted); }
+  footer strong { color: var(--text); }
+
+  @media (max-width: 768px) {
+    .nav, .page-header, .container, footer { padding-left: 20px; padding-right: 20px; }
+    .comp-row { grid-template-columns: 1fr; }
+    .install-steps { grid-template-columns: 1fr 1fr; }
+    .install-step::after { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/" class="nav-back">← Voltar ao sistema</a>
+  <span class="nav-sep">/</span>
+  <span class="nav-current">PWA Instalável + Push Notifications</span>
+</nav>
+
+<header class="page-header">
+  <div class="header-inner">
+    <div class="header-badge">&#9733; Diferencial StickFrame</div>
+    <h1 class="header-title">PWA Instalável + Push Notifications</h1>
+    <p class="header-sub">Progressive Web App completa: instala no celular como app nativo, funciona offline e envia notificações push — sem passar pela App Store ou Play Store.</p>
+    <div class="header-meta">
+      <div class="meta-pill"><span class="dot-violet"></span><strong>PWA</strong> Progressive Web App</div>
+      <div class="meta-pill"><span class="dot-green"></span>iOS + Android</div>
+      <div class="meta-pill"><span class="dot-violet"></span><strong>Service Worker</strong> offline</div>
+      <div class="meta-pill"><span class="dot-green"></span>Push API nativo</div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- COMPONENTES TÉCNICOS -->
+  <section>
+    <div class="container">
+      <div class="sec-header">
+        <span class="sec-icon">⚙️</span>
+        <h2 class="sec-title">Componentes Técnicos</h2>
+        <span class="sec-badge badge-violet">Next.js</span>
+      </div>
+      <div class="tech-grid">
+        <div class="tech-card">
+          <div class="tech-icon">📋</div>
+          <div class="tech-title"><code>manifest.json</code></div>
+          <div class="tech-desc">Define nome, ícones, cor de tema e modo standalone. Responsável pela experiência de instalação no celular.</div>
+        </div>
+        <div class="tech-card">
+          <div class="tech-icon">⚡</div>
+          <div class="tech-title"><code>sw.js</code> Service Worker</div>
+          <div class="tech-desc">Cache de assets e dados para funcionamento offline. Servido pelo Next.js com estratégia stale-while-revalidate.</div>
+        </div>
+        <div class="tech-card">
+          <div class="tech-icon">🖼️</div>
+          <div class="tech-title">Ícones PWA</div>
+          <div class="tech-desc">Ícones em 192×192 e 512×512 px otimizados para iOS e Android. Compatível com splash screen nativa.</div>
+        </div>
+        <div class="tech-card">
+          <div class="tech-icon">🔔</div>
+          <div class="tech-title">Push API</div>
+          <div class="tech-desc">Notificações enviadas mesmo com o app fechado. Integrada ao Service Worker para entrega confiável.</div>
+        </div>
+      </div>
+
+      <div style="margin-top:20px;">
+        <div class="code-block">
+          <div class="code-block-header">
+            <span class="code-lang">manifest.json — exemplo</span>
+            <span style="font-size:11px;color:var(--muted);">Configuração PWA</span>
+          </div>
+          <pre><code>{
+  <span class="code-key">"name"</span>: <span class="code-str">"StickFrame"</span>,
+  <span class="code-key">"short_name"</span>: <span class="code-str">"StickFrame"</span>,
+  <span class="code-key">"display"</span>: <span class="code-str">"standalone"</span>,
+  <span class="code-key">"background_color"</span>: <span class="code-str">"#0f1117"</span>,
+  <span class="code-key">"theme_color"</span>: <span class="code-str">"#981915"</span>,
+  <span class="code-key">"start_url"</span>: <span class="code-str">"/"</span>,
+  <span class="code-key">"icons"</span>: [
+    { <span class="code-key">"src"</span>: <span class="code-str">"/icon-192.png"</span>, <span class="code-key">"sizes"</span>: <span class="code-str">"192x192"</span> },
+    { <span class="code-key">"src"</span>: <span class="code-str">"/icon-512.png"</span>, <span class="code-key">"sizes"</span>: <span class="code-str">"512x512"</span> }
+  ]
+}</code></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- NOTIFICAÇÕES PUSH -->
+  <section>
+    <div class="container">
+      <div class="sec-header">
+        <span class="sec-icon">🔔</span>
+        <h2 class="sec-title">Notificações Push Configuradas</h2>
+      </div>
+      <div class="notif-list">
+        <div class="notif-row">
+          <span class="notif-icon">🛡️</span>
+          <div>
+            <div class="notif-title">Garantias vencendo</div>
+            <div class="notif-desc">Alertas 30 e 7 dias antes do vencimento de garantias de obra</div>
+          </div>
+          <span class="notif-timing" style="background:rgba(245,158,11,0.15);color:var(--yellow);border:1px solid rgba(245,158,11,0.3);">30d e 7d</span>
+        </div>
+        <div class="notif-row">
+          <span class="notif-icon">📅</span>
+          <div>
+            <div class="notif-title">Follow-ups de CRM atrasados</div>
+            <div class="notif-desc">Reuniões e tarefas do CRM que passaram do prazo sem conclusão</div>
+          </div>
+          <span class="notif-timing" style="background:rgba(239,68,68,0.15);color:var(--red);border:1px solid rgba(239,68,68,0.3);">Atrasado</span>
+        </div>
+        <div class="notif-row">
+          <span class="notif-icon">👷</span>
+          <div>
+            <div class="notif-title">Certificações NR vencendo</div>
+            <div class="notif-desc">NR de colaboradores prestes a vencer ou já vencidas — integrado ao módulo de Compliance</div>
+          </div>
+          <span class="notif-timing" style="background:rgba(245,158,11,0.15);color:var(--yellow);border:1px solid rgba(245,158,11,0.3);">30d e 7d</span>
+        </div>
+        <div class="notif-row">
+          <span class="notif-icon">📋</span>
+          <div>
+            <div class="notif-title">Change Orders aguardando aprovação</div>
+            <div class="notif-desc">Aditivos enviados ao cliente que ainda não foram aprovados ou rejeitados</div>
+          </div>
+          <span class="notif-timing" style="background:rgba(249,115,22,0.12);color:#f97316;border:1px solid rgba(249,115,22,0.3);">Pendente</span>
+        </div>
+        <div class="notif-row">
+          <span class="notif-icon">💸</span>
+          <div>
+            <div class="notif-title">Pagamentos em atraso</div>
+            <div class="notif-desc">Parcelas de clientes ou fornecedores que ultrapassaram o vencimento</div>
+          </div>
+          <span class="notif-timing" style="background:rgba(239,68,68,0.15);color:var(--red);border:1px solid rgba(239,68,68,0.3);">Vencido</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- EXPERIÊNCIA DE INSTALAÇÃO -->
+  <section>
+    <div class="container">
+      <div class="sec-header">
+        <span class="sec-icon">📱</span>
+        <h2 class="sec-title">Experiência de Instalação</h2>
+        <span class="sec-badge badge-green">Zero atrito</span>
+      </div>
+      <div class="install-steps">
+        <div class="install-step">
+          <div class="install-num">Passo 1</div>
+          <div class="install-title">Acessar no Chrome/Safari</div>
+          <div class="install-desc">Usuário acessa <code>app.stickframe.com.br</code> pelo celular — sem App Store, sem Play Store.</div>
+        </div>
+        <div class="install-step">
+          <div class="install-num">Passo 2</div>
+          <div class="install-title">Banner automático</div>
+          <div class="install-desc">"Adicionar à tela inicial" aparece automaticamente no primeiro acesso mobile.</div>
+        </div>
+        <div class="install-step">
+          <div class="install-num">Passo 3</div>
+          <div class="install-title">App instalado</div>
+          <div class="install-desc">Ícone na tela inicial, abre em tela cheia sem barra de URL — igual a um app nativo.</div>
+        </div>
+        <div class="install-step">
+          <div class="install-num">Passo 4</div>
+          <div class="install-title">Push ativado</div>
+          <div class="install-desc">Notificações push solicitadas na primeira abertura. Configuráveis pelo usuário.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- COMPARATIVO -->
+  <section>
+    <div class="container">
+      <div class="sec-header">
+        <span class="sec-icon">⚖️</span>
+        <h2 class="sec-title">Comparativo com Procore / Concorrentes</h2>
+      </div>
+      <div class="comp-row">
+        <div class="comp-card highlight">
+          <div class="comp-name">StickFrame — PWA incluso</div>
+          <div class="comp-item"><span class="icon-yes">✓</span> PWA instalável sem App Store / Play Store</div>
+          <div class="comp-item"><span class="icon-yes">✓</span> Service Worker para funcionamento offline</div>
+          <div class="comp-item"><span class="icon-yes">✓</span> Push notifications de contexto de obra</div>
+          <div class="comp-item"><span class="icon-yes">✓</span> Atualiza instantaneamente no servidor (sem aprovação de store)</div>
+          <div class="comp-item"><span class="icon-yes">✓</span> Zero custo de distribuição — o link já é o "app"</div>
+        </div>
+        <div class="comp-card">
+          <div class="comp-name">Procore / Concorrentes Nacionais</div>
+          <div class="comp-item"><span class="icon-partial">~</span> Procore: app nativo iOS/Android disponível, custo embutido no plano</div>
+          <div class="comp-item"><span class="icon-partial">~</span> Procore app em inglês por padrão — sem NRs brasileiras</div>
+          <div class="comp-item"><span class="icon-no">✗</span> Sienge: versão mobile responsiva apenas, sem instalação</div>
+          <div class="comp-item"><span class="icon-no">✗</span> Obra Prima: sem push notifications proativas</div>
+          <div class="comp-item"><span class="icon-no">✗</span> Apps nativos dependem de aprovação das stores para atualizar</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ONDE APARECE -->
+  <section>
+    <div class="container">
+      <div class="sec-header">
+        <span class="sec-icon">📍</span>
+        <h2 class="sec-title">Onde Aparece no Sistema</h2>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;">
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:18px;">
+          <div style="font-size:12px;font-weight:700;color:var(--violet);margin-bottom:6px;">Banner de instalação automático</div>
+          <div style="font-size:12px;color:var(--muted);">Exibido no primeiro acesso mobile. Ativado pelo manifest.json servido pelo Next.js.</div>
+        </div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:18px;">
+          <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:6px;">Configurações → Notificações</div>
+          <div style="font-size:12px;color:var(--muted);">Gerenciar quais alertas receber e para quais obras. Configuração granular por tipo de evento.</div>
+        </div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:18px;">
+          <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px;font-family:monospace;">/manifest.json e /sw.js</div>
+          <div style="font-size:12px;color:var(--muted);">Arquivos PWA servidos automaticamente pelo Next.js — sem configuração adicional.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PITCH -->
+  <section>
+    <div class="container">
+      <div class="sec-header">
+        <span class="sec-icon">🎯</span>
+        <h2 class="sec-title">Pitch para Apresentações</h2>
+      </div>
+      <div class="pitch">Gestor de obra está sempre no canteiro, com o celular. O StickFrame instala como app, notifica quando tem aditivo para aprovar ou NR vencendo — sem precisar de app na Play Store. O Procore tem app nativo mas cobra por isso; aqui já vem incluso, e atualiza instantaneamente.</div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="container">
+    <p><strong>StickFrame</strong> &copy; 2026 — Plataforma de gestão para construtoras de Steel Frame</p>
+  </div>
+</footer>
+
+</body>
+</html>

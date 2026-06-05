@@ -82,6 +82,7 @@ export const createObraSlice = (set, get) => ({
   },
 
   loadDiario: async (obraId) => {
+    if (!obraId || obraId === "null") return;
     if (get().loaded.diario[obraId]) return;
     get().setLoading("diario", true);
     try {

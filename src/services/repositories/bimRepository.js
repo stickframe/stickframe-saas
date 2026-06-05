@@ -33,7 +33,13 @@ export async function listarApontamentos(obraId) {
 }
 
 export async function criarApontamento(apt) {
-  const { data, error } = await sb.from("bim_apontamentos").insert({ ...apt, empresa_id: getEmpresaId() }).select().single();
+  const payload = {
+    ...apt,
+    empresa_id: getEmpresaId(),
+    modelo_id:  apt.modelo_id  || null,
+    prazo:      apt.prazo      || null,
+  };
+  const { data, error } = await sb.from("bim_apontamentos").insert(payload).select().single();
   if (error) throw error;
   return data;
 }

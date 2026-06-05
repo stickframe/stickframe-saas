@@ -28,6 +28,26 @@ export async function subscribePush(empresaId, userId) {
   }
 }
 
+export async function sendPush(userId, { title, body, url }) {
+  if (typeof window === "undefined") return;
+  if (!("Notification" in window)) return;
+  if (Notification.permission !== "granted") return;
+  try {
+    if ("serviceWorker" in navigator) {
+      const reg = await navigator.serviceWorker.ready;
+      await reg.showNotification(title, {
+        body,
+        icon: "/icon-192.png",
+        data: { url },
+      });
+    } else {
+      new Notification(title, { body });
+    }
+  } catch (e) {
+    console.warn("sendPush failed:", e);
+  }
+}
+
 export async function unsubscribePush() {
   if (!("serviceWorker" in navigator)) return;
   const reg = await navigator.serviceWorker.ready;

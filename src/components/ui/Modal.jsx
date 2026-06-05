@@ -1,14 +1,17 @@
 import { useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 
 export default function Modal({ title, onClose, children, width = 600 }) {
-  const firstRef = useRef(null);
+  const firstRef  = useRef(null);
+  const onCloseRef = useRef(onClose);
+  useEffect(() => { onCloseRef.current = onClose; });
 
   useEffect(() => {
     const prev = document.activeElement;
     firstRef.current?.focus();
 
     function onKeyDown(e) {
-      if (e.key === "Escape") { onClose(); return; }
+      if (e.key === "Escape") { onCloseRef.current(); return; }
       if (e.key !== "Tab") return;
       const focusable = firstRef.current?.querySelectorAll(
         'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
@@ -27,9 +30,10 @@ export default function Modal({ title, onClose, children, width = 600 }) {
       document.removeEventListener("keydown", onKeyDown);
       prev?.focus();
     };
-  }, [onClose]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  return (
+  return createPortal(
     <div
       role="dialog"
       aria-modal="true"
@@ -49,6 +53,7 @@ export default function Modal({ title, onClose, children, width = 600 }) {
         </div>
         {children}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
