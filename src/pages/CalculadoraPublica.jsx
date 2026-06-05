@@ -274,18 +274,6 @@ export default function CalculadoraPublica() {
           min-height: 100vh;
           color: #1A1A1A;
         }
-        .calc-header {
-          background: #1A1A1A;
-          padding: 16px 20px;
-          text-align: center;
-        }
-        .calc-logo {
-          font-size: 22px;
-          font-weight: 700;
-          color: #fff;
-          letter-spacing: 2px;
-        }
-        .calc-logo span { color: #981915; }
         .calc-body {
           max-width: 560px;
           margin: 0 auto;
@@ -545,12 +533,82 @@ export default function CalculadoraPublica() {
           font-weight: 500;
         }
         .back-link:hover { text-decoration: underline; }
+        .calc-header {
+          background: #111;
+          padding: 0 20px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          height: 64px;
+          border-bottom: 1px solid rgba(255,255,255,.06);
+          position: sticky; top: 0; z-index: 100;
+        }
+        .calc-header-logo {
+          display: flex; align-items: center; gap: 10px;
+        }
+        .calc-header-logo img { height: 36px; width: auto; }
+        .calc-header-badge {
+          background: #981915; color: #fff; font-size: 10px;
+          font-weight: 800; padding: 2px 8px; border-radius: 20px;
+          letter-spacing: .5px; text-transform: uppercase;
+        }
+        .calc-hero {
+          background: linear-gradient(160deg, #111 0%, #1a0505 50%, #981915 100%);
+          padding: 52px 20px 48px;
+          text-align: center;
+          color: #fff;
+        }
+        .calc-hero-tag {
+          display: inline-block; background: rgba(255,255,255,.12);
+          border: 1px solid rgba(255,255,255,.2); border-radius: 20px;
+          font-size: 11px; font-weight: 700; padding: 4px 14px;
+          letter-spacing: 1px; text-transform: uppercase; margin-bottom: 18px;
+          color: rgba(255,255,255,.85);
+        }
+        .calc-hero h1 {
+          font-size: clamp(26px, 6vw, 42px); font-weight: 900;
+          line-height: 1.15; margin: 0 0 14px; letter-spacing: -1px;
+        }
+        .calc-hero h1 span { color: #ff6b6b; }
+        .calc-hero p {
+          font-size: 15px; opacity: .75; margin: 0 auto 28px;
+          max-width: 440px; line-height: 1.6;
+        }
+        .calc-hero-stats {
+          display: flex; justify-content: center; gap: 32px; flex-wrap: wrap;
+        }
+        .calc-hero-stat { text-align: center; }
+        .calc-hero-stat-val { font-size: 22px; font-weight: 900; }
+        .calc-hero-stat-lbl { font-size: 11px; opacity: .55; margin-top: 2px; }
       `}</style>
 
       <div className="calc-root">
         <header className="calc-header">
-          <div className="calc-logo">STICK<span>FRAME</span></div>
+          <div className="calc-header-logo">
+            <img src="/logo-transparente-122x122.png" alt="Stick Frame" />
+          </div>
+          <span className="calc-header-badge">Steel Frame</span>
         </header>
+
+        <div className="calc-hero">
+          <div className="calc-hero-tag">🏗 Calculadora Gratuita</div>
+          <h1>Quanto custa sua<br /><span>casa em Steel Frame?</span></h1>
+          <p>Simule o custo completo em segundos — materiais, projetos e mão de obra. Sem compromisso.</p>
+          <div className="calc-hero-stats">
+            <div className="calc-hero-stat">
+              <div className="calc-hero-stat-val">6</div>
+              <div className="calc-hero-stat-lbl">modelos prontos</div>
+            </div>
+            <div className="calc-hero-stat">
+              <div className="calc-hero-stat-val">40%</div>
+              <div className="calc-hero-stat-lbl">mais rápido</div>
+            </div>
+            <div className="calc-hero-stat">
+              <div className="calc-hero-stat-val">24h</div>
+              <div className="calc-hero-stat-lbl">retorno garantido</div>
+            </div>
+          </div>
+        </div>
 
         <div className="calc-body">
 
