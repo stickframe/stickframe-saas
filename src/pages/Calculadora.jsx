@@ -57,8 +57,326 @@ function otimizarCorte(pecas, tamBarra) {
   return barras;
 }
 
+// ─── Calculadora Parede Drywall ───────────────────────────────────────────────
+function CalcParedeDrywall() {
+  const [comp,     setComp]     = useState("");
+  const [alt,      setAlt]      = useState("2.80");
+  const [faces,    setFaces]    = useState("2");
+  const [tipo,     setTipo]     = useState("BA");
+  const [esp,      setEsp]      = useState("90");
+  const [desperd,  setDesperd]  = useState("10");
+  const [result,   setResult]   = useState(null);
+
+  const TIPOS = {
+    BA:  { label: "ST (Standard)",         preco_placa: 17.00, massa_m2: 0.50, fita_m2: 1.20 },
+    RU:  { label: "RU (Resistente Umidade)", preco_placa: 22.00, massa_m2: 0.55, fita_m2: 1.20 },
+    RF:  { label: "RF (Resistente Fogo)",   preco_placa: 28.00, massa_m2: 0.55, fita_m2: 1.20 },
+  };
+
+  function calcular() {
+    const c = parseFloat(String(comp).replace(",","."));
+    const h = parseFloat(String(alt).replace(",","."));
+    const f = parseInt(faces);
+    const d = 1 + parseInt(desperd) / 100;
+    if (!c || !h) return;
+
+    const area      = c * h * f;
+    const areaComp  = area * d;
+    const e         = parseInt(esp);
+    const PLACA     = 1.20 * 2.40; // m²
+    const placas    = Math.ceil(areaComp / PLACA);
+    // Montantes: espaçamento + guias
+    const montantes = Math.ceil((c / (e / 1000)) + 1) * f;
+    const guias     = Math.ceil(c * 2 * f);                 // metros (superior+inferior)
+    // Fixação: ~15 parafusos/m²
+    const parafusos = Math.ceil(areaComp * 15);
+    const cxPar     = Math.ceil(parafusos / 500); // cx c/ 500
+    // Massa e fita
+    const t         = TIPOS[tipo];
+    const massa     = Math.ceil(areaComp * t.massa_m2 * 5) / 5; // arredonda 0.2 saco (15kg)
+    const fita      = Math.ceil(areaComp * t.fita_m2);
+
+    setResult({
+      area, areaComp, placas, montantes, guias, parafusos, cxPar, massa, fita,
+      totalPlacas: placas * t.preco_placa,
+      totalMont: montantes * 18.50,
+      totalGuia: guias * 12.00,
+      totalPar: cxPar * 48.00,
+      totalMassa: Math.ceil(massa) * 38.00,
+      totalFita: fita * 3.80,
+    });
+  }
+
+  const total = result ? result.totalPlacas + result.totalMont + result.totalGuia + result.totalPar + result.totalMassa + result.totalFita : 0;
+
+  return (
+    <div>
+      <div style={{ background: "#fff", borderRadius: 16, border: `1px solid ${C.border}`, padding: "22px 26px", marginBottom: 24 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(140px,1fr))", gap: 14, marginBottom: 16 }}>
+          {[
+            { label: "COMPRIMENTO DA PAREDE (m)", val: comp, set: setComp, ph: "Ex: 10" },
+            { label: "PÉ-DIREITO (m)", val: alt, set: setAlt, ph: "Ex: 2.80" },
+          ].map(({ label, val, set, ph }) => (
+            <div key={label}>
+              <label style={{ fontSize: 11, fontWeight: 700, color: C.muted, display: "block", marginBottom: 6, letterSpacing: 1 }}>{label}</label>
+              <input type="number" value={val} onChange={e => set(e.target.value)} placeholder={ph}
+                style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 15, fontWeight: 700, fontFamily: "inherit", outline: "none", boxSizing: "border-box" }} />
+            </div>
+          ))}
+          <div>
+            <label style={{ fontSize: 11, fontWeight: 700, color: C.muted, display: "block", marginBottom: 6, letterSpacing: 1 }}>FACES</label>
+            <select value={faces} onChange={e => setFaces(e.target.value)}
+              style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 14, fontFamily: "inherit", outline: "none" }}>
+              <option value="1">1 face</option>
+              <option value="2">2 faces (parede)</option>
+            </select>
+          </div>
+          <div>
+            <label style={{ fontSize: 11, fontWeight: 700, color: C.muted, display: "block", marginBottom: 6, letterSpacing: 1 }}>TIPO DE PLACA</label>
+            <select value={tipo} onChange={e => setTipo(e.target.value)}
+              style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 14, fontFamily: "inherit", outline: "none" }}>
+              {Object.entries(TIPOS).map(([k,v]) => <option key={k} value={k}>{v.label}</option>)}
+            </select>
+          </div>
+          <div>
+            <label style={{ fontSize: 11, fontWeight: 700, color: C.muted, display: "block", marginBottom: 6, letterSpacing: 1 }}>ESPAÇ. MONTANTES (mm)</label>
+            <select value={esp} onChange={e => setEsp(e.target.value)}
+              style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 14, fontFamily: "inherit", outline: "none" }}>
+              <option value="400">400 mm</option>
+              <option value="600">600 mm (padrão)</option>
+            </select>
+          </div>
+          <div>
+            <label style={{ fontSize: 11, fontWeight: 700, color: C.muted, display: "block", marginBottom: 6, letterSpacing: 1 }}>DESPERDÍCIO (%)</label>
+            <select value={desperd} onChange={e => setDesperd(e.target.value)}
+              style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 14, fontFamily: "inherit", outline: "none" }}>
+              <option value="5">5%</option>
+              <option value="10">10% (recomendado)</option>
+              <option value="15">15%</option>
+            </select>
+          </div>
+        </div>
+        <button onClick={calcular} style={{ padding: "12px 32px", background: C.red, color: "#fff", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+          Calcular
+        </button>
+      </div>
+
+      {result && (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))", gap: 16, marginBottom: 24 }}>
+          {[
+            { label: "Placas Drywall", qtd: `${result.placas} chp`, sub: `${TIPOS[tipo].label} · ${result.area.toFixed(1)} m²`, val: result.totalPlacas },
+            { label: "Montantes (C 90)", qtd: `${result.montantes} pç`, sub: `espaç. ${esp}mm`, val: result.totalMont },
+            { label: "Guias (U 92)", qtd: `${result.guias} m`, sub: "superior + inferior", val: result.totalGuia },
+            { label: "Parafusos TEX", qtd: `${result.cxPar} cx`, sub: `${result.parafusos} pçs (~15/m²)`, val: result.totalPar },
+            { label: "Massa para Juntas", qtd: `${Math.ceil(result.massa)} saco`, sub: `${(result.massa).toFixed(1)} × 15kg`, val: result.totalMassa },
+            { label: "Fita para Juntas", qtd: `${result.fita} m`, sub: `~1,2 m/m² de placa`, val: result.totalFita },
+          ].map(({ label, qtd, sub, val }) => (
+            <div key={label} style={{ background: "#fff", borderRadius: 12, border: `1px solid ${C.border}`, padding: "16px 18px" }}>
+              <div style={{ fontSize: 11, color: C.muted, fontWeight: 700, letterSpacing: 1, marginBottom: 6 }}>{label.toUpperCase()}</div>
+              <div style={{ fontSize: 22, fontWeight: 800, color: C.text }}>{qtd}</div>
+              <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{sub}</div>
+              <div style={{ fontSize: 13, color: C.success, fontWeight: 700, marginTop: 6 }}>{fmtR(val)}</div>
+            </div>
+          ))}
+          <div style={{ background: C.red, borderRadius: 12, padding: "16px 18px", color: "#fff" }}>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, marginBottom: 6, opacity: .8 }}>TOTAL ESTIMADO</div>
+            <div style={{ fontSize: 26, fontWeight: 900 }}>{fmtR(total)}</div>
+            <div style={{ fontSize: 11, opacity: .8, marginTop: 2 }}>materiais · preços de referência</div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Calculadora Forro Drywall ─────────────────────────────────────────────────
+function CalcForroDrywall() {
+  const [compA,    setCompA]    = useState("");
+  const [compB,    setCompB]    = useState("");
+  const [tipo,     setTipo]     = useState("BA");
+  const [modulo,   setModulo]   = useState("60x60");
+  const [desperd,  setDesperd]  = useState("10");
+  const [result,   setResult]   = useState(null);
+
+  const TIPOS = {
+    BA: { label: "ST (Standard)",          preco: 17.00 },
+    RU: { label: "RU (Resistente Umidade)", preco: 22.00 },
+    RF: { label: "RF (Resistente Fogo)",    preco: 28.00 },
+  };
+
+  const MODULOS = {
+    "60x60": { label: "60×60 cm (padrão)",   placa_m2: 0.36, perfil_m_m2: 3.33 },
+    "62.5x125": { label: "62,5×125 cm",      placa_m2: 0.78, perfil_m_m2: 2.40 },
+  };
+
+  function calcular() {
+    const a = parseFloat(String(compA).replace(",","."));
+    const b = parseFloat(String(compB).replace(",","."));
+    if (!a || !b) return;
+    const area  = a * b;
+    const d     = 1 + parseInt(desperd) / 100;
+    const mod   = MODULOS[modulo];
+    const t     = TIPOS[tipo];
+    const PLACA = 1.20 * 2.40;
+
+    const placas    = Math.ceil(area * d / PLACA);
+    const perfis    = Math.ceil(area * mod.perfil_m_m2 * d); // m de perfil (T47)
+    // Pendurais: 1 a cada 1,2m² aprox
+    const pendurais = Math.ceil(area / 1.2);
+    // Parafusos: ~8/m²
+    const cxPar     = Math.ceil(area * 8 / 500);
+    // Massa e fita
+    const massa     = Math.ceil(area * 0.4 * d);
+    const fita      = Math.ceil(area * 1.0 * d);
+
+    setResult({
+      area, placas, perfis, pendurais, cxPar, massa, fita,
+      totalPlacas: placas * t.preco,
+      totalPerfis: perfis * 8.50,
+      totalPend:   pendurais * 2.80,
+      totalPar:    cxPar * 48.00,
+      totalMassa:  Math.ceil(massa / 15) * 38.00,
+      totalFita:   fita * 3.80,
+    });
+  }
+
+  const total = result ? result.totalPlacas + result.totalPerfis + result.totalPend + result.totalPar + result.totalMassa + result.totalFita : 0;
+
+  return (
+    <div>
+      <div style={{ background: "#fff", borderRadius: 16, border: `1px solid ${C.border}`, padding: "22px 26px", marginBottom: 24 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", gap: 14, marginBottom: 16 }}>
+          {[
+            { label: "COMPRIMENTO (m)", val: compA, set: setCompA, ph: "Ex: 8" },
+            { label: "LARGURA (m)",     val: compB, set: setCompB, ph: "Ex: 6" },
+          ].map(({ label, val, set, ph }) => (
+            <div key={label}>
+              <label style={{ fontSize: 11, fontWeight: 700, color: C.muted, display: "block", marginBottom: 6, letterSpacing: 1 }}>{label}</label>
+              <input type="number" value={val} onChange={e => set(e.target.value)} placeholder={ph}
+                style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 15, fontWeight: 700, fontFamily: "inherit", outline: "none", boxSizing: "border-box" }} />
+            </div>
+          ))}
+          <div>
+            <label style={{ fontSize: 11, fontWeight: 700, color: C.muted, display: "block", marginBottom: 6, letterSpacing: 1 }}>TIPO DE PLACA</label>
+            <select value={tipo} onChange={e => setTipo(e.target.value)}
+              style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 14, fontFamily: "inherit", outline: "none" }}>
+              {Object.entries(TIPOS).map(([k,v]) => <option key={k} value={k}>{v.label}</option>)}
+            </select>
+          </div>
+          <div>
+            <label style={{ fontSize: 11, fontWeight: 700, color: C.muted, display: "block", marginBottom: 6, letterSpacing: 1 }}>MÓDULO DO FORRO</label>
+            <select value={modulo} onChange={e => setModulo(e.target.value)}
+              style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 14, fontFamily: "inherit", outline: "none" }}>
+              {Object.entries(MODULOS).map(([k,v]) => <option key={k} value={k}>{v.label}</option>)}
+            </select>
+          </div>
+          <div>
+            <label style={{ fontSize: 11, fontWeight: 700, color: C.muted, display: "block", marginBottom: 6, letterSpacing: 1 }}>DESPERDÍCIO (%)</label>
+            <select value={desperd} onChange={e => setDesperd(e.target.value)}
+              style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 14, fontFamily: "inherit", outline: "none" }}>
+              <option value="5">5%</option>
+              <option value="10">10% (recomendado)</option>
+              <option value="15">15%</option>
+            </select>
+          </div>
+        </div>
+        <button onClick={calcular} style={{ padding: "12px 32px", background: C.red, color: "#fff", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+          Calcular
+        </button>
+      </div>
+
+      {result && (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))", gap: 16, marginBottom: 24 }}>
+          {[
+            { label: "Placas Drywall", qtd: `${result.placas} chp`, sub: `${TIPOS[tipo].label}`, val: result.totalPlacas },
+            { label: "Perfil T47 (subestrutura)", qtd: `${result.perfis} m`, sub: `módulo ${modulo}`, val: result.totalPerfis },
+            { label: "Pendurais + Tirantes", qtd: `${result.pendurais} pç`, sub: "1 a cada 1,2 m²", val: result.totalPend },
+            { label: "Parafusos TEX", qtd: `${result.cxPar} cx`, sub: "~8 por m²", val: result.totalPar },
+            { label: "Massa para Juntas", qtd: `${Math.ceil(result.massa / 15)} saco`, sub: `${result.massa} kg`, val: result.totalMassa },
+            { label: "Fita para Juntas", qtd: `${result.fita} m`, sub: "1 m/m² de forro", val: result.totalFita },
+          ].map(({ label, qtd, sub, val }) => (
+            <div key={label} style={{ background: "#fff", borderRadius: 12, border: `1px solid ${C.border}`, padding: "16px 18px" }}>
+              <div style={{ fontSize: 11, color: C.muted, fontWeight: 700, letterSpacing: 1, marginBottom: 6 }}>{label.toUpperCase()}</div>
+              <div style={{ fontSize: 22, fontWeight: 800 }}>{qtd}</div>
+              <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{sub}</div>
+              <div style={{ fontSize: 13, color: C.success, fontWeight: 700, marginTop: 6 }}>{fmtR(val)}</div>
+            </div>
+          ))}
+          <div style={{ background: C.red, borderRadius: 12, padding: "16px 18px", color: "#fff" }}>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, marginBottom: 6, opacity: .8 }}>TOTAL ESTIMADO</div>
+            <div style={{ fontSize: 26, fontWeight: 900 }}>{fmtR(total)}</div>
+            <div style={{ fontSize: 11, opacity: .8, marginTop: 2 }}>materiais · preços de referência</div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Comparativo BA × RU × RF ─────────────────────────────────────────────────
+function CalcComparativo() {
+  const [area, setArea] = useState("");
+  const [result, setResult] = useState(null);
+
+  function calcular() {
+    const a = parseFloat(String(area).replace(",","."));
+    if (!a) return;
+    const PLACA = 1.20 * 2.40;
+    const placas = Math.ceil(a * 1.10 / PLACA);
+    setResult({
+      area: a,
+      sistemas: [
+        { tipo: "ST — Standard", preco: 17.00, desc: "Uso geral, ambientes secos, paredes internas", cor: "#4a9eff" },
+        { tipo: "RU — Resistente Umidade", preco: 22.00, desc: "Banheiros, cozinhas, áreas úmidas", cor: "#2e9e5b" },
+        { tipo: "RF — Resistente Fogo", preco: 28.00, desc: "Corredores, saída de emergência, CPTEC", cor: "#e07020" },
+      ].map(s => ({ ...s, placas, total: placas * s.preco, totalM2: (placas * s.preco) / a })),
+    });
+  }
+
+  return (
+    <div>
+      <div style={{ background: "#fff", borderRadius: 16, border: `1px solid ${C.border}`, padding: "22px 26px", marginBottom: 24, display: "flex", gap: 16, alignItems: "flex-end", flexWrap: "wrap" }}>
+        <div style={{ flex: "1 1 180px" }}>
+          <label style={{ fontSize: 11, fontWeight: 700, color: C.muted, display: "block", marginBottom: 6, letterSpacing: 1 }}>ÁREA DE PAREDE (m²)</label>
+          <input type="number" value={area} onChange={e => setArea(e.target.value)} placeholder="Ex: 50"
+            style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 15, fontWeight: 700, fontFamily: "inherit", outline: "none", boxSizing: "border-box" }} />
+        </div>
+        <button onClick={calcular} style={{ padding: "12px 32px", background: C.red, color: "#fff", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+          Comparar
+        </button>
+      </div>
+
+      {result && (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 16 }}>
+          {result.sistemas.map(s => (
+            <div key={s.tipo} style={{ background: "#fff", borderRadius: 16, border: `2px solid ${s.cor}22`, padding: "20px 22px" }}>
+              <div style={{ fontWeight: 800, fontSize: 15, color: s.cor, marginBottom: 8 }}>{s.tipo}</div>
+              <div style={{ fontSize: 12, color: C.muted, marginBottom: 16, lineHeight: 1.5 }}>{s.desc}</div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                <div style={{ background: C.darker, borderRadius: 8, padding: "10px 12px" }}>
+                  <div style={{ fontSize: 10, color: C.muted, marginBottom: 2 }}>PLACAS</div>
+                  <div style={{ fontSize: 18, fontWeight: 800 }}>{s.placas} chp</div>
+                </div>
+                <div style={{ background: C.darker, borderRadius: 8, padding: "10px 12px" }}>
+                  <div style={{ fontSize: 10, color: C.muted, marginBottom: 2 }}>CUSTO/m²</div>
+                  <div style={{ fontSize: 18, fontWeight: 800 }}>{fmtR(s.totalM2)}</div>
+                </div>
+              </div>
+              <div style={{ marginTop: 12, background: s.cor + "18", borderRadius: 8, padding: "10px 14px", textAlign: "center" }}>
+                <div style={{ fontSize: 11, color: C.muted }}>Total materiais</div>
+                <div style={{ fontSize: 20, fontWeight: 900, color: s.cor }}>{fmtR(s.total)}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function Calculadora() {
   const setActivePage = useAppStore((s) => s.setActivePage);
+  const [modo, setModo] = useState("steelframe");
 
   const [area,      setArea]      = useState("");
   const [pavs,      setPavs]      = useState(1);
@@ -225,7 +543,34 @@ export default function Calculadora() {
 
   return (
     <div style={{ maxWidth: 880, margin: "0 auto", padding: "24px 16px" }}>
-      <h2 style={{ fontSize: 22, fontWeight: 800, marginBottom: 4 }}>Calculadora Steel Frame</h2>
+      <h2 style={{ fontSize: 22, fontWeight: 800, marginBottom: 4 }}>Calculadora de Materiais</h2>
+      <p style={{ color: C.muted, fontSize: 13, marginBottom: 20 }}>
+        Quantitativos e custos de referência para Steel Frame e Drywall
+      </p>
+
+      {/* ── Seletor de modo ── */}
+      <div style={{ display: "flex", gap: 8, marginBottom: 28, flexWrap: "wrap" }}>
+        {[
+          { key: "steelframe",  label: "🏗 Steel Frame" },
+          { key: "parede",      label: "🧱 Parede Drywall" },
+          { key: "forro",       label: "⬜ Forro Drywall" },
+          { key: "comparativo", label: "📊 Comparativo ST/RU/RF" },
+        ].map(({ key, label }) => (
+          <button key={key} onClick={() => setModo(key)} style={{
+            padding: "9px 20px", borderRadius: 10, fontSize: 13, fontWeight: modo === key ? 700 : 500,
+            background: modo === key ? C.red : "transparent",
+            color: modo === key ? "#fff" : C.muted,
+            border: `1px solid ${modo === key ? C.red : C.border}`,
+            cursor: "pointer", fontFamily: "inherit", transition: "all .15s",
+          }}>{label}</button>
+        ))}
+      </div>
+
+      {modo === "parede"      && <CalcParedeDrywall />}
+      {modo === "forro"       && <CalcForroDrywall />}
+      {modo === "comparativo" && <CalcComparativo />}
+      {modo !== "steelframe" && modo !== "parede" && modo !== "forro" && modo !== "comparativo" && null}
+      {modo !== "steelframe" ? null : (<>
       <p style={{ color: C.muted, fontSize: 13, marginBottom: 24 }}>
         Estimativa de insumos e custos de referência por área construída — 10% de perda já incluídos
       </p>
@@ -734,6 +1079,7 @@ export default function Calculadora() {
       )}
 
       <style>{`@media print { button { display: none !important; } }`}</style>
+      </>)}
     </div>
   );
 }
