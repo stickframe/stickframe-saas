@@ -272,7 +272,7 @@ export default function Equipe() {
   function gerarCracha(c, certs = []) {
     if (!c.token_ponto) return;
     const url = `${window.location.origin}/ponto/${c.token_ponto}`;
-    const qr  = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}`;
+    const qr  = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(url)}`;
     const inicial = c.nome[0].toUpperCase();
     const avatarHtml = c.foto_url
       ? `<img src="${c.foto_url}" class="avatar-foto"/>`
@@ -302,21 +302,22 @@ export default function Equipe() {
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
       <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { display:flex; align-items:center; justify-content:center; min-height:100vh; background:#f5f5f7; font-family:Inter,Arial,sans-serif; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
-        .card { width:240px; background:#fff; border-radius:16px; padding:28px 20px 20px; text-align:center; box-shadow:0 4px 20px rgba(0,0,0,.12); border-top:6px solid #981915; }
-        .logo { height:48px; margin-bottom:16px; display:block; margin-left:auto; margin-right:auto; }
-        .avatar { width:72px; height:72px; border-radius:50%; background:#981915; color:#fff; font-size:28px; font-weight:900; line-height:72px; text-align:center; margin:0 auto 12px; display:block; }
-        .avatar-foto { width:72px; height:72px; border-radius:50%; object-fit:cover; margin:0 auto 12px; display:block; border:3px solid #981915; }
-        .nome { font-size:15px; font-weight:800; color:#1a1a1a; margin-bottom:4px; letter-spacing:.3px; }
-        .cargo { font-size:11px; color:#6b7280; margin-bottom:16px; text-transform:uppercase; letter-spacing:.8px; }
-        .qr { width:160px; height:160px; margin:0 auto 14px; display:block; border:1px solid #eee; border-radius:8px; padding:4px; }
-        .label { font-size:9px; font-weight:700; letter-spacing:2px; color:#9ca3af; text-transform:uppercase; }
-        .certs-row { display:flex; flex-wrap:wrap; justify-content:center; gap:6px; margin-top:14px; }
-        .cert-badge { display:flex; flex-direction:column; align-items:center; gap:2px; background:#f1f5f9; border-radius:8px; padding:6px 8px; min-width:44px; }
-        .cert-badge i { font-size:16px; color:#981915; }
-        .cert-badge span { font-size:8px; font-weight:700; color:#374151; letter-spacing:.4px; text-transform:uppercase; }
+        @page { size: 85.6mm 120mm; margin: 0; }
+        body { display:flex; align-items:center; justify-content:center; width:85.6mm; height:120mm; background:#f5f5f7; font-family:Inter,Arial,sans-serif; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+        .card { width:85.6mm; height:120mm; background:#fff; border-radius:8px; padding:10px 10px 8px; text-align:center; box-shadow:0 2px 10px rgba(0,0,0,.12); border-top:5px solid #981915; overflow:hidden; }
+        .logo { height:22px; margin-bottom:6px; display:block; margin-left:auto; margin-right:auto; }
+        .avatar { width:44px; height:44px; border-radius:50%; background:#981915; color:#fff; font-size:17px; font-weight:900; line-height:44px; text-align:center; margin:0 auto 5px; display:block; }
+        .avatar-foto { width:44px; height:44px; border-radius:50%; object-fit:cover; margin:0 auto 5px; display:block; border:2px solid #981915; }
+        .nome { font-size:9px; font-weight:800; color:#1a1a1a; margin-bottom:2px; letter-spacing:.2px; text-transform:uppercase; }
+        .cargo { font-size:7.5px; color:#6b7280; margin-bottom:6px; text-transform:uppercase; letter-spacing:.7px; }
+        .qr { width:72px; height:72px; margin:0 auto 4px; display:block; border:1px solid #eee; border-radius:4px; padding:2px; }
+        .label { font-size:6.5px; font-weight:700; letter-spacing:1.5px; color:#9ca3af; text-transform:uppercase; }
+        .certs-row { display:flex; flex-wrap:wrap; justify-content:center; gap:3px; margin-top:5px; }
+        .cert-badge { display:flex; flex-direction:column; align-items:center; gap:1px; background:#f1f5f9; border-radius:5px; padding:3px 4px; min-width:30px; }
+        .cert-badge i { font-size:10px; color:#981915; }
+        .cert-badge span { font-size:5.5px; font-weight:700; color:#374151; letter-spacing:.3px; text-transform:uppercase; }
         .cert-vencido { opacity:.45; }
-        @media print { body { background:#fff; min-height:unset; } .card { box-shadow:none; } }
+        @media print { body { background:#fff; } .card { box-shadow:none; border-radius:0; } }
       </style>
       <div class="card">
         <img src="${LOGO_STICKFRAME}" class="logo" onerror="this.style.display='none'"/>
