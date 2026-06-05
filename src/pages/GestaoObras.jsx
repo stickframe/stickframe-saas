@@ -680,6 +680,24 @@ export default function GestaoObras() {
     if (!obraId && obras.length > 0) setObraId(obras[0].id);
   }, [obras, obraId]);
 
+  // Pre-fill nova obra from orcamento "Criar Obra" button
+  useEffect(() => {
+    const raw = localStorage.getItem("sf_obra_prefill");
+    if (!raw) return;
+    localStorage.removeItem("sf_obra_prefill");
+    try {
+      const prefill = JSON.parse(raw);
+      setForm((f) => ({
+        ...FORM_VAZIO,
+        nome: prefill.nome || "",
+        cliente_id: prefill.cliente_id || "",
+        contrato: prefill.contrato || 0,
+      }));
+      setModal("nova");
+    } catch { /* ignore */ }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const obraParaToken = obras.find((o) => o.id === obraId);
   useEffect(() => {
     if (!obraId || !obraParaToken || obraParaToken.token_portal) return;
