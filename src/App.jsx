@@ -14,7 +14,6 @@ import UndoBar from "./components/ui/UndoBar";
 import { OnboardingTour } from "./components/ui/OnboardingTour";
 import { useUndoStore } from "./store/undoStore";
 import { useHotkeys } from "react-hotkeys-hook";
-import PortalColaborador from "./pages/PortalColaborador";
 
 // Auto-reload on chunk fetch failure (stale SW cache after deploy)
 function lazyWithRetry(fn) {
@@ -99,12 +98,10 @@ function AuthenticatedApp() {
   const user          = useAppStore((s) => s.user);
   const loaded        = useAppStore((s) => s.loaded);
 
-  // Restaura empresaId no service após refresh — import síncrono elimina race condition
   useEffect(() => {
     if (user?.empresaId) setEmpresaId(user.empresaId);
   }, [user]);
 
-  // Prefetch das páginas mais acessadas em background após login
   useEffect(() => {
     if (!user) return;
     const PREFETCH = [
@@ -121,7 +118,6 @@ function AuthenticatedApp() {
     return () => hasRIC ? cancelIdleCallback(id) : clearTimeout(id);
   }, [user]);
 
-  // Sincroniza URL com activePage (permite compartilhar links e usar botão Voltar)
   useEffect(() => {
     const path = `/${activePage === "dashboard" ? "" : activePage}`;
     if (window.location.pathname !== path) {
@@ -129,14 +125,12 @@ function AuthenticatedApp() {
     }
   }, [activePage]);
 
-  // Lê a URL ao montar para restaurar a página correta após reload
   useEffect(() => {
     const page = window.location.pathname.replace("/", "") || "dashboard";
     if (PAGES[page] && page !== activePage) setActivePage(page);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Suporte ao botão Voltar/Avançar do navegador
   useEffect(() => {
     const onPop = () => {
       const page = window.location.pathname.replace("/", "") || "dashboard";
