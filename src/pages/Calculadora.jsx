@@ -8,24 +8,65 @@ import {
 } from "../services/repositories/retalhosRepository";
 
 // ─── Insumos por m² de área construída ───────────────────────────────────────
-// grupo = chave usada pelo módulo de Orçamentos (sf_estimativo)
+// fund:true = não multiplica por pavs/padrão | serv:true = mão de obra (não é material)
 const INSUMOS = [
-  { categoria: "Estrutura de Aço", grupo: "Estrutura",        nome: "Montante C 90×40×15×1,25mm",         un: "pç",  base: 1.50, preco: 18.50, desc: "Espaçamento 600mm, pé-direito 2,80m" },
-  { categoria: "Estrutura de Aço", grupo: "Estrutura",        nome: "Guia U 92×40×1,25mm",                un: "m",   base: 1.10, preco: 12.00, desc: "Superior e inferior" },
-  { categoria: "Estrutura de Aço", grupo: "Estrutura",        nome: "Montante C 140×40×15×1,25mm",        un: "pç",  base: 0.30, preco: 24.00, desc: "Vergas e contravergas" },
-  { categoria: "Fechamento",       grupo: "Vedação externa",  nome: "Chapa OSB 11,1mm (1,22×2,44)",       un: "chp", base: 0.38, preco: 52.00, desc: "Contraventamento estrutural" },
-  { categoria: "Fechamento",       grupo: "Vedação interna",  nome: "Placa de Gesso ST 13mm (1,20×2,40)", un: "chp", base: 0.85, preco: 17.00, desc: "Faces internas das paredes" },
-  { categoria: "Fechamento",       grupo: "Vedação externa",  nome: "Placa Cimentícia 10mm (1,20×2,40)",  un: "chp", base: 0.18, preco: 65.00, desc: "Fachada externa" },
-  { categoria: "Isolamento",       grupo: "Isolamento",       nome: "Lã de Vidro 50mm",                   un: "m²",  base: 1.30, preco: 16.00, desc: "Interior das paredes e laje" },
-  { categoria: "Isolamento",       grupo: "Isolamento",       nome: "Manta EPDM (fita adesiva 50mm)",     un: "m",   base: 1.10, preco:  5.50, desc: "Vedação de juntas" },
-  { categoria: "Isolamento",       grupo: "Impermeabilização",nome: "Impermeabilizante flexível",         un: "m²",  base: 0.15, preco: 35.00, desc: "Áreas molhadas" },
-  { categoria: "Fixação",          grupo: "Fixação",          nome: "Parafuso TEX 4,2×16mm (flangeado)",  un: "cx",  base: 0.40, preco: 48.00, desc: "Caixa c/ 500 pçs — gesso" },
-  { categoria: "Fixação",          grupo: "Fixação",          nome: "Parafuso TEX 4,2×38mm",              un: "cx",  base: 0.80, preco: 52.00, desc: "Caixa c/ 500 pçs — OSB/cimentícia" },
-  { categoria: "Fixação",          grupo: "Fixação",          nome: "Parafuso TEX 6,3×19mm",              un: "cx",  base: 0.16, preco: 58.00, desc: "Caixa c/ 500 pçs — emenda perfis" },
-  { categoria: "Fundação (Radier)", grupo: "Fundação",        nome: "Concreto C-25",                      un: "m³",  base: 0.10, preco: 420.0, desc: "Espessura 10cm" },
-  { categoria: "Fundação (Radier)", grupo: "Fundação",        nome: "Ferragem CA-50 ⌀6,3mm",              un: "kg",  base: 6.00, preco:  6.50, desc: "~6 kg/m²" },
-  { categoria: "Fundação (Radier)", grupo: "Fundação",        nome: "Tela soldada Q-92 (3×2m)",           un: "pç",  base: 0.17, preco: 68.00, desc: "1 tela = 6m²" },
-  { categoria: "Fundação (Radier)", grupo: "Fundação",        nome: "Forma lateral (tábua 3ª)",           un: "m",   base: 0.40, preco:  8.00, desc: "Perímetro do radier" },
+  // Estrutura
+  { categoria: "Estrutura de Aço",   grupo: "Estrutura",          nome: "Montante C 90×40×15×1,25mm",          un: "pç",  base: 1.50,  preco: 18.50, desc: "Espaçamento 600mm, pé-direito 2,80m" },
+  { categoria: "Estrutura de Aço",   grupo: "Estrutura",          nome: "Guia U 92×40×1,25mm",                 un: "m",   base: 1.10,  preco: 12.00, desc: "Superior e inferior" },
+  { categoria: "Estrutura de Aço",   grupo: "Estrutura",          nome: "Montante C 140×40×15×1,25mm",         un: "pç",  base: 0.30,  preco: 24.00, desc: "Vergas e contravergas" },
+  // Fechamento
+  { categoria: "Fechamento",         grupo: "Vedação externa",    nome: "Chapa OSB 11,1mm (1,22×2,44)",        un: "chp", base: 0.38,  preco: 52.00, desc: "Contraventamento estrutural" },
+  { categoria: "Fechamento",         grupo: "Vedação interna",    nome: "Placa de Gesso ST 13mm (1,20×2,40)",  un: "chp", base: 0.85,  preco: 17.00, desc: "Faces internas das paredes" },
+  { categoria: "Fechamento",         grupo: "Vedação externa",    nome: "Placa Cimentícia 10mm (1,20×2,40)",   un: "chp", base: 0.18,  preco: 65.00, desc: "Fachada externa" },
+  // Isolamento
+  { categoria: "Isolamento",         grupo: "Isolamento",         nome: "Lã de Vidro 50mm",                    un: "m²",  base: 1.30,  preco: 16.00, desc: "Interior das paredes e laje" },
+  { categoria: "Isolamento",         grupo: "Isolamento",         nome: "Manta EPDM (fita adesiva 50mm)",      un: "m",   base: 1.10,  preco:  5.50, desc: "Vedação de juntas" },
+  { categoria: "Isolamento",         grupo: "Impermeabilização",  nome: "Impermeabilizante flexível",          un: "m²",  base: 0.15,  preco: 35.00, desc: "Áreas molhadas" },
+  // Fixação
+  { categoria: "Fixação",            grupo: "Fixação",            nome: "Parafuso TEX 4,2×16mm (flangeado)",   un: "cx",  base: 0.40,  preco: 48.00, desc: "Caixa c/ 500 pçs — gesso" },
+  { categoria: "Fixação",            grupo: "Fixação",            nome: "Parafuso TEX 4,2×38mm",               un: "cx",  base: 0.80,  preco: 52.00, desc: "Caixa c/ 500 pçs — OSB/cimentícia" },
+  { categoria: "Fixação",            grupo: "Fixação",            nome: "Parafuso TEX 6,3×19mm",               un: "cx",  base: 0.16,  preco: 58.00, desc: "Caixa c/ 500 pçs — emenda perfis" },
+  // Fundação
+  { categoria: "Fundação (Radier)",  grupo: "Fundação",           nome: "Concreto C-25",                       un: "m³",  base: 0.10,  preco: 420.0, desc: "Espessura 10cm",   fund: true },
+  { categoria: "Fundação (Radier)",  grupo: "Fundação",           nome: "Ferragem CA-50 ⌀6,3mm",               un: "kg",  base: 6.00,  preco:  6.50, desc: "~6 kg/m²",         fund: true },
+  { categoria: "Fundação (Radier)",  grupo: "Fundação",           nome: "Tela soldada Q-92 (3×2m)",            un: "pç",  base: 0.17,  preco: 68.00, desc: "1 tela = 6m²",     fund: true },
+  { categoria: "Fundação (Radier)",  grupo: "Fundação",           nome: "Forma lateral (tábua 3ª)",            un: "m",   base: 0.40,  preco:  8.00, desc: "Perímetro do radier", fund: true },
+  // Cobertura
+  { categoria: "Cobertura",         grupo: "Cobertura",           nome: "Telha shingle (fardo 3m²)",           un: "fd",  base: 0.38,  preco: 185.0, desc: "Cobertura principal" },
+  { categoria: "Cobertura",         grupo: "Cobertura",           nome: "Manta subcobertura 1,5m",             un: "m²",  base: 1.05,  preco:  8.50, desc: "Barreira térmica/hídrica" },
+  { categoria: "Cobertura",         grupo: "Cobertura",           nome: "Perfil de cumeeira/rincão",           un: "m",   base: 0.25,  preco: 22.00, desc: "Acabamento de telhado" },
+  { categoria: "Cobertura",         grupo: "Cobertura",           nome: "Calha PVC 150mm",                     un: "m",   base: 0.30,  preco: 28.00, desc: "Captação de águas pluviais" },
+  { categoria: "Cobertura",         grupo: "Cobertura",           nome: "Rufo e contra-rufo em aço",           un: "m",   base: 0.20,  preco: 35.00, desc: "Vedação perimetral" },
+  // Esquadrias
+  { categoria: "Esquadrias",        grupo: "Esquadrias",          nome: "Janela alumínio c/ vidro (1,20×1,20)",un: "un",  base: 0.055, preco: 680.0, desc: "~1 janela a cada 18m²" },
+  { categoria: "Esquadrias",        grupo: "Esquadrias",          nome: "Porta interna 0,80×2,10",             un: "un",  base: 0.08,  preco: 420.0, desc: "~1 porta a cada 12m²" },
+  { categoria: "Esquadrias",        grupo: "Esquadrias",          nome: "Porta externa blindada",              un: "un",  base: 0.008, preco:2200.0, desc: "~1 porta externa a cada 120m²" },
+  // Instalações
+  { categoria: "Instalações Elétricas", grupo: "Elétrica",       nome: "Conduíte + fios + caixas",            un: "m²",  base: 1.00,  preco: 62.00, desc: "~R$62/m² elétrica embutida" },
+  { categoria: "Instalações Elétricas", grupo: "Elétrica",       nome: "Quadro de distribuição",              un: "un",  base: 0.012, preco:1800.0, desc: "~1 QD a cada 80m²" },
+  { categoria: "Inst. Hidrossanitárias", grupo: "Hidráulica",    nome: "Tubulação PVC água fria/quente",      un: "m²",  base: 1.00,  preco: 38.00, desc: "~R$38/m² hidráulica" },
+  { categoria: "Inst. Hidrossanitárias", grupo: "Hidráulica",    nome: "Tubulação esgoto + ventilação",       un: "m²",  base: 1.00,  preco: 22.00, desc: "~R$22/m² esgoto" },
+  // Acabamentos
+  { categoria: "Acabamentos",       grupo: "Acabamentos",         nome: "Piso vinílico click 4mm",             un: "m²",  base: 0.90,  preco: 58.00, desc: "90% da área útil" },
+  { categoria: "Acabamentos",       grupo: "Acabamentos",         nome: "Revestimento porcelanato banheiro",   un: "m²",  base: 0.08,  preco: 85.00, desc: "Banheiros (~8% da área)" },
+  { categoria: "Acabamentos",       grupo: "Acabamentos",         nome: "Massa corrida + pintura látex",       un: "m²",  base: 2.80,  preco:  9.50, desc: "Paredes e teto interno" },
+  { categoria: "Acabamentos",       grupo: "Acabamentos",         nome: "Forro drywall ST (teto)",             un: "m²",  base: 0.90,  preco: 42.00, desc: "90% da área útil" },
+  { categoria: "Acabamentos",       grupo: "Acabamentos",         nome: "Rodapé MDF 10cm",                     un: "m",   base: 1.80,  preco: 12.00, desc: "Perimetral interno" },
+  // Projetos
+  { categoria: "Projetos e Engenharia", grupo: "Projetos",       nome: "Projeto Arquitetônico",               un: "m²",  base: 1.00,  preco: 28.00, desc: "Inclui implantação e cortes" },
+  { categoria: "Projetos e Engenharia", grupo: "Projetos",       nome: "Projeto Estrutural LSF",              un: "m²",  base: 1.00,  preco: 18.00, desc: "Memorial + detalhamento" },
+  { categoria: "Projetos e Engenharia", grupo: "Projetos",       nome: "Projeto Elétrico + Hidro",            un: "m²",  base: 1.00,  preco: 14.00, desc: "Aprovação em concessionária" },
+  // Mão de Obra
+  { categoria: "Mão de Obra",       grupo: "Mão de Obra",        nome: "Montagem estrutura LSF",              un: "m²",  base: 1.00,  preco: 85.00, desc: "Equipe especializada" },
+  { categoria: "Mão de Obra",       grupo: "Mão de Obra",        nome: "Instalação vedações (OSB/gesso/cim)", un: "m²",  base: 1.00,  preco: 45.00, desc: "Fechamento interno e externo" },
+  { categoria: "Mão de Obra",       grupo: "Mão de Obra",        nome: "Cobertura (telha shingle)",           un: "m²",  base: 1.00,  preco: 38.00, desc: "Montagem e impermeabilização" },
+  { categoria: "Mão de Obra",       grupo: "Mão de Obra",        nome: "Acabamentos e instalações",           un: "m²",  base: 1.00,  preco: 72.00, desc: "Piso, pintura, elétrica, hidro" },
+];
+
+const CATS_ORDEM = [
+  "Estrutura de Aço","Fechamento","Isolamento","Fixação","Fundação (Radier)",
+  "Cobertura","Esquadrias","Instalações Elétricas","Inst. Hidrossanitárias",
+  "Acabamentos","Projetos e Engenharia","Mão de Obra",
 ];
 
 const PADROES = {
@@ -104,7 +145,6 @@ const KITS = [
   },
 ];
 
-const CATS_ORDEM = ["Estrutura de Aço","Fechamento","Isolamento","Fixação","Fundação (Radier)"];
 
 const fmtR  = (v) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 const fmtMm = (mm) => mm >= 1000 ? `${(mm / 1000).toFixed(2).replace(".", ",")} m` : `${mm} mm`;
@@ -523,21 +563,36 @@ function CalcComparativo() {
 }
 
 // ─── Calculadora Kits ─────────────────────────────────────────────────────────
+const CATS_OPCIONAIS = ["Projetos e Engenharia", "Mão de Obra"];
+
 function CalcKits({ onEnviarOrcamento }) {
   const [kitSel, setKitSel] = useState(null);
   const [result, setResult] = useState(null);
+  const [catsAtivas, setCatsAtivas] = useState(
+    Object.fromEntries(CATS_ORDEM.map(c => [c, true]))
+  );
+
+  function toggleCat(cat) {
+    setCatsAtivas(prev => ({ ...prev, [cat]: !prev[cat] }));
+  }
 
   function calcularKit(kit) {
     setKitSel(kit);
     const fatorPadrao = PADROES[kit.padrao].fator;
     const items = INSUMOS.map((ins) => {
-      const ehFundacao = ins.categoria === "Fundação (Radier)";
-      const fator = ehFundacao ? 1 : fatorPadrao * kit.pavs;
+      const fator = ins.fund ? 1 : fatorPadrao * kit.pavs;
       const qtd = Math.ceil(ins.base * kit.area * fator);
       return { ...ins, qtd, total: qtd * ins.preco };
     });
-    setResult({ ...kit, items, total: items.reduce((s, i) => s + i.total, 0) });
+    setResult({ ...kit, items });
   }
+
+  const totalAtivo = result
+    ? result.items.filter(i => catsAtivas[i.categoria]).reduce((s, i) => s + i.total, 0)
+    : 0;
+  const totalSoMateriais = result
+    ? result.items.filter(i => !["Projetos e Engenharia","Mão de Obra"].includes(i.categoria)).reduce((s, i) => s + i.total, 0)
+    : 0;
 
   return (
     <div>
@@ -546,7 +601,7 @@ function CalcKits({ onEnviarOrcamento }) {
         {KITS.map((kit) => {
           const sel = kitSel?.id === kit.id;
           const totalRef = INSUMOS.reduce((s, ins) => {
-            const f = ins.categoria === "Fundação (Radier)" ? 1 : PADROES[kit.padrao].fator * kit.pavs;
+            const f = ins.fund ? 1 : PADROES[kit.padrao].fator * kit.pavs;
             return s + Math.ceil(ins.base * kit.area * f) * ins.preco;
           }, 0);
           return (
@@ -608,21 +663,63 @@ function CalcKits({ onEnviarOrcamento }) {
       </div>
 
       {/* Resultado do kit selecionado */}
-      {result && (
+      {result && (() => {
+        const totalCompleto = result.items.reduce((s, i) => s + i.total, 0);
+        const totalComProjetos = result.items
+          .filter(i => i.categoria !== "Mão de Obra")
+          .reduce((s, i) => s + i.total, 0);
+        return (
         <div style={{ animation: "fadeUp .4s ease" }}>
           <div style={{
             background: "linear-gradient(135deg,#1a0a0a,#981915)",
-            borderRadius: 20, padding: "28px 32px", marginBottom: 24, color: "#fff",
-            display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16,
+            borderRadius: 20, padding: "28px 32px", marginBottom: 16, color: "#fff",
           }}>
-            <div>
-              <div style={{ fontSize: 11, opacity: .6, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 6 }}>Kit selecionado</div>
-              <div style={{ fontSize: 26, fontWeight: 900, marginBottom: 4 }}>{result.nome}</div>
-              <div style={{ fontSize: 14, opacity: .7 }}>{result.area} m² · {result.pavs} pav. · Padrão {result.padrao}</div>
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 16, marginBottom: 20 }}>
+              <div>
+                <div style={{ fontSize: 11, opacity: .6, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 6 }}>Kit selecionado</div>
+                <div style={{ fontSize: 26, fontWeight: 900, marginBottom: 4 }}>{result.nome}</div>
+                <div style={{ fontSize: 14, opacity: .7 }}>{result.area} m² · {result.pavs} pav. · Padrão {result.padrao}</div>
+              </div>
+              <div style={{ textAlign: "right" }}>
+                <div style={{ fontSize: 11, opacity: .6, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }}>Total incluído</div>
+                <div style={{ fontSize: 38, fontWeight: 900, letterSpacing: -1 }}>{fmtR(totalAtivo)}</div>
+              </div>
             </div>
-            <div style={{ textAlign: "right" }}>
-              <div style={{ fontSize: 11, opacity: .6, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }}>Total materiais</div>
-              <div style={{ fontSize: 38, fontWeight: 900, letterSpacing: -1 }}>{fmtR(result.total)}</div>
+            {/* toggles de categorias opcionais */}
+            <div style={{ borderTop: "1px solid rgba(255,255,255,.15)", paddingTop: 16, display: "flex", flexWrap: "wrap", gap: 10 }}>
+              {CATS_OPCIONAIS.map(cat => {
+                const sub = result.items.filter(i => i.categoria === cat).reduce((s, i) => s + i.total, 0);
+                const ativo = catsAtivas[cat];
+                return (
+                  <button key={cat} onClick={() => toggleCat(cat)} style={{
+                    display: "flex", alignItems: "center", gap: 8,
+                    padding: "8px 14px", borderRadius: 10, cursor: "pointer", fontFamily: "inherit",
+                    border: `1px solid ${ativo ? "rgba(255,255,255,.4)" : "rgba(255,255,255,.15)"}`,
+                    background: ativo ? "rgba(255,255,255,.15)" : "rgba(0,0,0,.2)",
+                    color: ativo ? "#fff" : "rgba(255,255,255,.45)",
+                    fontSize: 12, fontWeight: 700, transition: "all .2s",
+                  }}>
+                    <span style={{ fontSize: 14 }}>{ativo ? "☑" : "☐"}</span>
+                    <span>{cat}</span>
+                    <span style={{ opacity: .7 }}>{fmtR(sub)}</span>
+                  </button>
+                );
+              })}
+            </div>
+            {/* breakdown referência */}
+            <div style={{ borderTop: "1px solid rgba(255,255,255,.1)", marginTop: 14, paddingTop: 14, display: "flex", flexWrap: "wrap", gap: 20 }}>
+              <div>
+                <div style={{ fontSize: 10, opacity: .5, textTransform: "uppercase", letterSpacing: 1, marginBottom: 2 }}>Só materiais</div>
+                <div style={{ fontSize: 15, fontWeight: 800 }}>{fmtR(totalSoMateriais)}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: 10, opacity: .5, textTransform: "uppercase", letterSpacing: 1, marginBottom: 2 }}>+ Projetos</div>
+                <div style={{ fontSize: 15, fontWeight: 800 }}>{fmtR(totalComProjetos)}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: 10, opacity: .5, textTransform: "uppercase", letterSpacing: 1, marginBottom: 2 }}>Obra completa</div>
+                <div style={{ fontSize: 15, fontWeight: 800 }}>{fmtR(totalCompleto)}</div>
+              </div>
             </div>
           </div>
 
@@ -631,11 +728,12 @@ function CalcKits({ onEnviarOrcamento }) {
             const itens = result.items.filter(i => i.categoria === cat);
             if (!itens.length) return null;
             const subtotal = itens.reduce((s, i) => s + i.total, 0);
+            const ativa = catsAtivas[cat];
             return (
-              <div key={cat} style={{ background: "#fff", borderRadius: 16, border: `1px solid ${C.border}`, marginBottom: 12, overflow: "hidden" }}>
+              <div key={cat} style={{ background: "#fff", borderRadius: 16, border: `1px solid ${C.border}`, marginBottom: 12, overflow: "hidden", opacity: ativa ? 1 : 0.35, transition: "opacity .2s" }}>
                 <div style={{ background: C.darker, padding: "10px 18px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <span style={{ fontSize: 12, fontWeight: 800, color: C.text, letterSpacing: .5 }}>{cat}</span>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: "#981915" }}>{fmtR(subtotal)}</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: "#981915" }}>{fmtR(subtotal)}{!ativa && <span style={{ marginLeft: 8, fontSize: 10, color: C.muted }}>(excluído)</span>}</span>
                 </div>
                 {itens.map(i => (
                   <div key={i.nome} style={{ display: "grid", gridTemplateColumns: "1fr auto auto auto", gap: 12, padding: "10px 18px", borderTop: `1px solid ${C.border}`, alignItems: "center" }}>
@@ -667,7 +765,8 @@ function CalcKits({ onEnviarOrcamento }) {
             </button>
           </div>
         </div>
-      )}
+        );
+      })()}
     </div>
   );
 }
@@ -744,7 +843,7 @@ export default function Calculadora() {
     if (!a || a <= 0) return;
     const fatorPadrao = PADROES[padrao].fator;
     const items = INSUMOS.map((ins) => {
-      const ehFundacao = ins.categoria === "Fundação (Radier)";
+      const ehFundacao = ins.fund;
       const fator      = ehFundacao ? 1 : fatorPadrao * pavs;
       const qtd        = Math.ceil(ins.base * a * fator);
       return { ...ins, qtd, total: qtd * ins.preco };
