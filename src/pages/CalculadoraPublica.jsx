@@ -628,8 +628,6 @@ export default function CalculadoraPublica() {
             <div className="calc-header-brand"><span>STICK</span><span>FRAME</span></div>
           </div>
           <nav className="calc-header-nav">
-            <a href="https://stickframe.com.br" target="_blank" rel="noreferrer">Início</a>
-            <a href="https://stickframe.com.br" target="_blank" rel="noreferrer">Projetos</a>
             <button className="calc-header-cta" onClick={() => document.querySelector('.calc-body')?.scrollIntoView({ behavior: 'smooth' })}>Simular agora</button>
           </nav>
         </header>
