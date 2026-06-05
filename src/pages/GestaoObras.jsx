@@ -280,6 +280,143 @@ function DiarioAba({ obraId, obra, diario, addDiario }) {
   );
 }
 
+// ─── Galeria por Ambiente ──────────────────────────────────────────────────────
+const AMBIENTES = ["Sala", "Quarto", "Banheiro", "Cozinha", "Estrutura", "Fachada", "Cobertura", "Fundação", "Outro"];
+const STATUS_FOTO = ["Em andamento", "Concluído", "Com problema"];
+const STATUS_FOTO_COR = { "Concluído": "#2e9e5b", "Em andamento": "#b97a00", "Com problema": "#c0392b" };
+
+function GaleriaAmbiente({ obraId }) {
+  const storageKey = `fotos_ambientes_${obraId}`;
+  const [fotos, setFotos] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(storageKey) || "[]"); } catch { return []; }
+  });
+  const [modalAberto, setModalAberto] = useState(false);
+  const [form, setForm] = useState({ url: "", ambiente: "Sala", legenda: "", status: "Em andamento" });
+  const [fotoAmpliada, setFotoAmpliada] = useState(null);
+
+  const salvarFoto = () => {
+    if (!form.url.trim()) return;
+    const nova = [...fotos, { ...form, id: Date.now() }];
+    setFotos(nova);
+    localStorage.setItem(storageKey, JSON.stringify(nova));
+    setForm({ url: "", ambiente: "Sala", legenda: "", status: "Em andamento" });
+    setModalAberto(false);
+  };
+
+  const removerFoto = (id) => {
+    const nova = fotos.filter((f) => f.id !== id);
+    setFotos(nova);
+    localStorage.setItem(storageKey, JSON.stringify(nova));
+  };
+
+  const grupos = AMBIENTES
+    .map((amb) => ({ amb, fotos: fotos.filter((f) => f.ambiente === amb) }))
+    .filter((g) => g.fotos.length > 0);
+
+  return (
+    <div style={{ marginTop: 28 }}>
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+        <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>📸 Galeria por Ambiente</div>
+        <button
+          onClick={() => setModalAberto(true)}
+          style={{ padding: "7px 16px", background: C.red, color: "#fff", border: "none", borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}
+        >
+          + Foto
+        </button>
+      </div>
+
+      {grupos.length === 0 && (
+        <div style={{ textAlign: "center", padding: "24px 0", color: C.muted, fontSize: 13 }}>
+          Nenhuma foto cadastrada. Clique em "+ Foto" para adicionar.
+        </div>
+      )}
+
+      {grupos.map(({ amb, fotos: gFotos }) => (
+        <div key={amb} style={{ marginBottom: 24 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: 1, color: C.muted, textTransform: "uppercase", marginBottom: 10, display: "flex", alignItems: "center", gap: 8 }}>
+            {amb}
+            <span style={{ background: C.dark, borderRadius: 10, padding: "1px 8px", fontSize: 11, fontWeight: 600, color: C.muted }}>{gFotos.length}</span>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 12 }}>
+            {gFotos.map((f) => (
+              <div key={f.id} style={{ background: C.dark, borderRadius: 10, border: `1px solid ${C.border}`, overflow: "hidden", position: "relative" }}>
+                <img
+                  src={f.url}
+                  alt={f.legenda || amb}
+                  onClick={() => setFotoAmpliada(f.url)}
+                  style={{ width: "100%", height: 120, objectFit: "cover", display: "block", cursor: "zoom-in" }}
+                  onError={(e) => { e.target.style.background = C.border; e.target.style.height = "120px"; }}
+                />
+                <div style={{ padding: "8px 10px" }}>
+                  {f.legenda && <div style={{ fontSize: 12, color: C.text, marginBottom: 6, lineHeight: 1.4 }}>{f.legenda}</div>}
+                  <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
+                    <span style={{ fontSize: 10, fontWeight: 700, background: C.surface, border: `1px solid ${C.border}`, borderRadius: 6, padding: "2px 7px", color: C.muted }}>{f.ambiente}</span>
+                    <span style={{ fontSize: 10, fontWeight: 700, background: STATUS_FOTO_COR[f.status] + "22", border: `1px solid ${STATUS_FOTO_COR[f.status]}44`, borderRadius: 6, padding: "2px 7px", color: STATUS_FOTO_COR[f.status] }}>{f.status}</span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => removerFoto(f.id)}
+                  style={{ position: "absolute", top: 6, right: 6, background: "rgba(0,0,0,0.5)", border: "none", borderRadius: 6, color: "#fff", fontSize: 12, width: 22, height: 22, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1 }}
+                  title="Remover foto"
+                >✕</button>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+
+      {/* Modal adicionar foto */}
+      {modalAberto && (
+        <Modal title="Adicionar Foto" onClose={() => setModalAberto(false)}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <div>
+              <Label required>URL da foto</Label>
+              <Input value={form.url} onChange={(v) => setForm((f) => ({ ...f, url: v }))} placeholder="https://..." />
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <div>
+                <Label>Ambiente</Label>
+                <Select
+                  value={form.ambiente}
+                  onChange={(v) => setForm((f) => ({ ...f, ambiente: v }))}
+                  options={AMBIENTES.map((a) => ({ value: a, label: a }))}
+                />
+              </div>
+              <div>
+                <Label>Status</Label>
+                <Select
+                  value={form.status}
+                  onChange={(v) => setForm((f) => ({ ...f, status: v }))}
+                  options={STATUS_FOTO.map((s) => ({ value: s, label: s }))}
+                />
+              </div>
+            </div>
+            <div>
+              <Label>Legenda</Label>
+              <Input value={form.legenda} onChange={(v) => setForm((f) => ({ ...f, legenda: v }))} placeholder="Descrição opcional..." />
+            </div>
+            {form.url && (
+              <img src={form.url} alt="preview" style={{ maxWidth: "100%", maxHeight: 180, borderRadius: 8, objectFit: "cover", border: `1px solid ${C.border}` }} />
+            )}
+            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+              <button onClick={() => setModalAberto(false)} style={{ padding: "8px 18px", background: C.dark, border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, cursor: "pointer", fontFamily: "inherit", color: C.text }}>Cancelar</button>
+              <button onClick={salvarFoto} disabled={!form.url.trim()} style={{ padding: "8px 18px", background: C.red, color: "#fff", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "inherit", opacity: form.url.trim() ? 1 : 0.5 }}>💾 Salvar</button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* Lightbox */}
+      {fotoAmpliada && (
+        <div onClick={() => setFotoAmpliada(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", cursor: "zoom-out" }}>
+          <img src={fotoAmpliada} alt="ampliada" style={{ maxWidth: "90vw", maxHeight: "90vh", borderRadius: 10 }} />
+        </div>
+      )}
+    </div>
+  );
+}
+
 const FORM_VAZIO = {
   nome: "", cliente_id: "", cliente: "", email_cliente: "",
   status: "Planejamento", fase: "Projeto executivo",
@@ -1668,6 +1805,7 @@ export default function GestaoObras() {
                       diario={diario[obraId] || []}
                       addDiario={addDiario}
                     />
+                    <GaleriaAmbiente obraId={obraId} />
                   </div>
                 )}
 
