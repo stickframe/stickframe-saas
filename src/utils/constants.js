@@ -42,7 +42,6 @@ export const NAV = [
   { key: "sst",               label: "SST",              icon: "ShieldAlert" },
   { key: "suprimentos",       label: "Suprimentos",      icon: "PackageOpen" },
   { key: "inteligencia",       label: "Inteligência",     icon: "Brain", perfis: ["diretor", "engenheiro"] },
-  { key: "analise",            label: "Análise",          icon: "BarChart2", perfis: ["diretor"] },
   { key: "bi",                 label: "BI",               icon: "TrendingUp", perfis: ["diretor"] },
   { key: "configuracoes",      label: "Configurações",    icon: "Settings" },
 ];
@@ -52,7 +51,7 @@ export const PERFIS = {
   diretor: {
     label: "Diretor",
     cor: C.red,
-    paginas: ["dashboard","agenda","crm","orcamentos","obras","cronograma","medicoes","diario","vistorias","bim","quantitativos","financeiro","contratos","historico","fornecedores","monitor_precos","calculadora","orcamento_tecnico","equipamentos","checklists","equipe","sst","suprimentos","inteligencia","analise","bi","configuracoes"],
+    paginas: ["dashboard","agenda","crm","orcamentos","obras","cronograma","medicoes","diario","vistorias","bim","quantitativos","financeiro","contratos","historico","fornecedores","monitor_precos","calculadora","orcamento_tecnico","equipamentos","checklists","equipe","sst","suprimentos","inteligencia","bi","configuracoes"],
   },
   comercial: {
     label: "Comercial",

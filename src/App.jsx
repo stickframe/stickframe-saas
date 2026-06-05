@@ -50,7 +50,6 @@ const OrcamentoTecnico  = lazyWithRetry(() => import("./pages/OrcamentoTecnico")
 const MonitorPrecos     = lazyWithRetry(() => import("./pages/MonitorPrecos"));
 const Equipamentos      = lazyWithRetry(() => import("./pages/Equipamentos"));
 const Checklists        = lazyWithRetry(() => import("./pages/Checklists"));
-const Analise           = lazyWithRetry(() => import("./pages/Analise"));
 const QRObra            = lazyWithRetry(() => import("./pages/QRObra"));
 const Inteligencia      = lazyWithRetry(() => import("./pages/Inteligencia"));
 const CalculadoraPublica   = lazyWithRetry(() => import("./pages/CalculadoraPublica"));
@@ -87,7 +86,6 @@ const PAGES = {
   equipamentos:   Equipamentos,
   checklists:     Checklists,
   inteligencia:   Inteligencia,
-  analise:        Analise,
   bi:             BI,
   sst:            SST,
   suprimentos:    Suprimentos,
