@@ -116,7 +116,9 @@ export default function SST() {
   const diasSemAcidente = (() => {
     const acidentes = inc.filter(i => i.tipo === "Acidente" || i.tipo === "Incidente").sort((a,b) => b.data.localeCompare(a.data));
     if (!acidentes.length) return "∞";
-    return Math.floor((new Date() - new Date(acidentes[0].data + "T12:00:00")) / 86400000);
+    const dataAcidente = new Date(acidentes[0].data + "T00:00:00");
+    const hoje2 = new Date(); hoje2.setHours(0,0,0,0);
+    return Math.floor((hoje2 - dataAcidente) / 86400000);
   })();
 
   const ddsMes       = dds.filter(d => d.data?.startsWith(mesAtual)).length;
