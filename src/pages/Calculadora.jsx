@@ -34,6 +34,76 @@ const PADROES = {
   "Alto Padrão": { fator: 1.20 },
 };
 
+// ─── Kits de modelos de casa ──────────────────────────────────────────────────
+const KITS = [
+  {
+    id: "studio",
+    nome: "Studio Compact",
+    area: 42, pavs: 1, padrao: "Padrão",
+    tag: "MAIS VENDIDO",
+    tagCor: "#2e9e5b",
+    descricao: "Ideal para uso individual, home office ou kitnet. Layout inteligente e construção rápida.",
+    quartos: 1, banheiros: 1, salas: 1,
+    emoji: "🏠",
+    destaques: ["Entrega em 45 dias", "Kit completo estrutural", "Perfeito para kitnet"],
+  },
+  {
+    id: "vila",
+    nome: "Vila 78m²",
+    area: 78, pavs: 1, padrao: "Padrão",
+    tag: "POPULAR",
+    tagCor: "#4a9eff",
+    descricao: "Casa térrea completa para família pequena. Conforto e economia em um só projeto.",
+    quartos: 2, banheiros: 1, salas: 1,
+    emoji: "🏡",
+    destaques: ["2 quartos confortáveis", "Varanda integrada", "Custo-benefício ótimo"],
+  },
+  {
+    id: "casa120",
+    nome: "Casa Serena 120m²",
+    area: 120, pavs: 1, padrao: "Padrão",
+    tag: "RECOMENDADO",
+    tagCor: "#981915",
+    descricao: "O modelo mais completo para família de 4 pessoas. Suíte master, sala ampla e área gourmet.",
+    quartos: 3, banheiros: 2, salas: 2,
+    emoji: "🏘",
+    destaques: ["Suíte master com closet", "Área gourmet", "Sala de TV + jantar"],
+  },
+  {
+    id: "sobrado160",
+    nome: "Sobrado Vivo 160m²",
+    area: 160, pavs: 2, padrao: "Padrão",
+    tag: "2 PAVIMENTOS",
+    tagCor: "#8b5cf6",
+    descricao: "Sobrado moderno com térreo social e pavimento superior privativo. Máxima privacidade.",
+    quartos: 3, banheiros: 3, salas: 2,
+    emoji: "🏗",
+    destaques: ["Térreo social separado", "3 suítes no andar", "Sacada com guarda-corpo"],
+  },
+  {
+    id: "alto200",
+    nome: "Residência Alto 200m²",
+    area: 200, pavs: 1, padrao: "Alto Padrão",
+    tag: "ALTO PADRÃO",
+    tagCor: "#e07020",
+    descricao: "Para quem não abre mão do melhor. Acabamentos superiores, ambientes generosos e projeto exclusivo.",
+    quartos: 4, banheiros: 3, salas: 3,
+    emoji: "🏛",
+    destaques: ["4 suítes amplas", "Home theater", "Piscina prevista"],
+  },
+  {
+    id: "vigo273",
+    nome: "Casa Vigo 273m²",
+    area: 273, pavs: 2, padrao: "Alto Padrão",
+    tag: "PREMIUM",
+    tagCor: "#c0392b",
+    descricao: "Nossa flagship — o lar dos sonhos em Steel Frame. Projeto inspirado em casas européias modernas.",
+    quartos: 4, banheiros: 4, salas: 3,
+    emoji: "🏰",
+    destaques: ["Estilo europeu moderno", "Pé-direito duplo na sala", "Área total de lazer"],
+  },
+];
+
 const CATS_ORDEM = ["Estrutura de Aço","Fechamento","Isolamento","Fixação","Fundação (Radier)"];
 
 const fmtR  = (v) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -452,6 +522,156 @@ function CalcComparativo() {
   );
 }
 
+// ─── Calculadora Kits ─────────────────────────────────────────────────────────
+function CalcKits({ onEnviarOrcamento }) {
+  const [kitSel, setKitSel] = useState(null);
+  const [result, setResult] = useState(null);
+
+  function calcularKit(kit) {
+    setKitSel(kit);
+    const fatorPadrao = PADROES[kit.padrao].fator;
+    const items = INSUMOS.map((ins) => {
+      const ehFundacao = ins.categoria === "Fundação (Radier)";
+      const fator = ehFundacao ? 1 : fatorPadrao * kit.pavs;
+      const qtd = Math.ceil(ins.base * kit.area * fator);
+      return { ...ins, qtd, total: qtd * ins.preco };
+    });
+    setResult({ ...kit, items, total: items.reduce((s, i) => s + i.total, 0) });
+  }
+
+  return (
+    <div>
+      {/* Grid de kits */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(280px,1fr))", gap: 20, marginBottom: 32 }}>
+        {KITS.map((kit) => {
+          const sel = kitSel?.id === kit.id;
+          const totalRef = INSUMOS.reduce((s, ins) => {
+            const f = ins.categoria === "Fundação (Radier)" ? 1 : PADROES[kit.padrao].fator * kit.pavs;
+            return s + Math.ceil(ins.base * kit.area * f) * ins.preco;
+          }, 0);
+          return (
+            <div key={kit.id} onClick={() => calcularKit(kit)} style={{
+              background: sel ? "linear-gradient(135deg,#1a0a0a,#2d0f0f)" : "#fff",
+              border: `2px solid ${sel ? "#981915" : C.border}`,
+              borderRadius: 20, padding: "22px", cursor: "pointer",
+              transition: "all .2s", position: "relative", overflow: "hidden",
+              boxShadow: sel ? "0 12px 40px rgba(152,25,21,.3)" : "0 2px 12px rgba(0,0,0,.06)",
+              transform: sel ? "translateY(-3px)" : "none",
+            }}
+              onMouseEnter={e => { if (!sel) { e.currentTarget.style.transform="translateY(-2px)"; e.currentTarget.style.boxShadow="0 8px 28px rgba(0,0,0,.12)"; }}}
+              onMouseLeave={e => { if (!sel) { e.currentTarget.style.transform="none"; e.currentTarget.style.boxShadow="0 2px 12px rgba(0,0,0,.06)"; }}}
+            >
+              {/* tag */}
+              <div style={{ position: "absolute", top: 14, right: 14, background: kit.tagCor, color: "#fff", fontSize: 9, fontWeight: 800, padding: "3px 8px", borderRadius: 20, letterSpacing: .8 }}>
+                {kit.tag}
+              </div>
+
+              <div style={{ fontSize: 40, marginBottom: 12 }}>{kit.emoji}</div>
+              <div style={{ fontSize: 18, fontWeight: 900, color: sel ? "#fff" : C.text, marginBottom: 4 }}>{kit.nome}</div>
+              <div style={{ fontSize: 12, color: sel ? "rgba(255,255,255,.6)" : C.muted, marginBottom: 14, lineHeight: 1.5 }}>{kit.descricao}</div>
+
+              {/* specs */}
+              <div style={{ display: "flex", gap: 12, marginBottom: 14, flexWrap: "wrap" }}>
+                {[
+                  { icon: "📐", val: `${kit.area} m²` },
+                  { icon: "🛏", val: `${kit.quartos} qts` },
+                  { icon: "🚿", val: `${kit.banheiros} ban` },
+                  { icon: "🏠", val: `${kit.pavs}P` },
+                ].map(({ icon, val }) => (
+                  <div key={val} style={{ display: "flex", alignItems: "center", gap: 4, background: sel ? "rgba(255,255,255,.1)" : C.darker, borderRadius: 8, padding: "4px 10px" }}>
+                    <span style={{ fontSize: 12 }}>{icon}</span>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: sel ? "#fff" : C.text }}>{val}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* destaques */}
+              <div style={{ marginBottom: 16 }}>
+                {kit.destaques.map(d => (
+                  <div key={d} style={{ fontSize: 11, color: sel ? "rgba(255,255,255,.7)" : C.muted, marginBottom: 3 }}>✓ {d}</div>
+                ))}
+              </div>
+
+              {/* preço ref */}
+              <div style={{ borderTop: `1px solid ${sel ? "rgba(255,255,255,.15)" : C.border}`, paddingTop: 12, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <div>
+                  <div style={{ fontSize: 9, color: sel ? "rgba(255,255,255,.5)" : C.muted, letterSpacing: .8, marginBottom: 2 }}>MATERIAIS A PARTIR DE</div>
+                  <div style={{ fontSize: 20, fontWeight: 900, color: sel ? "#ffb3b0" : "#981915" }}>{fmtR(totalRef)}</div>
+                </div>
+                <div style={{ background: sel ? "rgba(255,255,255,.15)" : "#981915", color: "#fff", fontSize: 11, fontWeight: 700, padding: "8px 16px", borderRadius: 10 }}>
+                  {sel ? "✓ Selecionado" : "Calcular"}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Resultado do kit selecionado */}
+      {result && (
+        <div style={{ animation: "fadeUp .4s ease" }}>
+          <div style={{
+            background: "linear-gradient(135deg,#1a0a0a,#981915)",
+            borderRadius: 20, padding: "28px 32px", marginBottom: 24, color: "#fff",
+            display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16,
+          }}>
+            <div>
+              <div style={{ fontSize: 11, opacity: .6, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 6 }}>Kit selecionado</div>
+              <div style={{ fontSize: 26, fontWeight: 900, marginBottom: 4 }}>{result.nome}</div>
+              <div style={{ fontSize: 14, opacity: .7 }}>{result.area} m² · {result.pavs} pav. · Padrão {result.padrao}</div>
+            </div>
+            <div style={{ textAlign: "right" }}>
+              <div style={{ fontSize: 11, opacity: .6, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }}>Total materiais</div>
+              <div style={{ fontSize: 38, fontWeight: 900, letterSpacing: -1 }}>{fmtR(result.total)}</div>
+            </div>
+          </div>
+
+          {/* tabela de insumos por categoria */}
+          {CATS_ORDEM.map(cat => {
+            const itens = result.items.filter(i => i.categoria === cat);
+            if (!itens.length) return null;
+            const subtotal = itens.reduce((s, i) => s + i.total, 0);
+            return (
+              <div key={cat} style={{ background: "#fff", borderRadius: 16, border: `1px solid ${C.border}`, marginBottom: 12, overflow: "hidden" }}>
+                <div style={{ background: C.darker, padding: "10px 18px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: 12, fontWeight: 800, color: C.text, letterSpacing: .5 }}>{cat}</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: "#981915" }}>{fmtR(subtotal)}</span>
+                </div>
+                {itens.map(i => (
+                  <div key={i.nome} style={{ display: "grid", gridTemplateColumns: "1fr auto auto auto", gap: 12, padding: "10px 18px", borderTop: `1px solid ${C.border}`, alignItems: "center" }}>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{i.nome}</div>
+                      <div style={{ fontSize: 11, color: C.muted }}>{i.desc}</div>
+                    </div>
+                    <div style={{ textAlign: "right", fontSize: 13, fontWeight: 700, color: C.text }}>{i.qtd} {i.un}</div>
+                    <div style={{ textAlign: "right", fontSize: 11, color: C.muted }}>{fmtR(i.preco)}/{i.un}</div>
+                    <div style={{ textAlign: "right", fontSize: 13, fontWeight: 700, color: "#2e9e5b" }}>{fmtR(i.total)}</div>
+                  </div>
+                ))}
+              </div>
+            );
+          })}
+
+          <div style={{ display: "flex", gap: 12, justifyContent: "flex-end", marginTop: 8 }}>
+            <button onClick={() => {
+              const rows = result.items.map(i => ({ Categoria: i.categoria, Material: i.nome, Un: i.un, Qtd: i.qtd, "Preço Ref": i.preco, Total: i.total }));
+              const ws = XLSX.utils.json_to_sheet(rows);
+              const wb = XLSX.utils.book_new();
+              XLSX.utils.book_append_sheet(wb, ws, "Kit");
+              XLSX.writeFile(wb, `kit-${result.id}-${result.area}m2.xlsx`);
+            }} style={{ padding: "12px 22px", background: C.darker, border: `1px solid ${C.border}`, borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", color: C.text }}>
+              📥 Exportar Excel
+            </button>
+            <button onClick={() => onEnviarOrcamento(result)} style={{ padding: "12px 28px", background: "linear-gradient(135deg,#981915,#c0392b)", color: "#fff", border: "none", borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", boxShadow: "0 4px 16px rgba(152,25,21,.3)" }}>
+              📋 Enviar para Orçamento
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function Calculadora() {
   const setActivePage = useAppStore((s) => s.setActivePage);
   const [modo, setModo] = useState("steelframe");
@@ -671,6 +891,7 @@ export default function Calculadora() {
       {/* ── Seletor de modo — cards grandes ── */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))", gap: 12, marginBottom: 32 }}>
         {[
+          { key: "kits",        icon: "🏠", title: "Kits de Casa",       sub: "Modelos prontos p/ orçar" },
           { key: "steelframe",  icon: "🏗", title: "Steel Frame",        sub: "Obra completa por m²" },
           { key: "parede",      icon: "🧱", title: "Parede Drywall",     sub: "Placas, perfis e fixação" },
           { key: "forro",       icon: "⬜", title: "Forro Drywall",      sub: "T47, pendurais e placas" },
@@ -694,10 +915,15 @@ export default function Calculadora() {
         })}
       </div>
 
+      {modo === "kits"        && <CalcKits onEnviarOrcamento={(res) => {
+        const itens = res.items.map(i => ({ grupo: i.grupo, item: i.nome, un: i.un, qtd: i.qtd, precoUnit: i.preco }));
+        localStorage.setItem("sf_estimativo", JSON.stringify({ itens, totalGeral: res.total, area: res.area, tipo: res.padrao }));
+        setActivePage("orcamentos");
+      }} />}
       {modo === "parede"      && <CalcParedeDrywall />}
       {modo === "forro"       && <CalcForroDrywall />}
       {modo === "comparativo" && <CalcComparativo />}
-      {modo !== "steelframe" && modo !== "parede" && modo !== "forro" && modo !== "comparativo" && null}
+      {modo !== "steelframe" && modo !== "parede" && modo !== "forro" && modo !== "comparativo" && modo !== "kits" && null}
       {modo !== "steelframe" ? null : (<>
       <p style={{ color: C.muted, fontSize: 13, marginBottom: 24 }}>
         Estimativa de insumos e custos de referência por área construída — 10% de perda já incluídos
