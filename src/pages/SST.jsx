@@ -6,6 +6,7 @@ import Badge from "../components/ui/Badge";
 import Modal from "../components/ui/Modal";
 import Input from "../components/ui/Input";
 import Select from "../components/ui/Select";
+import AssinaturaCanvas from "../components/ui/AssinaturaCanvas";
 import { C } from "../utils/constants";
 import {
   listarDDS, criarDDS, atualizarDDS, deletarDDS,
@@ -56,6 +57,25 @@ export default function SST() {
   const [epiForm, setEpiForm]     = useState({ item: "", quantidade: 1, data_entrega: new Date().toISOString().slice(0,10), validade: "", assinado: false, colaborador_id: "", obra_id: "", obs: "" });
 
   const [confirm, setConfirm] = useState(null);
+
+  // Assinaturas
+  const [assEpiModal, setAssEpiModal] = useState(null); // epi object
+  const [assDdsModal, setAssDdsModal] = useState(null); // dds object
+  const [assDdsNome, setAssDdsNome]   = useState("");
+
+  async function salvarAssEpi(base64) {
+    await sb.from("sst_epis").update({ assinatura_base64: base64, assinado: true }).eq("id", assEpiModal.id);
+    setAssEpiModal(null);
+    loadEpis();
+  }
+
+  async function salvarAssDds(base64) {
+    if (!assDdsNome.trim()) return;
+    await sb.from("sst_dds_assinaturas").insert({ empresa_id: getEmpresaId(), dds_id: assDdsModal.id, nome: assDdsNome.trim(), assinatura_base64: base64 });
+    setAssDdsNome("");
+    setAssDdsModal(null);
+    loadDDS();
+  }
 
   const loadObras  = useCallback(async () => {
     const { data } = await sb.from("obras").select("id,nome").eq("empresa_id", getEmpresaId()).order("nome");
@@ -220,6 +240,7 @@ export default function SST() {
                     <td style={{ padding: "10px 10px", color: C.muted }}>{d.obra?.nome || "—"}</td>
                     <td style={{ padding: "10px 10px", color: C.muted }}>{(d.participantes || []).length} pessoa(s)</td>
                     <td style={{ padding: "10px 10px", whiteSpace: "nowrap" }}>
+                      <Btn variant="ghost" size="sm" onClick={() => { setAssDdsModal(d); setAssDdsNome(""); }} style={{ color: C.warning }}>✍ Assinar</Btn>
                       <Btn variant="ghost" size="sm" onClick={() => abrirEditDDS(d)}>Editar</Btn>
                       <Btn variant="ghost" size="sm" style={{ color: C.danger }} onClick={() => setConfirm({ id: d.id, tipo: "dds", label: d.tema })}>Excluir</Btn>
                     </td>
@@ -307,6 +328,7 @@ export default function SST() {
                         <span style={{ fontSize: 18 }}>{e.assinado ? "✅" : "⬜"}</span>
                       </td>
                       <td style={{ padding: "10px 10px", whiteSpace: "nowrap" }}>
+                        <Btn variant="ghost" size="sm" onClick={() => setAssEpiModal(e)} style={{ color: e.assinado ? C.success : C.warning }}>✍ {e.assinado ? "Ver assinatura" : "Assinar"}</Btn>
                         <Btn variant="ghost" size="sm" onClick={() => abrirEditEpi(e)}>Editar</Btn>
                         <Btn variant="ghost" size="sm" style={{ color: C.danger }} onClick={() => setConfirm({ id: e.id, tipo: "epi", label: e.item })}>Excluir</Btn>
                       </td>
@@ -431,6 +453,57 @@ export default function SST() {
               <Btn variant="ghost" onClick={() => setEpiModal(false)}>Cancelar</Btn>
               <Btn onClick={salvarEpi} disabled={!epiForm.colaborador_id || !epiForm.item}>Salvar</Btn>
             </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* ── Modal Assinatura EPI ── */}
+      {assEpiModal && (
+        <Modal onClose={() => setAssEpiModal(null)} title={`✍ Assinatura — ${assEpiModal.item}`}>
+          {assEpiModal.assinatura_base64 ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <div style={{ fontSize: 13, color: C.muted }}>Assinatura registrada:</div>
+              <img src={assEpiModal.assinatura_base64} alt="Assinatura" style={{ width: "100%", border: `1px solid ${C.border}`, borderRadius: 8 }} />
+              <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+                <Btn variant="ghost" onClick={() => setAssEpiModal(null)}>Fechar</Btn>
+                <Btn onClick={() => setAssEpiModal({ ...assEpiModal, assinatura_base64: null })}>Reasinar</Btn>
+              </div>
+            </div>
+          ) : (
+            <AssinaturaCanvas
+              titulo={`Colaborador: ${colabs.find(c => c.id === assEpiModal.colaborador_id)?.nome || "—"}`}
+              onSalvar={salvarAssEpi}
+              onCancelar={() => setAssEpiModal(null)}
+            />
+          )}
+        </Modal>
+      )}
+
+      {/* ── Modal Assinatura DDS ── */}
+      {assDdsModal && (
+        <Modal onClose={() => setAssDdsModal(null)} title={`✍ Assinatura DDS — ${assDdsModal.tema}`}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: "block", marginBottom: 6 }}>NOME DO PARTICIPANTE *</label>
+              <input
+                value={assDdsNome}
+                onChange={e => setAssDdsNome(e.target.value)}
+                placeholder="Nome completo"
+                style={{ width: "100%", padding: "9px 13px", border: `1px solid ${C.border}`, borderRadius: 6, fontSize: 13, fontFamily: "inherit", outline: "none", boxSizing: "border-box" }}
+              />
+            </div>
+            {assDdsNome.trim() && (
+              <AssinaturaCanvas
+                titulo={`Assinatura de ${assDdsNome}`}
+                onSalvar={salvarAssDds}
+                onCancelar={() => setAssDdsModal(null)}
+              />
+            )}
+            {!assDdsNome.trim() && (
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                <Btn variant="ghost" onClick={() => setAssDdsModal(null)}>Cancelar</Btn>
+              </div>
+            )}
           </div>
         </Modal>
       )}
