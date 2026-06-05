@@ -167,9 +167,9 @@ function useAlertasOperacionais() {
       // Estoque abaixo do mínimo
       sb.from("suprimentos_estoque").select("item, quantidade, estoque_minimo").eq("empresa_id", empId).gt("estoque_minimo", 0),
       // Certificações NR vencidas
-      sb.from("certificacoes").select("id, nr, validade, colaborador:colaboradores(nome)").eq("empresa_id", empId).lt("validade", hoje),
+      sb.from("certificacoes").select("id, nr, data_validade, colaborador_id").eq("empresa_id", empId).lt("data_validade", hoje),
       // Certificações NR vencendo em 30d
-      sb.from("certificacoes").select("id, nr, validade, colaborador:colaboradores(nome)").eq("empresa_id", empId).gte("validade", hoje).lte("validade", em30),
+      sb.from("certificacoes").select("id, nr, data_validade, colaborador_id").eq("empresa_id", empId).gte("data_validade", hoje).lte("data_validade", em30),
     ]).then(([episVenc, episVend, incAbertos, pedCrit, estoqueItems, certVenc, certVend]) => {
       const result = [];
       (episVenc.data || []).forEach(e => result.push({
@@ -205,16 +205,16 @@ function useAlertasOperacionais() {
         id: `cert-${c.id}-expired`,
         categoria: "certificacao", tipo: "erro", cor: "#e74c3c", icon: "🛡️",
         titulo: "Cert. NR VENCIDA",
-        texto: `Cert. ${c.nr} de ${c.colaborador?.nome || "Colaborador"} VENCIDA`,
+        texto: `Cert. ${c.nr} — VENCIDA`,
       }));
       (certVend.data || []).forEach(c => {
-        const diasRestantes = Math.ceil((new Date(c.validade) - new Date()) / 86400000);
+        const diasRestantes = Math.ceil((new Date(c.data_validade) - new Date()) / 86400000);
         result.push({
           id: `cert-${c.id}-expiring`,
           categoria: "certificacao", tipo: diasRestantes <= 7 ? "erro" : "alerta",
           cor: diasRestantes <= 7 ? "#e74c3c" : "#e67e22", icon: "🛡️",
           titulo: "Cert. NR vencendo",
-          texto: `Cert. ${c.nr} de ${c.colaborador?.nome || "Colaborador"} vence em ${diasRestantes} dia(s)`,
+          texto: `Cert. ${c.nr} vence em ${diasRestantes} dia(s)`,
         });
       });
       setAlertas(result);
