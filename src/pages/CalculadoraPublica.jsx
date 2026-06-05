@@ -637,29 +637,7 @@ export default function CalculadoraPublica() {
                 </div>
               </div>
 
-              {CATS_ORDEM_KIT.map(cat => {
-                const itens = kitItems.filter(i => i.categoria === cat);
-                if (!itens.length) return null;
-                const subtotal = itens.reduce((s, i) => s + i.total, 0);
-                const ativa = catsAtivas[cat];
-                return (
-                  <div key={cat} className="kit-cat-block" style={{ opacity: ativa ? 1 : 0.35 }}>
-                    <div className="kit-cat-header">
-                      <span style={{ fontSize: 11, fontWeight: 800, color: "#333" }}>{cat}</span>
-                      <span style={{ fontSize: 11, fontWeight: 700, color: "#981915" }}>{fmtR(subtotal)}{!ativa && <span style={{ marginLeft: 6, fontSize: 10, color: "#999" }}>(excluído)</span>}</span>
-                    </div>
-                    {itens.map(i => (
-                      <div key={i.nome} className="kit-cat-row">
-                        <div style={{ fontWeight: 600, color: "#333" }}>{i.nome}</div>
-                        <div style={{ color: "#555", whiteSpace: "nowrap" }}>{i.qtd} {i.un}</div>
-                        <div style={{ fontWeight: 700, color: "#2e9e5b", whiteSpace: "nowrap" }}>{fmtR(i.total)}</div>
-                      </div>
-                    ))}
-                  </div>
-                );
-              })}
-
-              <button className="calc-btn" style={{ marginTop: 8 }} onClick={() => { setNome(""); setWhatsapp(""); setEmail(""); setKitStep("contact"); window.scrollTo({top:0,behavior:"smooth"}); }}>
+              <button className="calc-btn" style={{ marginTop: 4 }} onClick={() => { setNome(""); setWhatsapp(""); setEmail(""); setKitStep("contact"); window.scrollTo({top:0,behavior:"smooth"}); }}>
                 📋 Solicitar orçamento completo
               </button>
             </div>
