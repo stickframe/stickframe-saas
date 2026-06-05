@@ -949,6 +949,31 @@ export default function CRM() {
                               <span style={{ background: C.darker, padding: "2px 6px", borderRadius: 4 }}>{c.origem || "Indicação"}</span>
                               {atrasado && <span style={{ color: C.danger, fontWeight: 700, fontSize: 10, background: C.danger+"22", padding: "2px 6px", borderRadius: 4 }}>⚠️ FOLLOW-UP</span>}
                             </div>
+                            {c.origem === "Calculadora" && (() => {
+                              const KIT_IDS = { 42: "studio", 78: "vila", 120: "casa120", 160: "sobrado160", 200: "alto200", 273: "vigo273" };
+                              const kitId = KIT_IDS[Number(c.area_m2)];
+                              if (!kitId) return null;
+                              const padrao = (c.observacoes || "").match(/Padrão:\s*([^|]+)/)?.[1]?.trim() || "Padrão";
+                              return (
+                                <button
+                                  onClick={e => {
+                                    e.stopPropagation();
+                                    localStorage.setItem("sf_kit_lead", JSON.stringify({ kitId, padrao }));
+                                    setActivePage("calculadora");
+                                  }}
+                                  style={{
+                                    marginTop: 8, width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                                    padding: "6px 0", borderRadius: 7, border: "1px solid #98191533",
+                                    background: "#98191510", color: "#981915", fontSize: 11, fontWeight: 700,
+                                    cursor: "pointer", transition: "background 0.15s",
+                                  }}
+                                  onMouseEnter={e => e.currentTarget.style.background = "#98191520"}
+                                  onMouseLeave={e => e.currentTarget.style.background = "#98191510"}
+                                >
+                                  🔧 Simular kit
+                                </button>
+                              );
+                            })()}
                             {c.contato && (
                               <button
                                 onClick={e => {
@@ -957,7 +982,7 @@ export default function CRM() {
                                   enviarWhatsApp(c.contato, tpl.msg(c));
                                 }}
                                 style={{
-                                  marginTop: 10, width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                                  marginTop: 8, width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
                                   padding: "6px 0", borderRadius: 7, border: "1px solid #25D36633",
                                   background: "#25D36610", color: "#25D366", fontSize: 11, fontWeight: 700,
                                   cursor: "pointer", transition: "background 0.15s",
