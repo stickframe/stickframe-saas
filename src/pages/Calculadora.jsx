@@ -14,7 +14,7 @@ const INSUMOS = [
   { categoria: "Estrutura de Aço", grupo: "Estrutura",        nome: "Guia U 92×40×1,25mm",                un: "m",   base: 1.10, preco: 12.00, desc: "Superior e inferior" },
   { categoria: "Estrutura de Aço", grupo: "Estrutura",        nome: "Montante C 140×40×15×1,25mm",        un: "pç",  base: 0.30, preco: 24.00, desc: "Vergas e contravergas" },
   { categoria: "Fechamento",       grupo: "Vedação externa",  nome: "Chapa OSB 11,1mm (1,22×2,44)",       un: "chp", base: 0.38, preco: 52.00, desc: "Contraventamento estrutural" },
-  { categoria: "Fechamento",       grupo: "Vedação interna",  nome: "Placa de Gesso BA 13mm (1,20×2,40)", un: "chp", base: 0.85, preco: 17.00, desc: "Faces internas das paredes" },
+  { categoria: "Fechamento",       grupo: "Vedação interna",  nome: "Placa de Gesso ST 13mm (1,20×2,40)", un: "chp", base: 0.85, preco: 17.00, desc: "Faces internas das paredes" },
   { categoria: "Fechamento",       grupo: "Vedação externa",  nome: "Placa Cimentícia 10mm (1,20×2,40)",  un: "chp", base: 0.18, preco: 65.00, desc: "Fachada externa" },
   { categoria: "Isolamento",       grupo: "Isolamento",       nome: "Lã de Vidro 50mm",                   un: "m²",  base: 1.30, preco: 16.00, desc: "Interior das paredes e laje" },
   { categoria: "Isolamento",       grupo: "Isolamento",       nome: "Manta EPDM (fita adesiva 50mm)",     un: "m",   base: 1.10, preco:  5.50, desc: "Vedação de juntas" },
