@@ -10,6 +10,7 @@ import {
   listarEstoque, criarItemEstoque, atualizarItemEstoque, deletarItemEstoque,
 } from "../services/repositories/suprimentosRepository";
 import { sb, getEmpresaId } from "../services/supabase";
+import { exportarPedidosExcel, exportarEstoqueExcel } from "../utils/exportExcel";
 
 const URGENCIAS     = ["Normal", "Urgente", "Crítico"];
 const STATUS_PED    = ["Pendente", "Aprovado", "Em trânsito", "Entregue", "Cancelado"];
@@ -233,7 +234,10 @@ export default function Suprimentos() {
         <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: 20 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
             <h3 style={{ fontWeight: 700 }}>Pedidos de Material</h3>
-            <Btn onClick={abrirNovoPed}>+ Novo Pedido</Btn>
+            <div style={{ display: "flex", gap: 8 }}>
+              <Btn variant="ghost" onClick={() => exportarPedidosExcel(pedidos)}>📊 Exportar Excel</Btn>
+              <Btn onClick={abrirNovoPed}>+ Novo Pedido</Btn>
+            </div>
           </div>
           {pedLoading ? <p style={{ color: C.muted }}>Carregando...</p> : pedidos.length === 0 ? (
             <p style={{ color: C.muted, textAlign: "center", padding: 32 }}>Nenhum pedido registrado.</p>
@@ -282,7 +286,10 @@ export default function Suprimentos() {
         <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: 20 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
             <h3 style={{ fontWeight: 700 }}>Estoque / Almoxarifado</h3>
-            <Btn onClick={abrirNovoEst}>+ Novo Item</Btn>
+            <div style={{ display: "flex", gap: 8 }}>
+              <Btn variant="ghost" onClick={() => exportarEstoqueExcel(estoque, movimentos)}>📊 Exportar Excel</Btn>
+              <Btn onClick={abrirNovoEst}>+ Novo Item</Btn>
+            </div>
           </div>
           {estLoading ? <p style={{ color: C.muted }}>Carregando...</p> : estoque.length === 0 ? (
             <p style={{ color: C.muted, textAlign: "center", padding: 32 }}>Nenhum item cadastrado no estoque.</p>

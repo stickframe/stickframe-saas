@@ -14,6 +14,7 @@ import {
   listarEpis, criarEpi, atualizarEpi, deletarEpi,
 } from "../services/repositories/sstRepository";
 import { sb, getEmpresaId } from "../services/supabase";
+import { exportarEpisExcel, exportarDdsExcel } from "../utils/exportExcel";
 
 const GRAVIDADES = ["Baixa", "Média", "Alta", "Crítica"];
 const TIPOS_INC  = ["Quase-acidente", "Acidente", "Incidente"];
@@ -241,7 +242,10 @@ export default function SST() {
         <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: 20 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
             <h3 style={{ fontWeight: 700 }}>Diálogos Diários de Segurança</h3>
-            <Btn onClick={abrirNovoDDS}>+ Novo DDS</Btn>
+            <div style={{ display: "flex", gap: 8 }}>
+              <Btn variant="ghost" onClick={() => exportarDdsExcel(dds)}>📊 Excel</Btn>
+              <Btn onClick={abrirNovoDDS}>+ Novo DDS</Btn>
+            </div>
           </div>
           {ddsLoading ? <p style={{ color: C.muted }}>Carregando...</p> : dds.length === 0 ? (
             <p style={{ color: C.muted, textAlign: "center", padding: 32 }}>Nenhum DDS registrado ainda.</p>
@@ -328,7 +332,10 @@ export default function SST() {
         <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: 20 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
             <h3 style={{ fontWeight: 700 }}>Entrega de EPIs</h3>
-            <Btn onClick={abrirNovoEpi}>+ Registrar Entrega</Btn>
+            <div style={{ display: "flex", gap: 8 }}>
+              <Btn variant="ghost" onClick={() => exportarEpisExcel(epis)}>📊 Excel</Btn>
+              <Btn onClick={abrirNovoEpi}>+ Registrar Entrega</Btn>
+            </div>
           </div>
           {episLoading ? <p style={{ color: C.muted }}>Carregando...</p> : epis.length === 0 ? (
             <p style={{ color: C.muted, textAlign: "center", padding: 32 }}>Nenhuma entrega de EPI registrada.</p>

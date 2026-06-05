@@ -70,3 +70,94 @@ export function exportarFinanceiroExcel(obras, financeiro) {
 
   XLSX.writeFile(wb, `financeiro-stickframe-${hoje()}.xlsx`);
 }
+
+// ─── Suprimentos — Pedidos ────────────────────────────────────────────────────
+export function exportarPedidosExcel(pedidos) {
+  const rows = pedidos.map((p) => ({
+    "Item":            p.item || "",
+    "Quantidade":      p.quantidade || 0,
+    "Unidade":         p.unidade || "",
+    "Urgência":        p.urgencia || "",
+    "Status":          p.status || "",
+    "Obra":            p.obra?.nome || "",
+    "Solicitante":     p.solicitante || "",
+    "Data Pedido":     p.data_pedido || "",
+    "Previsão Entrega": p.data_entrega || "",
+    "Valor Unitário":  p.valor_unitario || 0,
+    "Valor Total":     (p.valor_unitario || 0) * (p.quantidade || 0),
+    "Observações":     p.obs || "",
+  }));
+  const ws = XLSX.utils.json_to_sheet(rows);
+  ws["!cols"] = [24, 12, 8, 10, 14, 24, 18, 14, 16, 14, 14, 30].map((w) => ({ wch: w }));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Pedidos");
+  XLSX.writeFile(wb, `pedidos-suprimentos-${hoje()}.xlsx`);
+}
+
+// ─── Suprimentos — Estoque ────────────────────────────────────────────────────
+export function exportarEstoqueExcel(estoque, movimentos = []) {
+  const wb = XLSX.utils.book_new();
+  const wsEst = XLSX.utils.json_to_sheet(estoque.map((e) => ({
+    "Item":            e.item || "",
+    "Saldo":           e.quantidade || 0,
+    "Unidade":         e.unidade || "",
+    "Estoque Mínimo":  e.estoque_minimo || 0,
+    "Localização":     e.localizacao || "",
+    "Valor Unitário":  e.valor_unitario || 0,
+    "Valor em Estoque": (e.valor_unitario || 0) * (e.quantidade || 0),
+    "Status":          e.estoque_minimo > 0 && e.quantidade <= e.estoque_minimo ? "Abaixo do mínimo" : "OK",
+  })));
+  wsEst["!cols"] = [24, 10, 8, 14, 18, 14, 16, 18].map((w) => ({ wch: w }));
+  XLSX.utils.book_append_sheet(wb, wsEst, "Estoque");
+  if (movimentos.length) {
+    const wsMov = XLSX.utils.json_to_sheet(movimentos.map((m) => ({
+      "Data/Hora":   m.created_at ? new Date(m.created_at).toLocaleString("pt-BR") : "",
+      "Item":        m.estoque?.item || "",
+      "Tipo":        m.tipo || "",
+      "Quantidade":  m.tipo === "entrada" ? m.quantidade : -m.quantidade,
+      "Observação":  m.obs || "",
+    })));
+    wsMov["!cols"] = [18, 24, 10, 12, 40].map((w) => ({ wch: w }));
+    XLSX.utils.book_append_sheet(wb, wsMov, "Movimentações");
+  }
+  XLSX.writeFile(wb, `estoque-suprimentos-${hoje()}.xlsx`);
+}
+
+// ─── SST — EPIs ───────────────────────────────────────────────────────────────
+export function exportarEpisExcel(epis) {
+  const rows = epis.map((e) => ({
+    "Colaborador":    e.colaborador?.nome || "",
+    "Item EPI":       e.item || "",
+    "Quantidade":     e.quantidade || 1,
+    "Data Entrega":   e.data_entrega || "",
+    "Validade":       e.validade || "",
+    "Status Validade": !e.validade ? "Sem validade" : new Date(e.validade) < new Date() ? "VENCIDO" : "OK",
+    "Assinado":       e.assinado ? "Sim" : "Não",
+    "Obra":           e.obra?.nome || "",
+    "Observações":    e.obs || "",
+  }));
+  const ws = XLSX.utils.json_to_sheet(rows);
+  ws["!cols"] = [24, 22, 10, 14, 12, 16, 10, 24, 30].map((w) => ({ wch: w }));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "EPIs");
+  XLSX.writeFile(wb, `epis-sst-${hoje()}.xlsx`);
+}
+
+// ─── SST — DDS ────────────────────────────────────────────────────────────────
+export function exportarDdsExcel(dds) {
+  const rows = dds.map((d) => ({
+    "Data":           d.data || "",
+    "Tema":           d.tema || "",
+    "Facilitador":    d.facilitador || "",
+    "Obra":           d.obra?.nome || "",
+    "Participantes":  (d.participantes || []).join(", "),
+    "Nº Participantes": (d.participantes || []).length,
+    "Assinaturas":    d.assinaturas_count || 0,
+    "Observações":    d.obs || "",
+  }));
+  const ws = XLSX.utils.json_to_sheet(rows);
+  ws["!cols"] = [12, 30, 22, 24, 40, 14, 12, 30].map((w) => ({ wch: w }));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "DDS");
+  XLSX.writeFile(wb, `dds-sst-${hoje()}.xlsx`);
+}
