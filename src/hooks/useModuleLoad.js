@@ -5,7 +5,7 @@ const MODULOS_VALIDOS = new Set([
   "clientes", "fornecedores", "obras", "contratos", "orcamentos",
   "financeiro", "cotacoes", "diario", "medicoes", "arquivos",
   "notificacoes", "atividades", "historico", "eventos",
-  "colaboradores", "alocacoes",
+  "colaboradores", "alocacoes", "suprimentos", "sst",
 ]);
 
 export function useModuleLoad(modulo, id = null) {
