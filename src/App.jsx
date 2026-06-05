@@ -14,6 +14,7 @@ import UndoBar from "./components/ui/UndoBar";
 import { OnboardingTour } from "./components/ui/OnboardingTour";
 import { useUndoStore } from "./store/undoStore";
 import { useHotkeys } from "react-hotkeys-hook";
+import PortalColaborador from "./pages/PortalColaborador";
 
 // Auto-reload on chunk fetch failure (stale SW cache after deploy)
 function lazyWithRetry(fn) {
