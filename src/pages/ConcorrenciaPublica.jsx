@@ -106,7 +106,7 @@ export default function ConcorrenciaPublica() {
                   <div key={it.id} style={{ display: "flex", justifyContent: "space-between", fontSize: 13, padding: "6px 0", borderBottom: `1px solid ${ST.border}` }}>
                     <span>{it.descricao}</span>
                     <span style={{ fontWeight: 700 }}>
-                      {precos[it.id]?.preco ? `R$ ${Number(precos[it.id].preco).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}/${it.unidade}` : "—"}
+                      {precos[it.id]?.preco ? `R$ ${parseFloat(String(precos[it.id].preco).replace(",", ".")).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}/${it.unidade}` : "—"}
                     </span>
                   </div>
                 ))}
