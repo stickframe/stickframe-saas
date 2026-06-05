@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { BarChart2, ClipboardList } from "../components/ui/Icon";
 import { C } from "../utils/constants";
 import useAppStore from "../store/useAppStore";
+import { sb } from "../services/supabase";
 import * as XLSX from "xlsx";
 import {
   listarRetalhos, registrarRetalho, marcarUsado,
@@ -793,6 +794,22 @@ export default function Calculadora() {
     localStorage.getItem("sf_kit_lead") ? "kits" : "steelframe"
   );
 
+  const [cubValor,      setCubValor]      = useState<number | null>(null);
+  const [cubCarregando, setCubCarregando] = useState(false);
+
+  async function atualizarCub() {
+    setCubCarregando(true);
+    try {
+      const { data, error } = await sb.functions.invoke("atualizar-cub");
+      if (error) throw error;
+      if (data?.cub) setCubValor(data.cub);
+    } catch (e) {
+      alert("Erro ao atualizar CUB: " + ((e as Error)?.message || String(e)));
+    } finally {
+      setCubCarregando(false);
+    }
+  }
+
   const [area,      setArea]      = useState("");
   const [pavs,      setPavs]      = useState(1);
   const [padrao,    setPadrao]    = useState("Padrão");
@@ -990,7 +1007,7 @@ export default function Calculadora() {
             Steel Frame, Parede Drywall, Forro — quantitativos precisos com fator de desperdício configurável e export direto para orçamento.
           </p>
           {/* Stats */}
-          <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", gap: 24, flexWrap: "wrap", alignItems: "flex-end" }}>
             {[
               { val: "16+", label: "insumos SF" },
               { val: "3",   label: "tipos de placa" },
@@ -1001,6 +1018,30 @@ export default function Calculadora() {
                 <div style={{ fontSize: 11, color: "rgba(255,255,255,.5)", textTransform: "uppercase", letterSpacing: 1 }}>{label}</div>
               </div>
             ))}
+            <div>
+              <div style={{ fontSize: 24, fontWeight: 900, color: "#ffb3b0" }}>
+                {cubValor ? `R$ ${cubValor.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}` : "—"}
+              </div>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,.5)", textTransform: "uppercase", letterSpacing: 1 }}>CUB-R1B/m²</div>
+            </div>
+            <button
+              onClick={atualizarCub}
+              disabled={cubCarregando}
+              style={{
+                padding: "7px 14px",
+                background: "rgba(255,255,255,.15)",
+                border: "1px solid rgba(255,255,255,.3)",
+                borderRadius: 8,
+                color: "#fff",
+                fontSize: 12,
+                fontWeight: 700,
+                cursor: cubCarregando ? "not-allowed" : "pointer",
+                fontFamily: "inherit",
+                opacity: cubCarregando ? 0.7 : 1,
+              }}
+            >
+              {cubCarregando ? "..." : "🔄 Atualizar CUB"}
+            </button>
           </div>
         </div>
       </div>
