@@ -576,6 +576,232 @@ function Field({ label, children }) {
 }
 
 // ─── Página BIM ───────────────────────────────────────────────────────────────
+// ─── Kits para o preview 3D ───────────────────────────────────────────────────
+const KITS_3D = [
+  { id: "studio",    nome: "Studio 42m²",         area: 42,  larg: 7,  comp: 6,  pavs: 1, quartos: 1, cor: "#4a9eff" },
+  { id: "vila",      nome: "Vila 78m²",            area: 78,  larg: 9,  comp: 8.5,pavs: 1, quartos: 2, cor: "#2e9e5b" },
+  { id: "casa120",   nome: "Casa Serena 120m²",    area: 120, larg: 12, comp: 10, pavs: 1, quartos: 3, cor: "#981915" },
+  { id: "sobrado",   nome: "Sobrado 160m²",        area: 160, larg: 10, comp: 8,  pavs: 2, quartos: 3, cor: "#8b5cf6" },
+  { id: "alto200",   nome: "Residência Alto 200m²",area: 200, larg: 14, comp: 14, pavs: 1, quartos: 4, cor: "#e07020" },
+  { id: "vigo273",   nome: "Casa Vigo 273m²",      area: 273, larg: 16, comp: 17, pavs: 2, quartos: 4, cor: "#c0392b" },
+];
+
+function KitPreview3D() {
+  const canvasRef = useRef(null);
+  const [kitSel, setKitSel] = useState(KITS_3D[2]);
+  const [loading, setLoading] = useState(false);
+  const rendererRef = useRef(null);
+  const animRef = useRef(null);
+
+  useEffect(() => {
+    if (!canvasRef.current || !kitSel) return;
+    setLoading(true);
+    let renderer, animId;
+
+    (async () => {
+      const THREE = await import("three");
+      const { OrbitControls } = await import("three/addons/controls/OrbitControls.js");
+
+      // Limpa anterior
+      if (rendererRef.current) { rendererRef.current.dispose(); canvasRef.current.innerHTML = ""; }
+
+      const w = canvasRef.current.clientWidth || 800;
+      const h = canvasRef.current.clientHeight || 500;
+
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x0f0f14);
+
+      // Grid
+      const grid = new THREE.GridHelper(60, 30, 0x222233, 0x111122);
+      scene.add(grid);
+
+      // Luz
+      scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+      const dir = new THREE.DirectionalLight(0xffffff, 1.2);
+      dir.position.set(20, 40, 20);
+      dir.castShadow = true;
+      scene.add(dir);
+      const dir2 = new THREE.DirectionalLight(0x8888ff, 0.3);
+      dir2.position.set(-20, 10, -10);
+      scene.add(dir2);
+
+      const kit = kitSel;
+      const PAV_H = 3.0;
+      const W = kit.larg, D = kit.comp;
+
+      // Função para criar parede com janelas
+      function addWall(x, y, z, wx, wy, wz, cor) {
+        const geo = new THREE.BoxGeometry(wx, wy, wz);
+        const mat = new THREE.MeshLambertMaterial({ color: cor });
+        const m = new THREE.Mesh(geo, mat);
+        m.position.set(x, y, z);
+        scene.add(m);
+        // linha de wireframe
+        const edge = new THREE.LineSegments(
+          new THREE.EdgesGeometry(geo),
+          new THREE.LineBasicMaterial({ color: 0x333344, linewidth: 1 })
+        );
+        edge.position.set(x, y, z);
+        scene.add(edge);
+      }
+
+      for (let pav = 0; pav < kit.pavs; pav++) {
+        const yBase = pav * PAV_H;
+        const wallColor = pav === 0 ? 0xd4c9b8 : 0xcfc6b5;
+
+        // Piso
+        addWall(0, yBase - 0.05, 0, W, 0.1, D, 0x888877);
+
+        // Paredes externas
+        const wt = 0.2;
+        addWall(0,          yBase + PAV_H/2, -D/2,      W, PAV_H, wt,  wallColor); // frente
+        addWall(0,          yBase + PAV_H/2,  D/2,      W, PAV_H, wt,  wallColor); // fundo
+        addWall(-W/2,       yBase + PAV_H/2,  0,        wt, PAV_H, D, wallColor); // esq
+        addWall( W/2,       yBase + PAV_H/2,  0,        wt, PAV_H, D, wallColor); // dir
+
+        // Paredes internas — divisões de cômodos
+        if (kit.quartos >= 2) {
+          addWall(W * 0.1, yBase + PAV_H/2, D * 0.1, wt, PAV_H, D * 0.6, 0xc8bfae);
+        }
+        if (kit.quartos >= 3) {
+          addWall(-W * 0.2, yBase + PAV_H/2, D * 0.05, wt, PAV_H, D * 0.5, 0xc8bfae);
+        }
+
+        // Janelas (aberturas em cor azul claro)
+        const janelaH = 1.2, janelaW = 1.5, janelaY = yBase + 1.6;
+        [[0, janelaY, -D/2], [W*0.25, janelaY, -D/2], [-W*0.25, janelaY, -D/2]].forEach(([x,y,z]) => {
+          const jGeo = new THREE.BoxGeometry(janelaW, janelaH, 0.05);
+          const jMat = new THREE.MeshLambertMaterial({ color: 0x88bbdd, transparent: true, opacity: 0.6 });
+          const j = new THREE.Mesh(jGeo, jMat);
+          j.position.set(x, y, z);
+          scene.add(j);
+        });
+
+        // Porta
+        const pGeo = new THREE.BoxGeometry(0.9, 2.2, 0.05);
+        const pMat = new THREE.MeshLambertMaterial({ color: 0x6b4c2a });
+        const porta = new THREE.Mesh(pGeo, pMat);
+        porta.position.set(W * 0.15, yBase + 1.1, -D/2);
+        scene.add(porta);
+      }
+
+      // Telhado — pirâmide/cume
+      const roofY = kit.pavs * PAV_H;
+      if (kit.pavs === 1) {
+        // Telhado duas águas simples
+        const shape = new THREE.Shape();
+        shape.moveTo(-W/2 - 0.5, 0);
+        shape.lineTo(0, 2.8);
+        shape.lineTo(W/2 + 0.5, 0);
+        shape.lineTo(-W/2 - 0.5, 0);
+        const extSettings = { depth: D + 1, bevelEnabled: false };
+        const roofGeo = new THREE.ExtrudeGeometry(shape, extSettings);
+        const roofMat = new THREE.MeshLambertMaterial({ color: 0x8b3a2a });
+        const roof = new THREE.Mesh(roofGeo, roofMat);
+        roof.position.set(0, roofY, -D/2 - 0.5);
+        scene.add(roof);
+        const roofEdge = new THREE.LineSegments(new THREE.EdgesGeometry(roofGeo), new THREE.LineBasicMaterial({ color: 0x5a2010 }));
+        roofEdge.position.copy(roof.position);
+        scene.add(roofEdge);
+      } else {
+        // Terraço plano no 2º pav
+        addWall(0, roofY + 0.1, 0, W + 0.4, 0.2, D + 0.4, 0x888877);
+        // Guarda-corpo
+        [[0, roofY+0.5, -D/2],[0, roofY+0.5, D/2],[-W/2, roofY+0.5, 0],[W/2, roofY+0.5, 0]]
+          .forEach(([x,y,z], i) => {
+            const isZ = i < 2;
+            addWall(x, y, z, isZ ? W : 0.1, 1, isZ ? 0.1 : D, 0xcccccc);
+          });
+      }
+
+      // Grama/terreno
+      const terrGeo = new THREE.PlaneGeometry(W + 20, D + 20);
+      const terrMat = new THREE.MeshLambertMaterial({ color: 0x2d5a1b });
+      const terr = new THREE.Mesh(terrGeo, terrMat);
+      terr.rotation.x = -Math.PI / 2;
+      terr.position.y = -0.06;
+      scene.add(terr);
+
+      // Câmera
+      const camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 1000);
+      const dist = Math.max(W, D) * 1.5;
+      camera.position.set(dist, dist * 0.7, dist);
+      camera.lookAt(0, kit.pavs * PAV_H / 2, 0);
+
+      renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(w, h);
+      renderer.setPixelRatio(window.devicePixelRatio);
+      renderer.shadowMap.enabled = true;
+      canvasRef.current.appendChild(renderer.domElement);
+      rendererRef.current = renderer;
+
+      const controls = new OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.08;
+      controls.target.set(0, kit.pavs * PAV_H / 2, 0);
+      controls.update();
+
+      setLoading(false);
+
+      function animate() { animId = requestAnimationFrame(animate); controls.update(); renderer.render(scene, camera); }
+      animate();
+      animRef.current = animId;
+    })();
+
+    return () => {
+      cancelAnimationFrame(animRef.current);
+      if (rendererRef.current) { rendererRef.current.dispose(); }
+    };
+  }, [kitSel]);
+
+  return (
+    <div style={{ background: "#0f0f14", borderRadius: "0 0 12px 12px", border: `1px solid ${C.border}`, borderTop: "none" }}>
+      {/* seletor de kit */}
+      <div style={{ padding: "14px 18px", borderBottom: "1px solid #1a1a2e", display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+        <span style={{ fontSize: 11, color: "#555", fontWeight: 700, letterSpacing: 1, marginRight: 4 }}>MODELO:</span>
+        {KITS_3D.map(k => (
+          <button key={k.id} onClick={() => setKitSel(k)} style={{
+            padding: "6px 14px", borderRadius: 8, border: `1px solid ${kitSel?.id === k.id ? k.cor : "#333"}`,
+            background: kitSel?.id === k.id ? k.cor + "22" : "transparent",
+            color: kitSel?.id === k.id ? k.cor : "#666",
+            fontSize: 11, fontWeight: kitSel?.id === k.id ? 700 : 400,
+            cursor: "pointer", fontFamily: "inherit", transition: "all .15s",
+          }}>{k.nome}</button>
+        ))}
+      </div>
+
+      {/* viewer */}
+      <div style={{ position: "relative", height: 520 }}>
+        {loading && (
+          <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "#0f0f14", zIndex: 10 }}>
+            <div style={{ color: "#555", fontSize: 14 }}>Gerando modelo 3D...</div>
+          </div>
+        )}
+        <div ref={canvasRef} style={{ width: "100%", height: "100%" }} />
+      </div>
+
+      {/* info bar */}
+      <div style={{ padding: "10px 16px", borderTop: "1px solid #1a1a2e", display: "flex", gap: 24, alignItems: "center", flexWrap: "wrap" }}>
+        <span style={{ fontSize: 11, color: "#444" }}>🖱 Arrastar: orbitar · Scroll: zoom · Shift+drag: pan</span>
+        {kitSel && (
+          <div style={{ display: "flex", gap: 16, marginLeft: "auto" }}>
+            {[
+              { icon: "📐", val: `${kitSel.area} m²` },
+              { icon: "🏠", val: `${kitSel.pavs} pav.` },
+              { icon: "🛏", val: `${kitSel.quartos} qts` },
+            ].map(({ icon, val }) => (
+              <div key={val} style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                <span style={{ fontSize: 12 }}>{icon}</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: "#888" }}>{val}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function BIM() {
   const { toast, mostrarToast } = useToast();
   useModuleLoad("obras");
@@ -754,6 +980,7 @@ export default function BIM() {
           ["revisoes",     "🔄 Revisões"],
           ["apontamentos", "📌 Apontamentos"],
           ["viewer",       "🖥 Viewer 3D"],
+          ["preview",      "🏠 Preview Kit"],
         ].map(([k, l]) => (
           <button key={k} onClick={() => setAba(k)} style={{
             padding: "10px 20px", background: "transparent", border: "none",
@@ -924,6 +1151,8 @@ export default function BIM() {
       )}
 
       {/* ABA VIEWER */}
+      {aba === "preview" && <KitPreview3D />}
+
       {aba === "viewer" && (
         <div style={{ background: "#1a1a1a", borderRadius: "0 0 12px 12px", border: `1px solid ${C.border}`, borderTop: "none" }}>
           {modeloUrl ? (
