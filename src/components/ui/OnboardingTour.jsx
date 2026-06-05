@@ -16,9 +16,11 @@ export function OnboardingTour() {
   const [visivel, setVisivel] = useState(false);
   const setActivePage = useAppStore(s => s.setActivePage);
 
+  const user = useAppStore(s => s.user);
+
   useEffect(() => {
-    if (!localStorage.getItem("sf_onboarding_done")) setVisivel(true);
-  }, []);
+    if (user && !localStorage.getItem("sf_onboarding_done")) setVisivel(true);
+  }, [user]);
 
   function fechar() {
     localStorage.setItem("sf_onboarding_done", "1");
