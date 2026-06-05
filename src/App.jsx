@@ -62,6 +62,7 @@ const PainelQR             = lazyWithRetry(() => import("./pages/PainelQR"));
 const BI                   = lazyWithRetry(() => import("./pages/BI"));
 const SST                  = lazyWithRetry(() => import("./pages/SST"));
 const Suprimentos          = lazyWithRetry(() => import("./pages/Suprimentos"));
+const PortalColaborador    = lazyWithRetry(() => import("./pages/PortalColaborador"));
 
 const PAGES = {
   dashboard:  Dashboard,
@@ -98,12 +99,10 @@ function AuthenticatedApp() {
   const user          = useAppStore((s) => s.user);
   const loaded        = useAppStore((s) => s.loaded);
 
-  // Restaura empresaId no service após refresh — import síncrono elimina race condition
   useEffect(() => {
     if (user?.empresaId) setEmpresaId(user.empresaId);
   }, [user]);
 
-  // Prefetch das páginas mais acessadas em background após login
   useEffect(() => {
     if (!user) return;
     const PREFETCH = [
@@ -120,7 +119,6 @@ function AuthenticatedApp() {
     return () => hasRIC ? cancelIdleCallback(id) : clearTimeout(id);
   }, [user]);
 
-  // Sincroniza URL com activePage (permite compartilhar links e usar botão Voltar)
   useEffect(() => {
     const path = `/${activePage === "dashboard" ? "" : activePage}`;
     if (window.location.pathname !== path) {
@@ -128,14 +126,12 @@ function AuthenticatedApp() {
     }
   }, [activePage]);
 
-  // Lê a URL ao montar para restaurar a página correta após reload
   useEffect(() => {
     const page = window.location.pathname.replace("/", "") || "dashboard";
     if (PAGES[page] && page !== activePage) setActivePage(page);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Suporte ao botão Voltar/Avançar do navegador
   useEffect(() => {
     const onPop = () => {
       const page = window.location.pathname.replace("/", "") || "dashboard";
@@ -199,18 +195,18 @@ export default function App() {
       <OnboardingTour />
       <Suspense fallback={<LoadingScreen />}>
         <Routes>
-          <Route path="/portal/:token"   element={<PortalOnline />} />
-          <Route path="/proposta/:token"  element={<PropostaOnline />} />
-          <Route path="/contrato/:token" element={<ContratoOnline />} />
-          <Route path="/qr/obra/:obraId" element={<QRObra />} />
-          <Route path="/calcular" element={<CalculadoraPublica />} />
-          <Route path="/docs-publicos" element={<AnalisePublica />} />
-          <Route path="/concorrencia/:token" element={<ConcorrenciaPublica />} />
-          <Route path="/ponto/:token"       element={<PontoColaborador />} />
-          <Route path="/portal/:token"      element={<PortalColaborador />} />
-          <Route path="/ambiente/:token"    element={<AmbienteQR />} />
-          <Route path="/painel/:token"      element={<PainelQR />} />
-          <Route path="/login" element={<LoginScreen />} />
+          <Route path="/portal/:token"        element={<PortalOnline />} />
+          <Route path="/proposta/:token"      element={<PropostaOnline />} />
+          <Route path="/contrato/:token"      element={<ContratoOnline />} />
+          <Route path="/qr/obra/:obraId"      element={<QRObra />} />
+          <Route path="/calcular"             element={<CalculadoraPublica />} />
+          <Route path="/docs-publicos"        element={<AnalisePublica />} />
+          <Route path="/concorrencia/:token"  element={<ConcorrenciaPublica />} />
+          <Route path="/ponto/:token"         element={<PontoColaborador />} />
+          <Route path="/colaborador/:token"   element={<PortalColaborador />} />
+          <Route path="/ambiente/:token"      element={<AmbienteQR />} />
+          <Route path="/painel/:token"        element={<PainelQR />} />
+          <Route path="/login"                element={<LoginScreen />} />
           <Route path="/*" element={
             <RequireAuth>
               <AuthenticatedApp />
