@@ -323,9 +323,9 @@ export default function SST() {
       {ddsModal && (
         <Modal onClose={() => setDdsModal(false)} title={ddsEdit ? "Editar DDS" : "Novo DDS"}>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            <Input label="Data" type="date" value={ddsForm.data} onChange={e => setDdsForm(f => ({ ...f, data: e.target.value }))} />
-            <Input label="Tema / Assunto *" value={ddsForm.tema} onChange={e => setDdsForm(f => ({ ...f, tema: e.target.value }))} placeholder="Ex: Trabalho em altura" />
-            <Input label="Facilitador" value={ddsForm.facilitador} onChange={e => setDdsForm(f => ({ ...f, facilitador: e.target.value }))} placeholder="Nome do responsável" />
+            <Input label="Data" type="date" value={ddsForm.data} onChange={v => setDdsForm(f => ({ ...f, data: v }))} />
+            <Input label="Tema / Assunto *" value={ddsForm.tema} onChange={v => setDdsForm(f => ({ ...f, tema: v }))} placeholder="Ex: Trabalho em altura" />
+            <Input label="Facilitador" value={ddsForm.facilitador} onChange={v => setDdsForm(f => ({ ...f, facilitador: v }))} placeholder="Nome do responsável" />
             <div>
               <label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: "block", marginBottom: 4 }}>Obra</label>
               <select value={ddsForm.obra_id} onChange={e => setDdsForm(f => ({ ...f, obra_id: e.target.value }))} style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 14 }}>
@@ -333,7 +333,7 @@ export default function SST() {
                 {obras.map(o => <option key={o.id} value={o.id}>{o.nome}</option>)}
               </select>
             </div>
-            <Input label="Participantes (separados por vírgula)" value={ddsForm.participantes_txt} onChange={e => setDdsForm(f => ({ ...f, participantes_txt: e.target.value }))} placeholder="André, João, Maria" />
+            <Input label="Participantes (separados por vírgula)" value={ddsForm.participantes_txt} onChange={v => setDdsForm(f => ({ ...f, participantes_txt: v }))} placeholder="André, João, Maria" />
             <div><label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: "block", marginBottom: 4 }}>Observações</label><textarea value={ddsForm.obs} onChange={e => setDdsForm(f => ({ ...f, obs: e.target.value }))} rows={3} style={{ width: "100%", background: C.dark, border: `1px solid ${C.border}`, borderRadius: 6, padding: "8px 10px", color: C.text, fontSize: 14, fontFamily: "inherit", resize: "vertical", boxSizing: "border-box" }} /></div>
             <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 4 }}>
               <Btn variant="ghost" onClick={() => setDdsModal(false)}>Cancelar</Btn>
@@ -348,7 +348,7 @@ export default function SST() {
         <Modal onClose={() => setIncModal(false)} title={incEdit ? "Editar Incidente" : "Novo Incidente"}>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-              <Input label="Data" type="date" value={incForm.data} onChange={e => setIncForm(f => ({ ...f, data: e.target.value }))} />
+              <Input label="Data" type="date" value={incForm.data} onChange={v => setIncForm(f => ({ ...f, data: v }))} />
               <div>
                 <label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: "block", marginBottom: 4 }}>Tipo</label>
                 <select value={incForm.tipo} onChange={e => setIncForm(f => ({ ...f, tipo: e.target.value }))} style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 14 }}>
@@ -411,9 +411,9 @@ export default function SST() {
               </select>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
-              <Input label="Quantidade" type="number" min="1" value={epiForm.quantidade} onChange={e => setEpiForm(f => ({ ...f, quantidade: Number(e.target.value) }))} />
-              <Input label="Data entrega" type="date" value={epiForm.data_entrega} onChange={e => setEpiForm(f => ({ ...f, data_entrega: e.target.value }))} />
-              <Input label="Validade" type="date" value={epiForm.validade} onChange={e => setEpiForm(f => ({ ...f, validade: e.target.value }))} />
+              <Input label="Quantidade" type="number" min="1" value={epiForm.quantidade} onChange={v => setEpiForm(f => ({ ...f, quantidade: Number(v) }))} />
+              <Input label="Data entrega" type="date" value={epiForm.data_entrega} onChange={v => setEpiForm(f => ({ ...f, data_entrega: v }))} />
+              <Input label="Validade" type="date" value={epiForm.validade} onChange={v => setEpiForm(f => ({ ...f, validade: v }))} />
             </div>
             <div>
               <label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: "block", marginBottom: 4 }}>Obra</label>
