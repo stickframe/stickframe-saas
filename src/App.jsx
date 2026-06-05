@@ -62,7 +62,6 @@ const PainelQR             = lazyWithRetry(() => import("./pages/PainelQR"));
 const BI                   = lazyWithRetry(() => import("./pages/BI"));
 const SST                  = lazyWithRetry(() => import("./pages/SST"));
 const Suprimentos          = lazyWithRetry(() => import("./pages/Suprimentos"));
-const PortalColaborador    = lazyWithRetry(() => import("./pages/PortalColaborador"));
 
 const PAGES = {
   dashboard:  Dashboard,
