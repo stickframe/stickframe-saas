@@ -804,7 +804,7 @@ export default function Calculadora() {
       if (error) throw error;
       if (data?.cub) setCubValor(data.cub);
     } catch (e) {
-      alert("Erro ao atualizar CUB: " + ((e as Error)?.message || String(e)));
+      alert("Erro ao atualizar CUB: " + (e?.message || String(e)));
     } finally {
       setCubCarregando(false);
     }
