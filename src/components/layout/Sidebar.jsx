@@ -61,9 +61,7 @@ export default function Sidebar({ open, onClose }) {
       {/* Logo */}
       <div style={{ padding: "24px 20px 20px", borderBottom: "1px solid #e2e8f0" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ width: 34, height: 34, background: "#dc2626", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-            <img src={LOGO_STICKFRAME} style={{ width: 24, height: 24, objectFit: "contain", filter: "brightness(0) invert(1)" }} alt="Logo" />
-          </div>
+          <img src={LOGO_STICKFRAME} style={{ width: 38, height: 38, objectFit: "contain", flexShrink: 0 }} alt="Logo StickFrame" />
           <div>
             <div style={{ fontFamily: "'Inter', sans-serif", fontWeight: 700, letterSpacing: 1.5, fontSize: 16, lineHeight: 1, color: "#0f172a" }}>
               STICKFRAME
