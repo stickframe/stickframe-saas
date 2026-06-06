@@ -61,7 +61,6 @@ const INSUMOS = [
   { categoria: "Mão de Obra",       grupo: "Mão de Obra",        nome: "Montagem estrutura LSF",              un: "m²",  base: 1.00,  preco: 400.00, desc: "Equipe especializada" },
   { categoria: "Mão de Obra",       grupo: "Mão de Obra",        nome: "Instalação vedações (OSB/gesso/cim)", un: "m²",  base: 1.00,  preco: 200.00, desc: "Fechamento interno e externo" },
   { categoria: "Mão de Obra",       grupo: "Mão de Obra",        nome: "Cobertura (telha shingle)",           un: "m²",  base: 1.00,  preco: 300.00, desc: "Montagem e impermeabilização" },
-  { categoria: "Mão de Obra",       grupo: "Mão de Obra",        nome: "Acabamentos e instalações",           un: "m²",  base: 1.00,  preco: 72.00, desc: "Piso, pintura, elétrica, hidro" },
 ];
 
 const CATS_ORDEM = [
