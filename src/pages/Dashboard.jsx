@@ -194,10 +194,13 @@ export default function Dashboard() {
   const setActivePage = useAppStore((s) => s.setActivePage);
   const [tab, setTab] = useState("visao-geral");
 
-  const onboardingKey = userId ? `onboarding_done_${userId}` : null;
-  const [showOnboarding, setShowOnboarding] = useState(
-    () => perfil === "diretor" && !!onboardingKey && !localStorage.getItem(onboardingKey)
-  );
+  const onboardingKey = `onboarding_done_${userId || "user"}`;
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  useEffect(() => {
+    if (perfil === "diretor" && !localStorage.getItem(onboardingKey)) {
+      setShowOnboarding(true);
+    }
+  }, [onboardingKey, perfil]);
 
   if (perfil === "comercial")  return <Suspense fallback={null}><DashboardComercial /></Suspense>;
   if (perfil === "engenheiro") return <Suspense fallback={null}><DashboardEngenheiro /></Suspense>;
