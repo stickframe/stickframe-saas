@@ -57,6 +57,43 @@ Deno.serve(async (req) => {
     });
     if (usrError) throw usrError;
 
+    // Notifica o dono do sistema via WhatsApp
+    const phoneId = Deno.env.get("WHATSAPP_PHONE_ID");
+    const token   = Deno.env.get("WHATSAPP_TOKEN");
+    const ownerNumber = "5511989859995";
+
+    if (phoneId && token) {
+      const texto =
+`🆕 *Novo cadastro no Stickframe!*
+
+🏢 *Empresa:* ${nomeEmpresa}
+👤 *Usuário:* ${nomeUsuario}
+📧 *E-mail:* ${email}`;
+
+      const waBody = {
+        messaging_product: "whatsapp",
+        to: ownerNumber,
+        type: "text",
+        text: { body: texto, preview_url: false },
+      };
+
+      try {
+        await fetch(
+          `https://graph.facebook.com/v19.0/${phoneId}/messages`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(waBody),
+          }
+        );
+      } catch (waErr) {
+        console.error("WhatsApp owner notification error:", waErr);
+      }
+    }
+
     return new Response(JSON.stringify({ ok: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
