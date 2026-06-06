@@ -580,10 +580,10 @@ export default function CalculadoraPublica() {
         .calc-header-logo {
           display: flex; align-items: center; gap: 10px;
         }
-        .calc-header-logo img { height: 44px; width: auto; object-fit: contain; }
-        .calc-header-brand { font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 700; letter-spacing: 0; display: flex; flex-direction: column; gap: 2px; }
-        .calc-header-brand-name { color: #fff; font-weight: 700; font-size: 15px; }
-        .calc-header-brand-tagline { color: rgba(255,255,255,.5); font-size: 11px; font-weight: 500; }
+        .calc-header-logo img { height: 36px; width: auto; }
+        .calc-header-brand { font-size: 15px; font-weight: 900; letter-spacing: 2px; }
+        .calc-header-brand span:first-child { color: rgba(255,255,255,.35); }
+        .calc-header-brand span:last-child { color: #981915; }
         .calc-header-nav { display: flex; align-items: center; gap: 20px; }
         .calc-header-nav a { color: rgba(255,255,255,.45); font-size: 13px; font-weight: 600; text-decoration: none; transition: color .15s; }
         .calc-header-nav a:hover { color: #fff; }
@@ -642,11 +642,8 @@ export default function CalculadoraPublica() {
       <div className="calc-root">
         <header className="calc-header">
           <div className="calc-header-logo">
-            <img src="https://gpzmglcxmbboxxogbibq.supabase.co/storage/v1/object/public/arquivos/logos/34ec14d3-02fc-4b0a-8040-67f7a739394d/logo.jpg" alt="StickFrame" />
-            <div className="calc-header-brand">
-              <div className="calc-header-brand-name">StickFrame</div>
-              <div className="calc-header-brand-tagline">Simulador Inteligente</div>
-            </div>
+            <img src="/logo-transparente-122x122.png" alt="Stick Frame" />
+            <div className="calc-header-brand"><span>STICK</span><span>FRAME</span></div>
           </div>
           <nav className="calc-header-nav">
             <button className="calc-header-cta" onClick={() => document.querySelector('.calc-body')?.scrollIntoView({ behavior: 'smooth' })}>Simular agora</button>
