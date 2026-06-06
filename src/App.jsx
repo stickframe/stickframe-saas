@@ -17,6 +17,7 @@ import { OnboardingTour } from "./components/ui/OnboardingTour";
 import { useUndoStore } from "./store/undoStore";
 import { useHotkeys } from "react-hotkeys-hook";
 import PortalColaborador from "./pages/PortalColaborador";
+import Admin from "./pages/Admin";
 
 // Auto-reload on chunk fetch failure (stale SW cache after deploy)
 function lazyWithRetry(fn) {
@@ -168,6 +169,13 @@ function RequireAuth({ children }) {
   return user ? children : <Navigate to="/login" replace />;
 }
 
+function RequireAdmin({ children }) {
+  const user = useAppStore((s) => s.user);
+  if (!user) return <Navigate to="/login" replace />;
+  if (user.email !== "andrequeirozcandido@gmail.com") return <Navigate to="/" replace />;
+  return children;
+}
+
 function GlobalHotkeys() {
   const pop = useUndoStore((s) => s.pop);
   const toast = useToast();
@@ -207,6 +215,11 @@ export default function App() {
           <Route path="/colaborador/:token"   element={<PortalColaborador />} />
           <Route path="/ambiente/:token"      element={<AmbienteQR />} />
           <Route path="/painel/:token"        element={<PainelQR />} />
+          <Route path="/admin" element={
+            <RequireAdmin>
+              <Admin />
+            </RequireAdmin>
+          } />
           <Route path="/login"                element={<LoginScreen />} />
           <Route path="/cadastro"             element={<Cadastro />} />
           <Route path="/pricing"              element={<Pricing />} />
