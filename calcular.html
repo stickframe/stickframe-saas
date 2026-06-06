@@ -1,154 +1,1094 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-    <!-- SEO Primary -->
-    <title>Quanto Custa Construir em Steel Frame? Calcule Agora | Stickframe</title>
-    <meta name="description" content="Calculadora gratuita: descubra quanto custa construir sua casa em Steel Frame vs Alvenaria. Compare materiais, mão de obra e prazo em segundos. Resultado imediato, sem compromisso." />
-    <meta name="keywords" content="quanto custa construir casa steel frame, calculadora steel frame, orçamento steel frame, preço steel frame m2, construção steel frame, steel frame vs alvenaria, custo steel frame" />
-    <meta name="robots" content="index, follow" />
-    <link rel="canonical" href="https://stickframe.com.br/calcular" />
-
-    <!-- Open Graph -->
-    <meta property="og:type"        content="website" />
-    <meta property="og:url"         content="https://stickframe.com.br/calcular" />
-    <meta property="og:title"       content="Calculadora Steel Frame — Quanto Custa Construir?" />
-    <meta property="og:description" content="Simule o custo completo da sua obra em Steel Frame em segundos. Compare com alvenaria, veja prazo e receba proposta personalizada." />
-    <meta property="og:image"       content="https://stickframe.com.br/og-calcular.png" />
-    <meta property="og:locale"      content="pt_BR" />
-    <meta property="og:site_name"   content="Stickframe" />
-
-    <!-- Twitter Card -->
-    <meta name="twitter:card"        content="summary_large_image" />
-    <meta name="twitter:title"       content="Calculadora Steel Frame — Quanto Custa Construir?" />
-    <meta name="twitter:description" content="Descubra o custo real da sua casa em Steel Frame. Calculadora gratuita, resultado em segundos." />
-    <meta name="twitter:image"       content="https://stickframe.com.br/og-calcular.png" />
-
-    <!-- Schema Markup JSON-LD -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@graph": [
-        {
-          "@type": "WebPage",
-          "@id": "https://stickframe.com.br/calcular",
-          "url": "https://stickframe.com.br/calcular",
-          "name": "Calculadora de Custo Steel Frame",
-          "description": "Calcule o custo da sua obra em Steel Frame comparando com alvenaria. Ferramenta gratuita com resultado imediato.",
-          "inLanguage": "pt-BR",
-          "isPartOf": {
-            "@type": "WebSite",
-            "@id": "https://stickframe.com.br/",
-            "url": "https://stickframe.com.br/",
-            "name": "Stickframe",
-            "description": "Sistema de gestão para construtoras de Steel Frame"
-          }
-        },
-        {
-          "@type": "SoftwareApplication",
-          "name": "Calculadora de Steel Frame",
-          "applicationCategory": "UtilitiesApplication",
-          "operatingSystem": "Web",
-          "offers": {
-            "@type": "Offer",
-            "price": "0",
-            "priceCurrency": "BRL"
-          },
-          "description": "Calculadora gratuita para estimar o custo de construção em Steel Frame. Compare materiais, mão de obra e prazo com alvenaria tradicional.",
-          "url": "https://stickframe.com.br/calcular"
-        },
-        {
-          "@type": "FAQPage",
-          "mainEntity": [
-            {
-              "@type": "Question",
-              "name": "Quanto custa construir em Steel Frame?",
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "O custo médio de construção em Steel Frame varia entre R$ 3.000 e R$ 6.000 por m², dependendo do padrão de acabamento. Uma casa de 120 m² padrão fica entre R$ 360.000 e R$ 480.000 completa. Use nossa calculadora para obter uma estimativa personalizada."
-              }
-            },
-            {
-              "@type": "Question",
-              "name": "Steel Frame é mais barato que alvenaria?",
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "Steel Frame costuma ser 10 a 20% mais caro em materiais, mas 40% mais rápido na construção, reduzindo o custo financeiro da obra. A durabilidade e a precisão estrutural também compensam o investimento a longo prazo."
-              }
-            },
-            {
-              "@type": "Question",
-              "name": "Qual o prazo de construção em Steel Frame?",
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "Uma casa em Steel Frame é construída em 4 a 9 meses, dependendo do porte e do padrão. Isso é até 40% mais rápido que a alvenaria convencional, que leva de 12 a 18 meses para obras similares."
-              }
-            },
-            {
-              "@type": "Question",
-              "name": "O que está incluído no orçamento de Steel Frame?",
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "Um orçamento completo de Steel Frame inclui: estrutura metálica LSF, fechamentos internos e externos, cobertura, instalações hidráulicas e elétricas, e mão de obra especializada. Nossa calculadora considera todos esses itens na estimativa."
-              }
-            }
-          ]
-        },
-        {
-          "@type": "BreadcrumbList",
-          "itemListElement": [
-            {
-              "@type": "ListItem",
-              "position": 1,
-              "name": "Início",
-              "item": "https://stickframe.com.br/"
-            },
-            {
-              "@type": "ListItem",
-              "position": 2,
-              "name": "Calculadora Steel Frame",
-              "item": "https://stickframe.com.br/calcular"
-            }
-          ]
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Obra Inteligente - StickFrame</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-      ]
-    }
-    </script>
 
-    <!-- Google Tag Manager — container GTM-PFF7Q9L -->
-    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-    })(window,document,'script','dataLayer','GTM-PFF7Q9L');</script>
+        :root {
+            --primary: #DC2626;
+            --primary-dark: #991B1B;
+            --background: #0F172A;
+            --card: #1E293B;
+            --border: #334155;
+            --foreground: #F1F5F9;
+            --muted: #94A3B8;
+            --success: #10B981;
+        }
 
-    <!-- Google Analytics 4 — G-WSMBGMCHC5 -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-WSMBGMCHC5"></script>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background-color: var(--background);
+            color: var(--foreground);
+            line-height: 1.6;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 256px;
+            background-color: var(--card);
+            border-right: 1px solid var(--border);
+            padding: 24px 16px;
+            display: flex;
+            flex-direction: column;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sidebar-logo img {
+            width: 50px;
+            height: 50px;
+            object-fit: contain;
+        }
+
+        .header-logo {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .header-logo img {
+            height: 48px;
+            object-fit: contain;
+        }
+
+        .header-brand {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .header-brand-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--foreground);
+        }
+
+        .header-brand-tagline {
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .sidebar-logo-text h1 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--foreground);
+        }
+
+        .sidebar-logo-text p {
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            color: var(--muted);
+            transition: all 0.2s ease;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .nav-item:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+            color: var(--foreground);
+        }
+
+        .nav-item.active {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .sidebar-footer {
+            padding-top: 24px;
+            border-top: 1px solid var(--border);
+        }
+
+        .btn-enter {
+            width: 100%;
+            padding: 12px 16px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 14px;
+        }
+
+        .btn-enter:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .header {
+            height: 64px;
+            background-color: var(--card);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .header h1 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .btn-specialist {
+            padding: 10px 16px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-specialist:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .content {
+            padding: 32px;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .metrics-dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .metric-card {
+            background-color: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .metric-icon {
+            font-size: 24px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .metric-label {
+            font-size: 12px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .metric-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--foreground);
+        }
+
+        .metric-unit {
+            font-size: 14px;
+            color: var(--muted);
+        }
+
+        .metric-highlight {
+            color: var(--success);
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 32px;
+        }
+
+        .calculator-section {
+            background-color: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 32px;
+        }
+
+        .calculator-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .calculator-header-icon {
+            width: 48px;
+            height: 48px;
+            background-color: var(--background);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .calculator-header h2 {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .calculator-header p {
+            font-size: 14px;
+            color: var(--muted);
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--foreground);
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 16px;
+            background-color: var(--background);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--foreground);
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .finish-options {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .finish-option {
+            padding: 16px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+            background-color: var(--background);
+        }
+
+        .finish-option:hover {
+            border-color: var(--primary);
+            background-color: rgba(220, 38, 38, 0.05);
+        }
+
+        .finish-option.selected {
+            border-color: var(--primary);
+            background-color: rgba(220, 38, 38, 0.1);
+        }
+
+        .finish-option-name {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 4px;
+            color: var(--foreground);
+        }
+
+        .finish-option-desc {
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .btn-calculate {
+            width: 100%;
+            padding: 14px 24px;
+            background-color: var(--background);
+            color: var(--foreground);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-calculate:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+            border-color: var(--foreground);
+        }
+
+        .results-section {
+            background-color: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 32px;
+            display: none;
+            margin-top: 24px;
+        }
+
+        .results-section.show {
+            display: block;
+        }
+
+        .results-header {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 24px;
+            color: var(--foreground);
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .comparison-card {
+            background-color: var(--background);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .comparison-card h3 {
+            font-size: 12px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+
+        .comparison-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--foreground);
+            margin-bottom: 8px;
+        }
+
+        .comparison-savings {
+            font-size: 14px;
+            color: var(--success);
+            font-weight: 600;
+        }
+
+        .sidebar-content {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .benefits-card {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            border-radius: 16px;
+            padding: 24px;
+            color: white;
+        }
+
+        .benefits-card h3 {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+
+        .benefits-card p {
+            font-size: 14px;
+            margin-bottom: 16px;
+            opacity: 0.95;
+        }
+
+        .benefits-list {
+            list-style: none;
+            margin-bottom: 24px;
+        }
+
+        .benefits-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+
+        .benefits-list li:before {
+            content: "✓";
+            color: var(--success);
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .btn-guide {
+            width: 100%;
+            padding: 12px 16px;
+            background-color: white;
+            color: var(--primary);
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-guide:hover {
+            background-color: rgba(255, 255, 255, 0.9);
+        }
+
+        .faq-section {
+            background-color: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+        }
+
+        .faq-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: var(--foreground);
+        }
+
+        .faq-item {
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 16px;
+            margin-bottom: 16px;
+        }
+
+        .faq-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .faq-question {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--foreground);
+            transition: all 0.2s ease;
+        }
+
+        .faq-question:hover {
+            color: var(--primary);
+        }
+
+        .faq-toggle {
+            font-size: 16px;
+            transition: transform 0.2s ease;
+        }
+
+        .faq-toggle.open {
+            transform: rotate(180deg);
+        }
+
+        .faq-answer {
+            display: none;
+            margin-top: 12px;
+            font-size: 14px;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        .faq-answer.show {
+            display: block;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background-color: var(--card);
+            border-radius: 24px;
+            padding: 32px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            background: none;
+            border: none;
+            color: var(--muted);
+            font-size: 24px;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+
+        .modal-close:hover {
+            color: var(--foreground);
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--foreground);
+        }
+
+        .modal-subtitle {
+            font-size: 14px;
+            color: var(--muted);
+            margin-bottom: 24px;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 14px 24px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-submit:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .btn-submit:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background-color: var(--success);
+            color: white;
+            padding: 16px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            z-index: 2000;
+            animation: slideIn 0.3s ease;
+        }
+
+        .toast.error {
+            background-color: var(--primary);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none;
+            }
+
+            .content {
+                padding: 16px;
+            }
+
+            .header {
+                padding: 0 16px;
+                flex-direction: column;
+                gap: 12px;
+                height: auto;
+            }
+
+            .header-logo {
+                width: 100%;
+            }
+
+            .header-actions {
+                width: 100%;
+            }
+
+            .btn-specialist {
+                width: 100%;
+            }
+
+            .form-row,
+            .finish-options {
+                grid-template-columns: 1fr;
+            }
+
+            .metrics-dashboard {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <svg width="50" height="50" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="flex-shrink: 0;">
+                    <rect fill="#DC2626" width="100" height="100" rx="8"/>
+                    <text x="50" y="65" font-size="60" font-weight="bold" fill="white" text-anchor="middle">SF</text>
+                </svg>
+                <div class="sidebar-logo-text">
+                    <h1>StickFrame</h1>
+                    <p>Calculadora Premium</p>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active">
+                    <span>📊</span> Calculadora
+                </a>
+                <a href="#" class="nav-item">
+                    <span>📈</span> Métricas
+                </a>
+                <a href="#" class="nav-item">
+                    <span>ℹ️</span> Sobre
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <button class="btn-enter">Entrar</button>
+            </div>
+        </aside>
+
+        <main class="main">
+            <header class="header">
+                <div class="header-logo">
+                    <svg width="48" height="48" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                        <rect fill="#DC2626" width="100" height="100" rx="8"/>
+                        <text x="50" y="65" font-size="60" font-weight="bold" fill="white" text-anchor="middle">SF</text>
+                    </svg>
+                    <div class="header-brand">
+                        <div class="header-brand-name">StickFrame</div>
+                        <div class="header-brand-tagline">Simulador de Obra Inteligente</div>
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <button class="btn-specialist">Falar com Especialista</button>
+                </div>
+            </header>
+
+            <div class="content">
+                <div class="metrics-dashboard">
+                    <div class="metric-card">
+                        <div class="metric-icon">⏱️</div>
+                        <div class="metric-label">Prazo Estimado</div>
+                        <div class="metric-value">6 a 7<span class="metric-unit"> meses</span></div>
+                        <div class="metric-highlight">-40% tempo</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon">💰</div>
+                        <div class="metric-label">Custo Médio</div>
+                        <div class="metric-value">R$ 4.200<span class="metric-unit"> por m²</span></div>
+                        <div class="metric-highlight">Eficiência</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon">🌱</div>
+                        <div class="metric-label">Redução de Resíduos</div>
+                        <div class="metric-value">85%<span class="metric-unit"> vs alvenaria</span></div>
+                        <div class="metric-highlight">Eco-friendly</div>
+                    </div>
+                </div>
+
+                <div class="main-grid">
+                    <div>
+                        <div class="calculator-section">
+                            <div class="calculator-header">
+                                <div class="calculator-header-icon">⚙️</div>
+                                <div>
+                                    <h2>Calcule seu Sonho</h2>
+                                    <p>Preencha os dados técnicos para uma estimativa premium.</p>
+                                </div>
+                            </div>
+
+                            <form id="calculatorForm">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="area">Área Construída (m²)</label>
+                                        <input type="number" id="area" name="area" value="120" min="10" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="floors">Pavimentos</label>
+                                        <select id="floors" name="floors" required>
+                                            <option value="1">Térreo</option>
+                                            <option value="2">1 Pavimento</option>
+                                            <option value="3">2 Pavimentos</option>
+                                            <option value="4">3 Pavimentos</option>
+                                            <option value="5">4+ Pavimentos</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Padrão de Acabamento</label>
+                                    <div class="finish-options">
+                                        <div class="finish-option selected" data-finish="economico">
+                                            <div class="finish-option-name">Econômico</div>
+                                            <div class="finish-option-desc">Acabamentos básicos, funcional e acessível</div>
+                                        </div>
+                                        <div class="finish-option" data-finish="padrao">
+                                            <div class="finish-option-name">Padrão</div>
+                                            <div class="finish-option-desc">Bom acabamento, equilíbrio custo-benefício</div>
+                                        </div>
+                                        <div class="finish-option" data-finish="alto_padrao">
+                                            <div class="finish-option-name">Alto Padrão</div>
+                                            <div class="finish-option-desc">Acabamentos premium, materiais superiores</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="city">Cidade da Obra</label>
+                                    <input type="text" id="city" name="city" placeholder="Ex: São Paulo - SP" value="São Paulo - SP" required>
+                                </div>
+
+                                <button type="submit" class="btn-calculate">Gerar Orçamento Detalhado</button>
+                            </form>
+                        </div>
+
+                        <div class="results-section" id="resultsSection">
+                            <div class="results-header">Resultado da Simulação</div>
+                            <div class="comparison-grid">
+                                <div class="comparison-card">
+                                    <h3>Steel Frame</h3>
+                                    <div class="comparison-value" id="steelFrameCost">R$ 504.000</div>
+                                    <div class="comparison-savings" id="costPerM2">R$ 4.200 por m²</div>
+                                </div>
+                                <div class="comparison-card">
+                                    <h3>Alvenaria Convencional</h3>
+                                    <div class="comparison-value" id="masonryCost">R$ 428.400</div>
+                                    <div class="comparison-savings" id="savings">Você economiza</div>
+                                </div>
+                            </div>
+                            <button class="btn-calculate" onclick="showLeadForm()">Solicitar Orçamento Detalhado</button>
+                        </div>
+                    </div>
+
+                    <div class="sidebar-content">
+                        <div class="benefits-card">
+                            <h3>Por que Steel Frame?</h3>
+                            <p>Conheça os principais benefícios do sistema construtivo mais moderno do mercado.</p>
+                            <ul class="benefits-list">
+                                <li>Obra limpa e sem desperdício de materiais.</li>
+                                <li>Isolamento térmico e acústico superior.</li>
+                                <li>Precisão milimétrica na execução.</li>
+                                <li>Estrutura resistente e durável (50+ anos).</li>
+                                <li>Financiável por principais bancos.</li>
+                            </ul>
+                            <button class="btn-guide">⬇️ Baixar Guia Gratuito</button>
+                        </div>
+
+                        <div class="faq-section">
+                            <div class="faq-title">Perguntas Frequentes</div>
+                            <div class="faq-item">
+                                <div class="faq-question" onclick="toggleFAQ(this)">
+                                    <span>É possível financiar uma obra em Steel Frame?</span>
+                                    <span class="faq-toggle">▼</span>
+                                </div>
+                                <div class="faq-answer">
+                                    Sim! Steel Frame é financiável por praticamente todos os bancos brasileiros. A estrutura é reconhecida como alvenaria convencional para fins de financiamento imobiliário.
+                                </div>
+                            </div>
+                            <div class="faq-item">
+                                <div class="faq-question" onclick="toggleFAQ(this)">
+                                    <span>Qual é a durabilidade de uma construção em Steel Frame?</span>
+                                    <span class="faq-toggle">▼</span>
+                                </div>
+                                <div class="faq-answer">
+                                    A durabilidade é superior a 50 anos com manutenção adequada. A estrutura é resistente a intempéries, pragas e tem excelente desempenho sísmico.
+                                </div>
+                            </div>
+                            <div class="faq-item">
+                                <div class="faq-question" onclick="toggleFAQ(this)">
+                                    <span>Como receber um orçamento personalizado?</span>
+                                    <span class="faq-toggle">▼</span>
+                                </div>
+                                <div class="faq-answer">
+                                    Preencha o formulário acima com os dados do seu projeto. Um especialista entrará em contato em até 24 horas com uma proposta detalhada e customizada.
+                                </div>
+                            </div>
+                            <div class="faq-item">
+                                <div class="faq-question" onclick="toggleFAQ(this)">
+                                    <span>Qual é o prazo de execução?</span>
+                                    <span class="faq-toggle">▼</span>
+                                </div>
+                                <div class="faq-answer">
+                                    Em média, 40% mais rápido que alvenaria convencional. Para uma casa de 120m², o prazo estimado é de 6 a 7 meses, dependendo da complexidade.
+                                </div>
+                            </div>
+                            <div class="faq-item">
+                                <div class="faq-question" onclick="toggleFAQ(this)">
+                                    <span>Preciso de projeto arquitetônico pronto?</span>
+                                    <span class="faq-toggle">▼</span>
+                                </div>
+                                <div class="faq-answer">
+                                    Sim, é necessário ter o projeto arquitetônico aprovado pela prefeitura. Podemos indicar profissionais parceiros para auxiliar nessa etapa.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="modal" id="leadModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeLeadForm()">✕</button>
+            <h2 class="modal-title">Solicitar Orçamento</h2>
+            <p class="modal-subtitle">Preencha seus dados para receber uma proposta personalizada</p>
+
+            <form id="leadForm" onsubmit="submitLead(event)">
+                <div class="form-group">
+                    <label for="leadName">Nome Completo</label>
+                    <input type="text" id="leadName" name="name" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="leadEmail">E-mail</label>
+                    <input type="email" id="leadEmail" name="email" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="leadPhone">Telefone</label>
+                    <input type="tel" id="leadPhone" name="phone" placeholder="(11) 99999-9999" required>
+                </div>
+
+                <button type="submit" class="btn-submit">Enviar Dados</button>
+            </form>
+        </div>
+    </div>
+
     <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-WSMBGMCHC5', { send_page_view: true });
+        const finishPrices = {
+            economico: 3000,
+            padrao: 4200,
+            alto_padrao: 5500
+        };
+
+        let selectedFinish = 'economico';
+        let calculationData = null;
+
+        document.querySelectorAll('.finish-option').forEach(option => {
+            option.addEventListener('click', function() {
+                document.querySelectorAll('.finish-option').forEach(o => o.classList.remove('selected'));
+                this.classList.add('selected');
+                selectedFinish = this.dataset.finish;
+            });
+        });
+
+        document.getElementById('calculatorForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const area = parseFloat(document.getElementById('area').value);
+            const floors = parseInt(document.getElementById('floors').value);
+            const city = document.getElementById('city').value;
+            
+            const costPerM2 = finishPrices[selectedFinish];
+            const steelFrameCost = area * costPerM2;
+            const masonryCost = steelFrameCost * 0.85;
+            const savings = steelFrameCost - masonryCost;
+            
+            calculationData = {
+                area,
+                floors,
+                finish: selectedFinish,
+                city,
+                costPerM2,
+                steelFrameCost,
+                masonryCost,
+                savings,
+                timestamp: new Date().toISOString()
+            };
+
+            document.getElementById('steelFrameCost').textContent = `R$ ${steelFrameCost.toLocaleString('pt-BR', {maximumFractionDigits: 0})}`;
+            document.getElementById('costPerM2').textContent = `R$ ${costPerM2.toLocaleString('pt-BR')} por m²`;
+            document.getElementById('masonryCost').textContent = `R$ ${masonryCost.toLocaleString('pt-BR', {maximumFractionDigits: 0})}`;
+            document.getElementById('savings').textContent = `Você economiza R$ ${savings.toLocaleString('pt-BR', {maximumFractionDigits: 0})}`;
+
+            document.getElementById('resultsSection').classList.add('show');
+            document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
+        });
+
+        function showLeadForm() {
+            document.getElementById('leadModal').classList.add('show');
+        }
+
+        function closeLeadForm() {
+            document.getElementById('leadModal').classList.remove('show');
+        }
+
+        function submitLead(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('leadName').value;
+            const email = document.getElementById('leadEmail').value;
+            const phone = document.getElementById('leadPhone').value;
+
+            const leadData = {
+                ...calculationData,
+                name,
+                email,
+                phone
+            };
+
+            fetch('/api/leads', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(leadData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                showToast('Obrigado! Em breve entraremos em contato.', 'success');
+                closeLeadForm();
+                document.getElementById('leadForm').reset();
+            })
+            .catch(error => {
+                showToast('Erro ao enviar dados. Tente novamente.', 'error');
+                console.error('Error:', error);
+            });
+        }
+
+        function toggleFAQ(element) {
+            const answer = element.nextElementSibling;
+            const toggle = element.querySelector('.faq-toggle');
+            
+            answer.classList.toggle('show');
+            toggle.classList.toggle('open');
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeLeadForm();
+            }
+        });
+
+        document.getElementById('leadModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeLeadForm();
+            }
+        });
     </script>
-
-    <!-- Preconnect para performance -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="dns-prefetch" href="https://gpzmglcxmbboxxogbibq.supabase.co" />
-
-    <link rel="icon" type="image/png" href="/logo.png" />
-    <link rel="manifest" href="/manifest.json" />
-    <meta name="theme-color" content="#981915" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-title" content="Stickframe" />
-    <link rel="apple-touch-icon" href="/logo-transparente-122x122.png" />
-  </head>
-  <body>
-    <!-- Google Tag Manager (noscript) -->
-    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PFF7Q9L"
-    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+</body>
 </html>
