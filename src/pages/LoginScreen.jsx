@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { C } from "../utils/constants";
 import useAppStore from "../store/useAppStore";
+import { sb } from "../services/supabase";
 import {
   isWebAuthnAvailable,
   hasSavedCredential,
@@ -25,6 +26,18 @@ export default function LoginScreen() {
   const [bioAvailable, setBioAvailable] = useState(false);
   const [bioSaved,     setBioSaved]     = useState(false);
   const [bioLoading,   setBioLoading]   = useState(false);
+
+  // Branding da empresa via ?e=TOKEN
+  const [empresaBranding, setEmpresaBranding] = useState(null);
+  useEffect(() => {
+    const token = new URLSearchParams(window.location.search).get("e");
+    if (!token) return;
+    sb.from("empresas")
+      .select("nome, logo_url, cor_primaria")
+      .eq("calc_token", token)
+      .maybeSingle()
+      .then(({ data }) => { if (data) setEmpresaBranding(data); });
+  }, []);
 
   // Prompt shown after first login to register biometrics
   const [bioPrompt,    setBioPrompt]    = useState(null); // { refreshToken, nome }
@@ -123,8 +136,14 @@ export default function LoginScreen() {
       <div style={{ width: "min(420px, 94vw)", background: "#161b22", border: "1px solid #30363d", borderRadius: 18, padding: "clamp(28px,5vw,44px)", boxShadow: "0 0 60px #00000099" }}>
 
         <div style={{ textAlign: "center", marginBottom: 32 }}>
-          <img src={LOGO} style={{ width: 80, height: 80, borderRadius: 16, objectFit: "contain", marginBottom: 14 }} alt="Logo" />
-          <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700, letterSpacing: 3, fontSize: 22 }}>
+          {empresaBranding?.logo_url && (
+            <img src={empresaBranding.logo_url} style={{ width: 72, height: 72, borderRadius: 14, objectFit: "contain", marginBottom: 10 }} alt={empresaBranding.nome} />
+          )}
+          {empresaBranding?.nome && (
+            <div style={{ fontWeight: 800, fontSize: 18, color: "#e6edf3", marginBottom: 14 }}>{empresaBranding.nome}</div>
+          )}
+          <img src={LOGO} style={{ width: empresaBranding ? 48 : 80, height: empresaBranding ? 48 : 80, borderRadius: empresaBranding ? 10 : 16, objectFit: "contain", marginBottom: 10, opacity: empresaBranding ? 0.7 : 1 }} alt="Logo StickFrame" />
+          <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700, letterSpacing: 3, fontSize: empresaBranding ? 14 : 22 }}>
             <span style={{ color: "#e6edf3" }}>STICK</span><span style={{ color: C.red }}>FRAME</span>
           </div>
           <div style={{ fontSize: 9, color: "#6e7681", letterSpacing: 2, marginTop: 2 }}>SISTEMAS CONSTRUTIVOS</div>

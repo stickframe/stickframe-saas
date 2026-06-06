@@ -27,6 +27,27 @@ function LabelF({ children, required }) {
   );
 }
 
+function LinkCopiavel({ label, url, desc }) {
+  const [copiado, setCopiado] = useState(false);
+  return (
+    <div>
+      <LabelF>{label}</LabelF>
+      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+        <div style={{ flex: 1, padding: "10px 14px", background: C.darker, border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 12, color: C.muted, fontFamily: "monospace", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          {url}
+        </div>
+        <button
+          onClick={() => { navigator.clipboard.writeText(url); setCopiado(true); setTimeout(() => setCopiado(false), 2000); }}
+          style={{ padding: "10px 16px", background: copiado ? "#16a34a" : C.red, color: "#fff", border: "none", borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap", transition: "background .2s" }}
+        >
+          {copiado ? "✓ Copiado!" : "📋 Copiar"}
+        </button>
+      </div>
+      <div style={{ fontSize: 11, color: C.muted, marginTop: 5 }}>{desc}</div>
+    </div>
+  );
+}
+
 function Tab({ label, active, onClick }) {
   return (
     <button onClick={onClick} style={{
@@ -434,41 +455,23 @@ export default function Configuracoes() {
             </div>
           </Card>
 
-          {/* Calculadora White-Label */}
-          <Card title="🔗 Sua Calculadora White-Label" subtitle="Compartilhe com clientes — o link abre a calculadora com o nome e logo da sua empresa.">
+          {/* Links White-Label */}
+          <Card title="🔗 Seus links personalizados" subtitle="Compartilhe com clientes e colaboradores — os links exibem o nome e logo da sua empresa.">
             {calcToken ? (
-              <div>
-                <LabelF>Link da calculadora personalizada</LabelF>
-                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                  <div style={{
-                    flex: 1, padding: "10px 14px", background: C.darker, border: `1px solid ${C.border}`,
-                    borderRadius: 8, fontSize: 12, color: C.muted, fontFamily: "monospace",
-                    overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                  }}>
-                    {`https://stickframe.com.br/calcular?e=${calcToken}`}
-                  </div>
-                  <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(`https://stickframe.com.br/calcular?e=${calcToken}`);
-                      setCalcLinkCopiado(true);
-                      setTimeout(() => setCalcLinkCopiado(false), 2000);
-                    }}
-                    style={{
-                      padding: "10px 16px", background: calcLinkCopiado ? "#16a34a" : C.red,
-                      color: "#fff", border: "none", borderRadius: 8,
-                      fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
-                      whiteSpace: "nowrap", transition: "background .2s",
-                    }}
-                  >
-                    {calcLinkCopiado ? "✓ Copiado!" : "📋 Copiar link"}
-                  </button>
-                </div>
-                <div style={{ fontSize: 11, color: C.muted, marginTop: 8 }}>
-                  Quando um cliente acessa esse link, vê a calculadora com o nome e logo da sua empresa. Leads chegam para você via WhatsApp.
-                </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                <LinkCopiavel
+                  label="Calculadora personalizada"
+                  url={`https://stickframe.com.br/calcular?e=${calcToken}`}
+                  desc="Clientes veem a calculadora com seu logo. Leads chegam para você via WhatsApp."
+                />
+                <LinkCopiavel
+                  label="Login personalizado (para colaboradores)"
+                  url={`https://stickframe.com.br/login?e=${calcToken}`}
+                  desc="Colaboradores veem seu logo na tela de acesso ao sistema."
+                />
               </div>
             ) : (
-              <div style={{ fontSize: 13, color: C.muted }}>Carregando link…</div>
+              <div style={{ fontSize: 13, color: C.muted }}>Carregando links…</div>
             )}
           </Card>
 
