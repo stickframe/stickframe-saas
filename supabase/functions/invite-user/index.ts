@@ -28,6 +28,25 @@ Deno.serve(async (req) => {
     const { data: caller } = await supabaseAdmin.from("usuarios").select("perfil,empresa_id").eq("id", user.id).single();
     if (caller?.perfil !== "diretor" || caller?.empresa_id !== empresa_id) throw new Error("Sem permissão");
 
+    // Verificar limite de usuários por plano
+    const { data: empresaData } = await supabaseAdmin.from("empresas").select("plano").eq("id", empresa_id).single();
+    const plano = empresaData?.plano ?? "free";
+    const limiteUsuarios = plano === "pro" ? 10 : 1;
+
+    const { count: countUsuarios } = await supabaseAdmin
+      .from("usuarios")
+      .select("*", { count: "exact", head: true })
+      .eq("empresa_id", empresa_id)
+      .eq("ativo", true);
+
+    if ((countUsuarios ?? 0) >= limiteUsuarios) {
+      throw new Error(
+        plano === "free"
+          ? "LIMITE_PLANO:Seu plano gratuito permite apenas 1 usuário. Faça upgrade para o plano Pro."
+          : `LIMITE_PLANO:Seu plano Pro permite até ${limiteUsuarios} usuários. Remova um usuário para convidar outro.`
+      );
+    }
+
     const { data, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
       data: { nome, perfil, empresa_id },
       redirectTo: `${Deno.env.get("SITE_URL") || "https://stickframe.com.br"}/login`,
