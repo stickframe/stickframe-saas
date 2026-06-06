@@ -7,16 +7,22 @@ async function _hydrateUser(set, get, authUser, email) {
   if (!usuario) throw new Error("Usuário não encontrado. Contate o administrador.");
   const empId = usuario.empresa_id;
   setEmpresaId(empId);
+
+  // Carrega dados da empresa incluindo trial_ends_at
+  const { data: empresa } = await sb.from("empresas").select("plano, trial_ends_at").eq("id", empId).single();
+
   set({
     user: {
       email: email || authUser.email,
       nome:   usuario.nome  || authUser.email.split("@")[0],
       cargo:  usuario.cargo || "Usuário",
       perfil: usuario.perfil || "comercial",
+      plano:  empresa?.plano || "free",
       uid:    authUser.id,
       id:     authUser.id,
     },
     empresaId: empId,
+    trialEndsAt: empresa?.trial_ends_at || null,
   });
   listarMembrosEmpresa().then((list) => get().setAllObraMembros(list)).catch(() => {});
   listarPerfisCustomizados().then((list) => set({ perfisCustomizados: list })).catch(() => {});
@@ -28,6 +34,7 @@ async function _hydrateUser(set, get, authUser, email) {
 export const createAuthSlice = (set, get) => ({
   user:      null,
   empresaId: null,
+  trialEndsAt: null,
   perfisCustomizados: [],
   setPerfisCustomizados: (list) => set({ perfisCustomizados: list }),
 
@@ -58,7 +65,7 @@ export const createAuthSlice = (set, get) => ({
     await sb.auth.signOut();
     setEmpresaId(null);
     set({
-      user: null, empresaId: null, activePage: "dashboard",
+      user: null, empresaId: null, trialEndsAt: null, activePage: "dashboard",
       loaded: { clientes:false, obras:false, orcamentos:false, financeiro:false, contratos:false, diario:{}, medicoes:{}, eventos:false, historico:false, arquivos:{} },
       clientes:[], orcamentos:[], obras:[], financeiro:{}, diario:{}, historico:[], eventos:[], arquivos:{}, medicoes:{}, contratos:[],
     });

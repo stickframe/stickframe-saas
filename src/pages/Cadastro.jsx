@@ -56,7 +56,7 @@ export default function Cadastro() {
           <div style={{ fontWeight: 900, letterSpacing: 3, fontSize: 18, color: "#fff" }}>
             STICK<span style={{ color: "#981915" }}>FRAME</span>
           </div>
-          <div style={{ fontSize: 11, letterSpacing: 2, color: "rgba(255,255,255,.35)", marginTop: 4 }}>SISTEMAS CONSTRUTIVOS</div>
+          <div style={{ fontSize: 11, letterSpacing: 2, color: "rgba(255,255,255,.35)", marginTop: 4 }}>SISTEMA DE GESTÃO</div>
         </div>
 
         <div style={{ background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.1)", borderRadius: 16, padding: "32px 28px" }}>
@@ -86,23 +86,23 @@ export default function Cadastro() {
                 </div>
               )}
 
-              <form onSubmit={handleCadastro}>
+              <form onSubmit={handleCadastro} autoComplete="off">
                 <div style={{ marginBottom: 14 }}>
                   <label style={labelStyle}>Nome da empresa *</label>
-                  <input style={inputStyle} value={nomeEmpresa} onChange={(e) => setNomeEmpresa(e.target.value)} placeholder="Ex: Becker Engenharia Ltda." required />
+                  <input style={inputStyle} value={nomeEmpresa} onChange={(e) => setNomeEmpresa(e.target.value)} placeholder="Ex: Construtora Ltda." autoComplete="off" required />
                 </div>
                 <div style={{ marginBottom: 14 }}>
                   <label style={labelStyle}>Seu nome *</label>
-                  <input style={inputStyle} value={nomeUsuario} onChange={(e) => setNomeUsuario(e.target.value)} placeholder="Ex: João Silva" required />
+                  <input style={inputStyle} value={nomeUsuario} onChange={(e) => setNomeUsuario(e.target.value)} placeholder="Ex: João Silva" autoComplete="off" required />
                 </div>
                 <div style={{ marginBottom: 14 }}>
                   <label style={labelStyle}>E-mail *</label>
-                  <input style={inputStyle} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="seuemail@empresa.com.br" required />
+                  <input style={inputStyle} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="seuemail@empresa.com.br" autoComplete="off" required />
                 </div>
                 <div style={{ marginBottom: 14 }}>
                   <label style={labelStyle}>Senha *</label>
                   <div style={{ position: "relative" }}>
-                    <input style={{ ...inputStyle, paddingRight: 80 }} type={show ? "text" : "password"} value={senha} onChange={(e) => setSenha(e.target.value)} placeholder="Mínimo 6 caracteres" required />
+                    <input style={{ ...inputStyle, paddingRight: 80 }} type={show ? "text" : "password"} value={senha} onChange={(e) => setSenha(e.target.value)} placeholder="Mínimo 6 caracteres" autoComplete="new-password" required />
                     <button type="button" onClick={() => setShow(!show)} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "rgba(255,255,255,.5)", fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}>
                       {show ? "Ocultar" : "Mostrar"}
                     </button>
@@ -110,7 +110,7 @@ export default function Cadastro() {
                 </div>
                 <div style={{ marginBottom: 24 }}>
                   <label style={labelStyle}>Confirmar senha *</label>
-                  <input style={inputStyle} type={show ? "text" : "password"} value={confirmar} onChange={(e) => setConfirmar(e.target.value)} placeholder="Repita a senha" required />
+                  <input style={inputStyle} type={show ? "text" : "password"} value={confirmar} onChange={(e) => setConfirmar(e.target.value)} placeholder="Repita a senha" autoComplete="new-password" required />
                 </div>
 
                 <button

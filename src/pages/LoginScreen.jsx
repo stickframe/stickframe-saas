@@ -146,7 +146,7 @@ export default function LoginScreen() {
           <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700, letterSpacing: 3, fontSize: empresaBranding ? 14 : 22 }}>
             <span style={{ color: "#e6edf3" }}>STICK</span><span style={{ color: C.red }}>FRAME</span>
           </div>
-          <div style={{ fontSize: 9, color: "#6e7681", letterSpacing: 2, marginTop: 2 }}>SISTEMAS CONSTRUTIVOS</div>
+          <div style={{ fontSize: 9, color: "#6e7681", letterSpacing: 2, marginTop: 2 }}>SISTEMA DE GESTÃO</div>
         </div>
 
         {/* Biometric quick-login */}
@@ -218,7 +218,7 @@ export default function LoginScreen() {
         </div>
 
         <p style={{ textAlign: "center", color: "#6e7681", fontSize: 11, marginTop: 16 }}>
-          Stick Frame Sistemas Construtivos · Santo André/SP
+          Stick Frame · Sistema de Gestão · Santo André/SP
         </p>
       </div>
     </div>

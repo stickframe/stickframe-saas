@@ -253,7 +253,11 @@ export default function Configuracoes() {
       mostrarToast("✅ Convite enviado!");
       listarUsuariosEmpresa().then((data) => { if (data) setUsuarios(data); }).catch(() => {});
     } catch (e) {
-      mostrarToast("Erro: " + e.message, true);
+      if (e.message?.startsWith("LIMITE_PLANO:")) {
+        mostrarToast("⚠️ " + e.message.replace("LIMITE_PLANO:", ""));
+      } else {
+        mostrarToast("Erro: " + e.message, true);
+      }
     } finally {
       setConvidando(false);
     }

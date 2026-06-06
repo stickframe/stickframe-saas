@@ -8,6 +8,7 @@ import AppLayout from "./components/layout/AppLayout";
 import LoginScreen from "./pages/LoginScreen";
 import Cadastro from "./pages/Cadastro";
 import Pricing from "./pages/Pricing";
+import LandingPage from "./pages/LandingPage";
 import LoadingScreen from "./components/ui/LoadingScreen";
 import { PageSkeleton } from "./components/ui/Skeleton";
 import { ToastProvider, useToast } from "./components/ui/Toast";
@@ -17,6 +18,7 @@ import { OnboardingTour } from "./components/ui/OnboardingTour";
 import { useUndoStore } from "./store/undoStore";
 import { useHotkeys } from "react-hotkeys-hook";
 import PortalColaborador from "./pages/PortalColaborador";
+import Admin from "./pages/Admin";
 
 // Auto-reload on chunk fetch failure (stale SW cache after deploy)
 function lazyWithRetry(fn) {
@@ -165,7 +167,16 @@ function AuthenticatedApp() {
 
 function RequireAuth({ children }) {
   const user = useAppStore((s) => s.user);
-  return user ? children : <Navigate to="/login" replace />;
+  if (user) return children;
+  if (window.location.pathname === "/") return <LandingPage />;
+  return <Navigate to="/login" replace />;
+}
+
+function RequireAdmin({ children }) {
+  const user = useAppStore((s) => s.user);
+  if (!user) return <Navigate to="/login" replace />;
+  if (user.email !== "andrequeirozcandido@gmail.com") return <Navigate to="/" replace />;
+  return children;
 }
 
 function GlobalHotkeys() {
@@ -207,6 +218,11 @@ export default function App() {
           <Route path="/colaborador/:token"   element={<PortalColaborador />} />
           <Route path="/ambiente/:token"      element={<AmbienteQR />} />
           <Route path="/painel/:token"        element={<PainelQR />} />
+          <Route path="/admin" element={
+            <RequireAdmin>
+              <Admin />
+            </RequireAdmin>
+          } />
           <Route path="/login"                element={<LoginScreen />} />
           <Route path="/cadastro"             element={<Cadastro />} />
           <Route path="/pricing"              element={<Pricing />} />

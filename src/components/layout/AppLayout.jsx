@@ -8,6 +8,7 @@ import { subscribePush } from "../../services/pushService";
 import { C, NAV } from "../../utils/constants";
 import { buscarEmpresa } from "../../services/repositories/empresaRepository";
 import useAppStore from "../../store/useAppStore";
+import { useTrial } from "../../hooks/useTrial";
 import { lazy, Suspense } from "react";
 
 const Onboarding = lazy(() => import("../../pages/Onboarding"));
@@ -25,6 +26,7 @@ export default function AppLayout({ children }) {
   const userId = useAppStore((s) => s.user?.id);
   const darkMode = useAppStore((s) => s.darkMode);
   const toggleDarkMode = useAppStore((s) => s.toggleDarkMode);
+  const { isTrial, isExpired, daysLeft } = useTrial();
 
   useEffect(() => {
     if (empresaId && userId) {
@@ -83,6 +85,43 @@ export default function AppLayout({ children }) {
             </button>
           </div>
         </div>
+        {(isTrial || isExpired) && (
+          <div style={{
+            padding: "8px 16px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 12,
+            fontSize: 13,
+            fontWeight: 500,
+            fontFamily: "Inter, sans-serif",
+            background: isExpired ? "#fef2f2" : "#fffbeb",
+            borderBottom: `1px solid ${isExpired ? "#fecaca" : "#fde68a"}`,
+            color: isExpired ? "#991b1b" : "#92400e",
+          }}>
+            <span>
+              {isExpired
+                ? "⚠️ Trial expirado · Seu plano voltou para Free"
+                : `🎉 Trial Pro: ${daysLeft} ${daysLeft === 1 ? "dia restante" : "dias restantes"}`}
+            </span>
+            <button
+              onClick={() => setActivePage("configuracoes")}
+              style={{
+                background: isExpired ? "#dc2626" : "#d97706",
+                color: "#fff",
+                border: "none",
+                borderRadius: 6,
+                padding: "3px 10px",
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: "pointer",
+                fontFamily: "Inter, sans-serif",
+              }}
+            >
+              Fazer upgrade
+            </button>
+          </div>
+        )}
         <main className="main-content">
           {children}
         </main>
