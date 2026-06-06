@@ -38,10 +38,11 @@ Deno.serve(async (req) => {
 
     const uid = authData.user.id;
 
-    // Cria a empresa no plano free
+    // Cria a empresa no plano free com trial de 14 dias
+    const trialEndsAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
     const { data: empresa, error: empError } = await admin
       .from("empresas")
-      .insert({ nome: nomeEmpresa, plano: "free", limite_obras: 2 })
+      .insert({ nome: nomeEmpresa, plano: "free", limite_obras: 2, trial_ends_at: trialEndsAt })
       .select("id")
       .single();
     if (empError) throw empError;

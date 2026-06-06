@@ -41,14 +41,19 @@ export const createObraSlice = (set, get) => ({
   },
 
   addObra: async (obra) => {
-    // Verifica limite do plano free
+    // Verifica limite do plano free (trial ativo = acesso Pro completo)
     try {
-      const empresa = await buscarEmpresa();
-      if (!empresa?.plano || empresa.plano === "free") {
-        const limite = empresa?.limite_obras ?? 2;
-        const ativas = get().obras.filter((o) => o.status !== "Concluída" && o.status !== "Cancelada").length;
-        if (ativas >= limite) {
-          throw new Error(`LIMITE_PLANO:Seu plano gratuito permite até ${limite} obras ativas. Faça upgrade para o plano Pro para obras ilimitadas.`);
+      const storeState = get();
+      const trialEndsAt = storeState.trialEndsAt;
+      const trialAtivo = trialEndsAt && new Date(trialEndsAt) > new Date();
+      if (!trialAtivo) {
+        const empresa = await buscarEmpresa();
+        if (!empresa?.plano || empresa.plano === "free") {
+          const limite = empresa?.limite_obras ?? 2;
+          const ativas = get().obras.filter((o) => o.status !== "Concluída" && o.status !== "Cancelada").length;
+          if (ativas >= limite) {
+            throw new Error(`LIMITE_PLANO:Seu plano gratuito permite até ${limite} obras ativas. Faça upgrade para o plano Pro para obras ilimitadas.`);
+          }
         }
       }
     } catch (err) {
