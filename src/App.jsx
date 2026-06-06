@@ -8,6 +8,7 @@ import AppLayout from "./components/layout/AppLayout";
 import LoginScreen from "./pages/LoginScreen";
 import Cadastro from "./pages/Cadastro";
 import Pricing from "./pages/Pricing";
+import LandingPage from "./pages/LandingPage";
 import LoadingScreen from "./components/ui/LoadingScreen";
 import { PageSkeleton } from "./components/ui/Skeleton";
 import { ToastProvider, useToast } from "./components/ui/Toast";
@@ -166,7 +167,9 @@ function AuthenticatedApp() {
 
 function RequireAuth({ children }) {
   const user = useAppStore((s) => s.user);
-  return user ? children : <Navigate to="/login" replace />;
+  if (user) return children;
+  if (window.location.pathname === "/") return <LandingPage />;
+  return <Navigate to="/login" replace />;
 }
 
 function RequireAdmin({ children }) {
