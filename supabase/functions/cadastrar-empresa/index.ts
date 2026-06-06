@@ -50,7 +50,6 @@ Deno.serve(async (req) => {
     // Cria o usuário como diretor da empresa
     const { error: usrError } = await admin.from("usuarios").insert({
       id: uid,
-      email,
       nome: nomeUsuario,
       perfil: "diretor",
       empresa_id: empresa.id,
