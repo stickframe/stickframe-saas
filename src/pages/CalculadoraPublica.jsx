@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { CheckCircle, Zap } from "../components/ui/Icon";
 import { sb } from "../services/supabase";
 
@@ -101,6 +101,18 @@ function applyPhoneMask(value) {
 }
 
 export default function CalculadoraPublica() {
+  // White-label branding
+  const [empresaBranding, setEmpresaBranding] = useState(null);
+  useEffect(() => {
+    const token = new URLSearchParams(window.location.search).get("e");
+    if (!token) return;
+    sb.from("empresas")
+      .select("nome, logo_url, cor_primaria")
+      .eq("calc_token", token)
+      .maybeSingle()
+      .then(({ data }) => { if (data) setEmpresaBranding(data); });
+  }, []);
+
   // "metro" | "kits"
   const [modo, setModo] = useState("metro");
 
@@ -640,8 +652,19 @@ export default function CalculadoraPublica() {
       <div className="calc-root">
         <header className="calc-header">
           <div className="calc-header-logo">
-            <img src="/logo-transparente-122x122.png" alt="Stick Frame" />
-            <div className="calc-header-brand"><span>STICK</span><span>FRAME</span></div>
+            {empresaBranding ? (
+              <>
+                {empresaBranding.logo_url && <img src={empresaBranding.logo_url} alt={empresaBranding.nome} style={{ height: 36, width: "auto", objectFit: "contain" }} />}
+                <div className="calc-header-brand" style={{ color: empresaBranding.cor_primaria || "#981915" }}>
+                  <span style={{ color: "rgba(255,255,255,.85)", letterSpacing: 1, fontSize: 14, fontWeight: 900 }}>{empresaBranding.nome}</span>
+                </div>
+              </>
+            ) : (
+              <>
+                <img src="/logo-transparente-122x122.png" alt="Stick Frame" />
+                <div className="calc-header-brand"><span>STICK</span><span>FRAME</span></div>
+              </>
+            )}
           </div>
           <nav className="calc-header-nav">
             <button className="calc-header-cta" onClick={() => document.querySelector('.calc-body')?.scrollIntoView({ behavior: 'smooth' })}>Simular agora</button>

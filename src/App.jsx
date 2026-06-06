@@ -6,6 +6,8 @@ import "./styles/responsive.css";
 import useAppStore from "./store/useAppStore";
 import AppLayout from "./components/layout/AppLayout";
 import LoginScreen from "./pages/LoginScreen";
+import Cadastro from "./pages/Cadastro";
+import Pricing from "./pages/Pricing";
 import LoadingScreen from "./components/ui/LoadingScreen";
 import { PageSkeleton } from "./components/ui/Skeleton";
 import { ToastProvider, useToast } from "./components/ui/Toast";
@@ -206,6 +208,8 @@ export default function App() {
           <Route path="/ambiente/:token"      element={<AmbienteQR />} />
           <Route path="/painel/:token"        element={<PainelQR />} />
           <Route path="/login"                element={<LoginScreen />} />
+          <Route path="/cadastro"             element={<Cadastro />} />
+          <Route path="/pricing"              element={<Pricing />} />
           <Route path="/*" element={
             <RequireAuth>
               <AuthenticatedApp />

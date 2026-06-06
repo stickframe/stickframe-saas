@@ -16,6 +16,7 @@ import Btn from "../components/ui/Btn";
 import Input from "../components/ui/Input";
 import Select from "../components/ui/Select";
 import WebhookConfig from "../components/configuracoes/WebhookConfig";
+import ModalUpgradePro from "../components/ui/ModalUpgradePro";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 function LabelF({ children, required }) {
@@ -90,6 +91,12 @@ export default function Configuracoes() {
   const [convite, setConvite] = useState({ email: "", nome: "", perfil: "comercial" });
   const [convidando, setConvidando] = useState(false);
 
+  const [showUpgrade, setShowUpgrade] = useState(false);
+
+  // Calculadora white-label
+  const [calcToken, setCalcToken] = useState("");
+  const [calcLinkCopiado, setCalcLinkCopiado] = useState(false);
+
   // API Key
   const [apiKey, setApiKey] = useState("");
   const [apiKeyCreatedAt, setApiKeyCreatedAt] = useState(null);
@@ -119,6 +126,7 @@ export default function Configuracoes() {
           plano:            data.plano            || "free",
           limite_obras:     data.limite_obras      ?? 2,
         });
+        if (data.calc_token) setCalcToken(data.calc_token);
         if (data.api_key) setApiKey(data.api_key);
         if (data.api_key_created_at) setApiKeyCreatedAt(data.api_key_created_at);
       }
@@ -267,6 +275,7 @@ export default function Configuracoes() {
 
   return (
     <>
+      {showUpgrade && <ModalUpgradePro onClose={() => setShowUpgrade(false)} />}
       {toast && (
         <div style={{
           position: "fixed", bottom: 28, right: 28, zIndex: 999,
@@ -292,9 +301,9 @@ export default function Configuracoes() {
             </div>
           </div>
           {empresa.plano === "free" && (
-            <a href="mailto:contato@stickframe.com.br?subject=Upgrade Pro" style={{ background: C.red, color: "#fff", borderRadius: 7, padding: "6px 12px", fontSize: 12, fontWeight: 700, textDecoration: "none", whiteSpace: "nowrap" }}>
+            <button onClick={() => setShowUpgrade(true)} style={{ background: C.red, color: "#fff", borderRadius: 7, padding: "6px 12px", fontSize: 12, fontWeight: 700, border: "none", cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap" }}>
               Fazer upgrade
-            </a>
+            </button>
           )}
         </div>
       </div>
@@ -423,6 +432,44 @@ export default function Configuracoes() {
             <div style={{ fontSize: 12, color: C.muted, marginTop: 8 }}>
               Você receberá um email diariamente quando algum produto monitorado variar mais do que esse percentual.
             </div>
+          </Card>
+
+          {/* Calculadora White-Label */}
+          <Card title="🔗 Sua Calculadora White-Label" subtitle="Compartilhe com clientes — o link abre a calculadora com o nome e logo da sua empresa.">
+            {calcToken ? (
+              <div>
+                <LabelF>Link da calculadora personalizada</LabelF>
+                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  <div style={{
+                    flex: 1, padding: "10px 14px", background: C.darker, border: `1px solid ${C.border}`,
+                    borderRadius: 8, fontSize: 12, color: C.muted, fontFamily: "monospace",
+                    overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                  }}>
+                    {`https://stickframe.com.br/calcular?e=${calcToken}`}
+                  </div>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(`https://stickframe.com.br/calcular?e=${calcToken}`);
+                      setCalcLinkCopiado(true);
+                      setTimeout(() => setCalcLinkCopiado(false), 2000);
+                    }}
+                    style={{
+                      padding: "10px 16px", background: calcLinkCopiado ? "#16a34a" : C.red,
+                      color: "#fff", border: "none", borderRadius: 8,
+                      fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
+                      whiteSpace: "nowrap", transition: "background .2s",
+                    }}
+                  >
+                    {calcLinkCopiado ? "✓ Copiado!" : "📋 Copiar link"}
+                  </button>
+                </div>
+                <div style={{ fontSize: 11, color: C.muted, marginTop: 8 }}>
+                  Quando um cliente acessa esse link, vê a calculadora com o nome e logo da sua empresa. Leads chegam para você via WhatsApp.
+                </div>
+              </div>
+            ) : (
+              <div style={{ fontSize: 13, color: C.muted }}>Carregando link…</div>
+            )}
           </Card>
 
           <div style={{ display: "flex", justifyContent: "flex-end" }}>

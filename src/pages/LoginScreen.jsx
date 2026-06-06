@@ -193,7 +193,12 @@ export default function LoginScreen() {
           {loading ? "Entrando..." : "Entrar no sistema →"}
         </button>
 
-        <p style={{ textAlign: "center", color: "#6e7681", fontSize: 11, marginTop: 20 }}>
+        <div style={{ textAlign: "center", marginTop: 20, fontSize: 13, color: "#6e7681" }}>
+          Não tem conta?{" "}
+          <a href="/cadastro" style={{ color: C.red, fontWeight: 700, textDecoration: "none" }}>Criar conta grátis</a>
+        </div>
+
+        <p style={{ textAlign: "center", color: "#6e7681", fontSize: 11, marginTop: 16 }}>
           Stick Frame Sistemas Construtivos · Santo André/SP
         </p>
       </div>
