@@ -29,12 +29,16 @@ Deno.serve(async (req) => {
 
     console.log(`asaas-webhook: evento recebido: ${event}`);
 
-    // Apenas processar eventos de pagamento confirmado
-    if (event !== "PAYMENT_CONFIRMED" && event !== "PAYMENT_RECEIVED") {
+    const UPGRADE_EVENTS = ["PAYMENT_CONFIRMED", "PAYMENT_RECEIVED"];
+    const DOWNGRADE_EVENTS = ["PAYMENT_OVERDUE", "SUBSCRIPTION_DELETED", "PAYMENT_DELETED"];
+
+    if (!UPGRADE_EVENTS.includes(event) && !DOWNGRADE_EVENTS.includes(event)) {
       return new Response(JSON.stringify({ received: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    const isDowngrade = DOWNGRADE_EVENTS.includes(event);
 
     if (!payment) {
       console.warn("asaas-webhook: payload sem campo payment");
@@ -50,30 +54,23 @@ Deno.serve(async (req) => {
 
     const { externalReference, customer } = payment;
 
+    const novoPlano = isDowngrade ? "free" : "pro";
+    const novoLimite = isDowngrade ? 2 : 999;
+
     if (externalReference) {
-      // Atualiza pelo ID da empresa diretamente
       const { error } = await admin
         .from("empresas")
-        .update({ plano: "pro", limite_obras: 999 })
+        .update({ plano: novoPlano, limite_obras: novoLimite })
         .eq("id", externalReference);
-
-      if (error) {
-        console.error("asaas-webhook: erro ao atualizar por externalReference:", error.message);
-      } else {
-        console.log(`asaas-webhook: empresa ${externalReference} atualizada para pro via externalReference`);
-      }
+      if (error) console.error("asaas-webhook: erro ao atualizar por externalReference:", error.message);
+      else console.log(`asaas-webhook: empresa ${externalReference} → ${novoPlano}`);
     } else if (customer) {
-      // Fallback: atualiza pelo asaas_customer_id
       const { error } = await admin
         .from("empresas")
-        .update({ plano: "pro", limite_obras: 999 })
+        .update({ plano: novoPlano, limite_obras: novoLimite })
         .eq("asaas_customer_id", customer);
-
-      if (error) {
-        console.error("asaas-webhook: erro ao atualizar por customer:", error.message);
-      } else {
-        console.log(`asaas-webhook: empresa com customer ${customer} atualizada para pro via asaas_customer_id`);
-      }
+      if (error) console.error("asaas-webhook: erro ao atualizar por customer:", error.message);
+      else console.log(`asaas-webhook: empresa customer ${customer} → ${novoPlano}`);
     } else {
       console.warn("asaas-webhook: payment sem externalReference nem customer, ignorando");
     }

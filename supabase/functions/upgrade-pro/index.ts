@@ -35,7 +35,7 @@ Deno.serve(async (req) => {
 
     const apiKey = Deno.env.get("ASAAS_API_KEY") ?? "";
 
-    // 1. Encontrar ou criar cliente no Asaas
+    // 1. Criar ou reusar cliente no Asaas
     let customerId = empresa.asaas_customer_id;
     if (!customerId) {
       const res = await fetch(`${ASAAS_BASE}/customers`, {
@@ -49,30 +49,34 @@ Deno.serve(async (req) => {
       await admin.from("empresas").update({ asaas_customer_id: customerId }).eq("id", empresa.id);
     }
 
-    // 2. Criar cobrança recorrente mensal R$297
-    const vencimento = new Date();
-    vencimento.setDate(vencimento.getDate() + 3);
-    const dataVenc = vencimento.toISOString().slice(0, 10);
+    // 2. Criar assinatura recorrente mensal R$297
+    const hoje = new Date().toISOString().slice(0, 10);
 
-    const chargeRes = await fetch(`${ASAAS_BASE}/payments`, {
+    const subRes = await fetch(`${ASAAS_BASE}/subscriptions`, {
       method: "POST",
       headers: { "access_token": apiKey, "Content-Type": "application/json" },
       body: JSON.stringify({
         customer: customerId,
-        billingType: "UNDEFINED", // deixa o cliente escolher PIX/boleto/cartão
+        billingType: "UNDEFINED", // cliente escolhe PIX/boleto/cartão na primeira cobrança
         value: 297,
-        dueDate: dataVenc,
+        nextDueDate: hoje,
+        cycle: "MONTHLY",
         description: "StickFrame Pro — Assinatura Mensal",
         externalReference: empresa.id,
       }),
     });
-    const charge = await chargeRes.json();
-    if (!charge.id) throw new Error("Erro ao criar cobrança: " + JSON.stringify(charge));
+    const sub = await subRes.json();
+    if (!sub.id) throw new Error("Erro ao criar assinatura: " + JSON.stringify(sub));
 
-    return new Response(JSON.stringify({
-      link: charge.invoiceUrl || charge.bankSlipUrl,
-      id: charge.id,
-    }), {
+    // Busca o link de pagamento da primeira cobrança da assinatura
+    const paymentsRes = await fetch(`${ASAAS_BASE}/subscriptions/${sub.id}/payments`, {
+      headers: { "access_token": apiKey },
+    });
+    const payments = await paymentsRes.json();
+    const firstPayment = payments?.data?.[0];
+    const link = firstPayment?.invoiceUrl || firstPayment?.bankSlipUrl || sub.url;
+
+    return new Response(JSON.stringify({ link, id: sub.id }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
