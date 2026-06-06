@@ -56,7 +56,7 @@ export default function Cadastro() {
           <div style={{ fontWeight: 900, letterSpacing: 3, fontSize: 18, color: "#fff" }}>
             STICK<span style={{ color: "#981915" }}>FRAME</span>
           </div>
-          <div style={{ fontSize: 11, letterSpacing: 2, color: "rgba(255,255,255,.35)", marginTop: 4 }}>SISTEMAS CONSTRUTIVOS</div>
+          <div style={{ fontSize: 11, letterSpacing: 2, color: "rgba(255,255,255,.35)", marginTop: 4 }}>SISTEMA DE GESTÃO</div>
         </div>
 
         <div style={{ background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.1)", borderRadius: 16, padding: "32px 28px" }}>
@@ -89,7 +89,7 @@ export default function Cadastro() {
               <form onSubmit={handleCadastro} autoComplete="off">
                 <div style={{ marginBottom: 14 }}>
                   <label style={labelStyle}>Nome da empresa *</label>
-                  <input style={inputStyle} value={nomeEmpresa} onChange={(e) => setNomeEmpresa(e.target.value)} placeholder="Ex: Becker Engenharia Ltda." autoComplete="off" required />
+                  <input style={inputStyle} value={nomeEmpresa} onChange={(e) => setNomeEmpresa(e.target.value)} placeholder="Ex: Construtora Ltda." autoComplete="off" required />
                 </div>
                 <div style={{ marginBottom: 14 }}>
                   <label style={labelStyle}>Seu nome *</label>
