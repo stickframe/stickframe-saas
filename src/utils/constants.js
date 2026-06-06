@@ -1,18 +1,20 @@
 // ─── PALETA (TEMA CLARO) ─────────────────────────────────────────────────────
 export const C = {
-  red:      "#981915",
-  redDark:  "#6e1210",
-  graphite: "#4b4b4b",
-  dark:     "#f5f6f8",
-  darker:   "#eaecf0",
+  red:      "#dc2626",
+  redDark:  "#b91c1c",
+  graphite: "#334155",
+  dark:     "#f8fafc",
+  darker:   "#f1f5f9",
   surface:  "#ffffff",
-  border:   "#e2e4ea",
-  shadow:   "0 2px 8px rgba(0,0,0,0.05)",
-  text:     "#1a1a1a",
-  muted:    "#6b7280",
-  success:  "#2e9e5b",
-  warning:  "#b97a00",
-  danger:   "#c0392b",
+  border:   "#e2e8f0",
+  shadow:   "0 1px 3px rgba(0,0,0,0.08)",
+  text:     "#0f172a",
+  muted:    "#64748b",
+  success:  "#16a34a",
+  warning:  "#d97706",
+  danger:   "#dc2626",
+  card:     "#ffffff",
+  bg:       "#f8fafc",
 };
 
 

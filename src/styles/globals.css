@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700&family=DM+Sans:wght@400;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700&family=Inter:wght@300;400;500;600;700&display=swap');
 
 *,
 *::before,
@@ -9,9 +9,9 @@
 }
 
 body {
-  background: #f5f6f8;
-  color: #1a1a1a;
-  font-family: 'DM Sans', sans-serif;
+  background: #f8fafc;
+  color: #0f172a;
+  font-family: 'Inter', sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -45,28 +45,33 @@ select:focus {
 }
 
 .topbar {
-  padding: 12px 38px;
-  border-bottom: 1px solid #dcdce4;
+  padding: 0 32px;
+  height: 64px;
+  border-bottom: 1px solid #e2e8f0;
   display: flex;
   justify-content: space-between;
   align-items: center;
   background: #ffffff;
   gap: 12px;
+  position: sticky;
+  top: 0;
+  z-index: 50;
 }
 
 .main-content {
   flex: 1;
-  padding: 34px 38px;
+  padding: 32px 36px;
   overflow: auto;
-  background: #f5f6f8;
+  background: #f8fafc;
 }
 
-/* Card padrão — borderRadius 16, shadow leve, sem border */
+/* Card padrão */
 .sf-card {
   background: #ffffff;
-  border-radius: 16px;
-  padding: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border-radius: 20px;
+  padding: 24px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
 }
 
 .hamburger {
@@ -103,19 +108,19 @@ select:focus {
 
 /* ─── CSS Variables ─────────────────────────────────────────────────────── */
 :root {
-  --red:     #981915;
-  --red-dk:  #6e1210;
+  --red:     #dc2626;
+  --red-dk:  #b91c1c;
   --surface: #ffffff;
-  --bg:      #f5f6f8;
-  --border:  #e2e4ea;
-  --text:    #1a1a1a;
-  --muted:   #6b7280;
-  --success: #2e9e5b;
-  --warning: #b97a00;
-  --danger:  #c0392b;
-  --shadow:  0 2px 8px rgba(0,0,0,0.05);
+  --bg:      #f8fafc;
+  --border:  #e2e8f0;
+  --text:    #0f172a;
+  --muted:   #64748b;
+  --success: #16a34a;
+  --warning: #d97706;
+  --danger:  #dc2626;
+  --shadow:  0 1px 3px rgba(0,0,0,0.08);
   --radius:  12px;
-  --radius-lg: 16px;
+  --radius-lg: 20px;
 }
 
 /* ─── Cards ─────────────────────────────────────────────────────────────── */
