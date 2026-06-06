@@ -190,7 +190,6 @@ export default function CalculadoraPublica() {
     window.scrollTo({ top: 0, behavior: "smooth" });
     // Tracking: usuário viu o resultado
     try { window.dataLayer?.push({ event: "view_simulacao", value: Math.round(sfValor), padrao, area }); } catch (_) {}
-    try { window.gtag?.("event", "view_item", { currency: "BRL", value: Math.round(sfValor), item_category: padrao }); } catch (_) {}
   }
 
   async function handleContact(e) {
@@ -240,9 +239,8 @@ export default function CalculadoraPublica() {
         },
       }).catch(() => {});
 
-      // Tracking via GTM dataLayer + GA4 direto
+      // Tracking via GTM dataLayer — configure as tags no painel GTM
       try { window.dataLayer?.push({ event: "lead_gerado", value: Math.round(sfValor), currency: "BRL", padrao, area, cidade }); } catch (_) {}
-      try { window.gtag?.("event", "generate_lead", { currency: "BRL", value: Math.round(sfValor), method: "calculadora" }); } catch (_) {}
 
       // Open WhatsApp notification to empresa owner
       try {
