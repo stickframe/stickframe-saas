@@ -34,7 +34,8 @@ export default function OnboardingWizard({ userId, onClose, onNavigate }) {
   const current = STEPS[step];
 
   function finish() {
-    localStorage.setItem(`onboarding_done_${userId}`, "1");
+    const key = `onboarding_done_${userId || "user"}`;
+    localStorage.setItem(key, "1");
     onClose();
   }
 
