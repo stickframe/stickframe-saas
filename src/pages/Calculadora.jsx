@@ -793,7 +793,7 @@ export default function Calculadora() {
     localStorage.getItem("sf_kit_lead") ? "kits" : "steelframe"
   );
 
-  const [cubValor,      setCubValor]      = useState<number | null>(null);
+  const [cubValor,      setCubValor]      = useState(null);
   const [cubCarregando, setCubCarregando] = useState(false);
 
   async function atualizarCub() {
