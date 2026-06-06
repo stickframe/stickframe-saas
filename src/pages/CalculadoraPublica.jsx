@@ -284,155 +284,140 @@ export default function CalculadoraPublica() {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=DM+Sans:wght@400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&display=swap');
         .calc-root *, .calc-root *::before, .calc-root *::after { box-sizing: border-box; }
         .calc-root {
           font-family: 'DM Sans', sans-serif;
-          background: #f5faff;
+          background: #0e0505;
           min-height: 100vh;
-          color: #151d21;
+          color: #f0f0f0;
         }
         .calc-body {
-          max-width: 580px;
+          max-width: 560px;
           margin: 0 auto;
-          padding: 32px 20px 80px;
+          padding: 24px 16px 64px;
         }
         .calc-card {
-          background: #fff;
-          border: 1px solid rgba(110,118,129,.2);
-          padding: 28px;
+          background: rgba(255,255,255,.06);
+          border: 1px solid rgba(255,255,255,.10);
+          border-radius: 14px;
+          padding: 24px;
           margin-bottom: 16px;
+          backdrop-filter: blur(8px);
         }
         .calc-title {
-          font-family: 'Barlow Condensed', sans-serif;
-          font-size: 26px;
+          font-size: 22px;
           font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: .02em;
           margin: 0 0 4px;
-          color: #151d21;
+          color: #fff;
         }
         .calc-subtitle {
           font-size: 14px;
-          color: #5b5e66;
+          color: rgba(255,255,255,.55);
           margin: 0 0 24px;
         }
         .calc-label {
           display: block;
-          font-size: 11px;
-          font-weight: 700;
-          letter-spacing: .05em;
-          text-transform: uppercase;
+          font-size: 13px;
+          font-weight: 600;
           margin-bottom: 6px;
-          color: #59413e;
+          color: rgba(255,255,255,.7);
         }
         .calc-input {
           width: 100%;
-          border: 1px solid rgba(110,118,129,.3);
-          background: #fff;
-          color: #151d21;
-          padding: 12px;
+          border: 1.5px solid rgba(255,255,255,.15);
+          border-radius: 8px;
+          background: rgba(255,255,255,.06);
+          color: #fff;
+          padding: 10px 12px;
           font-size: 15px;
           font-family: inherit;
           outline: none;
           transition: border-color .15s;
           margin-bottom: 16px;
-          border-radius: 2px;
         }
         .calc-input:focus { border-color: #981915; }
-        .calc-input::placeholder { color: #9ca3af; }
         .calc-select {
           width: 100%;
-          border: 1px solid rgba(110,118,129,.3);
-          padding: 12px;
+          border: 1.5px solid rgba(255,255,255,.15);
+          border-radius: 8px;
+          padding: 10px 12px;
           font-size: 15px;
           font-family: inherit;
           outline: none;
-          background: #fff;
-          color: #151d21;
+          background: rgba(255,255,255,.06);
+          color: #fff;
           cursor: pointer;
           transition: border-color .15s;
           margin-bottom: 16px;
-          border-radius: 2px;
-          appearance: none;
-          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236E7681' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-          background-repeat: no-repeat;
-          background-position: right 14px center;
-          padding-right: 36px;
         }
+        .calc-select option { background: #1a0a0a; color: #fff; }
         .calc-select:focus { border-color: #981915; }
         .padrao-grid {
           display: grid;
           grid-template-columns: 1fr 1fr 1fr;
-          gap: 8px;
+          gap: 10px;
           margin-bottom: 16px;
         }
         .padrao-card {
-          border: 1.5px solid rgba(110,118,129,.25);
-          padding: 12px 8px;
+          border: 2px solid rgba(255,255,255,.15);
+          border-radius: 10px;
+          padding: 10px 8px;
           cursor: pointer;
           text-align: center;
           transition: border-color .15s, background .15s;
           user-select: none;
-          border-radius: 2px;
         }
-        .padrao-card:hover { border-color: #981915; background: #fff5f5; }
         .padrao-card.selected {
           border-color: #981915;
-          background: #fff0f0;
+          background: rgba(152,25,21,.18);
         }
         .padrao-card-title {
-          font-family: 'Barlow Condensed', sans-serif;
-          font-size: 14px;
+          font-size: 13px;
           font-weight: 700;
-          text-transform: uppercase;
           margin-bottom: 4px;
-          color: #151d21;
+          color: #fff;
         }
         .padrao-card-desc {
-          font-size: 10px;
-          color: #5b5e66;
+          font-size: 11px;
+          color: rgba(255,255,255,.5);
           line-height: 1.4;
         }
         .calc-btn {
           width: 100%;
-          background: #981915;
+          background: linear-gradient(135deg, #b91c1c, #7f1d1d);
           color: #fff;
           border: none;
-          border-radius: 2px;
-          padding: 16px;
-          font-family: 'Barlow Condensed', sans-serif;
-          font-size: 18px;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: .05em;
+          border-radius: 10px;
+          padding: 15px;
+          font-size: 16px;
+          font-weight: 800;
+          font-family: inherit;
           cursor: pointer;
-          transition: background .15s, transform .1s;
+          transition: opacity .15s, transform .1s;
+          box-shadow: 0 4px 20px rgba(152,25,21,.4);
         }
-        .calc-btn:hover { background: #740004; transform: translateY(-1px); }
-        .calc-btn:active { transform: scale(.98); }
-        .calc-btn:disabled { background: #9ca3af; cursor: not-allowed; transform: none; }
+        .calc-btn:hover { opacity: .9; transform: translateY(-1px); }
+        .calc-btn:disabled { background: #444; cursor: not-allowed; box-shadow: none; }
         .result-headline {
-          font-family: 'Barlow Condensed', sans-serif;
-          font-size: 22px;
+          font-size: 20px;
           font-weight: 700;
-          text-transform: uppercase;
           margin: 0 0 20px;
           text-align: center;
-          color: #151d21;
+          color: #fff;
         }
         .result-card {
+          border-radius: 12px;
           padding: 18px;
           margin-bottom: 12px;
-          border-radius: 2px;
         }
         .result-card.sf {
           border: 2px solid #981915;
-          background: #fff8f8;
+          background: rgba(152,25,21,.12);
         }
         .result-card.al {
-          border: 1px solid rgba(110,118,129,.25);
-          background: #f5faff;
+          border: 2px solid rgba(255,255,255,.1);
+          background: rgba(255,255,255,.04);
         }
         .result-card-header {
           display: flex;
@@ -441,39 +426,32 @@ export default function CalculadoraPublica() {
           margin-bottom: 12px;
         }
         .result-card-name {
-          font-family: 'Barlow Condensed', sans-serif;
-          font-size: 17px;
+          font-size: 15px;
           font-weight: 700;
-          text-transform: uppercase;
-          color: #151d21;
+          color: #fff;
         }
         .result-badge {
           background: #981915;
           color: #fff;
-          font-size: 10px;
+          font-size: 11px;
           font-weight: 700;
-          letter-spacing: .05em;
-          text-transform: uppercase;
-          padding: 3px 10px;
-          border-radius: 2px;
+          padding: 3px 8px;
+          border-radius: 20px;
         }
         .result-faixa-label {
-          font-size: 11px;
-          text-transform: uppercase;
-          letter-spacing: .05em;
-          color: #5b5e66;
+          font-size: 12px;
+          color: rgba(255,255,255,.5);
           margin-bottom: 2px;
         }
         .result-faixa {
-          font-family: 'Barlow Condensed', sans-serif;
-          font-size: 24px;
+          font-size: 20px;
           font-weight: 700;
-          color: #151d21;
+          color: #fff;
           margin-bottom: 8px;
         }
         .result-prazo {
           font-size: 13px;
-          color: #5b5e66;
+          color: rgba(255,255,255,.6);
           margin-bottom: 10px;
         }
         .result-tags {
@@ -482,40 +460,37 @@ export default function CalculadoraPublica() {
           gap: 6px;
         }
         .result-tag {
-          border: 1px solid rgba(110,118,129,.25);
-          border-radius: 2px;
-          padding: 3px 10px;
-          font-size: 11px;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: .03em;
-          color: #5b5e66;
+          background: rgba(255,255,255,.1);
+          border-radius: 20px;
+          padding: 4px 10px;
+          font-size: 12px;
+          font-weight: 500;
+          color: rgba(255,255,255,.7);
         }
-        .result-tag.green { background: #f0faf4; border-color: #2e9e5b; color: #1a6b3c; }
+        .result-tag.green { background: rgba(46,158,91,.2); color: #6ee7a0; }
         .comparison-note {
           text-align: center;
           font-size: 13px;
-          color: #5b5e66;
+          color: rgba(255,255,255,.6);
           margin: 4px 0 20px;
-          padding: 10px 14px;
-          background: #eef4fb;
-          border-left: 3px solid #981915;
+          padding: 10px;
+          background: rgba(255,200,0,.08);
+          border: 1px solid rgba(255,200,0,.2);
+          border-radius: 8px;
         }
         .cta-heading {
-          font-family: 'Barlow Condensed', sans-serif;
-          font-size: 20px;
+          font-size: 17px;
           font-weight: 700;
-          text-transform: uppercase;
           margin: 0 0 6px;
-          color: #151d21;
+          color: #fff;
         }
         .cta-sub {
-          font-size: 14px;
-          color: #5b5e66;
+          font-size: 13px;
+          color: rgba(255,255,255,.55);
           margin: 0 0 20px;
         }
         .error-msg {
-          color: #ba1a1a;
+          color: #ff6b6b;
           font-size: 13px;
           margin-bottom: 10px;
         }
@@ -525,17 +500,15 @@ export default function CalculadoraPublica() {
           margin-bottom: 12px;
         }
         .success-title {
-          font-family: 'Barlow Condensed', sans-serif;
-          font-size: 26px;
+          font-size: 22px;
           font-weight: 700;
-          text-transform: uppercase;
           text-align: center;
           margin-bottom: 8px;
-          color: #151d21;
+          color: #fff;
         }
         .success-msg {
           font-size: 15px;
-          color: #5b5e66;
+          color: rgba(255,255,255,.6);
           text-align: center;
           margin-bottom: 28px;
           line-height: 1.6;
@@ -544,85 +517,84 @@ export default function CalculadoraPublica() {
           width: 100%;
           background: transparent;
           color: #981915;
-          border: 1.5px solid #981915;
-          border-radius: 2px;
-          padding: 14px;
-          font-family: 'Barlow Condensed', sans-serif;
-          font-size: 16px;
+          border: 2px solid #981915;
+          border-radius: 8px;
+          padding: 13px;
+          font-size: 15px;
           font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: .05em;
           font-family: inherit;
           cursor: pointer;
           transition: background .15s, color .15s;
         }
-        .btn-outline:hover { background: #981915; color: #fff; }
-        .divider { height: 1px; background: rgba(110,118,129,.2); margin: 20px 0; }
-        .mode-tabs { display: flex; gap: 0; margin-bottom: 20px; overflow: hidden; border: 1.5px solid rgba(110,118,129,.25); background: #fff; border-radius: 2px; }
-        .mode-tab { flex: 1; padding: 12px 8px; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; font-family: inherit; cursor: pointer; border: none; background: transparent; color: #5b5e66; transition: background .15s, color .15s; }
+        .btn-outline { background: rgba(255,255,255,.08); border: 1.5px solid rgba(255,255,255,.2); color: #fff; }
+        .btn-outline:hover { background: #981915; border-color: #981915; color: #fff; }
+        .divider { height: 1px; background: rgba(255,255,255,.1); margin: 20px 0; }
+        .mode-tabs { display: flex; gap: 0; margin-bottom: 20px; border-radius: 10px; overflow: hidden; border: 1.5px solid rgba(255,255,255,.15); background: rgba(255,255,255,.04); }
+        .mode-tab { flex: 1; padding: 11px 8px; font-size: 14px; font-weight: 700; font-family: inherit; cursor: pointer; border: none; background: transparent; color: rgba(255,255,255,.5); transition: background .15s, color .15s; }
         .mode-tab.active { background: #981915; color: #fff; }
         .kit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 8px; }
         @media (max-width: 400px) { .kit-grid { grid-template-columns: 1fr; } }
-        .kit-card { border: 1px solid rgba(110,118,129,.2); padding: 18px 14px; cursor: pointer; background: #fff; transition: border-color .2s, box-shadow .2s, transform .15s; border-radius: 2px; }
-        .kit-card:hover { border-color: #981915; box-shadow: 0 4px 20px rgba(152,25,21,.1); transform: translateY(-2px); }
-        .kit-tag { display: inline-block; font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; padding: 2px 8px; color: #fff; margin-bottom: 10px; border-radius: 2px; }
-        .kit-emoji { font-size: 28px; margin-bottom: 8px; }
-        .kit-name { font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 700; text-transform: uppercase; margin-bottom: 4px; color: #151d21; }
-        .kit-desc { font-size: 11px; color: #5b5e66; line-height: 1.4; margin-bottom: 10px; }
+        .kit-card { border: 1.5px solid rgba(255,255,255,.1); border-radius: 14px; padding: 18px 14px; cursor: pointer; background: rgba(255,255,255,.05); transition: border-color .2s, background .2s, transform .15s; }
+        .kit-card:hover { border-color: #981915; background: rgba(152,25,21,.1); transform: translateY(-2px); }
+        .kit-tag { display: inline-block; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 20px; color: #fff; margin-bottom: 8px; letter-spacing: .5px; }
+        .kit-emoji { font-size: 30px; margin-bottom: 8px; }
+        .kit-name { font-size: 15px; font-weight: 800; margin-bottom: 4px; color: #fff; }
+        .kit-desc { font-size: 11px; color: rgba(255,255,255,.5); line-height: 1.4; margin-bottom: 10px; }
         .kit-meta { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 10px; }
-        .kit-chip { background: #eef4fb; border-radius: 2px; padding: 3px 8px; font-size: 10px; color: #5b5e66; font-weight: 600; text-transform: uppercase; letter-spacing: .03em; }
-        .kit-price-label { font-size: 9px; color: #9ca3af; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 2px; }
-        .kit-price { font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 700; color: #981915; }
-        .kit-btn { width: 100%; background: #981915; color: #fff; border: none; border-radius: 2px; padding: 10px; font-family: 'Barlow Condensed', sans-serif; font-size: 15px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; cursor: pointer; margin-top: 10px; transition: background .15s; }
-        .kit-btn:hover { background: #740004; }
-        .kit-result-banner { background: #161B22; border-radius: 2px; padding: 20px; color: #fff; margin-bottom: 16px; border-left: 4px solid #981915; }
+        .kit-chip { background: rgba(255,255,255,.1); border-radius: 20px; padding: 3px 8px; font-size: 11px; color: rgba(255,255,255,.7); font-weight: 600; }
+        .kit-price-label { font-size: 10px; color: rgba(255,255,255,.4); text-transform: uppercase; letter-spacing: .5px; }
+        .kit-price { font-size: 18px; font-weight: 900; color: #ff6b6b; }
+        .kit-btn { width: 100%; background: linear-gradient(135deg,#b91c1c,#7f1d1d); color: #fff; border: none; border-radius: 8px; padding: 10px; font-size: 13px; font-weight: 700; font-family: inherit; cursor: pointer; margin-top: 10px; box-shadow: 0 3px 12px rgba(152,25,21,.35); transition: opacity .15s; }
+        .kit-btn:hover { opacity: .85; }
+        .kit-result-banner { background: linear-gradient(135deg,#1a0a0a,#981915); border-radius: 12px; padding: 20px; color: #fff; margin-bottom: 16px; }
         .kit-toggles { border-top: 1px solid rgba(255,255,255,.15); padding-top: 12px; display: flex; flex-wrap: wrap; gap: 8px; }
-        .kit-toggle-btn { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 2px; cursor: pointer; font-family: inherit; font-size: 12px; font-weight: 700; transition: all .2s; }
+        .kit-toggle-btn { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-family: inherit; font-size: 12px; font-weight: 700; transition: all .2s; }
         .kit-breakdown { border-top: 1px solid rgba(255,255,255,.1); margin-top: 12px; padding-top: 12px; display: flex; flex-wrap: wrap; gap: 16px; }
         .kit-breakdown-item { }
         .kit-breakdown-label { font-size: 10px; opacity: .5; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; }
-        .kit-breakdown-val { font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 800; }
-        .kit-cat-block { background: #f5faff; border: 1px solid rgba(110,118,129,.15); margin-bottom: 10px; overflow: hidden; transition: opacity .2s; }
-        .kit-cat-header { background: #eef4fb; padding: 8px 14px; display: flex; justify-content: space-between; align-items: center; }
-        .kit-cat-row { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; padding: 8px 14px; border-top: 1px solid rgba(110,118,129,.1); align-items: center; font-size: 12px; color: #5b5e66; }
+        .kit-breakdown-val { font-size: 14px; font-weight: 800; }
+        .kit-cat-block { background: rgba(255,255,255,.04); border-radius: 10px; border: 1px solid rgba(255,255,255,.1); margin-bottom: 10px; overflow: hidden; transition: opacity .2s; }
+        .kit-cat-header { background: rgba(255,255,255,.05); padding: 8px 14px; display: flex; justify-content: space-between; align-items: center; }
+        .kit-cat-row { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; padding: 8px 14px; border-top: 1px solid rgba(255,255,255,.06); align-items: center; font-size: 12px; color: rgba(255,255,255,.75); }
         .back-link {
-          display: inline-flex;
-          align-items: center;
-          gap: 4px;
+          display: inline-block;
           font-size: 13px;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: .05em;
           color: #981915;
           cursor: pointer;
           margin-bottom: 16px;
           text-decoration: none;
+          font-weight: 500;
         }
         .back-link:hover { text-decoration: underline; }
         .calc-header {
-          background: #fff;
-          border-bottom: 1px solid rgba(110,118,129,.2);
+          background: rgba(14,5,5,.85);
+          backdrop-filter: blur(12px);
           padding: 0 24px;
           display: flex;
           align-items: center;
           justify-content: space-between;
           height: 64px;
+          border-bottom: 1px solid rgba(255,255,255,.07);
           position: sticky; top: 0; z-index: 100;
         }
         .calc-header-logo {
           display: flex; align-items: center; gap: 10px;
         }
-        .calc-header-logo img { height: 32px; width: auto; }
-        .calc-header-brand { font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; }
-        .calc-header-brand span:first-child { color: #151d21; }
+        .calc-header-logo img { height: 36px; width: auto; }
+        .calc-header-brand { font-size: 15px; font-weight: 900; letter-spacing: 2px; }
+        .calc-header-brand span:first-child { color: rgba(255,255,255,.35); }
         .calc-header-brand span:last-child { color: #981915; }
         .calc-header-nav { display: flex; align-items: center; gap: 20px; }
-        .calc-header-cta { background: #981915; color: #fff; border: none; border-radius: 2px; padding: 9px 18px; font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; cursor: pointer; transition: background .15s; white-space: nowrap; }
-        .calc-header-cta:hover { background: #740004; }
+        .calc-header-nav a { color: rgba(255,255,255,.45); font-size: 13px; font-weight: 600; text-decoration: none; transition: color .15s; }
+        .calc-header-nav a:hover { color: #fff; }
+        .calc-header-cta { background: #981915; color: #fff; border: none; border-radius: 8px; padding: 8px 16px; font-size: 13px; font-weight: 700; font-family: inherit; cursor: pointer; transition: background .15s; white-space: nowrap; }
+        .calc-header-cta:hover { background: #7a1210; }
         @media (max-width: 480px) { .calc-header-nav { display: none; } }
         .calc-hero {
-          background: #161B22;
-          padding: 72px 20px 60px;
+          background: radial-gradient(ellipse at 70% 50%, rgba(152,25,21,.35) 0%, transparent 65%),
+                      radial-gradient(ellipse at 20% 80%, rgba(100,10,10,.4) 0%, transparent 60%),
+                      #0e0505;
+          padding: 64px 20px 56px;
           text-align: center;
           color: #fff;
           position: relative;
@@ -631,35 +603,30 @@ export default function CalculadoraPublica() {
         .calc-hero::before {
           content: '';
           position: absolute; inset: 0;
-          background-image: radial-gradient(circle, #6E7681 1px, transparent 1px);
-          background-size: 32px 32px;
-          opacity: .05;
+          background-image: radial-gradient(circle, rgba(255,255,255,.04) 1px, transparent 1px);
+          background-size: 28px 28px;
           pointer-events: none;
         }
         .calc-hero-tag {
           display: inline-flex; align-items: center; gap: 6px;
-          border: 1px solid rgba(152,25,21,.5);
-          border-radius: 2px;
-          font-family: 'Barlow Condensed', sans-serif;
-          font-size: 12px; font-weight: 700; padding: 5px 16px;
-          letter-spacing: 2px; text-transform: uppercase; margin-bottom: 22px;
+          background: rgba(152,25,21,.25);
+          border: 1px solid rgba(152,25,21,.5); border-radius: 20px;
+          font-size: 11px; font-weight: 700; padding: 5px 16px;
+          letter-spacing: 1px; text-transform: uppercase; margin-bottom: 22px;
           color: #ff8a80;
-          background: rgba(152,25,21,.15);
         }
         .calc-hero h1 {
-          font-family: 'Barlow Condensed', sans-serif;
-          font-size: clamp(32px, 8vw, 52px); font-weight: 700;
-          text-transform: uppercase;
-          line-height: 1.1; margin: 0 0 16px; letter-spacing: .01em;
+          font-size: clamp(28px, 7vw, 48px); font-weight: 900;
+          line-height: 1.1; margin: 0 0 16px; letter-spacing: -1.5px;
         }
-        .calc-hero h1 span { color: #981915; }
+        .calc-hero h1 span { color: #ff6b6b; }
         .calc-hero p {
           font-size: 16px; color: rgba(255,255,255,.6); margin: 0 auto 36px;
-          max-width: 440px; line-height: 1.65;
+          max-width: 420px; line-height: 1.65;
         }
         .calc-hero-stats {
           display: flex; justify-content: center; gap: 0; flex-wrap: wrap;
-          border: 1px solid rgba(255,255,255,.1);
+          border: 1px solid rgba(255,255,255,.1); border-radius: 14px;
           max-width: 380px; margin: 0 auto; overflow: hidden;
           background: rgba(255,255,255,.04);
         }
@@ -668,8 +635,8 @@ export default function CalculadoraPublica() {
           border-right: 1px solid rgba(255,255,255,.08);
         }
         .calc-hero-stat:last-child { border-right: none; }
-        .calc-hero-stat-val { font-family: 'Barlow Condensed', sans-serif; font-size: 28px; font-weight: 700; color: #fff; }
-        .calc-hero-stat-lbl { font-size: 9px; color: rgba(255,255,255,.4); margin-top: 3px; letter-spacing: 1px; text-transform: uppercase; }
+        .calc-hero-stat-val { font-size: 24px; font-weight: 900; color: #fff; }
+        .calc-hero-stat-lbl { font-size: 10px; color: rgba(255,255,255,.4); margin-top: 3px; letter-spacing: .5px; text-transform: uppercase; }
       `}</style>
 
       <div className="calc-root">
@@ -987,14 +954,14 @@ export default function CalculadoraPublica() {
         </div>
 
         {/* SEO content — visível para crawlers, discreto visualmente */}
-        <section style={{ maxWidth: 860, margin: "0 auto", padding: "48px 24px 64px", color: "#5b5e66", fontSize: 14, lineHeight: 1.8, borderTop: "1px solid rgba(110,118,129,.15)" }}>
-          <h2 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 22, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".02em", color: "#151d21", marginBottom: 16 }}>Quanto custa construir uma casa em Steel Frame?</h2>
+        <section style={{ maxWidth: 860, margin: "0 auto", padding: "48px 24px 64px", color: "rgba(255,255,255,.45)", fontSize: 14, lineHeight: 1.8 }}>
+          <h2 style={{ fontSize: 20, fontWeight: 700, color: "rgba(255,255,255,.7)", marginBottom: 16 }}>Quanto custa construir uma casa em Steel Frame?</h2>
           <p>O custo de construção em <strong>Steel Frame</strong> varia entre <strong>R$ 3.000 e R$ 6.000 por m²</strong>, dependendo do padrão de acabamento escolhido. Uma residência de <strong>120 m² no padrão médio</strong> fica em torno de R$ 420.000 a R$ 480.000 completa — incluindo estrutura LSF, fechamentos, cobertura, instalações e mão de obra especializada.</p>
-          <h3 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 16, fontWeight: 700, textTransform: "uppercase", color: "#151d21", margin: "24px 0 8px" }}>Steel Frame vs Alvenaria: qual é mais barato?</h3>
+          <h3 style={{ fontSize: 16, fontWeight: 700, color: "rgba(255,255,255,.6)", margin: "24px 0 8px" }}>Steel Frame vs Alvenaria: qual é mais barato?</h3>
           <p>O Steel Frame costuma ter custo de materiais <strong>10 a 20% superior</strong> à alvenaria convencional, porém o prazo de obra é até <strong>40% menor</strong> — o que reduz o custo financeiro e libera a família para morar mais cedo. Obras em alvenaria de 120 m² levam de 12 a 18 meses; em Steel Frame, de <strong>5 a 8 meses</strong>.</p>
-          <h3 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 16, fontWeight: 700, textTransform: "uppercase", color: "#151d21", margin: "24px 0 8px" }}>O que está incluído no orçamento de Steel Frame?</h3>
+          <h3 style={{ fontSize: 16, fontWeight: 700, color: "rgba(255,255,255,.6)", margin: "24px 0 8px" }}>O que está incluído no orçamento de Steel Frame?</h3>
           <p>Um orçamento completo contempla: <strong>estrutura metálica LSF</strong> (Light Steel Framing), painéis de OSB ou drywall, manta impermeabilizante, fechamentos internos e externos, cobertura com telha shingle ou metálica, esquadrias, instalações hidráulicas e elétricas, e mão de obra especializada. Use nossa calculadora acima para obter uma estimativa personalizada gratuitamente.</p>
-          <h3 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 16, fontWeight: 700, textTransform: "uppercase", color: "#151d21", margin: "24px 0 8px" }}>Perguntas frequentes sobre Steel Frame</h3>
+          <h3 style={{ fontSize: 16, fontWeight: 700, color: "rgba(255,255,255,.6)", margin: "24px 0 8px" }}>Perguntas frequentes sobre Steel Frame</h3>
           <p><strong>Steel Frame é seguro e resistente?</strong> Sim. A estrutura de aço galvanizado tem vida útil superior a 50 anos, suporta ventos fortes e é antissísmica. É o sistema construtivo mais usado nos EUA, Canadá e Austrália.</p>
           <p style={{ marginTop: 12 }}><strong>Posso financiar uma casa em Steel Frame?</strong> Sim. O sistema é aceito pela Caixa Econômica Federal e pelos principais bancos, incluindo financiamento MCMV e crédito imobiliário convencional.</p>
           <p style={{ marginTop: 12 }}><strong>Como receber um orçamento personalizado?</strong> Preencha o simulador acima com a área e o padrão desejado. Nossa equipe entra em contato em até 24h com uma proposta detalhada, sem compromisso.</p>
