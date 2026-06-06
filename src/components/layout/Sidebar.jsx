@@ -43,63 +43,77 @@ export default function Sidebar({ open, onClose }) {
     ? clientes.filter((c) => c.proximo_contato && c.proximo_contato <= hoje && c.status !== "Fechado").length
     : 0;
 
+  const sidebarStyle = {
+    width: 256,
+    height: "100vh",
+    background: "#ffffff",
+    borderRight: "1px solid #e2e8f0",
+    display: "flex",
+    flexDirection: "column",
+    flexShrink: 0,
+    overflow: "hidden",
+    position: "sticky",
+    top: 0,
+  };
+
   return (
-    <aside
-      className={`sidebar-desktop${open ? " open" : ""}`}
-      style={{ width: 220, height: "100vh", background: C.darker, borderRight: `1px solid ${C.border}`, display: "flex", flexDirection: "column", flexShrink: 0, overflow: "hidden" }}
-    >
+    <aside className={`sidebar-desktop${open ? " open" : ""}`} style={sidebarStyle}>
       {/* Logo */}
-      <div style={{ padding: "22px 20px 18px", borderBottom: `1px solid ${C.border}` }}>
+      <div style={{ padding: "24px 20px 20px", borderBottom: "1px solid #e2e8f0" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <img src={LOGO_STICKFRAME} style={{ width: 34, height: 34, borderRadius: 8, flexShrink: 0, objectFit: "contain" }} alt="Logo StickFrame" />
+          <div style={{ width: 34, height: 34, background: "#dc2626", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <img src={LOGO_STICKFRAME} style={{ width: 24, height: 24, objectFit: "contain", filter: "brightness(0) invert(1)" }} alt="Logo" />
+          </div>
           <div>
-            <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700, letterSpacing: 2.5, fontSize: 15, lineHeight: 1 }}>
-              <span style={{ color: C.graphite }}>STICK</span><span style={{ color: C.red }}>FRAME</span>
+            <div style={{ fontFamily: "'Inter', sans-serif", fontWeight: 700, letterSpacing: 1.5, fontSize: 16, lineHeight: 1, color: "#0f172a" }}>
+              STICKFRAME
             </div>
-            <div style={{ color: C.muted, fontSize: 8, letterSpacing: 1.5, marginTop: 1 }}>SISTEMAS CONSTRUTIVOS</div>
+            <div style={{ color: "#94a3b8", fontSize: 9, letterSpacing: 1.5, marginTop: 2 }}>SISTEMAS CONSTRUTIVOS</div>
           </div>
         </div>
       </div>
 
       {/* Nav */}
-      <nav style={{ flex: 1, padding: "12px 0", overflowY: "auto" }}>
+      <nav style={{ flex: 1, padding: "12px 12px", overflowY: "auto" }}>
         {(() => {
-          // Group keys for dividers between logical sections
           const GROUP_BREAKS = new Set(["obras", "financeiro", "calculadora", "configuracoes"]);
           const items = [];
           navFiltro.forEach((n, idx) => {
             if (idx > 0 && GROUP_BREAKS.has(n.key)) {
               items.push(
-                <div key={`div-${n.key}`} style={{ margin: "6px 16px", borderTop: `1px solid ${C.border}`, opacity: 0.5 }} />
+                <div key={`div-${n.key}`} style={{ margin: "6px 4px", borderTop: "1px solid #f1f5f9" }} />
               );
             }
             const isActive = active === n.key;
-            const iconColor = isActive ? C.red : C.muted;
             items.push(
               <button
                 key={n.key}
                 onClick={() => { setActivePage(n.key); onClose?.(); }}
                 style={{
-                  display: "flex", alignItems: "center", gap: 12, width: "100%",
-                  padding: "11px 20px",
-                  background: isActive ? C.red + "22" : "transparent",
-                  borderTop: "none", borderRight: "none", borderBottom: "none",
-                  borderLeft: `3px solid ${isActive ? C.red : "transparent"}`,
+                  display: "flex", alignItems: "center", gap: 10, width: "100%",
+                  padding: "10px 12px",
+                  background: isActive ? "rgba(220,38,38,0.08)" : "transparent",
+                  border: "none",
+                  borderRight: isActive ? "3px solid #dc2626" : "3px solid transparent",
+                  borderRadius: 8,
                   cursor: "pointer",
-                  color: isActive ? C.text : C.muted,
-                  fontSize: 13, fontWeight: isActive ? 600 : 400,
+                  color: isActive ? "#dc2626" : "#64748b",
+                  fontSize: 13.5, fontWeight: isActive ? 600 : 400,
                   textAlign: "left", transition: "all .15s",
+                  fontFamily: "inherit",
                 }}
+                onMouseEnter={e => { if (!isActive) { e.currentTarget.style.background = "rgba(220,38,38,0.06)"; e.currentTarget.style.color = "#dc2626"; } }}
+                onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#64748b"; } }}
               >
-                <NavIcon name={n.icon} color={iconColor} />
+                <NavIcon name={n.icon} size={16} color={isActive ? "#dc2626" : "#94a3b8"} />
                 <span style={{ flex: 1 }}>{n.label}</span>
                 {n.key === "crm" && followupsVencidos > 0 && (
-                  <span style={{ background: C.red, color: "#fff", borderRadius: 10, fontSize: 10, fontWeight: 700, padding: "1px 6px", minWidth: 18, textAlign: "center" }}>
+                  <span style={{ background: "#dc2626", color: "#fff", borderRadius: 100, fontSize: 10, fontWeight: 700, padding: "1px 7px", minWidth: 18, textAlign: "center" }}>
                     {followupsVencidos}
                   </span>
                 )}
                 {n.key === "orcamentos" && preOrcCount > 0 && (
-                  <span style={{ background: "#2e9e5b", color: "#fff", borderRadius: 10, fontSize: 10, fontWeight: 700, padding: "1px 6px", minWidth: 18, textAlign: "center" }}>
+                  <span style={{ background: "#16a34a", color: "#fff", borderRadius: 100, fontSize: 10, fontWeight: 700, padding: "1px 7px", minWidth: 18, textAlign: "center" }}>
                     {preOrcCount}
                   </span>
                 )}
@@ -111,34 +125,27 @@ export default function Sidebar({ open, onClose }) {
       </nav>
 
       {/* User */}
-      <div style={{ padding: "14px 20px", borderTop: `2px solid ${C.border}`, background: C.darker }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-          <div style={{ width: 34, height: 34, borderRadius: "50%", background: perfil.cor + "33", border: `2px solid ${perfil.cor}55`, boxShadow: `0 0 0 3px ${perfil.cor}18`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: perfil.cor, flexShrink: 0 }}>
+      <div style={{ padding: "16px", borderTop: "1px solid #f1f5f9" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", background: "#f8fafc", borderRadius: 12 }}>
+          <div style={{ width: 38, height: 38, borderRadius: "50%", background: perfil.cor + "22", border: `2px solid ${perfil.cor}44`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700, color: perfil.cor, flexShrink: 0 }}>
             {user?.nome?.[0] || "U"}
           </div>
           <div style={{ overflow: "hidden", flex: 1 }}>
-            <div style={{ fontSize: 12, fontWeight: 700, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", color: C.text }}>{user?.nome}</div>
-            <div style={{ fontSize: 10, color: C.muted, marginTop: 1 }}>{user?.cargo}</div>
+            <div style={{ fontSize: 13, fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", color: "#0f172a" }}>{user?.nome}</div>
+            <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 1 }}>{perfil.label}</div>
           </div>
-          <span style={{ background: perfil.cor + "22", color: perfil.cor, border: `1px solid ${perfil.cor}44`, borderRadius: 4, padding: "2px 8px", fontSize: 9, fontWeight: 700, letterSpacing: 0.5, flexShrink: 0 }}>
-            {perfil.label}
-          </span>
+          {confirm ? (
+            <div style={{ fontSize: 11, whiteSpace: "nowrap" }}>
+              <button onClick={logout} style={{ background: "none", border: "none", color: "#dc2626", cursor: "pointer", fontWeight: 700, fontSize: 11 }}>Sair</button>
+              {" · "}
+              <button onClick={() => setConfirm(false)} style={{ background: "none", border: "none", color: "#94a3b8", cursor: "pointer", fontSize: 11 }}>Não</button>
+            </div>
+          ) : (
+            <button onClick={() => setConfirm(true)} title="Sair" style={{ background: "none", border: "none", color: "#94a3b8", cursor: "pointer", padding: 4, borderRadius: 6, lineHeight: 1 }}>
+              <NavIcon name="LogOut" size={15} color="#94a3b8" />
+            </button>
+          )}
         </div>
-        <div style={{ marginBottom: 10, display: "none" }}>
-          {/* role badge moved inline above */}
-        </div>
-        {confirm ? (
-          <div style={{ fontSize: 11, color: C.muted }}>
-            Sair mesmo?{" "}
-            <button onClick={logout} style={{ background: "none", border: "none", color: C.red, cursor: "pointer", fontWeight: 700, fontSize: 11 }}>Sim</button>
-            {" · "}
-            <button onClick={() => setConfirm(false)} style={{ background: "none", border: "none", color: C.muted, cursor: "pointer", fontSize: 11 }}>Não</button>
-          </div>
-        ) : (
-          <button onClick={() => setConfirm(true)} style={{ background: "none", border: `1px solid ${C.border}`, borderRadius: 6, color: C.muted, fontSize: 11, cursor: "pointer", padding: "6px 12px", width: "100%", fontFamily: "inherit", textAlign: "left" }}>
-            ↩ Sair da conta
-          </button>
-        )}
       </div>
     </aside>
   );

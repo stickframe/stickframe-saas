@@ -65,22 +65,22 @@ export default function AppLayout({ children }) {
         <div className="topbar">
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <button className="hamburger" onClick={() => setMenuOpen((v) => !v)}>☰</button>
-            <span className="topbar-page-title">{activeLabel}</span>
+            <span style={{ fontSize: 16, fontWeight: 600, color: "#475569" }}>{activeLabel}</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <PresenceAvatars />
+            <NotificacaoDropdown />
             <button
               onClick={toggleDarkMode}
               title={darkMode ? "Modo claro" : "Modo escuro"}
               style={{
-                background: "none", border: "none", cursor: "pointer",
-                fontSize: 18, lineHeight: 1, padding: "4px 6px",
-                borderRadius: 8, color: "var(--muted)",
+                background: "none", border: "1px solid #e2e8f0", cursor: "pointer",
+                fontSize: 15, lineHeight: 1, padding: "6px 8px",
+                borderRadius: 8, color: "#64748b",
               }}
             >
               {darkMode ? "☀️" : "🌙"}
             </button>
-            <PresenceAvatars />
-            <NotificacaoDropdown />
           </div>
         </div>
         <main className="main-content">
