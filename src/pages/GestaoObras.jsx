@@ -820,7 +820,11 @@ export default function GestaoObras() {
       setObraId(data.id);
       mostrarToast("✅ Obra cadastrada com sucesso!");
     } catch (e) {
-      mostrarToast("❌ Erro ao cadastrar obra. Verifique os dados.");
+      if (e.message?.startsWith("LIMITE_PLANO:")) {
+        mostrarToast("⚠️ " + e.message.replace("LIMITE_PLANO:", ""));
+      } else {
+        mostrarToast("❌ Erro ao cadastrar obra. Verifique os dados.");
+      }
     }
   }
 

@@ -6,6 +6,7 @@ import {
   subscribeObras, subscribeDiario,
 } from "../../services/repositories/obraRepository";
 import { criarNotificacao } from "../../services/repositories/notificacoesRepository";
+import { buscarEmpresa } from "../../services/repositories/empresaRepository";
 import { emailFaseAvancada, emailMedicaoAprovada } from "../../services/emailService";
 
 export const createObraSlice = (set, get) => ({
@@ -40,6 +41,20 @@ export const createObraSlice = (set, get) => ({
   },
 
   addObra: async (obra) => {
+    // Verifica limite do plano free
+    try {
+      const empresa = await buscarEmpresa();
+      if (!empresa?.plano || empresa.plano === "free") {
+        const limite = empresa?.limite_obras ?? 2;
+        const ativas = get().obras.filter((o) => o.status !== "Concluída" && o.status !== "Cancelada").length;
+        if (ativas >= limite) {
+          throw new Error(`LIMITE_PLANO:Seu plano gratuito permite até ${limite} obras ativas. Faça upgrade para o plano Pro para obras ilimitadas.`);
+        }
+      }
+    } catch (err) {
+      if (err.message?.startsWith("LIMITE_PLANO:")) throw err;
+      // se falhar ao buscar empresa, deixa criar normalmente
+    }
     const data = await criarObra(obra);
     set((s) => ({ obras: [...s.obras, data] }));
     get().registrar("obra", "criado", `Obra ${data.nome} cadastrada`, data.id);

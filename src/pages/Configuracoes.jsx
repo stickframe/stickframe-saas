@@ -116,6 +116,8 @@ export default function Configuracoes() {
           site:             data.site             || "",
           logo_url:         data.logo_url         || "",
           whatsapp_alertas: data.whatsapp_alertas || "",
+          plano:            data.plano            || "free",
+          limite_obras:     data.limite_obras      ?? 2,
         });
         if (data.api_key) setApiKey(data.api_key);
         if (data.api_key_created_at) setApiKeyCreatedAt(data.api_key_created_at);
@@ -275,9 +277,26 @@ export default function Configuracoes() {
       )}
 
       {/* Header */}
-      <div style={{ marginBottom: 24 }}>
-        <h2 style={{ fontSize: 22, fontWeight: 800 }}>Configurações</h2>
-        <p style={{ color: C.muted, fontSize: 13, marginTop: 4 }}>Empresa · Perfil · Usuários</p>
+      <div style={{ marginBottom: 24, display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
+        <div>
+          <h2 style={{ fontSize: 22, fontWeight: 800 }}>Configurações</h2>
+          <p style={{ color: C.muted, fontSize: 13, marginTop: 4 }}>Empresa · Perfil · Usuários</p>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, background: empresa.plano === "pro" ? "#e6f9f0" : "#f0f4ff", border: `1px solid ${empresa.plano === "pro" ? "#2e9e5b" : "#4a7af8"}`, borderRadius: 10, padding: "10px 16px" }}>
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, color: empresa.plano === "pro" ? "#1a6b40" : "#2c4a9e" }}>
+              Plano {empresa.plano === "pro" ? "Pro ✓" : "Free"}
+            </div>
+            <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>
+              {empresa.plano === "free" ? `${empresa.limite_obras ?? 2} obras ativas · 1 usuário` : "Obras ilimitadas · usuários ilimitados"}
+            </div>
+          </div>
+          {empresa.plano === "free" && (
+            <a href="mailto:contato@stickframe.com.br?subject=Upgrade Pro" style={{ background: C.red, color: "#fff", borderRadius: 7, padding: "6px 12px", fontSize: 12, fontWeight: 700, textDecoration: "none", whiteSpace: "nowrap" }}>
+              Fazer upgrade
+            </a>
+          )}
+        </div>
       </div>
 
       {/* Tabs */}
