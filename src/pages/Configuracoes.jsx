@@ -16,6 +16,7 @@ import Btn from "../components/ui/Btn";
 import Input from "../components/ui/Input";
 import Select from "../components/ui/Select";
 import WebhookConfig from "../components/configuracoes/WebhookConfig";
+import ModalUpgradePro from "../components/ui/ModalUpgradePro";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 function LabelF({ children, required }) {
@@ -89,6 +90,8 @@ export default function Configuracoes() {
   const [showConvite, setShowConvite] = useState(false);
   const [convite, setConvite] = useState({ email: "", nome: "", perfil: "comercial" });
   const [convidando, setConvidando] = useState(false);
+
+  const [showUpgrade, setShowUpgrade] = useState(false);
 
   // Calculadora white-label
   const [calcToken, setCalcToken] = useState("");
@@ -272,6 +275,7 @@ export default function Configuracoes() {
 
   return (
     <>
+      {showUpgrade && <ModalUpgradePro onClose={() => setShowUpgrade(false)} />}
       {toast && (
         <div style={{
           position: "fixed", bottom: 28, right: 28, zIndex: 999,
@@ -297,9 +301,9 @@ export default function Configuracoes() {
             </div>
           </div>
           {empresa.plano === "free" && (
-            <a href="mailto:contato@stickframe.com.br?subject=Upgrade Pro" style={{ background: C.red, color: "#fff", borderRadius: 7, padding: "6px 12px", fontSize: 12, fontWeight: 700, textDecoration: "none", whiteSpace: "nowrap" }}>
+            <button onClick={() => setShowUpgrade(true)} style={{ background: C.red, color: "#fff", borderRadius: 7, padding: "6px 12px", fontSize: 12, fontWeight: 700, border: "none", cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap" }}>
               Fazer upgrade
-            </a>
+            </button>
           )}
         </div>
       </div>
