@@ -46,8 +46,8 @@ export default function Sidebar({ open, onClose }) {
   const sidebarStyle = {
     width: 256,
     height: "100vh",
-    background: "#ffffff",
-    borderRight: "1px solid #e2e8f0",
+    background: C.surface,
+    borderRight: `1px solid ${C.border}`,
     display: "flex",
     flexDirection: "column",
     flexShrink: 0,
@@ -59,14 +59,14 @@ export default function Sidebar({ open, onClose }) {
   return (
     <aside className={`sidebar-desktop${open ? " open" : ""}`} style={sidebarStyle}>
       {/* Logo */}
-      <div style={{ padding: "24px 20px 20px", borderBottom: "1px solid #e2e8f0" }}>
+      <div style={{ padding: "24px 20px 20px", borderBottom: `1px solid ${C.border}` }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <img src={LOGO_STICKFRAME} style={{ width: 38, height: 38, objectFit: "contain", flexShrink: 0 }} alt="Logo StickFrame" />
           <div>
-            <div style={{ fontFamily: "'Inter', sans-serif", fontWeight: 700, letterSpacing: 1.5, fontSize: 16, lineHeight: 1, color: "#0f172a" }}>
+            <div style={{ fontFamily: "inherit", fontWeight: 700, letterSpacing: 1.5, fontSize: 16, lineHeight: 1, color: C.text }}>
               STICKFRAME
             </div>
-            <div style={{ color: "#94a3b8", fontSize: 9, letterSpacing: 1.5, marginTop: 2 }}>SISTEMAS CONSTRUTIVOS</div>
+            <div style={{ color: C.muted, fontSize: 9, letterSpacing: 1.5, marginTop: 2 }}>SISTEMAS CONSTRUTIVOS</div>
           </div>
         </div>
       </div>
@@ -79,7 +79,7 @@ export default function Sidebar({ open, onClose }) {
           navFiltro.forEach((n, idx) => {
             if (idx > 0 && GROUP_BREAKS.has(n.key)) {
               items.push(
-                <div key={`div-${n.key}`} style={{ margin: "6px 4px", borderTop: "1px solid #f1f5f9" }} />
+                <div key={`div-${n.key}`} style={{ margin: "6px 4px", borderTop: `1px solid ${C.border}` }} />
               );
             }
             const isActive = active === n.key;
@@ -90,28 +90,28 @@ export default function Sidebar({ open, onClose }) {
                 style={{
                   display: "flex", alignItems: "center", gap: 10, width: "100%",
                   padding: "10px 12px",
-                  background: isActive ? "rgba(220,38,38,0.08)" : "transparent",
+                  background: isActive ? `rgba(152,25,21,0.08)` : "transparent",
                   border: "none",
-                  borderRight: isActive ? "3px solid #dc2626" : "3px solid transparent",
+                  borderRight: isActive ? `3px solid ${C.red}` : "3px solid transparent",
                   borderRadius: 8,
                   cursor: "pointer",
-                  color: isActive ? "#dc2626" : "#64748b",
+                  color: isActive ? C.red : C.muted,
                   fontSize: 13.5, fontWeight: isActive ? 600 : 400,
                   textAlign: "left", transition: "all .15s",
                   fontFamily: "inherit",
                 }}
-                onMouseEnter={e => { if (!isActive) { e.currentTarget.style.background = "rgba(220,38,38,0.06)"; e.currentTarget.style.color = "#dc2626"; } }}
-                onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#64748b"; } }}
+                onMouseEnter={e => { if (!isActive) { e.currentTarget.style.background = "rgba(152,25,21,0.06)"; e.currentTarget.style.color = C.red; } }}
+                onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = C.muted; } }}
               >
-                <NavIcon name={n.icon} size={16} color={isActive ? "#dc2626" : "#94a3b8"} />
+                <NavIcon name={n.icon} size={16} color={isActive ? C.red : C.muted} />
                 <span style={{ flex: 1 }}>{n.label}</span>
                 {n.key === "crm" && followupsVencidos > 0 && (
-                  <span style={{ background: "#dc2626", color: "#fff", borderRadius: 100, fontSize: 10, fontWeight: 700, padding: "1px 7px", minWidth: 18, textAlign: "center" }}>
+                  <span style={{ background: C.red, color: "#fff", borderRadius: 100, fontSize: 10, fontWeight: 700, padding: "1px 7px", minWidth: 18, textAlign: "center" }}>
                     {followupsVencidos}
                   </span>
                 )}
                 {n.key === "orcamentos" && preOrcCount > 0 && (
-                  <span style={{ background: "#16a34a", color: "#fff", borderRadius: 100, fontSize: 10, fontWeight: 700, padding: "1px 7px", minWidth: 18, textAlign: "center" }}>
+                  <span style={{ background: C.success, color: "#fff", borderRadius: 100, fontSize: 10, fontWeight: 700, padding: "1px 7px", minWidth: 18, textAlign: "center" }}>
                     {preOrcCount}
                   </span>
                 )}
@@ -123,24 +123,24 @@ export default function Sidebar({ open, onClose }) {
       </nav>
 
       {/* User */}
-      <div style={{ padding: "16px", borderTop: "1px solid #f1f5f9" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", background: "#f8fafc", borderRadius: 12 }}>
+      <div style={{ padding: "16px", borderTop: `1px solid ${C.border}` }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", background: C.darker, borderRadius: 12 }}>
           <div style={{ width: 38, height: 38, borderRadius: "50%", background: perfil.cor + "22", border: `2px solid ${perfil.cor}44`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700, color: perfil.cor, flexShrink: 0 }}>
             {user?.nome?.[0] || "U"}
           </div>
           <div style={{ overflow: "hidden", flex: 1 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", color: "#0f172a" }}>{user?.nome}</div>
-            <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 1 }}>{perfil.label}</div>
+            <div style={{ fontSize: 13, fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", color: C.text }}>{user?.nome}</div>
+            <div style={{ fontSize: 11, color: C.muted, marginTop: 1 }}>{perfil.label}</div>
           </div>
           {confirm ? (
             <div style={{ fontSize: 11, whiteSpace: "nowrap" }}>
-              <button onClick={logout} style={{ background: "none", border: "none", color: "#dc2626", cursor: "pointer", fontWeight: 700, fontSize: 11 }}>Sair</button>
+              <button onClick={logout} style={{ background: "none", border: "none", color: C.red, cursor: "pointer", fontWeight: 700, fontSize: 11 }}>Sair</button>
               {" · "}
-              <button onClick={() => setConfirm(false)} style={{ background: "none", border: "none", color: "#94a3b8", cursor: "pointer", fontSize: 11 }}>Não</button>
+              <button onClick={() => setConfirm(false)} style={{ background: "none", border: "none", color: C.muted, cursor: "pointer", fontSize: 11 }}>Não</button>
             </div>
           ) : (
-            <button onClick={() => setConfirm(true)} title="Sair" style={{ background: "none", border: "none", color: "#94a3b8", cursor: "pointer", padding: 4, borderRadius: 6, lineHeight: 1 }}>
-              <NavIcon name="LogOut" size={15} color="#94a3b8" />
+            <button onClick={() => setConfirm(true)} title="Sair" style={{ background: "none", border: "none", color: C.muted, cursor: "pointer", padding: 4, borderRadius: 6, lineHeight: 1 }}>
+              <NavIcon name="LogOut" size={15} color={C.muted} />
             </button>
           )}
         </div>

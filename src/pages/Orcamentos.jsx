@@ -290,7 +290,7 @@ function gerarPropostaComercialPDF(o) {
     <img src="${LOGO_STICKFRAME}" style="width:54px;height:54px;object-fit:contain;border-radius:8px">
     <div style="text-align:right">
       <div style="font-size:11px;letter-spacing:2px;color:#6b7280;font-weight:700">PROPOSTA COMERCIAL</div>
-      <div style="font-size:22px;font-weight:800;color:#b91c1c">N&ordm; ${numProposta}</div>
+      <div style="font-size:22px;font-weight:800;color:#981915">N&ordm; ${numProposta}</div>
       <div style="font-size:10px;color:#6b7280;margin-top:2px">DATA DE EMISS&Atilde;O</div>
       <div style="font-size:13px;font-weight:700">${dataHoje}</div>
     </div>
@@ -319,7 +319,7 @@ function gerarPropostaComercialPDF(o) {
       <td style="padding:14px;text-align:right;font-size:13px">${o.area * (o.unidades || 1)}</td>
       <td style="padding:14px;text-align:right;font-size:13px">m&sup2;</td>
       <td style="padding:14px;text-align:right;font-size:13px">${fmtBRL(m2)}</td>
-      <td style="padding:14px;text-align:right;font-size:14px;font-weight:800;color:#b91c1c">${fmtBRL(precoVenda)}</td>
+      <td style="padding:14px;text-align:right;font-size:14px;font-weight:800;color:#981915">${fmtBRL(precoVenda)}</td>
     </tr></tbody>
   </table>
   <div style="text-align:right;font-size:13px;color:#374151;margin-bottom:32px"><strong>Valor total do contrato: ${fmtBRL(precoVenda)}</strong></div>
@@ -334,15 +334,15 @@ function gerarPropostaComercialPDF(o) {
     <tbody>
       <tr style="border-bottom:1px solid #e5e7eb">
         <td style="padding:12px 14px;font-weight:700;font-size:13px">Sinal / Mobiliza&ccedil;&atilde;o</td>
-        <td style="padding:12px 14px;font-weight:700;color:#b91c1c;font-size:13px">${fmtBRL(sinal)}</td>
+        <td style="padding:12px 14px;font-weight:700;color:#981915;font-size:13px">${fmtBRL(sinal)}</td>
         <td style="padding:12px 14px;font-size:13px;color:#374151">Pagamento antes do in&iacute;cio da obra, destinado &agrave; compra de materiais e mobiliza&ccedil;&atilde;o da equipe</td>
       </tr>
       <tr style="border-bottom:1px solid #e5e7eb">
         <td style="padding:12px 14px;font-weight:700;font-size:13px">Saldo</td>
-        <td style="padding:12px 14px;font-weight:700;color:#b91c1c;font-size:13px">${fmtBRL(precoVenda - sinal)}</td>
+        <td style="padding:12px 14px;font-weight:700;color:#981915;font-size:13px">${fmtBRL(precoVenda - sinal)}</td>
         <td style="padding:12px 14px;font-size:13px;color:#374151">Conforme medi&ccedil;&otilde;es das etapas de evolu&ccedil;&atilde;o de obra</td>
       </tr>
-      <tr style="background:#b91c1c">
+      <tr style="background:#981915">
         <td style="padding:12px 14px;font-weight:700;color:#fff;font-size:13px">Total do Contrato</td>
         <td style="padding:12px 14px;font-weight:700;color:#fff;font-size:14px">${fmtBRL(precoVenda)}</td>
         <td style="padding:12px 14px;color:#fecaca;font-size:12px">Sinal de ${fmtBRL(sinal)} + saldo conforme medi&ccedil;&otilde;es</td>

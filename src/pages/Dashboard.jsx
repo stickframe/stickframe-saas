@@ -12,6 +12,8 @@ import { emailAlertaInadimplencia } from "../services/emailService";
 import { gerarRelatorioMensal as gerarPdfMensal } from "../services/relatorioService";
 import SmartAlerts from "../components/ui/SmartAlerts";
 import OnboardingWizard from "../components/ui/OnboardingWizard";
+import DashboardKPIs from "../components/Dashboard/DashboardKPIs";
+import ComplianceNR from "../components/Dashboard/ComplianceNR";
 
 // ─── Mini Sparkline ───────────────────────────────────────────────────────────
 function Sparkline({ data = [], color = C.success, height = 32, width = 64 }) {
@@ -784,6 +786,9 @@ ${obrasAndamento.length > 0 ? `
         </div>
       </div>
 
+      {/* Novos KPIs principais com a tipografia Barlow Condensed */}
+      <div style={{ marginBottom: 20 }}><DashboardKPIs /></div>
+
       {/* KPIs */}
       <div className="kpi-grid-6" style={{ marginBottom: 20 }}>
         {kpis.map((k) => <KpiCard key={k.label} {...k} />)}
@@ -1028,21 +1033,21 @@ ${obrasAndamento.length > 0 ? `
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                   {emAlta.map((p) => (
-                    <div key={p.id} style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 8, alignItems: "center", padding: "7px 10px", background: "#fef2f2", borderRadius: 7, borderLeft: "3px solid #dc2626" }}>
+                    <div key={p.id} style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 8, alignItems: "center", padding: "7px 10px", background: C.danger + "0f", borderRadius: 7, borderLeft: "3px solid " + C.danger }}>
                       <div style={{ minWidth: 0 }}>
                         <div style={{ fontSize: 12, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.nome_produto}</div>
                         <div style={{ fontSize: 10, color: C.muted }}>{p.loja || "—"} · R$ {Number(p.preco_anterior).toLocaleString("pt-BR", { minimumFractionDigits: 2 })} → R$ {Number(p.preco_atual).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</div>
                       </div>
-                      <span style={{ fontSize: 12, fontWeight: 800, color: "#dc2626", flexShrink: 0 }}>+{p.var.toFixed(1)}%</span>
+                      <span style={{ fontSize: 12, fontWeight: 800, color: C.danger, flexShrink: 0 }}>+{p.var.toFixed(1)}%</span>
                     </div>
                   ))}
                   {emBaixa.map((p) => (
-                    <div key={p.id} style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 8, alignItems: "center", padding: "7px 10px", background: "#f0fdf4", borderRadius: 7, borderLeft: "3px solid #16a34a" }}>
+                    <div key={p.id} style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 8, alignItems: "center", padding: "7px 10px", background: C.success + "0f", borderRadius: 7, borderLeft: "3px solid " + C.success }}>
                       <div style={{ minWidth: 0 }}>
                         <div style={{ fontSize: 12, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.nome_produto}</div>
                         <div style={{ fontSize: 10, color: C.muted }}>{p.loja || "—"}</div>
                       </div>
-                      <span style={{ fontSize: 12, fontWeight: 800, color: "#16a34a", flexShrink: 0 }}>{p.var.toFixed(1)}%</span>
+                      <span style={{ fontSize: 12, fontWeight: 800, color: C.success, flexShrink: 0 }}>{p.var.toFixed(1)}%</span>
                     </div>
                   ))}
                 </div>
@@ -1054,15 +1059,15 @@ ${obrasAndamento.length > 0 ? `
 
       {/* Alerta de Inadimplência */}
       {inadimplentes.length > 0 && (
-        <div style={{ background: "#fff5f5", border: "1px solid #fca5a5", borderRadius: 12, padding: 20 }}>
+        <div style={{ background: C.danger + "0d", border: `1px solid ${C.danger}33`, borderRadius: 12, padding: 20 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 14 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <span style={{ fontSize: 18 }}><AlertTriangle size={14} /></span>
               <div>
-                <div style={{ fontSize: 13, fontWeight: 800, color: "#991b1b" }}>
+                <div style={{ fontSize: 13, fontWeight: 800, color: C.danger }}>
                   Atenção: {inadimplentes.length} obra{inadimplentes.length > 1 ? "s" : ""} com pagamento atrasado em relação ao progresso
                 </div>
-                <div style={{ fontSize: 11, color: "#b91c1c", marginTop: 2 }}>
+                <div style={{ fontSize: 11, color: C.danger, marginTop: 2 }}>
                   Progresso da obra supera % recebido em mais de 25 pontos
                 </div>
               </div>
@@ -1085,44 +1090,44 @@ ${obrasAndamento.length > 0 ? `
                   toastMsg(`❌ Erro ao enviar: ${e?.message}`);
                 }
               }}
-              style={{ padding: "7px 14px", background: "#fee2e2", border: "1px solid #fca5a5", borderRadius: 8, color: "#991b1b", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap" }}
+              style={{ padding: "7px 14px", background: C.danger + "22", border: `1px solid ${C.danger}44`, color: C.danger, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap" }}
             >
               📧 Enviar alerta por email
             </button>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {inadimplentes.map((o) => (
-              <div key={o.id} style={{ background: "#fff", border: "1px solid #fca5a5", borderRadius: 8, padding: "12px 16px" }}>
+              <div key={o.id} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 8, padding: "12px 16px" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
                   <div>
                     <div style={{ fontSize: 13, fontWeight: 700 }}>{o.nome}</div>
-                    <div style={{ fontSize: 11, color: "#888", marginTop: 2 }}>{o.fase} · {o.status}</div>
+                    <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{o.fase} · {o.status}</div>
                   </div>
-                  <span style={{ background: "#fee2e2", color: "#991b1b", borderRadius: 6, fontSize: 11, fontWeight: 700, padding: "3px 10px" }}>
+                  <span style={{ background: C.danger + "22", color: C.danger, borderRadius: 6, fontSize: 11, fontWeight: 700, padding: "3px 10px" }}>
                     +{o.gapPagamento.toFixed(0)}% gap
                   </span>
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, fontSize: 11 }}>
                   <div>
-                    <div style={{ color: "#888", marginBottom: 2 }}>Progresso</div>
-                    <div style={{ fontWeight: 700, color: "#1a1a1a" }}>{o.progresso || 0}%</div>
+                    <div style={{ color: C.muted, marginBottom: 2 }}>Progresso</div>
+                    <div style={{ fontWeight: 700, color: C.text }}>{o.progresso || 0}%</div>
                   </div>
                   <div>
-                    <div style={{ color: "#888", marginBottom: 2 }}>% Pago</div>
-                    <div style={{ fontWeight: 700, color: "#991b1b" }}>{o.pctRecebido.toFixed(0)}%</div>
+                    <div style={{ color: C.muted, marginBottom: 2 }}>% Pago</div>
+                    <div style={{ fontWeight: 700, color: C.danger }}>{o.pctRecebido.toFixed(0)}%</div>
                   </div>
                   <div>
-                    <div style={{ color: "#888", marginBottom: 2 }}>Recebido</div>
-                    <div style={{ fontWeight: 700, color: "#2e9e5b" }}>{fmt(o.rec)}</div>
+                    <div style={{ color: C.muted, marginBottom: 2 }}>Recebido</div>
+                    <div style={{ fontWeight: 700, color: C.success }}>{fmt(o.rec)}</div>
                   </div>
                 </div>
                 <div style={{ marginTop: 8 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: "#888", marginBottom: 3 }}>
-                    <span>Pago</span><span style={{ color: "#991b1b" }}>Progresso {o.progresso}% / Pago {o.pctRecebido.toFixed(0)}%</span>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: C.muted, marginBottom: 3 }}>
+                    <span>Pago</span><span style={{ color: C.danger }}>Progresso {o.progresso}% / Pago {o.pctRecebido.toFixed(0)}%</span>
                   </div>
-                  <div style={{ position: "relative", height: 8, background: "#fee2e2", borderRadius: 4, overflow: "visible" }}>
-                    <div style={{ height: 8, width: `${Math.min(o.pctRecebido, 100)}%`, background: "#2e9e5b", borderRadius: 4 }} />
-                    <div style={{ position: "absolute", top: 0, left: `${Math.min(o.progresso, 100)}%`, height: 8, width: 2, background: "#991b1b", transform: "translateX(-1px)" }} title={`Progresso: ${o.progresso}%`} />
+                  <div style={{ position: "relative", height: 8, background: C.danger + "22", borderRadius: 4, overflow: "visible" }}>
+                    <div style={{ height: 8, width: `${Math.min(o.pctRecebido, 100)}%`, background: C.success, borderRadius: 4 }} />
+                    <div style={{ position: "absolute", top: 0, left: `${Math.min(o.progresso, 100)}%`, height: 8, width: 2, background: C.danger, transform: "translateX(-1px)" }} title={`Progresso: ${o.progresso}%`} />
                   </div>
                 </div>
               </div>
@@ -1283,6 +1288,9 @@ ${obrasAndamento.length > 0 ? `
 
       {/* ── Operacional: SST + Suprimentos ── */}
       <OperacionalKpis />
+
+      {/* Alertas de Certificação NR (Novo componente) */}
+      <div style={{ marginBottom: 16 }}><ComplianceNR /></div>
 
       {/* Atividade Recente */}
       {historico && historico.length > 0 && (

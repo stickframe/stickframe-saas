@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700&family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Hanken+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
 
 *,
 *::before,
@@ -9,9 +9,9 @@
 }
 
 body {
-  background: #f8fafc;
-  color: #0f172a;
-  font-family: 'Inter', sans-serif;
+  background: #f4f1ec;
+  color: #26231f;
+  font-family: 'Hanken Grotesk', sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -108,19 +108,37 @@ select:focus {
 
 /* ─── CSS Variables ─────────────────────────────────────────────────────── */
 :root {
-  --red:     #dc2626;
-  --red-dk:  #b91c1c;
-  --surface: #ffffff;
-  --bg:      #f8fafc;
-  --border:  #e2e8f0;
-  --text:    #0f172a;
-  --muted:   #64748b;
-  --success: #16a34a;
-  --warning: #d97706;
-  --danger:  #dc2626;
-  --shadow:  0 1px 3px rgba(0,0,0,0.08);
-  --radius:  12px;
-  --radius-lg: 20px;
+  /* Marca */
+  --red:      #981915;
+  --red-dk:   #7d1411;
+  --primary:  #981915;
+
+  /* Neutros quentes */
+  --surface:  #ffffff;
+  --surface-2:#faf8f4;
+  --bg:       #f4f1ec;
+  --bg-hover: #efeae2;
+  --border:   #e7e1d8;
+  --text:     #26231f;
+  --muted:    #8c847a;
+
+  /* Semânticas */
+  --success:  #3f7a4b;
+  --warning:  #b07a1e;
+  --danger:   #a33327;
+
+  /* Acentos auxiliares */
+  --blue:     #3b6ea5;
+  --purple:   #6d557e;
+  --graphite: #2b2b2e;
+
+  /* Forma */
+  --shadow:   0 1px 2px rgba(40,30,20,.06);
+  --radius:   12px;
+  --radius-lg: 16px;
+
+  /* Mono */
+  --mono: 'JetBrains Mono', ui-monospace, monospace;
 }
 
 /* ─── Cards ─────────────────────────────────────────────────────────────── */

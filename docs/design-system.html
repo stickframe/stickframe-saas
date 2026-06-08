@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stick Frame — Sistema de Design</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=DM+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --red:#981915; --red-dk:#6e1210; --graphite:#4b4b4b;
+    --bg:#f5f6f8; --darker:#eaecf0; --surface:#ffffff; --border:#e2e4ea;
+    --text:#1a1a1a; --muted:#6b7280;
+    --success:#2e9e5b; --warning:#b97a00; --danger:#c0392b;
+    --blue:#4a9eff; --purple:#9b59b6;
+    --shadow:0 2px 8px rgba(0,0,0,0.05);
+    --radius:12px; --radius-lg:16px;
+    --mono:'JetBrains Mono',ui-monospace,monospace;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text);
+    -webkit-font-smoothing:antialiased; line-height:1.5;
+  }
+  ::selection{background:var(--red);color:#fff}
+
+  /* ── Layout shell ───────────────────────────────────── */
+  .shell{display:grid;grid-template-columns:248px 1fr;min-height:100vh}
+  .rail{
+    position:sticky;top:0;height:100vh;background:#16181c;color:#fff;
+    display:flex;flex-direction:column;border-right:1px solid #25282e;overflow-y:auto;
+  }
+  .rail-logo{padding:24px 22px 18px;border-bottom:1px solid #25282e}
+  .rail-logo img{height:34px;width:auto;display:block}
+  .rail-kicker{font-size:9px;letter-spacing:2px;color:#7a7f87;margin-top:10px;font-weight:600}
+  .rail nav{padding:14px 0;flex:1}
+  .rail nav a{
+    display:flex;align-items:center;gap:10px;padding:9px 22px;color:#9aa0a8;
+    font-size:13px;text-decoration:none;border-left:3px solid transparent;transition:.15s;
+  }
+  .rail nav a:hover{color:#fff;background:#1e2127}
+  .rail nav a.active{color:#fff;border-left-color:var(--red);background:rgba(152,25,21,.16)}
+  .rail nav .grp{font-size:9px;letter-spacing:2px;color:#565b63;padding:16px 22px 6px;font-weight:700}
+  .rail-foot{padding:16px 22px;border-top:1px solid #25282e;font-size:11px;color:#6b7280}
+  .rail-foot a{color:#c9484a;text-decoration:none;font-weight:600}
+
+  .main{min-width:0}
+  .topbar{
+    background:#1a1a1a;color:#fff;padding:46px 56px 40px;
+    border-bottom:4px solid var(--red);
+  }
+  .topbar .eyebrow{font-size:12px;letter-spacing:3px;color:#9aa0a8;font-weight:600;text-transform:uppercase}
+  .topbar h1{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:54px;letter-spacing:.5px;line-height:1;margin:14px 0 12px}
+  .topbar p{color:#b8bdc4;font-size:15px;max-width:620px}
+  .topbar .meta{display:flex;gap:28px;margin-top:24px;flex-wrap:wrap}
+  .topbar .meta div{font-size:12px;color:#8b9097}
+  .topbar .meta b{display:block;color:#fff;font-size:14px;font-weight:700;margin-top:2px}
+
+  .content{padding:48px 56px 90px;max-width:1080px}
+  section{margin-bottom:64px;scroll-margin-top:24px}
+  .sec-head{margin-bottom:24px;padding-bottom:14px;border-bottom:1px solid var(--border)}
+  .sec-num{font-family:var(--mono);font-size:12px;color:var(--red);font-weight:500}
+  .sec-head h2{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:32px;letter-spacing:.3px;margin-top:2px}
+  .sec-head p{color:var(--muted);font-size:14px;margin-top:6px;max-width:680px}
+
+  .label{font-size:11px;font-weight:700;letter-spacing:1px;color:var(--muted);text-transform:uppercase;margin-bottom:12px}
+
+  .card{background:var(--surface);border-radius:var(--radius-lg);box-shadow:var(--shadow);border:1px solid var(--border);padding:24px}
+  .grid{display:grid;gap:16px}
+
+  /* ── Color swatches ─────────────────────────────────── */
+  .swatches{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
+  .sw{border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);background:#fff}
+  .sw .chip{height:78px;display:flex;align-items:flex-end;padding:8px 10px}
+  .sw .chip .hex{font-family:var(--mono);font-size:11px;font-weight:500;background:rgba(255,255,255,.85);padding:2px 6px;border-radius:4px;color:#1a1a1a}
+  .sw .meta{padding:10px 12px}
+  .sw .meta .nm{font-weight:700;font-size:13px}
+  .sw .meta .tok{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:1px}
+  .sw .meta .use{font-size:11px;color:var(--muted);margin-top:6px;line-height:1.4}
+
+  /* ── Type specimens ─────────────────────────────────── */
+  .type-row{display:grid;grid-template-columns:160px 1fr;gap:24px;padding:18px 0;border-bottom:1px solid var(--border);align-items:baseline}
+  .type-row:last-child{border-bottom:none}
+  .type-meta .nm{font-weight:700;font-size:13px}
+  .type-meta .spec{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:3px}
+  .barlow{font-family:'Barlow Condensed',sans-serif}
+
+  /* ── Token table ────────────────────────────────────── */
+  table.tok{width:100%;border-collapse:collapse;font-size:13px}
+  table.tok th{text-align:left;font-size:11px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:700;padding:8px 14px;border-bottom:1px solid var(--border)}
+  table.tok td{padding:11px 14px;border-bottom:1px solid var(--border)}
+  table.tok tr:last-child td{border-bottom:none}
+  table.tok code{font-family:var(--mono);font-size:12px;background:var(--darker);padding:2px 7px;border-radius:5px}
+
+  /* ── Live component clones (real .sf-* styles) ──────── */
+  .demo{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+  .demo-col{display:flex;flex-direction:column;gap:14px}
+
+  .sf-btn{border:none;border-radius:6px;font-family:inherit;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;white-space:nowrap;transition:opacity .15s}
+  .sf-btn:hover{opacity:.85}
+  .sf-btn-sm{padding:6px 12px;font-size:11px}
+  .sf-btn-md{padding:9px 18px;font-size:13px}
+  .sf-btn-primary{background:var(--red);color:#fff}
+  .sf-btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border)}
+  .sf-btn-success{background:var(--success);color:#fff}
+  .sf-btn-danger{background:var(--danger);color:#fff}
+  .sf-btn-disabled{opacity:.4;cursor:not-allowed}
+
+  .sf-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
+  .b-red{background:#fde8e8;color:var(--red)} .b-green{background:#e6f9f0;color:var(--success)}
+  .b-yellow{background:#fff8e1;color:var(--warning)} .b-gray{background:#f0f1f3;color:var(--muted)}
+  .b-dot{width:6px;height:6px;border-radius:50%;display:inline-block}
+
+  .field{display:flex;flex-direction:column;gap:6px;max-width:320px}
+  .field .flab{font-size:11px;font-weight:700;letter-spacing:1px;color:var(--muted);text-transform:uppercase}
+  .input{font-family:inherit;font-size:13px;padding:9px 12px;border:1px solid var(--border);border-radius:8px;background:#fff;color:var(--text);width:100%}
+  .input:focus{border-color:var(--red);outline:none}
+  .input::placeholder{color:#aab0b8}
+
+  table.sf-table{width:100%;border-collapse:collapse;font-size:13px}
+  table.sf-table th{padding:8px 12px;text-align:left;font-size:11px;font-weight:700;letter-spacing:.5px;color:var(--muted);border-bottom:1px solid var(--border)}
+  table.sf-table td{padding:10px 12px;border-bottom:1px solid var(--border)}
+  table.sf-table tr:last-child td{border-bottom:none}
+  table.sf-table tbody tr:hover td{background:var(--bg)}
+
+  /* KPI card */
+  .kpi{background:#fff;border-radius:16px;box-shadow:var(--shadow);padding:16px 16px;border:1px solid var(--border)}
+  .kpi .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+  .kpi .lab{font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase}
+  .kpi .val{font-size:20px;font-weight:800}
+  .kpi .sub{font-size:10px;color:var(--muted);margin-top:4px}
+
+  /* Modal mock */
+  .modal-mock{background:rgba(0,0,0,.55);border-radius:12px;padding:34px;display:flex;align-items:center;justify-content:center}
+  .modal-box{background:#fff;border:1px solid var(--border);border-radius:12px;padding:22px;width:340px}
+  .modal-box .mh{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+  .modal-box .mh .mt{font-size:15px;font-weight:700}
+  .modal-box .mh .mx{color:var(--muted);font-size:20px;line-height:1;cursor:pointer}
+
+  /* chart mocks */
+  .bars{display:flex;align-items:flex-end;gap:8px;height:96px}
+  .bars .b{flex:1;border-radius:3px 3px 0 0;min-height:4px}
+  .funnel{display:flex;gap:3px;height:12px;border-radius:6px;overflow:hidden;margin-bottom:14px}
+  .funnel div{min-width:6px}
+
+  /* nav demo */
+  .navdemo{background:#16181c;border-radius:12px;overflow:hidden;width:230px;border:1px solid #25282e}
+  .navdemo a{display:flex;align-items:center;gap:10px;padding:11px 18px;color:#9aa0a8;font-size:13px;border-left:3px solid transparent}
+  .navdemo a.active{color:#fff;background:rgba(152,25,21,.16);border-left-color:var(--red);font-weight:600}
+  .navdemo a .ico{width:15px;height:15px;border:1.6px solid currentColor;border-radius:3px;flex-shrink:0}
+  .navdemo a .badge{margin-left:auto;background:var(--red);color:#fff;border-radius:10px;font-size:10px;font-weight:700;padding:1px 7px}
+
+  .perfis{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+  .perfil{border:1px solid var(--border);border-radius:12px;padding:16px;background:#fff}
+  .perfil .av{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;margin-bottom:10px}
+  .perfil .pn{font-weight:700;font-size:14px}
+  .perfil .pp{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.45}
+  .perfil .tag{display:inline-block;font-size:10px;font-weight:700;border-radius:4px;padding:2px 9px;margin-top:10px}
+
+  .note{display:flex;gap:12px;background:#fffaf0;border:1px solid #f1dfb0;border-radius:12px;padding:14px 16px;font-size:13px;color:#7a5b14;margin-top:18px}
+  .note b{color:#6e1210}
+  .note .ni{font-weight:800;color:var(--warning)}
+
+  .principles{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .principle{border-left:3px solid var(--red);padding:4px 0 4px 16px}
+  .principle h4{font-size:14px;font-weight:700;margin-bottom:5px}
+  .principle p{font-size:13px;color:var(--muted)}
+
+  .footer-cta{display:flex;justify-content:space-between;align-items:center;gap:16px;background:#1a1a1a;color:#fff;border-radius:16px;padding:24px 28px;flex-wrap:wrap}
+  .footer-cta b{font-size:16px}
+  .footer-cta p{font-size:13px;color:#9aa0a8;margin-top:2px}
+  .footer-cta a{background:var(--red);color:#fff;text-decoration:none;font-weight:700;font-size:13px;padding:11px 22px;border-radius:8px}
+
+  @media(max-width:920px){
+    .shell{grid-template-columns:1fr}
+    .rail{position:static;height:auto;flex-direction:row;align-items:center;overflow-x:auto}
+    .rail-logo{border-bottom:none;border-right:1px solid #25282e;padding:14px 18px}
+    .rail nav{display:flex;padding:0}
+    .rail nav .grp,.rail-foot{display:none}
+    .rail nav a{white-space:nowrap;border-left:none;border-bottom:3px solid transparent}
+    .rail nav a.active{border-left:none;border-bottom-color:var(--red)}
+    .topbar{padding:34px 26px}
+    .topbar h1{font-size:40px}
+    .content{padding:32px 26px 70px}
+    .type-row{grid-template-columns:1fr;gap:8px}
+    .principles{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- ── Side rail ─────────────────────────────────────── -->
+  <aside class="rail">
+    <div class="rail-logo">
+      <img src="../public/assets/logo-stickframe-branco.png" alt="Stick Frame">
+      <div class="rail-kicker">DESIGN SYSTEM · v2.0</div>
+    </div>
+    <nav>
+      <div class="grp">FUNDAMENTOS</div>
+      <a href="#overview" class="active">Visão geral</a>
+      <a href="#cores">Cores</a>
+      <a href="#tipografia">Tipografia</a>
+      <a href="#tokens">Espaço · Raio · Sombra</a>
+      <div class="grp">COMPONENTES</div>
+      <a href="#botoes">Botões</a>
+      <a href="#badges">Badges & Status</a>
+      <a href="#cards">Cards & KPIs</a>
+      <a href="#forms">Formulários</a>
+      <a href="#tabela">Tabela</a>
+      <a href="#modal">Modal</a>
+      <a href="#graficos">Gráficos</a>
+      <div class="grp">PADRÕES</div>
+      <a href="#navegacao">Navegação & Perfis</a>
+      <a href="#principios">Princípios</a>
+    </nav>
+    <div class="rail-foot">
+      Extraído do código-fonte<br>
+      <a href="Avaliacao UX - Orcamentos.html">→ Avaliação UX: Orçamentos</a>
+    </div>
+  </aside>
+
+  <!-- ── Main ──────────────────────────────────────────── -->
+  <div class="main">
+    <header class="topbar">
+      <div class="eyebrow">Stick Frame · Sistemas Construtivos</div>
+      <h1>Sistema de Design</h1>
+      <p>Documentação visual da linguagem de interface do SaaS de gestão — cores, tipografia, tokens e componentes, extraídos diretamente de <code style="font-family:var(--mono);font-size:12px;color:#e88">globals.css</code> e <code style="font-family:var(--mono);font-size:12px;color:#e88">constants.js</code>.</p>
+      <div class="meta">
+        <div>Tema<b>Claro (light)</b></div>
+        <div>Fontes<b>DM Sans · Barlow Condensed</b></div>
+        <div>Componentes UI<b>Btn · Badge · Input · Select · Modal</b></div>
+        <div>Perfis de acesso<b>4 (RBAC)</b></div>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- OVERVIEW -->
+      <section id="overview">
+        <div class="sec-head">
+          <div class="sec-num">00</div>
+          <h2>Visão geral</h2>
+          <p>O sistema usa um tema claro consistente sobre fundo cinza-frio (<code style="font-family:var(--mono);font-size:12px">#f5f6f8</code>), superfícies brancas com cantos arredondados e sombra suave, e o vermelho da marca como cor de ação única. A tipografia separa display (Barlow Condensed, do logo) do corpo de interface (DM Sans).</p>
+        </div>
+        <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(220px,1fr))">
+          <div class="card"><div class="label" style="margin-bottom:6px">Cor de marca</div><div style="font-family:var(--mono);font-size:22px;font-weight:600;color:var(--red)">#981915</div><div style="font-size:12px;color:var(--muted);margin-top:6px">Vermelho tijolo — ações, ênfase, identidade.</div></div>
+          <div class="card"><div class="label" style="margin-bottom:6px">Raio padrão</div><div style="font-family:var(--mono);font-size:22px;font-weight:600">12 / 16px</div><div style="font-size:12px;color:var(--muted);margin-top:6px">Modais e botões 12 · cards 16 · botões 6.</div></div>
+          <div class="card"><div class="label" style="margin-bottom:6px">Elevação</div><div style="font-family:var(--mono);font-size:15px;font-weight:600">0 2px 8px / .05</div><div style="font-size:12px;color:var(--muted);margin-top:6px">Sombra única e discreta em todos os cards.</div></div>
+          <div class="card"><div class="label" style="margin-bottom:6px">Prefixo de classe</div><div style="font-family:var(--mono);font-size:22px;font-weight:600">.sf-*</div><div style="font-size:12px;color:var(--muted);margin-top:6px">Utilitários compartilhados em globals.css.</div></div>
+        </div>
+      </section>
+
+      <!-- CORES -->
+      <section id="cores">
+        <div class="sec-head">
+          <div class="sec-num">01</div>
+          <h2>Cores</h2>
+          <p>Paleta única definida no objeto <code style="font-family:var(--mono);font-size:12px">C</code>. Vermelho como única cor de ação; neutros frios para estrutura; semânticas para feedback; acentos auxiliares para perfis e categorias.</p>
+        </div>
+
+        <div class="label">Marca</div>
+        <div class="swatches" style="margin-bottom:30px">
+          <div class="sw"><div class="chip" style="background:#981915"><span class="hex">#981915</span></div><div class="meta"><div class="nm">Vermelho</div><div class="tok">--red · C.red</div><div class="use">Botões primários, links, bordas de ênfase, logo.</div></div></div>
+          <div class="sw"><div class="chip" style="background:#6e1210"><span class="hex">#6e1210</span></div><div class="meta"><div class="nm">Vermelho escuro</div><div class="tok">--red-dk · C.redDark</div><div class="use">Estados hover/pressionado e gradientes.</div></div></div>
+          <div class="sw"><div class="chip" style="background:#4b4b4b"><span class="hex">#4b4b4b</span></div><div class="meta"><div class="nm">Grafite</div><div class="tok">C.graphite</div><div class="use">"STICK" no logotipo, títulos sóbrios.</div></div></div>
+        </div>
+
+        <div class="label">Neutros</div>
+        <div class="swatches" style="margin-bottom:30px">
+          <div class="sw"><div class="chip" style="background:#1a1a1a"><span class="hex">#1a1a1a</span></div><div class="meta"><div class="nm">Texto</div><div class="tok">--text · C.text</div></div></div>
+          <div class="sw"><div class="chip" style="background:#6b7280"><span class="hex">#6b7280</span></div><div class="meta"><div class="nm">Muted</div><div class="tok">--muted · C.muted</div></div></div>
+          <div class="sw"><div class="chip" style="background:#e2e4ea"><span class="hex" style="background:rgba(0,0,0,.06)">#e2e4ea</span></div><div class="meta"><div class="nm">Borda</div><div class="tok">--border · C.border</div></div></div>
+          <div class="sw"><div class="chip" style="background:#eaecf0"><span class="hex" style="background:rgba(0,0,0,.06)">#eaecf0</span></div><div class="meta"><div class="nm">Darker</div><div class="tok">C.darker</div></div></div>
+          <div class="sw"><div class="chip" style="background:#f5f6f8;border-bottom:1px solid var(--border)"><span class="hex" style="background:rgba(0,0,0,.06)">#f5f6f8</span></div><div class="meta"><div class="nm">Fundo</div><div class="tok">--bg · C.dark</div></div></div>
+          <div class="sw"><div class="chip" style="background:#fff;border-bottom:1px solid var(--border)"><span class="hex" style="background:rgba(0,0,0,.06)">#ffffff</span></div><div class="meta"><div class="nm">Superfície</div><div class="tok">--surface · C.surface</div></div></div>
+        </div>
+
+        <div class="label">Semânticas</div>
+        <div class="swatches" style="margin-bottom:30px">
+          <div class="sw"><div class="chip" style="background:#2e9e5b"><span class="hex">#2e9e5b</span></div><div class="meta"><div class="nm">Sucesso</div><div class="tok">--success</div><div class="use">Receitas, "Aprovado", no prazo.</div></div></div>
+          <div class="sw"><div class="chip" style="background:#b97a00"><span class="hex">#b97a00</span></div><div class="meta"><div class="nm">Alerta</div><div class="tok">--warning</div><div class="use">Pendências, medições aguardando.</div></div></div>
+          <div class="sw"><div class="chip" style="background:#c0392b"><span class="hex">#c0392b</span></div><div class="meta"><div class="nm">Perigo</div><div class="tok">--danger</div><div class="use">Despesas, atrasos, exclusão.</div></div></div>
+        </div>
+
+        <div class="label">Acentos auxiliares</div>
+        <div class="swatches">
+          <div class="sw"><div class="chip" style="background:#4a9eff"><span class="hex">#4a9eff</span></div><div class="meta"><div class="nm">Azul</div><div class="tok">perfil Engenheiro · CRM</div></div></div>
+          <div class="sw"><div class="chip" style="background:#9b59b6"><span class="hex">#9b59b6</span></div><div class="meta"><div class="nm">Roxo</div><div class="tok">contratos · medições</div></div></div>
+          <div class="sw"><div class="chip" style="background:#c88a00"><span class="hex">#c88a00</span></div><div class="meta"><div class="nm">Âmbar</div><div class="tok">status "Aguardando"</div></div></div>
+        </div>
+        <div class="note"><span class="ni">!</span><div>Há leves inconsistências de origem: o vermelho aparece como <b>#981915</b> (token) e como <b>#b91c1c</b> em PDFs; o âmbar surge como <b>#b97a00</b> e <b>#c88a00</b>. Vale unificar num único arquivo de tokens.</div></div>
+      </section>
+
+      <!-- TIPOGRAFIA -->
+      <section id="tipografia">
+        <div class="sec-head">
+          <div class="sec-num">02</div>
+          <h2>Tipografia</h2>
+          <p>Duas famílias do Google Fonts. <b>Barlow Condensed</b> (700) para display e a marca; <b>DM Sans</b> (400–800) para toda a interface. Rótulos sempre em caixa-alta com <em>tracking</em> de 1px.</p>
+        </div>
+
+        <div class="card" style="margin-bottom:20px">
+          <div style="display:flex;gap:40px;flex-wrap:wrap;align-items:flex-end">
+            <div><div class="label" style="margin-bottom:8px">Display — Barlow Condensed</div><div class="barlow" style="font-size:56px;font-weight:700;line-height:1">Steel Frame</div></div>
+            <div><div class="label" style="margin-bottom:8px">Logotipo</div><div class="barlow" style="font-size:30px;font-weight:700;letter-spacing:2.5px"><span style="color:#4b4b4b">STICK</span><span style="color:#981915">FRAME</span></div></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="type-row">
+            <div class="type-meta"><div class="nm">Título de página</div><div class="spec">DM Sans · 22px · 800</div></div>
+            <div style="font-size:22px;font-weight:800">Visão consolidada do mês</div>
+          </div>
+          <div class="type-row">
+            <div class="type-meta"><div class="nm">Valor destaque</div><div class="spec">DM Sans · 28px · 800</div></div>
+            <div style="font-size:28px;font-weight:800;color:var(--red)">R$ 4.820.000</div>
+          </div>
+          <div class="type-row">
+            <div class="type-meta"><div class="nm">Valor / métrica</div><div class="spec">DM Sans · 20–22px · 800</div></div>
+            <div style="font-size:22px;font-weight:800">12 obras ativas</div>
+          </div>
+          <div class="type-row">
+            <div class="type-meta"><div class="nm">Corpo</div><div class="spec">DM Sans · 13–14px · 400</div></div>
+            <div style="font-size:14px">Sistema construtivo com agilidade, segurança e garantia — texto padrão de interface e descrições.</div>
+          </div>
+          <div class="type-row">
+            <div class="type-meta"><div class="nm">Rótulo</div><div class="spec">DM Sans · 11px · 700 · UPPER · +1px</div></div>
+            <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted)">Padrão construtivo</div>
+          </div>
+          <div class="type-row">
+            <div class="type-meta"><div class="nm">Muted / auxiliar</div><div class="spec">DM Sans · 11–13px · 400</div></div>
+            <div style="font-size:13px;color:var(--muted)">de 18 orçamentos no pipeline</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TOKENS -->
+      <section id="tokens">
+        <div class="sec-head">
+          <div class="sec-num">03</div>
+          <h2>Espaçamento · Raio · Sombra</h2>
+          <p>Layout por <em>flexbox/grid</em> com <code style="font-family:var(--mono);font-size:12px">gap</code> em vez de margens. Espaçamentos recorrentes: 8 / 10 / 12 / 14 / 16 / 20px.</p>
+        </div>
+        <div class="grid" style="grid-template-columns:1.3fr 1fr">
+          <div class="card">
+            <table class="tok">
+              <thead><tr><th>Token</th><th>Valor</th><th>Uso</th></tr></thead>
+              <tbody>
+                <tr><td><code>--radius</code></td><td>12px</td><td>Modais, botões maiores</td></tr>
+                <tr><td><code>--radius-lg</code></td><td>16px</td><td>Cards padrão (.sf-card)</td></tr>
+                <tr><td><code>botão</code></td><td>6px</td><td>.sf-btn</td></tr>
+                <tr><td><code>--shadow</code></td><td>0 2px 8px ·05</td><td>Elevação de card</td></tr>
+                <tr><td><code>--border</code></td><td>1px #e2e4ea</td><td>Divisórias e contornos</td></tr>
+                <tr><td><code>gap</code></td><td>8 · 12 · 14</td><td>col / grid / linhas</td></tr>
+                <tr><td><code>padding card</code></td><td>20–24px</td><td>Interior dos cards</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="demo-col">
+            <div style="display:flex;gap:14px;align-items:flex-end">
+              <div style="text-align:center"><div style="width:64px;height:64px;background:#fff;border:1px solid var(--border);border-radius:6px"></div><div style="font-family:var(--mono);font-size:11px;margin-top:6px;color:var(--muted)">6px</div></div>
+              <div style="text-align:center"><div style="width:64px;height:64px;background:#fff;border:1px solid var(--border);border-radius:12px"></div><div style="font-family:var(--mono);font-size:11px;margin-top:6px;color:var(--muted)">12px</div></div>
+              <div style="text-align:center"><div style="width:64px;height:64px;background:#fff;border:1px solid var(--border);border-radius:16px"></div><div style="font-family:var(--mono);font-size:11px;margin-top:6px;color:var(--muted)">16px</div></div>
+            </div>
+            <div style="display:flex;gap:14px;align-items:flex-end;margin-top:8px">
+              <div style="text-align:center"><div style="width:96px;height:64px;background:#fff;border-radius:12px;box-shadow:var(--shadow)"></div><div style="font-family:var(--mono);font-size:11px;margin-top:8px;color:var(--muted)">--shadow</div></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- BOTOES -->
+      <section id="botoes">
+        <div class="sec-head">
+          <div class="sec-num">04</div>
+          <h2>Botões</h2>
+          <p>Componente <code style="font-family:var(--mono);font-size:12px">Btn.jsx</code> · raio 6px, peso 700, <code style="font-family:var(--mono);font-size:12px">opacity .85</code> no hover. Variantes <em>primary · ghost · success · danger</em> e tamanhos <em>sm · md</em>.</p>
+        </div>
+        <div class="card demo-col">
+          <div>
+            <div class="label">Variantes (md)</div>
+            <div class="demo">
+              <button class="sf-btn sf-btn-md sf-btn-primary">Gerar orçamento</button>
+              <button class="sf-btn sf-btn-md sf-btn-ghost">Cancelar</button>
+              <button class="sf-btn sf-btn-md sf-btn-success">✓ Aprovar</button>
+              <button class="sf-btn sf-btn-md sf-btn-danger">Excluir</button>
+              <button class="sf-btn sf-btn-md sf-btn-primary sf-btn-disabled">Desabilitado</button>
+            </div>
+          </div>
+          <div>
+            <div class="label">Tamanho pequeno (sm)</div>
+            <div class="demo">
+              <button class="sf-btn sf-btn-sm sf-btn-primary">+ Novo</button>
+              <button class="sf-btn sf-btn-sm sf-btn-ghost">Editar</button>
+              <button class="sf-btn sf-btn-sm sf-btn-success">Enviar</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- BADGES -->
+      <section id="badges">
+        <div class="sec-head">
+          <div class="sec-num">05</div>
+          <h2>Badges & Status</h2>
+          <p>Pílulas de fundo claro + texto tonal (<code style="font-family:var(--mono);font-size:12px">.sf-badge</code>). Os status de negócio têm cores fixas e reaparecem como ponto colorido em listas.</p>
+        </div>
+        <div class="grid" style="grid-template-columns:1fr 1fr">
+          <div class="card">
+            <div class="label">Badges utilitárias</div>
+            <div class="demo">
+              <span class="sf-badge b-red">Vermelho</span>
+              <span class="sf-badge b-green">Verde</span>
+              <span class="sf-badge b-yellow">Âmbar</span>
+              <span class="sf-badge b-gray">Cinza</span>
+            </div>
+          </div>
+          <div class="card">
+            <div class="label">Status de orçamento</div>
+            <div class="demo">
+              <span class="sf-badge" style="background:#fff4e0;color:#c88a00"><span class="b-dot" style="background:#c88a00"></span>Aguardando resposta</span>
+              <span class="sf-badge" style="background:#e9f2ff;color:#4a9eff"><span class="b-dot" style="background:#4a9eff"></span>Em revisão</span>
+              <span class="sf-badge" style="background:#e6f9f0;color:#2e9e5b"><span class="b-dot" style="background:#2e9e5b"></span>Aprovado</span>
+              <span class="sf-badge" style="background:#fde8e8;color:#c0392b"><span class="b-dot" style="background:#c0392b"></span>Recusado</span>
+            </div>
+            <div class="label" style="margin-top:18px">Fases de obra</div>
+            <div class="demo">
+              <span class="sf-badge b-gray">Projeto executivo</span>
+              <span class="sf-badge b-gray">Fundação</span>
+              <span class="sf-badge b-red">Estrutura Steel Frame</span>
+              <span class="sf-badge b-gray">Acabamento</span>
+              <span class="sf-badge b-green">Entrega</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CARDS -->
+      <section id="cards">
+        <div class="sec-head">
+          <div class="sec-num">06</div>
+          <h2>Cards & KPIs</h2>
+          <p>Superfície branca, raio 16, sombra suave. Variações por contexto: borda superior colorida (KPI), borda esquerda colorida (alerta) e card simples.</p>
+        </div>
+        <div class="label">KPI — borda superior por acento</div>
+        <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(180px,1fr));margin-bottom:24px">
+          <div class="kpi" style="border-top:3px solid #4a9eff"><div class="top"><span class="lab">Clientes</span><span style="color:#4a9eff;font-weight:700">◈</span></div><div class="val" style="color:#4a9eff">38</div><div class="sub">12 fechados</div></div>
+          <div class="kpi" style="border-top:3px solid #b97a00"><div class="top"><span class="lab">Orçamentos</span><span style="color:#b97a00;font-weight:700">◻</span></div><div class="val" style="color:#b97a00">18</div><div class="sub">pipeline R$ 6,2M</div></div>
+          <div class="kpi" style="border-top:3px solid #981915"><div class="top"><span class="lab">Obras ativas</span><span style="color:#981915;font-weight:700">◆</span></div><div class="val" style="color:#981915">12</div><div class="sub">de 27 total</div></div>
+          <div class="kpi" style="border-top:3px solid #2e9e5b"><div class="top"><span class="lab">Margem</span><span style="color:#2e9e5b;font-weight:700">%</span></div><div class="val" style="color:#2e9e5b">23,4%</div><div class="sub">saldo R$ 1,1M</div></div>
+        </div>
+        <div class="grid" style="grid-template-columns:1fr 1fr 1fr">
+          <div class="card" style="border-left:4px solid var(--warning);border-radius:16px"><div class="lab" style="font-size:10px;letter-spacing:1px;color:var(--muted);text-transform:uppercase">Medições pendentes</div><div style="font-size:20px;font-weight:800;color:var(--warning);margin-top:6px">3</div><div style="font-size:11px;color:var(--muted);margin-top:2px">R$ 240k aguardando</div></div>
+          <div class="card" style="border-left:4px solid var(--danger);border-radius:16px"><div class="lab" style="font-size:10px;letter-spacing:1px;color:var(--muted);text-transform:uppercase">Obras atrasadas</div><div style="font-size:20px;font-weight:800;color:var(--danger);margin-top:6px">2</div><div style="font-size:11px;color:var(--muted);margin-top:2px">10 no prazo</div></div>
+          <div class="card" style="border-radius:16px"><div class="lab" style="font-size:10px;letter-spacing:1px;color:var(--muted);text-transform:uppercase">Conversão CRM</div><div style="font-size:20px;font-weight:800;color:#4a9eff;margin-top:6px">32%</div><div style="font-size:11px;color:var(--muted);margin-top:2px">12 de 38 clientes</div></div>
+        </div>
+      </section>
+
+      <!-- FORMS -->
+      <section id="forms">
+        <div class="sec-head">
+          <div class="sec-num">07</div>
+          <h2>Formulários</h2>
+          <p>Campos com rótulo em caixa-alta acima, contorno fino e foco vermelho. Componentes <code style="font-family:var(--mono);font-size:12px">Input.jsx</code> e <code style="font-family:var(--mono);font-size:12px">Select.jsx</code>.</p>
+        </div>
+        <div class="card">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;max-width:560px">
+            <div class="field" style="max-width:none"><span class="flab">Área (m²) <span style="color:var(--danger)">*</span></span><input class="input" value="148" type="text"></div>
+            <div class="field" style="max-width:none"><span class="flab">Unidades</span><input class="input" value="1" type="text"></div>
+            <div class="field" style="max-width:none"><span class="flab">Padrão construtivo <span style="color:var(--danger)">*</span></span><select class="input"><option>Padrão — R$ 3.500/m²</option><option>Econômico — R$ 2.800/m²</option><option>Alto Padrão — R$ 4.800/m²</option></select></div>
+            <div class="field" style="max-width:none"><span class="flab">Status</span><select class="input"><option>Aguardando resposta</option></select></div>
+          </div>
+          <div class="note" style="margin-top:20px"><span class="ni">↳</span><div>Estado de foco usa <b>border-color:#981915</b> sem anel — clique num campo acima para ver.</div></div>
+        </div>
+      </section>
+
+      <!-- TABELA -->
+      <section id="tabela">
+        <div class="sec-head">
+          <div class="sec-num">08</div>
+          <h2>Tabela</h2>
+          <p>Cabeçalho em rótulo cinza, linhas com divisória fina e <em>hover</em> sobre fundo. Padrão para listas densas (orçamentos, rentabilidade, lançamentos).</p>
+        </div>
+        <div class="card" style="padding:8px 0">
+          <table class="sf-table">
+            <thead><tr><th style="padding-left:20px">Ref</th><th>Cliente</th><th>Padrão</th><th style="text-align:right">Valor</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td style="padding-left:20px;font-weight:700">ORC-2025-014</td><td>Construtora Aurora</td><td>Alto Padrão</td><td style="text-align:right;font-weight:700">R$ 710.400</td><td><span class="sf-badge" style="background:#e6f9f0;color:#2e9e5b">Aprovado</span></td></tr>
+              <tr><td style="padding-left:20px;font-weight:700">ORC-2025-013</td><td>Marina &amp; Paulo</td><td>Padrão</td><td style="text-align:right;font-weight:700">R$ 518.000</td><td><span class="sf-badge" style="background:#fff4e0;color:#c88a00">Aguardando</span></td></tr>
+              <tr><td style="padding-left:20px;font-weight:700">ORC-2025-012</td><td>Loteamento Vale Verde</td><td>Econômico</td><td style="text-align:right;font-weight:700">R$ 1.344.000</td><td><span class="sf-badge" style="background:#e9f2ff;color:#4a9eff">Em revisão</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- MODAL -->
+      <section id="modal">
+        <div class="sec-head">
+          <div class="sec-num">09</div>
+          <h2>Modal</h2>
+          <p><code style="font-family:var(--mono);font-size:12px">Modal.jsx</code> — backdrop escuro a 55–65%, caixa branca centralizada, cabeçalho com título e "×", rodapé de ações alinhado à direita.</p>
+        </div>
+        <div class="modal-mock">
+          <div class="modal-box">
+            <div class="mh"><span class="mt">Novo orçamento</span><span class="mx">×</span></div>
+            <div class="field" style="max-width:none;margin-bottom:14px"><span class="flab">Cliente <span style="color:var(--danger)">*</span></span><select class="input"><option>Marina &amp; Paulo</option></select></div>
+            <div style="background:var(--darker);border:1px solid #98191533;border-radius:10px;padding:14px;margin-bottom:16px">
+              <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:var(--red);margin-bottom:10px">PRÉVIA DO ORÇAMENTO</div>
+              <div style="display:flex;justify-content:space-between;align-items:flex-end"><span style="font-size:12px;color:var(--muted)">148 m² × R$ 3.500/m²</span><span style="font-size:16px;font-weight:800;color:var(--red)">R$ 518.000</span></div>
+            </div>
+            <div style="display:flex;gap:8px;justify-content:flex-end;border-top:1px solid var(--border);padding-top:14px">
+              <button class="sf-btn sf-btn-md sf-btn-ghost">Cancelar</button>
+              <button class="sf-btn sf-btn-md sf-btn-primary">Gerar</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- GRAFICOS -->
+      <section id="graficos">
+        <div class="sec-head">
+          <div class="sec-num">10</div>
+          <h2>Gráficos</h2>
+          <p>Visualizações em SVG/divs feitas à mão — sem biblioteca de charting. Três padrões: barras agrupadas, linha com área e a barra de funil do VGV.</p>
+        </div>
+        <div class="grid" style="grid-template-columns:1fr 1fr 1fr">
+          <div class="card">
+            <div class="label">Receita vs despesa</div>
+            <div class="bars">
+              <div style="flex:1;display:flex;gap:3px;align-items:flex-end;height:100%"><div class="b" style="background:#2e9e5b;height:80%;flex:1"></div><div class="b" style="background:#981915;height:50%;flex:1"></div></div>
+              <div style="flex:1;display:flex;gap:3px;align-items:flex-end;height:100%"><div class="b" style="background:#2e9e5b;height:60%;flex:1"></div><div class="b" style="background:#981915;height:72%;flex:1"></div></div>
+              <div style="flex:1;display:flex;gap:3px;align-items:flex-end;height:100%"><div class="b" style="background:#2e9e5b;height:95%;flex:1"></div><div class="b" style="background:#981915;height:40%;flex:1"></div></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="label">Evolução de receitas</div>
+            <svg viewBox="0 0 100 70" preserveAspectRatio="none" style="width:100%;height:96px;overflow:visible">
+              <defs><linearGradient id="lg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#2e9e5b" stop-opacity=".35"/><stop offset="100%" stop-color="#2e9e5b" stop-opacity="0"/></linearGradient></defs>
+              <path d="M 0,52 L 25,40 L 50,46 L 75,22 L 100,16 L 100,70 L 0,70 Z" fill="url(#lg)"/>
+              <polyline points="0,52 25,40 50,46 75,22 100,16" fill="none" stroke="#2e9e5b" stroke-width="2" stroke-linejoin="round"/>
+              <circle cx="0" cy="52" r="3" fill="#2e9e5b"/><circle cx="25" cy="40" r="3" fill="#2e9e5b"/><circle cx="50" cy="46" r="3" fill="#2e9e5b"/><circle cx="75" cy="22" r="3" fill="#2e9e5b"/><circle cx="100" cy="16" r="3" fill="#2e9e5b"/>
+            </svg>
+          </div>
+          <div class="card">
+            <div class="label">Funil VGV</div>
+            <div class="funnel">
+              <div style="background:#4a9eff;width:30%"></div>
+              <div style="background:#b97a00;width:24%"></div>
+              <div style="background:#9b59b6;width:18%"></div>
+              <div style="background:#981915;width:16%"></div>
+              <div style="background:#2e9e5b;width:12%"></div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:5px;font-size:11px;color:var(--muted)">
+              <div style="display:flex;justify-content:space-between"><span><span class="b-dot" style="background:#4a9eff;margin-right:6px"></span>Pipeline CRM</span><b style="color:var(--text)">R$ 2,1M</b></div>
+              <div style="display:flex;justify-content:space-between"><span><span class="b-dot" style="background:#981915;margin-right:6px"></span>Obras</span><b style="color:var(--text)">R$ 1,4M</b></div>
+              <div style="display:flex;justify-content:space-between"><span><span class="b-dot" style="background:#2e9e5b;margin-right:6px"></span>Concluídas</span><b style="color:var(--text)">R$ 820k</b></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- NAV -->
+      <section id="navegacao">
+        <div class="sec-head">
+          <div class="sec-num">11</div>
+          <h2>Navegação & Perfis</h2>
+          <p>Sidebar escura (220px) sobre <code style="font-family:var(--mono);font-size:12px">C.darker</code>. Item ativo: faixa vermelha à esquerda + fundo vermelho 10%. Badges numéricos para pendências. O menu é filtrado por perfil (RBAC).</p>
+        </div>
+        <div class="grid" style="grid-template-columns:auto 1fr;align-items:start">
+          <div class="navdemo">
+            <a class="active"><span class="ico"></span>Dashboard</a>
+            <a><span class="ico"></span>CRM / Clientes<span class="badge">3</span></a>
+            <a><span class="ico"></span>Orçamentos<span class="badge" style="background:#2e9e5b">2</span></a>
+            <a><span class="ico"></span>Gestão de Obras</a>
+            <a><span class="ico"></span>Financeiro</a>
+          </div>
+          <div>
+            <div class="label">Perfis de acesso (PERFIS)</div>
+            <div class="perfis">
+              <div class="perfil"><div class="av" style="background:#98191533;border:2px solid #981915;color:#981915">D</div><div class="pn">Diretor</div><div class="pp">Acesso total — todos os 23 módulos.</div><span class="tag" style="background:#98191522;color:#981915;border:1px solid #98191544">Diretor</span></div>
+              <div class="perfil"><div class="av" style="background:#b97a0033;border:2px solid #b97a00;color:#b97a00">C</div><div class="pn">Comercial</div><div class="pp">Dashboard, Agenda, CRM, Orçamentos.</div><span class="tag" style="background:#b97a0022;color:#b97a00;border:1px solid #b97a0044">Comercial</span></div>
+              <div class="perfil"><div class="av" style="background:#4a9eff33;border:2px solid #4a9eff;color:#4a9eff">E</div><div class="pn">Engenheiro</div><div class="pp">Obras, cronograma, medições, BIM, quantitativos.</div><span class="tag" style="background:#4a9eff22;color:#4a9eff;border:1px solid #4a9eff44">Engenheiro</span></div>
+              <div class="perfil"><div class="av" style="background:#2e9e5b33;border:2px solid #2e9e5b;color:#2e9e5b">F</div><div class="pn">Financeiro</div><div class="pp">Financeiro, contratos, histórico, preços.</div><span class="tag" style="background:#2e9e5b22;color:#2e9e5b;border:1px solid #2e9e5b44">Financeiro</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PRINCIPIOS -->
+      <section id="principios">
+        <div class="sec-head">
+          <div class="sec-num">12</div>
+          <h2>Princípios</h2>
+          <p>Regras implícitas observadas no código — descrevem o "porquê" por trás dos componentes.</p>
+        </div>
+        <div class="card">
+          <div class="principles">
+            <div class="principle"><h4>Vermelho é só ação</h4><p>O vermelho da marca aparece em botões primários, item ativo e ênfase. Não é usado como cor de fundo ampla na interface.</p></div>
+            <div class="principle"><h4>Densidade com respiro</h4><p>Fontes pequenas (11–14px) e <em>gaps</em> consistentes de 8–16px permitem muita informação sem ruído visual.</p></div>
+            <div class="principle"><h4>Cor carrega significado</h4><p>Verde = receita/aprovado, vermelho = despesa/perigo, âmbar = pendência. A mesma cor reaparece em badges, gráficos e bordas.</p></div>
+            <div class="principle"><h4>Acento contextual no card</h4><p>A borda colorida (topo ou esquerda) classifica o card num relance, mantendo a superfície branca neutra.</p></div>
+            <div class="principle"><h4>Caixa-alta para rótulos</h4><p>Todo rótulo de campo/seção é 11px, 700, uppercase, tracking 1px — cria hierarquia sem cor.</p></div>
+            <div class="principle"><h4>Mobile-aware</h4><p>Grids colapsam para 1 coluna ≤768px (PWA de canteiro). Ainda há grids inline a migrar para utilitários.</p></div>
+          </div>
+        </div>
+      </section>
+
+      <div class="footer-cta">
+        <div>
+          <b>Próximo: avaliação de UX</b>
+          <p>Análise heurística do fluxo de Orçamento → Proposta → Obra.</p>
+        </div>
+        <a href="Avaliacao UX - Orcamentos.html">Ver avaliação →</a>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  // Realça o item de nav conforme a rolagem
+  const links = [...document.querySelectorAll('.rail nav a')];
+  const map = new Map(links.map(a => [a.getAttribute('href').slice(1), a]));
+  const obs = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){
+        links.forEach(l=>l.classList.remove('active'));
+        const a = map.get(e.target.id); if(a) a.classList.add('active');
+      }
+    });
+  },{rootMargin:'-20% 0px -70% 0px'});
+  document.querySelectorAll('section[id]').forEach(s=>obs.observe(s));
+</script>
+</body>
+</html>

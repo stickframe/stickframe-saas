@@ -1,31 +1,32 @@
-// ─── PALETA (re-ancorada na marca: tijolo + grafite, neutros quentes) ────────
-// Mesmas CHAVES de antes — nada quebra. Só os valores mudaram + cores de dados novas.
+/**
+ * Stick Frame — Global Style Constants
+ * 
+ * Objeto `C` contendo as variáveis semânticas de cor.
+ * Utilizado para manter consistência em componentes que dependem
+ * de cores via prop `style` (gráficos, SVGs, etc).
+ */
 export const C = {
-  red:      "#981915",   // vermelho tijolo da marca (era #dc2626 genérico)
-  redDark:  "#7d1411",
-  graphite: "#2b2b2e",   // grafite (sidebar / tinta forte)
-  dark:     "#faf8f4",   // superfície alternativa quente (era slate frio)
-  darker:   "#efeae2",   // fundo interno suave
-  surface:  "#ffffff",
-  border:   "#e7e1d8",   // borda quente (era #e2e8f0 frio)
-  shadow:   "0 1px 2px rgba(40,30,20,0.06)",
-  text:     "#26231f",   // tinta quente quase-preta (era slate #0f172a)
-  muted:    "#8c847a",   // texto terciário / labels
-  success:  "#3f7a4b",   // sálvia
-  warning:  "#b07a1e",   // ocre
-  danger:   "#a33327",   // argila/vermelho de alerta
-  card:     "#ffffff",
-  bg:       "#f4f1ec",   // fundo da aplicação (osso/concreto claro)
+  // Marca
+  red: '#981915',
+  redDark: '#7d1411',
+  brickSoft: '#f3e7e5',
 
-  // ── Cores de dados (escala categórica sóbria) — chaves NOVAS, opcionais ──
-  steel:    "#3b6ea5",   // aço (azul) — antes muitos usavam "#4a9eff"
-  ochre:    "#c0892d",
-  sage:     "#4f7d57",
-  plum:     "#6d557e",
-  clay:     "#b8624a",
-  brickSoft:"#f3e7e5",   // fundo suave do tijolo (para chips/realces)
+  // Neutros Quentes
+  surface: '#ffffff',
+  surface2: '#faf8f4',
+  bg: '#f4f1ec',
+  border: '#e7e1d8',
+  text: '#26231f',
+  muted: '#8c847a',
+  graphite: '#2b2b2e',
+
+  // Semânticas e Acentos de Dados
+  success: '#3f7a4b',
+  warning: '#b07a1e',
+  danger: '#a33327',
+  steel: '#3b6ea5',
+  purple: '#6d557e'
 };
-
 
 // ─── NAV ─────────────────────────────────────────────────────────────────────
 export const NAV = [
@@ -67,19 +68,16 @@ export const PERFIS = {
   comercial: {
     label: "Comercial",
     cor: C.warning,
-    // Foco em prospecção: sem acesso a financeiro global, obras, medições
     paginas: ["dashboard","agenda","crm","orcamentos","configuracoes"],
   },
   engenheiro: {
     label: "Engenheiro",
     cor: C.steel,
-    // Foco em entrega: sem CRM, financeiro global ou pipeline comercial
     paginas: ["dashboard","obras","cronograma","medicoes","diario","vistorias","bim","quantitativos","fornecedores","monitor_precos","calculadora","orcamento_tecnico","equipamentos","checklists","equipe","sst","suprimentos","historico","inteligencia","configuracoes"],
   },
   financeiro: {
     label: "Financeiro",
     cor: C.success,
-    // Foco em números: sem obras operacionais ou CRM
     paginas: ["dashboard","financeiro","contratos","historico","monitor_precos","configuracoes"],
   },
 };
@@ -109,7 +107,7 @@ export const COR_TIPO_EVENTO = {
   "Reunião com cliente":    C.warning,
   "Vistoria":               C.steel,
   "Entrega de documentos":  C.success,
-  "Medição":                C.plum,
+  "Medição":                C.purple,
   "Outro":                  C.muted,
 };
 

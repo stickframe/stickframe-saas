@@ -31,9 +31,9 @@ const PLANOS = [
     preco: "R$ 297",
     periodo: "por mês",
     desc: "Para construtoras em crescimento",
-    cor: "#dc2626",
-    border: "#dc2626",
-    bg: "rgba(220,38,38,.08)",
+    cor: "#981915",
+    border: "#981915",
+    bg: "rgba(152,25,21,.08)",
     items: [
       "Obras ilimitadas",
       "Até 10 usuários",
@@ -57,9 +57,9 @@ const PLANOS = [
     preco: "Sob consulta",
     periodo: "",
     desc: "Para grandes construtoras",
-    cor: "#a78bfa",
-    border: "rgba(167,139,250,.3)",
-    bg: "rgba(167,139,250,.05)",
+    cor: "#6d557e",
+    border: "rgba(109,85,126,.3)",
+    bg: "rgba(109,85,126,.05)",
     items: [
       "Tudo do Pro",
       "Usuários ilimitados",
@@ -80,24 +80,24 @@ export default function Pricing() {
   const navigate = useNavigate();
 
   return (
-    <div style={{ minHeight: "100vh", background: "#0e0505", fontFamily: "'DM Sans', sans-serif", color: "#fff" }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700;800;900&display=swap');`}</style>
+    <div style={{ minHeight: "100vh", background: "#1c1b20", fontFamily: "'Hanken Grotesk', sans-serif", color: "#ece7df" }}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap');`}</style>
 
       {/* Header */}
       <div style={{ padding: "20px 32px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid rgba(255,255,255,.08)" }}>
         <a href="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
           <img src={LOGO} alt="StickFrame" style={{ height: 36, width: 36, borderRadius: 8, objectFit: "cover" }} />
-          <span style={{ fontWeight: 900, letterSpacing: 2, fontSize: 15, color: "#fff" }}>STICK<span style={{ color: "#dc2626" }}>FRAME</span></span>
+          <span style={{ fontWeight: 900, letterSpacing: 2, fontSize: 15, color: "#fff" }}>STICK<span style={{ color: "#981915" }}>FRAME</span></span>
         </a>
         <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
           <a href="/login" style={{ color: "rgba(255,255,255,.6)", fontSize: 13, fontWeight: 600, textDecoration: "none" }}>Entrar</a>
-          <a href="/cadastro" style={{ background: "#dc2626", color: "#fff", borderRadius: 8, padding: "8px 16px", fontSize: 13, fontWeight: 700, textDecoration: "none" }}>Criar conta grátis</a>
+          <a href="/cadastro" style={{ background: "#981915", color: "#fff", borderRadius: 8, padding: "8px 16px", fontSize: 13, fontWeight: 700, textDecoration: "none" }}>Criar conta grátis</a>
         </div>
       </div>
 
       {/* Hero */}
       <div style={{ textAlign: "center", padding: "56px 24px 40px" }}>
-        <div style={{ display: "inline-block", background: "rgba(220,38,38,.15)", border: "1px solid rgba(220,38,38,.3)", borderRadius: 20, padding: "4px 14px", fontSize: 11, fontWeight: 700, color: "#dc2626", letterSpacing: 1.5, marginBottom: 20, textTransform: "uppercase" }}>
+        <div style={{ display: "inline-block", background: "rgba(152,25,21,.15)", border: "1px solid rgba(152,25,21,.3)", borderRadius: 20, padding: "4px 14px", fontSize: 11, fontWeight: 700, color: "#981915", letterSpacing: 1.5, marginBottom: 20, textTransform: "uppercase" }}>
           Planos e Preços
         </div>
         <h1 style={{ fontSize: "clamp(28px,5vw,44px)", fontWeight: 900, color: "#fff", margin: "0 0 16px", letterSpacing: -1 }}>
@@ -119,7 +119,7 @@ export default function Pricing() {
             position: "relative",
           }}>
             {p.destaque && (
-              <div style={{ position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)", background: "#dc2626", color: "#fff", borderRadius: 20, padding: "3px 14px", fontSize: 10, fontWeight: 800, letterSpacing: 1.5, whiteSpace: "nowrap" }}>
+              <div style={{ position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)", background: "#981915", color: "#fff", borderRadius: 20, padding: "3px 14px", fontSize: 10, fontWeight: 800, letterSpacing: 1.5, whiteSpace: "nowrap" }}>
                 MAIS POPULAR
               </div>
             )}
@@ -136,9 +136,9 @@ export default function Pricing() {
               onClick={!p.ctaHref ? (e) => { e.preventDefault(); navigate("/cadastro"); } : undefined}
               style={{
                 display: "block", textAlign: "center", padding: "12px 0",
-                background: p.destaque ? "#dc2626" : "transparent",
+                background: p.destaque ? "#981915" : "transparent",
                 color: p.destaque ? "#fff" : p.cor,
-                border: `1.5px solid ${p.destaque ? "#dc2626" : p.border}`,
+                border: `1.5px solid ${p.destaque ? "#981915" : p.border}`,
                 borderRadius: 8, fontWeight: 800, fontSize: 14,
                 textDecoration: "none", marginBottom: 24,
               }}
@@ -149,7 +149,7 @@ export default function Pricing() {
             <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
               {p.items.map((item) => (
                 <div key={item} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13, color: "rgba(255,255,255,.75)" }}>
-                  <span style={{ color: "#22c55e", fontSize: 14, flexShrink: 0 }}>✓</span>
+                  <span style={{ color: "#3f7a4b", fontSize: 14, flexShrink: 0 }}>✓</span>
                   {item}
                 </div>
               ))}

@@ -67,7 +67,7 @@ export default function AppLayout({ children }) {
         <div className="topbar">
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <button className="hamburger" onClick={() => setMenuOpen((v) => !v)}>☰</button>
-            <span style={{ fontSize: 16, fontWeight: 600, color: "#475569" }}>{activeLabel}</span>
+            <span style={{ fontSize: 16, fontWeight: 600, color: C.muted }}>{activeLabel}</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <PresenceAvatars />
@@ -76,9 +76,9 @@ export default function AppLayout({ children }) {
               onClick={toggleDarkMode}
               title={darkMode ? "Modo claro" : "Modo escuro"}
               style={{
-                background: "none", border: "1px solid #e2e8f0", cursor: "pointer",
+                background: "none", border: `1px solid ${C.border}`, cursor: "pointer",
                 fontSize: 15, lineHeight: 1, padding: "6px 8px",
-                borderRadius: 8, color: "#64748b",
+                borderRadius: 8, color: C.muted,
               }}
             >
               {darkMode ? "☀️" : "🌙"}
@@ -94,10 +94,10 @@ export default function AppLayout({ children }) {
             gap: 12,
             fontSize: 13,
             fontWeight: 500,
-            fontFamily: "Inter, sans-serif",
-            background: isExpired ? "#fef2f2" : "#fffbeb",
-            borderBottom: `1px solid ${isExpired ? "#fecaca" : "#fde68a"}`,
-            color: isExpired ? "#991b1b" : "#92400e",
+            fontFamily: "inherit",
+            background: isExpired ? C.danger + "18" : C.warning + "18",
+            borderBottom: `1px solid ${isExpired ? C.danger + "44" : C.warning + "44"}`,
+            color: isExpired ? C.danger : C.warning,
           }}>
             <span>
               {isExpired
@@ -107,7 +107,7 @@ export default function AppLayout({ children }) {
             <button
               onClick={() => setActivePage("configuracoes")}
               style={{
-                background: isExpired ? "#dc2626" : "#d97706",
+                background: isExpired ? C.danger : C.warning,
                 color: "#fff",
                 border: "none",
                 borderRadius: 6,
@@ -115,7 +115,7 @@ export default function AppLayout({ children }) {
                 fontSize: 12,
                 fontWeight: 600,
                 cursor: "pointer",
-                fontFamily: "Inter, sans-serif",
+                fontFamily: "inherit",
               }}
             >
               Fazer upgrade

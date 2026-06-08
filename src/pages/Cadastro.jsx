@@ -70,7 +70,7 @@ export default function Cadastro() {
               </div>
               <button
                 onClick={() => navigate("/login")}
-                style={{ width: "100%", background: "linear-gradient(135deg,#b91c1c,#7f1d1d)", color: "#fff", border: "none", borderRadius: 10, padding: 15, fontSize: 16, fontWeight: 800, fontFamily: "inherit", cursor: "pointer" }}
+                style={{ width: "100%", background: "linear-gradient(135deg,#981915,#7d1411)", color: "#fff", border: "none", borderRadius: 10, padding: 15, fontSize: 16, fontWeight: 800, fontFamily: "inherit", cursor: "pointer" }}
               >
                 Entrar no sistema →
               </button>
@@ -116,7 +116,7 @@ export default function Cadastro() {
                 <button
                   type="submit"
                   disabled={loading || !nomeEmpresa || !nomeUsuario || !email || !senha || !confirmar}
-                  style={{ width: "100%", background: loading ? "#444" : "linear-gradient(135deg,#b91c1c,#7f1d1d)", color: "#fff", border: "none", borderRadius: 10, padding: 15, fontSize: 16, fontWeight: 800, fontFamily: "inherit", cursor: loading ? "not-allowed" : "pointer", boxShadow: "0 4px 20px rgba(152,25,21,.4)" }}
+                  style={{ width: "100%", background: loading ? "#444" : "linear-gradient(135deg,#981915,#7d1411)", color: "#fff", border: "none", borderRadius: 10, padding: 15, fontSize: 16, fontWeight: 800, fontFamily: "inherit", cursor: loading ? "not-allowed" : "pointer", boxShadow: "0 4px 20px rgba(152,25,21,.4)" }}
                 >
                   {loading ? "Criando conta…" : "Criar conta gratuita →"}
                 </button>
@@ -124,7 +124,7 @@ export default function Cadastro() {
 
               <div style={{ textAlign: "center", marginTop: 20, fontSize: 13, color: "rgba(255,255,255,.4)" }}>
                 Já tem conta?{" "}
-                <Link to="/login" style={{ color: "#ff6b6b", fontWeight: 700, textDecoration: "none" }}>Entrar</Link>
+                <Link to="/login" style={{ color: "#ff8e8a", fontWeight: 700, textDecoration: "none" }}>Entrar</Link>
               </div>
             </>
           )}
