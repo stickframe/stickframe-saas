@@ -59,9 +59,18 @@ const getValidadeText = (criado, validadeDias = 30) => {
 
 // ─── Cálculo ─────────────────────────────────────────────────────────────────
 // ─── Cálculo ─────────────────────────────────────────────────────────────────
-function calcOrcamento({ area, unidades, padrao, desconto = 0 }) {
-  const preco       = PRECOS[padrao] || PRECOS["Padrão"];
-  const valor_m2    = preco.m2;
+function calcOrcamento({ area, unidades, padrao, desconto = 0, valor_m2_custom = 0, valor = 0 }) {
+  let valor_m2 = 0;
+  if (padrao === "Livre") {
+    if (valor > 0) {
+      valor_m2 = Number(valor) / (Number(area || 1) * Number(unidades || 1));
+    } else {
+      valor_m2 = Number(valor_m2_custom) || 0;
+    }
+  } else {
+    const preco = PRECOS[padrao] || PRECOS["Padrão"];
+    valor_m2    = preco.m2;
+  }
   const valor_uh    = valor_m2 * Number(area);
   const valor_base  = valor_uh * Number(unidades);
   const desc_valor  = valor_base * (Number(desconto) / 100);
@@ -86,7 +95,8 @@ function FormOrc({ form, setForm, clientes, onSave, onCancel, onDelete, btnLabel
     area: form.area,
     unidades: form.unidades,
     padrao: form.padrao,
-    desconto: form.desconto || 0
+    desconto: form.desconto || 0,
+    valor_m2_custom: form.valor_m2_custom || 0
   });
 
   const [criandoCliente, setCriandoCliente] = useState(false);
@@ -232,7 +242,10 @@ function FormOrc({ form, setForm, clientes, onSave, onCancel, onDelete, btnLabel
           <Select
             value={form.padrao}
             onChange={set("padrao")}
-            options={Object.entries(PRECOS).map(([k, v]) => ({ value: k, label: `${v.label} — ${fmt(v.m2)}/m²` }))}
+            options={[
+              ...Object.entries(PRECOS).map(([k, v]) => ({ value: k, label: `${v.label} — ${fmt(v.m2)}/m²` })),
+              { value: "Livre", label: "Livre (Digitar valor/m²)" }
+            ]}
           />
         </div>
         <div>
@@ -244,6 +257,19 @@ function FormOrc({ form, setForm, clientes, onSave, onCancel, onDelete, btnLabel
           />
         </div>
       </div>
+
+      {form.padrao === "Livre" && (
+        <div>
+          <Label required>Valor do m² / Mão de obra (R$)</Label>
+          <Input
+            type="number"
+            min="0"
+            placeholder="Digite o valor por m² (Ex: 1200)"
+            value={form.valor_m2_custom || ""}
+            onChange={set("valor_m2_custom")}
+          />
+        </div>
+      )}
 
       {/* Desconto */}
       <div>
@@ -826,6 +852,7 @@ const FORM_VAZIO = {
   padrao:     "Padrão",
   status:     "Aguardando resposta",
   desconto:   0,
+  valor_m2_custom: 0,
 };
 
 export default function Orcamentos() {
@@ -934,9 +961,10 @@ export default function Orcamentos() {
 
   function abrirEditar(o) {
     setEditId(o.id);
-    const preco = PRECOS[o.padrao] || PRECOS["Padrão"];
-    const valor_base = preco.m2 * Number(o.area) * Number(o.unidades);
-    const desc = valor_base > 0 ? Math.round(((valor_base - Number(o.valor)) / valor_base) * 100) : 0;
+    const isLivre = o.padrao === "Livre";
+    const preco = isLivre ? null : (PRECOS[o.padrao] || PRECOS["Padrão"]);
+    const valor_base = isLivre ? Number(o.valor) : (preco.m2 * Number(o.area) * Number(o.unidades));
+    const desc = isLivre ? 0 : (valor_base > 0 ? Math.round(((valor_base - Number(o.valor)) / valor_base) * 100) : 0);
     setForm({
       cliente_id: o.cliente_id || clientes[0]?.id || "",
       unidades:   o.unidades   || 1,
@@ -944,6 +972,7 @@ export default function Orcamentos() {
       padrao:     o.padrao     || "Padrão",
       status:     o.status     || "Aguardando resposta",
       desconto:   desc >= 0 && desc <= 100 ? desc : 0,
+      valor_m2_custom: isLivre ? (Number(o.valor) / (Number(o.area || 1) * Number(o.unidades || 1))) : 0,
     });
     setModal("editar");
   }
