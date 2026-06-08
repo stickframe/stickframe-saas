@@ -26,13 +26,47 @@ const STATUS_COR  = {
 };
 const statusColor = (s) => STATUS_COR[s] || C.muted;
 
+const parseCriadoDate = (dateStr) => {
+  if (!dateStr) return new Date();
+  if (typeof dateStr === "string" && dateStr.includes("/")) {
+    const [day, month, year] = dateStr.split("/").map(Number);
+    return new Date(year, month - 1, day);
+  }
+  return new Date(dateStr);
+};
+
+const getValidadeText = (criado, validadeDias = 30) => {
+  const dataCriado = parseCriadoDate(criado);
+  const dataValidade = new Date(dataCriado.getTime());
+  dataValidade.setDate(dataValidade.getDate() + validadeDias);
+  
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+  dataValidade.setHours(0, 0, 0, 0);
+  
+  const diffTime = dataValidade.getTime() - hoje.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  if (diffDays < 0) {
+    const absDays = Math.abs(diffDays);
+    return { text: `Expirado há ${absDays} ${absDays === 1 ? 'dia' : 'dias'}`, color: C.danger, isExpired: true };
+  } else if (diffDays === 0) {
+    return { text: "Expira hoje!", color: C.warning, isExpired: false };
+  } else {
+    return { text: `Expira em ${diffDays} ${diffDays === 1 ? 'dia' : 'dias'}`, color: C.success, isExpired: false };
+  }
+};
+
 // ─── Cálculo ─────────────────────────────────────────────────────────────────
-function calcOrcamento({ area, unidades, padrao }) {
+// ─── Cálculo ─────────────────────────────────────────────────────────────────
+function calcOrcamento({ area, unidades, padrao, desconto = 0 }) {
   const preco       = PRECOS[padrao] || PRECOS["Padrão"];
   const valor_m2    = preco.m2;
   const valor_uh    = valor_m2 * Number(area);
-  const valor_total = valor_uh * Number(unidades);
-  return { valor_m2, valor_uh, valor_total };
+  const valor_base  = valor_uh * Number(unidades);
+  const desc_valor  = valor_base * (Number(desconto) / 100);
+  const valor_total = valor_base - desc_valor;
+  return { valor_m2, valor_uh, valor_base, desc_valor, valor_total };
 }
 
 // ─── Label auxiliar ──────────────────────────────────────────────────────────
@@ -46,9 +80,39 @@ function Label({ children, required }) {
 }
 
 // ─── Formulário (fora do componente) ─────────────────────────────────────────
-function FormOrc({ form, setForm, clientes, onSave, onCancel, onDelete, btnLabel }) {
+function FormOrc({ form, setForm, clientes, onSave, onCancel, onDelete, btnLabel, addCliente }) {
   const set  = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
-  const calc = calcOrcamento({ area: form.area, unidades: form.unidades, padrao: form.padrao });
+  const calc = calcOrcamento({
+    area: form.area,
+    unidades: form.unidades,
+    padrao: form.padrao,
+    desconto: form.desconto || 0
+  });
+
+  const [criandoCliente, setCriandoCliente] = useState(false);
+  const [novoCliente, setNovoCliente] = useState({ nome: "", contato: "", email: "" });
+  const [salvandoCli, setSalvandoCli] = useState(false);
+  const [cliErro, setCliErro] = useState("");
+
+  async function handleSalvarCliente() {
+    if (!novoCliente.nome.trim()) return;
+    setSalvandoCli(true);
+    setCliErro("");
+    try {
+      const data = await addCliente(novoCliente);
+      if (data?.id) {
+        setForm(f => ({ ...f, cliente_id: data.id }));
+        setCriandoCliente(false);
+        setNovoCliente({ nome: "", contato: "", email: "" });
+      } else {
+        throw new Error("Não foi possível obter o ID do cliente criado.");
+      }
+    } catch (e) {
+      setCliErro(e?.message || "Erro ao cadastrar cliente.");
+    } finally {
+      setSalvandoCli(false);
+    }
+  }
 
   const clienteOpts = clientes.map((c) => ({ value: c.id, label: c.nome }));
   if (!clienteOpts.length) clienteOpts.push({ value: "", label: "— Nenhum cliente cadastrado —" });
@@ -58,17 +122,91 @@ function FormOrc({ form, setForm, clientes, onSave, onCancel, onDelete, btnLabel
 
       {/* Cliente */}
       <div>
-        <Label required>Cliente</Label>
-        <Select value={form.cliente_id} onChange={set("cliente_id")} options={clienteOpts} />
-        {!clientes.length && (
-          <div style={{ fontSize: 11, color: C.warning, marginTop: 4 }}>
-            ⚠️ Cadastre um cliente no CRM antes de gerar um orçamento.
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+          <Label required>Cliente</Label>
+          {!criandoCliente && (
+            <button
+              type="button"
+              onClick={() => setCriandoCliente(true)}
+              style={{
+                background: "none", border: "none", color: C.red,
+                fontWeight: 700, fontSize: 11, cursor: "pointer",
+                padding: "2px 6px", textTransform: "uppercase", letterSpacing: 0.5
+              }}
+            >
+              + Novo Cliente
+            </button>
+          )}
+        </div>
+
+        {criandoCliente ? (
+          <div style={{
+            background: C.bg, borderRadius: 8, padding: 12,
+            border: `1px solid ${C.border}`, display: "flex", flexDirection: "column", gap: 10
+          }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: C.text }}>CADASTRAR NOVO CLIENTE</div>
+            <div>
+              <Label required>Nome</Label>
+              <Input
+                value={novoCliente.nome}
+                onChange={(v) => setNovoCliente(n => ({ ...n, nome: v }))}
+                placeholder="Nome completo"
+              />
+            </div>
+            <div className="sf-grid-2">
+              <div>
+                <Label>WhatsApp / Contato</Label>
+                <Input
+                  value={novoCliente.contato}
+                  onChange={(v) => setNovoCliente(n => ({ ...n, contato: v }))}
+                  placeholder="(11) 99999-9999"
+                />
+              </div>
+              <div>
+                <Label>E-mail</Label>
+                <Input
+                  type="email"
+                  value={novoCliente.email}
+                  onChange={(v) => setNovoCliente(n => ({ ...n, email: v }))}
+                  placeholder="exemplo@email.com"
+                />
+              </div>
+            </div>
+            {cliErro && (
+              <div style={{ fontSize: 11, color: C.danger }}>⚠️ {cliErro}</div>
+            )}
+            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 4 }}>
+              <button
+                type="button"
+                className="sf-btn sf-btn-sm sf-btn-ghost"
+                onClick={() => setCriandoCliente(false)}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className="sf-btn sf-btn-sm sf-btn-primary"
+                disabled={!novoCliente.nome.trim() || salvandoCli}
+                onClick={handleSalvarCliente}
+              >
+                {salvandoCli ? "Salvando..." : "Salvar Cliente"}
+              </button>
+            </div>
           </div>
+        ) : (
+          <>
+            <Select value={form.cliente_id} onChange={set("cliente_id")} options={clienteOpts} />
+            {!clientes.length && (
+              <div style={{ fontSize: 11, color: C.warning, marginTop: 4 }}>
+                ⚠️ Cadastre um cliente no CRM ou crie um novo inline.
+              </div>
+            )}
+          </>
         )}
       </div>
 
       {/* Unidades + Área */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+      <div className="sf-grid-2">
         <div>
           <Label>Unidades</Label>
           <Input
@@ -88,7 +226,7 @@ function FormOrc({ form, setForm, clientes, onSave, onCancel, onDelete, btnLabel
       </div>
 
       {/* Padrão + Status */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+      <div className="sf-grid-2">
         <div>
           <Label required>Padrão construtivo</Label>
           <Select
@@ -107,27 +245,54 @@ function FormOrc({ form, setForm, clientes, onSave, onCancel, onDelete, btnLabel
         </div>
       </div>
 
+      {/* Desconto */}
+      <div>
+        <Label>Desconto (%)</Label>
+        <Input
+          type="number"
+          min="0"
+          max="100"
+          value={form.desconto || 0}
+          onChange={(v) => set("desconto")(Math.min(100, Math.max(0, parseInt(v) || 0)))}
+        />
+      </div>
+
       {/* Prévia de valores */}
       <div style={{ background: C.darker, borderRadius: 10, border: `1px solid ${C.red}33`, padding: 16 }}>
         <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1.5, color: C.red, marginBottom: 12 }}>
           PRÉVIA DO ORÇAMENTO
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: form.unidades > 1 ? "1fr 1fr 1fr" : "1fr 1fr", gap: 10 }}>
-          {[
-            ["Valor / m²",  fmt(calc.valor_m2),    false],
-            ...(form.unidades > 1 ? [["Valor / unid.", fmt(calc.valor_uh), false]] : []),
-            ["TOTAL",       fmt(calc.valor_total),  true ],
-          ].map(([k, v, destaque]) => (
-            <div key={k} style={{
-              background: C.surface, borderRadius: 8, padding: "10px 12px",
-              border: destaque ? `1px solid ${C.red}44` : `1px solid ${C.border}`,
-            }}>
-              <div style={{ fontSize: 10, color: C.muted, marginBottom: 4 }}>{k}</div>
-              <div style={{ fontSize: destaque ? 15 : 13, fontWeight: 700, color: destaque ? C.red : C.text }}>
-                {v}
-              </div>
+        <div className="sf-grid-2">
+          <div style={{ background: C.surface, borderRadius: 8, padding: "10px 12px", border: `1px solid ${C.border}` }}>
+            <div style={{ fontSize: 10, color: C.muted, marginBottom: 4 }}>Valor / m²</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{fmt(calc.valor_m2)}</div>
+          </div>
+          {form.unidades > 1 && (
+            <div style={{ background: C.surface, borderRadius: 8, padding: "10px 12px", border: `1px solid ${C.border}` }}>
+              <div style={{ fontSize: 10, color: C.muted, marginBottom: 4 }}>Valor / unid. (base)</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{fmt(calc.valor_uh)}</div>
             </div>
-          ))}
+          )}
+          {form.desconto > 0 && (
+            <>
+              <div style={{ background: C.surface, borderRadius: 8, padding: "10px 12px", border: `1px solid ${C.border}` }}>
+                <div style={{ fontSize: 10, color: C.muted, marginBottom: 4 }}>Valor Base Total</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{fmt(calc.valor_base)}</div>
+              </div>
+              <div style={{ background: C.surface, borderRadius: 8, padding: "10px 12px", border: `1px solid ${C.border}` }}>
+                <div style={{ fontSize: 10, color: C.muted, marginBottom: 4 }}>Desconto ({form.desconto}%)</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: C.danger }}>- {fmt(calc.desc_valor)}</div>
+              </div>
+            </>
+          )}
+          <div style={{
+            gridColumn: "span 2",
+            background: C.surface, borderRadius: 8, padding: "10px 12px",
+            border: `1px solid ${C.red}44`,
+          }}>
+            <div style={{ fontSize: 10, color: C.muted, marginBottom: 4 }}>TOTAL COM DESCONTO</div>
+            <div style={{ fontSize: 18, fontWeight: 900, color: C.red }}>{fmt(calc.valor_total)}</div>
+          </div>
         </div>
         <div style={{ fontSize: 11, color: C.muted, marginTop: 10 }}>
           {form.unidades > 1 ? `${form.unidades} × ` : ""}{form.area} m² × {fmt(calc.valor_m2)}/m²
@@ -660,6 +825,7 @@ const FORM_VAZIO = {
   area:       48,
   padrao:     "Padrão",
   status:     "Aguardando resposta",
+  desconto:   0,
 };
 
 export default function Orcamentos() {
@@ -672,13 +838,16 @@ export default function Orcamentos() {
   const addOrcamento    = useAppStore((s) => s.addOrcamento);
   const updateOrcamento = useAppStore((s) => s.updateOrcamento);
   const deleteOrcamento = useAppStore((s) => s.deleteOrcamento);
+  const loadOrcamentos  = useAppStore((s) => s.loadOrcamentos);
   const addObra         = useAppStore((s) => s.addObra);
+  const deleteObra      = useAppStore((s) => s.deleteObra);
   const addLancamento   = useAppStore((s) => s.addLancamento);
   const setActivePage   = useAppStore((s) => s.setActivePage);
 
   const [modal,        setModal]        = useState(false);
   const [editId,       setEditId]       = useState(null);
   const [confirm,      setConfirm]      = useState(null);
+  const [abertoDropId, setAbertoDropId] = useState(null);
   const { toast, mostrarToast } = useToast();
   const [form,         setForm]         = useState({ ...FORM_VAZIO, cliente_id: clientes[0]?.id || "" });
   const [converterOrc, setConverterOrc] = useState(null);
@@ -700,6 +869,32 @@ export default function Orcamentos() {
       .eq("status", "Novo")
       .order("created_at", { ascending: false })
       .then(({ data }) => setPreOrcamentos(data || []));
+  }, []);
+
+  // Realtime local (broadcast) e database changes para orçamentos aceitos online
+  useEffect(() => {
+    const empId = getEmpresaId();
+    if (!empId) return;
+
+    const chPg = sb.channel(`orcamentos-changes:${empId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "orcamentos", filter: `empresa_id=eq.${empId}` },
+        () => {
+          loadOrcamentos(true);
+        })
+      .subscribe();
+
+    const chBc = sb.channel(`orcamentos-public:${empId}`)
+      .on("broadcast", { event: "aceite" }, () => {
+        loadOrcamentos(true);
+        mostrarToast("📢 Um cliente acabou de aceitar a proposta comercial online!");
+      })
+      .subscribe();
+
+    return () => {
+      chPg.unsubscribe();
+      chBc.unsubscribe();
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Detecta estimativo vindo da Calculadora SF (navega para esta página e escreve em localStorage)
@@ -738,20 +933,32 @@ export default function Orcamentos() {
 
   function abrirEditar(o) {
     setEditId(o.id);
+    const preco = PRECOS[o.padrao] || PRECOS["Padrão"];
+    const valor_base = preco.m2 * Number(o.area) * Number(o.unidades);
+    const desc = valor_base > 0 ? Math.round(((valor_base - Number(o.valor)) / valor_base) * 100) : 0;
     setForm({
       cliente_id: o.cliente_id || clientes[0]?.id || "",
       unidades:   o.unidades   || 1,
       area:       o.area       || 48,
       padrao:     o.padrao     || "Padrão",
       status:     o.status     || "Aguardando resposta",
+      desconto:   desc >= 0 && desc <= 100 ? desc : 0,
     });
     setModal("editar");
   }
 
   function gerarRef() {
     const ano = new Date().getFullYear();
-    const num = String(orcamentos.length + 1).padStart(3, "0");
-    return `ORC-${ano}-${num}`;
+    const prefix = `ORC-${ano}-`;
+    const numMax = orcamentos
+      .filter((o) => o.ref && o.ref.startsWith(prefix))
+      .map((o) => {
+        const partes = o.ref.split("-");
+        const numPart = parseInt(partes[partes.length - 1], 10);
+        return isNaN(numPart) ? 0 : numPart;
+      })
+      .reduce((max, val) => Math.max(max, val), 0);
+    return `${prefix}${String(numMax + 1).padStart(3, "0")}`;
   }
 
   function salvarNovo() {
@@ -839,64 +1046,94 @@ export default function Orcamentos() {
   async function confirmarConverter() {
     const o = converterOrc;
     const clienteSel = clientes.find((c) => c.id === o.cliente_id);
-    const obra = await addObra({
-      nome:          obraForm.nome,
-      cliente_id:    o.cliente_id,
-      cliente:       o.cliente,
-      email_cliente: clienteSel?.email || "",
-      status:        "Planejamento",
-      fase:          FASES[0],
-      progresso:     0,
-      contrato:      o.valor,
-      prazo:         obraForm.prazo_fim || "—",
-      prazo_inicio:  obraForm.prazo_inicio || null,
-      prazo_fim:     obraForm.prazo_fim || null,
-      area:          Number(o.area) || 0,
-      padrao:        o.padrao || "Padrão",
-    });
+    
+    let obraCriada = null;
+    let orcamentoAtualizado = false;
 
-    // Se há estimativo da calculadora, importa para quantitativos da obra
-    if (estimativo?.itens?.length && obra?.id) {
+    try {
+      // 1. Criar a obra
+      obraCriada = await addObra({
+        nome:          obraForm.nome,
+        cliente_id:    o.cliente_id,
+        cliente:       o.cliente,
+        email_cliente: clienteSel?.email || "",
+        status:        "Planejamento",
+        fase:          FASES[0],
+        progresso:     0,
+        contrato:      o.valor,
+        prazo:         obraForm.prazo_fim || "—",
+        prazo_inicio:  obraForm.prazo_inicio || null,
+        prazo_fim:     obraForm.prazo_fim || null,
+        area:          Number(o.area) || 0,
+        padrao:        o.padrao || "Padrão",
+      });
+
+      if (!obraCriada || !obraCriada.id) {
+        throw new Error("Não foi possível criar o registro da obra.");
+      }
+
+      // 2. Atualizar o orçamento (status + vinculação da obra_id)
+      await updateOrcamento(o.id, { status: "Aprovado", obra_id: obraCriada.id });
+      orcamentoAtualizado = true;
+
+      // 3. Se há estimativo da calculadora, importa para quantitativos da obra
+      if (estimativo?.itens?.length) {
+        try {
+          const rows = estimativo.itens.map((it) => ({
+            fase:           GRUPO_PARA_FASE[it.grupo] || "Fechamentos",
+            categoria:      GRUPO_PARA_CAT[it.grupo]  || "Vedação",
+            descricao:      it.item,
+            unidade:        it.un,
+            quantidade:     it.qtd,
+            custo_unitario: it.precoUnit,
+            observacoes:    "Importado da calculadora estimativa",
+          }));
+          await inserirTemplate(obraCriada.id, rows);
+        } catch (e) {
+          mostrarToast(`⚠️ Não foi possível importar itens para Quantitativos: ${e?.message || e}`);
+        }
+      }
+
+      // 4. Auto-generate financial installments
+      if (o.valor > 0) {
+        const hoje = new Date();
+        const addDays = (d) => { const dt = new Date(hoje); dt.setDate(dt.getDate() + d); return dt.toISOString().split("T")[0]; };
+        const prazoMeio = obraForm.prazo_inicio && obraForm.prazo_fim
+          ? new Date((new Date(obraForm.prazo_inicio).getTime() + new Date(obraForm.prazo_fim).getTime()) / 2).toISOString().split("T")[0]
+          : addDays(60);
+        const parcelas = [
+          { descricao: "30% Entrada — " + o.cliente, valor: Math.round(o.valor * 0.30 * 100) / 100, tipo: "receita", categoria: "Contrato", data_vencimento: addDays(7), status: "A receber" },
+          { descricao: "40% Meio de obra — " + o.cliente, valor: Math.round(o.valor * 0.40 * 100) / 100, tipo: "receita", categoria: "Contrato", data_vencimento: prazoMeio, status: "A receber" },
+          { descricao: "30% Entrega — " + o.cliente, valor: Math.round(o.valor * 0.30 * 100) / 100, tipo: "receita", categoria: "Contrato", data_vencimento: obraForm.prazo_fim || addDays(120), status: "A receber" },
+        ];
+        for (const p of parcelas) {
+          await addLancamento(obraCriada.id, p);
+        }
+      }
+
+      setConverterOrc(null);
+      mostrarToast(estimativo?.itens?.length
+        ? `✅ Obra criada com ${estimativo.itens.length} itens do estimativo nos quantitativos!`
+        : "✅ Obra criada! Redirecionando...");
+      setTimeout(() => setActivePage("obras"), 1500);
+
+    } catch (err) {
+      console.error("Erro na conversão de orçamento para obra:", err);
+      
+      // Rollback
       try {
-        const rows = estimativo.itens.map((it) => ({
-          fase:           GRUPO_PARA_FASE[it.grupo] || "Fechamentos",
-          categoria:      GRUPO_PARA_CAT[it.grupo]  || "Vedação",
-          descricao:      it.item,
-          unidade:        it.un,
-          quantidade:     it.qtd,
-          custo_unitario: it.precoUnit,
-          observacoes:    "Importado da calculadora estimativa",
-        }));
-        await inserirTemplate(obra.id, rows);
-      } catch (e) {
-        mostrarToast(`⚠️ Não foi possível importar itens para Quantitativos: ${e?.message || e}`);
+        if (obraCriada && obraCriada.id) {
+          await deleteObra(obraCriada.id);
+        }
+        if (orcamentoAtualizado) {
+          await updateOrcamento(o.id, { status: o.status, obra_id: null });
+        }
+      } catch (rollbackErr) {
+        console.error("Erro no rollback da conversão:", rollbackErr);
       }
+      
+      mostrarToast(`❌ Erro na conversão: ${err?.message || err}`);
     }
-
-    updateOrcamento(o.id, { status: "Aprovado" });
-
-    // Auto-generate financial installments: 30% entrada / 40% meio / 30% entrega
-    if (obra?.id && o.valor > 0) {
-      const hoje = new Date();
-      const addDays = (d) => { const dt = new Date(hoje); dt.setDate(dt.getDate() + d); return dt.toISOString().split("T")[0]; };
-      const prazoMeio = obraForm.prazo_inicio && obraForm.prazo_fim
-        ? new Date((new Date(obraForm.prazo_inicio).getTime() + new Date(obraForm.prazo_fim).getTime()) / 2).toISOString().split("T")[0]
-        : addDays(60);
-      const parcelas = [
-        { descricao: "30% Entrada — " + o.cliente, valor: Math.round(o.valor * 0.30 * 100) / 100, tipo: "receita", categoria: "Contrato", data_vencimento: addDays(7), status: "A receber" },
-        { descricao: "40% Meio de obra — " + o.cliente, valor: Math.round(o.valor * 0.40 * 100) / 100, tipo: "receita", categoria: "Contrato", data_vencimento: prazoMeio, status: "A receber" },
-        { descricao: "30% Entrega — " + o.cliente, valor: Math.round(o.valor * 0.30 * 100) / 100, tipo: "receita", categoria: "Contrato", data_vencimento: obraForm.prazo_fim || addDays(120), status: "A receber" },
-      ];
-      for (const p of parcelas) {
-        try { await addLancamento(obra.id, p); } catch (e) { console.error("Lançamento erro:", e); }
-      }
-    }
-
-    setConverterOrc(null);
-    mostrarToast(estimativo?.itens?.length
-      ? `✅ Obra criada com ${estimativo.itens.length} itens do estimativo nos quantitativos!`
-      : "✅ Obra criada! Redirecionando...");
-    setTimeout(() => setActivePage("obras"), 1500);
   }
   async function gerarLinkProposta(o) {
     try {
@@ -976,6 +1213,7 @@ export default function Orcamentos() {
             form={form} setForm={setForm} clientes={clientes}
             onSave={salvarNovo} onCancel={() => { setModal(false); setEstimativo(null); setPreOrcAtivo(null); }}
             btnLabel="Gerar orçamento"
+            addCliente={addCliente}
           />
         </Modal>
       )}
@@ -986,6 +1224,7 @@ export default function Orcamentos() {
             onSave={salvarEdicao} onCancel={() => setModal(false)}
             onDelete={() => { setModal(false); confirmarDelete(editId); }}
             btnLabel="Salvar alterações"
+            addCliente={addCliente}
           />
         </Modal>
       )}
@@ -1264,6 +1503,10 @@ export default function Orcamentos() {
                           {o.ref}
                         </span>
                         <Badge label={o.status} color={statusColor(o.status)} />
+                        {(() => {
+                          const info = getValidadeText(o.criado, o.validade_dias);
+                          return <Badge label={info.text} color={info.color} dot={info.isExpired} />;
+                        })()}
                       </div>
                       <div style={{ fontSize: 15, fontWeight: 700 }}>{o.cliente}</div>
                       <div style={{ fontSize: 11, color: C.muted, marginTop: 3 }}>
@@ -1281,7 +1524,7 @@ export default function Orcamentos() {
                   </div>
 
                   {/* Ações */}
-                  <div style={{ display: "flex", gap: 8, marginTop: 14, flexWrap: "wrap" }}>
+                  <div style={{ display: "flex", gap: 8, marginTop: 14, flexWrap: "wrap", alignItems: "center" }}>
                     {modoComparar && (
                       <button onClick={() => setSelecionados(prev => {
                         if (prev.includes(o.id)) return prev.filter(id => id !== o.id);
@@ -1297,73 +1540,22 @@ export default function Orcamentos() {
                         {selecionados.includes(o.id) ? "✓ Selecionado" : "Selecionar"}
                       </button>
                     )}
-                    <Btn variant="ghost" size="sm" onClick={() => abrirEditar(o)}><Pencil size={13} /> Editar</Btn>
-                    <button
-                      onClick={() => gerarPDF(o)}
-                      style={{
-                        padding: "6px 14px", background: "#4a9eff22",
-                        border: "1px solid #4a9eff44", borderRadius: 6,
-                        color: "#4a9eff", fontSize: 11, fontWeight: 700,
-                        cursor: "pointer", fontFamily: "inherit",
-                      }}
-                    >
-                      <FileText size={13} /> PDF simples
-                    </button>
+
+                    {/* Ação Principal: Proposta Comercial */}
                     <button
                       onClick={() => gerarPropostaComercialPDF(o)}
-                      style={{
-                        padding: "6px 14px", background: "#c88a0022",
-                        border: "1px solid #c88a0044", borderRadius: 6,
-                        color: "#c88a00", fontSize: 11, fontWeight: 700,
-                        cursor: "pointer", fontFamily: "inherit",
-                      }}
+                      className="sf-btn sf-btn-sm sf-btn-primary"
                     >
                       <ClipboardList size={13} /> Proposta Comercial
                     </button>
-                    <button
-                      onClick={() => gerarContratoHTML(o)}
-                      style={{
-                        padding: "6px 14px", background: "#7c3aed22",
-                        border: "1px solid #7c3aed44", borderRadius: 6,
-                        color: "#7c3aed", fontSize: 11, fontWeight: 700,
-                        cursor: "pointer", fontFamily: "inherit",
-                      }}
-                    >
-                      📝 Gerar Contrato
-                    </button>
-                    <button
-                      onClick={() => gerarLinkProposta(o)}
-                      style={{
-                        padding: "6px 14px", background: "#9b59b622",
-                        border: "1px solid #9b59b644", borderRadius: 6,
-                        color: "#9b59b6", fontSize: 11, fontWeight: 700,
-                        cursor: "pointer", fontFamily: "inherit",
-                      }}
-                    >
-                      {o.proposta_token ? "🔗 Copiar link" : "🔗 Gerar proposta"}
-                    </button>
-                    {o.proposta_token && (
-                      <button
-                        onClick={() => compartilharWhatsApp(o)}
-                        style={{
-                          padding: "6px 14px", background: "#25d36622",
-                          border: "1px solid #25d36644", borderRadius: 6,
-                          color: "#25d366", fontSize: 11, fontWeight: 700,
-                          cursor: "pointer", fontFamily: "inherit",
-                        }}
-                      >
-                        💬 WhatsApp
-                      </button>
-                    )}
-                    {o.status !== "Recusado" && (
+
+                    {/* Ações Secundárias */}
+                    <Btn variant="ghost" size="sm" onClick={() => abrirEditar(o)}><Pencil size={13} /> Editar</Btn>
+
+                    {o.status !== "Aprovado" && o.status !== "Recusado" && (
                       <button
                         onClick={() => abrirConverter(o)}
-                        style={{
-                          padding: "6px 14px", background: C.success + "22",
-                          border: `1px solid ${C.success}44`, borderRadius: 6,
-                          color: C.success, fontSize: 11, fontWeight: 700,
-                          cursor: "pointer", fontFamily: "inherit",
-                        }}
+                        className="sf-btn sf-btn-sm sf-btn-success"
                       >
                         ◆ Converter em Obra
                       </button>
@@ -1375,42 +1567,106 @@ export default function Orcamentos() {
                       options={STATUS_OPTS.map((s) => ({ value: s, label: s }))}
                     />
 
-                    {clienteOrc?.contato && (
+                    {/* Menu Dropdown de Mais Ações */}
+                    <div style={{ position: "relative" }}>
                       <button
-                        onClick={() => enviarWhatsApp(clienteOrc.contato, msgOrcamento(o))}
-                        style={{
-                          padding: "6px 14px", background: "#25D36622",
-                          border: "1px solid #25D36644", borderRadius: 6,
-                          color: "#25D366", fontSize: 11, fontWeight: 700,
-                          cursor: "pointer", fontFamily: "inherit",
-                        }}
+                        onClick={() => setAbertoDropId(abertoDropId === o.id ? null : o.id)}
+                        className="sf-btn sf-btn-sm sf-btn-ghost"
+                        style={{ padding: "6px 14px" }}
                       >
-                        <Smartphone size={13} /> WhatsApp
+                        Mais...
                       </button>
-                    )}
-
-                    <button
-                      onClick={() => duplicarOrcamento(o)}
-                      style={{
-                        padding: "6px 12px", background: "#4a9eff22",
-                        border: "1px solid #4a9eff44", borderRadius: 6,
-                        color: "#4a9eff", fontSize: 11, fontWeight: 700,
-                        cursor: "pointer", fontFamily: "inherit",
-                      }}
-                    >
-                      📋 Duplicar
-                    </button>
-                    <button
-                      onClick={() => confirmarDelete(o.id)}
-                      style={{
-                        padding: "6px 12px", background: C.danger + "22",
-                        border: `1px solid ${C.danger}44`, borderRadius: 6,
-                        color: C.danger, fontSize: 11, fontWeight: 700,
-                        cursor: "pointer", fontFamily: "inherit",
-                      }}
-                    >
-                      🗑
-                    </button>
+                      {abertoDropId === o.id && (
+                        <>
+                          <div
+                            style={{ position: "fixed", inset: 0, zIndex: 10 }}
+                            onClick={() => setAbertoDropId(null)}
+                          />
+                          <div style={{
+                            position: "absolute", bottom: "100%", right: 0, marginBottom: 4,
+                            background: C.surface, border: `1px solid ${C.border}`,
+                            borderRadius: 8, boxShadow: "0 4px 16px rgba(0,0,0,0.15)",
+                            zIndex: 11, display: "flex", flexDirection: "column", minWidth: 200,
+                            overflow: "hidden"
+                          }}>
+                            <button
+                              onClick={() => { setAbertoDropId(null); gerarLinkProposta(o); }}
+                              style={{
+                                padding: "9px 12px", border: "none", background: "none",
+                                textAlign: "left", fontSize: 12, cursor: "pointer", color: C.text,
+                                fontFamily: "inherit", borderBottom: `1px solid ${C.border}`, display: "flex", alignItems: "center", gap: 6
+                              }}
+                            >
+                              🔗 {o.proposta_token ? "Copiar link online" : "Gerar link online"}
+                            </button>
+                            {o.proposta_token && (
+                              <button
+                                onClick={() => { setAbertoDropId(null); compartilharWhatsApp(o); }}
+                                style={{
+                                  padding: "9px 12px", border: "none", background: "none",
+                                  textAlign: "left", fontSize: 12, cursor: "pointer", color: C.text,
+                                  fontFamily: "inherit", borderBottom: `1px solid ${C.border}`, display: "flex", alignItems: "center", gap: 6
+                                }}
+                              >
+                                💬 WhatsApp (Link)
+                              </button>
+                            )}
+                            {clienteOrc?.contato && (
+                              <button
+                                onClick={() => { setAbertoDropId(null); enviarWhatsApp(clienteOrc.contato, msgOrcamento(o)); }}
+                                style={{
+                                  padding: "9px 12px", border: "none", background: "none",
+                                  textAlign: "left", fontSize: 12, cursor: "pointer", color: C.text,
+                                  fontFamily: "inherit", borderBottom: `1px solid ${C.border}`, display: "flex", alignItems: "center", gap: 6
+                                }}
+                              >
+                                📱 WhatsApp (Texto)
+                              </button>
+                            )}
+                            <button
+                              onClick={() => { setAbertoDropId(null); gerarContratoHTML(o); }}
+                              style={{
+                                padding: "9px 12px", border: "none", background: "none",
+                                textAlign: "left", fontSize: 12, cursor: "pointer", color: C.text,
+                                fontFamily: "inherit", borderBottom: `1px solid ${C.border}`, display: "flex", alignItems: "center", gap: 6
+                              }}
+                            >
+                              📝 Gerar Contrato
+                            </button>
+                            <button
+                              onClick={() => { setAbertoDropId(null); gerarPDF(o); }}
+                              style={{
+                                padding: "9px 12px", border: "none", background: "none",
+                                textAlign: "left", fontSize: 12, cursor: "pointer", color: C.text,
+                                fontFamily: "inherit", borderBottom: `1px solid ${C.border}`, display: "flex", alignItems: "center", gap: 6
+                              }}
+                            >
+                              📄 PDF Simples (Rascunho)
+                            </button>
+                            <button
+                              onClick={() => { setAbertoDropId(null); duplicarOrcamento(o); }}
+                              style={{
+                                padding: "9px 12px", border: "none", background: "none",
+                                textAlign: "left", fontSize: 12, cursor: "pointer", color: C.text,
+                                fontFamily: "inherit", borderBottom: `1px solid ${C.border}`, display: "flex", alignItems: "center", gap: 6
+                              }}
+                            >
+                              📋 Duplicar
+                            </button>
+                            <button
+                              onClick={() => { setAbertoDropId(null); confirmarDelete(o.id); }}
+                              style={{
+                                padding: "9px 12px", border: "none", background: "none",
+                                textAlign: "left", fontSize: 12, cursor: "pointer", color: C.danger,
+                                fontFamily: "inherit", fontWeight: 700, display: "flex", alignItems: "center", gap: 6
+                              }}
+                            >
+                              🗑 Excluir
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
               );

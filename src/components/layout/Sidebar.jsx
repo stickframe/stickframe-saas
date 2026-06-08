@@ -44,10 +44,11 @@ export default function Sidebar({ open, onClose }) {
     : 0;
 
   const sidebarStyle = {
-    width: 256,
+    width: 248,
     height: "100vh",
-    background: C.surface,
-    borderRight: `1px solid ${C.border}`,
+    background: "#16181c",
+    color: "#fff",
+    borderRight: "1px solid #25282e",
     display: "flex",
     flexDirection: "column",
     flexShrink: 0,
@@ -59,27 +60,27 @@ export default function Sidebar({ open, onClose }) {
   return (
     <aside className={`sidebar-desktop${open ? " open" : ""}`} style={sidebarStyle}>
       {/* Logo */}
-      <div style={{ padding: "24px 20px 20px", borderBottom: `1px solid ${C.border}` }}>
+      <div style={{ padding: "24px 22px 18px", borderBottom: "1px solid #25282e" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <img src={LOGO_STICKFRAME} style={{ width: 38, height: 38, objectFit: "contain", flexShrink: 0 }} alt="Logo StickFrame" />
+          <img src={LOGO_STICKFRAME} style={{ height: "34px", width: "auto", display: "block", objectFit: "contain", flexShrink: 0 }} alt="Logo StickFrame" />
           <div>
-            <div style={{ fontFamily: "inherit", fontWeight: 700, letterSpacing: 1.5, fontSize: 16, lineHeight: 1, color: C.text }}>
+            <div style={{ fontFamily: "inherit", fontWeight: 700, letterSpacing: "2px", fontSize: 16, lineHeight: 1, color: "#ffffff" }}>
               STICKFRAME
             </div>
-            <div style={{ color: C.muted, fontSize: 9, letterSpacing: 1.5, marginTop: 2 }}>SISTEMAS CONSTRUTIVOS</div>
+            <div style={{ color: "#7a7f87", fontSize: 9, letterSpacing: "2px", marginTop: 4, fontWeight: 600 }}>SISTEMAS CONSTRUTIVOS</div>
           </div>
         </div>
       </div>
 
       {/* Nav */}
-      <nav style={{ flex: 1, padding: "12px 12px", overflowY: "auto" }}>
+      <nav style={{ flex: 1, padding: "14px 0", overflowY: "auto" }}>
         {(() => {
           const GROUP_BREAKS = new Set(["obras", "financeiro", "calculadora", "configuracoes"]);
           const items = [];
           navFiltro.forEach((n, idx) => {
             if (idx > 0 && GROUP_BREAKS.has(n.key)) {
               items.push(
-                <div key={`div-${n.key}`} style={{ margin: "6px 4px", borderTop: `1px solid ${C.border}` }} />
+                <div key={`div-${n.key}`} style={{ margin: "10px 0", borderTop: "1px solid #25282e" }} />
               );
             }
             const isActive = active === n.key;
@@ -89,29 +90,28 @@ export default function Sidebar({ open, onClose }) {
                 onClick={() => { setActivePage(n.key); onClose?.(); }}
                 style={{
                   display: "flex", alignItems: "center", gap: 10, width: "100%",
-                  padding: "10px 12px",
-                  background: isActive ? `rgba(152,25,21,0.08)` : "transparent",
+                  padding: "9px 22px",
+                  background: isActive ? "rgba(152,25,21,0.16)" : "transparent",
                   border: "none",
-                  borderRight: isActive ? `3px solid ${C.red}` : "3px solid transparent",
-                  borderRadius: 8,
+                  borderLeft: isActive ? "3px solid #981915" : "3px solid transparent",
                   cursor: "pointer",
-                  color: isActive ? C.red : C.muted,
-                  fontSize: 13.5, fontWeight: isActive ? 600 : 400,
+                  color: isActive ? "#ffffff" : "#9aa0a8",
+                  fontSize: 13, fontWeight: isActive ? 700 : 500,
                   textAlign: "left", transition: "all .15s",
                   fontFamily: "inherit",
                 }}
-                onMouseEnter={e => { if (!isActive) { e.currentTarget.style.background = "rgba(152,25,21,0.06)"; e.currentTarget.style.color = C.red; } }}
-                onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = C.muted; } }}
+                onMouseEnter={e => { if (!isActive) { e.currentTarget.style.background = "#1e2127"; e.currentTarget.style.color = "#ffffff"; } }}
+                onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#9aa0a8"; } }}
               >
-                <NavIcon name={n.icon} size={16} color={isActive ? C.red : C.muted} />
+                <NavIcon name={n.icon} size={15} color={isActive ? "#ffffff" : "#9aa0a8"} />
                 <span style={{ flex: 1 }}>{n.label}</span>
                 {n.key === "crm" && followupsVencidos > 0 && (
-                  <span style={{ background: C.red, color: "#fff", borderRadius: 100, fontSize: 10, fontWeight: 700, padding: "1px 7px", minWidth: 18, textAlign: "center" }}>
+                  <span style={{ background: "#981915", color: "#fff", borderRadius: 100, fontSize: 10, fontWeight: 700, padding: "1px 7px", minWidth: 18, textAlign: "center" }}>
                     {followupsVencidos}
                   </span>
                 )}
                 {n.key === "orcamentos" && preOrcCount > 0 && (
-                  <span style={{ background: C.success, color: "#fff", borderRadius: 100, fontSize: 10, fontWeight: 700, padding: "1px 7px", minWidth: 18, textAlign: "center" }}>
+                  <span style={{ background: "#2e9e5b", color: "#fff", borderRadius: 100, fontSize: 10, fontWeight: 700, padding: "1px 7px", minWidth: 18, textAlign: "center" }}>
                     {preOrcCount}
                   </span>
                 )}
@@ -123,24 +123,24 @@ export default function Sidebar({ open, onClose }) {
       </nav>
 
       {/* User */}
-      <div style={{ padding: "16px", borderTop: `1px solid ${C.border}` }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", background: C.darker, borderRadius: 12 }}>
+      <div style={{ padding: "16px", borderTop: "1px solid #25282e" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", background: "rgba(255,255,255,0.04)", borderRadius: 12 }}>
           <div style={{ width: 38, height: 38, borderRadius: "50%", background: perfil.cor + "22", border: `2px solid ${perfil.cor}44`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700, color: perfil.cor, flexShrink: 0 }}>
             {user?.nome?.[0] || "U"}
           </div>
           <div style={{ overflow: "hidden", flex: 1 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", color: C.text }}>{user?.nome}</div>
-            <div style={{ fontSize: 11, color: C.muted, marginTop: 1 }}>{perfil.label}</div>
+            <div style={{ fontSize: 13, fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", color: "#ffffff" }}>{user?.nome}</div>
+            <div style={{ fontSize: 11, color: "#9aa0a8", marginTop: 1 }}>{perfil.label}</div>
           </div>
           {confirm ? (
             <div style={{ fontSize: 11, whiteSpace: "nowrap" }}>
-              <button onClick={logout} style={{ background: "none", border: "none", color: C.red, cursor: "pointer", fontWeight: 700, fontSize: 11 }}>Sair</button>
+              <button onClick={logout} style={{ background: "none", border: "none", color: "#c9484a", cursor: "pointer", fontWeight: 700, fontSize: 11 }}>Sair</button>
               {" · "}
-              <button onClick={() => setConfirm(false)} style={{ background: "none", border: "none", color: C.muted, cursor: "pointer", fontSize: 11 }}>Não</button>
+              <button onClick={() => setConfirm(false)} style={{ background: "none", border: "none", color: "#9aa0a8", cursor: "pointer", fontSize: 11 }}>Não</button>
             </div>
           ) : (
-            <button onClick={() => setConfirm(true)} title="Sair" style={{ background: "none", border: "none", color: C.muted, cursor: "pointer", padding: 4, borderRadius: 6, lineHeight: 1 }}>
-              <NavIcon name="LogOut" size={15} color={C.muted} />
+            <button onClick={() => setConfirm(true)} title="Sair" style={{ background: "none", border: "none", color: "#9aa0a8", cursor: "pointer", padding: 4, borderRadius: 6, lineHeight: 1 }}>
+              <NavIcon name="LogOut" size={15} color="#9aa0a8" />
             </button>
           )}
         </div>

@@ -48,8 +48,8 @@ export const createContratoSlice = (set, get) => ({
     }
   },
 
-  loadOrcamentos: async () => {
-    if (get().loaded.orcamentos) return;
+  loadOrcamentos: async (force = false) => {
+    if (get().loaded.orcamentos && !force) return;
     get().setLoading("orcamentos", true);
     try {
       const data = await listarOrcamentos();

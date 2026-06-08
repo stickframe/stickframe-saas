@@ -18,6 +18,7 @@ export const createClienteSlice = (set, get) => ({
     const data = await criarCliente(c);
     set((s) => ({ clientes: [...s.clientes, data] }));
     get().registrar("cliente", "criado", `Cliente ${c.nome} cadastrado`);
+    return data;
   },
 
   updateCliente: async (id, updates) => {

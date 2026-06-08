@@ -93,11 +93,42 @@ export const CATEGORIAS_DESPESA = ["Materiais","Mão de obra","Projeto","Transpo
 export const CATEGORIAS_RECEITA = ["Entrada contrato","Medição 1","Medição 2","Medição 3","Saldo final","Outros"];
 
 // ─── PRECOS POR PADRÃO ───────────────────────────────────────────────────────
-export const PRECOS = {
+const defaultPrecos = {
   "Econômico":   { label: "Econômico",   m2: 2800 },
   "Padrão":      { label: "Padrão",      m2: 3500 },
   "Alto Padrão": { label: "Alto Padrão", m2: 4800 },
 };
+
+export const PRECOS = new Proxy({}, {
+  get(target, prop) {
+    try {
+      const local = localStorage.getItem("sf_precos_m2");
+      if (local) {
+        const parsed = JSON.parse(local);
+        if (parsed && parsed[prop]) {
+          return parsed[prop];
+        }
+      }
+    } catch (_) {}
+    return defaultPrecos[prop];
+  },
+  ownKeys(target) {
+    try {
+      const local = localStorage.getItem("sf_precos_m2");
+      if (local) {
+        const parsed = JSON.parse(local);
+        if (parsed) return Reflect.ownKeys(parsed);
+      }
+    } catch (_) {}
+    return Reflect.ownKeys(defaultPrecos);
+  },
+  getOwnPropertyDescriptor(target, prop) {
+    return {
+      enumerable: true,
+      configurable: true,
+    };
+  }
+});
 
 // ─── TIPOS EVENTO ────────────────────────────────────────────────────────────
 export const TIPOS_EVENTO = ["Visita de obra","Reunião com cliente","Vistoria","Entrega de documentos","Medição","Outro"];
