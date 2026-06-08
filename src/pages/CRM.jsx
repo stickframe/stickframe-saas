@@ -10,6 +10,7 @@ import { useToast } from "../hooks/useToast";
 import { useSavedViews } from "../hooks/useSavedViews";
 import SavedViewsBar from "../components/ui/SavedViewsBar";
 import Btn from "../components/ui/Btn";
+import FormAiImport from "../components/ui/FormAiImport";
 import Input from "../components/ui/Input";
 import Select from "../components/ui/Select";
 import Badge from "../components/ui/Badge";
@@ -344,6 +345,7 @@ export default function CRM() {
   const clientes       = useAppStore((s) => s.clientes);
   const addCliente     = useAppStore((s) => s.addCliente);
   const updateCliente  = useAppStore((s) => s.updateCliente);
+  const addOrcamento   = useAppStore((s) => s.addOrcamento);
   const setActivePage  = useAppStore((s) => s.setActivePage);
   const userPerfil     = useAppStore((s) => s.user?.perfil);
 
@@ -368,6 +370,7 @@ export default function CRM() {
   const [csvModal,   setCsvModal]   = useState(false);
   const [csvPreview, setCsvPreview] = useState([]);
   const [csvErro,    setCsvErro]    = useState("");
+  const [aiImportModal, setAiImportModal] = useState(false);
   const [waModal,    setWaModal]    = useState(null); // cliente para WA modal
   const [scoreModal, setScoreModal] = useState(null); // cliente para score detail
   const [seqLoading, setSeqLoading] = useState(false);
@@ -617,6 +620,16 @@ export default function CRM() {
       )}
 
       {/* Modais */}
+      {aiImportModal && (
+        <Modal title="Importar Proposta por IA" onClose={() => setAiImportModal(false)}>
+          <FormAiImport
+            onClose={() => setAiImportModal(false)}
+            mostrarToast={mostrarToast}
+            addCliente={addCliente}
+            addOrcamento={addOrcamento}
+          />
+        </Modal>
+      )}
       {modal === "novo" && (
         <Modal title="Novo cliente" onClose={() => setModal(false)}>
           <FormCliente
@@ -730,7 +743,8 @@ export default function CRM() {
           <p style={{ color: C.muted, fontSize: 13, marginTop: 4 }}>Gerencie seu funil de vendas e contatos</p>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
-          <Btn variant="ghost" onClick={() => { setCsvPreview([]); setCsvErro(""); setCsvModal(true); }}>⬆ Importar</Btn>
+          <Btn variant="ghost" onClick={() => { setCsvPreview([]); setCsvErro(""); setCsvModal(true); }}>⬆ Importar CSV</Btn>
+          <Btn variant="ghost" onClick={() => setAiImportModal(true)}>🤖 Importar por IA</Btn>
           <Btn onClick={abrirNovo}>+ Nova oportunidade</Btn>
         </div>
       </div>
