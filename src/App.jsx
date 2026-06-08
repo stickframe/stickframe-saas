@@ -3,6 +3,7 @@ import { setEmpresaId } from "./services/supabase";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import "./styles/globals.css";
 import "./styles/responsive.css";
+import "./styles/theme-stickframe.css";
 import useAppStore from "./store/useAppStore";
 import AppLayout from "./components/layout/AppLayout";
 import LoginScreen from "./pages/LoginScreen";

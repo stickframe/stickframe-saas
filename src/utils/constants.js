@@ -1,20 +1,29 @@
-// ─── PALETA (TEMA CLARO) ─────────────────────────────────────────────────────
+// ─── PALETA (re-ancorada na marca: tijolo + grafite, neutros quentes) ────────
+// Mesmas CHAVES de antes — nada quebra. Só os valores mudaram + cores de dados novas.
 export const C = {
-  red:      "#dc2626",
-  redDark:  "#b91c1c",
-  graphite: "#334155",
-  dark:     "#f8fafc",
-  darker:   "#f1f5f9",
+  red:      "#981915",   // vermelho tijolo da marca (era #dc2626 genérico)
+  redDark:  "#7d1411",
+  graphite: "#2b2b2e",   // grafite (sidebar / tinta forte)
+  dark:     "#faf8f4",   // superfície alternativa quente (era slate frio)
+  darker:   "#efeae2",   // fundo interno suave
   surface:  "#ffffff",
-  border:   "#e2e8f0",
-  shadow:   "0 1px 3px rgba(0,0,0,0.08)",
-  text:     "#0f172a",
-  muted:    "#64748b",
-  success:  "#16a34a",
-  warning:  "#d97706",
-  danger:   "#dc2626",
+  border:   "#e7e1d8",   // borda quente (era #e2e8f0 frio)
+  shadow:   "0 1px 2px rgba(40,30,20,0.06)",
+  text:     "#26231f",   // tinta quente quase-preta (era slate #0f172a)
+  muted:    "#8c847a",   // texto terciário / labels
+  success:  "#3f7a4b",   // sálvia
+  warning:  "#b07a1e",   // ocre
+  danger:   "#a33327",   // argila/vermelho de alerta
   card:     "#ffffff",
-  bg:       "#f8fafc",
+  bg:       "#f4f1ec",   // fundo da aplicação (osso/concreto claro)
+
+  // ── Cores de dados (escala categórica sóbria) — chaves NOVAS, opcionais ──
+  steel:    "#3b6ea5",   // aço (azul) — antes muitos usavam "#4a9eff"
+  ochre:    "#c0892d",
+  sage:     "#4f7d57",
+  plum:     "#6d557e",
+  clay:     "#b8624a",
+  brickSoft:"#f3e7e5",   // fundo suave do tijolo (para chips/realces)
 };
 
 
@@ -63,7 +72,7 @@ export const PERFIS = {
   },
   engenheiro: {
     label: "Engenheiro",
-    cor: "#4a9eff",
+    cor: C.steel,
     // Foco em entrega: sem CRM, financeiro global ou pipeline comercial
     paginas: ["dashboard","obras","cronograma","medicoes","diario","vistorias","bim","quantitativos","fornecedores","monitor_precos","calculadora","orcamento_tecnico","equipamentos","checklists","equipe","sst","suprimentos","historico","inteligencia","configuracoes"],
   },
@@ -98,9 +107,9 @@ export const TIPOS_EVENTO = ["Visita de obra","Reunião com cliente","Vistoria",
 export const COR_TIPO_EVENTO = {
   "Visita de obra":         C.red,
   "Reunião com cliente":    C.warning,
-  "Vistoria":               "#4a9eff",
+  "Vistoria":               C.steel,
   "Entrega de documentos":  C.success,
-  "Medição":                "#9b59b6",
+  "Medição":                C.plum,
   "Outro":                  C.muted,
 };
 
