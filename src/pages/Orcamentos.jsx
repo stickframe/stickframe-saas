@@ -843,6 +843,7 @@ export default function Orcamentos() {
   const deleteObra      = useAppStore((s) => s.deleteObra);
   const addLancamento   = useAppStore((s) => s.addLancamento);
   const setActivePage   = useAppStore((s) => s.setActivePage);
+  const addCliente      = useAppStore((s) => s.addCliente);
 
   const [modal,        setModal]        = useState(false);
   const [editId,       setEditId]       = useState(null);

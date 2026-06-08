@@ -16,7 +16,7 @@ async function _hydrateUser(set, get, authUser, email) {
       email: email || authUser.email,
       nome:   usuario.nome  || authUser.email.split("@")[0],
       cargo:  usuario.cargo || "Usuário",
-      perfil: usuario.perfil || "comercial",
+      perfil: (usuario.perfil || "comercial").toLowerCase(),
       plano:  empresa?.plano || "free",
       uid:    authUser.id,
       id:     authUser.id,
