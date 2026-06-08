@@ -1,9 +1,22 @@
 import { createClient } from "@supabase/supabase-js";
 
-export const sb = createClient(
-  import.meta.env.VITE_SUPABASE_URL || "https://placeholder.supabase.co",
-  import.meta.env.VITE_SUPABASE_KEY || "placeholder"
-);
+const url = import.meta.env.VITE_SUPABASE_URL;
+const key = import.meta.env.VITE_SUPABASE_KEY;
+
+const isValidUrl = (u) => {
+  if (!u) return false;
+  try {
+    const parsed = new URL(u);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch (_) {
+    return false;
+  }
+};
+
+const supabaseUrl = isValidUrl(url) ? url : "https://placeholder.supabase.co";
+const supabaseKey = (key && key !== "COLE_AQUI") ? key : "placeholder";
+
+export const sb = createClient(supabaseUrl, supabaseKey);
 
 let _empresaId = null;
 try {
