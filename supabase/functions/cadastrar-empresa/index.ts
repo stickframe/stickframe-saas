@@ -30,7 +30,11 @@ Deno.serve(async (req) => {
       email_confirm: true,
     });
     if (authError) {
-      if (authError.message.includes("already registered") || authError.message.includes("already been registered")) {
+      if (
+        authError.message.includes("already registered") ||
+        authError.message.includes("already been registered") ||
+        authError.message.includes("already exists")
+      ) {
         throw new Error("Este e-mail já está cadastrado.");
       }
       throw authError;
@@ -55,7 +59,12 @@ Deno.serve(async (req) => {
       empresa_id: empresa.id,
       ativo: true,
     });
-    if (usrError) throw usrError;
+    if (usrError) {
+      if (usrError.message.includes("duplicate key") || usrError.code === "23505") {
+        throw new Error("Este e-mail já está cadastrado.");
+      }
+      throw usrError;
+    }
 
     // Envia email de boas-vindas
     const resendKey = Deno.env.get("RESEND_API_KEY");
