@@ -13,6 +13,7 @@ import { gerarRelatorioMensal as gerarPdfMensal } from "../services/relatorioSer
 import SmartAlerts from "../components/ui/SmartAlerts";
 import DashboardKPIs from "../components/Dashboard/DashboardKPIs";
 import ComplianceNR from "../components/Dashboard/ComplianceNR";
+import CalculadoraRapida from "../components/ui/CalculadoraRapida";
 
 // ─── Mini Sparkline ───────────────────────────────────────────────────────────
 function Sparkline({ data = [], color = C.success, height = 32, width = 64 }) {
@@ -768,6 +769,9 @@ ${obrasAndamento.length > 0 ? `
           ))}
         </div>
       </div>
+
+      {/* Simulação Rápida */}
+      <div style={{ marginBottom: 20 }}><CalculadoraRapida /></div>
 
       {/* Novos KPIs principais com a tipografia Barlow Condensed */}
       <div style={{ marginBottom: 20 }}><DashboardKPIs /></div>
