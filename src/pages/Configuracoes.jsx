@@ -1094,6 +1094,79 @@ export default function Configuracoes() {
               </div>
             </div>
           </Card>
+
+          {/* Google Calendar / iCal */}
+          <Card
+            title="📅 Google Calendar / iCal"
+            subtitle="Adicione seus compromissos do StickFrame no Google Calendar, Apple Calendar ou Outlook"
+          >
+            {apiKey ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+                <div style={{ fontSize: 13, color: C.muted, lineHeight: 1.6 }}>
+                  Use o link abaixo para sincronizar seus eventos do StickFrame com qualquer aplicativo de calendário que suporte o formato iCalendar (.ics).
+                  O feed é atualizado automaticamente e exibe os compromissos dos próximos 90 dias.
+                </div>
+
+                <div>
+                  <LabelF>URL do Feed iCal</LabelF>
+                  <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                    <div style={{
+                      flex: 1, padding: "10px 14px", background: C.darker,
+                      border: `1px solid ${C.border}`, borderRadius: 8,
+                      fontSize: 12, color: C.muted, fontFamily: "monospace",
+                      overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                    }}>
+                      {`https://gpzmglcxmbboxxogbibq.supabase.co/functions/v1/agenda-ical?token=${apiKey}`}
+                    </div>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(`https://gpzmglcxmbboxxogbibq.supabase.co/functions/v1/agenda-ical?token=${apiKey}`);
+                        mostrarToast("✅ Link copiado!");
+                      }}
+                      style={{
+                        padding: "10px 16px", background: C.red, color: "#fff",
+                        border: "none", borderRadius: 8, fontSize: 12, fontWeight: 700,
+                        cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap",
+                      }}
+                    >
+                      📋 Copiar link
+                    </button>
+                    <button
+                      onClick={() => {
+                        const feedUrl = `https://gpzmglcxmbboxxogbibq.supabase.co/functions/v1/agenda-ical?token=${apiKey}`;
+                        window.open(`https://calendar.google.com/calendar/r?cid=${encodeURIComponent(feedUrl)}`, "_blank");
+                      }}
+                      style={{
+                        padding: "10px 16px", background: "#1a73e8", color: "#fff",
+                        border: "none", borderRadius: 8, fontSize: 12, fontWeight: 700,
+                        cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap",
+                      }}
+                    >
+                      📆 Abrir no Google Calendar
+                    </button>
+                  </div>
+                </div>
+
+                <div style={{ background: C.darker, border: `1px solid ${C.border}`, borderRadius: 10, padding: "16px 18px" }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 10 }}>Como adicionar no Google Calendar:</div>
+                  <ol style={{ fontSize: 12, color: C.muted, paddingLeft: 18, lineHeight: 2 }}>
+                    <li>Clique em <strong style={{ color: C.text }}>"Abrir no Google Calendar"</strong> acima, ou acesse o Google Calendar</li>
+                    <li>No menu lateral, clique em <strong style={{ color: C.text }}>"Outros calendários"</strong> → <strong style={{ color: C.text }}>+</strong></li>
+                    <li>Selecione <strong style={{ color: C.text }}>"A partir do URL"</strong></li>
+                    <li>Cole o link copiado acima e clique em <strong style={{ color: C.text }}>"Adicionar calendário"</strong></li>
+                  </ol>
+                  <div style={{ fontSize: 11, color: C.muted, marginTop: 8, paddingTop: 8, borderTop: `1px solid ${C.border}` }}>
+                    Apple Calendar: Arquivo → Nova assinatura de calendário → Cole o link.<br />
+                    Outlook: Adicionar calendário → Da Internet → Cole o link.
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div style={{ fontSize: 13, color: C.muted, padding: "10px 0" }}>
+                Gere uma Chave de API (acima) para habilitar o feed de calendário.
+              </div>
+            )}
+          </Card>
         </>
       )}
 
