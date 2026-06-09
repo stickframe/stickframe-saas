@@ -9,9 +9,7 @@ import { C, NAV } from "../../utils/constants";
 import { buscarEmpresa } from "../../services/repositories/empresaRepository";
 import useAppStore from "../../store/useAppStore";
 import { useTrial } from "../../hooks/useTrial";
-import { lazy, Suspense } from "react";
-
-const Onboarding = lazy(() => import("../../pages/Onboarding"));
+import OnboardingWizard from "../ui/OnboardingWizard";
 
 export default function AppLayout({ children }) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -54,9 +52,7 @@ export default function AppLayout({ children }) {
   return (
     <div className="app-layout">
       {showOnboarding && checkDone && (
-        <Suspense fallback={null}>
-          <Onboarding onComplete={() => setShowOnboarding(false)} />
-        </Suspense>
+        <OnboardingWizard onComplete={() => setShowOnboarding(false)} />
       )}
 
       {menuOpen && (
