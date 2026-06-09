@@ -70,6 +70,22 @@ export default function PropostaOnline() {
         status: "Aprovado",
       }).eq("proposta_token", token);
       setAceiteFeito(true);
+
+      // Transmissão em tempo real (broadcast) do aceite para o comercial
+      const empId = orc?.empresa_id;
+      if (empId) {
+        const channel = sb.channel(`orcamentos-public:${empId}`);
+        channel.subscribe(async (status) => {
+          if (status === "SUBSCRIBED") {
+            await channel.send({
+              type: "broadcast",
+              event: "aceite",
+              payload: { orcamentoId: orc.id, status: "Aprovado", aceite_nome: aceite.nome },
+            });
+            sb.removeChannel(channel);
+          }
+        });
+      }
     } finally { setEnviando(false); }
   }
 

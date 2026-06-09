@@ -450,15 +450,15 @@ export default function OrcamentoTecnico() {
     const dataHoje = new Date().toLocaleDateString("pt-BR");
     const cliente = formSalvar.cliente || "—";
     const rows = comparativoVersoes.map((v) => {
-      const cor = v.isAtual ? "#b91c1c" : v.diffTotal > 0 ? "#b45309" : v.diffTotal < 0 ? "#166534" : "#374151";
+      const cor = v.isAtual ? "#981915" : v.diffTotal > 0 ? "#b07a1e" : v.diffTotal < 0 ? "#3f7a4b" : "#374151";
       const diffTxt = v.isAtual ? "versão atual" : v.diffTotal > 0 ? `+${fmtBRL(v.diffTotal)} (+${v.diffPct.toFixed(1)}%)` : `${fmtBRL(v.diffTotal)} (${v.diffPct.toFixed(1)}%)`;
-      return `<tr style="border-bottom:1px solid #e5e7eb;background:${v.isAtual ? "#fef2f2" : "#fff"}">
+      return `<tr style="border-bottom:1px solid #e5e7eb;background:${v.isAtual ? "#f3e7e5" : "#fff"}">
         <td style="padding:12px 14px;font-weight:${v.isAtual ? 700 : 400};font-size:13px">${v.isAtual ? "► " : ""}${v.opcaoLabel}</td>
         <td style="padding:12px 14px;text-align:right;font-size:13px">${fmtBRL(v.totalMat)}</td>
         ${resultado.incluiMO ? `<td style="padding:12px 14px;text-align:right;font-size:13px;color:#2563eb">${fmtBRL(v.totalMO)}</td>` : ""}
         <td style="padding:12px 14px;text-align:right;font-size:13px">${fmtBRL(v.total)}</td>
         <td style="padding:12px 14px;text-align:right;font-size:13px">${fmtBRL(v.m2)}</td>
-        <td style="padding:12px 14px;text-align:right;font-size:14px;font-weight:700;color:#166534">${fmtBRL(v.precoVenda)}</td>
+        <td style="padding:12px 14px;text-align:right;font-size:14px;font-weight:700;color:#3f7a4b">${fmtBRL(v.precoVenda)}</td>
         <td style="padding:12px 14px;text-align:right;font-size:13px;color:${cor};font-weight:600">${diffTxt}</td>
       </tr>`;
     }).join("");
@@ -474,7 +474,7 @@ export default function OrcamentoTecnico() {
       <img src="${LOGO_STICKFRAME}" style="width:54px;height:54px;object-fit:contain;border-radius:8px">
       <div style="text-align:right">
         <div style="font-size:11px;letter-spacing:2px;color:#6b7280;font-weight:700">COMPARATIVO DE VERSÕES</div>
-        <div style="font-size:20px;font-weight:800;color:#b91c1c">Opções de Estrutura</div>
+        <div style="font-size:20px;font-weight:800;color:#981915">Opções de Estrutura</div>
         <div style="font-size:10px;color:#6b7280;margin-top:2px">DATA</div>
         <div style="font-size:13px;font-weight:700">${dataHoje}</div>
       </div>
@@ -755,15 +755,15 @@ export default function OrcamentoTecnico() {
     const pgtoRows = `
       <tr style="border-bottom:1px solid #e5e7eb">
         <td style="padding:12px 14px;font-weight:700;font-size:13px">Sinal / Mobiliza&ccedil;&atilde;o</td>
-        <td style="padding:12px 14px;font-weight:700;color:#b91c1c;font-size:13px">${fmtBRL(sinal)}</td>
+        <td style="padding:12px 14px;font-weight:700;color:#981915;font-size:13px">${fmtBRL(sinal)}</td>
         <td style="padding:12px 14px;font-size:13px;color:#374151">Pagamento antes do in&iacute;cio da obra, destinado &agrave; compra de materiais e mobiliza&ccedil;&atilde;o da equipe</td>
       </tr>
       <tr style="border-bottom:1px solid #e5e7eb">
         <td style="padding:12px 14px;font-weight:700;font-size:13px">Saldo</td>
-        <td style="padding:12px 14px;font-weight:700;color:#b91c1c;font-size:13px">${fmtBRL(r.precoVenda - sinal)}</td>
+        <td style="padding:12px 14px;font-weight:700;color:#981915;font-size:13px">${fmtBRL(r.precoVenda - sinal)}</td>
         <td style="padding:12px 14px;font-size:13px;color:#374151">Conforme medi&ccedil;&otilde;es das etapas de evolu&ccedil;&atilde;o de obra</td>
       </tr>
-      <tr style="background:#b91c1c">
+      <tr style="background:#981915">
         <td style="padding:12px 14px;font-weight:700;color:#fff;font-size:13px">Total do Contrato</td>
         <td style="padding:12px 14px;font-weight:700;color:#fff;font-size:14px">${fmtBRL(r.precoVenda)}</td>
         <td style="padding:12px 14px;color:#fecaca;font-size:12px">Sinal de ${fmtBRL(sinal)} + saldo conforme medi&ccedil;&otilde;es</td>
@@ -791,7 +791,7 @@ export default function OrcamentoTecnico() {
         <img src="${LOGO}" style="width:54px;height:54px;object-fit:contain;border-radius:8px">
         <div style="text-align:right">
           <div style="font-size:11px;letter-spacing:2px;color:#6b7280;font-weight:700">PROPOSTA COMERCIAL</div>
-          <div style="font-size:22px;font-weight:800;color:#b91c1c">N&ordm; ${numProposta}</div>
+          <div style="font-size:22px;font-weight:800;color:#981915">N&ordm; ${numProposta}</div>
           <div style="font-size:10px;color:#6b7280;margin-top:2px">DATA DE EMISS&Atilde;O</div>
           <div style="font-size:13px;font-weight:700">${dataHoje}</div>
         </div>
@@ -842,7 +842,7 @@ export default function OrcamentoTecnico() {
             <td style="padding:14px;text-align:right;font-size:13px">${r.area}</td>
             <td style="padding:14px;text-align:right;font-size:13px">m&sup2;</td>
             <td style="padding:14px;text-align:right;font-size:13px">${fmtBRL(m2)}</td>
-            <td style="padding:14px;text-align:right;font-size:14px;font-weight:800;color:#b91c1c">${fmtBRL(totalUnid)}</td>
+            <td style="padding:14px;text-align:right;font-size:14px;font-weight:800;color:#981915">${fmtBRL(totalUnid)}</td>
           </tr>
         </tbody>
       </table>
@@ -1114,7 +1114,7 @@ export default function OrcamentoTecnico() {
         </div>
 
         {crmLead && (
-          <div style={{ background: "#b91c1c15", border: "1px solid #b91c1c44", borderRadius: 8, padding: "10px 14px", display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ background: C.red + "15", border: `1px solid ${C.red}44`, borderRadius: 8, padding: "10px 14px", display: "flex", alignItems: "center", gap: 10 }}>
             <span style={{ fontSize: 18 }}><Link size={11} /></span>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 11, color: C.red, fontWeight: 700 }}>VIA CRM</div>

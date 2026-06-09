@@ -69,10 +69,10 @@ function AbaStatus({ obra }) {
 
       {/* Prazo */}
       {prazoFim && (
-        <div style={{ background: diasRestantes < 0 ? "#fef2f2" : diasRestantes <= 14 ? "#fffbeb" : "#f0fdf4", borderRadius: 14, padding: "14px 16px", border: `1px solid ${diasRestantes < 0 ? "#fecaca" : diasRestantes <= 14 ? "#fde68a" : "#bbf7d0"}` }}>
+        <div style={{ background: diasRestantes < 0 ? C.red + "15" : diasRestantes <= 14 ? "#fffbeb" : "#f0fdf4", borderRadius: 14, padding: "14px 16px", border: `1px solid ${diasRestantes < 0 ? C.red + "33" : diasRestantes <= 14 ? "#fde68a" : "#bbf7d0"}` }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 6 }}>PRAZO DE ENTREGA</div>
           <div style={{ fontSize: 18, fontWeight: 900 }}>{prazoFim.toLocaleDateString("pt-BR", { day: "numeric", month: "long", year: "numeric" })}</div>
-          <div style={{ fontSize: 13, fontWeight: 700, marginTop: 4, color: diasRestantes < 0 ? "#dc2626" : diasRestantes <= 14 ? C.warning : C.success }}>
+          <div style={{ fontSize: 13, fontWeight: 700, marginTop: 4, color: diasRestantes < 0 ? C.red : diasRestantes <= 14 ? C.warning : C.success }}>
             {diasRestantes < 0 ? `⚠️ ${Math.abs(diasRestantes)} dias de atraso` : diasRestantes === 0 ? "🎯 Entrega hoje!" : `✅ ${diasRestantes} dias restantes`}
           </div>
         </div>
@@ -279,7 +279,7 @@ function AbaCheckin({ obraId }) {
             {FUNCOES.map((f) => <option key={f}>{f}</option>)}
           </select>
         </div>
-        {erro && <div style={{ background: "#fef2f2", color: "#dc2626", borderRadius: 8, padding: "10px 14px", fontSize: 13, marginBottom: 12 }}>{erro}</div>}
+        {erro && <div style={{ background: C.red + "15", color: C.red, border: `1px solid ${C.red}33`, borderRadius: 8, padding: "10px 14px", fontSize: 13, marginBottom: 12 }}>{erro}</div>}
         {sucesso && <div style={{ background: "#f0fdf4", color: C.success, borderRadius: 8, padding: "10px 14px", fontSize: 13, fontWeight: 600, marginBottom: 12 }}>✅ Presença registrada!</div>}
         <button onClick={registrar} disabled={enviando || !nome.trim()}
           style={{ width: "100%", padding: "14px", borderRadius: 12, border: "none", background: !nome.trim() || enviando ? "#ccc" : C.red, color: "#fff", fontSize: 15, fontWeight: 700, cursor: nome.trim() && !enviando ? "pointer" : "not-allowed", fontFamily: "inherit" }}>

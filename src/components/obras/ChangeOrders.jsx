@@ -18,16 +18,16 @@ import { fmt } from "../../utils/format";
 const fmtDate = (s) => (s ? new Date(s).toLocaleDateString("pt-BR") : "—");
 
 const TIPO_COLORS = {
-  Aditivo:   { bg: "#dbeafe", color: "#1d4ed8", border: "#93c5fd" },
-  Supressão: { bg: "#fee2e2", color: "#b91c1c", border: "#fca5a5" },
-  Alteração: { bg: "#fef9c3", color: "#92400e", border: "#fde68a" },
+  Aditivo:   { bg: C.steel + "15", color: C.steel, border: C.steel + "44" },
+  Supressão: { bg: C.danger + "15", color: C.danger, border: C.danger + "44" },
+  Alteração: { bg: C.warning + "15", color: C.warning, border: C.warning + "44" },
 };
 
 const STATUS_COLORS = {
   Rascunho:  { bg: "#f3f4f6", color: "#6b7280", border: "#d1d5db" },
-  Pendente:  { bg: "#fff7ed", color: "#c2410c", border: "#fdba74" },
-  Aprovado:  { bg: "#dcfce7", color: "#15803d", border: "#86efac" },
-  Rejeitado: { bg: "#fee2e2", color: "#b91c1c", border: "#fca5a5" },
+  Pendente:  { bg: C.warning + "15", color: C.warning, border: C.warning + "44" },
+  Aprovado:  { bg: C.success + "15", color: C.success, border: C.success + "44" },
+  Rejeitado: { bg: C.danger + "15", color: C.danger, border: C.danger + "44" },
 };
 
 const TIPO_OPTS = ["Aditivo", "Supressão", "Alteração"];
@@ -199,11 +199,11 @@ export default function ChangeOrders({ obraId, userPerfil }) {
             {lista.length > 0 && (
               <span style={{ marginLeft: 8 }}>
                 · Aprovados:{" "}
-                <strong style={{ color: totalAprovado >= 0 ? "#15803d" : "#b91c1c" }}>
+                <strong style={{ color: totalAprovado >= 0 ? C.success : C.danger }}>
                   {totalAprovado >= 0 ? "+" : ""}{fmt(totalAprovado)}
                 </strong>
                 {diasImpacto !== 0 && (
-                  <span style={{ marginLeft: 6, color: diasImpacto > 0 ? "#c2410c" : "#15803d" }}>
+                  <span style={{ marginLeft: 6, color: diasImpacto > 0 ? C.warning : C.success }}>
                     · {diasImpacto > 0 ? "+" : ""}{diasImpacto} dia{Math.abs(diasImpacto) !== 1 ? "s" : ""}
                   </span>
                 )}
@@ -325,9 +325,9 @@ export default function ChangeOrders({ obraId, userPerfil }) {
                     {co.solicitado_por && <div><strong>Solicitado por:</strong> {co.solicitado_por}</div>}
                     {co.descricao && <div><strong>Descrição:</strong> {co.descricao}</div>}
                     {co.justificativa && <div><strong>Justificativa:</strong> {co.justificativa}</div>}
-                    {co.observacoes && <div style={{ color: "#b91c1c" }}><strong>Obs:</strong> {co.observacoes}</div>}
+                    {co.observacoes && <div style={{ color: C.danger }}><strong>Obs:</strong> {co.observacoes}</div>}
                     {co.status === "Aprovado" && co.data_aprovacao && (
-                      <div style={{ color: "#15803d" }}>Aprovado em {fmtDate(co.data_aprovacao)}{co.aprovado_por ? ` por ${co.aprovado_por}` : ""}</div>
+                      <div style={{ color: C.success }}>Aprovado em {fmtDate(co.data_aprovacao)}{co.aprovado_por ? ` por ${co.aprovado_por}` : ""}</div>
                     )}
                   </div>
                 )}
@@ -341,8 +341,8 @@ export default function ChangeOrders({ obraId, userPerfil }) {
       {lista.length > 0 && (
         <div style={{
           marginTop: 16, padding: "10px 16px", borderRadius: 8,
-          background: "#f0fdf4", border: "1px solid #86efac",
-          fontSize: 13, color: "#15803d", fontWeight: 600,
+          background: C.success + "15", border: "1px solid " + C.success + "44",
+          fontSize: 13, color: C.success, fontWeight: 600,
           display: "flex", gap: 16, flexWrap: "wrap",
         }}>
           <span>Total aprovado: {fmt(totalAprovado)}</span>

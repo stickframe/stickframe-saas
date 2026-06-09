@@ -44,9 +44,9 @@ export default function ModalUpgradePro({ onClose }) {
         </div>
 
         {/* Benefícios resumidos */}
-        <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 10, padding: "12px 16px", marginBottom: 20 }}>
+        <div style={{ background: C.brickSoft, border: `1px solid ${C.red}33`, borderRadius: 10, padding: "12px 16px", marginBottom: 20 }}>
           {["Obras ilimitadas", "Até 10 usuários", "Relatórios PDF", "CRM de clientes", "Suporte prioritário"].map((b) => (
-            <div key={b} style={{ fontSize: 13, color: "#dc2626", fontWeight: 600, display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+            <div key={b} style={{ fontSize: 13, color: C.red, fontWeight: 600, display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
               <span>✓</span> {b}
             </div>
           ))}

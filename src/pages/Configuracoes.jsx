@@ -127,6 +127,21 @@ export default function Configuracoes() {
   // Perfis customizados (para dropdown de usuários)
   const perfisCustomizados = useAppStore((s) => s.perfisCustomizados);
 
+  const [precosM2, setPrecosM2] = useState(() => {
+    try {
+      const local = localStorage.getItem("sf_precos_m2");
+      if (local) {
+        const parsed = JSON.parse(local);
+        return {
+          economico: parsed["Econômico"]?.m2 || 2800,
+          padrao: parsed["Padrão"]?.m2 || 3500,
+          altoPadrao: parsed["Alto Padrão"]?.m2 || 4800,
+        };
+      }
+    } catch (_) {}
+    return { economico: 2800, padrao: 3500, altoPadrao: 4800 };
+  });
+
 
 
   // ── Carrega dados ─────────────────────────────────────────────────────────
@@ -810,6 +825,51 @@ export default function Configuracoes() {
             }}>
               Enviar erro de teste
             </Btn>
+          </Card>
+          <Card title="Preço do m² por Padrão Construtivo" subtitle="Valores base utilizados no cálculo de orçamentos por m²">
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <div className="sf-grid-3">
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, marginBottom: 6 }}>ECONÔMICO (R$/m²)</div>
+                  <Input
+                    type="number"
+                    value={precosM2.economico}
+                    onChange={(v) => setPrecosM2(p => ({ ...p, economico: Math.max(0, parseInt(v) || 0) }))}
+                  />
+                </div>
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, marginBottom: 6 }}>PADRÃO (R$/m²)</div>
+                  <Input
+                    type="number"
+                    value={precosM2.padrao}
+                    onChange={(v) => setPrecosM2(p => ({ ...p, padrao: Math.max(0, parseInt(v) || 0) }))}
+                  />
+                </div>
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, marginBottom: 6 }}>ALTO PADRÃO (R$/m²)</div>
+                  <Input
+                    type="number"
+                    value={precosM2.altoPadrao}
+                    onChange={(v) => setPrecosM2(p => ({ ...p, altoPadrao: Math.max(0, parseInt(v) || 0) }))}
+                  />
+                </div>
+              </div>
+              <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 6 }}>
+                <Btn onClick={() => {
+                  try {
+                    const toSave = {
+                      "Econômico":   { label: "Econômico",   m2: precosM2.economico },
+                      "Padrão":      { label: "Padrão",      m2: precosM2.padrao },
+                      "Alto Padrão": { label: "Alto Padrão", m2: precosM2.altoPadrao },
+                    };
+                    localStorage.setItem("sf_precos_m2", JSON.stringify(toSave));
+                    mostrarToast("✅ Preços atualizados com sucesso!");
+                  } catch (e) {
+                    mostrarToast("Erro ao salvar preços.", true);
+                  }
+                }}>💾 Salvar valores de m²</Btn>
+              </div>
+            </div>
           </Card>
 
           <Card title="Informações do Build">

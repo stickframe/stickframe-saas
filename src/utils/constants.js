@@ -1,22 +1,32 @@
-// ─── PALETA (TEMA CLARO) ─────────────────────────────────────────────────────
+/**
+ * Stick Frame — Global Style Constants
+ * 
+ * Objeto `C` contendo as variáveis semânticas de cor.
+ * Utilizado para manter consistência em componentes que dependem
+ * de cores via prop `style` (gráficos, SVGs, etc).
+ */
 export const C = {
-  red:      "#dc2626",
-  redDark:  "#b91c1c",
-  graphite: "#334155",
-  dark:     "#f8fafc",
-  darker:   "#f1f5f9",
-  surface:  "#ffffff",
-  border:   "#e2e8f0",
-  shadow:   "0 1px 3px rgba(0,0,0,0.08)",
-  text:     "#0f172a",
-  muted:    "#64748b",
-  success:  "#16a34a",
-  warning:  "#d97706",
-  danger:   "#dc2626",
-  card:     "#ffffff",
-  bg:       "#f8fafc",
-};
+  // Marca
+  red: '#981915',
+  redDark: '#7d1411',
+  brickSoft: '#f3e7e5',
 
+  // Neutros Quentes
+  surface: '#ffffff',
+  surface2: '#faf8f4',
+  bg: '#f4f1ec',
+  border: '#e7e1d8',
+  text: '#26231f',
+  muted: '#8c847a',
+  graphite: '#2b2b2e',
+
+  // Semânticas e Acentos de Dados
+  success: '#3f7a4b',
+  warning: '#b07a1e',
+  danger: '#a33327',
+  steel: '#3b6ea5',
+  purple: '#6d557e'
+};
 
 // ─── NAV ─────────────────────────────────────────────────────────────────────
 export const NAV = [
@@ -58,19 +68,16 @@ export const PERFIS = {
   comercial: {
     label: "Comercial",
     cor: C.warning,
-    // Foco em prospecção: sem acesso a financeiro global, obras, medições
     paginas: ["dashboard","agenda","crm","orcamentos","configuracoes"],
   },
   engenheiro: {
     label: "Engenheiro",
-    cor: "#4a9eff",
-    // Foco em entrega: sem CRM, financeiro global ou pipeline comercial
+    cor: C.steel,
     paginas: ["dashboard","obras","cronograma","medicoes","diario","vistorias","bim","quantitativos","fornecedores","monitor_precos","calculadora","orcamento_tecnico","equipamentos","checklists","equipe","sst","suprimentos","historico","inteligencia","configuracoes"],
   },
   financeiro: {
     label: "Financeiro",
     cor: C.success,
-    // Foco em números: sem obras operacionais ou CRM
     paginas: ["dashboard","financeiro","contratos","historico","monitor_precos","configuracoes"],
   },
 };
@@ -86,11 +93,42 @@ export const CATEGORIAS_DESPESA = ["Materiais","Mão de obra","Projeto","Transpo
 export const CATEGORIAS_RECEITA = ["Entrada contrato","Medição 1","Medição 2","Medição 3","Saldo final","Outros"];
 
 // ─── PRECOS POR PADRÃO ───────────────────────────────────────────────────────
-export const PRECOS = {
+const defaultPrecos = {
   "Econômico":   { label: "Econômico",   m2: 2800 },
   "Padrão":      { label: "Padrão",      m2: 3500 },
   "Alto Padrão": { label: "Alto Padrão", m2: 4800 },
 };
+
+export const PRECOS = new Proxy({}, {
+  get(target, prop) {
+    try {
+      const local = localStorage.getItem("sf_precos_m2");
+      if (local) {
+        const parsed = JSON.parse(local);
+        if (parsed && parsed[prop]) {
+          return parsed[prop];
+        }
+      }
+    } catch (_) {}
+    return defaultPrecos[prop];
+  },
+  ownKeys(target) {
+    try {
+      const local = localStorage.getItem("sf_precos_m2");
+      if (local) {
+        const parsed = JSON.parse(local);
+        if (parsed) return Reflect.ownKeys(parsed);
+      }
+    } catch (_) {}
+    return Reflect.ownKeys(defaultPrecos);
+  },
+  getOwnPropertyDescriptor(target, prop) {
+    return {
+      enumerable: true,
+      configurable: true,
+    };
+  }
+});
 
 // ─── TIPOS EVENTO ────────────────────────────────────────────────────────────
 export const TIPOS_EVENTO = ["Visita de obra","Reunião com cliente","Vistoria","Entrega de documentos","Medição","Outro"];
@@ -98,9 +136,9 @@ export const TIPOS_EVENTO = ["Visita de obra","Reunião com cliente","Vistoria",
 export const COR_TIPO_EVENTO = {
   "Visita de obra":         C.red,
   "Reunião com cliente":    C.warning,
-  "Vistoria":               "#4a9eff",
+  "Vistoria":               C.steel,
   "Entrega de documentos":  C.success,
-  "Medição":                "#9b59b6",
+  "Medição":                C.purple,
   "Outro":                  C.muted,
 };
 

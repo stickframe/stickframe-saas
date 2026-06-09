@@ -17,7 +17,7 @@ export function useObraPermission(obraId) {
   const obraMembros = useAppStore((s) => s.obraMembros);
 
   const nivel = useCallback(() => {
-    if (perfil === "diretor") return "responsavel";
+    if (perfil?.toLowerCase() === "diretor") return "responsavel";
     const membros = obraMembros[obraId] || [];
     if (membros.length === 0) return "colaborador"; // sem membros → acesso livre
     const membro = membros.find((m) => m.usuario_id === uid);
@@ -40,7 +40,7 @@ export function useObrasVisiveis(obras) {
   const uid    = useAppStore((s) => s.user?.uid);
   const obraMembros = useAppStore((s) => s.obraMembros);
 
-  if (perfil === "diretor") return obras;
+  if (perfil?.toLowerCase() === "diretor") return obras;
 
   return obras.filter((o) => {
     const membros = obraMembros[o.id] || [];
