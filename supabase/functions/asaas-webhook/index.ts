@@ -9,19 +9,16 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    // Validação opcional do token do webhook
+    // Validação OBRIGATÓRIA do token do webhook (fail-closed).
+    // Sem o token, qualquer um poderia forjar um upgrade de plano.
     const webhookToken = Deno.env.get("ASAAS_WEBHOOK_TOKEN");
-    if (webhookToken) {
-      const incomingToken = req.headers.get("asaas-access-token");
-      if (incomingToken !== webhookToken) {
-        console.warn("asaas-webhook: token inválido recebido");
-        return new Response(JSON.stringify({ error: "Unauthorized" }), {
-          status: 401,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-    } else {
-      console.warn("asaas-webhook: ASAAS_WEBHOOK_TOKEN não configurado, pulando validação");
+    const incomingToken = req.headers.get("asaas-access-token");
+    if (!webhookToken || incomingToken !== webhookToken) {
+      console.warn("asaas-webhook: token ausente ou inválido — rejeitado");
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const body = await req.json();

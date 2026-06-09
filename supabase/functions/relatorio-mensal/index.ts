@@ -21,7 +21,8 @@ serve(async (req) => {
     const mesInicio = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
     const mesFim    = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString();
 
-    // Get empresa_id from JWT or use first empresa
+    // Obtém empresa_id do JWT. SEM empresa válida = acesso negado.
+    // (corrige vazamento multi-tenant: antes, sem auth, consultava TODAS as empresas)
     let empresa_id: string | null = null;
     const authHeader = req.headers.get("Authorization");
     if (authHeader) {
@@ -41,27 +42,24 @@ serve(async (req) => {
       }
     }
 
-    // Fetch obras em andamento
-    const obrasQ = empresa_id
-      ? sb.from("obras").select("id, nome, fase, progresso, status").eq("empresa_id", empresa_id)
-      : sb.from("obras").select("id, nome, fase, progresso, status");
+    if (!empresa_id) {
+      return new Response(
+        JSON.stringify({ error: "Não autorizado" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
+    // Fetch — sempre filtrado por empresa_id
     const [
       { data: obras },
       { data: orcamentosMes },
       { data: clientesMes },
       { data: lancamentosMes },
     ] = await Promise.all([
-      obrasQ,
-      empresa_id
-        ? sb.from("orcamentos").select("id, valor, status").eq("empresa_id", empresa_id).gte("created_at", mesInicio).lte("created_at", mesFim)
-        : sb.from("orcamentos").select("id, valor, status").gte("created_at", mesInicio).lte("created_at", mesFim),
-      empresa_id
-        ? sb.from("clientes").select("id").eq("empresa_id", empresa_id).gte("created_at", mesInicio).lte("created_at", mesFim)
-        : sb.from("clientes").select("id").gte("created_at", mesInicio).lte("created_at", mesFim),
-      empresa_id
-        ? sb.from("lancamentos").select("tipo, valor").eq("empresa_id", empresa_id).eq("tipo", "receita").gte("data", mesInicio.split("T")[0]).lte("data", mesFim.split("T")[0])
-        : sb.from("lancamentos").select("tipo, valor").eq("tipo", "receita").gte("data", mesInicio.split("T")[0]).lte("data", mesFim.split("T")[0]),
+      sb.from("obras").select("id, nome, fase, progresso, status").eq("empresa_id", empresa_id),
+      sb.from("orcamentos").select("id, valor, status").eq("empresa_id", empresa_id).gte("created_at", mesInicio).lte("created_at", mesFim),
+      sb.from("clientes").select("id").eq("empresa_id", empresa_id).gte("created_at", mesInicio).lte("created_at", mesFim),
+      sb.from("lancamentos").select("tipo, valor").eq("empresa_id", empresa_id).eq("tipo", "receita").gte("data", mesInicio.split("T")[0]).lte("data", mesFim.split("T")[0]),
     ]);
 
     const obrasAndamento = (obras ?? []).filter((o) => o.status === "Em andamento");
