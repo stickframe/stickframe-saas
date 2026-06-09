@@ -12,6 +12,7 @@ import { ArquivoVersoes } from "../components/obras/ArquivoVersoes";
 import { PlantaApontamentos } from "../components/obras/PlantaApontamentos";
 import { PdfViewer } from "../components/obras/PdfViewer";
 import { useObraPermission, useObrasVisiveis } from "../hooks/useObraPermission";
+import Planejamento4D from "../components/obras/Planejamento4D";
 import { sb, getEmpresaId } from "../services/supabase";
 import { useState, useEffect, useMemo, useRef } from "react";
 import { AlertTriangle, BarChart2, ClipboardList, DollarSign, HardHat, Pencil, Ruler, Search, Trash2, TrendingUp } from "../components/ui/Icon";
@@ -1791,53 +1792,68 @@ export default function GestaoObras() {
 
                   return (
                     <div style={{ background: C.surface, borderRadius: "0 0 12px 12px", border: `1px solid ${C.border}`, borderTop: "none", padding: 22 }}>
-                      <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 16 }}>
-                        {obra.prazo_inicio ? new Date(obra.prazo_inicio + "T00:00").toLocaleDateString("pt-BR") : "—"} → {obra.prazo_fim ? new Date(obra.prazo_fim + "T00:00").toLocaleDateString("pt-BR") : "—"} · {totalDias} dias
-                      </div>
+                      <div className="sf-grid-2" style={{ gap: 24, alignItems: "start" }}>
+                        
+                        {/* Coluna da Esquerda: Cronograma Físico */}
+                        <div>
+                          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 16 }}>
+                            CRONOGRAMA FÍSICO DA OBRA
+                          </div>
+                          <div style={{ fontSize: 11, color: C.muted, marginBottom: 16 }}>
+                            {obra.prazo_inicio ? new Date(obra.prazo_inicio + "T00:00").toLocaleDateString("pt-BR") : "—"} → {obra.prazo_fim ? new Date(obra.prazo_fim + "T00:00").toLocaleDateString("pt-BR") : "—"} · {totalDias} dias
+                          </div>
 
-                      {FASES.map((fase, i) => {
-                        const faseInicio = new Date(inicio.getTime() + i * diasPorFase * 86400000);
-                        const faseFim    = new Date(inicio.getTime() + (i + 1) * diasPorFase * 86400000);
-                        const done = i < faseIdx;
-                        const curr = i === faseIdx;
-                        const pctStart = (i * diasPorFase / totalDias) * 100;
-                        const pctWidth = (diasPorFase / totalDias) * 100;
-                        let phasePct = done ? 100 : curr ? Math.min(100, Math.max(0, Math.round(((hoje - faseInicio) / (faseFim - faseInicio)) * 100))) : 0;
+                          {FASES.map((fase, i) => {
+                            const faseInicio = new Date(inicio.getTime() + i * diasPorFase * 86400000);
+                            const faseFim    = new Date(inicio.getTime() + (i + 1) * diasPorFase * 86400000);
+                            const done = i < faseIdx;
+                            const curr = i === faseIdx;
+                            const pctStart = (i * diasPorFase / totalDias) * 100;
+                            const pctWidth = (diasPorFase / totalDias) * 100;
+                            let phasePct = done ? 100 : curr ? Math.min(100, Math.max(0, Math.round(((hoje - faseInicio) / (faseFim - faseInicio)) * 100))) : 0;
 
-                        return (
-                          <div key={fase} style={{ marginBottom: 12 }}>
-                            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, marginBottom: 4 }}>
-                              <span style={{ color: done ? C.success : curr ? C.text : C.muted, fontWeight: curr ? 700 : 400 }}>
-                                {done ? "✓ " : curr ? "▶ " : ""}{fase}
-                              </span>
-                              <span style={{ color: C.muted, fontSize: 10 }}>
-                                {faseInicio.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })} – {faseFim.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}
-                              </span>
-                            </div>
-                            <div style={{ height: 20, background: C.dark, borderRadius: 4, overflow: "hidden", position: "relative" }}>
-                              <div style={{
-                                position: "absolute", left: `${pctStart}%`, width: `${pctWidth}%`, height: "100%",
-                                background: done ? "#2e9e5b33" : curr ? "#98191533" : C.darker,
-                                border: `1px solid ${done ? "#2e9e5b" : curr ? C.red : C.border}`, borderRadius: 4,
-                              }}>
-                                <div style={{ height: "100%", width: `${phasePct}%`, background: done ? "#2e9e5b" : C.red, borderRadius: "4px 0 0 4px" }} />
+                            return (
+                              <div key={fase} style={{ marginBottom: 12 }}>
+                                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, marginBottom: 4 }}>
+                                  <span style={{ color: done ? C.success : curr ? C.text : C.muted, fontWeight: curr ? 700 : 400 }}>
+                                    {done ? "✓ " : curr ? "▶ " : ""}{fase}
+                                  </span>
+                                  <span style={{ color: C.muted, fontSize: 10 }}>
+                                    {faseInicio.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })} – {faseFim.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}
+                                  </span>
+                                </div>
+                                <div style={{ height: 20, background: C.dark, borderRadius: 4, overflow: "hidden", position: "relative" }}>
+                                  <div style={{
+                                    position: "absolute", left: `${pctStart}%`, width: `${pctWidth}%`, height: "100%",
+                                    background: done ? "#2e9e5b33" : curr ? "#98191533" : C.darker,
+                                    border: `1px solid ${done ? "#2e9e5b" : curr ? C.red : C.border}`, borderRadius: 4,
+                                  }}>
+                                    <div style={{ height: "100%", width: `${phasePct}%`, background: done ? "#2e9e5b" : C.red, borderRadius: "4px 0 0 4px" }} />
+                                  </div>
+                                </div>
                               </div>
-                            </div>
-                          </div>
-                        );
-                      })}
+                            );
+                          })}
 
-                      {obra.prazo_inicio && (() => {
-                        const pctHoje = Math.min(100, Math.max(0, ((hoje - inicio) / (fim - inicio)) * 100));
-                        return (
-                          <div style={{ position: "relative", height: 20, marginTop: 8 }}>
-                            <div style={{ position: "absolute", left: `${pctHoje}%`, top: 0, bottom: 0, width: 2, background: "#ffd700" }} />
-                            <div style={{ position: "absolute", left: `${pctHoje}%`, top: 0, fontSize: 9, color: "#ffd700", whiteSpace: "nowrap", transform: "translateX(-50%)" }}>
-                              ◆ Hoje
-                            </div>
-                          </div>
-                        );
-                      })()}
+                          {obra.prazo_inicio && (() => {
+                            const pctHoje = Math.min(100, Math.max(0, ((hoje - inicio) / (fim - inicio)) * 100));
+                            return (
+                              <div style={{ position: "relative", height: 20, marginTop: 14 }}>
+                                <div style={{ position: "absolute", left: `${pctHoje}%`, top: 0, bottom: 0, width: 2, background: "#ffd700" }} />
+                                <div style={{ position: "absolute", left: `${pctHoje}%`, top: 0, fontSize: 9, color: "#ffd700", whiteSpace: "nowrap", transform: "translateX(-50%)" }}>
+                                  ◆ Hoje
+                                </div>
+                              </div>
+                            );
+                          })()}
+                        </div>
+
+                        {/* Coluna da Direita: Simulador 3D/4D */}
+                        <div style={{ minWidth: 280 }}>
+                          <Planejamento4D faseAtual={obra.fase} />
+                        </div>
+
+                      </div>
                     </div>
                   );
                 })()}
