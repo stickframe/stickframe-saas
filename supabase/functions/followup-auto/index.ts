@@ -12,6 +12,16 @@ serve(async (req) => {
   }
 
   try {
+    // Função de cron — exige segredo. Sem ele, qualquer um dispararia
+    // envios de WhatsApp em massa.
+    const cronSecret = Deno.env.get("CRON_SECRET");
+    if (!cronSecret || req.headers.get("x-cron-secret") !== cronSecret) {
+      return new Response(JSON.stringify({ error: "Não autorizado" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const sb = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!

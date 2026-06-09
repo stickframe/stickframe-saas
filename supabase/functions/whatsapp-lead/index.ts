@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -13,6 +14,37 @@ serve(async (req) => {
   try {
     const { nome, whatsapp, area, padrao, valorSF, valorAlv, prazo } = await req.json();
 
+    // ── Rate limit por IP: máx 3 simulações por minuto ─────────
+    // (endpoint público — evita spam de WhatsApp usando os créditos da conta)
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() || "unknown";
+    const admin = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
+    const { data: allowed } = await admin.rpc("check_rate_limit", {
+      p_bucket: "whatsapp-lead", p_ip: ip, p_max: 3, p_window_secs: 60,
+    });
+    if (allowed === false) {
+      return new Response(JSON.stringify({ ok: false, error: "Muitas tentativas. Aguarde um minuto." }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 429,
+      });
+    }
+
+    // ── Validação de input ─────────────────────────────────────
+    const numero = String(whatsapp ?? "").replace(/\D/g, "");
+    if (numero.length < 10 || numero.length > 13) {
+      return new Response(JSON.stringify({ ok: false, error: "Número inválido" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400,
+      });
+    }
+    const areaNum = Number(area);
+    if (!Number.isFinite(areaNum) || areaNum <= 0 || areaNum > 100000) {
+      return new Response(JSON.stringify({ ok: false, error: "Área inválida" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400,
+      });
+    }
+
     const phoneId  = Deno.env.get("WHATSAPP_PHONE_ID");
     const token    = Deno.env.get("WHATSAPP_TOKEN");
 
@@ -23,8 +55,7 @@ serve(async (req) => {
       });
     }
 
-    // Normaliza número: remove tudo que não for dígito, garante 55 no início
-    const numero = whatsapp.replace(/\D/g, "");
+    // Garante 55 no início
     const to = numero.startsWith("55") ? numero : `55${numero}`;
 
     const nomeFormatado = nome?.split(" ")[0] || "Olá";
