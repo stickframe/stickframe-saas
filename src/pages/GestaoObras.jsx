@@ -678,6 +678,7 @@ export default function GestaoObras() {
   const [relPdfOpcoes,  setRelPdfOpcoes]  = useState({ resumo: true, diario: true, financeiro: true, fotos: false, cronograma: false });
   const [relPdfWaLink,  setRelPdfWaLink]  = useState(null);
   const [showQR,        setShowQR]        = useState(false);
+  const [showPlacaQR,   setShowPlacaQR]   = useState(false);
 
   useEffect(() => {
     if (!obraId && obras.length > 0) setObraId(obras[0].id);
@@ -2529,6 +2530,12 @@ export default function GestaoObras() {
                         borderRadius: 6, color: "#7c3aed", fontSize: 12, fontWeight: 700,
                         cursor: "pointer", fontFamily: "inherit",
                       }}>📱 QR Code</button>
+                      <button onClick={() => setShowPlacaQR(true)} style={{
+                        width: "100%", padding: "8px 0",
+                        background: "#ea580c22", border: "1px solid #ea580c44",
+                        borderRadius: 6, color: "#ea580c", fontSize: 12, fontWeight: 700,
+                        cursor: "pointer", fontFamily: "inherit", marginTop: 4,
+                      }}>📋 Placa de QR Codes</button>
                     </div>
                     {/* Chat do Portal */}
                     {obra?.token_portal && (
@@ -2819,6 +2826,150 @@ export default function GestaoObras() {
           </div>
         </div>
       )}
+
+      {/* Modal Placa de QR Codes */}
+      {showPlacaQR && obra && (() => {
+        const baseUrl = `${window.location.origin}/qr/obra/${obra.id}`;
+        const qrMaster = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(baseUrl)}&bgcolor=ffffff&color=981915&margin=8`;
+        
+        const fases = [
+          "Projeto executivo",
+          "Fundação",
+          "Estrutura Steel Frame",
+          "Fechamentos",
+          "Instalações",
+          "Acabamento",
+          "Entrega"
+        ];
+
+        return (
+          <Modal title="📋 Placa de QR Codes do Canteiro" onClose={() => setShowPlacaQR(false)}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 640, minWidth: 320 }}>
+              <div style={{ fontSize: 13, color: C.muted }}>
+                Esta placa contém um QR Code mestre para o portal e QR Codes específicos para cada etapa do checklist da obra. Ideal para imprimir e colar no canteiro de obras.
+              </div>
+              
+              <div style={{ border: `1px solid ${C.border}`, borderRadius: 12, padding: 16, background: C.dark, display: "flex", flexWrap: "wrap", gap: 16, justifyContent: "center", alignItems: "center" }}>
+                <div style={{ textAlign: "center", width: 140 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: C.red, marginBottom: 6 }}>PORTAL GERAL</div>
+                  <img src={qrMaster} alt="QR Master" style={{ width: 120, height: 120, borderRadius: 8, background: "#fff", padding: 4, border: `1px solid ${C.border}` }} />
+                </div>
+                
+                <div style={{ flex: 1, minWidth: 200, display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
+                  {fases.map((f) => {
+                    const fUrl = `${baseUrl}?tab=checklist&etapa=${encodeURIComponent(f)}`;
+                    const qrFase = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(fUrl)}&bgcolor=ffffff&color=1a1a1a&margin=4`;
+                    return (
+                      <div key={f} style={{ display: "flex", flexDirection: "column", alignItems: "center", background: "#fff", borderRadius: 8, padding: 6, border: `1px solid ${C.border}` }}>
+                        <img src={qrFase} alt={f} style={{ width: 60, height: 60 }} />
+                        <div style={{ fontSize: 9, fontWeight: 700, textAlign: "center", color: C.text, marginTop: 4, lineHeight: 1.1, height: 20, overflow: "hidden", textOverflow: "ellipsis" }}>
+                          {f}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div style={{ display: "flex", gap: 10, width: "100%" }}>
+                <Btn variant="ghost" fullWidth onClick={() => setShowPlacaQR(false)}>
+                  Fechar
+                </Btn>
+                <Btn fullWidth onClick={() => {
+                  const qrMasterBig = `https://api.qrserver.com/v1/create-qr-code/?size=350x350&data=${encodeURIComponent(baseUrl)}&bgcolor=ffffff&color=981915&margin=12`;
+                  
+                  const fasesHtml = fases.map((f) => {
+                    const fUrl = `${baseUrl}?tab=checklist&etapa=${encodeURIComponent(f)}`;
+                    const qrFaseBig = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(fUrl)}&bgcolor=ffffff&color=1a1a1a&margin=8`;
+                    return `
+                      <div class="qr-item">
+                        <div class="qr-item-title">${f}</div>
+                        <div class="qr-item-image-container">
+                          <img class="qr-item-image" src="${qrFaseBig}" alt="${f}" />
+                        </div>
+                        <div class="qr-item-instruction">Escanear para FVS/Checklist</div>
+                      </div>
+                    `;
+                  }).join("");
+
+                  const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
+<title>Placa de Checklist QR — ${obra.nome}</title>
+<style>
+  @page { size: A4 portrait; margin: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #fff; color: #1a1a1a; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+  .placa { width: 210mm; height: 297mm; display: flex; flex-direction: column; padding: 20mm; background: #fff; justify-content: space-between; }
+  .header { border-bottom: 3px solid #981915; padding-bottom: 15px; display: flex; justify-content: space-between; align-items: flex-end; }
+  .header-left h1 { font-size: 26px; font-weight: 900; color: #981915; margin-bottom: 2px; }
+  .header-left p { font-size: 13px; color: #6b7280; font-weight: 600; }
+  .header-right { text-align: right; }
+  .header-right h2 { font-size: 16px; font-weight: 800; color: #1a1a1a; }
+  .header-right p { font-size: 11px; color: #9ca3af; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-top: 4px; }
+  
+  .content { display: flex; gap: 24px; flex: 1; margin: 30px 0; }
+  
+  .main-section { width: 40%; display: flex; flex-direction: column; align-items: center; justify-content: center; border-right: 2px dashed #e5e7eb; padding-right: 24px; }
+  .main-qr-container { background: #fff; border: 4px solid #981915; border-radius: 20px; padding: 15px; display: inline-block; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+  .main-qr-image { width: 200px; height: 200px; display: block; }
+  .main-title { font-size: 18px; font-weight: 800; color: #981915; text-align: center; margin-bottom: 6px; }
+  .main-sub { font-size: 11px; color: #6b7280; font-weight: 600; text-align: center; line-height: 1.4; max-width: 200px; }
+  
+  .grid-section { width: 60%; display: flex; flex-direction: column; justify-content: center; }
+  .grid-title { font-size: 14px; font-weight: 800; color: #1a1a1a; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 1px; }
+  .qr-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .qr-item { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+  .qr-item-title { font-size: 11px; font-weight: 800; color: #1a1a1a; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; height: 16px; overflow: hidden; }
+  .qr-item-image-container { background: #fff; border: 1.5px solid #e5e7eb; border-radius: 8px; padding: 6px; }
+  .qr-item-image { width: 90px; height: 90px; display: block; }
+  .qr-item-instruction { font-size: 8px; color: #9ca3af; font-weight: 700; text-transform: uppercase; margin-top: 6px; letter-spacing: 0.5px; }
+  
+  .footer { border-top: 1px solid #e5e7eb; padding-top: 15px; display: flex; justify-content: space-between; font-size: 10px; color: #9ca3af; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+</style>
+</head><body>
+<div class="placa">
+  <div class="header">
+    <div class="header-left">
+      <p>CONTROLE DE QUALIDADE E PROGRAMAÇÃO</p>
+      <h1>PLACA DE CHECKLISTS E DIÁRIO</h1>
+    </div>
+    <div class="header-right">
+      <h2>${obra.nome}</h2>
+      <p>Canteiro de Obras Digital</p>
+    </div>
+  </div>
+  
+  <div class="content">
+    <div class="main-section">
+      <div class="main-title">PORTAL DA OBRA</div>
+      <div class="main-qr-container">
+        <img class="main-qr-image" src="${qrMasterBig}" alt="Portal Geral" />
+      </div>
+      <div class="main-sub">Escaneie o QR Code principal acima para acessar o histórico completo, projetos PDF e visualização 3D BIM da obra.</div>
+    </div>
+    
+    <div class="grid-section">
+      <div class="grid-title">📋 Acesso Direto por Etapa da Obra</div>
+      <div class="qr-grid">
+        ${fasesHtml}
+      </div>
+    </div>
+  </div>
+  
+  <div class="footer">
+    <span>Stick Frame Sistemas Construtivos</span>
+    <span>powered by stickframe.com.br</span>
+  </div>
+</div>
+</body></html>`;
+                  printHtml(html, `placa-checklists-${obra.nome.replace(/\s+/g,"-").toLowerCase()}`);
+                }}>
+                  🖨️ Imprimir Placa
+                </Btn>
+              </div>
+            </div>
+          </Modal>
+        );
+      })()}
 
       {/* Modal Relatório PDF */}
       {relPdfModal && obra && (

@@ -90,10 +90,11 @@ export default function Configuracoes() {
 
   // Empresa
   const [empresa, setEmpresa] = useState({
-    nome: "", cnpj: "", cidade: "", telefone: "", email: "", segmento: "", site: "", logo_url: "", whatsapp_alertas: "",
+    nome: "", cnpj: "", cidade: "", telefone: "", email: "", segmento: "", site: "", logo_url: "", whatsapp_alertas: "", ical_token: "",
   });
   const [logoPreview, setLogoPreview] = useState(null);
   const [logoFile,    setLogoFile]    = useState(null);
+  const [gerandoIcal, setGerandoIcal] = useState(false);
   const logoRef = useRef();
 
   // Perfil
@@ -161,6 +162,7 @@ export default function Configuracoes() {
           whatsapp_alertas: data.whatsapp_alertas || "",
           plano:            data.plano            || "free",
           limite_obras:     data.limite_obras      ?? 2,
+          ical_token:       data.ical_token       || "",
         });
         if (data.calc_token) setCalcToken(data.calc_token);
         if (data.api_key) setApiKey(data.api_key);
@@ -310,6 +312,24 @@ export default function Configuracoes() {
     }
   }
 
+  async function gerarNovoIcalToken() {
+    setGerandoIcal(true);
+    try {
+      const novoToken = crypto.randomUUID();
+      const { error } = await sb
+        .from("empresas")
+        .update({ ical_token: novoToken })
+        .eq("id", empresaId);
+      if (error) throw error;
+      setEmpresa((f) => ({ ...f, ical_token: novoToken }));
+      mostrarToast("✅ Novo token de calendário gerado com sucesso!");
+    } catch (e) {
+      mostrarToast("❌ Erro ao gerar token: " + e.message, true);
+    } finally {
+      setGerandoIcal(false);
+    }
+  }
+
   const logoAtual = logoPreview || empresa.logo_url;
   const senhaOk   = senhaForm.nova.length >= 6 && senhaForm.nova === senhaForm.confirmar;
 
@@ -355,6 +375,7 @@ export default function Configuracoes() {
         <Tab label="👥 Usuários"  active={tab === "usuarios"} onClick={() => setTab("usuarios")} />
         <Tab label="⚙️ Sistema"   active={tab === "sistema"}  onClick={() => setTab("sistema")} />
         <Tab label="🤖 Robô IA"   active={tab === "ia"}       onClick={() => setTab("ia")} />
+        <Tab label="📅 Integrações" active={tab === "integracoes"} onClick={() => setTab("integracoes")} />
         {user?.perfil === "diretor" && (
           <Tab label="🔗 Webhooks" active={tab === "webhooks"} onClick={() => setTab("webhooks")} />
         )}
@@ -1071,6 +1092,100 @@ export default function Configuracoes() {
                   </button>
                 )}
               </div>
+            </div>
+          </Card>
+        </>
+      )}
+
+      {/* ══ Aba: Integrações ══ */}
+      {tab === "integracoes" && (
+        <>
+          <Card 
+            title="📅 Sincronização com Google Calendar e Calendários Externos" 
+            subtitle="Adicione seus compromissos e visitas de obras diretamente ao seu calendário favorito (Google Calendar, Apple Calendar, Outlook, etc.) usando um link de assinatura seguro."
+          >
+            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+              
+              {/* Informação sobre como funciona */}
+              <div style={{ display: "flex", gap: 12, alignItems: "flex-start", background: C.darker, border: `1px solid ${C.border}`, borderRadius: 10, padding: "14px 18px" }}>
+                <span style={{ fontSize: 20 }}>💡</span>
+                <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.5 }}>
+                  <strong style={{ color: C.text, display: "block", marginBottom: 4 }}>Como funciona a sincronização?</strong>
+                  Ao assinar este link, seu aplicativo de calendário irá atualizar automaticamente e buscar os eventos futuros e passados cadastrados na Agenda do StickFrame.
+                  <br />
+                  <span style={{ color: C.warning, display: "block", marginTop: 4 }}>
+                    ⚠️ Nota: O Google Calendar atualiza as assinaturas de URL periodicamente (geralmente a cada 8 a 12 horas). Portanto, novos compromissos podem demorar um pouco para aparecer na sua agenda do Google.
+                  </span>
+                </div>
+              </div>
+
+              {/* Link de Assinatura */}
+              <div>
+                <LabelF>Link de Assinatura iCal</LabelF>
+                {empresa.ical_token ? (
+                  <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                    <input
+                      readOnly
+                      value={`${import.meta.env.VITE_SUPABASE_URL || "https://<projeto>.supabase.co"}/functions/v1/ical-feed?token=${empresa.ical_token}`}
+                      style={{
+                        flex: 1, padding: "10px 13px", background: C.darker,
+                        border: `1px solid ${C.border}`, borderRadius: 8,
+                        fontFamily: "monospace", fontSize: 12, color: C.text,
+                      }}
+                    />
+                    <button
+                      onClick={() => { 
+                        navigator.clipboard.writeText(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ical-feed?token=${empresa.ical_token}`); 
+                        mostrarToast("✅ Link do iCal copiado!"); 
+                      }}
+                      style={{
+                        padding: "10px 14px", background: C.darker, border: `1px solid ${C.border}`,
+                        borderRadius: 8, cursor: "pointer", fontFamily: "inherit", fontSize: 12, color: C.text,
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      Copiar Link
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ fontSize: 13, color: C.muted, padding: "10px 0" }}>
+                    Nenhum link gerado. Clique em "Gerar Token" para ativar a integração.
+                  </div>
+                )}
+              </div>
+
+              {/* Ações de Administração do Token */}
+              <div>
+                {user?.perfil === "diretor" ? (
+                  <div>
+                    <Btn onClick={gerarNovoIcalToken} disabled={gerandoIcal}>
+                      {gerandoIcal ? "Gerando..." : empresa.ical_token ? "🔄 Revogar e Gerar Novo Token" : "📅 Gerar Token iCal"}
+                    </Btn>
+                    {empresa.ical_token && (
+                      <div style={{ fontSize: 11, color: C.warning, marginTop: 6 }}>
+                        Atenção: ao gerar um novo token, o link de assinatura anterior deixará de funcionar imediatamente em todos os dispositivos sincronizados.
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div style={{ fontSize: 11, color: C.muted }}>
+                    Somente usuários com perfil de <strong>Diretor</strong> podem revogar ou gerar novos tokens de sincronização da empresa.
+                  </div>
+                )}
+              </div>
+
+              {/* Instruções de Configuração detalhadas */}
+              <div style={{ background: C.darker, borderRadius: 10, padding: "16px 20px", fontSize: 12, color: C.muted }}>
+                <div style={{ fontWeight: 700, color: C.text, marginBottom: 8 }}>📋 Como adicionar no Google Agenda (Computador):</div>
+                <ol style={{ paddingLeft: 18, lineHeight: 1.8 }}>
+                  <li>Acesse o <a href="https://calendar.google.com" target="_blank" rel="noreferrer" style={{ color: C.red, textDecoration: "underline" }}>Google Agenda</a> no computador.</li>
+                  <li>No menu lateral esquerdo, clique no botão <strong>+</strong> ao lado de "Outras agendas".</li>
+                  <li>Selecione a opção <strong>"Do URL"</strong>.</li>
+                  <li>Cole o link copiado acima e clique em <strong>"Adicionar agenda"</strong>.</li>
+                  <li>Pronto! O calendário "StickFrame - {empresa.nome}" aparecerá na seção "Outras agendas".</li>
+                </ol>
+              </div>
+
             </div>
           </Card>
         </>

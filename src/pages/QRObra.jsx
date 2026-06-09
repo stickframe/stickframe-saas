@@ -311,6 +311,226 @@ function AbaCheckin({ obraId }) {
   );
 }
 
+// Itens de qualidade por etapa Steel Frame
+const CHECKLIST_ITEMS = {
+  "Projeto executivo": [
+    "Projeto arquitetônico aprovado pela prefeitura",
+    "ART/RRT emitida e assinada pelo responsável técnico",
+    "Memorial descritivo entregue ao cliente",
+    "Projeto estrutural Steel Frame compatibilizado",
+    "Projetos complementares (elétrico, hidráulico) entregues",
+    "Sondagem do terreno realizada",
+  ],
+  "Fundação": [
+    "Locação da obra executada e conferida",
+    "Radier/sapatas executados conforme projeto",
+    "Cura do concreto realizada (mínimo 7 dias)",
+    "Nivelamento e prumo dos chumbadores verificados",
+    "Impermeabilização da fundação aplicada",
+    "Aterro e compactação do entorno executados",
+  ],
+  "Estrutura Steel Frame": [
+    "Perfis guia (U enrijecido) fixados conforme projeto",
+    "Espaçamento dos montantes (600mm ou conforme projeto)",
+    "Prumo e nível de todos os montantes verificados",
+    "Contraventamentos (fitas diagonais) instalados",
+    "Fixações com parafusos e torque corretos",
+    "Aberturas de portas e janelas com vergas duplas",
+    "Vistoria estrutural realizada pelo responsável técnico",
+    "Laje seca (dry floor) assentada e nivelada",
+  ],
+  "Fechamentos": [
+    "Placas OSB externas instaladas e fixadas",
+    "Barreiras de vapor aplicadas corretamente",
+    "Lã de rocha/vidro nos painéis isolados",
+    "Placas de gesso (drywall) internas instaladas",
+    "Esquadrias fixadas, niveladas e vedadas",
+    "Impermeabilização de fachada aplicada",
+    "Cobertura executada (estrutura + telha)",
+    "Calhas e rufos instalados",
+  ],
+  "Instalações": [
+    "Eletrodutos e eletrofitas posicionados nos montantes",
+    "Instalação elétrica aprovada pelo eletricista",
+    "Pontos hidráulicos PEX/CPVC embutidos",
+    "Instalação hidráulica testada (pressão 24h)",
+    "Passagens de dutos de AVAC executadas",
+    "Caixas de inspeção e registros instalados",
+    "Aterramento elétrico executado",
+  ],
+  "Acabamento": [
+    "Massa e pintura interna concluídos",
+    "Pintura externa e textura aplicados",
+    "Pisos e revestimentos assentados e rejuntados",
+    "Rodapés, soleiras e peitoris instalados",
+    "Louças e metais sanitários instalados",
+    "Tomadas, interruptores e luminárias instalados",
+    "Portas e janelas reguladas e com ferragens",
+    "Limpeza final executada",
+  ],
+  "Entrega": [
+    "Vistoria final realizada e aprovada",
+    "Manual do proprietário entregue",
+    "Chaves, senhas e documentação técnica entregues",
+    "Termo de entrega assinado pelo cliente",
+    "Habite-se ou CND emitidos (quando aplicável)",
+    "Fotos do estado final arquivadas",
+  ],
+};
+
+const FASES = [
+  "Projeto executivo",
+  "Fundação",
+  "Estrutura Steel Frame",
+  "Fechamentos",
+  "Instalações",
+  "Acabamento",
+  "Entrega"
+];
+
+const STATUS_LABEL = { pendente: "Pendente", ok: "OK", nao_ok: "Não OK" };
+const STATUS_COR   = { pendente: C.muted, ok: "#2e9e5b", nao_ok: C.red };
+const STATUS_BG    = { pendente: C.dark, ok: "#e8f7ef", nao_ok: "#fdecea" };
+
+function AbaChecklist({ obraId, initialEtapa }) {
+  const [etapa, setEtapa] = useState(FASES[0]);
+  const [itens, setItens] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(null);
+
+  useEffect(() => {
+    if (initialEtapa && FASES.includes(initialEtapa)) {
+      setEtapa(initialEtapa);
+    }
+  }, [initialEtapa]);
+
+  useEffect(() => {
+    if (obraId) {
+      setLoading(true);
+      sb.rpc("qr_get_checklist", { p_obra_id: obraId })
+        .then(({ data, error }) => {
+          if (!error && data) {
+            const map = {};
+            data.forEach((r) => {
+              map[`${r.etapa}|${r.item}`] = { status: r.status, obs: r.obs || "" };
+            });
+            setItens(map);
+          }
+        })
+        .finally(() => setLoading(false));
+    }
+  }, [obraId]);
+
+  const getItem = (etapa, item) => itens[`${etapa}|${item}`] || { status: "pendente", obs: "" };
+
+  async function toggleStatus(item) {
+    if (!obraId) return;
+    const key = `${etapa}|${item}`;
+    const atual = itens[key]?.status || "pendente";
+    const proximo = atual === "pendente" ? "ok" : atual === "ok" ? "nao_ok" : "pendente";
+
+    setItens((prev) => ({ ...prev, [key]: { ...(prev[key] || {}), status: proximo } }));
+    setSaving(key);
+    try {
+      const { error } = await sb.rpc("qr_save_checklist_item", {
+        p_obra_id: obraId,
+        p_etapa: etapa,
+        p_item: item,
+        p_status: proximo,
+        p_obs: itens[key]?.obs || ""
+      });
+      if (error) throw error;
+    } catch (e) {
+      console.error(e);
+      alert("Erro ao salvar: " + e.message);
+      setItens((prev) => ({ ...prev, [key]: { ...(prev[key] || {}), status: atual } }));
+    } finally {
+      setSaving(null);
+    }
+  }
+
+  const itemsEtapa = CHECKLIST_ITEMS[etapa] || [];
+
+  if (loading) return <div style={{ padding: 24, textAlign: "center", color: C.muted }}>Carregando checklist...</div>;
+
+  return (
+    <div style={{ padding: "16px", display: "flex", flexDirection: "column", gap: 12 }}>
+      {/* Seletor de Etapas */}
+      <div style={{ display: "flex", gap: 4, overflowX: "auto", paddingBottom: 8, marginBottom: 4 }}>
+        {FASES.map((f) => {
+          const ativa = etapa === f;
+          return (
+            <button
+              key={f}
+              onClick={() => setEtapa(f)}
+              style={{
+                padding: "6px 12px", borderRadius: 16, fontSize: 11, fontWeight: 600, cursor: "pointer",
+                border: `1px solid ${ativa ? C.red : C.border}`,
+                background: ativa ? C.red : C.surface,
+                color: ativa ? "#fff" : C.text,
+                whiteSpace: "nowrap", fontFamily: "inherit"
+              }}
+            >
+              {f}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Lista de itens */}
+      <div style={{ background: C.surface, borderRadius: 14, border: `1px solid ${C.border}`, overflow: "hidden" }}>
+        <div style={{ padding: "12px 16px", background: C.dark, borderBottom: `1px solid ${C.border}`, fontSize: 13, fontWeight: 700 }}>
+          {etapa}
+        </div>
+        {itemsEtapa.map((item) => {
+          const key = `${etapa}|${item}`;
+          const dado = getItem(etapa, item);
+          const st = dado.status;
+          return (
+            <div
+              key={item}
+              style={{
+                display: "flex", alignItems: "center", gap: 12,
+                padding: "12px 16px", borderBottom: "1px solid " + C.border,
+                background: STATUS_BG[st],
+                transition: "background .2s",
+              }}
+            >
+              {/* Botão de Toggle */}
+              <button
+                onClick={() => toggleStatus(item)}
+                disabled={saving === key}
+                style={{
+                  width: 28, height: 28, borderRadius: "50%", border: "none",
+                  background: STATUS_COR[st] + "22", color: STATUS_COR[st],
+                  fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+                  flexShrink: 0, fontWeight: 700, fontFamily: "inherit"
+                }}
+              >
+                {st === "ok" ? "✓" : st === "nao_ok" ? "✗" : "○"}
+              </button>
+              
+              <div style={{ flex: 1, fontSize: 12.5, color: st === "nao_ok" ? C.red : C.text }}>
+                {item}
+              </div>
+
+              <span style={{
+                fontSize: 9.5, fontWeight: 700, padding: "2px 8px", borderRadius: 10,
+                background: STATUS_COR[st] + "22", color: STATUS_COR[st], whiteSpace: "nowrap",
+              }}>
+                {STATUS_LABEL[st]}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+      <div style={{ fontSize: 11, color: C.muted, textAlign: "center", marginTop: 4 }}>
+        Toque no círculo para alternar: ○ Pendente ➔ ✓ OK ➔ ✗ Não OK
+      </div>
+    </div>
+  );
+}
+
 // ── Principal ─────────────────────────────────────────────────────────────────
 export default function QRObra() {
   const { obraId } = useParams();
@@ -318,6 +538,19 @@ export default function QRObra() {
   const [loading, setLoading] = useState(true);
   const [erro,    setErro]    = useState(null);
   const [tab,     setTab]     = useState("status");
+  const [initialEtapa, setInitialEtapa] = useState("");
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tabParam = params.get("tab");
+    const etapaParam = params.get("etapa");
+    if (tabParam && ["status", "projetos", "bim", "checkin", "checklist"].includes(tabParam)) {
+      setTab(tabParam);
+    }
+    if (etapaParam) {
+      setInitialEtapa(etapaParam);
+    }
+  }, []);
 
   useEffect(() => {
     if (!obraId) { setErro("ID de obra inválido."); setLoading(false); return; }
@@ -367,11 +600,12 @@ export default function QRObra() {
         </div>
 
         {/* Tabs */}
-        <div style={{ display: "flex", background: "rgba(0,0,0,0.15)", borderRadius: "10px 10px 0 0", overflow: "hidden" }}>
+        <div style={{ display: "flex", background: "rgba(0,0,0,0.15)", borderRadius: "10px 10px 0 0", overflow: "hidden", overflowX: "auto" }}>
           <Tab label="📊 Status"   active={tab === "status"}   onClick={() => setTab("status")} />
           <Tab label="📄 Projetos" active={tab === "projetos"} onClick={() => setTab("projetos")} badge={arquivos.length} />
           <Tab label="🧊 BIM"      active={tab === "bim"}      onClick={() => setTab("bim")} badge={bim_modelos.length} />
           <Tab label="✅ Check-in"  active={tab === "checkin"}  onClick={() => setTab("checkin")} />
+          <Tab label="📋 Checklist" active={tab === "checklist"} onClick={() => setTab("checklist")} />
         </div>
       </div>
 
@@ -381,6 +615,7 @@ export default function QRObra() {
         {tab === "projetos" && <AbaProjetos arquivos={arquivos} obraId={obraId} />}
         {tab === "bim"      && <AbaBIM modelos={bim_modelos} />}
         {tab === "checkin"  && <AbaCheckin obraId={obraId} />}
+        {tab === "checklist" && <AbaChecklist obraId={obraId} initialEtapa={initialEtapa} />}
       </div>
 
       <div style={{ textAlign: "center", color: C.muted, fontSize: 10, letterSpacing: 1, marginTop: 24, textTransform: "uppercase" }}>

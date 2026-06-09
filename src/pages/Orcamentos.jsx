@@ -15,6 +15,7 @@ import Input from "../components/ui/Input";
 import Select from "../components/ui/Select";
 import Badge from "../components/ui/Badge";
 import Modal from "../components/ui/Modal";
+import FormAiMemorial from "../components/ui/FormAiMemorial";
 
 // ─── Status ──────────────────────────────────────────────────────────────────
 const STATUS_OPTS = ["Aguardando resposta", "Em revisão", "Aprovado", "Recusado"];
@@ -900,6 +901,7 @@ export default function Orcamentos() {
     try { return JSON.parse(localStorage.getItem("sf_estimativo") || "null"); } catch { return null; }
   });
   const [estimativoAberto, setEstimativoAberto] = useState(false);
+  const [memorialOrcamento, setMemorialOrcamento] = useState(null);
 
   // Carrega pré-orçamentos novos
   useEffect(() => {
@@ -1239,6 +1241,14 @@ export default function Orcamentos() {
         <Modal title="⚡ Calculadora Estimativa Steel Frame" onClose={() => setCalculadora(false)}>
           <CalculadoraEstimativa onAplicar={aplicarEstimativo} onClose={() => setCalculadora(false)} />
         </Modal>
+      )}
+
+      {/* Modal Memorial IA */}
+      {memorialOrcamento && (
+        <FormAiMemorial
+          orcamento={memorialOrcamento}
+          onClose={() => setMemorialOrcamento(null)}
+        />
       )}
 
       {/* Modais */}
@@ -1630,7 +1640,7 @@ export default function Orcamentos() {
                             onClick={() => setAbertoDropId(null)}
                           />
                           <div style={{
-                            position: "absolute", bottom: "100%", right: 0, marginBottom: 4,
+                            position: "absolute", bottom: "100%", left: 0, marginBottom: 4,
                             background: C.surface, border: `1px solid ${C.border}`,
                             borderRadius: 8, boxShadow: "0 4px 16px rgba(0,0,0,0.15)",
                             zIndex: 11, display: "flex", flexDirection: "column", minWidth: 200,
@@ -1689,6 +1699,16 @@ export default function Orcamentos() {
                               }}
                             >
                               📄 PDF Simples (Rascunho)
+                            </button>
+                            <button
+                              onClick={() => { setAbertoDropId(null); setMemorialOrcamento(o); }}
+                              style={{
+                                padding: "9px 12px", border: "none", background: "none",
+                                textAlign: "left", fontSize: 12, cursor: "pointer", color: C.text,
+                                fontFamily: "inherit", borderBottom: `1px solid ${C.border}`, display: "flex", alignItems: "center", gap: 6
+                              }}
+                            >
+                              🤖 Memorial IA
                             </button>
                             <button
                               onClick={() => { setAbertoDropId(null); duplicarOrcamento(o); }}

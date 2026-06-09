@@ -4,6 +4,11 @@ import ReactDOM from "react-dom/client";
 import * as Sentry from "@sentry/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import App from "./App.jsx";
+import { registerSW } from "virtual:pwa-register";
+
+if ("serviceWorker" in navigator) {
+  registerSW({ immediate: true });
+}
 
 Sentry.init({
   dsn: import.meta.env.VITE_SENTRY_DSN,
