@@ -60,16 +60,13 @@ const getValidadeText = (criado, validadeDias = 30) => {
 // ─── Cálculo ─────────────────────────────────────────────────────────────────
 // ─── Cálculo ─────────────────────────────────────────────────────────────────
 function calcOrcamento({ area, unidades, padrao, desconto = 0, valor_m2_custom = 0, valor = 0 }) {
-  let valor_m2 = 0;
-  if (padrao === "Livre") {
-    if (valor > 0) {
-      valor_m2 = Number(valor) / (Number(area || 1) * Number(unidades || 1));
-    } else {
-      valor_m2 = Number(valor_m2_custom) || 0;
-    }
-  } else {
+  let valor_m2 = Number(valor_m2_custom) || 0;
+  if (valor_m2 === 0 && valor > 0) {
+    valor_m2 = Number(valor) / (Number(area || 1) * Number(unidades || 1));
+  }
+  if (valor_m2 === 0) {
     const preco = PRECOS[padrao] || PRECOS["Padrão"];
-    valor_m2    = preco.m2;
+    valor_m2    = preco?.m2 || 0;
   }
   const valor_uh    = valor_m2 * Number(area);
   const valor_base  = valor_uh * Number(unidades);
@@ -238,13 +235,24 @@ function FormOrc({ form, setForm, clientes, onSave, onCancel, onDelete, btnLabel
       {/* Padrão + Status */}
       <div className="sf-grid-2">
         <div>
-          <Label required>Padrão construtivo</Label>
+          <Label required>Padrão construtivo (Presets)</Label>
           <Select
-            value={form.padrao}
-            onChange={set("padrao")}
+            value={Object.entries(PRECOS).find(([k, v]) => Number(v.m2) === Number(form.valor_m2_custom))?.[0] || "Livre"}
+            onChange={(val) => {
+              if (val === "Livre") {
+                setForm((f) => ({ ...f, padrao: "Livre" }));
+              } else {
+                const preset = PRECOS[val];
+                setForm((f) => ({
+                  ...f,
+                  padrao: val,
+                  valor_m2_custom: preset ? preset.m2 : 0
+                }));
+              }
+            }}
             options={[
               ...Object.entries(PRECOS).map(([k, v]) => ({ value: k, label: `${v.label} — ${fmt(v.m2)}/m²` })),
-              { value: "Livre", label: "Livre (Digitar valor/m²)" }
+              { value: "Livre", label: "Outro / Personalizado (Digitar abaixo)" }
             ]}
           />
         </div>
@@ -258,18 +266,24 @@ function FormOrc({ form, setForm, clientes, onSave, onCancel, onDelete, btnLabel
         </div>
       </div>
 
-      {form.padrao === "Livre" && (
-        <div>
-          <Label required>Valor do m² / Mão de obra (R$)</Label>
-          <Input
-            type="number"
-            min="0"
-            placeholder="Digite o valor por m² (Ex: 1200)"
-            value={form.valor_m2_custom || ""}
-            onChange={set("valor_m2_custom")}
-          />
-        </div>
-      )}
+      <div>
+        <Label required>Valor do m² / Mão de obra (R$)</Label>
+        <Input
+          type="number"
+          min="0"
+          placeholder="Digite o valor por m² (Ex: 1200)"
+          value={form.valor_m2_custom || ""}
+          onChange={(val) => {
+            const valNum = parseFloat(val) || 0;
+            const matched = Object.entries(PRECOS).find(([k, v]) => Number(v.m2) === valNum)?.[0] || "Livre";
+            setForm((f) => ({
+              ...f,
+              padrao: matched,
+              valor_m2_custom: val
+            }));
+          }}
+        />
+      </div>
 
       {/* Desconto */}
       <div>
@@ -852,7 +866,7 @@ const FORM_VAZIO = {
   padrao:     "Padrão",
   status:     "Aguardando resposta",
   desconto:   0,
-  valor_m2_custom: 0,
+  valor_m2_custom: 3500,
 };
 
 export default function Orcamentos() {
@@ -1420,11 +1434,14 @@ export default function Orcamentos() {
                         const existing = clientes.find((c) => c.contato === p.contato || c.nome === p.nome);
                         clienteId = existing?.id || clientes[0]?.id || "";
                       }
+                      const leadPadrao = p.padrao || "Padrão";
+                      const leadPreco = PRECOS[leadPadrao] || PRECOS["Padrão"];
                       setForm({
                         ...FORM_VAZIO,
                         cliente_id: clienteId,
                         area: p.area_m2 || p.area || 48,
-                        padrao: p.padrao || "Padrão",
+                        padrao: leadPadrao,
+                        valor_m2_custom: leadPreco ? leadPreco.m2 : 3500,
                         unidades: 1,
                       });
                       setPreOrcAtivo(p.id);
