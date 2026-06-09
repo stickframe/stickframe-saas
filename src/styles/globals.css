@@ -379,4 +379,77 @@ input:focus, select:focus, textarea:focus {
 
 /* Loading spinner */
 @keyframes spin { to { transform:rotate(360deg); } }
+
+/* ─── Impressão / Exportar PDF ──────────────────────────────────────────── */
+@media print {
+  @page {
+    size: A4;
+    margin: 20mm;
+  }
+
+  /* Oculta elementos de navegação e interface */
+  .sidebar-desktop,
+  .topbar,
+  .hamburger,
+  .mobile-overlay,
+  .command-palette,
+  .pwa-install-banner,
+  .smart-alerts,
+  [data-no-print],
+  .no-print {
+    display: none !important;
+  }
+
+  /* Reseta layout para impressão */
+  .app-layout {
+    display: block !important;
+  }
+
+  .main-area {
+    display: block !important;
+  }
+
+  .main-content {
+    padding: 0 !important;
+    background: #fff !important;
+    overflow: visible !important;
+  }
+
+  /* Cabeçalho de impressão */
+  body.printing::before {
+    content: "";
+    display: block;
+    height: 0;
+  }
+
+  /* Garante que cards e tabelas não quebrem de forma ruim */
+  .sf-card {
+    break-inside: avoid;
+    box-shadow: none !important;
+    border: 1px solid #e2e8f0 !important;
+  }
+
+  /* Remove cores de fundo que desperdiçam tinta */
+  body {
+    background: #fff !important;
+    color: #1a1a1a !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Cabeçalho do relatório visível apenas na impressão */
+  .print-header {
+    display: flex !important;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding-bottom: 16px;
+    margin-bottom: 24px;
+    border-bottom: 3px solid #981915;
+  }
+
+  /* Oculta botões de ação do dashboard na impressão */
+  .dashboard-actions {
+    display: none !important;
+  }
+}
 .spinner { width:20px; height:20px; border:2px solid var(--border); border-top-color:var(--primary); border-radius:50%; animation:spin 0.6s linear infinite; }
