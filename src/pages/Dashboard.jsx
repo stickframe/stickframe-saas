@@ -11,9 +11,9 @@ import { useToast } from "../hooks/useToast";
 import { emailAlertaInadimplencia } from "../services/emailService";
 import { gerarRelatorioMensal as gerarPdfMensal } from "../services/relatorioService";
 import SmartAlerts from "../components/ui/SmartAlerts";
-import OnboardingWizard from "../components/ui/OnboardingWizard";
 import DashboardKPIs from "../components/Dashboard/DashboardKPIs";
 import ComplianceNR from "../components/Dashboard/ComplianceNR";
+import CalculadoraRapida from "../components/ui/CalculadoraRapida";
 
 // ─── Mini Sparkline ───────────────────────────────────────────────────────────
 function Sparkline({ data = [], color = C.success, height = 32, width = 64 }) {
@@ -192,17 +192,8 @@ function evolucaoMensal(lancamentos, tipo = "receita", mesesAtras = 6) {
 // ─── Dashboard (roteador por perfil) ─────────────────────────────────────────
 export default function Dashboard() {
   const perfil = useAppStore((s) => s.user?.perfil);
-  const userId = useAppStore((s) => s.user?.id);
   const setActivePage = useAppStore((s) => s.setActivePage);
   const [tab, setTab] = useState("visao-geral");
-
-  const onboardingKey = `onboarding_done_${userId || "user"}`;
-  const [showOnboarding, setShowOnboarding] = useState(false);
-  useEffect(() => {
-    if (perfil === "diretor" && !localStorage.getItem(onboardingKey)) {
-      setShowOnboarding(true);
-    }
-  }, [onboardingKey, perfil]);
 
   if (perfil === "comercial")  return <Suspense fallback={null}><DashboardComercial /></Suspense>;
   if (perfil === "engenheiro") return <Suspense fallback={null}><DashboardEngenheiro /></Suspense>;
@@ -211,13 +202,6 @@ export default function Dashboard() {
   // Diretor: tab switcher
   return (
     <div>
-      {showOnboarding && (
-        <OnboardingWizard
-          userId={userId}
-          onClose={() => setShowOnboarding(false)}
-          onNavigate={(page) => { setShowOnboarding(false); setActivePage(page); }}
-        />
-      )}
       <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
         <button
           onClick={() => setTab("visao-geral")}
@@ -503,6 +487,18 @@ function DashboardDiretor() {
     { label: "Margem",       value: `${margem}%`,             sub: `saldo ${fmt(saldo)}`,                                                  accent: Number(margem) >= 20 ? C.success : C.warning, icon: "%", trend: null },
   ];
 
+  // ── Exportar PDF via window.print() ──────────────────────────────────────
+  function exportarPdf() {
+    document.body.classList.add("printing");
+    window.print();
+    // afterprint é disparado quando o diálogo de impressão fecha
+    const cleanup = () => {
+      document.body.classList.remove("printing");
+      window.removeEventListener("afterprint", cleanup);
+    };
+    window.addEventListener("afterprint", cleanup);
+  }
+
   // ── Relatório executivo mensal ────────────────────────────────────────────
   function gerarRelatorioMensal() {
     const mes = mesAno();
@@ -673,7 +669,17 @@ ${obrasAndamento.length > 0 ? `
           }}>Dashboard</h2>
           <p style={{ color: C.muted, fontSize: 13, letterSpacing: 0.3 }}>Visão consolidada — {mesAno()}</p>
         </div>
-        <div style={{ display: "flex", gap: 8 }}>
+        <div className="dashboard-actions" style={{ display: "flex", gap: 8 }}>
+          <button
+            onClick={exportarPdf}
+            style={{
+              padding: "8px 18px", background: "#4a9eff", border: "none",
+              borderRadius: 8, color: "#fff", fontWeight: 700,
+              fontSize: 12, cursor: "pointer", fontFamily: "inherit",
+            }}
+          >
+            🖨️ Exportar PDF
+          </button>
           <button
             onClick={gerarRelatorioMensal}
             style={{
@@ -705,8 +711,28 @@ ${obrasAndamento.length > 0 ? `
         </div>
       </div>
 
+      {/* Cabeçalho visível apenas na impressão */}
+      <div className="print-header" style={{ display: "none" }}>
+        <div>
+          <div style={{ fontSize: 22, fontWeight: 900, color: "#981915", letterSpacing: -0.5 }}>
+            Stick<span style={{ fontWeight: 300 }}>Frame</span>
+          </div>
+          <div style={{ fontSize: 12, color: "#6b7280", marginTop: 2 }}>Gestão de Obras Steel Frame</div>
+        </div>
+        <div style={{ textAlign: "right" }}>
+          <div style={{ fontSize: 16, fontWeight: 700, color: "#4b4b4b" }}>Relatório Executivo Mensal</div>
+          <div style={{ fontSize: 12, color: "#6b7280", marginTop: 2 }}>{mesAno()}</div>
+          <div style={{ fontSize: 11, color: "#9ca3af" }}>
+            Gerado em {new Date().toLocaleDateString("pt-BR")} às{" "}
+            {new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+          </div>
+        </div>
+      </div>
+
       {/* Smart Alerts */}
-      <SmartAlerts onNavigate={setActivePage} />
+      <div data-no-print="true">
+        <SmartAlerts onNavigate={setActivePage} />
+      </div>
 
       {/* VGV — Funil financeiro */}
       <div style={{ background: `linear-gradient(135deg, rgba(152,25,21,0.04) 0%, transparent 60%)`, borderRadius: 14, padding: "20px 24px", border: `1px solid ${C.border}`, marginBottom: 20, borderTop: `3px solid ${C.red}` }}>
@@ -785,6 +811,9 @@ ${obrasAndamento.length > 0 ? `
           ))}
         </div>
       </div>
+
+      {/* Simulação Rápida */}
+      <div style={{ marginBottom: 20 }}><CalculadoraRapida /></div>
 
       {/* Novos KPIs principais com a tipografia Barlow Condensed */}
       <div style={{ marginBottom: 20 }}><DashboardKPIs /></div>

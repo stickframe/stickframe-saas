@@ -9,9 +9,7 @@ import { C, NAV } from "../../utils/constants";
 import { buscarEmpresa } from "../../services/repositories/empresaRepository";
 import useAppStore from "../../store/useAppStore";
 import { useTrial } from "../../hooks/useTrial";
-import { lazy, Suspense } from "react";
-
-const Onboarding = lazy(() => import("../../pages/Onboarding"));
+import OnboardingWizard from "../ui/OnboardingWizard";
 
 export default function AppLayout({ children }) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -54,9 +52,7 @@ export default function AppLayout({ children }) {
   return (
     <div className="app-layout">
       {showOnboarding && checkDone && (
-        <Suspense fallback={null}>
-          <Onboarding onComplete={() => setShowOnboarding(false)} />
-        </Suspense>
+        <OnboardingWizard onComplete={() => setShowOnboarding(false)} />
       )}
 
       {menuOpen && (
@@ -95,19 +91,18 @@ export default function AppLayout({ children }) {
             fontSize: 13,
             fontWeight: 500,
             fontFamily: "inherit",
-            background: isExpired ? C.danger + "18" : C.warning + "18",
-            borderBottom: `1px solid ${isExpired ? C.danger + "44" : C.warning + "44"}`,
-            color: isExpired ? C.danger : C.warning,
+            background: isExpired || daysLeft <= 3 ? "#dc2626" : "#f59e0b",
+            color: "#fff",
           }}>
             <span>
               {isExpired
-                ? "⚠️ Trial expirado · Seu plano voltou para Free"
-                : `🎉 Trial Pro: ${daysLeft} ${daysLeft === 1 ? "dia restante" : "dias restantes"}`}
+                ? "Seu trial expirou — "
+                : `Seu trial Pro expira em ${daysLeft} ${daysLeft === 1 ? "dia" : "dias"} — `}
             </span>
-            <button
-              onClick={() => setActivePage("configuracoes")}
+            <a
+              href="/pricing"
               style={{
-                background: isExpired ? C.danger : C.warning,
+                background: "rgba(255,255,255,0.25)",
                 color: "#fff",
                 border: "none",
                 borderRadius: 6,
@@ -116,10 +111,11 @@ export default function AppLayout({ children }) {
                 fontWeight: 600,
                 cursor: "pointer",
                 fontFamily: "inherit",
+                textDecoration: "none",
               }}
             >
-              Fazer upgrade
-            </button>
+              {isExpired ? "Assinar agora" : "Fazer upgrade"}
+            </a>
           </div>
         )}
         <main className="main-content">
