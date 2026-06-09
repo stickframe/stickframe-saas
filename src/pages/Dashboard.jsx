@@ -11,7 +11,6 @@ import { useToast } from "../hooks/useToast";
 import { emailAlertaInadimplencia } from "../services/emailService";
 import { gerarRelatorioMensal as gerarPdfMensal } from "../services/relatorioService";
 import SmartAlerts from "../components/ui/SmartAlerts";
-import OnboardingWizard from "../components/ui/OnboardingWizard";
 import DashboardKPIs from "../components/Dashboard/DashboardKPIs";
 import ComplianceNR from "../components/Dashboard/ComplianceNR";
 
@@ -192,17 +191,8 @@ function evolucaoMensal(lancamentos, tipo = "receita", mesesAtras = 6) {
 // ─── Dashboard (roteador por perfil) ─────────────────────────────────────────
 export default function Dashboard() {
   const perfil = useAppStore((s) => s.user?.perfil);
-  const userId = useAppStore((s) => s.user?.id);
   const setActivePage = useAppStore((s) => s.setActivePage);
   const [tab, setTab] = useState("visao-geral");
-
-  const onboardingKey = `onboarding_done_${userId || "user"}`;
-  const [showOnboarding, setShowOnboarding] = useState(false);
-  useEffect(() => {
-    if (perfil === "diretor" && !localStorage.getItem(onboardingKey)) {
-      setShowOnboarding(true);
-    }
-  }, [onboardingKey, perfil]);
 
   if (perfil === "comercial")  return <Suspense fallback={null}><DashboardComercial /></Suspense>;
   if (perfil === "engenheiro") return <Suspense fallback={null}><DashboardEngenheiro /></Suspense>;
@@ -211,13 +201,6 @@ export default function Dashboard() {
   // Diretor: tab switcher
   return (
     <div>
-      {showOnboarding && (
-        <OnboardingWizard
-          userId={userId}
-          onClose={() => setShowOnboarding(false)}
-          onNavigate={(page) => { setShowOnboarding(false); setActivePage(page); }}
-        />
-      )}
       <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
         <button
           onClick={() => setTab("visao-geral")}
