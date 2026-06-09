@@ -378,6 +378,7 @@ export default function Planejamento4D({ faseAtual = "Projeto executivo" }) {
       setLoading(false);
 
       // Loop de renderização
+      let animId;
       const animate = () => {
         if (!active) return;
         animId = requestAnimationFrame(animate);
