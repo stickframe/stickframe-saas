@@ -57,8 +57,27 @@ export default function Sidebar({ open, onClose }) {
     top: 0,
   };
 
+  const drawerStyle = {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    height: "100vh",
+    width: 260,
+    background: "#16181c",
+    color: "#fff",
+    borderRight: "1px solid #25282e",
+    display: "flex",
+    flexDirection: "column",
+    overflow: "hidden",
+    zIndex: 600,
+    transform: open ? "translateX(0)" : "translateX(-100%)",
+    transition: "transform 0.25s ease",
+  };
+
   return (
-    <aside className={`sidebar-desktop${open ? " open" : ""}`} style={sidebarStyle}>
+    <>
+      {/* Desktop sidebar */}
+      <aside className="sidebar-desktop" style={sidebarStyle}>
       {/* Logo */}
       <div style={{ padding: "24px 22px 18px", borderBottom: "1px solid #25282e" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -146,5 +165,45 @@ export default function Sidebar({ open, onClose }) {
         </div>
       </div>
     </aside>
+
+      {/* Mobile drawer */}
+      <aside className="sidebar-mobile-drawer" style={drawerStyle}>
+        <div style={{ padding: "24px 22px 18px", borderBottom: "1px solid #25282e", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <img src={LOGO_STICKFRAME} style={{ height: "34px", width: "auto", objectFit: "contain" }} alt="Logo StickFrame" />
+          <button onClick={onClose} style={{ background: "none", border: "none", color: "#9aa0a8", fontSize: 24, cursor: "pointer", padding: 4 }}>✕</button>
+        </div>
+        <nav style={{ flex: 1, padding: "14px 0", overflowY: "auto" }}>
+          {navFiltro.map((n) => {
+            const isActive = active === n.key;
+            return (
+              <button
+                key={n.key}
+                onClick={() => { setActivePage(n.key); onClose?.(); }}
+                style={{
+                  display: "flex", alignItems: "center", gap: 10, width: "100%",
+                  padding: "12px 22px",
+                  background: isActive ? "rgba(152,25,21,0.16)" : "transparent",
+                  border: "none",
+                  borderLeft: isActive ? "3px solid #981915" : "3px solid transparent",
+                  cursor: "pointer",
+                  color: isActive ? "#ffffff" : "#9aa0a8",
+                  fontSize: 14, fontWeight: isActive ? 700 : 500,
+                  textAlign: "left",
+                  fontFamily: "inherit",
+                }}
+              >
+                <NavIcon name={n.icon} size={16} color={isActive ? "#ffffff" : "#9aa0a8"} />
+                <span>{n.label}</span>
+              </button>
+            );
+          })}
+        </nav>
+        <div style={{ padding: "16px", borderTop: "1px solid #25282e" }}>
+          <button onClick={logout} style={{ background: "none", border: "none", color: "#c9484a", cursor: "pointer", fontWeight: 700, fontSize: 13, padding: "8px 0" }}>
+            Sair
+          </button>
+        </div>
+      </aside>
+    </>
   );
 }
