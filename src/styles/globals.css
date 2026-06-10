@@ -104,6 +104,10 @@ select:focus {
 
 .mobile-overlay {
   display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 500;
 }
 
 /* ─── CSS Variables ─────────────────────────────────────────────────────── */
@@ -330,7 +334,7 @@ select:focus {
   .mobile-overlay         { display: block; }
 
   /* Mostra hamburguer no mobile */
-  .hamburger              { display: flex !important; }
+  .hamburger              { display: flex !important; font-size: 26px; min-width: 48px; min-height: 48px; background: rgba(0,0,0,0.05); border-radius: 8px; }
   .topbar                 { padding: 0 16px; }
 }
 
