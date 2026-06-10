@@ -659,7 +659,7 @@ ${obrasAndamento.length > 0 ? `
         </div>
       )}
       {/* Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 24 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
         <div>
           <h2 style={{
             fontSize: 28, fontWeight: 900, marginBottom: 2,
@@ -669,7 +669,7 @@ ${obrasAndamento.length > 0 ? `
           }}>Dashboard</h2>
           <p style={{ color: C.muted, fontSize: 13, letterSpacing: 0.3 }}>Visão consolidada — {mesAno()}</p>
         </div>
-        <div className="dashboard-actions" style={{ display: "flex", gap: 8 }}>
+        <div className="dashboard-actions" style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           <button
             onClick={exportarPdf}
             style={{
@@ -794,7 +794,7 @@ ${obrasAndamento.length > 0 ? `
         </div>
 
         {/* Etapas */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 8 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))", gap: 8 }}>
           {vgvFunil.map((f, i) => (
             <div key={i} style={{
               borderLeft: `3px solid ${f.color}`, paddingLeft: 10,
