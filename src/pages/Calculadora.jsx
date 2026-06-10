@@ -872,20 +872,7 @@ export default function Calculadora() {
     recarregarRetalhos();
   }
 
-  function calcular() {
-    const a = parseFloat(String(area).replace(",", "."));
-    if (!a || a <= 0) return;
-    const fatorPadrao = PADROES[padrao].fator;
-    const items = INSUMOS.map((ins) => {
-      const ehFundacao = ins.fund;
-      const fator      = ehFundacao ? 1 : fatorPadrao * pavs;
-      const qtd        = Math.ceil(ins.base * a * fator);
-      return { ...ins, qtd, total: qtd * ins.preco };
-    });
-    setResultado({ area: a, pavs, padrao, items });
-    setOtimizacao(null);
-    setVerTodas({});
-  }
+
 
   function exportarExcel() {
     if (!resultado) return;
@@ -970,7 +957,60 @@ export default function Calculadora() {
     setDesvioReal({});
   }
 
-  const totalGeral = resultado?.items.reduce((s, i) => s + i.total, 0) || 0;
+  // Real-time calculation
+  useEffect(() => {
+    const a = parseFloat(String(area).replace(",", "."));
+    if (!a || a <= 0) { setResultado(null); return; }
+    const fatorPadrao = PADROES[padrao].fator;
+    const items = INSUMOS.map((ins) => {
+      const fator = ins.fund ? 1 : fatorPadrao * pavs;
+      const qtd   = Math.ceil(ins.base * a * fator);
+      return { ...ins, qtd, total: qtd * ins.preco };
+    });
+    setResultado({ area: a, pavs, padrao, items });
+    setOtimizacao(null);
+  }, [area, pavs, padrao]);
+
+  const [extrasAtivos, setExtrasAtivos] = useState({
+    "Projetos e Engenharia": true,
+    "Mão de Obra":           true,
+  });
+
+  function toggleExtra(cat) {
+    setExtrasAtivos(prev => ({ ...prev, [cat]: !prev[cat] }));
+  }
+
+  const totalGeral = resultado
+    ? resultado.items
+        .filter(i => !["Projetos e Engenharia", "Mão de Obra"].includes(i.categoria) || extrasAtivos[i.categoria])
+        .reduce((s, i) => s + i.total, 0)
+    : 0;
+
+  // Category totals for result panel bars
+  const catTotais = resultado
+    ? CATS_ORDEM.map(cat => ({
+        cat,
+        total: resultado.items.filter(i => i.categoria === cat &&
+          (!["Projetos e Engenharia","Mão de Obra"].includes(cat) || extrasAtivos[cat])
+        ).reduce((s, i) => s + i.total, 0),
+      })).filter(x => x.total > 0)
+    : [];
+  const maxCatTotal = catTotais.length ? Math.max(...catTotais.map(x => x.total)) : 1;
+
+  const CAT_CORES = {
+    "Estrutura de Aço":          "#981915",
+    "Fechamento":                "#b07a1e",
+    "Isolamento":                "#3b6ea5",
+    "Fixação":                   "#6d557e",
+    "Fundação (Radier)":         "#5c4a2a",
+    "Cobertura":                 "#2e6b4a",
+    "Esquadrias":                "#2e7a8a",
+    "Instalações Elétricas":     "#c05020",
+    "Inst. Hidrossanitárias":    "#1a6ea0",
+    "Acabamentos":               "#7a5a9a",
+    "Projetos e Engenharia":     "#3f7a4b",
+    "Mão de Obra":               "#c04030",
+  };
 
   return (
     <div style={{ maxWidth: 960, margin: "0 auto", padding: "0 0 40px" }}>
@@ -1083,143 +1123,162 @@ export default function Calculadora() {
       {modo === "comparativo" && <CalcComparativo />}
       {modo !== "steelframe" && modo !== "parede" && modo !== "forro" && modo !== "comparativo" && modo !== "kits" && null}
       {modo !== "steelframe" ? null : (<>
-      <p style={{ color: C.muted, fontSize: 13, marginBottom: 24 }}>
-        Estimativa de insumos e custos de referência por área construída — 10% de perda já incluídos
-      </p>
 
-      {/* ── Formulário ── */}
-      <div style={{
-        background: "#fff", borderRadius: 16, border: `1px solid ${C.border}`,
-        padding: "22px 26px", marginBottom: 24,
-        display: "grid", gridTemplateColumns: "1fr 1fr 1fr auto", gap: 16, alignItems: "flex-end",
-      }}>
-        <div>
-          <label style={{ fontSize: 11, fontWeight: 700, color: C.muted, display: "block", marginBottom: 6, letterSpacing: 1 }}>
-            ÁREA CONSTRUÍDA (m²)
-          </label>
-          <input
-            type="number" min="10" value={area}
-            onChange={(e) => setArea(e.target.value)}
-            placeholder="Ex: 120"
-            style={{
-              width: "100%", padding: "10px 12px", borderRadius: 8,
-              border: `1px solid ${C.border}`, fontSize: 16, fontWeight: 700,
-              fontFamily: "inherit", outline: "none", boxSizing: "border-box",
-            }}
-          />
-        </div>
-        <div>
-          <label style={{ fontSize: 11, fontWeight: 700, color: C.muted, display: "block", marginBottom: 6, letterSpacing: 1 }}>
-            PAVIMENTOS
-          </label>
-          <select
-            value={pavs} onChange={(e) => setPavs(Number(e.target.value))}
-            style={{
-              width: "100%", padding: "10px 12px", borderRadius: 8,
-              border: `1px solid ${C.border}`, fontSize: 14, fontFamily: "inherit",
-              background: "#fff", outline: "none",
-            }}
-          >
-            <option value={1}>Térreo (1 pav.)</option>
-            <option value={2}>Sobrado (2 pav.)</option>
-            <option value={3}>3 pavimentos</option>
-          </select>
-        </div>
-        <div>
-          <label style={{ fontSize: 11, fontWeight: 700, color: C.muted, display: "block", marginBottom: 6, letterSpacing: 1 }}>
-            PADRÃO CONSTRUTIVO
-          </label>
-          <select
-            value={padrao} onChange={(e) => setPadrao(e.target.value)}
-            style={{
-              width: "100%", padding: "10px 12px", borderRadius: 8,
-              border: `1px solid ${C.border}`, fontSize: 14, fontFamily: "inherit",
-              background: "#fff", outline: "none",
-            }}
-          >
-            {Object.keys(PADROES).map((p) => <option key={p}>{p}</option>)}
-          </select>
-        </div>
-        <button onClick={calcular} style={{
-          padding: "10px 24px", background: C.red, color: "#fff",
-          border: "none", borderRadius: 8, fontSize: 14, fontWeight: 700,
-          cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap",
-        }}>
-          Calcular
-        </button>
-      </div>
+      {/* ── 2-column layout: Form + Sticky Result ── */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 380px", gap: 24, alignItems: "start" }}>
 
-      {/* ── Resultado ── */}
-      {resultado && (
-        <>
-          {/* Barra de resumo */}
-          <div style={{
-            background: C.red, color: "#fff", borderRadius: 12,
-            padding: "18px 26px", marginBottom: 20,
-            display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16,
-          }}>
-            <div>
-              <div style={{ fontSize: 12, opacity: 0.75, marginBottom: 4 }}>
-                {resultado.area} m² · {resultado.pavs} pav. · {resultado.padrao}
-              </div>
-              <div style={{ fontSize: 22, fontWeight: 800 }}>
-                {fmtR(totalGeral)} <span style={{ fontSize: 14, fontWeight: 400, opacity: 0.8 }}>estimativa total de insumos</span>
-              </div>
-            </div>
-            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-              <button onClick={exportarExcel} style={{
-                padding: "9px 16px", background: "rgba(255,255,255,0.15)",
-                border: "1px solid rgba(255,255,255,0.3)", borderRadius: 8,
-                color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
-              }}><BarChart2 size={13} /> Exportar Excel</button>
-              <button onClick={() => window.print()} style={{
-                padding: "9px 16px", background: "rgba(255,255,255,0.15)",
-                border: "1px solid rgba(255,255,255,0.3)", borderRadius: 8,
-                color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
-              }}>🖨️ Imprimir</button>
-              <button onClick={enviarParaOrcamento} style={{
-                padding: "9px 18px", background: "#fff",
-                border: "none", borderRadius: 8,
-                color: C.red, fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "inherit",
-              }}><ClipboardList size={13} /> Usar no Orçamento →</button>
+        {/* ── LEFT: Form panel ── */}
+        <div>
+          {/* Area input */}
+          <div style={{ background: "#fff", borderRadius: 16, border: `1px solid ${C.border}`, padding: "24px", marginBottom: 16 }}>
+            <label style={{ fontSize: 11, fontWeight: 700, color: C.muted, display: "block", marginBottom: 10, letterSpacing: 1 }}>
+              ÁREA CONSTRUÍDA (m²)
+            </label>
+            <input
+              type="number" min="10" value={area}
+              onChange={(e) => setArea(e.target.value)}
+              placeholder="Ex: 120"
+              style={{
+                width: "100%", padding: "14px 16px", borderRadius: 10,
+                border: `2px solid ${area ? C.red : C.border}`,
+                fontSize: 28, fontWeight: 900, fontFamily: "inherit",
+                outline: "none", boxSizing: "border-box",
+                color: C.text, transition: "border-color .2s",
+              }}
+            />
+            <div style={{ fontSize: 11, color: C.muted, marginTop: 6 }}>
+              Digite a área total e os resultados atualizam em tempo real
             </div>
           </div>
 
-          {/* Tabelas por categoria */}
-          {CATS_ORDEM.map((cat) => {
+          {/* Padrão radio-cards */}
+          <div style={{ background: "#fff", borderRadius: 16, border: `1px solid ${C.border}`, padding: "20px 24px", marginBottom: 16 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 12 }}>PADRÃO CONSTRUTIVO</div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8 }}>
+              {[
+                { key: "Econômico",   sub: "Fator 0.85×", icon: "◇", cor: C.steel },
+                { key: "Padrão",      sub: "Fator 1.00×", icon: "◆", cor: C.red   },
+                { key: "Alto Padrão", sub: "Fator 1.20×", icon: "★", cor: "#e07020" },
+              ].map(({ key, sub, icon, cor }) => {
+                const sel = padrao === key;
+                return (
+                  <button key={key} onClick={() => setPadrao(key)} style={{
+                    padding: "14px 12px", borderRadius: 12,
+                    border: `2px solid ${sel ? cor : C.border}`,
+                    background: sel ? cor + "12" : "#fff",
+                    cursor: "pointer", fontFamily: "inherit",
+                    textAlign: "center", transition: "all .15s",
+                  }}>
+                    <div style={{ fontSize: 18, marginBottom: 4 }}>{icon}</div>
+                    <div style={{ fontSize: 13, fontWeight: 800, color: sel ? cor : C.text, marginBottom: 2 }}>{key}</div>
+                    <div style={{ fontSize: 10, color: C.muted }}>{sub}</div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Pavimentos segmented control */}
+          <div style={{ background: "#fff", borderRadius: 16, border: `1px solid ${C.border}`, padding: "20px 24px", marginBottom: 16 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 12 }}>NÚMERO DE PAVIMENTOS</div>
+            <div style={{ display: "flex", gap: 8 }}>
+              {[
+                { val: 1, label: "Térreo",   sub: "1 pav." },
+                { val: 2, label: "Sobrado",  sub: "2 pav." },
+                { val: 3, label: "Triplex",  sub: "3 pav." },
+              ].map(({ val, label, sub }) => {
+                const sel = pavs === val;
+                return (
+                  <button key={val} onClick={() => setPavs(val)} style={{
+                    flex: 1, padding: "12px 8px", borderRadius: 10,
+                    border: `2px solid ${sel ? C.red : C.border}`,
+                    background: sel ? C.red : "#fff",
+                    cursor: "pointer", fontFamily: "inherit", transition: "all .15s",
+                  }}>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: sel ? "#fff" : C.text }}>{label}</div>
+                    <div style={{ fontSize: 11, color: sel ? "rgba(255,255,255,.7)" : C.muted }}>{sub}</div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Extras checkboxes */}
+          <div style={{ background: "#fff", borderRadius: 16, border: `1px solid ${C.border}`, padding: "20px 24px", marginBottom: 24 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 12 }}>INCLUIR NO ORÇAMENTO</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {[
+                { cat: "Projetos e Engenharia", label: "Projetos (Arq. + Estrutural + Elétrico/Hidro)", icon: "📐" },
+                { cat: "Mão de Obra",           label: "Mão de obra (montagem, vedações, cobertura)",   icon: "👷" },
+              ].map(({ cat, label, icon }) => {
+                const ativo = extrasAtivos[cat];
+                const sub   = resultado
+                  ? resultado.items.filter(i => i.categoria === cat).reduce((s, i) => s + i.total, 0)
+                  : 0;
+                return (
+                  <label key={cat} style={{
+                    display: "flex", alignItems: "center", gap: 12, padding: "12px 14px",
+                    borderRadius: 10, border: `2px solid ${ativo ? C.red + "55" : C.border}`,
+                    background: ativo ? C.red + "06" : "#fafafa",
+                    cursor: "pointer", transition: "all .15s",
+                  }}>
+                    <input type="checkbox" checked={ativo} onChange={() => toggleExtra(cat)}
+                      style={{ width: 16, height: 16, accentColor: C.red, cursor: "pointer" }} />
+                    <span style={{ fontSize: 18 }}>{icon}</span>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{label}</div>
+                      {sub > 0 && <div style={{ fontSize: 11, color: ativo ? C.red : C.muted, fontWeight: 700 }}>{fmtR(sub)}</div>}
+                    </div>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Tabelas detalhadas por categoria */}
+          {resultado && CATS_ORDEM.map((cat) => {
             const items    = resultado.items.filter((i) => i.categoria === cat);
             const subtotal = items.reduce((s, i) => s + i.total, 0);
             if (!items.length) return null;
+            const excluida = ["Projetos e Engenharia","Mão de Obra"].includes(cat) && !extrasAtivos[cat];
             return (
-              <div key={cat} style={{ background: "#fff", borderRadius: 16, border: `1px solid ${C.border}`, marginBottom: 14, overflow: "hidden" }}>
+              <div key={cat} style={{
+                background: "#fff", borderRadius: 14, border: `1px solid ${C.border}`,
+                marginBottom: 10, overflow: "hidden",
+                opacity: excluida ? 0.4 : 1, transition: "opacity .2s",
+              }}>
                 <div style={{
-                  padding: "11px 20px", background: C.dark,
+                  padding: "10px 18px", background: "#f8f8f8",
                   borderBottom: `1px solid ${C.border}`,
                   display: "flex", justifyContent: "space-between", alignItems: "center",
                 }}>
-                  <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.5, color: C.graphite, textTransform: "uppercase" }}>{cat}</span>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: C.graphite }}>{fmtR(subtotal)}</span>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <div style={{ width: 8, height: 8, borderRadius: "50%", background: CAT_CORES[cat] || C.red, flexShrink: 0 }} />
+                    <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.graphite, textTransform: "uppercase" }}>{cat}</span>
+                    {excluida && <span style={{ fontSize: 10, color: C.muted, fontStyle: "italic" }}>(excluído)</span>}
+                  </div>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: excluida ? C.muted : C.graphite }}>{fmtR(subtotal)}</span>
                 </div>
                 <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
                   <thead>
                     <tr style={{ background: "#fafafa" }}>
-                      <th style={{ padding: "9px 20px", textAlign: "left",   fontSize: 11, color: C.muted, fontWeight: 600 }}>Material</th>
-                      <th style={{ padding: "9px 12px", textAlign: "right",  fontSize: 11, color: C.muted, fontWeight: 600, width: 80 }}>Qtd</th>
-                      <th style={{ padding: "9px 12px", textAlign: "left",   fontSize: 11, color: C.muted, fontWeight: 600, width: 50 }}>Un</th>
-                      <th style={{ padding: "9px 14px", textAlign: "right",  fontSize: 11, color: C.muted, fontWeight: 600, width: 100 }}>Preço ref.</th>
-                      <th style={{ padding: "9px 20px", textAlign: "right",  fontSize: 11, color: C.muted, fontWeight: 600, width: 110 }}>Total ref.</th>
+                      <th style={{ padding: "8px 18px", textAlign: "left",  fontSize: 10, color: C.muted, fontWeight: 600 }}>Material</th>
+                      <th style={{ padding: "8px 10px", textAlign: "right", fontSize: 10, color: C.muted, fontWeight: 600, width: 70 }}>Qtd</th>
+                      <th style={{ padding: "8px 10px", textAlign: "left",  fontSize: 10, color: C.muted, fontWeight: 600, width: 45 }}>Un</th>
+                      <th style={{ padding: "8px 12px", textAlign: "right", fontSize: 10, color: C.muted, fontWeight: 600, width: 95 }}>Preço ref.</th>
+                      <th style={{ padding: "8px 18px", textAlign: "right", fontSize: 10, color: C.muted, fontWeight: 600, width: 100 }}>Total</th>
                     </tr>
                   </thead>
                   <tbody>
                     {items.map((item, i) => (
                       <tr key={i} style={{ borderTop: `1px solid ${C.border}` }}>
-                        <td style={{ padding: "11px 20px", fontWeight: 500 }}>{item.nome}</td>
-                        <td style={{ padding: "11px 12px", textAlign: "right", fontWeight: 800, color: C.red }}>
+                        <td style={{ padding: "10px 18px", fontWeight: 500 }}>{item.nome}</td>
+                        <td style={{ padding: "10px 10px", textAlign: "right", fontWeight: 800, color: CAT_CORES[cat] || C.red }}>
                           {item.qtd.toLocaleString("pt-BR")}
                         </td>
-                        <td style={{ padding: "11px 12px", color: C.muted }}>{item.un}</td>
-                        <td style={{ padding: "11px 14px", textAlign: "right", color: C.muted, fontSize: 12 }}>{fmtR(item.preco)}</td>
-                        <td style={{ padding: "11px 20px", textAlign: "right", fontWeight: 700 }}>{fmtR(item.total)}</td>
+                        <td style={{ padding: "10px 10px", color: C.muted }}>{item.un}</td>
+                        <td style={{ padding: "10px 12px", textAlign: "right", color: C.muted, fontSize: 11 }}>{fmtR(item.preco)}</td>
+                        <td style={{ padding: "10px 18px", textAlign: "right", fontWeight: 700 }}>{fmtR(item.total)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -1228,29 +1287,147 @@ export default function Calculadora() {
             );
           })}
 
-          <div style={{
-            background: "#fff", borderRadius: 16, border: `2px solid ${C.red}33`,
-            padding: "18px 24px", display: "flex", justifyContent: "space-between", alignItems: "center",
-            marginBottom: 16,
-          }}>
-            <div style={{ fontSize: 13, color: C.muted, fontWeight: 600 }}>TOTAL ESTIMADO DE INSUMOS</div>
-            <div style={{ fontSize: 24, fontWeight: 900, color: C.red }}>{fmtR(totalGeral)}</div>
-          </div>
-
-          <div style={{ display: "flex", justifyContent: "center", marginBottom: 8 }}>
-            <button onClick={enviarParaOrcamento} style={{
-              padding: "13px 32px", background: C.red, color: "#fff",
-              border: "none", borderRadius: 10, fontSize: 15, fontWeight: 800,
-              cursor: "pointer", fontFamily: "inherit",
-              boxShadow: "0 4px 16px rgba(152,25,21,0.3)",
-            }}>
-              <ClipboardList size={13} /> Enviar para Orçamento →
-            </button>
-          </div>
-
-          <p style={{ fontSize: 12, color: C.muted, textAlign: "center" }}>
-            ⚠️ Preços de referência — sujeitos à variação regional e de mercado. Elabore o projeto executivo para quantitativos precisos.
+          <p style={{ fontSize: 12, color: C.muted, textAlign: "center", marginTop: 8 }}>
+            ⚠️ Preços de referência — sujeitos à variação regional e de mercado.
           </p>
+        </div>
+
+        {/* ── RIGHT: Sticky result panel ── */}
+        <div style={{ position: "sticky", top: 20 }}>
+          <div style={{
+            background: "linear-gradient(160deg,#1a0a0a,#2d0f0f)",
+            borderRadius: 20, padding: "28px 24px", color: "#fff",
+            boxShadow: "0 12px 40px rgba(152,25,21,.25)",
+          }}>
+            {/* Header */}
+            <div style={{ fontSize: 11, opacity: .5, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 8 }}>
+              Investimento estimado
+            </div>
+
+            {/* Big number */}
+            <div style={{ fontSize: 40, fontWeight: 900, letterSpacing: -1.5, lineHeight: 1, marginBottom: 4 }}>
+              {resultado ? fmtR(totalGeral) : "—"}
+            </div>
+            {resultado && (
+              <div style={{ fontSize: 12, opacity: .55, marginBottom: 20 }}>
+                {resultado.area} m² · {resultado.pavs} pav. · {resultado.padrao}
+                {resultado.area > 0 && <span> · {fmtR(totalGeral / resultado.area)}/m²</span>}
+              </div>
+            )}
+
+            {/* Category breakdown bars */}
+            {catTotais.length > 0 && (
+              <div style={{ marginBottom: 20 }}>
+                <div style={{ fontSize: 10, fontWeight: 700, opacity: .4, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>
+                  Composição do investimento
+                </div>
+                {catTotais.map(({ cat, total }) => (
+                  <div key={cat} style={{ marginBottom: 7 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
+                      <span style={{ fontSize: 10, opacity: .7, fontWeight: 600 }}>{cat}</span>
+                      <span style={{ fontSize: 10, fontWeight: 700, opacity: .85 }}>{fmtR(total)}</span>
+                    </div>
+                    <div style={{ height: 4, background: "rgba(255,255,255,.12)", borderRadius: 2, overflow: "hidden" }}>
+                      <div style={{
+                        height: "100%",
+                        width: `${(total / maxCatTotal) * 100}%`,
+                        background: CAT_CORES[cat] || C.red,
+                        borderRadius: 2,
+                        transition: "width .4s ease",
+                      }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Breakdown summary */}
+            {resultado && (
+              <div style={{
+                background: "rgba(255,255,255,.07)", borderRadius: 12,
+                padding: "14px 16px", marginBottom: 20,
+                display: "flex", flexDirection: "column", gap: 6,
+              }}>
+                {[
+                  { label: "Só materiais",      cats: CATS_ORDEM.filter(c => !["Projetos e Engenharia","Mão de Obra"].includes(c)) },
+                  { label: "+ Projetos",         cats: CATS_ORDEM.filter(c => c !== "Mão de Obra") },
+                  { label: "Obra completa",      cats: CATS_ORDEM },
+                ].map(({ label, cats }) => {
+                  const val = resultado.items.filter(i => cats.includes(i.categoria)).reduce((s, i) => s + i.total, 0);
+                  return (
+                    <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ fontSize: 11, opacity: .55 }}>{label}</span>
+                      <span style={{ fontSize: 13, fontWeight: 800 }}>{fmtR(val)}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* CTAs */}
+            <button
+              onClick={enviarParaOrcamento}
+              disabled={!resultado}
+              style={{
+                width: "100%", padding: "14px 0", background: C.red,
+                border: "none", borderRadius: 12, color: "#fff",
+                fontSize: 15, fontWeight: 800, cursor: resultado ? "pointer" : "not-allowed",
+                fontFamily: "inherit", marginBottom: 10,
+                opacity: resultado ? 1 : .5,
+                boxShadow: resultado ? "0 4px 20px rgba(152,25,21,.4)" : "none",
+                transition: "opacity .2s",
+              }}>
+              Gerar Orçamento →
+            </button>
+
+            <div style={{ display: "flex", gap: 8 }}>
+              <button onClick={exportarExcel} disabled={!resultado} style={{
+                flex: 1, padding: "10px 0",
+                background: "rgba(255,255,255,.1)", border: "1px solid rgba(255,255,255,.2)",
+                borderRadius: 10, color: "#fff", fontSize: 12, fontWeight: 700,
+                cursor: resultado ? "pointer" : "not-allowed", fontFamily: "inherit",
+                opacity: resultado ? 1 : .4,
+              }}>
+                📥 Excel
+              </button>
+              <button onClick={() => window.print()} disabled={!resultado} style={{
+                flex: 1, padding: "10px 0",
+                background: "rgba(255,255,255,.1)", border: "1px solid rgba(255,255,255,.2)",
+                borderRadius: 10, color: "#fff", fontSize: 12, fontWeight: 700,
+                cursor: resultado ? "pointer" : "not-allowed", fontFamily: "inherit",
+                opacity: resultado ? 1 : .4,
+              }}>
+                🖨️ Imprimir
+              </button>
+            </div>
+
+            {/* CUB indicator */}
+            <div style={{
+              marginTop: 16, paddingTop: 16,
+              borderTop: "1px solid rgba(255,255,255,.1)",
+              display: "flex", justifyContent: "space-between", alignItems: "center",
+            }}>
+              <div>
+                <div style={{ fontSize: 10, opacity: .4, letterSpacing: .5 }}>CUB-R1B/m²</div>
+                <div style={{ fontSize: 14, fontWeight: 700 }}>
+                  {cubValor ? `R$ ${cubValor.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}` : "—"}
+                </div>
+              </div>
+              <button onClick={atualizarCub} disabled={cubCarregando} style={{
+                padding: "6px 12px", background: "rgba(255,255,255,.1)",
+                border: "1px solid rgba(255,255,255,.2)", borderRadius: 8,
+                color: "#fff", fontSize: 11, fontWeight: 700, cursor: "pointer",
+                fontFamily: "inherit", opacity: cubCarregando ? .6 : 1,
+              }}>
+                {cubCarregando ? "..." : "🔄"}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Otimizador de Corte (below 2-col layout) ── */}
+      {resultado && (<>
 
           {/* ── Otimizador de Corte ── */}
           <div style={{ background: "#fff", borderRadius: 16, border: `1px solid ${C.border}`, overflow: "hidden", marginTop: 8 }}>
