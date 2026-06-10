@@ -1028,11 +1028,11 @@ ${obrasAndamento.length > 0 ? `
                   {followUps.map((c) => {
                     const atrasado = c.proximo_contato < hojeStr;
                     return (
-                      <div key={c.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 12px", background: atrasado ? C.danger + "0e" : C.darker, borderRadius: 8, borderLeft: `3px solid ${atrasado ? C.danger : C.warning}` }}>
-                        <span style={{ fontSize: 18 }}>{atrasado ? "⚠️" : "📞"}</span>
+                      <div key={c.id} style={{ display: "flex", alignItems: "flex-start", gap: 8, padding: "10px 12px", background: atrasado ? C.danger + "0e" : C.darker, borderRadius: 8, borderLeft: `3px solid ${atrasado ? C.danger : C.warning}`, flexWrap: "wrap" }}>
+                        <span style={{ fontSize: 18, flexShrink: 0 }}>{atrasado ? "⚠️" : "📞"}</span>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: 13, fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.nome}</div>
-                          <div style={{ fontSize: 11, color: C.muted }}>
+                          <div style={{ fontSize: 11, color: C.muted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                             {c.status} · {c.contato || c.email || "—"}
                           </div>
                         </div>
