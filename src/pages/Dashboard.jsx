@@ -1065,7 +1065,7 @@ ${obrasAndamento.length > 0 ? `
                     <div key={p.id} style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 8, alignItems: "center", padding: "7px 10px", background: C.danger + "0f", borderRadius: 7, borderLeft: "3px solid " + C.danger }}>
                       <div style={{ minWidth: 0 }}>
                         <div style={{ fontSize: 12, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.nome_produto}</div>
-                        <div style={{ fontSize: 10, color: C.muted }}>{p.loja || "—"} · R$ {Number(p.preco_anterior).toLocaleString("pt-BR", { minimumFractionDigits: 2 })} → R$ {Number(p.preco_atual).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</div>
+                        <div style={{ fontSize: 10, color: C.muted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.loja || "—"} · R$ {Number(p.preco_anterior).toLocaleString("pt-BR", { minimumFractionDigits: 2 })} → R$ {Number(p.preco_atual).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</div>
                       </div>
                       <span style={{ fontSize: 12, fontWeight: 800, color: C.danger, flexShrink: 0 }}>+{p.var.toFixed(1)}%</span>
                     </div>
