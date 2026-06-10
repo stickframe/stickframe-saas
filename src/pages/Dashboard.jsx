@@ -659,7 +659,7 @@ ${obrasAndamento.length > 0 ? `
         </div>
       )}
       {/* Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 24 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
         <div>
           <h2 style={{
             fontSize: 28, fontWeight: 900, marginBottom: 2,
@@ -669,7 +669,7 @@ ${obrasAndamento.length > 0 ? `
           }}>Dashboard</h2>
           <p style={{ color: C.muted, fontSize: 13, letterSpacing: 0.3 }}>Visão consolidada — {mesAno()}</p>
         </div>
-        <div className="dashboard-actions" style={{ display: "flex", gap: 8 }}>
+        <div className="dashboard-actions" style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           <button
             onClick={exportarPdf}
             style={{
@@ -794,7 +794,7 @@ ${obrasAndamento.length > 0 ? `
         </div>
 
         {/* Etapas */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 8 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))", gap: 8 }}>
           {vgvFunil.map((f, i) => (
             <div key={i} style={{
               borderLeft: `3px solid ${f.color}`, paddingLeft: 10,
@@ -1028,11 +1028,11 @@ ${obrasAndamento.length > 0 ? `
                   {followUps.map((c) => {
                     const atrasado = c.proximo_contato < hojeStr;
                     return (
-                      <div key={c.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 12px", background: atrasado ? C.danger + "0e" : C.darker, borderRadius: 8, borderLeft: `3px solid ${atrasado ? C.danger : C.warning}` }}>
-                        <span style={{ fontSize: 18 }}>{atrasado ? "⚠️" : "📞"}</span>
+                      <div key={c.id} style={{ display: "flex", alignItems: "flex-start", gap: 8, padding: "10px 12px", background: atrasado ? C.danger + "0e" : C.darker, borderRadius: 8, borderLeft: `3px solid ${atrasado ? C.danger : C.warning}`, flexWrap: "wrap" }}>
+                        <span style={{ fontSize: 18, flexShrink: 0 }}>{atrasado ? "⚠️" : "📞"}</span>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: 13, fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.nome}</div>
-                          <div style={{ fontSize: 11, color: C.muted }}>
+                          <div style={{ fontSize: 11, color: C.muted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                             {c.status} · {c.contato || c.email || "—"}
                           </div>
                         </div>
@@ -1065,7 +1065,7 @@ ${obrasAndamento.length > 0 ? `
                     <div key={p.id} style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 8, alignItems: "center", padding: "7px 10px", background: C.danger + "0f", borderRadius: 7, borderLeft: "3px solid " + C.danger }}>
                       <div style={{ minWidth: 0 }}>
                         <div style={{ fontSize: 12, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.nome_produto}</div>
-                        <div style={{ fontSize: 10, color: C.muted }}>{p.loja || "—"} · R$ {Number(p.preco_anterior).toLocaleString("pt-BR", { minimumFractionDigits: 2 })} → R$ {Number(p.preco_atual).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</div>
+                        <div style={{ fontSize: 10, color: C.muted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.loja || "—"} · R$ {Number(p.preco_anterior).toLocaleString("pt-BR", { minimumFractionDigits: 2 })} → R$ {Number(p.preco_atual).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</div>
                       </div>
                       <span style={{ fontSize: 12, fontWeight: 800, color: C.danger, flexShrink: 0 }}>+{p.var.toFixed(1)}%</span>
                     </div>

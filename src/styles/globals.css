@@ -328,6 +328,10 @@ select:focus {
   .main-area              { width: 100%; overflow-x: hidden; }
   .main-content           { padding: 16px !important; }
   .mobile-overlay         { display: block; }
+
+  /* Mostra hamburguer no mobile */
+  .hamburger              { display: flex !important; }
+  .topbar                 { padding: 0 16px; }
 }
 
 /* ── Design system additions ─────────────────────────── */
