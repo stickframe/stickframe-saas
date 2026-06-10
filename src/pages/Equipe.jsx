@@ -987,8 +987,8 @@ export default function Equipe() {
                 <Btn onClick={() => setAlocModal(true)}>+ Nova alocação</Btn>
               </div>
             ) : (
-              <div style={{ background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", border: `1px solid ${C.border}`, overflow: "hidden" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+              <div style={{ background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", border: `1px solid ${C.border}`, overflowX: "auto" }}>
+                <table style={{ width: "100%", minWidth: 560, borderCollapse: "collapse", fontSize: 13 }}>
                   <thead>
                     <tr style={{ background: C.darker }}>
                       <th style={{ padding: "10px 16px", textAlign: "left", fontSize: 10, fontWeight: 700, letterSpacing: 1, color: C.muted, textTransform: "uppercase" }}>Colaborador</th>
@@ -1076,8 +1076,8 @@ export default function Equipe() {
                 <Btn onClick={() => setHoraModal(true)}>+ Registrar horas</Btn>
               </div>
             ) : (
-              <div style={{ background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", border: `1px solid ${C.border}`, overflow: "hidden" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+              <div style={{ background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", border: `1px solid ${C.border}`, overflowX: "auto" }}>
+                <table style={{ width: "100%", minWidth: 560, borderCollapse: "collapse", fontSize: 13 }}>
                   <thead>
                     <tr style={{ background: C.darker }}>
                       <th style={{ padding: "10px 16px", textAlign: "left", fontSize: 10, fontWeight: 700, letterSpacing: 1, color: C.muted, textTransform: "uppercase" }}>Data</th>
@@ -1195,8 +1195,8 @@ export default function Equipe() {
                 </div>
 
                 {/* Table */}
-                <div style={{ background: C.surface, borderRadius: 16, border: `1px solid ${C.border}`, overflow: "hidden" }}>
-                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                <div style={{ background: C.surface, borderRadius: 16, border: `1px solid ${C.border}`, overflowX: "auto" }}>
+                  <table style={{ width: "100%", minWidth: 500, borderCollapse: "collapse", fontSize: 13 }}>
                     <thead>
                       <tr style={{ background: C.darker }}>
                         {["Nome", "Total de Horas", "Dias Trabalhados", "Média Diária", "Obras"].map((h) => (
