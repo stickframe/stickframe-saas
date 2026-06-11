@@ -1125,113 +1125,129 @@ export default function Calculadora() {
       {modo !== "steelframe" ? null : (<>
 
       {/* ── 2-column layout: Form + Sticky Result ── */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 380px", gap: 24, alignItems: "start" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 400px", gap: 16, alignItems: "start" }}>
 
         {/* ── LEFT: Form panel ── */}
         <div>
-          {/* Area input */}
-          <div style={{ background: "#fff", borderRadius: 16, border: `1px solid ${C.border}`, padding: "24px", marginBottom: 16 }}>
-            <label style={{ fontSize: 11, fontWeight: 700, color: C.muted, display: "block", marginBottom: 10, letterSpacing: 1 }}>
-              ÁREA CONSTRUÍDA (m²)
-            </label>
-            <input
-              type="number" min="10" value={area}
-              onChange={(e) => setArea(e.target.value)}
-              placeholder="Ex: 120"
-              style={{
-                width: "100%", padding: "14px 16px", borderRadius: 10,
-                border: `2px solid ${area ? C.red : C.border}`,
-                fontSize: 28, fontWeight: 900, fontFamily: "inherit",
-                outline: "none", boxSizing: "border-box",
-                color: C.text, transition: "border-color .2s",
-              }}
-            />
-            <div style={{ fontSize: 11, color: C.muted, marginTop: 6 }}>
-              Digite a área total e os resultados atualizam em tempo real
-            </div>
-          </div>
-
-          {/* Padrão radio-cards */}
-          <div style={{ background: "#fff", borderRadius: 16, border: `1px solid ${C.border}`, padding: "20px 24px", marginBottom: 16 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 12 }}>PADRÃO CONSTRUTIVO</div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8 }}>
-              {[
-                { key: "Econômico",   sub: "Fator 0.85×", icon: "◇", cor: C.steel },
-                { key: "Padrão",      sub: "Fator 1.00×", icon: "◆", cor: C.red   },
-                { key: "Alto Padrão", sub: "Fator 1.20×", icon: "★", cor: "#e07020" },
-              ].map(({ key, sub, icon, cor }) => {
-                const sel = padrao === key;
-                return (
-                  <button key={key} onClick={() => setPadrao(key)} style={{
-                    padding: "14px 12px", borderRadius: 12,
-                    border: `2px solid ${sel ? cor : C.border}`,
-                    background: sel ? cor + "12" : "#fff",
-                    cursor: "pointer", fontFamily: "inherit",
-                    textAlign: "center", transition: "all .15s",
+          {/* ── Fieldset: Projeto (Área + Pavimentos) ── */}
+          <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "var(--radius-lg)", overflow: "hidden", marginBottom: 12 }}>
+            <div style={{ padding: "20px 22px", borderBottom: "1px solid var(--line,#efeae2)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 14 }}>
+                <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "1.1px", color: "var(--muted)", textTransform: "uppercase" }}>Projeto</span>
+                <span style={{ fontSize: 11.5, color: "var(--muted)" }}>Dados básicos da edificação</span>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+                {/* Área input-wrap */}
+                <div>
+                  <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "var(--text-muted,#57514a)", marginBottom: 6 }}>Área construída</label>
+                  <div style={{
+                    display: "flex", alignItems: "center",
+                    background: "var(--surface-2)", border: `1.5px solid ${area ? "var(--red)" : "var(--border)"}`,
+                    borderRadius: 10, transition: "border-color .12s",
                   }}>
-                    <div style={{ fontSize: 18, marginBottom: 4 }}>{icon}</div>
-                    <div style={{ fontSize: 13, fontWeight: 800, color: sel ? cor : C.text, marginBottom: 2 }}>{key}</div>
-                    <div style={{ fontSize: 10, color: C.muted }}>{sub}</div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Pavimentos segmented control */}
-          <div style={{ background: "#fff", borderRadius: 16, border: `1px solid ${C.border}`, padding: "20px 24px", marginBottom: 16 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 12 }}>NÚMERO DE PAVIMENTOS</div>
-            <div style={{ display: "flex", gap: 8 }}>
-              {[
-                { val: 1, label: "Térreo",   sub: "1 pav." },
-                { val: 2, label: "Sobrado",  sub: "2 pav." },
-                { val: 3, label: "Triplex",  sub: "3 pav." },
-              ].map(({ val, label, sub }) => {
-                const sel = pavs === val;
-                return (
-                  <button key={val} onClick={() => setPavs(val)} style={{
-                    flex: 1, padding: "12px 8px", borderRadius: 10,
-                    border: `2px solid ${sel ? C.red : C.border}`,
-                    background: sel ? C.red : "#fff",
-                    cursor: "pointer", fontFamily: "inherit", transition: "all .15s",
+                    <input type="number" min="10" value={area} onChange={(e) => setArea(e.target.value)} placeholder="120"
+                      style={{
+                        flex: 1, border: "none", background: "none", outline: "none",
+                        fontFamily: "var(--cond,'Barlow Condensed',sans-serif)", fontWeight: 600, fontSize: 19,
+                        color: "var(--text)", padding: "10px 0 10px 14px", width: "100%", minWidth: 0,
+                      }} />
+                    <span style={{ fontSize: 11.5, fontWeight: 700, color: "var(--muted)", padding: "0 13px", letterSpacing: ".5px" }}>M²</span>
+                  </div>
+                </div>
+                {/* Pavimentos stepper */}
+                <div>
+                  <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "var(--text-muted,#57514a)", marginBottom: 6 }}>Pavimentos</label>
+                  <div style={{
+                    display: "flex", alignItems: "center",
+                    background: "var(--surface-2)", border: "1.5px solid var(--border)",
+                    borderRadius: 10, overflow: "hidden",
                   }}>
-                    <div style={{ fontSize: 14, fontWeight: 800, color: sel ? "#fff" : C.text }}>{label}</div>
-                    <div style={{ fontSize: 11, color: sel ? "rgba(255,255,255,.7)" : C.muted }}>{sub}</div>
-                  </button>
-                );
-              })}
+                    <button type="button" onClick={() => setPavs(Math.max(1, pavs - 1))}
+                      style={{ width: 42, height: 42, border: "none", background: "none", color: "var(--text-muted,#57514a)", fontSize: 18, cursor: "pointer", flexShrink: 0 }}>−</button>
+                    <div style={{ flex: 1, textAlign: "center", fontFamily: "var(--cond,'Barlow Condensed',sans-serif)", fontWeight: 700, fontSize: 19, color: "var(--text)" }}>{pavs}</div>
+                    <button type="button" onClick={() => setPavs(Math.min(4, pavs + 1))}
+                      style={{ width: 42, height: 42, border: "none", background: "none", color: "var(--text-muted,#57514a)", fontSize: 18, cursor: "pointer", flexShrink: 0 }}>+</button>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
 
-          {/* Extras checkboxes */}
-          <div style={{ background: "#fff", borderRadius: 16, border: `1px solid ${C.border}`, padding: "20px 24px", marginBottom: 24 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 12 }}>INCLUIR NO ORÇAMENTO</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {[
-                { cat: "Projetos e Engenharia", label: "Projetos (Arq. + Estrutural + Elétrico/Hidro)", icon: "📐" },
-                { cat: "Mão de Obra",           label: "Mão de obra (montagem, vedações, cobertura)",   icon: "👷" },
-              ].map(({ cat, label, icon }) => {
-                const ativo = extrasAtivos[cat];
-                const sub   = resultado
-                  ? resultado.items.filter(i => i.categoria === cat).reduce((s, i) => s + i.total, 0)
-                  : 0;
-                return (
-                  <label key={cat} style={{
-                    display: "flex", alignItems: "center", gap: 12, padding: "12px 14px",
-                    borderRadius: 10, border: `2px solid ${ativo ? C.red + "55" : C.border}`,
-                    background: ativo ? C.red + "06" : "#fafafa",
-                    cursor: "pointer", transition: "all .15s",
-                  }}>
-                    <input type="checkbox" checked={ativo} onChange={() => toggleExtra(cat)}
-                      style={{ width: 16, height: 16, accentColor: C.red, cursor: "pointer" }} />
-                    <span style={{ fontSize: 18 }}>{icon}</span>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{label}</div>
-                      {sub > 0 && <div style={{ fontSize: 11, color: ativo ? C.red : C.muted, fontWeight: 700 }}>{fmtR(sub)}</div>}
-                    </div>
-                  </label>
-                );
-              })}
+            {/* ── Padrão de acabamento — opt-cards ── */}
+            <div style={{ padding: "20px 22px", borderBottom: "1px solid var(--line,#efeae2)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 14 }}>
+                <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "1.1px", color: "var(--muted)", textTransform: "uppercase" }}>Padrão de acabamento</span>
+                <span style={{ fontSize: 11.5, color: "var(--muted)" }}>Valores de referência por m²</span>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 10 }}>
+                {[
+                  { key: "Econômico",   m2: "2.800", ds: "Acabamentos padrão de mercado, esquadrias linha leve" },
+                  { key: "Padrão",      m2: "3.500", ds: "Porcelanato, esquadrias linha suprema, louças intermediárias" },
+                  { key: "Alto Padrão", m2: "4.800", ds: "Acabamentos premium, automação, esquadrias especiais" },
+                ].map(({ key, m2, ds }) => {
+                  const sel = padrao === key;
+                  return (
+                    <button key={key} onClick={() => setPadrao(key)} style={{
+                      position: "relative", border: `1.5px solid ${sel ? "var(--red)" : "var(--border)"}`,
+                      borderRadius: 12, background: "var(--surface)",
+                      padding: "13px 14px 12px", cursor: "pointer", textAlign: "left", fontFamily: "inherit",
+                      boxShadow: sel ? "0 0 0 3px var(--brick-soft,#f3e7e5)" : "none",
+                      transition: "border-color .13s, box-shadow .13s",
+                    }}>
+                      <div style={{
+                        position: "absolute", top: 10, right: 10, width: 17, height: 17, borderRadius: "50%",
+                        border: `1.5px solid ${sel ? "var(--red)" : "var(--border)"}`,
+                        background: sel ? "var(--red)" : "var(--surface)",
+                        display: "grid", placeItems: "center",
+                      }}>
+                        {sel && <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>}
+                      </div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text)" }}>{key}</div>
+                      <div style={{ fontFamily: "var(--cond,'Barlow Condensed',sans-serif)", fontWeight: 700, fontSize: 20, color: "var(--text)", marginTop: 6 }}>
+                        R$ {m2}<small style={{ fontSize: 11, fontFamily: "inherit", fontWeight: 600, color: "var(--muted)", letterSpacing: ".3px" }}>/m²</small>
+                      </div>
+                      <div style={{ fontSize: 10.5, color: "var(--muted)", marginTop: 4, lineHeight: 1.35 }}>{ds}</div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* ── Itens adicionais — extras ── */}
+            <div style={{ padding: "20px 22px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 14 }}>
+                <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "1.1px", color: "var(--muted)", textTransform: "uppercase" }}>Itens adicionais</span>
+                <span style={{ fontSize: 11.5, color: "var(--muted)" }}>Somados ao valor estimado</span>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {[
+                  { cat: "Projetos e Engenharia", label: "Projetos (Arq. + Estrutural + Elétrico/Hidro)" },
+                  { cat: "Mão de Obra",           label: "Mão de obra (montagem, vedações, cobertura)" },
+                ].map(({ cat, label }) => {
+                  const ativo = extrasAtivos[cat];
+                  const sub   = resultado
+                    ? resultado.items.filter(i => i.categoria === cat).reduce((s, i) => s + i.total, 0)
+                    : 0;
+                  return (
+                    <label key={cat} onClick={() => toggleExtra(cat)} style={{
+                      display: "flex", alignItems: "center", gap: 12, padding: "11px 14px",
+                      border: `1.5px solid ${ativo ? "var(--red)" : "var(--border)"}`,
+                      borderRadius: 11, cursor: "pointer", transition: "border-color .13s",
+                      background: ativo ? "linear-gradient(0deg,rgba(152,25,21,.025),rgba(152,25,21,.025)),var(--surface)" : "var(--surface)",
+                    }}>
+                      <div style={{
+                        width: 18, height: 18, borderRadius: 5, flexShrink: 0,
+                        border: `1.5px solid ${ativo ? "var(--red)" : "var(--border)"}`,
+                        background: ativo ? "var(--red)" : "var(--surface)",
+                        display: "grid", placeItems: "center",
+                      }}>
+                        {ativo && <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>}
+                      </div>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text)", flex: 1 }}>{label}</span>
+                      {sub > 0 && <span style={{ fontFamily: "var(--cond,'Barlow Condensed',sans-serif)", fontWeight: 600, fontSize: 14, color: "var(--muted)", whiteSpace: "nowrap" }}>+ {fmtR(sub)}</span>}
+                    </label>
+                  );
+                })}
+              </div>
             </div>
           </div>
 
@@ -1294,70 +1310,79 @@ export default function Calculadora() {
 
         {/* ── RIGHT: Sticky result panel ── */}
         <div style={{ position: "sticky", top: 20 }}>
+          {/* res-hero */}
           <div style={{
-            background: "linear-gradient(160deg,#1a0a0a,#2d0f0f)",
-            borderRadius: 20, padding: "28px 24px", color: "#fff",
-            boxShadow: "0 12px 40px rgba(152,25,21,.25)",
+            position: "relative", background: "#2b2b2e",
+            borderRadius: "12px 12px 0 0", padding: "24px 24px 20px 28px",
+            color: "#fff", overflow: "hidden",
           }}>
-            {/* Header */}
-            <div style={{ fontSize: 11, opacity: .5, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 8 }}>
+            <div style={{
+              position: "absolute", left: 0, top: 0, bottom: 0, width: 4,
+              background: "var(--red, #981915)",
+            }} />
+            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: "rgba(255,255,255,.45)", marginBottom: 10 }}>
               Investimento estimado
             </div>
-
-            {/* Big number */}
-            <div style={{ fontSize: 40, fontWeight: 900, letterSpacing: -1.5, lineHeight: 1, marginBottom: 4 }}>
+            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 44, fontWeight: 700, lineHeight: 1, letterSpacing: -1, marginBottom: 6 }}>
               {resultado ? fmtR(totalGeral) : "—"}
             </div>
-            {resultado && (
-              <div style={{ fontSize: 12, opacity: .55, marginBottom: 20 }}>
-                {resultado.area} m² · {resultado.pavs} pav. · {resultado.padrao}
-                {resultado.area > 0 && <span> · {fmtR(totalGeral / resultado.area)}/m²</span>}
+            {resultado && resultado.area > 0 && (
+              <div style={{ fontSize: 12, color: "rgba(255,255,255,.5)", display: "flex", gap: 16, flexWrap: "wrap" }}>
+                <span>{fmtR(totalGeral / resultado.area)}/m² efetivo</span>
+                <span>~{Math.round(resultado.area * 0.055 + resultado.pavs * 2 + 8)} meses</span>
               </div>
             )}
+          </div>
 
-            {/* Category breakdown bars */}
-            {catTotais.length > 0 && (
-              <div style={{ marginBottom: 20 }}>
-                <div style={{ fontSize: 10, fontWeight: 700, opacity: .4, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>
-                  Composição do investimento
-                </div>
-                {catTotais.map(({ cat, total }) => (
-                  <div key={cat} style={{ marginBottom: 7 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
-                      <span style={{ fontSize: 10, opacity: .7, fontWeight: 600 }}>{cat}</span>
-                      <span style={{ fontSize: 10, fontWeight: 700, opacity: .85 }}>{fmtR(total)}</span>
-                    </div>
-                    <div style={{ height: 4, background: "rgba(255,255,255,.12)", borderRadius: 2, overflow: "hidden" }}>
-                      <div style={{
-                        height: "100%",
-                        width: `${(total / maxCatTotal) * 100}%`,
-                        background: CAT_CORES[cat] || C.red,
-                        borderRadius: 2,
-                        transition: "width .4s ease",
-                      }} />
-                    </div>
-                  </div>
-                ))}
+          {/* res-body */}
+          <div style={{
+            background: "#fff", border: `1px solid ${C.border}`, borderTop: "none",
+            borderRadius: "0 0 12px 12px", padding: "20px 20px 16px",
+          }}>
+            {/* 7-phase breakdown */}
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", color: C.muted, marginBottom: 10 }}>
+                Composição por etapa
               </div>
-            )}
+              {[
+                { label: "Projeto executivo", pct: 5,  color: C.plum },
+                { label: "Fundação",          pct: 10, color: C.clay },
+                { label: "Estrutura SF",      pct: 28, color: C.red },
+                { label: "Fechamentos",       pct: 22, color: C.steel },
+                { label: "Instalações",       pct: 15, color: C.ochre },
+                { label: "Acabamento",        pct: 17, color: C.sage },
+                { label: "Entrega",           pct: 3,  color: C.muted },
+              ].map(({ label, pct, color }) => (
+                <div key={label} style={{ marginBottom: 6 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
+                    <span style={{ fontSize: 11, color: C.text, fontWeight: 500 }}>{label}</span>
+                    <span style={{ fontSize: 11, fontWeight: 700, color }}>
+                      {resultado ? fmtR(totalGeral * pct / 100) : `${pct}%`}
+                    </span>
+                  </div>
+                  <div style={{ height: 4, background: C.border, borderRadius: 2, overflow: "hidden" }}>
+                    <div style={{ height: "100%", width: `${pct}%`, background: color, borderRadius: 2, transition: "width .4s ease" }} />
+                  </div>
+                </div>
+              ))}
+            </div>
 
             {/* Breakdown summary */}
             {resultado && (
               <div style={{
-                background: "rgba(255,255,255,.07)", borderRadius: 12,
-                padding: "14px 16px", marginBottom: 20,
-                display: "flex", flexDirection: "column", gap: 6,
+                background: C.bg, borderRadius: 8, padding: "12px 14px",
+                marginBottom: 16, display: "flex", flexDirection: "column", gap: 5,
               }}>
                 {[
-                  { label: "Só materiais",      cats: CATS_ORDEM.filter(c => !["Projetos e Engenharia","Mão de Obra"].includes(c)) },
-                  { label: "+ Projetos",         cats: CATS_ORDEM.filter(c => c !== "Mão de Obra") },
-                  { label: "Obra completa",      cats: CATS_ORDEM },
+                  { label: "Só materiais",  cats: CATS_ORDEM.filter(c => !["Projetos e Engenharia","Mão de Obra"].includes(c)) },
+                  { label: "+ Projetos",    cats: CATS_ORDEM.filter(c => c !== "Mão de Obra") },
+                  { label: "Obra completa", cats: CATS_ORDEM },
                 ].map(({ label, cats }) => {
                   const val = resultado.items.filter(i => cats.includes(i.categoria)).reduce((s, i) => s + i.total, 0);
                   return (
                     <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <span style={{ fontSize: 11, opacity: .55 }}>{label}</span>
-                      <span style={{ fontSize: 13, fontWeight: 800 }}>{fmtR(val)}</span>
+                      <span style={{ fontSize: 11, color: C.muted }}>{label}</span>
+                      <span style={{ fontSize: 13, fontWeight: 800, color: C.text }}>{fmtR(val)}</span>
                     </div>
                   );
                 })}
@@ -1369,31 +1394,30 @@ export default function Calculadora() {
               onClick={enviarParaOrcamento}
               disabled={!resultado}
               style={{
-                width: "100%", padding: "14px 0", background: C.red,
-                border: "none", borderRadius: 12, color: "#fff",
-                fontSize: 15, fontWeight: 800, cursor: resultado ? "pointer" : "not-allowed",
-                fontFamily: "inherit", marginBottom: 10,
-                opacity: resultado ? 1 : .5,
-                boxShadow: resultado ? "0 4px 20px rgba(152,25,21,.4)" : "none",
-                transition: "opacity .2s",
+                width: "100%", padding: "13px 0",
+                background: resultado ? "var(--red, #981915)" : C.border,
+                border: "none", borderRadius: 8, color: "#fff",
+                fontSize: 14, fontWeight: 700, cursor: resultado ? "pointer" : "not-allowed",
+                fontFamily: "inherit", marginBottom: 8,
+                transition: "background .2s",
               }}>
               Gerar Orçamento →
             </button>
 
-            <div style={{ display: "flex", gap: 8 }}>
+            <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
               <button onClick={exportarExcel} disabled={!resultado} style={{
-                flex: 1, padding: "10px 0",
-                background: "rgba(255,255,255,.1)", border: "1px solid rgba(255,255,255,.2)",
-                borderRadius: 10, color: "#fff", fontSize: 12, fontWeight: 700,
+                flex: 1, padding: "9px 0",
+                background: C.surface2, border: `1px solid ${C.border}`,
+                borderRadius: 8, color: C.text, fontSize: 12, fontWeight: 700,
                 cursor: resultado ? "pointer" : "not-allowed", fontFamily: "inherit",
                 opacity: resultado ? 1 : .4,
               }}>
                 📥 Excel
               </button>
               <button onClick={() => window.print()} disabled={!resultado} style={{
-                flex: 1, padding: "10px 0",
-                background: "rgba(255,255,255,.1)", border: "1px solid rgba(255,255,255,.2)",
-                borderRadius: 10, color: "#fff", fontSize: 12, fontWeight: 700,
+                flex: 1, padding: "9px 0",
+                background: C.surface2, border: `1px solid ${C.border}`,
+                borderRadius: 8, color: C.text, fontSize: 12, fontWeight: 700,
                 cursor: resultado ? "pointer" : "not-allowed", fontFamily: "inherit",
                 opacity: resultado ? 1 : .4,
               }}>
@@ -1403,25 +1427,28 @@ export default function Calculadora() {
 
             {/* CUB indicator */}
             <div style={{
-              marginTop: 16, paddingTop: 16,
-              borderTop: "1px solid rgba(255,255,255,.1)",
+              paddingTop: 12, borderTop: `1px solid ${C.border}`,
               display: "flex", justifyContent: "space-between", alignItems: "center",
             }}>
               <div>
-                <div style={{ fontSize: 10, opacity: .4, letterSpacing: .5 }}>CUB-R1B/m²</div>
-                <div style={{ fontSize: 14, fontWeight: 700 }}>
+                <div style={{ fontSize: 10, color: C.muted, letterSpacing: .5 }}>CUB-R1B/m²</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>
                   {cubValor ? `R$ ${cubValor.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}` : "—"}
                 </div>
               </div>
               <button onClick={atualizarCub} disabled={cubCarregando} style={{
-                padding: "6px 12px", background: "rgba(255,255,255,.1)",
-                border: "1px solid rgba(255,255,255,.2)", borderRadius: 8,
-                color: "#fff", fontSize: 11, fontWeight: 700, cursor: "pointer",
+                padding: "6px 10px", background: C.surface2,
+                border: `1px solid ${C.border}`, borderRadius: 6,
+                color: C.muted, fontSize: 11, fontWeight: 700, cursor: "pointer",
                 fontFamily: "inherit", opacity: cubCarregando ? .6 : 1,
               }}>
                 {cubCarregando ? "..." : "🔄"}
               </button>
             </div>
+
+            <p style={{ fontSize: 10, color: C.muted, marginTop: 12, marginBottom: 0, lineHeight: 1.5 }}>
+              Valores de referência — sujeitos a variação regional e de mercado.
+            </p>
           </div>
         </div>
       </div>
