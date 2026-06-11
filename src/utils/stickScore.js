@@ -90,7 +90,7 @@ export function calcularStickScore(obra, { financeiro = [], medicoes = [], diari
   scores.qualidade = clamp(Math.round(qualScore));
 
   // ── TOTAL ponderado ───────────────────────────────────────────────────────
-  const total = clamp(Math.round(
+  let total = clamp(Math.round(
     scores.cronograma * PESOS.cronograma +
     scores.financeiro * PESOS.financeiro +
     scores.compras    * PESOS.compras    +
@@ -98,8 +98,34 @@ export function calcularStickScore(obra, { financeiro = [], medicoes = [], diari
     scores.qualidade  * PESOS.qualidade
   ));
 
+  // ── Penalidades críticas (cap por dimensão em colapso) ────────────────────
+  // Impede que bons indicadores mascarem um setor crítico.
+  const penalidade = aplicarPenalidades(scores);
+  total = Math.min(total, penalidade.cap);
+
   const { nivel, cor } = classificar(total);
-  return { total, scores, nivel, cor };
+  return { total, scores, nivel, cor, penalidade: penalidade.motivo };
+}
+
+const CAPS = [
+  // [ dimensão, limiar, cap máximo, motivo ]
+  ["financeiro",  25, 59, "Financeiro crítico impede score acima de Atenção"],
+  ["cronograma",  25, 64, "Cronograma crítico limita o score"],
+  ["qualidade",   40, 79, "Qualidade crítica impede classificação Excelente ou superior"],
+  ["compras",     35, 74, "Compras/medições críticas limitam o score"],
+  ["equipe",      35, 74, "Equipe crítica limita o score"],
+];
+
+function aplicarPenalidades(scores) {
+  let cap = 100;
+  let motivo = null;
+  for (const [dim, limiar, dimCap, msg] of CAPS) {
+    if ((scores[dim] ?? 100) < limiar && dimCap < cap) {
+      cap = dimCap;
+      motivo = msg;
+    }
+  }
+  return { cap, motivo };
 }
 
 function classificar(total) {

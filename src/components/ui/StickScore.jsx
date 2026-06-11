@@ -171,7 +171,7 @@ export function StickScoreCard({ score, obra }) {
     );
   }
 
-  const { total, scores, cor, nivel } = score;
+  const { total, scores, cor, nivel, penalidade } = score;
   const insights = gerarInsights(score, historico);
 
   // Delta em relação ao mês anterior
@@ -260,10 +260,22 @@ export function StickScoreCard({ score, obra }) {
       {/* Insights automáticos */}
       <InsightsPanel insights={insights} />
 
-      {total < 70 && insights.length === 0 && (
+      {penalidade && (
         <div style={{
           marginTop: 16, padding: "10px 12px", borderRadius: 10,
-          background: "#981915" + "20", border: "1px solid #981915" + "40",
+          background: "#b07a1e20", border: "1px solid #b07a1e40",
+          fontSize: 11, color: "#fcd34d", lineHeight: 1.5,
+          display: "flex", gap: 6,
+        }}>
+          <span>⚠</span>
+          <span>Score limitado a {total} — {penalidade}</span>
+        </div>
+      )}
+
+      {total < 70 && !penalidade && insights.length === 0 && (
+        <div style={{
+          marginTop: 16, padding: "10px 12px", borderRadius: 10,
+          background: "#98191520", border: "1px solid #98191540",
           fontSize: 11, color: "#ffb3b0", lineHeight: 1.5,
         }}>
           ⚠️ StickScore abaixo de 70 — verifique cronograma e financeiro desta obra.
