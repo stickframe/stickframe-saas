@@ -1,13 +1,17 @@
 import { useState, useEffect } from "react";
-import { Building2, FileText, Link, DollarSign, HardHat, BarChart2, LayoutDashboard, Receipt } from "lucide-react";
+import { Gauge, Brain, Home, DollarSign, Target, CalendarDays, PackageOpen, ClipboardCheck, Users, BarChart2, LayoutDashboard, Receipt } from "lucide-react";
 
-const FEATURES = [
-  { Icon: Building2,    title: "Gestão de Obras",          desc: "Cronograma, diário, medições e vistorias em um só painel. Acompanhe cada etapa em tempo real." },
-  { Icon: FileText,     title: "Orçamentos & Contratos",   desc: "Gere propostas profissionais em minutos. Envie, aprove e controle contratos na plataforma." },
-  { Icon: Link,         title: "Calculadora White-label",  desc: "Envie um link com sua marca para clientes calcularem o custo da obra online." },
-  { Icon: DollarSign,   title: "Financeiro Integrado",     desc: "Controle receitas, despesas e fluxo de caixa de cada obra com relatórios automáticos." },
-  { Icon: HardHat,      title: "Equipe & SST",             desc: "Gerencie colaboradores, documentos e segurança do trabalho em um só lugar." },
-  { Icon: BarChart2,    title: "Analytics & BI",           desc: "Dashboards e StickScore™ para tomar decisões com base em dados reais das suas obras." },
+const ECOSSISTEMA = [
+  { Icon: Gauge,          brand: "StickScore™",   label: "Saúde da Obra",            desc: "Índice proprietário que mede a performance de cada obra em tempo real — num único número de 0 a 100." },
+  { Icon: Brain,          brand: "StickBrain™",   label: "Inteligência Artificial",  desc: "Motor de IA do StickFrame. Detecta riscos, sugere ações e gera análises automáticas da obra." },
+  { Icon: Home,           brand: "StickView™",    label: "Portal do Cliente",        desc: "Espaço exclusivo para o cliente acompanhar o progresso da obra e aprovar documentos." },
+  { Icon: DollarSign,     brand: "StickCash™",    label: "Financeiro",               desc: "Receitas e despesas por obra. Fluxo de caixa, margem real e alertas de desvio orçamentário." },
+  { Icon: Target,         brand: "StickLead™",    label: "CRM / Clientes",           desc: "Gestão de leads, pipeline comercial e relacionamento da prospecção até a obra concluída." },
+  { Icon: CalendarDays,   brand: "StickPlan™",    label: "Cronograma",               desc: "Planejamento e acompanhamento do cronograma. Marcos, fases e alertas de atraso em tempo real." },
+  { Icon: PackageOpen,    brand: "StickSupply™",  label: "Almoxarifado",             desc: "Compras, suprimentos e estoque. Gestão de pedidos, fornecedores e movimentação de materiais." },
+  { Icon: ClipboardCheck, brand: "StickInspect™", label: "Qualidade / FVS",          desc: "Vistorias, fichas de verificação e não-conformidades. Rastreabilidade completa da qualidade." },
+  { Icon: Users,          brand: "StickTeam™",    label: "Equipe",                   desc: "Colaboradores, ponto, check-ins em obra e controle de escala e produtividade." },
+  { Icon: BarChart2,      brand: "StickPulse™",   label: "Analytics",                desc: "Dashboard executivo com indicadores consolidados — VGV, margens, performance e tendências." },
 ];
 
 const PRINTS = [
@@ -113,7 +117,8 @@ const CSS = `
   .lp-feat { background: rgba(255,255,255,.045); border: 1px solid rgba(255,255,255,.1); border-radius: 16px; padding: 26px 26px 28px; transition: border-color .2s, transform .2s; }
   .lp-feat:hover { border-color: rgba(255,255,255,.25); transform: translateY(-3px); }
   .lp-feat .f-ic { width: 44px; height: 44px; border-radius: 11px; background: rgba(152,25,21,.32); color: #e8918c; display: flex; align-items: center; justify-content: center; margin-bottom: 18px; }
-  .lp-feat h3 { font-size: 17.5px; font-weight: 800; color: #fff; margin-bottom: 7px; }
+  .lp-feat h3 { font-size: 17.5px; font-weight: 800; color: #fff; margin-bottom: 2px; }
+  .lp-feat .f-lbl { font-size: 11px; font-weight: 700; letter-spacing: 1.4px; text-transform: uppercase; color: #e08a84; margin-bottom: 9px; }
   .lp-feat p { font-size: 14px; color: #b8b1a6; line-height: 1.55; }
 
   .lp-produto { padding: 96px 0 0; }
@@ -233,18 +238,20 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Funcionalidades — graphite band */}
+      {/* Ecossistema Stick™ — graphite band */}
       <section className="lp-feats" id="funcionalidades">
         <div className="lp-wrap">
           <div className="lp-sec-head">
-            <span className="lp-eyebrow">Funcionalidades</span>
-            <h2>Tudo que sua construtora precisa,<br />em um único lugar</h2>
+            <span className="lp-eyebrow">Ecossistema Stick™</span>
+            <h2>Uma suíte completa para a gestão<br />de obras em steel frame</h2>
+            <p style={{ color: "#b8b1a6" }}>Cada módulo tem identidade, metodologia e propósito próprios.</p>
           </div>
           <div className="lp-feat-grid">
-            {FEATURES.map(({ Icon, title, desc }) => (
-              <div className="lp-feat" key={title}>
+            {ECOSSISTEMA.map(({ Icon, brand, label, desc }) => (
+              <div className="lp-feat" key={brand}>
                 <div className="f-ic"><Icon size={22} /></div>
-                <h3>{title}</h3>
+                <h3>{brand}</h3>
+                <div className="f-lbl">{label}</div>
                 <p>{desc}</p>
               </div>
             ))}
