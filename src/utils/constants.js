@@ -25,7 +25,17 @@ export const C = {
   warning: '#b07a1e',
   danger: '#a33327',
   steel: '#3b6ea5',
-  purple: '#6d557e'
+  purple: '#6d557e',
+
+  // Aliases legados + escala categórica completa do handoff
+  dark: '#faf8f4',
+  darker: '#efeae2',
+  card: '#ffffff',
+  shadow: '0 1px 2px rgba(40,30,20,0.06)',
+  ochre: '#c0892d',
+  sage: '#4f7d57',
+  plum: '#6d557e',
+  clay: '#b8624a',
 };
 
 // ─── NAV ─────────────────────────────────────────────────────────────────────
