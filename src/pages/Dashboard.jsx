@@ -320,6 +320,7 @@ function DashboardDiretor() {
   const financeiro  = useAppStore((s) => s.financeiro);
   const contratos   = useAppStore((s) => s.contratos);
   const medicoes    = useAppStore((s) => s.medicoes);
+  const diario      = useAppStore((s) => s.diario);
   const empresa     = useAppStore((s) => s.empresa);
   const historico   = useAppStore((s) => s.historico);
   const empresaId   = useAppStore((s) => s.empresaId);
