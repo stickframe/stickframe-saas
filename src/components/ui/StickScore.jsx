@@ -1,4 +1,7 @@
+import { useState } from "react";
 import { STICK_SCORE_DIMENSOES } from "../../utils/stickScore";
+import useAppStore from "../../store/useAppStore";
+import ModalUpgradePro from "./ModalUpgradePro";
 
 function ScoreRing({ total, cor, size = 80 }) {
   const r = (size / 2) - 6;
@@ -40,7 +43,53 @@ export function StickScoreBadge({ score, size = "md" }) {
 }
 
 export function StickScoreCard({ score, obra }) {
+  const plano = useAppStore(s => s.user?.plano);
+  const [showUpgrade, setShowUpgrade] = useState(false);
+
   if (!score) return null;
+
+  // Free plan → locked teaser
+  if (plano === "free") {
+    return (
+      <>
+        {showUpgrade && <ModalUpgradePro onClose={() => setShowUpgrade(false)} />}
+        <div style={{
+          background: "linear-gradient(135deg, #0f0f14, #1a1a2e)",
+          borderRadius: 20, padding: "24px", border: "1px solid #981915" + "40",
+          boxShadow: "0 8px 32px rgba(152,25,21,0.15)", color: "#fff",
+          position: "relative", overflow: "hidden",
+        }}>
+          {/* blurred background score */}
+          <div style={{ filter: "blur(6px)", opacity: 0.3, pointerEvents: "none" }}>
+            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 2, color: "#981915", textTransform: "uppercase", marginBottom: 8 }}>StickScore™</div>
+            <div style={{ fontSize: 48, fontWeight: 900, color: "#981915" }}>??</div>
+          </div>
+          {/* overlay */}
+          <div style={{
+            position: "absolute", inset: 0, display: "flex", flexDirection: "column",
+            alignItems: "center", justifyContent: "center", gap: 12, padding: 24,
+          }}>
+            <div style={{ fontSize: 28 }}>🔒</div>
+            <div style={{ textAlign: "center" }}>
+              <div style={{ fontSize: 13, fontWeight: 800, color: "#fff", marginBottom: 4 }}>StickScore™ exclusivo PRO</div>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.55)", lineHeight: 1.5 }}>
+                Monitore a saúde de cada obra com pontuação em tempo real
+              </div>
+            </div>
+            <button onClick={() => setShowUpgrade(true)} style={{
+              padding: "10px 20px", background: "#981915", border: "none",
+              borderRadius: 10, color: "#fff", fontWeight: 800, fontSize: 13,
+              cursor: "pointer", fontFamily: "inherit",
+              boxShadow: "0 4px 16px rgba(152,25,21,0.4)",
+            }}>
+              Upgrade para PRO →
+            </button>
+          </div>
+        </div>
+      </>
+    );
+  }
+
   const { total, scores, cor, nivel } = score;
 
   return (
