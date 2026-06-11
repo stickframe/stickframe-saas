@@ -709,7 +709,7 @@ export default function Equipe() {
         {/* Header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
           <div>
-            <h2 style={{ fontSize: 22, fontWeight: 800 }}>Equipe</h2>
+            <h2 style={{ fontSize: 22, fontWeight: 800 }}>StickTeam™</h2>
             <p style={{ color: C.muted, fontSize: 13, marginTop: 4 }}>
               {ativos} ativo{ativos !== 1 ? "s" : ""}
               {folha > 0 && <span style={{ marginLeft: 10, color: C.success, fontWeight: 600 }}>· Folha: {fmt(folha)}</span>}
