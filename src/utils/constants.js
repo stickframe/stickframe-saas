@@ -45,6 +45,7 @@ export const NAV = [
   { key: "equipe",            label: "RH / Equipe",          icon: "HardHat",         grupo: "Obras" },
   { key: "sst",               label: "SST",                  icon: "ShieldAlert",     grupo: "Obras" },
   { key: "financeiro",        label: "Financeiro",           icon: "DollarSign",      grupo: "Financeiro" },
+  { key: "rentabilidade",     label: "Rentabilidade",        icon: "TrendingUp",      grupo: "Financeiro", badge: "PRO" },
   { key: "historico",         label: "Histórico",            icon: "History",         grupo: "Financeiro" },
   { key: "fornecedores",      label: "Fornecedores",         icon: "Factory",         grupo: "Compras" },
   { key: "suprimentos",       label: "Almoxarifado",         icon: "PackageOpen",     grupo: "Compras" },

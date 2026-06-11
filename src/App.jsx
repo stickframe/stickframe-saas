@@ -65,6 +65,7 @@ const PontoColaborador     = lazyWithRetry(() => import("./pages/PontoColaborado
 const AmbienteQR           = lazyWithRetry(() => import("./pages/AmbienteQR"));
 const PainelQR             = lazyWithRetry(() => import("./pages/PainelQR"));
 const BI                   = lazyWithRetry(() => import("./pages/BI"));
+const Rentabilidade        = lazyWithRetry(() => import("./pages/Rentabilidade"));
 const SST                  = lazyWithRetry(() => import("./pages/SST"));
 const Suprimentos          = lazyWithRetry(() => import("./pages/Suprimentos"));
 
@@ -79,6 +80,7 @@ const PAGES = {
   financeiro: Financeiro,
   contratos:  Contratos,
   historico:  Historico,
+  rentabilidade: Rentabilidade,
   equipe:     Equipe,
   cronograma: Cronograma,
   vistorias:  Vistorias,
