@@ -13,6 +13,12 @@ import OnboardingWizard from "../ui/OnboardingWizard";
 
 export default function AppLayout({ children }) {
   const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const handler = () => setMenuOpen(true);
+    document.addEventListener("sf:open-menu", handler);
+    return () => document.removeEventListener("sf:open-menu", handler);
+  }, []);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [checkDone, setCheckDone] = useState(false);
   const empresaId  = useAppStore((s) => s.empresaId);
