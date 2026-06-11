@@ -26,6 +26,9 @@ export default function AppLayout({ children }) {
   const activePage = useAppStore((s) => s.activePage);
   const perfil     = useAppStore((s) => s.user?.perfil);
   const activeLabel = NAV.find((n) => n.key === activePage)?.label || "";
+  const obras       = useAppStore((s) => s.obras);
+  const plano       = useAppStore((s) => s.user?.plano);
+  const obraAtiva   = obras.find((o) => o.status === "Em andamento") || obras[0] || null;
   const loadClientes = useAppStore((s) => s.loadClientes);
   const userId = useAppStore((s) => s.user?.id);
   const darkMode = useAppStore((s) => s.darkMode);
@@ -67,11 +70,49 @@ export default function AppLayout({ children }) {
       <Sidebar open={menuOpen} onClose={() => setMenuOpen(false)} />
       <div className="main-area">
         <div className="topbar">
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
             <button className="hamburger" onClick={() => setMenuOpen((v) => !v)}>☰</button>
-            <span style={{ fontSize: 16, fontWeight: 600, color: C.muted }}>{activeLabel}</span>
+
+            {/* Página atual */}
+            <span className="topbar-page-title" style={{ fontSize: 15, fontWeight: 600, color: C.text, whiteSpace: "nowrap" }}>
+              {activeLabel}
+            </span>
+
+            {/* Separador + obra ativa (desktop only) */}
+            {obraAtiva && (
+              <div className="topbar-obra-ativa" style={{
+                display: "flex", alignItems: "center", gap: 8,
+                padding: "5px 12px", borderRadius: 8,
+                background: C.red + "0a", border: `1px solid ${C.red}22`,
+                cursor: "pointer", transition: "background .15s",
+              }}
+                onClick={() => setActivePage("obras")}
+                title="Ir para Gestão de Obras"
+              >
+                <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#2e9e5b", flexShrink: 0, boxShadow: "0 0 6px #2e9e5b" }} />
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: C.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 180 }}>
+                    {obraAtiva.nome}
+                  </div>
+                  <div style={{ fontSize: 10, color: C.muted, marginTop: 1 }}>
+                    Obra ativa · {obraAtiva.progresso || 0}%
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
+
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            {/* Plano badge */}
+            <div style={{
+              padding: "3px 8px", borderRadius: 6, fontSize: 10, fontWeight: 800,
+              background: plano === "pro" ? C.red + "15" : "#f4f1ec",
+              color: plano === "pro" ? C.red : C.muted,
+              border: `1px solid ${plano === "pro" ? C.red + "30" : C.border}`,
+              letterSpacing: 0.5, whiteSpace: "nowrap",
+            }}>
+              {plano === "pro" ? "PRO" : "FREE"}
+            </div>
             <PresenceAvatars />
             <NotificacaoDropdown />
             <button

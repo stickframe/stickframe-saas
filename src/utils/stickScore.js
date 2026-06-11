@@ -1,5 +1,5 @@
 /**
- * StickScore™ — Índice de Saúde da Obra
+ * StickScore™ — Índice Inteligente de Performance de Obras
  * Pontuação 0–100 composta por 5 dimensões ponderadas.
  */
 
@@ -51,7 +51,7 @@ export function calcularStickScore(obra, { financeiro = [], medicoes = [], diari
     else if (margemReal > -0.1) finScore = 40;
     else                        finScore = 20;
   } else if (financeiro.length === 0) {
-    finScore = 68; // sem dados — neutro levemente negativo
+    finScore = 68;
   }
   scores.financeiro = clamp(Math.round(finScore));
 
@@ -65,7 +65,7 @@ export function calcularStickScore(obra, { financeiro = [], medicoes = [], diari
 
   // ── 4. EQUIPE (15%) ───────────────────────────────────────────────────────
   const nMembros = membros.length;
-  let equipeScore =
+  const equipeScore =
     nMembros >= 6 ? 100 :
     nMembros >= 4 ? 88  :
     nMembros >= 2 ? 72  :
@@ -90,7 +90,7 @@ export function calcularStickScore(obra, { financeiro = [], medicoes = [], diari
   scores.qualidade = clamp(Math.round(qualScore));
 
   // ── TOTAL ponderado ───────────────────────────────────────────────────────
-  const total = clamp(Math.round(
+  let total = clamp(Math.round(
     scores.cronograma * PESOS.cronograma +
     scores.financeiro * PESOS.financeiro +
     scores.compras    * PESOS.compras    +
@@ -98,20 +98,135 @@ export function calcularStickScore(obra, { financeiro = [], medicoes = [], diari
     scores.qualidade  * PESOS.qualidade
   ));
 
-  const nivel =
-    total >= 90 ? "Excelente" :
-    total >= 75 ? "Saudável"  :
-    total >= 60 ? "Atenção"   : "Crítico";
+  // ── Penalidades críticas (cap por dimensão em colapso) ────────────────────
+  // Impede que bons indicadores mascarem um setor crítico.
+  const penalidade = aplicarPenalidades(scores);
+  total = Math.min(total, penalidade.cap);
 
-  const cor =
-    total >= 90 ? "#2e9e5b" :
-    total >= 75 ? "#3b6ea5" :
-    total >= 60 ? "#b07a1e" : "#981915";
+  const { nivel, cor } = classificar(total);
+  return { total, scores, nivel, cor, penalidade: penalidade.motivo };
+}
 
-  return { total, scores, nivel, cor };
+const CAPS = [
+  // [ dimensão, limiar, cap máximo, motivo ]
+  ["financeiro",  25, 59, "Financeiro crítico impede score acima de Atenção"],
+  ["cronograma",  25, 64, "Cronograma crítico limita o score"],
+  ["qualidade",   40, 79, "Qualidade crítica impede classificação Excelente ou superior"],
+  ["compras",     35, 74, "Compras/medições críticas limitam o score"],
+  ["equipe",      35, 74, "Equipe crítica limita o score"],
+];
+
+function aplicarPenalidades(scores) {
+  let cap = 100;
+  let motivo = null;
+  for (const [dim, limiar, dimCap, msg] of CAPS) {
+    if ((scores[dim] ?? 100) < limiar && dimCap < cap) {
+      cap = dimCap;
+      motivo = msg;
+    }
+  }
+  return { cap, motivo };
+}
+
+function classificar(total) {
+  if (total >= 90) return { nivel: "Elite",     cor: "#059669" };
+  if (total >= 80) return { nivel: "Excelente", cor: "#2e9e5b" };
+  if (total >= 70) return { nivel: "Bom",       cor: "#3b6ea5" };
+  if (total >= 60) return { nivel: "Atenção",   cor: "#b07a1e" };
+  return             { nivel: "Crítico",         cor: "#981915" };
 }
 
 function clamp(v) { return Math.min(100, Math.max(0, v)); }
+
+// ── Histórico de score (localStorage, granularidade mensal) ──────────────────
+
+export function salvarSnapshotScore(empresaId, obraId, score) {
+  if (!empresaId || !obraId) return;
+  const mes = new Date().toISOString().slice(0, 7);
+  try {
+    const key = `stickscore-${empresaId}`;
+    const hist = JSON.parse(localStorage.getItem(key) || "{}");
+    if (!hist[obraId]) hist[obraId] = [];
+    const idx = hist[obraId].findIndex(s => s.mes === mes);
+    const snap = { mes, total: score.total, scores: score.scores };
+    if (idx >= 0) hist[obraId][idx] = snap;
+    else hist[obraId].push(snap);
+    hist[obraId] = hist[obraId].sort((a, b) => a.mes.localeCompare(b.mes)).slice(-12);
+    localStorage.setItem(key, JSON.stringify(hist));
+  } catch (_) {}
+}
+
+export function carregarHistoricoScore(empresaId, obraId) {
+  if (!empresaId || !obraId) return [];
+  try {
+    const hist = JSON.parse(localStorage.getItem(`stickscore-${empresaId}`) || "{}");
+    return hist[obraId] || [];
+  } catch (_) { return []; }
+}
+
+// ── Insights automáticos ─────────────────────────────────────────────────────
+
+const DIM_LABEL = {
+  cronograma: "cronograma",
+  financeiro:  "financeiro",
+  compras:     "compras / medições",
+  equipe:      "equipe",
+  qualidade:   "registros de diário",
+};
+
+export function gerarInsights(scoreAtual, historico) {
+  const insights = [];
+  if (!scoreAtual) return insights;
+
+  const prev = historico?.length >= 2 ? historico[historico.length - 2] : null;
+  const curr = historico?.length >= 1 ? historico[historico.length - 1] : null;
+
+  if (prev && curr) {
+    const delta = curr.total - prev.total;
+    const dims = Object.keys(DIM_LABEL);
+    const movers = dims
+      .map(d => ({ d, delta: (curr.scores?.[d] ?? 0) - (prev.scores?.[d] ?? 0) }))
+      .sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
+
+    const top = movers[0];
+    if (Math.abs(delta) >= 2) {
+      if (delta > 0 && top.delta > 0) {
+        insights.push({
+          tipo: "positivo",
+          texto: `Score subiu ${delta} pontos — impulsionado pelo avanço em ${DIM_LABEL[top.d]}.`,
+        });
+      } else if (delta < 0 && top.delta < 0) {
+        insights.push({
+          tipo: "negativo",
+          texto: `Score caiu ${Math.abs(delta)} pontos devido a quedas em ${DIM_LABEL[top.d]}.`,
+        });
+      }
+    }
+
+    // Alertas por dimensão
+    movers.filter(m => m.delta <= -10).forEach(m => {
+      insights.push({
+        tipo: "alerta",
+        texto: `${capitalize(DIM_LABEL[m.d])} caiu ${Math.abs(m.delta)} pontos — requer atenção.`,
+      });
+    });
+  }
+
+  // Alertas estáticos baseados no score atual
+  if (scoreAtual.scores.cronograma < 60) {
+    insights.push({ tipo: "alerta", texto: "Cronograma em atraso — revise prazos e progresso da obra." });
+  }
+  if (scoreAtual.scores.financeiro < 60) {
+    insights.push({ tipo: "alerta", texto: "Margem financeira baixa — verifique despesas e recebimentos." });
+  }
+  if (scoreAtual.scores.qualidade < 50) {
+    insights.push({ tipo: "dica", texto: "Diário de obra com poucos registros nos últimos 30 dias." });
+  }
+
+  return insights.slice(0, 3);
+}
+
+function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
 
 export const STICK_SCORE_DIMENSOES = [
   { key: "cronograma", label: "Cronograma", peso: "25%" },
@@ -120,3 +235,115 @@ export const STICK_SCORE_DIMENSOES = [
   { key: "equipe",     label: "Equipe",      peso: "15%" },
   { key: "qualidade",  label: "Qualidade",   peso: "10%" },
 ];
+
+// ── StickScore™ Executivo ─────────────────────────────────────────────────────
+// Score consolidado da empresa, voltado para donos e diretores.
+// Mede saúde financeira do negócio, não execução de obra individual.
+
+export const STICK_SCORE_EXEC_DIMENSOES = [
+  { key: "rentabilidade",   label: "Rentabilidade",        peso: "35%" },
+  { key: "fluxo",           label: "Fluxo de Caixa",       peso: "30%" },
+  { key: "recebimento",     label: "Prazo de Recebimento", peso: "20%" },
+  { key: "carteira",        label: "Carteira de Obras",    peso: "15%" },
+];
+
+/**
+ * @param {Array} obras — todas as obras da empresa
+ * @param {Object} financeiroPorObra — { obraId: { lancamentos: [] } }
+ */
+export function calcularStickScoreExecutivo(obras, financeiroPorObra = {}) {
+  const obrasAtivas    = obras.filter(o => o.status === "Em andamento");
+  const todasObras     = obras.filter(o => o.status !== "Planejamento");
+  const scores = {};
+
+  // ── 1. RENTABILIDADE (35%) ────────────────────────────────────────────────
+  // Margem média ponderada pelo contrato das obras ativas
+  let rentScore = 65;
+  const obrasComContrato = obrasAtivas.filter(o => o.contrato > 0);
+  if (obrasComContrato.length > 0) {
+    const totalContrato = obrasComContrato.reduce((s, o) => s + o.contrato, 0);
+    let margemPonderada = 0;
+    obrasComContrato.forEach(o => {
+      const fins = financeiroPorObra[o.id]?.lancamentos || [];
+      const rec  = fins.filter(f => f.tipo === "receita").reduce((s, f) => s + (Number(f.valor) || 0), 0);
+      const desp = fins.filter(f => f.tipo === "despesa").reduce((s, f) => s + (Number(f.valor) || 0), 0);
+      const margem = rec > 0 ? (rec - desp) / rec : 0;
+      margemPonderada += margem * (o.contrato / totalContrato);
+    });
+    rentScore =
+      margemPonderada > 0.30 ? 100 :
+      margemPonderada > 0.20 ? 90  :
+      margemPonderada > 0.12 ? 78  :
+      margemPonderada > 0.05 ? 62  :
+      margemPonderada > 0    ? 45  : 25;
+  }
+  scores.rentabilidade = clamp(Math.round(rentScore));
+
+  // ── 2. FLUXO DE CAIXA (30%) ───────────────────────────────────────────────
+  // Saldo total (receitas - despesas) vs. volume total de contratos
+  let fluxoScore = 65;
+  const totalRec  = todasObras.reduce((s, o) => {
+    const fins = financeiroPorObra[o.id]?.lancamentos || [];
+    return s + fins.filter(f => f.tipo === "receita").reduce((a, f) => a + (Number(f.valor) || 0), 0);
+  }, 0);
+  const totalDesp = todasObras.reduce((s, o) => {
+    const fins = financeiroPorObra[o.id]?.lancamentos || [];
+    return s + fins.filter(f => f.tipo === "despesa").reduce((a, f) => a + (Number(f.valor) || 0), 0);
+  }, 0);
+  const totalContrato = todasObras.reduce((s, o) => s + (o.contrato || 0), 0);
+  if (totalContrato > 0) {
+    const saldoPct = (totalRec - totalDesp) / totalContrato;
+    fluxoScore =
+      saldoPct > 0.20 ? 100 :
+      saldoPct > 0.10 ? 88  :
+      saldoPct > 0.02 ? 72  :
+      saldoPct > -0.05 ? 55 :
+      saldoPct > -0.15 ? 35 : 15;
+  }
+  scores.fluxo = clamp(Math.round(fluxoScore));
+
+  // ── 3. PRAZO DE RECEBIMENTO (20%) ─────────────────────────────────────────
+  // Gap médio entre progresso físico e % recebido do contrato
+  // Gap pequeno = cliente pagando no ritmo da obra = score alto
+  let recScore = 70;
+  const obrasParaGap = obrasAtivas.filter(o => o.contrato > 0 && o.progresso != null);
+  if (obrasParaGap.length > 0) {
+    const gaps = obrasParaGap.map(o => {
+      const fins = financeiroPorObra[o.id]?.lancamentos || [];
+      const rec  = fins.filter(f => f.tipo === "receita").reduce((s, f) => s + (Number(f.valor) || 0), 0);
+      const pctRecebido = (rec / o.contrato) * 100;
+      return (o.progresso || 0) - pctRecebido; // positivo = obra adiantada do recebimento
+    });
+    const gapMedio = gaps.reduce((s, g) => s + g, 0) / gaps.length;
+    recScore =
+      gapMedio <= 5   ? 100 :
+      gapMedio <= 15  ? 85  :
+      gapMedio <= 25  ? 68  :
+      gapMedio <= 40  ? 48  : 25;
+  }
+  scores.recebimento = clamp(Math.round(recScore));
+
+  // ── 4. CARTEIRA DE OBRAS (15%) ────────────────────────────────────────────
+  // Volume e diversificação: qtd de obras ativas + valor de carteira
+  let carteiraScore = 55;
+  const n = obrasAtivas.length;
+  const vgv = obrasAtivas.reduce((s, o) => s + (o.contrato || 0), 0);
+  if      (n >= 5 && vgv > 500000)  carteiraScore = 100;
+  else if (n >= 3 && vgv > 200000)  carteiraScore = 85;
+  else if (n >= 2 && vgv > 80000)   carteiraScore = 72;
+  else if (n >= 1 && vgv > 20000)   carteiraScore = 58;
+  else if (n >= 1)                   carteiraScore = 45;
+  scores.carteira = clamp(Math.round(carteiraScore));
+
+  // ── TOTAL ponderado ───────────────────────────────────────────────────────
+  const total = clamp(Math.round(
+    scores.rentabilidade * 0.35 +
+    scores.fluxo         * 0.30 +
+    scores.recebimento   * 0.20 +
+    scores.carteira      * 0.15
+  ));
+
+  const { nivel, cor } = classificar(total);
+  return { total, scores, nivel, cor };
+}
+

@@ -698,7 +698,7 @@ export default function Financeiro() {
         {/* Header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 22, flexWrap: "wrap", gap: 12 }}>
           <div>
-            <h2 style={{ fontSize: 22, fontWeight: 800 }}>Controle Financeiro</h2>
+            <h2 style={{ fontSize: 22, fontWeight: 800 }}>Financeiro</h2>
             <p style={{ color: C.muted, fontSize: 13, marginTop: 4 }}>Receitas, despesas e margem por obra</p>
           </div>
           <div style={{ display: "flex", gap: 10 }}>

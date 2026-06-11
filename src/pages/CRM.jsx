@@ -739,7 +739,7 @@ export default function CRM() {
       {/* Header da Página */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
         <div>
-          <h2 style={{ fontSize: 22, fontWeight: 800 }}>CRM / Comercial</h2>
+          <h2 style={{ fontSize: 22, fontWeight: 800 }}>CRM / Clientes</h2>
           <p style={{ color: C.muted, fontSize: 13, marginTop: 4 }}>Gerencie seu funil de vendas e contatos</p>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
