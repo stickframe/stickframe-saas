@@ -198,7 +198,7 @@ export default function Suprimentos() {
   return (
     <div style={{ padding: "0 0 40px" }}>
       <div style={{ marginBottom: 22 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 800, color: C.text }}>StickSupply™</h1>
+        <h1 style={{ fontSize: 22, fontWeight: 800, color: C.text }}>Almoxarifado</h1>
         <p style={{ color: C.muted, fontSize: 14 }}>Pedidos de material e controle de estoque</p>
       </div>
 

@@ -60,7 +60,7 @@ function NavButton({ n, isActive, onClick, badges }) {
       onClick={onClick}
       style={{
         display: "flex", alignItems: "center", gap: 9, width: "100%",
-        padding: "8px 18px",
+        padding: n.brand ? "6px 18px" : "8px 18px",
         background: isActive ? "rgba(152,25,21,0.18)" : "transparent",
         border: "none",
         borderLeft: isActive ? "3px solid #981915" : "3px solid transparent",
@@ -74,7 +74,14 @@ function NavButton({ n, isActive, onClick, badges }) {
       onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#9aa0a8"; } }}
     >
       <NavIcon name={n.icon} size={14} color={isActive ? "#ffffff" : "#9aa0a8"} />
-      <span style={{ flex: 1 }}>{n.label}</span>
+      <span style={{ flex: 1, display: "flex", flexDirection: "column", gap: 1 }}>
+        <span>{n.label}</span>
+        {n.brand && (
+          <span style={{ fontSize: 9, fontWeight: 700, color: isActive ? "rgba(255,255,255,0.45)" : "#4a5060", letterSpacing: 0.3 }}>
+            {n.brand}
+          </span>
+        )}
+      </span>
       {badges}
       {n.badge && <NavBadge badge={n.badge} />}
     </button>
@@ -100,7 +107,10 @@ export default function Sidebar({ open, onClose }) {
   const [busca, setBusca] = useState("");
 
   const navFiltrado = busca.trim()
-    ? navFiltro.filter(n => n.label.toLowerCase().includes(busca.toLowerCase()))
+    ? navFiltro.filter(n =>
+        n.label.toLowerCase().includes(busca.toLowerCase()) ||
+        n.brand?.toLowerCase().includes(busca.toLowerCase())
+      )
     : navFiltro;
   const { groups: groupsFiltrado, config: configFiltrado } = buildGroupedNav(navFiltrado);
 

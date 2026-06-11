@@ -325,7 +325,7 @@ export default function Vistorias() {
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
         <div>
-          <h2 style={{ fontSize: 22, fontWeight: 800 }}>StickInspect™</h2>
+          <h2 style={{ fontSize: 22, fontWeight: 800 }}>Qualidade / FVS</h2>
           <p style={{ color: C.muted, fontSize: 13, marginTop: 4 }}>Fichas de Verificação de Serviço e inspeções guiadas</p>
         </div>
         {podeEditar() && <button onClick={() => setModal(true)} style={{ padding: "10px 20px", borderRadius: 8, border: "none", background: C.red, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
