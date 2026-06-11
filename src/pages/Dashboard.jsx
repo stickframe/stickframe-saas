@@ -14,8 +14,8 @@ import SmartAlerts from "../components/ui/SmartAlerts";
 import DashboardKPIs from "../components/Dashboard/DashboardKPIs";
 import ComplianceNR from "../components/Dashboard/ComplianceNR";
 import CalculadoraRapida from "../components/ui/CalculadoraRapida";
-import { calcularStickScore, salvarSnapshotScore } from "../utils/stickScore";
-import { StickScoreInline, StickScoreHero } from "../components/ui/StickScore";
+import { calcularStickScore, calcularStickScoreExecutivo, salvarSnapshotScore } from "../utils/stickScore";
+import { StickScoreInline, StickScoreHero, StickScoreExecutivoCard } from "../components/ui/StickScore";
 
 // ─── Mini Sparkline ───────────────────────────────────────────────────────────
 function Sparkline({ data = [], color = C.success, height = 32, width = 64 }) {
@@ -747,8 +747,16 @@ ${obrasAndamento.length > 0 ? `
         <SmartAlerts onNavigate={setActivePage} />
       </div>
 
-      {/* StickScore™ Hero */}
-      <StickScoreHero obras={obras} financeiroPorObra={financeiro} />
+      {/* StickScore™ — Operacional + Executivo */}
+      {(() => {
+        const scoreExec = calcularStickScoreExecutivo(obras, financeiro);
+        return (
+          <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 12, marginBottom: 20 }}>
+            <StickScoreHero obras={obras} financeiroPorObra={financeiro} />
+            <StickScoreExecutivoCard score={scoreExec} />
+          </div>
+        );
+      })()}
 
       {/* VGV — Funil financeiro */}
       <div style={{ background: `linear-gradient(135deg, rgba(152,25,21,0.04) 0%, transparent 60%)`, borderRadius: 14, padding: "20px 24px", border: `1px solid ${C.border}`, marginBottom: 20, borderTop: `3px solid ${C.red}` }}>

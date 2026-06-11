@@ -235,3 +235,115 @@ export const STICK_SCORE_DIMENSOES = [
   { key: "equipe",     label: "Equipe",      peso: "15%" },
   { key: "qualidade",  label: "Qualidade",   peso: "10%" },
 ];
+
+// ── StickScore™ Executivo ─────────────────────────────────────────────────────
+// Score consolidado da empresa, voltado para donos e diretores.
+// Mede saúde financeira do negócio, não execução de obra individual.
+
+export const STICK_SCORE_EXEC_DIMENSOES = [
+  { key: "rentabilidade",   label: "Rentabilidade",        peso: "35%" },
+  { key: "fluxo",           label: "Fluxo de Caixa",       peso: "30%" },
+  { key: "recebimento",     label: "Prazo de Recebimento", peso: "20%" },
+  { key: "carteira",        label: "Carteira de Obras",    peso: "15%" },
+];
+
+/**
+ * @param {Array} obras — todas as obras da empresa
+ * @param {Object} financeiroPorObra — { obraId: { lancamentos: [] } }
+ */
+export function calcularStickScoreExecutivo(obras, financeiroPorObra = {}) {
+  const obrasAtivas    = obras.filter(o => o.status === "Em andamento");
+  const todasObras     = obras.filter(o => o.status !== "Planejamento");
+  const scores = {};
+
+  // ── 1. RENTABILIDADE (35%) ────────────────────────────────────────────────
+  // Margem média ponderada pelo contrato das obras ativas
+  let rentScore = 65;
+  const obrasComContrato = obrasAtivas.filter(o => o.contrato > 0);
+  if (obrasComContrato.length > 0) {
+    const totalContrato = obrasComContrato.reduce((s, o) => s + o.contrato, 0);
+    let margemPonderada = 0;
+    obrasComContrato.forEach(o => {
+      const fins = financeiroPorObra[o.id]?.lancamentos || [];
+      const rec  = fins.filter(f => f.tipo === "receita").reduce((s, f) => s + (Number(f.valor) || 0), 0);
+      const desp = fins.filter(f => f.tipo === "despesa").reduce((s, f) => s + (Number(f.valor) || 0), 0);
+      const margem = rec > 0 ? (rec - desp) / rec : 0;
+      margemPonderada += margem * (o.contrato / totalContrato);
+    });
+    rentScore =
+      margemPonderada > 0.30 ? 100 :
+      margemPonderada > 0.20 ? 90  :
+      margemPonderada > 0.12 ? 78  :
+      margemPonderada > 0.05 ? 62  :
+      margemPonderada > 0    ? 45  : 25;
+  }
+  scores.rentabilidade = clamp(Math.round(rentScore));
+
+  // ── 2. FLUXO DE CAIXA (30%) ───────────────────────────────────────────────
+  // Saldo total (receitas - despesas) vs. volume total de contratos
+  let fluxoScore = 65;
+  const totalRec  = todasObras.reduce((s, o) => {
+    const fins = financeiroPorObra[o.id]?.lancamentos || [];
+    return s + fins.filter(f => f.tipo === "receita").reduce((a, f) => a + (Number(f.valor) || 0), 0);
+  }, 0);
+  const totalDesp = todasObras.reduce((s, o) => {
+    const fins = financeiroPorObra[o.id]?.lancamentos || [];
+    return s + fins.filter(f => f.tipo === "despesa").reduce((a, f) => a + (Number(f.valor) || 0), 0);
+  }, 0);
+  const totalContrato = todasObras.reduce((s, o) => s + (o.contrato || 0), 0);
+  if (totalContrato > 0) {
+    const saldoPct = (totalRec - totalDesp) / totalContrato;
+    fluxoScore =
+      saldoPct > 0.20 ? 100 :
+      saldoPct > 0.10 ? 88  :
+      saldoPct > 0.02 ? 72  :
+      saldoPct > -0.05 ? 55 :
+      saldoPct > -0.15 ? 35 : 15;
+  }
+  scores.fluxo = clamp(Math.round(fluxoScore));
+
+  // ── 3. PRAZO DE RECEBIMENTO (20%) ─────────────────────────────────────────
+  // Gap médio entre progresso físico e % recebido do contrato
+  // Gap pequeno = cliente pagando no ritmo da obra = score alto
+  let recScore = 70;
+  const obrasParaGap = obrasAtivas.filter(o => o.contrato > 0 && o.progresso != null);
+  if (obrasParaGap.length > 0) {
+    const gaps = obrasParaGap.map(o => {
+      const fins = financeiroPorObra[o.id]?.lancamentos || [];
+      const rec  = fins.filter(f => f.tipo === "receita").reduce((s, f) => s + (Number(f.valor) || 0), 0);
+      const pctRecebido = (rec / o.contrato) * 100;
+      return (o.progresso || 0) - pctRecebido; // positivo = obra adiantada do recebimento
+    });
+    const gapMedio = gaps.reduce((s, g) => s + g, 0) / gaps.length;
+    recScore =
+      gapMedio <= 5   ? 100 :
+      gapMedio <= 15  ? 85  :
+      gapMedio <= 25  ? 68  :
+      gapMedio <= 40  ? 48  : 25;
+  }
+  scores.recebimento = clamp(Math.round(recScore));
+
+  // ── 4. CARTEIRA DE OBRAS (15%) ────────────────────────────────────────────
+  // Volume e diversificação: qtd de obras ativas + valor de carteira
+  let carteiraScore = 55;
+  const n = obrasAtivas.length;
+  const vgv = obrasAtivas.reduce((s, o) => s + (o.contrato || 0), 0);
+  if      (n >= 5 && vgv > 500000)  carteiraScore = 100;
+  else if (n >= 3 && vgv > 200000)  carteiraScore = 85;
+  else if (n >= 2 && vgv > 80000)   carteiraScore = 72;
+  else if (n >= 1 && vgv > 20000)   carteiraScore = 58;
+  else if (n >= 1)                   carteiraScore = 45;
+  scores.carteira = clamp(Math.round(carteiraScore));
+
+  // ── TOTAL ponderado ───────────────────────────────────────────────────────
+  const total = clamp(Math.round(
+    scores.rentabilidade * 0.35 +
+    scores.fluxo         * 0.30 +
+    scores.recebimento   * 0.20 +
+    scores.carteira      * 0.15
+  ));
+
+  const { nivel, cor } = classificar(total);
+  return { total, scores, nivel, cor };
+}
+

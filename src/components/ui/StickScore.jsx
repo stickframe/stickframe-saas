@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { STICK_SCORE_DIMENSOES, carregarHistoricoScore, gerarInsights } from "../../utils/stickScore";
+import { STICK_SCORE_DIMENSOES, STICK_SCORE_EXEC_DIMENSOES, carregarHistoricoScore, gerarInsights } from "../../utils/stickScore";
 import useAppStore from "../../store/useAppStore";
 import ModalUpgradePro from "./ModalUpgradePro";
 
@@ -453,4 +453,164 @@ function classGlobal(total) {
   if (total >= 70) return { nivel: "Bom",       cor: "#3b6ea5" };
   if (total >= 60) return { nivel: "Atenção",   cor: "#b07a1e" };
   return             { nivel: "Crítico",         cor: "#981915" };
+}
+
+// ── StickScore™ Executivo Card ────────────────────────────────────────────────
+
+const EXEC_INSIGHTS = {
+  rentabilidade: {
+    high: "Margens saudáveis — portfólio rentável.",
+    low:  "Rentabilidade abaixo do esperado — revise precificação e custos.",
+  },
+  fluxo: {
+    high: "Fluxo de caixa positivo — empresa capitalizada.",
+    low:  "Saldo de caixa pressionado — atenção às despesas vs. recebimentos.",
+  },
+  recebimento: {
+    high: "Clientes pagando no ritmo da obra.",
+    low:  "Gap de recebimento alto — obras avançando mais rápido que os pagamentos.",
+  },
+  carteira: {
+    high: "Carteira de obras diversificada e ativa.",
+    low:  "Carteira concentrada ou com pouco volume — prospeccção necessária.",
+  },
+};
+
+export function StickScoreExecutivoCard({ score }) {
+  const plano = useAppStore(s => s.user?.plano);
+  const [showUpgrade, setShowUpgrade] = useState(false);
+
+  if (!score) return null;
+
+  if (plano === "free") {
+    return (
+      <>
+        {showUpgrade && <ModalUpgradePro onClose={() => setShowUpgrade(false)} />}
+        <div
+          onClick={() => setShowUpgrade(true)}
+          style={{
+            background: "linear-gradient(135deg, #0f0f14, #1a1a2e)",
+            borderRadius: 16, padding: "20px 24px", cursor: "pointer",
+            border: "1px solid #6d3a9e30", display: "flex", alignItems: "center", gap: 16,
+          }}
+        >
+          <div style={{ fontSize: 28 }}>🔒</div>
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 2, color: "#6d3a9e", textTransform: "uppercase" }}>StickScore™ Executivo</div>
+            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)" }}>Rentabilidade, fluxo e carteira — exclusivo PRO</div>
+          </div>
+          <div style={{ marginLeft: "auto", padding: "6px 14px", background: "#6d3a9e", borderRadius: 8, color: "#fff", fontSize: 12, fontWeight: 700, flexShrink: 0 }}>
+            Desbloquear
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  const { total, scores, cor, nivel } = score;
+
+  // Gera 1–2 insights automáticos baseados nas dimensões mais fracas
+  const autoInsights = STICK_SCORE_EXEC_DIMENSOES
+    .map(d => ({ ...d, val: scores[d.key] ?? 0 }))
+    .sort((a, b) => a.val - b.val)
+    .slice(0, 2)
+    .map(d => ({
+      tipo: d.val >= 70 ? "positivo" : d.val >= 50 ? "dica" : "alerta",
+      texto: d.val >= 70
+        ? EXEC_INSIGHTS[d.key]?.high
+        : EXEC_INSIGHTS[d.key]?.low,
+    }))
+    .filter(i => i.texto);
+
+  return (
+    <div style={{
+      background: "linear-gradient(135deg, #0f0f14 0%, #13101e 100%)",
+      borderRadius: 20, padding: "24px",
+      border: `1px solid ${cor}30`,
+      boxShadow: `0 8px 32px ${cor}15`,
+      color: "#fff",
+    }}>
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+        <div>
+          <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 2, color: "#6d3a9e", textTransform: "uppercase", marginBottom: 2 }}>
+            StickScore™ Executivo
+          </div>
+          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>Visão do negócio</div>
+        </div>
+        <div style={{ position: "relative", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+          <ScoreRing total={total} cor={cor} size={72} />
+          <div style={{ position: "absolute", textAlign: "center" }}>
+            <div style={{ fontSize: 19, fontWeight: 900, color: cor, lineHeight: 1 }}>{total}</div>
+            <div style={{ fontSize: 7, color: "rgba(255,255,255,0.3)" }}>/ 100</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Nivel pill */}
+      <div style={{
+        display: "inline-flex", alignItems: "center", gap: 6,
+        background: cor + "20", border: `1px solid ${cor}40`,
+        borderRadius: 20, padding: "4px 12px", marginBottom: 20,
+      }}>
+        <div style={{ width: 6, height: 6, borderRadius: "50%", background: cor }} />
+        <span style={{ fontSize: 11, fontWeight: 700, color: cor }}>{nivel}</span>
+      </div>
+
+      {/* Dimensões */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {STICK_SCORE_EXEC_DIMENSOES.map(({ key, label, peso }) => {
+          const val = scores[key] ?? 0;
+          const barCor =
+            val >= 85 ? "#059669" :
+            val >= 70 ? "#2e9e5b" :
+            val >= 55 ? "#3b6ea5" :
+            val >= 40 ? "#b07a1e" : "#981915";
+          return (
+            <div key={key}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                <span style={{ fontSize: 11, color: "rgba(255,255,255,0.55)", fontWeight: 500 }}>
+                  {label}
+                  <span style={{ marginLeft: 6, fontSize: 9, opacity: 0.35 }}>{peso}</span>
+                </span>
+                <span style={{ fontSize: 11, fontWeight: 800, color: barCor }}>{val}</span>
+              </div>
+              <div style={{ height: 5, background: "rgba(255,255,255,0.07)", borderRadius: 3, overflow: "hidden" }}>
+                <div style={{
+                  height: "100%", width: `${val}%`,
+                  background: `linear-gradient(90deg, ${barCor}90, ${barCor})`,
+                  borderRadius: 3, transition: "width 0.7s ease",
+                }} />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Insights */}
+      {autoInsights.length > 0 && (
+        <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 6 }}>
+          {autoInsights.map((ins, i) => {
+            const styleMap = {
+              positivo: { bg: "#2e9e5b18", border: "#2e9e5b35", color: "#6ee7b7", icon: "↑" },
+              alerta:   { bg: "#b07a1e18", border: "#b07a1e35", color: "#fcd34d", icon: "⚠" },
+              dica:     { bg: "#3b6ea518", border: "#3b6ea535", color: "#93c5fd", icon: "💡" },
+            };
+            const s = styleMap[ins.tipo] || styleMap.dica;
+            return (
+              <div key={i} style={{
+                padding: "8px 10px", borderRadius: 8,
+                background: s.bg, border: `1px solid ${s.border}`,
+                fontSize: 11, color: s.color, lineHeight: 1.45,
+                display: "flex", gap: 6,
+              }}>
+                <span style={{ flexShrink: 0 }}>{s.icon}</span>
+                <span>{ins.texto}</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
 }
