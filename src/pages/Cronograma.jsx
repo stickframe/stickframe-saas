@@ -142,7 +142,7 @@ export default function Cronograma() {
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
         <div>
-          <h2 style={{ fontSize: 22, fontWeight: 800 }}>Cronograma</h2>
+          <h2 style={{ fontSize: 22, fontWeight: 800 }}>StickPlan™</h2>
           <p style={{ color: C.muted, fontSize: 13, marginTop: 4 }}>{obras.length} obra{obras.length !== 1 ? "s" : ""} · clique na barra para editar datas</p>
         </div>
         {/* Legenda */}
