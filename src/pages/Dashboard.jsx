@@ -14,8 +14,8 @@ import SmartAlerts from "../components/ui/SmartAlerts";
 import DashboardKPIs from "../components/Dashboard/DashboardKPIs";
 import ComplianceNR from "../components/Dashboard/ComplianceNR";
 import CalculadoraRapida from "../components/ui/CalculadoraRapida";
-import { calcularStickScore } from "../utils/stickScore";
-import { StickScoreInline } from "../components/ui/StickScore";
+import { calcularStickScore, salvarSnapshotScore } from "../utils/stickScore";
+import { StickScoreInline, StickScoreHero } from "../components/ui/StickScore";
 
 // ─── Mini Sparkline ───────────────────────────────────────────────────────────
 function Sparkline({ data = [], color = C.success, height = 32, width = 64 }) {
@@ -322,6 +322,7 @@ function DashboardDiretor() {
   const medicoes    = useAppStore((s) => s.medicoes);
   const empresa     = useAppStore((s) => s.empresa);
   const historico   = useAppStore((s) => s.historico);
+  const empresaId   = useAppStore((s) => s.empresaId);
   const { toast: toastInadimpl, mostrarToast: toastMsg } = useToast();
   const loadMedicoes = useAppStore((s) => s.loadMedicoes);
   const setActivePage = useAppStore((s) => s.setActivePage);
@@ -330,6 +331,16 @@ function DashboardDiretor() {
   useEffect(() => {
     obras.forEach((o) => loadMedicoes(o.id));
   }, [obras, loadMedicoes]);
+
+  // Salva snapshot mensal do StickScore para cada obra ativa
+  useEffect(() => {
+    if (!empresaId || obras.length === 0) return;
+    obras.filter(o => o.status === "Em andamento").forEach((o) => {
+      const fins = (financeiro[o.id]?.lancamentos || []);
+      const score = calcularStickScore(o, { financeiro: fins, medicoes: medicoes[o.id] || [] });
+      salvarSnapshotScore(empresaId, o.id, score);
+    });
+  }, [empresaId, obras, financeiro, medicoes]);
 
   // Carrega preços monitorados para o widget de preços em alta
   const [precosMon, setPrecosMon] = useState([]);
@@ -735,6 +746,9 @@ ${obrasAndamento.length > 0 ? `
       <div data-no-print="true">
         <SmartAlerts onNavigate={setActivePage} />
       </div>
+
+      {/* StickScore™ Hero */}
+      <StickScoreHero obras={obras} financeiroPorObra={financeiro} />
 
       {/* VGV — Funil financeiro */}
       <div style={{ background: `linear-gradient(135deg, rgba(152,25,21,0.04) 0%, transparent 60%)`, borderRadius: 14, padding: "20px 24px", border: `1px solid ${C.border}`, marginBottom: 20, borderTop: `3px solid ${C.red}` }}>

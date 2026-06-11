@@ -1,5 +1,5 @@
 /**
- * StickScore™ — Índice de Saúde da Obra
+ * StickScore™ — Índice Inteligente de Performance de Obras
  * Pontuação 0–100 composta por 5 dimensões ponderadas.
  */
 
@@ -51,7 +51,7 @@ export function calcularStickScore(obra, { financeiro = [], medicoes = [], diari
     else if (margemReal > -0.1) finScore = 40;
     else                        finScore = 20;
   } else if (financeiro.length === 0) {
-    finScore = 68; // sem dados — neutro levemente negativo
+    finScore = 68;
   }
   scores.financeiro = clamp(Math.round(finScore));
 
@@ -65,7 +65,7 @@ export function calcularStickScore(obra, { financeiro = [], medicoes = [], diari
 
   // ── 4. EQUIPE (15%) ───────────────────────────────────────────────────────
   const nMembros = membros.length;
-  let equipeScore =
+  const equipeScore =
     nMembros >= 6 ? 100 :
     nMembros >= 4 ? 88  :
     nMembros >= 2 ? 72  :
@@ -98,20 +98,109 @@ export function calcularStickScore(obra, { financeiro = [], medicoes = [], diari
     scores.qualidade  * PESOS.qualidade
   ));
 
-  const nivel =
-    total >= 90 ? "Excelente" :
-    total >= 75 ? "Saudável"  :
-    total >= 60 ? "Atenção"   : "Crítico";
-
-  const cor =
-    total >= 90 ? "#2e9e5b" :
-    total >= 75 ? "#3b6ea5" :
-    total >= 60 ? "#b07a1e" : "#981915";
-
+  const { nivel, cor } = classificar(total);
   return { total, scores, nivel, cor };
 }
 
+function classificar(total) {
+  if (total >= 90) return { nivel: "Elite",     cor: "#059669" };
+  if (total >= 80) return { nivel: "Excelente", cor: "#2e9e5b" };
+  if (total >= 70) return { nivel: "Bom",       cor: "#3b6ea5" };
+  if (total >= 60) return { nivel: "Atenção",   cor: "#b07a1e" };
+  return             { nivel: "Crítico",         cor: "#981915" };
+}
+
 function clamp(v) { return Math.min(100, Math.max(0, v)); }
+
+// ── Histórico de score (localStorage, granularidade mensal) ──────────────────
+
+export function salvarSnapshotScore(empresaId, obraId, score) {
+  if (!empresaId || !obraId) return;
+  const mes = new Date().toISOString().slice(0, 7);
+  try {
+    const key = `stickscore-${empresaId}`;
+    const hist = JSON.parse(localStorage.getItem(key) || "{}");
+    if (!hist[obraId]) hist[obraId] = [];
+    const idx = hist[obraId].findIndex(s => s.mes === mes);
+    const snap = { mes, total: score.total, scores: score.scores };
+    if (idx >= 0) hist[obraId][idx] = snap;
+    else hist[obraId].push(snap);
+    hist[obraId] = hist[obraId].sort((a, b) => a.mes.localeCompare(b.mes)).slice(-12);
+    localStorage.setItem(key, JSON.stringify(hist));
+  } catch (_) {}
+}
+
+export function carregarHistoricoScore(empresaId, obraId) {
+  if (!empresaId || !obraId) return [];
+  try {
+    const hist = JSON.parse(localStorage.getItem(`stickscore-${empresaId}`) || "{}");
+    return hist[obraId] || [];
+  } catch (_) { return []; }
+}
+
+// ── Insights automáticos ─────────────────────────────────────────────────────
+
+const DIM_LABEL = {
+  cronograma: "cronograma",
+  financeiro:  "financeiro",
+  compras:     "compras / medições",
+  equipe:      "equipe",
+  qualidade:   "registros de diário",
+};
+
+export function gerarInsights(scoreAtual, historico) {
+  const insights = [];
+  if (!scoreAtual) return insights;
+
+  const prev = historico?.length >= 2 ? historico[historico.length - 2] : null;
+  const curr = historico?.length >= 1 ? historico[historico.length - 1] : null;
+
+  if (prev && curr) {
+    const delta = curr.total - prev.total;
+    const dims = Object.keys(DIM_LABEL);
+    const movers = dims
+      .map(d => ({ d, delta: (curr.scores?.[d] ?? 0) - (prev.scores?.[d] ?? 0) }))
+      .sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
+
+    const top = movers[0];
+    if (Math.abs(delta) >= 2) {
+      if (delta > 0 && top.delta > 0) {
+        insights.push({
+          tipo: "positivo",
+          texto: `Score subiu ${delta} pontos — impulsionado pelo avanço em ${DIM_LABEL[top.d]}.`,
+        });
+      } else if (delta < 0 && top.delta < 0) {
+        insights.push({
+          tipo: "negativo",
+          texto: `Score caiu ${Math.abs(delta)} pontos devido a quedas em ${DIM_LABEL[top.d]}.`,
+        });
+      }
+    }
+
+    // Alertas por dimensão
+    movers.filter(m => m.delta <= -10).forEach(m => {
+      insights.push({
+        tipo: "alerta",
+        texto: `${capitalize(DIM_LABEL[m.d])} caiu ${Math.abs(m.delta)} pontos — requer atenção.`,
+      });
+    });
+  }
+
+  // Alertas estáticos baseados no score atual
+  if (scoreAtual.scores.cronograma < 60) {
+    insights.push({ tipo: "alerta", texto: "Cronograma em atraso — revise prazos e progresso da obra." });
+  }
+  if (scoreAtual.scores.financeiro < 60) {
+    insights.push({ tipo: "alerta", texto: "Margem financeira baixa — verifique despesas e recebimentos." });
+  }
+  if (scoreAtual.scores.qualidade < 50) {
+    insights.push({ tipo: "dica", texto: "Diário de obra com poucos registros nos últimos 30 dias." });
+  }
+
+  return insights.slice(0, 3);
+}
+
+function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
 
 export const STICK_SCORE_DIMENSOES = [
   { key: "cronograma", label: "Cronograma", peso: "25%" },
