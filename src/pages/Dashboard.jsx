@@ -14,6 +14,8 @@ import SmartAlerts from "../components/ui/SmartAlerts";
 import DashboardKPIs from "../components/Dashboard/DashboardKPIs";
 import ComplianceNR from "../components/Dashboard/ComplianceNR";
 import CalculadoraRapida from "../components/ui/CalculadoraRapida";
+import { calcularStickScore } from "../utils/stickScore";
+import { StickScoreInline } from "../components/ui/StickScore";
 
 // ─── Mini Sparkline ───────────────────────────────────────────────────────────
 function Sparkline({ data = [], color = C.success, height = 32, width = 64 }) {
@@ -1350,28 +1352,40 @@ ${obrasAndamento.length > 0 ? `
             <div style={{ fontSize: 12 }}>Nenhuma obra cadastrada</div>
           </div>
         ) : (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "12px 24px" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             {obras.map((o) => {
               const prazoFim   = o.prazo_fim ? new Date(o.prazo_fim) : null;
               const atrasada   = prazoFim && prazoFim < hoje && o.status !== "Concluída";
               const medObra    = (medicoes[o.id] || []).filter((m) => m.status === "Pendente");
+              const finObra    = allLancamentos.filter(l => l.obra_id === o.id);
+              const diarObra   = (diario[o.id] || []);
+              const score      = calcularStickScore(o, { financeiro: finObra, medicoes: medicoes[o.id] || [], diario: diarObra });
               return (
-                <div key={o.id} style={{ marginBottom: 4 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
-                    <span style={{ fontSize: 12, fontWeight: 600 }}>{o.nome?.split("—")[0]?.trim()}</span>
-                    <span style={{ fontSize: 11, color: o.progresso >= 50 ? C.success : C.muted }}>{o.progresso || 0}%</span>
+                <div key={o.id} style={{
+                  background: "#fff", borderRadius: 12,
+                  border: `1px solid ${C.border}`,
+                  padding: "12px 14px",
+                  boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: C.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {o.nome?.split("—")[0]?.trim()}
+                      </div>
+                      <div style={{ fontSize: 10, color: C.muted, marginTop: 1 }}>{o.fase || "—"}</div>
+                    </div>
+                    <StickScoreInline score={score} />
                   </div>
-                  <div style={{ height: 6, background: C.dark, borderRadius: 3, overflow: "hidden" }}>
+                  <div style={{ height: 5, background: C.border, borderRadius: 3, overflow: "hidden" }}>
                     <div style={{
-                      height: 6,
+                      height: 5,
                       width: `${o.progresso || 0}%`,
                       background: o.progresso >= 75 ? C.success : o.progresso >= 40 ? C.warning : C.red,
-                      borderRadius: 3,
-                      transition: "width .4s ease",
+                      borderRadius: 3, transition: "width .4s ease",
                     }} />
                   </div>
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: C.muted, marginTop: 3 }}>
-                    <span>{o.fase || "—"}</span>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: C.muted, marginTop: 4 }}>
+                    <span>{o.progresso || 0}% concluído</span>
                     <span style={{ display: "flex", gap: 8 }}>
                       {medObra.length > 0 && (
                         <span style={{ color: C.warning }}>⚠ {medObra.length} med. pendente{medObra.length > 1 ? "s" : ""}</span>
