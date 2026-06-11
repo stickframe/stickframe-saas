@@ -16,6 +16,7 @@ import ComplianceNR from "../components/Dashboard/ComplianceNR";
 import CalculadoraRapida from "../components/ui/CalculadoraRapida";
 import { calcularStickScore, calcularStickScoreExecutivo, salvarSnapshotScore } from "../utils/stickScore";
 import { StickScoreInline, StickScoreHero, StickScoreExecutivoCard } from "../components/ui/StickScore";
+import StickScoreBenchmark from "../components/ui/StickScoreBenchmark";
 
 // ─── Mini Sparkline ───────────────────────────────────────────────────────────
 function Sparkline({ data = [], color = C.success, height = 32, width = 64 }) {
@@ -755,6 +756,7 @@ ${obrasAndamento.length > 0 ? `
           <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 12, marginBottom: 20 }}>
             <StickScoreHero obras={obras} financeiroPorObra={financeiro} />
             <StickScoreExecutivoCard score={scoreExec} />
+            <StickScoreBenchmark obras={obras} financeiroPorObra={financeiro} medicoesPorObra={medicoes} />
           </div>
         );
       })()}
