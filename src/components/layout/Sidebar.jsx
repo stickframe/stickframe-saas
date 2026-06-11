@@ -61,7 +61,7 @@ export default function Sidebar({ open, onClose }) {
     position: "fixed",
     top: 0,
     left: 0,
-    height: "100vh",
+    height: "100dvh",
     width: 260,
     background: "#16181c",
     color: "#fff",
@@ -198,8 +198,8 @@ export default function Sidebar({ open, onClose }) {
             );
           })}
         </nav>
-        <div style={{ padding: "16px", borderTop: "1px solid #25282e" }}>
-          <button onClick={logout} style={{ background: "none", border: "none", color: "#c9484a", cursor: "pointer", fontWeight: 700, fontSize: 13, padding: "8px 0" }}>
+        <div style={{ padding: "16px 16px calc(16px + env(safe-area-inset-bottom))", borderTop: "1px solid #25282e" }}>
+          <button onClick={logout} style={{ background: "none", border: "none", color: "#c9484a", cursor: "pointer", fontWeight: 700, fontSize: 13, padding: "8px 0", width: "100%", textAlign: "left" }}>
             Sair
           </button>
         </div>
