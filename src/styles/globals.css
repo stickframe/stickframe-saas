@@ -336,6 +336,10 @@ select:focus {
   /* Mostra hamburguer no mobile */
   .hamburger              { display: flex !important; font-size: 26px; min-width: 48px; min-height: 48px; background: rgba(0,0,0,0.05); border-radius: 8px; }
   .topbar                 { padding: 0 16px; }
+
+  /* Barra de navegação inferior mobile */
+  .mobile-bottom-nav      { display: flex !important; }
+  .main-content           { padding-bottom: calc(72px + env(safe-area-inset-bottom)) !important; }
 }
 
 /* ── Design system additions ─────────────────────────── */
