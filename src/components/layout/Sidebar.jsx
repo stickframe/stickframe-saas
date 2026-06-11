@@ -97,6 +97,13 @@ export default function Sidebar({ open, onClose }) {
   const navFiltro = NAV.filter((n) => perfil.paginas.includes(n.key));
   const active    = perfil.paginas.includes(activePage) ? activePage : "dashboard";
 
+  const [busca, setBusca] = useState("");
+
+  const navFiltrado = busca.trim()
+    ? navFiltro.filter(n => n.label.toLowerCase().includes(busca.toLowerCase()))
+    : navFiltro;
+  const { groups: groupsFiltrado, config: configFiltrado } = buildGroupedNav(navFiltrado);
+
   const [preOrcCount, setPreOrcCount] = useState(0);
   useEffect(() => {
     const empId = getEmpresaId();
@@ -115,14 +122,16 @@ export default function Sidebar({ open, onClose }) {
 
   const { groups, config } = buildGroupedNav(navFiltro);
 
-  function renderNavGroups(mobile = false) {
+  function renderNavGroups(mobile = false, overrideGroups, overrideConfig) {
+    const grps = overrideGroups || groups;
+    const cfg  = overrideConfig  || config;
     const pad = mobile ? "12px 18px" : "8px 18px";
     const iconSz = mobile ? 16 : 14;
     const fontSize = mobile ? 14 : 12.5;
     const items = [];
 
     // Top items (null group: dashboard, agenda)
-    (groups["__top__"] || []).forEach(n => {
+    (grps["__top__"] || []).forEach(n => {
       const isActive = active === n.key;
       items.push(
         <button key={n.key} onClick={() => { setActivePage(n.key); onClose?.(); }}
@@ -145,7 +154,7 @@ export default function Sidebar({ open, onClose }) {
 
     // Grouped items
     ["Comercial","Obras","Financeiro","Compras","Engenharia","Gestão"].forEach(grupo => {
-      const list = groups[grupo];
+      const list = grps[grupo];
       if (!list || !list.length) return;
       items.push(
         <div key={`grp-${grupo}`}>
@@ -186,9 +195,9 @@ export default function Sidebar({ open, onClose }) {
     });
 
     // Configurações (always last)
-    if (config.length) {
+    if (cfg.length) {
       items.push(<div key="div-cfg" style={{ margin: "8px 0", borderTop: "1px solid #25282e" }} />);
-      config.forEach(n => {
+      cfg.forEach(n => {
         const isActive = active === n.key;
         items.push(
           <button key={n.key} onClick={() => { setActivePage(n.key); onClose?.(); }}
@@ -270,9 +279,37 @@ export default function Sidebar({ open, onClose }) {
           </div>
         </div>
 
+        {/* Search */}
+        <div style={{ padding: "8px 12px", borderBottom: "1px solid #1e2127" }}>
+          <div style={{ position: "relative" }}>
+            <NavIcon name="Search" size={12} color="#4a5060" />
+            <input
+              value={busca} onChange={e => setBusca(e.target.value)}
+              placeholder="Buscar módulo…"
+              style={{
+                width: "100%", padding: "7px 10px 7px 26px",
+                background: "#1e2127", border: "1px solid #25282e",
+                borderRadius: 8, color: "#fff", fontSize: 12,
+                fontFamily: "inherit", outline: "none", boxSizing: "border-box",
+              }}
+            />
+            <div style={{ position: "absolute", left: 9, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}>
+              <NavIcon name="Search" size={12} color="#4a5060" />
+            </div>
+            {busca && (
+              <button onClick={() => setBusca("")} style={{
+                position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)",
+                background: "none", border: "none", color: "#4a5060", cursor: "pointer", fontSize: 14, lineHeight: 1,
+              }}>✕</button>
+            )}
+          </div>
+        </div>
+
         {/* Nav */}
         <nav style={{ flex: 1, padding: "10px 0", overflowY: "auto" }}>
-          {renderNavGroups(false)}
+          {busca.trim()
+            ? renderNavGroups(false, groupsFiltrado, configFiltrado)
+            : renderNavGroups(false)}
         </nav>
 
         {/* User */}
@@ -306,8 +343,34 @@ export default function Sidebar({ open, onClose }) {
           <img src={LOGO_STICKFRAME} style={{ height: "30px", width: "auto", objectFit: "contain" }} alt="Logo StickFrame" />
           <button onClick={onClose} style={{ background: "none", border: "none", color: "#9aa0a8", fontSize: 22, cursor: "pointer", padding: 4 }}>✕</button>
         </div>
+        {/* Search mobile */}
+        <div style={{ padding: "8px 12px", borderBottom: "1px solid #1e2127" }}>
+          <div style={{ position: "relative" }}>
+            <input
+              value={busca} onChange={e => setBusca(e.target.value)}
+              placeholder="Buscar módulo…"
+              style={{
+                width: "100%", padding: "9px 10px 9px 32px",
+                background: "#1e2127", border: "1px solid #25282e",
+                borderRadius: 8, color: "#fff", fontSize: 13,
+                fontFamily: "inherit", outline: "none", boxSizing: "border-box",
+              }}
+            />
+            <div style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}>
+              <NavIcon name="Search" size={14} color="#4a5060" />
+            </div>
+            {busca && (
+              <button onClick={() => setBusca("")} style={{
+                position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)",
+                background: "none", border: "none", color: "#4a5060", cursor: "pointer", fontSize: 16, lineHeight: 1,
+              }}>✕</button>
+            )}
+          </div>
+        </div>
         <nav style={{ flex: 1, padding: "10px 0", overflowY: "auto" }}>
-          {renderNavGroups(true)}
+          {busca.trim()
+            ? renderNavGroups(true, groupsFiltrado, configFiltrado)
+            : renderNavGroups(true)}
         </nav>
         <div style={{ padding: "16px 16px calc(16px + env(safe-area-inset-bottom))", borderTop: "1px solid #25282e" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 10px", background: "rgba(255,255,255,0.04)", borderRadius: 10, marginBottom: 12 }}>
