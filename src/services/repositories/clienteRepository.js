@@ -6,7 +6,9 @@ export async function listarClientes() {
   return data;
 }
 export async function criarCliente(cliente) {
-  const { data, error } = await sb.from("clientes").insert({ ...cliente, empresa_id: getEmpresaId() }).select().single();
+  const empresaId = getEmpresaId();
+  if (!empresaId) throw new Error("Sessão expirada. Faça login novamente.");
+  const { data, error } = await sb.from("clientes").insert({ ...cliente, empresa_id: empresaId }).select().single();
   if (error) throw error;
   return data;
 }
@@ -20,7 +22,9 @@ export async function deletarCliente(id) {
   if (error) throw error;
 }
 export async function importarClientes(lista) {
-  const rows = lista.map((c) => ({ ...c, empresa_id: getEmpresaId() }));
+  const empresaId = getEmpresaId();
+  if (!empresaId) throw new Error("Sessão expirada. Faça login novamente.");
+  const rows = lista.map((c) => ({ ...c, empresa_id: empresaId }));
   const { data, error } = await sb.from("clientes").insert(rows).select();
   if (error) throw error;
   return data;
