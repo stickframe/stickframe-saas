@@ -983,14 +983,14 @@ export default function CalculadoraPublica() {
         </div>
 
         {/* SEO content — visível para crawlers, discreto visualmente */}
-        <section style={{ maxWidth: 860, margin: "0 auto", padding: "48px 24px 64px", color: "rgba(255,255,255,.45)", fontSize: 14, lineHeight: 1.8 }}>
-          <h2 style={{ fontSize: 20, fontWeight: 700, color: "rgba(255,255,255,.7)", marginBottom: 16 }}>Quanto custa construir uma casa em Steel Frame?</h2>
+        <section style={{ maxWidth: 860, margin: "0 auto", padding: "48px 24px 64px", color: "#8c847a", fontSize: 14, lineHeight: 1.8 }}>
+          <h2 style={{ fontSize: 20, fontWeight: 700, color: "#26231f", marginBottom: 16 }}>Quanto custa construir uma casa em Steel Frame?</h2>
           <p>O custo de construção em <strong>Steel Frame</strong> varia entre <strong>R$ 3.000 e R$ 6.000 por m²</strong>, dependendo do padrão de acabamento escolhido. Uma residência de <strong>120 m² no padrão médio</strong> fica em torno de R$ 420.000 a R$ 480.000 completa — incluindo estrutura LSF, fechamentos, cobertura, instalações e mão de obra especializada.</p>
-          <h3 style={{ fontSize: 16, fontWeight: 700, color: "rgba(255,255,255,.6)", margin: "24px 0 8px" }}>Steel Frame vs Alvenaria: qual é mais barato?</h3>
+          <h3 style={{ fontSize: 16, fontWeight: 700, color: "#26231f", margin: "24px 0 8px" }}>Steel Frame vs Alvenaria: qual é mais barato?</h3>
           <p>O Steel Frame costuma ter custo de materiais <strong>10 a 20% superior</strong> à alvenaria convencional, porém o prazo de obra é até <strong>40% menor</strong> — o que reduz o custo financeiro e libera a família para morar mais cedo. Obras em alvenaria de 120 m² levam de 12 a 18 meses; em Steel Frame, de <strong>5 a 8 meses</strong>.</p>
-          <h3 style={{ fontSize: 16, fontWeight: 700, color: "rgba(255,255,255,.6)", margin: "24px 0 8px" }}>O que está incluído no orçamento de Steel Frame?</h3>
+          <h3 style={{ fontSize: 16, fontWeight: 700, color: "#26231f", margin: "24px 0 8px" }}>O que está incluído no orçamento de Steel Frame?</h3>
           <p>Um orçamento completo contempla: <strong>estrutura metálica LSF</strong> (Light Steel Framing), painéis de OSB ou drywall, manta impermeabilizante, fechamentos internos e externos, cobertura com telha shingle ou metálica, esquadrias, instalações hidráulicas e elétricas, e mão de obra especializada. Use nossa calculadora acima para obter uma estimativa personalizada gratuitamente.</p>
-          <h3 style={{ fontSize: 16, fontWeight: 700, color: "rgba(255,255,255,.6)", margin: "24px 0 8px" }}>Perguntas frequentes sobre Steel Frame</h3>
+          <h3 style={{ fontSize: 16, fontWeight: 700, color: "#26231f", margin: "24px 0 8px" }}>Perguntas frequentes sobre Steel Frame</h3>
           <p><strong>Steel Frame é seguro e resistente?</strong> Sim. A estrutura de aço galvanizado tem vida útil superior a 50 anos, suporta ventos fortes e é antissísmica. É o sistema construtivo mais usado nos EUA, Canadá e Austrália.</p>
           <p style={{ marginTop: 12 }}><strong>Posso financiar uma casa em Steel Frame?</strong> Sim. O sistema é aceito pela Caixa Econômica Federal e pelos principais bancos, incluindo financiamento MCMV e crédito imobiliário convencional.</p>
           <p style={{ marginTop: 12 }}><strong>Como receber um orçamento personalizado?</strong> Preencha o simulador acima com a área e o padrão desejado. Nossa equipe entra em contato em até 24h com uma proposta detalhada, sem compromisso.</p>
