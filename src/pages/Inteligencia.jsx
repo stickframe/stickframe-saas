@@ -89,7 +89,7 @@ export default function Inteligencia() {
   return (
     <div>
       <div style={{ marginBottom: 24 }}>
-        <h2 style={{ fontSize: 22, fontWeight: 800 }}>Inteligência & Dados</h2>
+        <h2 style={{ fontSize: 22, fontWeight: 800 }}>StickBrain™</h2>
         <p style={{ color: C.muted, fontSize: 13, marginTop: 4 }}>Histórico e projeções baseadas no custo real de execução</p>
       </div>
 

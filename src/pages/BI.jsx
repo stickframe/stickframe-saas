@@ -328,7 +328,7 @@ export default function BI() {
     <div style={{ padding: "24px 28px", maxWidth: 1300, margin: "0 auto" }}>
       {/* Header */}
       <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 800, color: C.text, margin: 0 }}>Business Intelligence</h1>
+        <h1 style={{ fontSize: 22, fontWeight: 800, color: C.text, margin: 0 }}>StickPulse™</h1>
         <p style={{ fontSize: 13, color: C.muted, margin: "4px 0 0" }}>Comparativo de performance entre obras</p>
       </div>
 
