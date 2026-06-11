@@ -27,4 +27,15 @@ try {
 } catch (_) {}
 
 export const setEmpresaId = (id) => { _empresaId = id; };
-export const getEmpresaId = () => _empresaId;
+export const getEmpresaId = () => {
+  // Fallback: re-reads from localStorage if module-level var is null
+  if (!_empresaId) {
+    try {
+      const persisted = JSON.parse(localStorage.getItem("stickframe-storage") || "{}");
+      if (persisted?.state?.empresaId) {
+        _empresaId = persisted.state.empresaId;
+      }
+    } catch (_) {}
+  }
+  return _empresaId;
+};
