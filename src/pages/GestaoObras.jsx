@@ -18,6 +18,8 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import { AlertTriangle, BarChart2, ClipboardList, DollarSign, HardHat, Pencil, Ruler, Search, Trash2, TrendingUp } from "../components/ui/Icon";
 import { useToast } from "../hooks/useToast";
 import { C, FASES } from "../utils/constants";
+import { calcularStickScore } from "../utils/stickScore";
+import { StickScoreCard } from "../components/ui/StickScore";
 import { exportarObrasExcel } from "../utils/exportExcel";
 import useAppStore from "../store/useAppStore";
 import { useModuleLoad } from "../hooks/useModuleLoad";
@@ -1539,10 +1541,22 @@ export default function GestaoObras() {
                       </div>
                     </div>
 
+                    {/* StickScore™ */}
+                    {(() => {
+                      const finObra  = financeiro[obraId]?.lancamentos || [];
+                      const medObra  = [];
+                      const score    = calcularStickScore(obra, { financeiro: finObra, medicoes: medObra });
+                      return (
+                        <div style={{ marginBottom: 20 }}>
+                          <StickScoreCard score={score} obra={obra} />
+                        </div>
+                      );
+                    })()}
+
                     {/* Barra de progresso */}
                     <div style={{ marginBottom: 22 }}>
                       <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: C.muted, marginBottom: 5 }}>
-                        <span>Progresso</span>
+                        <span>Progresso físico</span>
                         <span style={{ color: C.text, fontWeight: 700 }}>{obra.progresso}%</span>
                       </div>
                       <div style={{ height: 8, background: C.dark, borderRadius: 4, overflow: "hidden" }}>
