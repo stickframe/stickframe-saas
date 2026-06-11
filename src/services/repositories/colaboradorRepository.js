@@ -1,7 +1,9 @@
 import { sb, getEmpresaId } from "../supabase";
 
 export async function listarColaboradores() {
-  const { data, error } = await sb.from("colaboradores").select("*").eq("empresa_id", getEmpresaId()).order("nome");
+  const empresaId = getEmpresaId();
+  if (!empresaId) throw new Error("Sessão sem empresa — recarregue a página.");
+  const { data, error } = await sb.from("colaboradores").select("*").eq("empresa_id", empresaId).order("nome");
   if (error) throw error;
   return data;
 }
