@@ -1,18 +1,19 @@
 import { useState, useEffect } from "react";
+import { Building2, FileText, Link, DollarSign, HardHat, BarChart2, LayoutDashboard, Receipt } from "lucide-react";
 
 const FEATURES = [
-  { icon: "📐", title: "Gestão de Obras", desc: "Cronograma, diário, medições e vistorias em um só painel. Acompanhe cada etapa em tempo real." },
-  { icon: "📄", title: "Orçamentos & Contratos", desc: "Gere propostas profissionais em minutos. Envie, aprove e controle contratos na plataforma." },
-  { icon: "🔗", title: "Calculadora White-label", desc: "Envie um link com sua marca para clientes calcularem o custo da obra online." },
-  { icon: "💰", title: "Financeiro Integrado", desc: "Controle receitas, despesas e fluxo de caixa de cada obra com relatórios automáticos." },
-  { icon: "👷", title: "Equipe & SST", desc: "Gerencie colaboradores, documentos e segurança do trabalho em um só lugar." },
-  { icon: "📊", title: "Analytics & BI", desc: "Dashboards e StickScore™ para tomar decisões com base em dados reais das suas obras." },
+  { Icon: Building2,    title: "Gestão de Obras",          desc: "Cronograma, diário, medições e vistorias em um só painel. Acompanhe cada etapa em tempo real." },
+  { Icon: FileText,     title: "Orçamentos & Contratos",   desc: "Gere propostas profissionais em minutos. Envie, aprove e controle contratos na plataforma." },
+  { Icon: Link,         title: "Calculadora White-label",  desc: "Envie um link com sua marca para clientes calcularem o custo da obra online." },
+  { Icon: DollarSign,   title: "Financeiro Integrado",     desc: "Controle receitas, despesas e fluxo de caixa de cada obra com relatórios automáticos." },
+  { Icon: HardHat,      title: "Equipe & SST",             desc: "Gerencie colaboradores, documentos e segurança do trabalho em um só lugar." },
+  { Icon: BarChart2,    title: "Analytics & BI",           desc: "Dashboards e StickScore™ para tomar decisões com base em dados reais das suas obras." },
 ];
 
 const PRINTS = [
-  { src: "/landing/prints/dashboard.webp",  label: "Dashboard",  icon: "📊" },
-  { src: "/landing/prints/financeiro.webp", label: "Financeiro", icon: "💰" },
-  { src: "/landing/prints/orcamentos.webp", label: "Orçamentos", icon: "📄" },
+  { src: "/landing/prints/dashboard.webp",  label: "Dashboard",  Icon: LayoutDashboard },
+  { src: "/landing/prints/financeiro.webp", label: "Financeiro", Icon: DollarSign },
+  { src: "/landing/prints/orcamentos.webp", label: "Orçamentos", Icon: Receipt },
 ];
 
 const PLANOS = [
@@ -111,7 +112,7 @@ const CSS = `
   .lp-feat-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; }
   .lp-feat { background: rgba(255,255,255,.045); border: 1px solid rgba(255,255,255,.1); border-radius: 16px; padding: 26px 26px 28px; transition: border-color .2s, transform .2s; }
   .lp-feat:hover { border-color: rgba(255,255,255,.25); transform: translateY(-3px); }
-  .lp-feat .f-ic { width: 44px; height: 44px; border-radius: 11px; background: rgba(152,25,21,.32); display: flex; align-items: center; justify-content: center; margin-bottom: 18px; font-size: 20px; }
+  .lp-feat .f-ic { width: 44px; height: 44px; border-radius: 11px; background: rgba(152,25,21,.32); color: #e8918c; display: flex; align-items: center; justify-content: center; margin-bottom: 18px; }
   .lp-feat h3 { font-size: 17.5px; font-weight: 800; color: #fff; margin-bottom: 7px; }
   .lp-feat p { font-size: 14px; color: #b8b1a6; line-height: 1.55; }
 
@@ -203,7 +204,7 @@ export default function LandingPage() {
               <a href="#funcionalidades">Funcionalidades</a>
               <a href="#produto">Produto</a>
               <a href="#precos">Preços</a>
-              <a href="/cadastro" className="lp-btn lp-btn-white" style={{ padding: "9px 18px", fontSize: 14 }}>
+              <a href="/cadastro" className="lp-btn lp-btn-brick" style={{ padding: "9px 18px", fontSize: 14 }}>
                 Começar grátis
               </a>
             </div>
@@ -240,11 +241,11 @@ export default function LandingPage() {
             <h2>Tudo que sua construtora precisa,<br />em um único lugar</h2>
           </div>
           <div className="lp-feat-grid">
-            {FEATURES.map((f) => (
-              <div className="lp-feat" key={f.title}>
-                <div className="f-ic">{f.icon}</div>
-                <h3>{f.title}</h3>
-                <p>{f.desc}</p>
+            {FEATURES.map(({ Icon, title, desc }) => (
+              <div className="lp-feat" key={title}>
+                <div className="f-ic"><Icon size={22} /></div>
+                <h3>{title}</h3>
+                <p>{desc}</p>
               </div>
             ))}
           </div>
@@ -272,7 +273,7 @@ export default function LandingPage() {
             {PRINTS.slice(1).map((p) => (
               <div className="lp-print-card" key={p.src}>
                 <img src={p.src} alt={p.label} />
-                <div className="lp-print-cap"><span>{p.icon}</span>{p.label}</div>
+                <div className="lp-print-cap"><p.Icon size={15} color="var(--brick)" />{p.label}</div>
               </div>
             ))}
           </div>
