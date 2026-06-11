@@ -29,7 +29,8 @@ import Select from "../components/ui/Select";
 import Badge from "../components/ui/Badge";
 import Modal from "../components/ui/Modal";
 import { listarQuantitativos } from "../services/repositories/quantitativoRepository";
-import { gerarRelatorioObra } from "../services/relatorioService";
+import { gerarRelatorioObra, gerarRelatorioStickScore } from "../services/relatorioService";
+import { carregarHistoricoScore } from "../utils/stickScore";
 import { printHtml } from "../utils/printHtml";
 
 const ICONE_TIPO  = { pdf: "📄", imagem: "🖼️", outro: "📎" };
@@ -606,6 +607,7 @@ export default function GestaoObras() {
   const loadHistoricoObra = useAppStore((s) => s.loadHistoricoObra);
   const financeiro        = useAppStore((s) => s.financeiro);
   const perfil            = useAppStore((s) => s.user?.perfil);
+  const plano             = useAppStore((s) => s.user?.plano);
   const userId            = useAppStore((s) => s.user?.uid);
   const userName          = useAppStore((s) => s.user?.nome);
   const empresaId         = useAppStore((s) => s.empresaId);
@@ -1549,6 +1551,25 @@ export default function GestaoObras() {
                       return (
                         <div style={{ marginBottom: 20 }}>
                           <StickScoreCard score={score} obra={obra} />
+                          {plano !== "free" && (
+                            <button
+                              onClick={() => {
+                                const hist = carregarHistoricoScore(empresaId, obra.id);
+                                gerarRelatorioStickScore(obra, score, hist);
+                              }}
+                              style={{
+                                marginTop: 10, width: "100%", padding: "9px 0",
+                                background: "transparent", border: "1px solid rgba(255,255,255,0.15)",
+                                borderRadius: 10, color: "rgba(255,255,255,0.55)",
+                                fontSize: 12, fontWeight: 600, cursor: "pointer",
+                                fontFamily: "inherit", transition: "all .15s",
+                              }}
+                              onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.color = "#fff"; }}
+                              onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.55)"; }}
+                            >
+                              📤 Compartilhar StickScore™
+                            </button>
+                          )}
                         </div>
                       );
                     })()}
