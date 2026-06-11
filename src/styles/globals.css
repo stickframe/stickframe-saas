@@ -110,6 +110,16 @@ select:focus {
   z-index: 500;
 }
 
+/* Mobile drawer — oculto no desktop, sempre montado para animação funcionar */
+.sidebar-mobile-drawer {
+  display: none;
+}
+@media (max-width: 768px) {
+  .sidebar-mobile-drawer {
+    display: flex !important;
+  }
+}
+
 /* ─── CSS Variables ─────────────────────────────────────────────────────── */
 :root {
   /* Marca */
