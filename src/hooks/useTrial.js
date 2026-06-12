@@ -2,9 +2,11 @@ import useAppStore from "../store/useAppStore";
 
 export function useTrial() {
   const trialEndsAt = useAppStore((s) => s.trialEndsAt);
-  const plano = useAppStore((s) => s.user?.plano);
+  // planoReal é o plano contratado; user.plano pode ser "pro" temporário
+  // durante o trial (acesso liberado), então o banner usa planoReal.
+  const planoReal = useAppStore((s) => s.planoReal ?? s.user?.plano);
 
-  if (!trialEndsAt || plano === "pro") return { isTrial: false, isExpired: false, daysLeft: null };
+  if (!trialEndsAt || planoReal === "pro") return { isTrial: false, isExpired: false, daysLeft: null };
 
   const now = new Date();
   const end = new Date(trialEndsAt);
