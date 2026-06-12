@@ -25,19 +25,19 @@ const PLANOS = [
     key: "essencial", nome: "Essencial", preco: "R$ 97", periodo: "/mês",
     desc: "Para começar com o pé direito",
     items: ["3 obras ativas", "2 usuários", "Orçamentos básicos", "Diário de obra", "Calculadora white-label"],
-    cta: "Começar agora", href: "/cadastro", hot: false,
+    cta: "Começar agora", href: "/cadastro?plan=essencial", hot: false,
   },
   {
     key: "profissional", nome: "Profissional", preco: "R$ 197", periodo: "/mês",
     desc: "Para construtoras em crescimento",
     items: ["Obras ilimitadas", "Até 10 usuários", "CRM de clientes", "Relatórios PDF", "Medições & contratos", "StickScore™", "Suporte prioritário"],
-    cta: "Assinar agora", href: "/cadastro", hot: true, tag: "Mais popular",
+    cta: "Assinar Profissional", href: "/cadastro?plan=profissional", hot: true, tag: "Mais popular",
   },
   {
     key: "construtora", nome: "Construtora+", preco: "Sob consulta", periodo: "",
     desc: "Para grandes construtoras",
     items: ["Tudo do Profissional", "Usuários ilimitados", "Multi-empresa", "White-label total", "SLA garantido", "Onboarding dedicado"],
-    cta: "Falar com consultor", href: "mailto:oi@stickframe.com.br?subject=Construtora%2B", hot: false,
+    cta: "Falar com consultor", href: "https://wa.me/551140038929?text=Ol%C3%A1%2C+tenho+interesse+no+plano+Construtora%2B+do+StickFrame", hot: false,
   },
 ];
 

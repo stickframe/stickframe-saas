@@ -1,21 +1,43 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { sb } from "../services/supabase";
 
 const LOGO = "https://gpzmglcxmbboxxogbibq.supabase.co/storage/v1/object/public/arquivos/logos/34ec14d3-02fc-4b0a-8040-67f7a739394d/logo.jpg?t=1780161932174";
 
+const PLAN_INFO = {
+  profissional: {
+    label: "Profissional",
+    preco: "R$ 197/mês",
+    cor: "#981915",
+    bg: "rgba(152,25,21,.12)",
+    border: "rgba(152,25,21,.35)",
+    msg: "Após criar sua conta você será direcionado para concluir a assinatura.",
+  },
+  essencial: {
+    label: "Essencial",
+    preco: "R$ 97/mês",
+    cor: "#3b6ea5",
+    bg: "rgba(59,110,165,.12)",
+    border: "rgba(59,110,165,.35)",
+    msg: "Após criar sua conta você poderá ativar o plano Essencial.",
+  },
+};
+
 export default function Cadastro() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const planKey = searchParams.get("plan");
+  const planInfo = PLAN_INFO[planKey] || null;
 
-  const [nomeEmpresa,  setNomeEmpresa]  = useState("");
-  const [nomeUsuario,  setNomeUsuario]  = useState("");
-  const [email,        setEmail]        = useState("");
-  const [senha,        setSenha]        = useState("");
-  const [confirmar,    setConfirmar]    = useState("");
-  const [show,         setShow]         = useState(false);
-  const [loading,      setLoading]      = useState(false);
-  const [erro,         setErro]         = useState("");
-  const [sucesso,      setSucesso]      = useState(false);
+  const [nomeEmpresa, setNomeEmpresa] = useState("");
+  const [nomeUsuario, setNomeUsuario] = useState("");
+  const [email,       setEmail]       = useState("");
+  const [senha,       setSenha]       = useState("");
+  const [confirmar,   setConfirmar]   = useState("");
+  const [show,        setShow]        = useState(false);
+  const [loading,     setLoading]     = useState(false);
+  const [erro,        setErro]        = useState("");
+  const [sucesso,     setSucesso]     = useState(false);
 
   async function handleCadastro(e) {
     e.preventDefault();
@@ -43,11 +65,14 @@ export default function Cadastro() {
     borderRadius: 8, color: "#fff", fontFamily: "inherit", outline: "none",
     boxSizing: "border-box",
   };
-  const labelStyle = { fontSize: 11, fontWeight: 700, letterSpacing: 1, color: "rgba(255,255,255,.5)", textTransform: "uppercase", marginBottom: 6, display: "block" };
+  const labelStyle = {
+    fontSize: 11, fontWeight: 700, letterSpacing: 1, color: "rgba(255,255,255,.5)",
+    textTransform: "uppercase", marginBottom: 6, display: "block",
+  };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#0e0505", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'DM Sans', sans-serif", padding: "24px 16px" }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700;800;900&display=swap');`}</style>
+    <div style={{ minHeight: "100vh", background: "#0e0505", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Hanken Grotesk', sans-serif", padding: "24px 16px" }}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700;800;900&display=swap');`}</style>
 
       <div style={{ width: "100%", maxWidth: 440 }}>
         {/* Logo */}
@@ -59,26 +84,76 @@ export default function Cadastro() {
           <div style={{ fontSize: 11, letterSpacing: 2, color: "rgba(255,255,255,.35)", marginTop: 4 }}>SISTEMA DE GESTÃO</div>
         </div>
 
+        {/* Plan banner */}
+        {planInfo && !sucesso && (
+          <div style={{
+            background: planInfo.bg, border: `1px solid ${planInfo.border}`,
+            borderRadius: 10, padding: "12px 16px", marginBottom: 16,
+            display: "flex", alignItems: "center", gap: 12,
+          }}>
+            <div style={{ width: 8, height: 8, borderRadius: "50%", background: planInfo.cor, flexShrink: 0 }} />
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 800, color: "#fff", marginBottom: 2 }}>
+                Plano {planInfo.label} — {planInfo.preco}
+              </div>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,.5)", lineHeight: 1.5 }}>
+                {planInfo.msg}
+              </div>
+            </div>
+          </div>
+        )}
+
         <div style={{ background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.1)", borderRadius: 16, padding: "32px 28px" }}>
           {sucesso ? (
             <div style={{ textAlign: "center" }}>
               <div style={{ fontSize: 48, marginBottom: 16 }}>✅</div>
-              <div style={{ fontSize: 20, fontWeight: 800, color: "#fff", marginBottom: 10 }}>Conta criada com sucesso!</div>
-              <div style={{ fontSize: 14, color: "rgba(255,255,255,.55)", marginBottom: 28, lineHeight: 1.6 }}>
-                Sua empresa foi cadastrada no plano <strong style={{ color: "#fff" }}>Free</strong>.<br />
-                Agora é só entrar no sistema.
+              <div style={{ fontSize: 20, fontWeight: 800, color: "#fff", marginBottom: 10 }}>
+                Conta criada com sucesso!
               </div>
-              <button
-                onClick={() => navigate("/login")}
-                style={{ width: "100%", background: "linear-gradient(135deg,#981915,#7d1411)", color: "#fff", border: "none", borderRadius: 10, padding: 15, fontSize: 16, fontWeight: 800, fontFamily: "inherit", cursor: "pointer" }}
-              >
-                Entrar no sistema →
-              </button>
+              {planInfo ? (
+                <>
+                  <div style={{ fontSize: 14, color: "rgba(255,255,255,.55)", marginBottom: 28, lineHeight: 1.6 }}>
+                    Sua empresa está pronta. Agora conclua a assinatura do plano{" "}
+                    <strong style={{ color: planInfo.cor }}>{planInfo.label}</strong>.
+                  </div>
+                  <button
+                    onClick={() => navigate("/pricing")}
+                    style={{ width: "100%", background: "linear-gradient(135deg,#981915,#7d1411)", color: "#fff", border: "none", borderRadius: 10, padding: 15, fontSize: 16, fontWeight: 800, fontFamily: "inherit", cursor: "pointer", marginBottom: 10 }}
+                  >
+                    Ativar plano {planInfo.label} →
+                  </button>
+                  <button
+                    onClick={() => navigate("/login")}
+                    style={{ width: "100%", background: "transparent", color: "rgba(255,255,255,.4)", border: "1px solid rgba(255,255,255,.1)", borderRadius: 10, padding: 12, fontSize: 13, fontWeight: 600, fontFamily: "inherit", cursor: "pointer" }}
+                  >
+                    Entrar primeiro e ativar depois
+                  </button>
+                </>
+              ) : (
+                <>
+                  <div style={{ fontSize: 14, color: "rgba(255,255,255,.55)", marginBottom: 28, lineHeight: 1.6 }}>
+                    Sua empresa foi cadastrada no plano <strong style={{ color: "#fff" }}>Free</strong>.<br />
+                    Agora é só entrar no sistema.
+                  </div>
+                  <button
+                    onClick={() => navigate("/login")}
+                    style={{ width: "100%", background: "linear-gradient(135deg,#981915,#7d1411)", color: "#fff", border: "none", borderRadius: 10, padding: 15, fontSize: 16, fontWeight: 800, fontFamily: "inherit", cursor: "pointer" }}
+                  >
+                    Entrar no sistema →
+                  </button>
+                </>
+              )}
             </div>
           ) : (
             <>
-              <div style={{ fontSize: 20, fontWeight: 800, color: "#fff", marginBottom: 6 }}>Criar conta gratuita</div>
-              <div style={{ fontSize: 13, color: "rgba(255,255,255,.45)", marginBottom: 24 }}>Plano Free · 2 obras ativas · sem cartão</div>
+              <div style={{ fontSize: 20, fontWeight: 800, color: "#fff", marginBottom: 6 }}>
+                {planInfo ? `Criar conta — Plano ${planInfo.label}` : "Criar conta gratuita"}
+              </div>
+              <div style={{ fontSize: 13, color: "rgba(255,255,255,.45)", marginBottom: 24 }}>
+                {planInfo
+                  ? `${planInfo.preco} · cancele quando quiser`
+                  : "Plano Free · 2 obras ativas · sem cartão"}
+              </div>
 
               {erro && (
                 <div style={{ background: "rgba(220,38,38,.15)", border: "1px solid rgba(220,38,38,.4)", borderRadius: 8, padding: "10px 14px", fontSize: 13, color: "#ff8a80", marginBottom: 16 }}>
@@ -118,7 +193,7 @@ export default function Cadastro() {
                   disabled={loading || !nomeEmpresa || !nomeUsuario || !email || !senha || !confirmar}
                   style={{ width: "100%", background: loading ? "#444" : "linear-gradient(135deg,#981915,#7d1411)", color: "#fff", border: "none", borderRadius: 10, padding: 15, fontSize: 16, fontWeight: 800, fontFamily: "inherit", cursor: loading ? "not-allowed" : "pointer", boxShadow: "0 4px 20px rgba(152,25,21,.4)" }}
                 >
-                  {loading ? "Criando conta…" : "Criar conta gratuita →"}
+                  {loading ? "Criando conta…" : planInfo ? `Criar conta e assinar ${planInfo.label} →` : "Criar conta gratuita →"}
                 </button>
               </form>
 
