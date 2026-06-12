@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { sb } from "../services/supabase";
+import { salvarOrigemLead, obterOrigemLead } from "../utils/leadOrigem";
 
 const LOGO = "https://gpzmglcxmbboxxogbibq.supabase.co/storage/v1/object/public/arquivos/logos/34ec14d3-02fc-4b0a-8040-67f7a739394d/logo.jpg?t=1780161932174";
 
@@ -29,6 +30,8 @@ export default function Cadastro() {
   const planKey = searchParams.get("plan");
   const planInfo = PLAN_INFO[planKey] || null;
 
+  useEffect(() => { salvarOrigemLead(); }, []);
+
   const [nomeEmpresa, setNomeEmpresa] = useState("");
   const [nomeUsuario, setNomeUsuario] = useState("");
   const [email,       setEmail]       = useState("");
@@ -47,7 +50,7 @@ export default function Cadastro() {
     setLoading(true);
     try {
       const { data, error } = await sb.functions.invoke("cadastrar-empresa", {
-        body: { nomeEmpresa, nomeUsuario, email: email.trim().toLowerCase(), senha },
+        body: { nomeEmpresa, nomeUsuario, email: email.trim().toLowerCase(), senha, leadOrigem: obterOrigemLead() },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);

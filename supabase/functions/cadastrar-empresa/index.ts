@@ -9,7 +9,7 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    const { nomeEmpresa, nomeUsuario, email, senha } = await req.json();
+    const { nomeEmpresa, nomeUsuario, email, senha, leadOrigem } = await req.json();
 
     if (!nomeEmpresa || !nomeUsuario || !email || !senha) {
       throw new Error("Preencha todos os campos.");
@@ -28,7 +28,13 @@ Deno.serve(async (req) => {
     const trialEndsAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
     const { data: empresa, error: empError } = await admin
       .from("empresas")
-      .insert({ nome: nomeEmpresa, plano: "free", limite_obras: 2, trial_ends_at: trialEndsAt })
+      .insert({
+        nome: nomeEmpresa,
+        plano: "free",
+        limite_obras: 2,
+        trial_ends_at: trialEndsAt,
+        lead_origem: typeof leadOrigem === "string" ? leadOrigem.slice(0, 60) : null,
+      })
       .select("id")
       .single();
     if (empError) throw empError;
