@@ -178,10 +178,12 @@ function RequireAuth({ children }) {
   return <Navigate to="/login" replace />;
 }
 
+const ADMIN_EMAILS = ["andrequeirozcandido@gmail.com", "andre@stickframe.com.br"];
+
 function RequireAdmin({ children }) {
   const user = useAppStore((s) => s.user);
   if (!user) return <Navigate to="/login" replace />;
-  if (user.email !== "andrequeirozcandido@gmail.com") return <Navigate to="/" replace />;
+  if (!ADMIN_EMAILS.includes(user.email)) return <Navigate to="/" replace />;
   return children;
 }
 
