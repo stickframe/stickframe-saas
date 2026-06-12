@@ -117,10 +117,10 @@ export default function Cadastro() {
                     <strong style={{ color: planInfo.cor }}>{planInfo.label}</strong>.
                   </div>
                   <button
-                    onClick={() => navigate("/pricing")}
+                    onClick={() => navigate("/checkout?plan=" + planKey)}
                     style={{ width: "100%", background: "linear-gradient(135deg,#981915,#7d1411)", color: "#fff", border: "none", borderRadius: 10, padding: 15, fontSize: 16, fontWeight: 800, fontFamily: "inherit", cursor: "pointer", marginBottom: 10 }}
                   >
-                    Ativar plano {planInfo.label} →
+                    Ativar trial gratuito de 14 dias →
                   </button>
                   <button
                     onClick={() => navigate("/login")}
