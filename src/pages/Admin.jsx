@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { sb } from "../services/supabase";
 import { C } from "../utils/constants";
 
-const ADMIN_EMAIL = "andrequeirozcandido@gmail.com";
+const ADMIN_EMAIL = "andre@stickframe.com.br";
 
 function Badge({ children, color }) {
   return (
