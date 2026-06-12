@@ -23,13 +23,26 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    // Cria o usuário de autenticação
+    // Cria a empresa PRIMEIRO, para passar empresa_id nos metadados do auth user
+    // (o trigger handle_new_user usa esses metadados para criar public.usuarios)
+    const trialEndsAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
+    const { data: empresa, error: empError } = await admin
+      .from("empresas")
+      .insert({ nome: nomeEmpresa, plano: "free", limite_obras: 2, trial_ends_at: trialEndsAt })
+      .select("id")
+      .single();
+    if (empError) throw empError;
+
+    // Cria o usuário de autenticação com metadados completos
     const { data: authData, error: authError } = await admin.auth.admin.createUser({
       email,
       password: senha,
       email_confirm: true,
+      user_metadata: { nome: nomeUsuario, perfil: "diretor", empresa_id: empresa.id },
     });
     if (authError) {
+      // Auth falhou — remove a empresa órfã criada acima
+      await admin.from("empresas").delete().eq("id", empresa.id);
       if (
         authError.message.includes("already registered") ||
         authError.message.includes("already been registered") ||
@@ -42,29 +55,16 @@ Deno.serve(async (req) => {
 
     const uid = authData.user.id;
 
-    // Cria a empresa no plano free com trial de 14 dias
-    const trialEndsAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
-    const { data: empresa, error: empError } = await admin
-      .from("empresas")
-      .insert({ nome: nomeEmpresa, plano: "free", limite_obras: 2, trial_ends_at: trialEndsAt })
-      .select("id")
-      .single();
-    if (empError) throw empError;
-
-    // Cria o usuário como diretor da empresa
-    const { error: usrError } = await admin.from("usuarios").insert({
+    // Garante a linha em public.usuarios (o trigger já deve ter criado via
+    // metadados; o upsert cobre o caso de o trigger não existir/falhar)
+    const { error: usrError } = await admin.from("usuarios").upsert({
       id: uid,
       nome: nomeUsuario,
       perfil: "diretor",
       empresa_id: empresa.id,
       ativo: true,
-    });
-    if (usrError) {
-      if (usrError.message.includes("duplicate key") || usrError.code === "23505") {
-        throw new Error("Este e-mail já está cadastrado.");
-      }
-      throw usrError;
-    }
+    }, { onConflict: "id" });
+    if (usrError) throw usrError;
 
     // Envia email de boas-vindas
     const resendKey = Deno.env.get("RESEND_API_KEY");
