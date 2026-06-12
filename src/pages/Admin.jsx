@@ -130,7 +130,14 @@ export default function Admin() {
     </div>
   );
 
-  const { empresas = [], totals = {}, crescimento = {}, funil = {}, origens = {}, asaas = null } = data || {};
+  const { empresas = [], totals = {}, crescimento = {}, funil = {}, origens = {}, asaas = null, proStats = {} } = data || {};
+
+  const ESTADO_BADGE = {
+    pago:         { label: "Paga ✓",        bg: "#2e9e5b18", color: "#2e9e5b" },
+    trial:        { label: "Trial ⏳",       bg: "#f59e0b18", color: "#b45309" },
+    inadimplente: { label: "Vencida ⚠️",     bg: "#dc262618", color: "#dc2626" },
+    aguardando:   { label: "Aguardando",     bg: "#3b6ea518", color: "#3b6ea5" },
+  };
 
   const fmtBRL = (v) => `R$ ${(v ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
   const funilEtapas = [
@@ -182,8 +189,10 @@ export default function Admin() {
         <StatCard accent="#2e9e5b" label="Últimos 7 dias" value={crescimento.semana ?? 0} />
         <StatCard accent="#2e9e5b" label="Últimos 30 dias" value={crescimento.mes ?? 0} />
         <StatCard accent="#2e9e5b" label="Free" value={totals.free ?? 0} color={C.muted} />
-        <StatCard accent="#2e9e5b" label="Pro" value={totals.pro ?? 0} color={C.red} />
-        <StatCard accent="#2e9e5b" label="Trials ativos" value={crescimento.trials_ativos ?? 0} />
+        <StatCard accent="#2e9e5b" label="PRO pagos" value={proStats.pagos ?? 0} color="#2e9e5b" />
+        <StatCard accent="#2e9e5b" label="PRO em trial" value={proStats.trial ?? 0} color="#b45309" />
+        <StatCard accent="#2e9e5b" label="PRO inadimplentes" value={proStats.inadimplentes ?? 0} color={(proStats.inadimplentes ?? 0) > 0 ? C.danger : C.muted} />
+        <StatCard accent="#2e9e5b" label="Trials free ativos" value={crescimento.trials_ativos ?? 0} />
       </div>
 
       {/* Gráfico de evolução */}
@@ -281,7 +290,7 @@ export default function Admin() {
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
             <thead>
               <tr style={{ background: C.bg }}>
-                {["Nome", "Contato", "Plano", "Health", "Trial", "Cadastro", "Obras Ativas", "Usuários"].map((h) => (
+                {["Nome", "Contato", "Plano", "Assinatura", "Health", "Trial", "Cadastro", "Obras Ativas", "Usuários"].map((h) => (
                   <th key={h} style={{
                     padding: "10px 16px", textAlign: "left",
                     fontWeight: 600, fontSize: 12, color: C.muted,
@@ -295,7 +304,7 @@ export default function Admin() {
             <tbody>
               {empresas.length === 0 ? (
                 <tr>
-                  <td colSpan={8} style={{ padding: 32, textAlign: "center", color: C.muted }}>
+                  <td colSpan={9} style={{ padding: 32, textAlign: "center", color: C.muted }}>
                     Nenhuma empresa encontrada
                   </td>
                 </tr>
@@ -315,6 +324,16 @@ export default function Admin() {
                   </td>
                   <td style={{ padding: "12px 16px" }}>
                     <Badge color={e.plano}>{e.plano || "—"}</Badge>
+                  </td>
+                  <td style={{ padding: "12px 16px", whiteSpace: "nowrap" }}>
+                    {(() => {
+                      const b = ESTADO_BADGE[e.estado_assinatura];
+                      return b ? (
+                        <span style={{ background: b.bg, color: b.color, padding: "3px 10px", borderRadius: 12, fontSize: 12, fontWeight: 700 }}>
+                          {b.label}
+                        </span>
+                      ) : <span style={{ color: C.muted }}>—</span>;
+                    })()}
                   </td>
                   <td style={{ padding: "12px 16px", whiteSpace: "nowrap" }}>
                     <span style={{
