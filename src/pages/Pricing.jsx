@@ -22,7 +22,7 @@ const PLANOS = [
     ],
     nao: ["Obras ilimitadas", "Múltiplos usuários", "Relatórios PDF", "CRM de clientes"],
     cta: "Começar grátis",
-    ctaHref: "/cadastro",
+    ctaHref: "/cadastro?plan=free",
     destaque: false,
   },
   {
@@ -47,8 +47,8 @@ const PLANOS = [
       "Suporte prioritário",
     ],
     nao: [],
-    cta: "Assinar agora",
-    ctaHref: "/cadastro",
+    cta: "Assinar Profissional",
+    ctaHref: "/cadastro?plan=profissional",
     destaque: true,
   },
   {
@@ -71,7 +71,7 @@ const PLANOS = [
     ],
     nao: [],
     cta: "Falar com consultor",
-    ctaHref: "mailto:contato@stickframe.com.br?subject=Enterprise",
+    ctaHref: "https://wa.me/551140038929?text=Ol%C3%A1%2C+tenho+interesse+no+plano+Enterprise+do+StickFrame",
     destaque: false,
   },
 ];
