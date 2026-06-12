@@ -6,7 +6,10 @@ const corsHeaders = {
 };
 
 const ASAAS_BASE = "https://www.asaas.com/api/v3";
-const PLANO_VALOR = 197;
+const PLANOS: Record<string, { label: string; valor: number }> = {
+  profissional: { label: "Profissional", valor: 197 },
+  essencial:    { label: "Essencial",    valor: 97 },
+};
 
 function addDays(days: number): string {
   const d = new Date();
@@ -48,8 +51,9 @@ Deno.serve(async (req) => {
       .from("empresas").select("*").eq("id", usuario.empresa_id).single();
     if (!empresa) return json({ error: "Empresa não encontrada" }, 404);
 
-    const { nome, email, cpfCnpj, trial } = await req.json();
+    const { nome, email, cpfCnpj, trial, plano } = await req.json();
     const useTrial = trial === true;
+    const planoInfo = PLANOS[plano as string] || PLANOS.profissional;
     const apiKey = Deno.env.get("ASAAS_API_KEY") ?? "";
 
     // 1. Criar ou reutilizar cliente no Asaas
@@ -80,10 +84,10 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         customer: customerId,
         billingType: "UNDEFINED", // cliente escolhe PIX/boleto/cartão na primeira cobrança
-        value: PLANO_VALOR,
+        value: planoInfo.valor,
         nextDueDate,
         cycle: "MONTHLY",
-        description: "StickFrame Profissional — Assinatura Mensal",
+        description: `StickFrame ${planoInfo.label} — Assinatura Mensal`,
         externalReference: empresa.id,
       }),
     });
