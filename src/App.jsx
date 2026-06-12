@@ -10,6 +10,7 @@ import LoginScreen from "./pages/LoginScreen";
 import Cadastro from "./pages/Cadastro";
 import Pricing from "./pages/Pricing";
 import LandingPage from "./pages/LandingPage";
+import CheckoutTrial from "./pages/CheckoutTrial";
 import LoadingScreen from "./components/ui/LoadingScreen";
 import { PageSkeleton } from "./components/ui/Skeleton";
 import { ToastProvider, useToast } from "./components/ui/Toast";
@@ -231,6 +232,7 @@ export default function App() {
           <Route path="/login"                element={<LoginScreen />} />
           <Route path="/cadastro"             element={<Cadastro />} />
           <Route path="/pricing"              element={<Pricing />} />
+          <Route path="/checkout"             element={<CheckoutTrial />} />
           <Route path="/*" element={
             <RequireAuth>
               <AuthenticatedApp />
