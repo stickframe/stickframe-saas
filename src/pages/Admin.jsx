@@ -22,19 +22,61 @@ function Badge({ children, color }) {
   );
 }
 
-function StatCard({ label, value, color }) {
+function StatCard({ label, value, color, accent, big }) {
   return (
     <div style={{
       background: C.surface,
       border: `1px solid ${C.border}`,
+      borderTop: accent ? `3px solid ${accent}` : `1px solid ${C.border}`,
       borderRadius: 10,
-      padding: "18px 24px",
-      minWidth: 120,
+      padding: big ? "22px 28px" : "18px 24px",
+      minWidth: big ? 180 : 120,
+      flex: big ? "1 1 180px" : undefined,
       boxShadow: C.shadow,
     }}>
-      <div style={{ fontSize: 28, fontWeight: 700, color: color || C.text }}>{value}</div>
+      <div style={{ fontSize: big ? 34 : 28, fontWeight: 700, color: color || C.text }}>{value}</div>
       <div style={{ fontSize: 13, color: C.muted, marginTop: 2 }}>{label}</div>
     </div>
+  );
+}
+
+// Gráfico de cadastros por dia (últimos 30 dias), derivado de created_at
+function CadastrosChart({ empresas }) {
+  const dias = [];
+  const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(hoje.getTime() - i * 86400_000);
+    dias.push({ key: d.toISOString().slice(0, 10), label: d.getDate(), count: 0 });
+  }
+  const idx = Object.fromEntries(dias.map((d, i) => [d.key, i]));
+  for (const e of empresas) {
+    const k = (e.created_at || "").slice(0, 10);
+    if (k in idx) dias[idx[k]].count++;
+  }
+  const max = Math.max(1, ...dias.map((d) => d.count));
+  const W = 600, H = 110, pad = 4;
+  const bw = W / dias.length;
+
+  return (
+    <svg viewBox={`0 0 ${W} ${H + 18}`} style={{ width: "100%", height: "auto", display: "block" }}>
+      {dias.map((d, i) => {
+        const h = (d.count / max) * (H - pad);
+        return (
+          <g key={d.key}>
+            <rect
+              x={i * bw + 2} y={H - h} width={bw - 4} height={Math.max(h, 2)}
+              rx={2} fill={d.count > 0 ? "#2e9e5b" : C.border}
+            />
+            {d.count > 0 && (
+              <text x={i * bw + bw / 2} y={H - h - 5} textAnchor="middle" fontSize="9" fill="#2e9e5b" fontWeight="700">{d.count}</text>
+            )}
+            {i % 5 === 0 && (
+              <text x={i * bw + bw / 2} y={H + 13} textAnchor="middle" fontSize="8" fill={C.muted}>{d.label}</text>
+            )}
+          </g>
+        );
+      })}
+    </svg>
   );
 }
 
@@ -125,30 +167,66 @@ export default function Admin() {
         </p>
       </div>
 
-      {/* Crescimento */}
-      {sectionTitle("Crescimento")}
+      {/* Topo CEO */}
       <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginBottom: 8 }}>
-        <StatCard label="Cadastros hoje" value={crescimento.hoje ?? 0} />
-        <StatCard label="Últimos 7 dias" value={crescimento.semana ?? 0} />
-        <StatCard label="Últimos 30 dias" value={crescimento.mes ?? 0} />
-        <StatCard label="Total de empresas" value={totals.total ?? 0} />
-        <StatCard label="Free" value={totals.free ?? 0} color={C.muted} />
-        <StatCard label="Pro" value={totals.pro ?? 0} color={C.red} />
-        <StatCard label="Conversão Free → Pro" value={`${crescimento.conversao ?? 0}%`} color="#2e9e5b" />
-        <StatCard label="Trials ativos" value={crescimento.trials_ativos ?? 0} color="#b45309" />
-        <StatCard label="Trials vencendo (7d)" value={crescimento.trials_vencendo_7d ?? 0} color="#b45309" />
-        <StatCard label="Trials expirados" value={crescimento.trials_expirados ?? 0} color={C.danger} />
+        <StatCard big accent="#2e9e5b" label="MRR" value={fmtBRL(asaas?.mrr)} color="#2e9e5b" />
+        <StatCard big accent={C.red} label="Empresas" value={totals.total ?? 0} />
+        <StatCard big accent="#3b6ea5" label="Conversão Free → Pro" value={`${crescimento.conversao ?? 0}%`} />
+        <StatCard big accent="#b45309" label="Inadimplentes" value={asaas?.inadimplentes ?? 0} color={(asaas?.inadimplentes ?? 0) > 0 ? C.danger : C.text} />
       </div>
 
-      {/* Receita (Asaas) */}
+      {/* 🟢 Crescimento */}
+      {sectionTitle("🟢 Crescimento")}
+      <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginBottom: 8 }}>
+        <StatCard accent="#2e9e5b" label="Cadastros hoje" value={crescimento.hoje ?? 0} />
+        <StatCard accent="#2e9e5b" label="Últimos 7 dias" value={crescimento.semana ?? 0} />
+        <StatCard accent="#2e9e5b" label="Últimos 30 dias" value={crescimento.mes ?? 0} />
+        <StatCard accent="#2e9e5b" label="Free" value={totals.free ?? 0} color={C.muted} />
+        <StatCard accent="#2e9e5b" label="Pro" value={totals.pro ?? 0} color={C.red} />
+        <StatCard accent="#2e9e5b" label="Trials ativos" value={crescimento.trials_ativos ?? 0} />
+      </div>
+
+      {/* Gráfico de evolução */}
+      <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12, padding: "18px 20px", boxShadow: C.shadow, marginTop: 16 }}>
+        <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 12 }}>Cadastros por dia — últimos 30 dias</div>
+        <CadastrosChart empresas={empresas} />
+      </div>
+
+      {/* 🔵 Receita (Asaas) */}
       {asaas && (
         <>
-          {sectionTitle("Receita · Asaas")}
+          {sectionTitle("🔵 Receita · Asaas")}
           <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginBottom: 8 }}>
-            <StatCard label="MRR" value={fmtBRL(asaas.mrr)} color="#2e9e5b" />
-            <StatCard label="ARR projetado" value={fmtBRL(asaas.arr)} />
-            <StatCard label="Assinaturas ativas" value={asaas.pagantes} />
-            <StatCard label="Inadimplentes" value={asaas.inadimplentes} color={asaas.inadimplentes > 0 ? C.danger : C.muted} />
+            <StatCard accent="#3b6ea5" label="MRR" value={fmtBRL(asaas.mrr)} color="#2e9e5b" />
+            <StatCard accent="#3b6ea5" label="ARR projetado" value={fmtBRL(asaas.arr)} />
+            <StatCard accent="#3b6ea5" label="Assinaturas ativas" value={asaas.pagantes} />
+          </div>
+        </>
+      )}
+
+      {/* 🟠 Atenção */}
+      {sectionTitle("🟠 Atenção")}
+      <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginBottom: 8 }}>
+        <StatCard accent="#b45309" label="Inadimplentes" value={asaas?.inadimplentes ?? 0} color={(asaas?.inadimplentes ?? 0) > 0 ? C.danger : C.muted} />
+        <StatCard accent="#b45309" label="Trials vencendo (7d)" value={crescimento.trials_vencendo_7d ?? 0} color="#b45309" />
+        <StatCard accent="#b45309" label="Trials expirados" value={crescimento.trials_expirados ?? 0} color={C.danger} />
+        <StatCard accent="#b45309" label="Empresas em risco" value={empresas.filter((e) => e.health < 30).length} color={C.danger} />
+      </div>
+
+      {/* Empresas em risco */}
+      {empresas.some((e) => e.health < 30) && (
+        <>
+          {sectionTitle("⚠️ Empresas em risco de abandono")}
+          <div style={{ background: C.surface, border: `1px solid ${C.danger}40`, borderRadius: 12, padding: "14px 20px", boxShadow: C.shadow }}>
+            {empresas.filter((e) => e.health < 30).sort((a, b) => a.health - b.health).map((e) => (
+              <div key={e.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: `1px solid ${C.border}` }}>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 600 }}>{e.nome}</div>
+                  <div style={{ fontSize: 12, color: C.muted }}>{e.contato_nome || "—"} · {e.contato_email || "sem e-mail"}</div>
+                </div>
+                <span style={{ fontWeight: 800, fontSize: 16, color: C.danger }}>{e.health}</span>
+              </div>
+            ))}
           </div>
         </>
       )}
