@@ -48,13 +48,13 @@ export default function CheckoutTrial() {
   useEffect(() => {
     sb.auth.getSession().then(({ data }) => {
       if (!data.session) {
-        navigate("/cadastro?plan=profissional");
+        navigate(`/cadastro?plan=${planKey}`);
       } else {
         setSession(data.session);
         setChecking(false);
       }
     });
-  }, [navigate]);
+  }, [navigate, planKey]);
 
   async function handleSubmit(e) {
     e.preventDefault();

@@ -4,32 +4,31 @@ const LOGO = "https://gpzmglcxmbboxxogbibq.supabase.co/storage/v1/object/public/
 
 const PLANOS = [
   {
-    key: "free",
-    nome: "Free",
-    preco: "R$ 0",
-    periodo: "para sempre",
-    desc: "Para testar e começar",
-    cor: "rgba(255,255,255,.5)",
-    border: "rgba(255,255,255,.12)",
-    bg: "rgba(255,255,255,.04)",
+    key: "essencial",
+    nome: "Essencial",
+    preco: "R$ 97",
+    periodo: "por mês",
+    desc: "Pra começar com o pé direito",
+    cor: "#3b6ea5",
+    border: "rgba(59,110,165,.4)",
+    bg: "rgba(59,110,165,.06)",
     items: [
-      "2 obras ativas",
-      "1 usuário",
+      "3 obras ativas",
+      "2 usuários",
+      "Orçamentos e diário de obra",
       "Calculadora white-label",
-      "Diário de obra",
-      "Orçamentos básicos",
       "Suporte por e-mail",
     ],
-    nao: ["Obras ilimitadas", "Múltiplos usuários", "Relatórios PDF", "CRM de clientes"],
-    cta: "Começar grátis",
-    ctaHref: "/cadastro?plan=free",
+    nao: ["Obras ilimitadas", "CRM de clientes", "Relatórios PDF", "StickScore™"],
+    cta: "Assinar Essencial",
+    checkoutPlan: "essencial",
     destaque: false,
   },
   {
-    key: "pro",
-    nome: "Pro",
-    preco: "R$ 297",
-    periodo: "por mês",
+    key: "profissional",
+    nome: "Profissional",
+    preco: "R$ 197",
+    periodo: "por mês · 14 dias grátis",
     desc: "Para construtoras em crescimento",
     cor: "#981915",
     border: "#981915",
@@ -43,41 +42,53 @@ const PLANOS = [
       "CRM de clientes",
       "Relatórios PDF",
       "Medições e contratos",
-      "Integrações API",
-      "Suporte prioritário",
+      "StickScore™ — Alerta de Estouro",
+      "Suporte prioritário no WhatsApp",
     ],
     nao: [],
-    cta: "Assinar Profissional",
-    ctaHref: "/cadastro?plan=profissional",
+    cta: "Testar 14 dias grátis →",
+    checkoutPlan: "profissional",
     destaque: true,
   },
   {
-    key: "enterprise",
-    nome: "Enterprise",
+    key: "construtora",
+    nome: "Construtora+",
     preco: "Sob consulta",
     periodo: "",
-    desc: "Para grandes construtoras",
+    desc: "Pra grandes operações",
     cor: "#6d557e",
     border: "rgba(109,85,126,.3)",
     bg: "rgba(109,85,126,.05)",
     items: [
-      "Tudo do Pro",
+      "Tudo do Profissional",
       "Usuários ilimitados",
       "Multi-empresa",
       "Marca própria (white-label total)",
       "Integração ERP",
       "SLA garantido",
-      "Gerente de conta dedicado",
+      "Onboarding com engenheiro",
     ],
     nao: [],
-    cta: "Falar com consultor",
-    ctaHref: "https://wa.me/551140038929?text=Ol%C3%A1%2C+tenho+interesse+no+plano+Enterprise+do+StickFrame",
+    cta: "Falar com especialista",
+    ctaHref: "https://wa.me/551140038929?text=Ol%C3%A1%2C+tenho+interesse+no+plano+Construtora%2B+do+StickFrame",
     destaque: false,
   },
 ];
 
 export default function Pricing() {
   const navigate = useNavigate();
+
+  // Logado → /checkout (ativa trial/assinatura na conta atual).
+  // Deslogado → /cadastro com o plano na URL.
+  async function irParaPlano(planKey) {
+    const { sb } = await import("../services/supabase");
+    const { data } = await sb.auth.getSession();
+    if (data?.session) {
+      navigate(`/checkout?plan=${planKey}`);
+    } else {
+      navigate(`/cadastro?plan=${planKey}`);
+    }
+  }
 
   return (
     <div style={{ minHeight: "100vh", background: "#1c1b20", fontFamily: "'Hanken Grotesk', sans-serif", color: "#ece7df" }}>
@@ -133,7 +144,7 @@ export default function Pricing() {
 
             <a
               href={p.ctaHref || "#"}
-              onClick={!p.ctaHref ? (e) => { e.preventDefault(); navigate("/cadastro"); } : undefined}
+              onClick={p.checkoutPlan ? (e) => { e.preventDefault(); irParaPlano(p.checkoutPlan); } : undefined}
               style={{
                 display: "block", textAlign: "center", padding: "12px 0",
                 background: p.destaque ? "#981915" : "transparent",
