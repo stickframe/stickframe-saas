@@ -33,7 +33,7 @@ Deno.serve(async (req) => {
     // Busca todas as empresas
     const { data: empresas, error: errEmpresas } = await supabaseAdmin
       .from("empresas")
-      .select("id, nome, plano, created_at, limite_obras, trial_ends_at, lead_origem")
+      .select("id, nome, plano, created_at, limite_obras, trial_ends_at, lead_origem, asaas_customer_id")
       .order("created_at", { ascending: false });
     if (errEmpresas) throw errEmpresas;
 
@@ -148,37 +148,78 @@ Deno.serve(async (req) => {
       origens[o] = (origens[o] ?? 0) + 1;
     }
 
-    // ── MRR via Asaas ────────────────────────────────────────────────────────
+    // ── MRR + estado das assinaturas via Asaas ───────────────────────────────
     let asaas: {
       mrr: number; arr: number; pagantes: number; inadimplentes: number;
     } | null = null;
+    // Estado por empresa: trial | pago | inadimplente | aguardando | null
+    const estadoMap: Record<string, { assinatura: string; cobranca: string }> = {};
     const asaasKey = Deno.env.get("ASAAS_API_KEY");
     if (asaasKey) {
       try {
         const headers = { "access_token": asaasKey };
-        const [subsRes, overdueRes] = await Promise.all([
-          fetch("https://www.asaas.com/api/v3/subscriptions?status=ACTIVE&limit=100", { headers }),
+        const [subsRes, overdueRes, paidRes] = await Promise.all([
+          fetch("https://www.asaas.com/api/v3/subscriptions?limit=100", { headers }),
           fetch("https://www.asaas.com/api/v3/payments?status=OVERDUE&limit=100", { headers }),
+          fetch("https://www.asaas.com/api/v3/payments?status=RECEIVED&limit=100", { headers }),
         ]);
         const subs = await subsRes.json();
         const overdue = await overdueRes.json();
-        const ativos = subs?.data ?? [];
+        const paid = await paidRes.json();
+
+        const todasSubs = subs?.data ?? [];
+        const ativos = todasSubs.filter((s: { status?: string }) => s.status === "ACTIVE");
         const mrr = ativos.reduce((s: number, x: { value?: number }) => s + (Number(x.value) || 0), 0);
-        const inadimplentes = new Set(
-          (overdue?.data ?? []).map((p: { customer?: string }) => p.customer)
-        ).size;
+        const overdueCustomers = new Set((overdue?.data ?? []).map((p: { customer?: string }) => p.customer));
+        const paidCustomers    = new Set((paid?.data ?? []).map((p: { customer?: string }) => p.customer));
+
         asaas = {
           mrr: Math.round(mrr * 100) / 100,
           arr: Math.round(mrr * 12 * 100) / 100,
           pagantes: ativos.length,
-          inadimplentes,
+          inadimplentes: overdueCustomers.size,
         };
+
+        // Mapeia estado por empresa (externalReference = empresa.id)
+        for (const s of todasSubs) {
+          const empId = s.externalReference;
+          if (!empId) continue;
+          const statusSub =
+            s.status === "ACTIVE" ? "ativa" :
+            s.status === "EXPIRED" ? "expirada" : "cancelada";
+          const cobranca =
+            overdueCustomers.has(s.customer) ? "vencida" :
+            paidCustomers.has(s.customer)    ? "paga" : "aguardando";
+          estadoMap[empId] = { assinatura: statusSub, cobranca };
+        }
       } catch (asaasErr) {
         console.error("admin-stats asaas:", asaasErr);
       }
     }
 
-    return new Response(JSON.stringify({ empresas: result, totals, crescimento, funil, origens, asaas }), {
+    // Estado consolidado por empresa
+    const agora2 = Date.now();
+    const empresasFinal = result.map((e) => {
+      let estado: string | null = null;
+      const est = estadoMap[e.id];
+      if (e.plano === "pro") {
+        if (est?.cobranca === "vencida") estado = "inadimplente";
+        else if (est?.cobranca === "paga") estado = "pago";
+        else if (e.trial_ends_at && new Date(e.trial_ends_at).getTime() > agora2) estado = "trial";
+        else if (est) estado = "aguardando";
+        else estado = "pago"; // PRO sem Asaas (ativação manual)
+      }
+      return { ...e, estado_assinatura: estado, cobranca: est?.cobranca ?? null };
+    });
+
+    const proStats = {
+      pagos:         empresasFinal.filter((e) => e.estado_assinatura === "pago").length,
+      trial:         empresasFinal.filter((e) => e.estado_assinatura === "trial").length,
+      inadimplentes: empresasFinal.filter((e) => e.estado_assinatura === "inadimplente").length,
+      aguardando:    empresasFinal.filter((e) => e.estado_assinatura === "aguardando").length,
+    };
+
+    return new Response(JSON.stringify({ empresas: empresasFinal, totals, crescimento, funil, origens, asaas, proStats }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
