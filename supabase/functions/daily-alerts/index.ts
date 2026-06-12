@@ -39,13 +39,18 @@ function emailHtml(title: string, body: string) {
 </body></html>`;
 }
 
+const CTA = `<a href="https://app.stickframe.com.br/checkout?plan=profissional"
+  style="display:inline-block;background:#981915;color:#fff;text-decoration:none;padding:13px 26px;border-radius:10px;font-weight:700;">
+  Ativar PRO agora →
+</a>`;
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
-  // Autorização: CRON_SECRET via header ou query param
+  // Autorização: CRON_SECRET via header ou query param (se configurado)
   const cronSecret = Deno.env.get("CRON_SECRET");
-  const authHeader = req.headers.get("x-cron-secret") || new URL(req.url).searchParams.get("secret");
-  if (cronSecret && authHeader !== cronSecret) {
+  const provided = req.headers.get("x-cron-secret") || new URL(req.url).searchParams.get("secret");
+  if (cronSecret && provided !== cronSecret) {
     return new Response(JSON.stringify({ error: "Não autorizado" }), {
       status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
@@ -57,14 +62,15 @@ Deno.serve(async (req) => {
   const waToken   = Deno.env.get("WHATSAPP_TOKEN") ?? "";
 
   const now    = new Date();
+  const in1d   = new Date(now.getTime() + 1 * 86400_000);
+  const in2d   = new Date(now.getTime() + 2 * 86400_000);
   const in3d   = new Date(now.getTime() + 3 * 86400_000);
-  const ago1d  = new Date(now.getTime() - 1  * 86400_000);
-  const ago2d  = new Date(now.getTime() - 2  * 86400_000);
-  const ago7d  = new Date(now.getTime() - 7  * 86400_000);
+  const ago1d  = new Date(now.getTime() - 1 * 86400_000);
+  const ago2d  = new Date(now.getTime() - 2 * 86400_000);
+  const ago7d  = new Date(now.getTime() - 7 * 86400_000);
 
   const log: string[] = [];
 
-  // ── Helpers ───────────────────────────────────────────────────────────────
   async function getDiretorEmail(empresaId: string): Promise<{ nome: string; email: string } | null> {
     const { data: u } = await sb.from("usuarios").select("id, nome").eq("empresa_id", empresaId).eq("perfil", "diretor").limit(1).single();
     if (!u) return null;
@@ -73,7 +79,7 @@ Deno.serve(async (req) => {
     return { nome: u.nome, email: au.user.email };
   }
 
-  // ── 1. Trial vencendo em ≤3 dias (ainda não enviou lembrete) ─────────────
+  // ── 1. Trial vencendo em ≤3 dias (lembrete único) ────────────────────────
   const { data: trialsProximos } = await sb.from("empresas")
     .select("id, nome")
     .eq("plano", "free")
@@ -87,17 +93,14 @@ Deno.serve(async (req) => {
     if (!contato || !resendKey) continue;
     const ok = await sendEmail(
       resendKey, contato.email,
-      `Seu trial StickFrame vence em breve — ative o PRO`,
+      `Seu período de avaliação está terminando`,
       emailHtml(
         `Olá, ${contato.nome}! Seu trial acaba em breve 🕐`,
         `<p style="color:#475569;line-height:1.6;margin:0 0 20px;">
-          Aproveite que você ainda tem acesso completo e ative o plano PRO antes que expire.<br>
-          Com o PRO você tem obras ilimitadas, relatórios completos e muito mais.
-        </p>
-        <a href="https://app.stickframe.com.br/checkout?plan=profissional"
-          style="display:inline-block;background:#981915;color:#fff;text-decoration:none;padding:13px 26px;border-radius:10px;font-weight:700;">
-          Ativar PRO agora →
-        </a>`
+          Seu período de avaliação está terminando. Continue utilizando o StickFrame
+          sem interrupções — ative o plano PRO e mantenha obras ilimitadas,
+          relatórios completos e todos os recursos.
+        </p>${CTA}`
       )
     );
     if (ok) {
@@ -105,9 +108,35 @@ Deno.serve(async (req) => {
       triaisLembrados++;
     }
   }
-  log.push(`trials_lembrados: ${triaisLembrados}`);
+  log.push(`trials_lembrados_3d: ${triaisLembrados}`);
 
-  // ── 2. Trial expirado ontem → e-mail de reativação ───────────────────────
+  // ── 2. Último dia de trial (D-1) — janela de 24h, dispara uma vez ────────
+  const { data: trialsUltimoDia } = await sb.from("empresas")
+    .select("id, nome")
+    .eq("plano", "free")
+    .gte("trial_ends_at", now.toISOString())
+    .lte("trial_ends_at", in1d.toISOString());
+
+  let triaisUltimoDia = 0;
+  for (const emp of trialsUltimoDia ?? []) {
+    const contato = await getDiretorEmail(emp.id);
+    if (!contato || !resendKey) continue;
+    await sendEmail(
+      resendKey, contato.email,
+      `Último dia do seu trial StickFrame`,
+      emailHtml(
+        `Hoje é o último dia do seu trial, ${contato.nome} ⏰`,
+        `<p style="color:#475569;line-height:1.6;margin:0 0 20px;">
+          Seu período de avaliação da <strong>${emp.nome}</strong> termina hoje.
+          Ative o PRO agora para não perder o acesso aos seus dados e obras.
+        </p>${CTA}`
+      )
+    );
+    triaisUltimoDia++;
+  }
+  log.push(`trials_ultimo_dia: ${triaisUltimoDia}`);
+
+  // ── 3. Trial expirado ontem → reativação ─────────────────────────────────
   const { data: trialsExpirados } = await sb.from("empresas")
     .select("id, nome")
     .eq("plano", "free")
@@ -120,17 +149,14 @@ Deno.serve(async (req) => {
     if (!contato || !resendKey) continue;
     await sendEmail(
       resendKey, contato.email,
-      `Seu trial StickFrame expirou — não perca o acesso`,
+      `Seu acesso expirou — seus dados continuam seguros`,
       emailHtml(
-        `Seu período de trial encerrou 😔`,
+        `Seu período de trial encerrou`,
         `<p style="color:#475569;line-height:1.6;margin:0 0 20px;">
-          Olá, ${contato.nome}! Seu trial gratuito da <strong>${emp.nome}</strong> expirou ontem.<br>
-          Ative o plano PRO agora e continue gerenciando suas obras sem interrupção.
-        </p>
-        <a href="https://app.stickframe.com.br/checkout?plan=profissional"
-          style="display:inline-block;background:#981915;color:#fff;text-decoration:none;padding:13px 26px;border-radius:10px;font-weight:700;">
-          Reativar acesso PRO →
-        </a>
+          Olá, ${contato.nome}! O trial da <strong>${emp.nome}</strong> expirou.<br>
+          Suas informações continuam seguras e podem ser reativadas a qualquer momento —
+          basta ativar o plano PRO para retomar de onde parou.
+        </p>${CTA}
         <p style="color:#94a3b8;font-size:12px;margin:16px 0 0;">Tem dúvidas? Responda este e-mail e eu te ajudo.</p>`
       )
     );
@@ -138,54 +164,83 @@ Deno.serve(async (req) => {
   }
   log.push(`trials_reativacao: ${triaisReativacao}`);
 
-  // ── 3. Churn risk: empresas sem login há ≥7 dias (todas) ─────────────────
+  // ── 4. Dados para churn + relatório ──────────────────────────────────────
   const { data: authList } = await sb.auth.admin.listUsers({ perPage: 1000 });
-  const { data: usuarios } = await sb.from("usuarios").select("id, empresa_id, nome, perfil");
-  const { data: todasEmpresas } = await sb.from("empresas").select("id, nome, plano").eq("ativo", true);
+  const { data: usuarios } = await sb.from("usuarios").select("id, empresa_id");
+  const { data: todasEmpresas } = await sb.from("empresas")
+    .select("id, nome, plano, created_at, trial_ends_at").eq("ativo", true);
 
-  // Monta ultimo login por empresa
+  const empresaPorUsuario: Record<string, string> = {};
+  for (const u of usuarios ?? []) empresaPorUsuario[u.id] = u.empresa_id;
+
   const lastSignInMap: Record<string, number> = {};
-  const emailMapU: Record<string, string> = {};
   for (const au of authList?.users ?? []) {
-    if (au.last_sign_in_at) emailMapU[au.id] = au.email ?? "";
     const ls = au.last_sign_in_at ? new Date(au.last_sign_in_at).getTime() : 0;
-    const empId = usuarios?.find(u => u.id === au.id)?.empresa_id;
+    const empId = empresaPorUsuario[au.id];
     if (empId && ls > (lastSignInMap[empId] ?? 0)) lastSignInMap[empId] = ls;
   }
 
-  const churnRisk = (todasEmpresas ?? []).filter(e => {
-    const ls = lastSignInMap[e.id] ?? 0;
-    return ls > 0 && ls < ago7d.getTime();
-  });
-
-  if (churnRisk.length > 0 && phoneId && waToken) {
-    const lista = churnRisk
-      .slice(0, 10)
-      .map(e => `• ${e.nome} (${e.plano})`)
-      .join("\n");
-    const texto =
-`⚠️ *${churnRisk.length} empresa(s) sem login há +7 dias:*
-
-${lista}${churnRisk.length > 10 ? `\n...e mais ${churnRisk.length - 10}` : ""}
-
-Considere entrar em contato 👆`;
-    await sendWhatsApp(phoneId, waToken, OWNER_WHATSAPP, texto);
-  }
+  const churnRisk = (todasEmpresas ?? [])
+    .map(e => {
+      const ls = lastSignInMap[e.id] ?? 0;
+      const dias = ls > 0 ? Math.floor((now.getTime() - ls) / 86400_000) : null;
+      return { ...e, dias_sem_login: dias };
+    })
+    .filter(e => e.dias_sem_login !== null && e.dias_sem_login >= 7)
+    .sort((a, b) => (b.dias_sem_login ?? 0) - (a.dias_sem_login ?? 0));
   log.push(`churn_risk: ${churnRisk.length}`);
 
-  // ── 4. Resumo diário para o dono ─────────────────────────────────────────
+  // Inadimplentes via Asaas (para o relatório)
+  let inadimplentes = 0;
+  const asaasKey = Deno.env.get("ASAAS_API_KEY");
+  if (asaasKey) {
+    try {
+      const r = await fetch("https://www.asaas.com/api/v3/payments?status=OVERDUE&limit=100", {
+        headers: { "access_token": asaasKey },
+      });
+      const j = await r.json();
+      inadimplentes = new Set((j?.data ?? []).map((p: { customer?: string }) => p.customer)).size;
+    } catch (_e) { /* relatório segue sem o dado */ }
+  }
+
+  // ── 5. Daily Report consolidado no WhatsApp ──────────────────────────────
   if (phoneId && waToken) {
-    const lines = [
-      `📊 *Resumo diário StickFrame*`,
+    const emps = todasEmpresas ?? [];
+    const total = emps.length;
+    const pro = emps.filter(e => e.plano === "pro").length;
+    const trialsAtivos = emps.filter(e =>
+      e.plano === "free" && e.trial_ends_at && new Date(e.trial_ends_at) > now
+    ).length;
+    const trialsVencendo2d = emps.filter(e =>
+      e.plano === "free" && e.trial_ends_at &&
+      new Date(e.trial_ends_at) > now && new Date(e.trial_ends_at) <= in2d
+    ).length;
+    const novos24h = emps.filter(e => new Date(e.created_at) >= ago1d).length;
+
+    const atencao: string[] = [];
+    if (trialsVencendo2d > 0) atencao.push(`• ${trialsVencendo2d} trial(s) vencem em até 2 dias`);
+    if (churnRisk.length > 0) atencao.push(`• ${churnRisk.length} empresa(s) sem login há +7 dias`);
+    if (inadimplentes > 0) atencao.push(`• ${inadimplentes} cliente(s) inadimplente(s)`);
+
+    const churnLista = churnRisk.slice(0, 8)
+      .map(e => `• ${e.nome} — ${e.dias_sem_login} dias`)
+      .join("\n");
+
+    const msg = [
+      `📊 *StickFrame Daily Report*`,
       ``,
-      `✅ Lembretes de trial enviados: ${triaisLembrados}`,
-      `📧 E-mails de reativação: ${triaisReativacao}`,
-      `⚠️ Em risco de churn: ${churnRisk.length}`,
-    ];
-    if (triaisLembrados === 0 && triaisReativacao === 0 && churnRisk.length === 0) {
-      lines.push(`\nTudo tranquilo hoje 🎉`);
-    }
-    await sendWhatsApp(phoneId, waToken, OWNER_WHATSAPP, lines.join("\n"));
+      `Empresas: ${total}`,
+      `PRO: ${pro}`,
+      `Trials ativos: ${trialsAtivos}`,
+      `Inadimplentes: ${inadimplentes}`,
+      ``,
+      `📈 Novos cadastros (24h): ${novos24h}`,
+      ...(atencao.length ? [``, `⚠️ *Atenção*`, ...atencao] : []),
+      ...(churnLista ? [``, `🔻 *Sem atividade*`, churnLista] : []),
+      ...(atencao.length === 0 && novos24h === 0 ? [``, `Tudo tranquilo hoje 🎉`] : []),
+    ].join("\n");
+
+    await sendWhatsApp(phoneId, waToken, OWNER_WHATSAPP, msg);
   }
 
   return new Response(JSON.stringify({ ok: true, log }), {
