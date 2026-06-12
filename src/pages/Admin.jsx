@@ -133,7 +133,7 @@ export default function Admin() {
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
             <thead>
               <tr style={{ background: C.bg }}>
-                {["Nome", "Plano", "Cadastro", "Limite Obras", "Obras Ativas", "Usuários"].map((h) => (
+                {["Nome", "Contato", "Plano", "Trial", "Cadastro", "Obras Ativas", "Usuários"].map((h) => (
                   <th key={h} style={{
                     padding: "10px 16px", textAlign: "left",
                     fontWeight: 600, fontSize: 12, color: C.muted,
@@ -147,7 +147,7 @@ export default function Admin() {
             <tbody>
               {empresas.length === 0 ? (
                 <tr>
-                  <td colSpan={6} style={{ padding: 32, textAlign: "center", color: C.muted }}>
+                  <td colSpan={7} style={{ padding: 32, textAlign: "center", color: C.muted }}>
                     Nenhuma empresa encontrada
                   </td>
                 </tr>
@@ -158,15 +158,29 @@ export default function Admin() {
                 }}>
                   <td style={{ padding: "12px 16px", fontWeight: 500 }}>{e.nome}</td>
                   <td style={{ padding: "12px 16px" }}>
+                    {e.contato_nome ? (
+                      <div>
+                        <div style={{ fontWeight: 500 }}>{e.contato_nome}</div>
+                        <div style={{ fontSize: 12, color: C.muted }}>{e.contato_email || "—"}</div>
+                      </div>
+                    ) : <span style={{ color: C.muted }}>—</span>}
+                  </td>
+                  <td style={{ padding: "12px 16px" }}>
                     <Badge color={e.plano}>{e.plano || "—"}</Badge>
+                  </td>
+                  <td style={{ padding: "12px 16px", whiteSpace: "nowrap" }}>
+                    {e.trial_ativo ? (
+                      <span style={{ color: "#b45309", fontWeight: 600, fontSize: 12 }}>
+                        ⏳ até {new Date(e.trial_ends_at).toLocaleDateString("pt-BR")}
+                      </span>
+                    ) : e.plano === "free" && e.trial_ends_at ? (
+                      <span style={{ color: C.muted, fontSize: 12 }}>expirado</span>
+                    ) : <span style={{ color: C.muted }}>—</span>}
                   </td>
                   <td style={{ padding: "12px 16px", color: C.muted, whiteSpace: "nowrap" }}>
                     {e.created_at
                       ? new Date(e.created_at).toLocaleDateString("pt-BR")
                       : "—"}
-                  </td>
-                  <td style={{ padding: "12px 16px", textAlign: "center" }}>
-                    {e.limite_obras ?? "—"}
                   </td>
                   <td style={{ padding: "12px 16px", textAlign: "center" }}>
                     <span style={{
