@@ -88,7 +88,21 @@ export default function Admin() {
     </div>
   );
 
-  const { empresas = [], totals = {} } = data || {};
+  const { empresas = [], totals = {}, crescimento = {}, funil = {}, origens = {}, asaas = null } = data || {};
+
+  const fmtBRL = (v) => `R$ ${(v ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
+  const funilEtapas = [
+    ["Criou conta",      funil.criou_conta],
+    ["Criou obra",       funil.criou_obra],
+    ["Fez orçamento",    funil.fez_orcamento],
+    ["Convidou usuário", funil.convidou_usuario],
+    ["Virou PRO",        funil.virou_pro],
+  ];
+  const funilMax = Math.max(1, funil.criou_conta ?? 1);
+
+  const sectionTitle = (t) => (
+    <div style={{ fontSize: 12, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: "0.08em", margin: "28px 0 12px" }}>{t}</div>
+  );
 
   return (
     <div style={containerStyle}>
@@ -111,12 +125,68 @@ export default function Admin() {
         </p>
       </div>
 
-      {/* Stats */}
-      <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginBottom: 32 }}>
+      {/* Crescimento */}
+      {sectionTitle("Crescimento")}
+      <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginBottom: 8 }}>
+        <StatCard label="Cadastros hoje" value={crescimento.hoje ?? 0} />
+        <StatCard label="Últimos 7 dias" value={crescimento.semana ?? 0} />
+        <StatCard label="Últimos 30 dias" value={crescimento.mes ?? 0} />
         <StatCard label="Total de empresas" value={totals.total ?? 0} />
-        <StatCard label="Plano Free" value={totals.free ?? 0} color={C.muted} />
-        <StatCard label="Plano Pro" value={totals.pro ?? 0} color={C.red} />
+        <StatCard label="Free" value={totals.free ?? 0} color={C.muted} />
+        <StatCard label="Pro" value={totals.pro ?? 0} color={C.red} />
+        <StatCard label="Conversão Free → Pro" value={`${crescimento.conversao ?? 0}%`} color="#2e9e5b" />
+        <StatCard label="Trials ativos" value={crescimento.trials_ativos ?? 0} color="#b45309" />
+        <StatCard label="Trials vencendo (7d)" value={crescimento.trials_vencendo_7d ?? 0} color="#b45309" />
+        <StatCard label="Trials expirados" value={crescimento.trials_expirados ?? 0} color={C.danger} />
       </div>
+
+      {/* Receita (Asaas) */}
+      {asaas && (
+        <>
+          {sectionTitle("Receita · Asaas")}
+          <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginBottom: 8 }}>
+            <StatCard label="MRR" value={fmtBRL(asaas.mrr)} color="#2e9e5b" />
+            <StatCard label="ARR projetado" value={fmtBRL(asaas.arr)} />
+            <StatCard label="Assinaturas ativas" value={asaas.pagantes} />
+            <StatCard label="Inadimplentes" value={asaas.inadimplentes} color={asaas.inadimplentes > 0 ? C.danger : C.muted} />
+          </div>
+        </>
+      )}
+
+      {/* Funil + Origens */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 20 }}>
+        <div>
+          {sectionTitle("Funil de ativação")}
+          <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12, padding: "18px 20px", boxShadow: C.shadow }}>
+            {funilEtapas.map(([label, val]) => (
+              <div key={label} style={{ marginBottom: 12 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                  <span style={{ fontSize: 13, color: C.text }}>{label}</span>
+                  <span style={{ fontSize: 13, fontWeight: 700 }}>{val ?? 0}</span>
+                </div>
+                <div style={{ height: 8, background: C.border, borderRadius: 4, overflow: "hidden" }}>
+                  <div style={{ height: 8, width: `${((val ?? 0) / funilMax) * 100}%`, background: C.red, borderRadius: 4 }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div>
+          {sectionTitle("Origem dos leads")}
+          <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12, padding: "18px 20px", boxShadow: C.shadow }}>
+            {Object.keys(origens).length === 0 ? (
+              <span style={{ color: C.muted, fontSize: 13 }}>Sem dados ainda</span>
+            ) : Object.entries(origens).sort((a, b) => b[1] - a[1]).map(([origem, qtd]) => (
+              <div key={origem} style={{ display: "flex", justifyContent: "space-between", padding: "7px 0", borderBottom: `1px solid ${C.border}` }}>
+                <span style={{ fontSize: 13, textTransform: "capitalize" }}>{origem}</span>
+                <span style={{ fontSize: 13, fontWeight: 700 }}>{qtd}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {sectionTitle("Empresas")}
 
       {/* Table */}
       <div style={{
@@ -133,7 +203,7 @@ export default function Admin() {
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
             <thead>
               <tr style={{ background: C.bg }}>
-                {["Nome", "Contato", "Plano", "Trial", "Cadastro", "Obras Ativas", "Usuários"].map((h) => (
+                {["Nome", "Contato", "Plano", "Health", "Trial", "Cadastro", "Obras Ativas", "Usuários"].map((h) => (
                   <th key={h} style={{
                     padding: "10px 16px", textAlign: "left",
                     fontWeight: 600, fontSize: 12, color: C.muted,
@@ -147,7 +217,7 @@ export default function Admin() {
             <tbody>
               {empresas.length === 0 ? (
                 <tr>
-                  <td colSpan={7} style={{ padding: 32, textAlign: "center", color: C.muted }}>
+                  <td colSpan={8} style={{ padding: 32, textAlign: "center", color: C.muted }}>
                     Nenhuma empresa encontrada
                   </td>
                 </tr>
@@ -167,6 +237,17 @@ export default function Admin() {
                   </td>
                   <td style={{ padding: "12px 16px" }}>
                     <Badge color={e.plano}>{e.plano || "—"}</Badge>
+                  </td>
+                  <td style={{ padding: "12px 16px", whiteSpace: "nowrap" }}>
+                    <span style={{
+                      fontWeight: 700, fontSize: 13,
+                      color: e.health >= 70 ? "#2e9e5b" : e.health >= 30 ? "#b45309" : C.danger,
+                    }}>
+                      {e.health ?? 0}
+                    </span>
+                    {e.health < 30 && (
+                      <span title="Empresa em risco de abandono" style={{ marginLeft: 6, fontSize: 12 }}>⚠️</span>
+                    )}
                   </td>
                   <td style={{ padding: "12px 16px", whiteSpace: "nowrap" }}>
                     {e.trial_ativo ? (

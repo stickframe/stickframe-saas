@@ -5,6 +5,7 @@ import {
   LayoutDashboard, Receipt, Clock, AlertTriangle, Smartphone,
   Play, ChevronDown,
 } from "lucide-react";
+import { salvarOrigemLead } from "../utils/leadOrigem";
 
 // ─── Ecossistema — benefit-first copy ────────────────────────────────────────
 const ECOSSISTEMA = [
@@ -282,6 +283,7 @@ export default function LandingPage() {
   const [solid, setSolid] = useState(false);
 
   useEffect(() => {
+    salvarOrigemLead();
     const fn = () => setSolid(window.scrollY > 40);
     window.addEventListener("scroll", fn, { passive: true });
     return () => window.removeEventListener("scroll", fn);
