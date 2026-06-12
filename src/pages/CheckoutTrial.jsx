@@ -1,8 +1,13 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { sb } from "../services/supabase";
 
 const LOGO = "https://gpzmglcxmbboxxogbibq.supabase.co/storage/v1/object/public/arquivos/logos/34ec14d3-02fc-4b0a-8040-67f7a739394d/logo.jpg?t=1780161932174";
+
+const PLANOS_CHECKOUT = {
+  profissional: { label: "Profissional", valor: 197 },
+  essencial:    { label: "Essencial",    valor: 97 },
+};
 
 function maskCpfCnpj(v) {
   const d = v.replace(/\D/g, "").slice(0, 14);
@@ -28,6 +33,9 @@ const s = {
 
 export default function CheckoutTrial() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const planKey = searchParams.get("plan") || "profissional";
+  const plano = PLANOS_CHECKOUT[planKey] || PLANOS_CHECKOUT.profissional;
   const [session, setSession] = useState(null);
   const [checking, setChecking] = useState(true);
 
@@ -64,6 +72,7 @@ export default function CheckoutTrial() {
           email: session.user.email,
           cpfCnpj: digitos,
           trial: true,
+          plano: planKey,
         },
       });
       if (error || data?.error) throw new Error(data?.error || error?.message);
@@ -97,8 +106,8 @@ export default function CheckoutTrial() {
         {/* Plan badge */}
         <div style={{ background: "rgba(152,25,21,.15)", border: "1px solid rgba(152,25,21,.3)", borderRadius: 10, padding: "14px 18px", marginBottom: 16, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div>
-            <div style={{ fontSize: 12, fontWeight: 800, color: "#fff", marginBottom: 2 }}>Plano Profissional — 14 dias grátis</div>
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,.45)" }}>Depois R$ 197/mês · cancele antes sem custo</div>
+            <div style={{ fontSize: 12, fontWeight: 800, color: "#fff", marginBottom: 2 }}>Plano {plano.label} — 14 dias grátis</div>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,.45)" }}>Depois R$ {plano.valor}/mês · cancele antes sem custo</div>
           </div>
           <div style={{ fontSize: 22, fontWeight: 900, color: "#981915", fontFamily: "sans-serif" }}>🎯</div>
         </div>
@@ -109,7 +118,7 @@ export default function CheckoutTrial() {
               <div style={{ fontSize: 52, marginBottom: 14 }}>🚀</div>
               <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", marginBottom: 10 }}>Trial ativado!</div>
               <div style={{ fontSize: 14, color: "rgba(255,255,255,.6)", lineHeight: 1.7, marginBottom: 24 }}>
-                Você tem <strong style={{ color: "#fff" }}>14 dias de acesso completo</strong> ao plano Profissional.<br />
+                Você tem <strong style={{ color: "#fff" }}>14 dias de acesso completo</strong> ao plano {plano.label}.<br />
                 Primeiro pagamento:{" "}
                 <strong style={{ color: "#e08a84" }}>{trialDate}</strong><br />
                 Escolha PIX, boleto ou cartão no link abaixo.
@@ -177,7 +186,7 @@ export default function CheckoutTrial() {
               </form>
 
               <ul style={{ marginTop: 20, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 8 }}>
-                {["14 dias de acesso ao Profissional completo", "Sem cobrança agora — primeiro pagamento em 14 dias", "Cancele antes sem custo, sem multa"].map((it) => (
+                {[`14 dias de acesso ao ${plano.label} completo`, "Sem cobrança agora — primeiro pagamento em 14 dias", "Cancele antes sem custo, sem multa"].map((it) => (
                   <li key={it} style={{ fontSize: 12, color: "rgba(255,255,255,.45)", display: "flex", gap: 8, alignItems: "flex-start" }}>
                     <span style={{ color: "#3f7a4b", flexShrink: 0 }}>✓</span>{it}
                   </li>
