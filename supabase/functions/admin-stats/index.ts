@@ -5,7 +5,10 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const ADMIN_EMAIL = "andrequeirozcandido@gmail.com";
+const ADMIN_EMAILS = [
+  "andrequeirozcandido@gmail.com",
+  "andre@stickframe.com.br",
+];
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -20,7 +23,7 @@ Deno.serve(async (req) => {
       { global: { headers: { Authorization: authHeader } } }
     );
     const { data: { user } } = await supabaseUser.auth.getUser();
-    if (!user || user.email !== ADMIN_EMAIL) throw new Error("Acesso negado");
+    if (!user || !ADMIN_EMAILS.includes(user.email ?? "")) throw new Error("Acesso negado");
 
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL")!,
