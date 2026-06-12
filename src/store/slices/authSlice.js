@@ -11,17 +11,25 @@ async function _hydrateUser(set, get, authUser, email) {
   // Carrega dados da empresa incluindo trial_ends_at
   const { data: empresa } = await sb.from("empresas").select("plano, trial_ends_at").eq("id", empId).single();
 
+  // Trial ativo libera os recursos Pro: plano efetivo = "pro" enquanto
+  // trial_ends_at estiver no futuro. planoReal guarda o plano contratado
+  // (usado pelo banner de trial e pelo badge TRIAL no topo).
+  const planoReal = empresa?.plano || "free";
+  const trialAtivo = planoReal === "free" &&
+    empresa?.trial_ends_at && new Date(empresa.trial_ends_at) > new Date();
+
   set({
     user: {
       email: email || authUser.email,
       nome:   usuario.nome  || authUser.email.split("@")[0],
       cargo:  usuario.cargo || "Usuário",
       perfil: (usuario.perfil || "comercial").toLowerCase(),
-      plano:  empresa?.plano || "free",
+      plano:  trialAtivo ? "pro" : planoReal,
       uid:    authUser.id,
       id:     authUser.id,
     },
     empresaId: empId,
+    planoReal,
     trialEndsAt: empresa?.trial_ends_at || null,
   });
   listarMembrosEmpresa().then((list) => get().setAllObraMembros(list)).catch(() => {});
@@ -34,6 +42,7 @@ async function _hydrateUser(set, get, authUser, email) {
 export const createAuthSlice = (set, get) => ({
   user:      null,
   empresaId: null,
+  planoReal: null,
   trialEndsAt: null,
   perfisCustomizados: [],
   setPerfisCustomizados: (list) => set({ perfisCustomizados: list }),
@@ -65,7 +74,7 @@ export const createAuthSlice = (set, get) => ({
     await sb.auth.signOut();
     setEmpresaId(null);
     set({
-      user: null, empresaId: null, trialEndsAt: null, activePage: "dashboard",
+      user: null, empresaId: null, planoReal: null, trialEndsAt: null, activePage: "dashboard",
       loaded: { clientes:false, obras:false, orcamentos:false, financeiro:false, contratos:false, diario:{}, medicoes:{}, eventos:false, historico:false, arquivos:{} },
       clientes:[], orcamentos:[], obras:[], financeiro:{}, diario:{}, historico:[], eventos:[], arquivos:{}, medicoes:{}, contratos:[],
     });

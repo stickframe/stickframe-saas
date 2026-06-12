@@ -106,12 +106,12 @@ export default function AppLayout({ children }) {
             {/* Plano badge */}
             <div style={{
               padding: "3px 8px", borderRadius: 6, fontSize: 10, fontWeight: 800,
-              background: plano === "pro" ? C.red + "15" : "#f4f1ec",
-              color: plano === "pro" ? C.red : C.muted,
-              border: `1px solid ${plano === "pro" ? C.red + "30" : C.border}`,
+              background: isTrial ? "#f59e0b18" : plano === "pro" ? C.red + "15" : "#f4f1ec",
+              color: isTrial ? "#b45309" : plano === "pro" ? C.red : C.muted,
+              border: `1px solid ${isTrial ? "#f59e0b50" : plano === "pro" ? C.red + "30" : C.border}`,
               letterSpacing: 0.5, whiteSpace: "nowrap",
             }}>
-              {plano === "pro" ? "PRO" : "FREE"}
+              {isTrial ? "TRIAL" : plano === "pro" ? "PRO" : "FREE"}
             </div>
             <PresenceAvatars />
             <NotificacaoDropdown />
