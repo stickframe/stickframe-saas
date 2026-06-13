@@ -168,7 +168,7 @@ function otimizarCorte(pecas, tamBarra) {
 }
 
 // ─── Calculadora Parede Drywall ───────────────────────────────────────────────
-function CalcParedeDrywall() {
+function CalcParedeDrywall({ listaInsumos = INSUMOS }) {
   const [comp,     setComp]     = useState("");
   const [alt,      setAlt]      = useState("2.80");
   const [faces,    setFaces]    = useState("2");
@@ -206,11 +206,15 @@ function CalcParedeDrywall() {
     const massa     = Math.ceil(areaComp * t.massa_m2 * 5) / 5; // arredonda 0.2 saco (15kg)
     const fita      = Math.ceil(areaComp * t.fita_m2);
 
+    const precoMontante = listaInsumos.find(i => i.nome.includes("C 90"))?.preco || 18.50;
+    const precoGuia = listaInsumos.find(i => i.nome.includes("Guia U"))?.preco || 12.00;
+    const precoPlaca = listaInsumos.find(i => i.nome.includes("Gesso ST"))?.preco || 17.00;
+
     setResult({
       area, areaComp, placas, montantes, guias, parafusos, cxPar, massa, fita,
-      totalPlacas: placas * t.preco_placa,
-      totalMont: montantes * 18.50,
-      totalGuia: guias * 12.00,
+      totalPlacas: placas * (t.preco_placa === 17.00 ? precoPlaca : t.preco_placa),
+      totalMont: montantes * precoMontante,
+      totalGuia: guias * precoGuia,
       totalPar: cxPar * 48.00,
       totalMassa: Math.ceil(massa) * 38.00,
       totalFita: fita * 3.80,
@@ -565,7 +569,7 @@ function CalcComparativo() {
 // ─── Calculadora Kits ─────────────────────────────────────────────────────────
 const CATS_OPCIONAIS = ["Projetos e Engenharia", "Mão de Obra"];
 
-function CalcKits({ onEnviarOrcamento }) {
+function CalcKits({ onEnviarOrcamento, listaInsumos = INSUMOS }) {
   const [kitSel, setKitSel] = useState(null);
   const [result, setResult] = useState(null);
   const [catsAtivas, setCatsAtivas] = useState(
@@ -595,7 +599,7 @@ function CalcKits({ onEnviarOrcamento }) {
   function calcularKit(kit) {
     setKitSel(kit);
     const fatorPadrao = PADROES[kit.padrao].fator;
-    const items = INSUMOS.map((ins) => {
+    const items = listaInsumos.map((ins) => {
       const fator = ins.fund ? 1 : fatorPadrao * kit.pavs;
       const qtd = Math.ceil(ins.base * kit.area * fator);
       return { ...ins, qtd, total: qtd * ins.preco };
@@ -616,7 +620,7 @@ function CalcKits({ onEnviarOrcamento }) {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(280px,1fr))", gap: 20, marginBottom: 32 }}>
         {KITS.map((kit) => {
           const sel = kitSel?.id === kit.id;
-          const totalRef = INSUMOS.reduce((s, ins) => {
+          const totalRef = listaInsumos.reduce((s, ins) => {
             const f = ins.fund ? 1 : PADROES[kit.padrao].fator * kit.pavs;
             return s + Math.ceil(ins.base * kit.area * f) * ins.preco;
           }, 0);
@@ -793,6 +797,42 @@ export default function Calculadora() {
     localStorage.getItem("sf_kit_lead") ? "kits" : "steelframe"
   );
 
+  const [listaInsumos, setListaInsumos] = useState(INSUMOS);
+  const [carregandoInsumos, setCarregandoInsumos] = useState(true);
+
+  useEffect(() => {
+    async function carregarInsumosDoBanco() {
+      try {
+        const { data, error } = await sb
+          .from("insumos_sistema")
+          .select("*");
+
+        if (error) throw error;
+
+        if (data && data.length > 0) {
+          const insumosDinamicos = INSUMOS.map(ins => {
+            const itemBanco = data.find(d => d.nome === ins.nome);
+            if (itemBanco) {
+              return {
+                ...ins,
+                preco: Number(itemBanco.preco),
+                desc: itemBanco.desc_tecnica || ins.desc
+              };
+            }
+            return ins;
+          });
+          setListaInsumos(insumosDinamicos);
+        }
+      } catch (err) {
+        console.error("Erro ao carregar insumos do Supabase, usando fallback local:", err);
+      } finally {
+        setCarregandoInsumos(false);
+      }
+    }
+
+    carregarInsumosDoBanco();
+  }, []);
+
   const [cubValor,      setCubValor]      = useState(null);
   const [cubCarregando, setCubCarregando] = useState(false);
 
@@ -871,8 +911,6 @@ export default function Calculadora() {
     await marcarUsado(id);
     recarregarRetalhos();
   }
-
-
 
   function exportarExcel() {
     if (!resultado) return;
@@ -962,14 +1000,14 @@ export default function Calculadora() {
     const a = parseFloat(String(area).replace(",", "."));
     if (!a || a <= 0) { setResultado(null); return; }
     const fatorPadrao = PADROES[padrao].fator;
-    const items = INSUMOS.map((ins) => {
+    const items = listaInsumos.map((ins) => {
       const fator = ins.fund ? 1 : fatorPadrao * pavs;
       const qtd   = Math.ceil(ins.base * a * fator);
       return { ...ins, qtd, total: qtd * ins.preco };
     });
     setResultado({ area: a, pavs, padrao, items });
     setOtimizacao(null);
-  }, [area, pavs, padrao]);
+  }, [area, pavs, padrao, listaInsumos]);
 
   const [extrasAtivos, setExtrasAtivos] = useState({
     "Projetos e Engenharia": true,
@@ -1112,13 +1150,13 @@ export default function Calculadora() {
         })}
       </div>
 
-      {modo === "kits"        && <CalcKits onEnviarOrcamento={(res) => {
+      {modo === "kits"        && <CalcKits listaInsumos={listaInsumos} onEnviarOrcamento={(res) => {
         const itens = res.items.map(i => ({ grupo: i.grupo, item: i.nome, un: i.un, qtd: i.qtd, precoUnit: i.preco }));
         const totalGeral = res.items.reduce((s, i) => s + i.total, 0);
         localStorage.setItem("sf_estimativo", JSON.stringify({ itens, totalGeral, area: res.area, tipo: res.padrao }));
         setActivePage("orcamentos");
       }} />}
-      {modo === "parede"      && <CalcParedeDrywall />}
+      {modo === "parede"      && <CalcParedeDrywall listaInsumos={listaInsumos} />}
       {modo === "forro"       && <CalcForroDrywall />}
       {modo === "comparativo" && <CalcComparativo />}
       {modo !== "steelframe" && modo !== "parede" && modo !== "forro" && modo !== "comparativo" && modo !== "kits" && null}
