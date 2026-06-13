@@ -21,6 +21,7 @@ import { useUndoStore } from "./store/undoStore";
 import { useHotkeys } from "react-hotkeys-hook";
 import PortalColaborador from "./pages/PortalColaborador";
 import Admin from "./pages/Admin";
+import AdminMobile from "./pages/AdminMobile";
 
 // Auto-reload on chunk fetch failure (stale SW cache after deploy)
 function lazyWithRetry(fn) {
@@ -229,6 +230,11 @@ export default function App() {
           <Route path="/admin" element={
             <RequireAdmin>
               <Admin />
+            </RequireAdmin>
+          } />
+          <Route path="/admin/mobile" element={
+            <RequireAdmin>
+              <AdminMobile />
             </RequireAdmin>
           } />
           <Route path="/login"                element={<LoginScreen />} />
