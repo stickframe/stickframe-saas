@@ -4,6 +4,7 @@ import { C } from "../../utils/constants";
 import useAppStore from "../../store/useAppStore";
 import { useNotificacoes } from "../../hooks/useNotificacoes";
 import { sb, getEmpresaId } from "../../services/supabase";
+import { playNotificationSound } from "../../utils/audio";
 
 const TIPO_ICON = { info: "ℹ️", sucesso: "✅", alerta: "⚠️", erro: "⛔" };
 const CAT_LABELS = { prazo: "Prazos", medicao: "Medições", vistoria: "Vistorias", orcamento: "Orçamentos", bim: "BIM", followup: "Follow-ups", lead: "Novos Leads", chat: "Mensagens", epi: "EPIs", incidente: "Incidentes", suprimentos: "Suprimentos", estoque: "Estoque", certificacao: "Cert. NR" };
@@ -61,6 +62,51 @@ function useOrcamentosAceitos() {
   return aceitos;
 }
 
+function useComentariosRecentes() {
+  const [comentarios, setComentarios] = useState([]);
+  const user = useAppStore((s) => s.user);
+
+  useEffect(() => {
+    const empId = getEmpresaId();
+    if (!empId || !user?.id) return;
+
+    const em7d = new Date(Date.now() - 7 * 86400000).toISOString();
+    sb.from("comentarios")
+      .select("id, texto, entidade, entidade_id, created_at, usuario:usuarios(nome), usuario_id")
+      .eq("empresa_id", empId)
+      .neq("usuario_id", user.id)
+      .gte("created_at", em7d)
+      .order("created_at", { ascending: false })
+      .limit(10)
+      .then(({ data }) => setComentarios(data || []));
+
+    const ch = sb.channel("comentarios-notif")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "comentarios", filter: `empresa_id=eq.${empId}` },
+        async (p) => {
+          if (p.new.usuario_id !== user.id) {
+            const { data: userObj } = await sb
+              .from("usuarios")
+              .select("nome")
+              .eq("id", p.new.usuario_id)
+              .single();
+
+            const novo = {
+              ...p.new,
+              usuario: userObj || { nome: "Outro Usuário" }
+            };
+
+            setComentarios((prev) => [novo, ...prev]);
+            playNotificationSound();
+          }
+        })
+      .subscribe();
+
+    return () => ch.unsubscribe();
+  }, [user?.id]);
+
+  return comentarios;
+}
+
 function useAlertas() {
   const obras           = useAppStore((s) => s.obras);
   const orcamentos      = useAppStore((s) => s.orcamentos);
@@ -71,6 +117,7 @@ function useAlertas() {
   const preOrcs         = usePreOrcamentos();
   const msgsPendentes   = useMsgsPendentes();
   const orcAceitos      = useOrcamentosAceitos();
+  const comentarios     = useComentariosRecentes();
 
   return useMemo(() => {
     const alertas = [];
@@ -171,8 +218,17 @@ function useAlertas() {
       });
     });
 
+    // 9. Comentários recentes
+    comentarios.forEach((c) => {
+      alertas.push({
+        categoria: "chat", tipo: "info", cor: "#7c3aed", icon: "💬",
+        titulo: "Novo comentário",
+        texto: `${c.usuario?.nome || "Outro Usuário"} comentou em ${c.entidade === "obra" ? "Obra" : c.entidade === "medicao" ? "Medição" : c.entidade}: "${c.texto?.slice(0, 60)}${c.texto?.length > 60 ? "…" : ""}"`,
+      });
+    });
+
     return alertas;
-  }, [obras, orcamentos, medicoes, vistorias, bimApontamentos, clientes, preOrcs, msgsPendentes, orcAceitos]);
+  }, [obras, orcamentos, medicoes, vistorias, bimApontamentos, clientes, preOrcs, msgsPendentes, orcAceitos, comentarios]);
 }
 
 function useAlertasOperacionais() {

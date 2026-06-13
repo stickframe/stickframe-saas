@@ -10,6 +10,7 @@ import Input from "../components/ui/Input";
 import Select from "../components/ui/Select";
 import Modal from "../components/ui/Modal";
 import { useObraPermission, useObrasVisiveis } from "../hooks/useObraPermission";
+import { gerarSingleRdoPDF } from "../services/pdfService";
 
 const MESES = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
 
@@ -144,7 +145,7 @@ function FormDiario({ form, setForm, onSave, onCancel }) {
 }
 
 // ─── Modal de detalhes ────────────────────────────────────────────────────────
-function ModalDetalhes({ reg, onClose }) {
+function ModalDetalhes({ reg, obra, onClose }) {
   return (
     <Modal title={`Diário — ${fmtDataBR(reg.data)}`} onClose={onClose}>
       <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -215,9 +216,23 @@ function ModalDetalhes({ reg, onClose }) {
           </div>
         )}
 
-        {/* Rodapé */}
-        <div style={{ fontSize: 11, color: C.muted, textAlign: "right" }}>
-          Registrado por <strong>{reg.responsavel}</strong> · {reg.created}
+        {/* Rodapé e Ações */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: `1px solid ${C.border}`, paddingTop: 14, marginTop: 10 }}>
+          <button
+            onClick={() => gerarSingleRdoPDF(obra, reg)}
+            style={{
+              padding: "8px 16px", background: "#4a9eff22",
+              border: "1px solid #4a9eff44", borderRadius: 8,
+              color: "#4a9eff", fontSize: 12, fontWeight: 700,
+              cursor: "pointer", fontFamily: "inherit",
+              display: "flex", alignItems: "center", gap: 6
+            }}
+          >
+            📄 Exportar RDO PDF
+          </button>
+          <div style={{ fontSize: 11, color: C.muted }}>
+            Registrado por <strong>{reg.responsavel}</strong> · {reg.created}
+          </div>
         </div>
       </div>
     </Modal>
@@ -345,7 +360,7 @@ export default function DiarioObra() {
       )}
 
       {/* Modal detalhes */}
-      {verReg && <ModalDetalhes reg={verReg} onClose={() => setVerReg(null)} />}
+      {verReg && <ModalDetalhes reg={verReg} obra={obra} onClose={() => setVerReg(null)} />}
 
       <div>
         {/* Header */}

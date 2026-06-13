@@ -465,3 +465,81 @@ export function gerarPortalCliente(obra, registros, financeiro) {
 
   download(html, `Portal_${obra.cliente.replace(/\s/g, "_")}.html`);
 }
+
+export function gerarSingleRdoPDF(obra, r) {
+  const data = hoje();
+  const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"/><title>RDO — ${obra?.nome || "Obra"} — ${r.data}</title>
+  <style>${BASE_HEADER}
+    .titulo{font-size:20px;font-weight:800;color:#414141;margin-bottom:4px;}
+    .subtitulo{font-size:12px;color:#888;margin-bottom:24px;}
+    .registro{border:1px solid #ddd;border-radius:8px;overflow:hidden;margin-bottom:20px;}
+    .reg-header{background:#f7f7f7;padding:12px 16px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px;border-bottom:1px solid #eee;}
+    .reg-field{font-size:10px;} .reg-label{color:#888;margin-bottom:3px;} .reg-val{font-weight:700;}
+    .reg-body{padding:16px 20px;}
+    .reg-section{margin-bottom:16px;}
+    .reg-section-label{font-size:9px;color:#888;text-transform:uppercase;margin-bottom:6px;letter-spacing:1px;}
+    .reg-section-val{font-size:12px;color:#333;line-height:1.7;white-space:pre-wrap;}
+    .ocorrencia{background:#fff5f5;border-left:3px solid #981915;padding:10px 14px;border-radius:0 4px 4px 0;font-size:11.5px;color:#333;line-height:1.7;white-space:pre-wrap;}
+    .footer{margin-top:32px;padding-top:12px;border-top:1px solid #eee;display:flex;justify-content:space-between;font-size:9px;color:#aaa;}
+  </style></head><body>
+  ${logoHTML("RELATÓRIO DIÁRIO DE OBRA (RDO)", `Emitido em ${data}`)}
+  <div class="body">
+    <div class="titulo">${obra?.nome || "Diário de Obra"}</div>
+    <div class="subtitulo">Cliente: ${obra?.cliente || "—"} · Fase: ${obra?.fase || "—"}</div>
+    
+    <div class="registro">
+      <div class="reg-header">
+        <div class="reg-field"><div class="reg-label">Data</div><div class="reg-val">${r.data || "—"}</div></div>
+        <div class="reg-field"><div class="reg-label">Turno</div><div class="reg-val">${r.turno || "—"}</div></div>
+        <div class="reg-field"><div class="reg-label">Clima</div><div class="reg-val">${r.clima || "—"}</div></div>
+        <div class="reg-field"><div class="reg-label">Equipe</div><div class="reg-val">${r.equipe || 0} pessoas</div></div>
+      </div>
+      <div class="reg-body">
+        <div class="reg-section">
+          <div class="reg-section-label">Responsável Técnico</div>
+          <div class="reg-section-val" style="font-weight:700">${r.responsavel || "—"}</div>
+        </div>
+        
+        <div class="reg-section">
+          <div class="reg-section-label">Atividades Executadas</div>
+          <div class="reg-section-val">${r.atividades || "—"}</div>
+        </div>
+        
+        ${r.materiais ? `
+        <div class="reg-section">
+          <div class="reg-section-label">Materiais Utilizados</div>
+          <div class="reg-section-val">${r.materiais}</div>
+        </div>` : ""}
+        
+        ${r.equipamentos ? `
+        <div class="reg-section">
+          <div class="reg-section-label">Equipamentos em Uso</div>
+          <div class="reg-section-val">${r.equipamentos}</div>
+        </div>` : ""}
+
+        ${r.ocorrencias ? `
+        <div class="reg-section">
+          <div class="reg-section-label">Ocorrências / Anotações</div>
+          <div class="ocorrencia">${r.ocorrencias}</div>
+        </div>` : ""}
+      </div>
+    </div>
+    
+    <div style="margin-top:60px;display:grid;grid-template-columns:1fr 1fr;gap:40px;text-align:center;">
+      <div>
+        <div style="border-top:1px solid #999;width:200px;margin:0 auto 6px;"></div>
+        <div style="font-size:10px;font-weight:700">${r.responsavel || "—"}</div>
+        <div style="font-size:9px;color:#888">Responsável Técnico</div>
+      </div>
+      <div>
+        <div style="border-top:1px solid #999;width:200px;margin:0 auto 6px;"></div>
+        <div style="font-size:10px;font-weight:700">${obra?.cliente || "—"}</div>
+        <div style="font-size:9px;color:#888">Contratante / Fiscalização</div>
+      </div>
+    </div>
+
+    <div class="footer"><div>Stick Frame Sistemas Construtivos Ltda.</div><div>Santo André, ${data}</div></div>
+  </div></body></html>`;
+
+  download(html, `RDO_${obra?.nome?.split("—")?.[0]?.trim()?.replace(/\s/g, "_") || "Obra"}_${(r.data || "").replace(/-/g, "")}.html`);
+}
