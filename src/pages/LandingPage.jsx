@@ -172,7 +172,17 @@ const CSS = `
   .lp-feat .f-lbl { font-size: 11px; font-weight: 700; letter-spacing: 1.4px; text-transform: uppercase; color: #e08a84; margin-bottom: 8px; }
   .lp-feat p { font-size: 13.5px; color: #b8b1a6; line-height: 1.55; }
 
-  /* Browser mockup */
+  /* How it works */
+  .lp-how { padding: 96px 0; background: var(--surface-2); }
+  .lp-how-steps { display: grid; grid-template-columns: repeat(3,1fr); gap: 0; position: relative; margin-top: 56px; }
+  .lp-how-steps::before { content: ""; position: absolute; top: 28px; left: calc(16.66% + 16px); right: calc(16.66% + 16px); height: 2px; background: linear-gradient(90deg, var(--brick) 0%, var(--line) 100%); pointer-events: none; }
+  .lp-how-step { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 0 28px; }
+  .lp-how-num { width: 56px; height: 56px; border-radius: 50%; background: var(--brick); color: #fff; font-family: 'Barlow Condensed', sans-serif; font-size: 26px; font-weight: 700; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; position: relative; z-index: 1; flex-shrink: 0; box-shadow: 0 0 0 6px var(--surface-2); }
+  .lp-how-step:not(:first-child) .lp-how-num { background: var(--graphite); }
+  .lp-how-step h3 { font-size: 17px; font-weight: 800; color: var(--ink); margin-bottom: 8px; }
+  .lp-how-step p { font-size: 14px; color: var(--ink-2); line-height: 1.6; }
+
+
   .lp-produto { padding: 96px 0 0; }
   .lp-browser { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 2px 4px rgba(40,30,20,.05),0 12px 32px rgba(40,30,20,.09); overflow: hidden; }
   .lp-browser .b-bar { display: flex; align-items: center; gap: 7px; padding: 11px 16px; border-bottom: 1px solid var(--line-2); background: var(--surface-2); }
@@ -238,15 +248,25 @@ const CSS = `
   .lp-close .h-note { font-size: 13px; color: var(--muted); margin-top: 14px; }
 
   /* Footer */
-  .lp-foot { background: var(--graphite-2); color: #9a948a; padding: 46px 0 38px; font-size: 13px; }
-  .lp-foot .f-row { display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+  .lp-foot { background: var(--graphite-2); color: #9a948a; padding: 46px 0 32px; font-size: 13px; }
+  .lp-foot .f-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 32px; flex-wrap: wrap; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,.07); margin-bottom: 24px; }
   .lp-foot .lp-logo { height: 30px; }
-  .lp-foot nav { display: flex; gap: 24px; flex-wrap: wrap; }
+  .lp-foot .f-tagline { font-size: 12px; color: #6a6460; margin-top: 8px; }
+  .lp-foot nav { display: flex; gap: 24px; flex-wrap: wrap; align-items: center; }
+  .lp-foot .f-social { display: flex; gap: 14px; }
+  .lp-foot .f-social a { display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 8px; border: 1px solid rgba(255,255,255,.1); color: #9a948a; font-size: 16px; transition: .15s; }
+  .lp-foot .f-social a:hover { border-color: rgba(255,255,255,.3); color: #fff; opacity: 1; }
+  .lp-foot .f-bottom { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
   .lp-foot a { color: inherit; }
   .lp-foot a:hover { color: #fff; opacity: 1; }
 
   /* Mobile */
   @media (max-width: 860px) {
+    .lp-how-steps { grid-template-columns: 1fr; gap: 32px; }
+    .lp-how-steps::before { display: none; }
+    .lp-how-step { flex-direction: row; text-align: left; gap: 18px; align-items: flex-start; padding: 0; }
+    .lp-how-num { flex-shrink: 0; margin-bottom: 0; }
+
     .lp-wrap { padding: 0 22px; }
     .lp-nav-links { display: none; }
     .lp-hero { padding: 120px 0 72px; }
@@ -260,7 +280,8 @@ const CSS = `
     .lp-calcsec { padding-bottom: 32px; }
     .lp-dores, .lp-produto, .lp-precos { padding-top: 64px; }
     .lp-feats { padding: 64px 0; }
-    .lp-foot .f-row { flex-direction: column; align-items: flex-start; gap: 18px; }
+    .lp-foot .f-top { flex-direction: column; gap: 20px; }
+    .lp-foot .f-bottom { flex-direction: column; align-items: flex-start; gap: 10px; }
   }
 `;
 
@@ -403,6 +424,40 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ── Como funciona ── */}
+      <section className="lp-how">
+        <div className="lp-wrap">
+          <div className="lp-sec-head center">
+            <span className="lp-eyebrow">Como funciona</span>
+            <h2>Do cadastro ao orçamento em menos de 5 minutos</h2>
+            <p>Sem treinamento. Sem planilha. Sem consultor.</p>
+          </div>
+          <div className="lp-how-steps">
+            <div className="lp-how-step">
+              <div className="lp-how-num">1</div>
+              <div>
+                <h3>Crie sua conta grátis</h3>
+                <p>14 dias no Profissional sem cartão. Em 2 minutos sua empresa está dentro do sistema.</p>
+              </div>
+            </div>
+            <div className="lp-how-step">
+              <div className="lp-how-num">2</div>
+              <div>
+                <h3>Cadastre a obra e a área</h3>
+                <p>Nome do cliente, área e padrão de acabamento. O sistema já sabe tudo que precisa calcular.</p>
+              </div>
+            </div>
+            <div className="lp-how-step">
+              <div className="lp-how-num">3</div>
+              <div>
+                <h3>Gere o orçamento e envie</h3>
+                <p>Lista de material, mão de obra e margem calculados. PDF com sua logo pronto pra mandar pro cliente.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ── Produto — browser mockup ── */}
       <section className="lp-produto" id="produto">
         <div className="lp-wrap">
@@ -536,15 +591,33 @@ export default function LandingPage() {
       {/* ── Footer ── */}
       <footer className="lp-foot">
         <div className="lp-wrap">
-          <div className="f-row">
-            <img src="/landing/assets/logo_branco.png" alt="StickFrame" className="lp-logo" />
+          <div className="f-top">
+            <div>
+              <img src="/landing/assets/logo_branco.png" alt="StickFrame" className="lp-logo" />
+              <div className="f-tagline">ERP para construtoras steel frame · Santo André/SP</div>
+            </div>
             <nav>
               <a href="#dores">Por que StickFrame</a>
+              <a href="#funcionalidades">Funcionalidades</a>
               <a href="#precos">Preços</a>
               <a href="/calcular">Calculadora</a>
               <a href="mailto:oi@stickframe.com.br">Contato</a>
             </nav>
-            <span>© {new Date().getFullYear()} StickFrame · Todos os direitos reservados</span>
+            <div className="f-social">
+              <a href="https://instagram.com/stickframe.erp" target="_blank" rel="noreferrer" title="Instagram">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1.5" fill="currentColor" stroke="none"/></svg>
+              </a>
+              <a href="https://wa.me/551140038929" target="_blank" rel="noreferrer" title="WhatsApp">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+              </a>
+            </div>
+          </div>
+          <div className="f-bottom">
+            <span>© {new Date().getFullYear()} StickFrame Sistemas Construtivos · CNPJ 00.000.000/0001-00</span>
+            <nav>
+              <a href="/privacidade">Política de Privacidade</a>
+              <a href="/termos">Termos de Uso</a>
+            </nav>
           </div>
         </div>
       </footer>
