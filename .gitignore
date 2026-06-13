@@ -8,3 +8,4 @@ cypress.env.json
 cypress/videos
 cypress/screenshots
 .claude/worktrees/
+design_handoff_stickframe/

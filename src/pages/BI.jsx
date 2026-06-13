@@ -188,7 +188,7 @@ export default function BI() {
 
       const [obrasRes, finRes, ncrRes] = await Promise.all([
         sb.from("obras").select("id, nome, cliente, area_m2, status, prazo_inicio, prazo_fim, created_at").eq("empresa_id", empresaId),
-        sb.from("financeiro").select("obra_id, tipo, valor, data").eq("empresa_id", empresaId),
+        sb.from("lancamentos_financeiros").select("obra_id, tipo, valor, data").eq("empresa_id", empresaId),
         sb.from("nao_conformidades").select("id, obra_id, created_at").eq("empresa_id", empresaId),
       ]);
 
@@ -254,6 +254,10 @@ export default function BI() {
       const score = Math.round(((c * 0.35 + m * 0.35 + n * 0.2 + p * 0.1)) * 100);
       return { ...r, score };
     });
+  }, [obraRows]);
+
+  const totalM2 = useMemo(() => {
+    return obraRows.reduce((sum, r) => sum + (r.area_m2 || 0), 0);
   }, [obraRows]);
 
   // ── KPIs ─────────────────────────────────────────────────────────────────
@@ -384,6 +388,87 @@ export default function BI() {
           <div style={sectionStyle}>
             <h2 style={{ fontSize: 15, fontWeight: 700, color: C.text, margin: "0 0 16px" }}>Performance por Obra</h2>
             <RankingTable rows={scoredRows} />
+          </div>
+
+          {/* Sustentabilidade (ESG) */}
+          <div style={sectionStyle}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
+              <span style={{ fontSize: 24 }}>🌱</span>
+              <div>
+                <h2 style={{ fontSize: 16, fontWeight: 800, color: C.text, margin: 0 }}>Sustentabilidade & Impacto ESG</h2>
+                <p style={{ fontSize: 12, color: C.muted, margin: "2px 0 0" }}>Indicadores ecológicos baseados em {fmt(totalM2)} m² de área construída em LSF (Light Steel Frame)</p>
+              </div>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16, marginBottom: 20 }}>
+              {/* Card 1: Agua */}
+              <div style={{ background: C.darker, borderRadius: 10, padding: "18px 20px", border: `1px solid ${C.border}`, boxShadow: "0 4px 6px rgba(0,0,0,0.02)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: C.muted, letterSpacing: 1 }}>ÁGUA ECONOMIZADA</span>
+                  <span style={{ fontSize: 20 }}>💧</span>
+                </div>
+                <div style={{ fontSize: 24, fontWeight: 800, color: "#3182ce" }}>{fmt(totalM2 * 1000)} L</div>
+                <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>Redução de ~1.000 litros por m² comparado com alvenaria convencional (construção seca)</div>
+              </div>
+
+              {/* Card 2: Carbono */}
+              <div style={{ background: C.darker, borderRadius: 10, padding: "18px 20px", border: `1px solid ${C.border}`, boxShadow: "0 4px 6px rgba(0,0,0,0.02)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: C.muted, letterSpacing: 1 }}>REDUÇÃO DE CO₂</span>
+                  <span style={{ fontSize: 20 }}>🍃</span>
+                </div>
+                <div style={{ fontSize: 24, fontWeight: 800, color: C.success }}>{fmt(totalM2 * 150)} kg</div>
+                <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>Emissões evitadas de CO₂ equivalente no ciclo de fabricação e montagem de perfis</div>
+              </div>
+
+              {/* Card 3: Residuos */}
+              <div style={{ background: C.darker, borderRadius: 10, padding: "18px 20px", border: `1px solid ${C.border}`, boxShadow: "0 4px 6px rgba(0,0,0,0.02)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: C.muted, letterSpacing: 1 }}>RESÍDUOS EVITADOS</span>
+                  <span style={{ fontSize: 20 }}>🏗️</span>
+                </div>
+                <div style={{ fontSize: 24, fontWeight: 800, color: C.warning }}>{fmt(totalM2 * 120)} kg</div>
+                <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>Redução de entulho e desperdício de material (perda menor que 1% de aço)</div>
+              </div>
+
+              {/* Card 4: Reciclado */}
+              <div style={{ background: C.darker, borderRadius: 10, padding: "18px 20px", border: `1px solid ${C.border}`, boxShadow: "0 4px 6px rgba(0,0,0,0.02)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: C.muted, letterSpacing: 1 }}>AÇO RECICLADO</span>
+                  <span style={{ fontSize: 20 }}>♻️</span>
+                </div>
+                <div style={{ fontSize: 24, fontWeight: 800, color: "#805ad5" }}>{fmt(totalM2 * 24)} kg</div>
+                <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>Estrutura composta por perfis de aço contendo cerca de 60% de matéria-prima reciclada</div>
+              </div>
+            </div>
+
+            <div style={{ background: "#41414106", border: `1px solid ${C.border}`, borderRadius: 10, padding: "20px" }}>
+              <h3 style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 16 }}>Comparativo Ambiental: LSF vs Alvenaria Tradicional</h3>
+              
+              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                <div>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 6 }}>
+                    <span style={{ fontWeight: 600 }}>Geração de Resíduos e Entulho (Desperdício)</span>
+                    <span><strong style={{ color: C.success }}>~1% (LSF)</strong> vs <strong style={{ color: C.danger }}>~20% (Alvenaria)</strong></span>
+                  </div>
+                  <div style={{ height: 8, background: C.darker, borderRadius: 4, overflow: "hidden", display: "flex" }}>
+                    <div style={{ width: "5%", background: C.success, height: "100%" }} />
+                    <div style={{ width: "95%", background: "#41414122", height: "100%" }} />
+                  </div>
+                </div>
+
+                <div>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 6 }}>
+                    <span style={{ fontWeight: 600 }}>Velocidade de Execução (Otimização do Canteiro)</span>
+                    <span><strong style={{ color: C.success }}>Redução de até 60% no tempo de cronograma</strong></span>
+                  </div>
+                  <div style={{ height: 8, background: C.darker, borderRadius: 4, overflow: "hidden", display: "flex" }}>
+                    <div style={{ width: "60%", background: C.success, height: "100%" }} />
+                    <div style={{ width: "40%", background: "#41414122", height: "100%" }} />
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Bar Chart */}
