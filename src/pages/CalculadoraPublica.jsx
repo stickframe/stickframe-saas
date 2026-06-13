@@ -7,31 +7,31 @@ const INSUMOS_KIT = [
   { categoria: "Estrutura de Aço",      nome: "Montante C 90×40×15×1,25mm",         un: "pç",  base: 1.50,  preco: 18.50 },
   { categoria: "Estrutura de Aço",      nome: "Guia U 92×40×1,25mm",                un: "m",   base: 1.10,  preco: 12.00 },
   { categoria: "Estrutura de Aço",      nome: "Montante C 140×40×15×1,25mm",        un: "pç",  base: 0.30,  preco: 24.00 },
-  { categoria: "Fechamento",            nome: "Chapa OSB 11,1mm",                   un: "chp", base: 0.38,  preco: 52.00 },
-  { categoria: "Fechamento",            nome: "Placa de Gesso ST 13mm",             un: "chp", base: 0.85,  preco: 17.00 },
-  { categoria: "Fechamento",            nome: "Placa Cimentícia 10mm",              un: "chp", base: 0.18,  preco: 65.00 },
+  { categoria: "Fechamento",            nome: "Chapa OSB 11,1mm (1,22×2,44)",       un: "chp", base: 0.38,  preco: 52.00 },
+  { categoria: "Fechamento",            nome: "Placa de Gesso ST 13mm (1,20×2,40)", un: "chp", base: 0.85,  preco: 17.00 },
+  { categoria: "Fechamento",            nome: "Placa Cimentícia 10mm (1,20×2,40)",  un: "chp", base: 0.18,  preco: 65.00 },
   { categoria: "Isolamento",            nome: "Lã de Vidro 50mm",                   un: "m²",  base: 1.30,  preco: 16.00 },
   { categoria: "Isolamento",            nome: "Impermeabilizante flexível",         un: "m²",  base: 0.15,  preco: 35.00 },
-  { categoria: "Fixação",               nome: "Parafuso TEX 4,2×16mm",              un: "cx",  base: 0.40,  preco: 48.00 },
+  { categoria: "Fixação",               nome: "Parafuso TEX 4,2×16mm (flangeado)",  un: "cx",  base: 0.40,  preco: 48.00 },
   { categoria: "Fixação",               nome: "Parafuso TEX 4,2×38mm",              un: "cx",  base: 0.80,  preco: 52.00 },
   { categoria: "Fundação (Radier)",     nome: "Concreto C-25",                      un: "m³",  base: 0.10,  preco: 420.0, fund: true },
-  { categoria: "Fundação (Radier)",     nome: "Ferragem CA-50",                     un: "kg",  base: 6.00,  preco:  6.50, fund: true },
-  { categoria: "Fundação (Radier)",     nome: "Tela soldada Q-92",                  un: "pç",  base: 0.17,  preco: 68.00, fund: true },
+  { categoria: "Fundação (Radier)",     nome: "Ferragem CA-50 ⌀6,3mm",              un: "kg",  base: 6.00,  preco:  6.50, fund: true },
+  { categoria: "Fundação (Radier)",     nome: "Tela soldada Q-92 (3×2m)",           un: "pç",  base: 0.17,  preco: 68.00, fund: true },
   { categoria: "Cobertura",             nome: "Telha shingle (fardo 3m²)",          un: "fd",  base: 0.38,  preco: 185.0 },
-  { categoria: "Cobertura",             nome: "Manta subcobertura",                 un: "m²",  base: 1.05,  preco:  8.50 },
+  { categoria: "Cobertura",             nome: "Manta subcobertura 1,5m",            un: "m²",  base: 1.05,  preco:  8.50 },
   { categoria: "Cobertura",             nome: "Calha PVC 150mm",                    un: "m",   base: 0.30,  preco: 28.00 },
-  { categoria: "Esquadrias",            nome: "Janela alumínio 1,20×1,20",          un: "un",  base: 0.055, preco: 680.0 },
+  { categoria: "Esquadrias",            nome: "Janela alumínio c/ vidro (1,20×1,20)", un: "un", base: 0.055, preco: 680.0 },
   { categoria: "Esquadrias",            nome: "Porta interna 0,80×2,10",            un: "un",  base: 0.08,  preco: 420.0 },
   { categoria: "Instalações Elétricas", nome: "Conduíte + fios + caixas",           un: "m²",  base: 1.00,  preco: 62.00 },
-  { categoria: "Inst. Hidrossanitárias",nome: "Tubulação PVC + esgoto",             un: "m²",  base: 1.00,  preco: 60.00 },
-  { categoria: "Acabamentos",           nome: "Piso vinílico + revestimento",       un: "m²",  base: 0.90,  preco: 58.00 },
-  { categoria: "Acabamentos",           nome: "Massa corrida + pintura",            un: "m²",  base: 2.80,  preco:  9.50 },
-  { categoria: "Acabamentos",           nome: "Forro drywall ST",                   un: "m²",  base: 0.90,  preco: 42.00 },
-  { categoria: "Projetos e Engenharia", nome: "Proj. Arquitetônico + Estrutural",   un: "m²",  base: 1.00,  preco: 46.00 },
-  { categoria: "Projetos e Engenharia", nome: "Proj. Elétrico + Hidrossanitário",   un: "m²",  base: 1.00,  preco: 14.00 },
+  { categoria: "Inst. Hidrossanitárias",nome: "Tubulação PVC água fria/quente",     un: "m²",  base: 1.00,  preco: 60.00 },
+  { categoria: "Acabamentos",           nome: "Piso vinílico click 4mm",            un: "m²",  base: 0.90,  preco: 58.00 },
+  { categoria: "Acabamentos",           nome: "Massa corrida + pintura látex",      un: "m²",  base: 2.80,  preco:  9.50 },
+  { categoria: "Acabamentos",           nome: "Forro drywall ST (teto)",            un: "m²",  base: 0.90,  preco: 42.00 },
+  { categoria: "Projetos e Engenharia", nome: "Projeto Arquitetônico",              un: "m²",  base: 1.00,  preco: 46.00 },
+  { categoria: "Projetos e Engenharia", nome: "Projeto Estrutural LSF",             un: "m²",  base: 1.00,  preco: 14.00 },
   { categoria: "Mão de Obra",           nome: "Montagem estrutura LSF",             un: "m²",  base: 1.00,  preco: 400.00 },
-  { categoria: "Mão de Obra",           nome: "Instalação vedações",                un: "m²",  base: 1.00,  preco: 200.00 },
-  { categoria: "Mão de Obra",           nome: "Cobertura + acabamentos",            un: "m²",  base: 1.00,  preco: 300.00 },
+  { categoria: "Mão de Obra",           nome: "Instalação vedações (OSB/gesso/cim)", un: "m²", base: 1.00,  preco: 200.00 },
+  { categoria: "Mão de Obra",           nome: "Cobertura (telha shingle)",          un: "m²",  base: 1.00,  preco: 300.00 },
 ];
 
 const CATS_ORDEM_KIT = [
@@ -113,6 +113,44 @@ export default function CalculadoraPublica() {
       .then(({ data }) => { if (data) setEmpresaBranding(data); });
   }, []);
 
+  const [listaInsumos, setListaInsumos] = useState(INSUMOS_KIT);
+  const [carregandoInsumos, setCarregandoInsumos] = useState(true);
+
+  useEffect(() => {
+    async function carregarInsumosPublicos() {
+      try {
+        const { data, error } = await sb
+          .from("insumos_sistema")
+          .select("*");
+
+        if (error) throw error;
+
+        if (data && data.length > 0) {
+          const insumosMesclados = INSUMOS_KIT.map(ins => {
+            const itemBanco = data.find(d => d.nome === ins.nome);
+            return itemBanco ? { ...ins, preco: Number(itemBanco.preco) } : ins;
+          });
+          setListaInsumos(insumosMesclados);
+        }
+      } catch (err) {
+        console.error("Erro ao carregar insumos públicos, usando fallback:", err);
+      } finally {
+        setCarregandoInsumos(false);
+      }
+    }
+
+    carregarInsumosPublicos();
+  }, []);
+
+  function calcKitDinamico(kit) {
+    const fator = PADROES_KIT[kit.padrao].fator;
+    return listaInsumos.map((ins) => {
+      const f = ins.fund ? 1 : fator * kit.pavs;
+      const qtd = Math.ceil(ins.base * kit.area * f);
+      return { ...ins, qtd, total: qtd * ins.preco };
+    });
+  }
+
   // "metro" | "kits"
   const [modo, setModo] = useState("metro");
 
@@ -124,7 +162,7 @@ export default function CalculadoraPublica() {
 
   function selecionarKit(kit) {
     setKitSel(kit);
-    setKitItems(calcKit(kit));
+    setKitItems(calcKitDinamico(kit));
     setCatsAtivas(Object.fromEntries(CATS_ORDEM_KIT.map(c => [c, true])));
     setKitStep("result");
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -190,9 +228,16 @@ export default function CalculadoraPublica() {
 
   function handleCalculate(e) {
     e.preventDefault();
+
+    const custoInsumosM2Base = listaInsumos.reduce((s, ins) => s + (ins.base * ins.preco), 0);
+    const fatorPadrao = PADROES_KIT[padrao].fator;
+    const sfValorM2 = custoInsumosM2Base * fatorPadrao;
+    const alValorM2 = sfValorM2 * 0.82;
+
     const areaTotal = area * PAVIMENTOS[pavimentos];
-    const sfValor = areaTotal * STEEL_FRAME[padrao];
-    const alValor = areaTotal * ALVENARIA[padrao];
+    const sfValor = areaTotal * sfValorM2;
+    const alValor = areaTotal * alValorM2;
+
     setSfMin(Math.round(sfValor * 0.92));
     setSfMax(Math.round(sfValor * 1.12));
     setAlMin(Math.round(alValor * 0.92));
@@ -200,7 +245,7 @@ export default function CalculadoraPublica() {
     setSfMidValue(Math.round(sfValor));
     setStep("result");
     window.scrollTo({ top: 0, behavior: "smooth" });
-    // Tracking: usuário viu o resultado
+
     try { window.dataLayer?.push({ event: "view_simulacao", value: Math.round(sfValor), padrao, area }); } catch (_) {}
   }
 
@@ -209,7 +254,10 @@ export default function CalculadoraPublica() {
     setSendError("");
     setSending(true);
     try {
-      const sfValor = area * PAVIMENTOS[pavimentos] * STEEL_FRAME[padrao];
+      const custoInsumosM2Base = listaInsumos.reduce((s, ins) => s + (ins.base * ins.preco), 0);
+      const sfValorM2 = custoInsumosM2Base * PADROES_KIT[padrao].fator;
+
+      const sfValor = area * PAVIMENTOS[pavimentos] * sfValorM2;
       const { error } = await sb.rpc("captar_lead_publico", {
         p_nome: nome,
         p_contato: whatsapp,
@@ -718,7 +766,7 @@ export default function CalculadoraPublica() {
               </div>
               <div className="kit-grid">
                 {KITS.map(kit => {
-                  const items = calcKit(kit);
+                  const items = calcKitDinamico(kit);
                   const total = items.reduce((s, i) => s + i.total, 0);
                   return (
                     <div key={kit.id} className="kit-card">
