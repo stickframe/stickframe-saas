@@ -188,7 +188,7 @@ export default function BI() {
 
       const [obrasRes, finRes, ncrRes] = await Promise.all([
         sb.from("obras").select("id, nome, cliente, area_m2, status, prazo_inicio, prazo_fim, created_at").eq("empresa_id", empresaId),
-        sb.from("financeiro").select("obra_id, tipo, valor, data").eq("empresa_id", empresaId),
+        sb.from("lancamentos_financeiros").select("obra_id, tipo, valor, data").eq("empresa_id", empresaId),
         sb.from("nao_conformidades").select("id, obra_id, created_at").eq("empresa_id", empresaId),
       ]);
 
