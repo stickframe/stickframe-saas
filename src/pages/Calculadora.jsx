@@ -947,7 +947,7 @@ export default function Calculadora() {
       area:   resultado.area,
       tipo:   resultado.padrao,
     }));
-    setActivePage("orcamentos");
+    setActivePage("orcamento_sf");
   }
 
   function calcularOtimizacao() {
@@ -1163,7 +1163,7 @@ export default function Calculadora() {
       {modo !== "steelframe" ? null : (<>
 
       {/* ── 2-column layout: Form + Sticky Result ── */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 400px", gap: 16, alignItems: "start" }}>
+      <div className="calc-sf-grid" style={{ display: "grid", gridTemplateColumns: "1fr 400px", gap: 16, alignItems: "start" }}>
 
         {/* ── LEFT: Form panel ── */}
         <div>
@@ -1836,6 +1836,9 @@ export default function Calculadora() {
         @media print { button { display: none !important; } }
         @keyframes fadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:none; } }
         @keyframes countUp { from { opacity:0; } to { opacity:1; } }
+        @media (max-width: 1080px) {
+          .calc-sf-grid { grid-template-columns: 1fr !important; }
+        }
       `}</style>
       </>)}
     </div>
