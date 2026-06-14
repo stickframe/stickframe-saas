@@ -176,6 +176,8 @@ export default function CalculadoraPublica() {
 
   // Step: "form" | "result" | "success"
   const [step, setStep] = useState("form");
+  // Lead gate: result is blurred until user submits contact
+  const [leadUnlocked, setLeadUnlocked] = useState(false);
 
   // Form values
   const [area, setArea] = useState(120);
@@ -243,6 +245,7 @@ export default function CalculadoraPublica() {
     setAlMin(Math.round(alValor * 0.92));
     setAlMax(Math.round(alValor * 1.12));
     setSfMidValue(Math.round(sfValor));
+    setLeadUnlocked(false);
     setStep("result");
     window.scrollTo({ top: 0, behavior: "smooth" });
 
@@ -312,7 +315,7 @@ export default function CalculadoraPublica() {
         }
       } catch (_) { /* WhatsApp notification is non-critical */ }
 
-      setStep("success");
+      setLeadUnlocked(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {
       setSendError("Erro ao enviar. Tente novamente.");
@@ -330,6 +333,7 @@ export default function CalculadoraPublica() {
     setNome("");
     setWhatsapp("");
     setSendError("");
+    setLeadUnlocked(false);
     setStep("form");
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -931,7 +935,51 @@ export default function CalculadoraPublica() {
             <>
               <span className="back-link" onClick={handleReset}>← Nova simulação</span>
 
-              <div className="calc-card">
+              {/* Lead gate modal — shown OVER the blurred result until unlocked */}
+              {!leadUnlocked && (
+                <div style={{ position: "fixed", inset: 0, zIndex: 300, background: "rgba(38,35,31,.7)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "16px" }}>
+                  <div style={{ background: "#fff", borderRadius: 16, padding: "32px 28px", maxWidth: 420, width: "100%", boxShadow: "0 24px 60px rgba(0,0,0,.25)" }}>
+                    <div style={{ fontSize: 28, textAlign: "center", marginBottom: 8 }}>🏗</div>
+                    <div className="cta-heading" style={{ textAlign: "center", marginBottom: 6 }}>Sua estimativa está pronta!</div>
+                    <p className="cta-sub" style={{ textAlign: "center", marginBottom: 24 }}>Informe seus dados para liberar o resultado completo. Nossa equipe também entra em contato em até 24h.</p>
+                    <form onSubmit={handleContact}>
+                      <label className="calc-label">Nome completo</label>
+                      <input
+                        className="calc-input"
+                        type="text"
+                        placeholder="Seu nome"
+                        value={nome}
+                        onChange={(e) => setNome(e.target.value)}
+                        required
+                      />
+                      <label className="calc-label">WhatsApp</label>
+                      <input
+                        className="calc-input"
+                        type="tel"
+                        placeholder="(11) 99999-9999"
+                        value={whatsapp}
+                        onChange={(e) => setWhatsapp(e.target.value)}
+                        required
+                      />
+                      <label className="calc-label">E-mail <span style={{color:"#888",fontWeight:400}}>(opcional)</span></label>
+                      <input
+                        className="calc-input"
+                        type="email"
+                        placeholder="seu@email.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                      />
+                      {sendError && <p className="error-msg">{sendError}</p>}
+                      <button className="calc-btn" type="submit" disabled={sending}>
+                        {sending ? "Enviando..." : "Ver minha estimativa →"}
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              )}
+
+              {/* Result — blurred until lead is captured */}
+              <div className="calc-card" style={!leadUnlocked ? { filter: "blur(6px)", userSelect: "none", pointerEvents: "none" } : {}}>
                 <p className="result-headline">Sua estimativa está pronta!</p>
 
                 {/* Steel Frame */}
@@ -968,48 +1016,6 @@ export default function CalculadoraPublica() {
                     <Zap size={13} /> Steel Frame pode ser até <strong>{speedPct}% mais rápido</strong> que a alvenaria convencional
                   </div>
                 )}
-
-                <div className="divider" />
-
-                <div className="cta-heading">Quer uma proposta detalhada e sem compromisso?</div>
-                <p className="cta-sub">Preencha abaixo e nossa equipe entra em contato em até 24h.</p>
-
-                <form onSubmit={handleContact}>
-                  <label className="calc-label">Nome completo</label>
-                  <input
-                    className="calc-input"
-                    type="text"
-                    placeholder="Seu nome"
-                    value={nome}
-                    onChange={(e) => setNome(e.target.value)}
-                    required
-                  />
-
-                  <label className="calc-label">WhatsApp</label>
-                  <input
-                    className="calc-input"
-                    type="tel"
-                    placeholder="Ex: (11) 99999-9999 ou +1 555 000-0000"
-                    value={whatsapp}
-                    onChange={(e) => setWhatsapp(e.target.value)}
-                    required
-                  />
-
-                  <label className="calc-label">E-mail <span style={{color:"#888",fontWeight:400}}>(opcional)</span></label>
-                  <input
-                    className="calc-input"
-                    type="email"
-                    placeholder="seu@email.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-
-                  {sendError && <p className="error-msg">{sendError}</p>}
-
-                  <button className="calc-btn" type="submit" disabled={sending}>
-                    {sending ? "Enviando..." : "Receber proposta grátis"}
-                  </button>
-                </form>
               </div>
             </>
           )}
