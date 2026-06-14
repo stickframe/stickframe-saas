@@ -119,6 +119,22 @@ const CSS = `
   .lp-nav-links a { color: inherit; opacity: .85; }
   .lp-nav-links a:hover { opacity: 1; }
 
+  /* Hamburger */
+  .lp-burger { display: none; background: none; border: none; cursor: pointer; padding: 6px; color: #fff; }
+  .lp-m-menu { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 49; background: var(--brick-dk); flex-direction: column; align-items: center; justify-content: center; gap: 32px; }
+  .lp-m-menu.open { display: flex; }
+  .lp-m-menu a { color: #fff; font-size: 22px; font-weight: 700; opacity: .85; }
+  .lp-m-menu a:hover { opacity: 1; }
+  .lp-m-menu .lp-btn { font-size: 16px; padding: 14px 32px; }
+
+  /* Burger & Mobile menu */
+  .lp-burger { display: none; align-items: center; justify-content: center; background: none; border: none; cursor: pointer; color: #fff; padding: 4px; }
+  .lp-m-menu { display: none; position: fixed; inset: 0; background: var(--graphite); z-index: 200; flex-direction: column; align-items: flex-start; padding: 80px 32px 40px; gap: 28px; }
+  .lp-m-menu.open { display: flex; }
+  .lp-m-menu a { color: #fff; font-size: 22px; font-weight: 700; opacity: .85; text-decoration: none; }
+  .lp-m-menu a:hover { opacity: 1; }
+  .lp-m-menu .lp-btn { margin-top: 12px; font-size: 16px; padding: 14px 28px; }
+
   /* Hero */
   .lp-hero { background: linear-gradient(165deg,#a51d18 0%,#981915 45%,#7d1411 100%); position: relative; overflow: hidden; color: #fff; padding: 150px 0 110px; }
   .lp-hero .ring  { position: absolute; right: -120px; top: -120px; width: 460px; height: 460px; border: 54px solid rgba(255,255,255,.05); border-radius: 50%; pointer-events: none; }
@@ -269,6 +285,7 @@ const CSS = `
 
     .lp-wrap { padding: 0 22px; }
     .lp-nav-links { display: none; }
+    .lp-burger { display: flex; }
     .lp-hero { padding: 120px 0 72px; }
     .lp-hero .h-cta .lp-btn { flex: 1 1 100%; }
     .lp-hero .h-video { justify-content: center; }
@@ -302,6 +319,7 @@ function FaqItem({ q, a }) {
 // ─── Component ────────────────────────────────────────────────────────────────
 export default function LandingPage() {
   const [solid, setSolid] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     salvarOrigemLead();
@@ -327,9 +345,24 @@ export default function LandingPage() {
                 Testar 14 dias grátis
               </a>
             </div>
+            <button className="lp-burger" aria-label="Abrir menu" onClick={() => setMenuOpen(true)}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+            </button>
           </div>
         </div>
       </nav>
+
+      {/* ── Mobile menu ── */}
+      <div className={`lp-m-menu${menuOpen ? " open" : ""}`} onClick={(e) => { if (e.target.tagName === "A" || e.target === e.currentTarget) setMenuOpen(false); }}>
+        <button onClick={() => setMenuOpen(false)} style={{ position: "absolute", top: 20, right: 24, background: "none", border: "none", cursor: "pointer", color: "#fff" }}>
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+        <a href="#dores" onClick={() => setMenuOpen(false)}>Por que StickFrame</a>
+        <a href="#produto" onClick={() => setMenuOpen(false)}>Produto</a>
+        <a href="#precos" onClick={() => setMenuOpen(false)}>Preços</a>
+        <a href="/calcular" onClick={() => setMenuOpen(false)}>Calculadora</a>
+        <a href="/cadastro?plan=profissional" className="lp-btn lp-btn-white" onClick={() => setMenuOpen(false)}>Testar 14 dias grátis</a>
+      </div>
 
       {/* ── Hero ── */}
       <section className="lp-hero">
