@@ -85,7 +85,7 @@ function reducer(state, action) {
 // Rota esperada: /orcamento-sf, /orcamento-sf/:id, /orcamento-sf/:id/:ambId, /orcamento-sf/:id/relatorio
 function parseRota(path) {
   var stripped = (path || '').replace(/^\/(orcamento[_-]sf)\/?/, '');
-  if(stripped === path) return { view: 'projetos' }; // path não começa com nossa base
+  if(stripped === path) return { view: 'projetos' };
   var parts = stripped.split('/').filter(Boolean);
   if(!parts.length) return { view: 'projetos' };
   var projetoId = parts[0];
