@@ -84,7 +84,9 @@ function reducer(state, action) {
 // ── Parse de rota interna ────────────────────────────────────────────────
 // Rota esperada: /orcamento-sf, /orcamento-sf/:id, /orcamento-sf/:id/:ambId, /orcamento-sf/:id/relatorio
 function parseRota(path) {
-  var parts = (path || '').replace(/^\/orcamento-sf\/?/, '').split('/').filter(Boolean);
+  var stripped = (path || '').replace(/^\/(orcamento[_-]sf)\/?/, '');
+  if(stripped === path) return { view: 'projetos' }; // path não começa com nossa base
+  var parts = stripped.split('/').filter(Boolean);
   if(!parts.length) return { view: 'projetos' };
   var projetoId = parts[0];
   if(!parts[1]) return { view: 'projeto', projetoId };
