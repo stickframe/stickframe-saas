@@ -55,6 +55,7 @@ const Configuracoes  = lazyWithRetry(() => import("./pages/Configuracoes"));
 const Fornecedores   = lazyWithRetry(() => import("./pages/Fornecedores"));
 const Calculadora       = lazyWithRetry(() => import("./pages/Calculadora"));
 const OrcamentoTecnico  = lazyWithRetry(() => import("./pages/OrcamentoTecnico"));
+const OrcamentoSF       = lazyWithRetry(() => import("./pages/OrcamentoSF"));
 const MonitorPrecos     = lazyWithRetry(() => import("./pages/MonitorPrecos"));
 const Equipamentos      = lazyWithRetry(() => import("./pages/Equipamentos"));
 const Checklists        = lazyWithRetry(() => import("./pages/Checklists"));
@@ -94,6 +95,7 @@ const PAGES = {
   fornecedores:      Fornecedores,
   calculadora:       Calculadora,
   orcamento_tecnico: OrcamentoTecnico,
+  orcamento_sf:      OrcamentoSF,
   monitor_precos: MonitorPrecos,
   equipamentos:   Equipamentos,
   checklists:     Checklists,
