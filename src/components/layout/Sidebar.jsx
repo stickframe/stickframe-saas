@@ -4,6 +4,7 @@ import { C, NAV, PERFIS } from "../../utils/constants";
 import useAppStore from "../../store/useAppStore";
 import { sb, getEmpresaId } from "../../services/supabase";
 import { LOGO_STICKFRAME } from "../../utils/cdn";
+import { playNotificationSound } from "../../utils/audio";
 
 function NavIcon({ name, size = 16, color }) {
   const Icon = LucideIcons[name];
@@ -118,11 +119,34 @@ export default function Sidebar({ open, onClose }) {
   useEffect(() => {
     const empId = getEmpresaId();
     if (!empId) return;
+
     sb.from("pre_orcamentos")
       .select("id", { count: "exact", head: true })
       .eq("empresa_id", empId)
       .eq("status", "Novo")
       .then(({ count }) => setPreOrcCount(count || 0));
+
+    const ch = sb.channel("sidebar-leads-realtime")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "pre_orcamentos", filter: `empresa_id=eq.${empId}` },
+        (p) => {
+          if (p.new.status === "Novo") {
+            setPreOrcCount((c) => c + 1);
+            playNotificationSound();
+          }
+        })
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "pre_orcamentos", filter: `empresa_id=eq.${empId}` },
+        () => {
+          sb.from("pre_orcamentos")
+            .select("id", { count: "exact", head: true })
+            .eq("empresa_id", empId)
+            .eq("status", "Novo")
+            .then(({ count }) => setPreOrcCount(count || 0));
+        })
+      .subscribe();
+
+    return () => {
+      ch.unsubscribe();
+    };
   }, []);
 
   const hoje = new Date().toISOString().slice(0, 10);
