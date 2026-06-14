@@ -208,11 +208,11 @@ function CalcParedeDrywall({ listaInsumos = INSUMOS }) {
 
     const precoMontante = listaInsumos.find(i => i.nome.includes("C 90"))?.preco || 18.50;
     const precoGuia = listaInsumos.find(i => i.nome.includes("Guia U"))?.preco || 12.00;
-    const precoPlaca = listaInsumos.find(i => i.nome.includes("Gesso ST"))?.preco || 17.00;
+    const precoPlaca = listaInsumos.find(i => i.nome.includes("Gesso ST"))?.preco || t.preco_placa;
 
     setResult({
       area, areaComp, placas, montantes, guias, parafusos, cxPar, massa, fita,
-      totalPlacas: placas * (t.preco_placa === 17.00 ? precoPlaca : t.preco_placa),
+      totalPlacas: placas * precoPlaca,
       totalMont: montantes * precoMontante,
       totalGuia: guias * precoGuia,
       totalPar: cxPar * 48.00,

@@ -33,7 +33,7 @@ Deno.serve(async (req) => {
     // Busca todas as empresas
     const { data: empresas, error: errEmpresas } = await supabaseAdmin
       .from("empresas")
-      .select("id, nome, plano, created_at, limite_obras, trial_ends_at, lead_origem, asaas_customer_id")
+      .select("id, nome, plano, created_at, limite_obras, trial_ends_at, lead_origem, asaas_customer_id, telefone")
       .order("created_at", { ascending: false });
     if (errEmpresas) throw errEmpresas;
 

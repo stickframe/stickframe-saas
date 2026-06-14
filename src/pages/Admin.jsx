@@ -227,15 +227,33 @@ export default function Admin() {
         <>
           {sectionTitle("⚠️ Empresas em risco de abandono")}
           <div style={{ background: C.surface, border: `1px solid ${C.danger}40`, borderRadius: 12, padding: "14px 20px", boxShadow: C.shadow }}>
-            {empresas.filter((e) => e.health < 30).sort((a, b) => a.health - b.health).map((e) => (
-              <div key={e.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: `1px solid ${C.border}` }}>
-                <div>
-                  <div style={{ fontSize: 14, fontWeight: 600 }}>{e.nome}</div>
-                  <div style={{ fontSize: 12, color: C.muted }}>{e.contato_nome || "—"} · {e.contato_email || "sem e-mail"}</div>
+            {empresas.filter((e) => e.health < 30).sort((a, b) => a.health - b.health).map((e) => {
+              const h = e.health ?? 0;
+              const [emoji, bg, col] = h >= 50 ? ["🟡", "#b07a1e18", "#b45309"] : ["🔴", "#dc262618", "#dc2626"];
+              const waNum = (e.telefone || "").replace(/\D/g, "");
+              const waMsg = encodeURIComponent(`Olá${e.contato_nome ? ", " + e.contato_nome : ""}! Vi que a ${e.nome} não está usando muito o StickFrame. Posso ajudar com algo?`);
+              return (
+                <div key={e.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: `1px solid ${C.border}` }}>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 600 }}>{e.nome}</div>
+                    <div style={{ fontSize: 12, color: C.muted }}>{e.contato_nome || "—"} · {e.contato_email || "sem e-mail"}</div>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 8px", borderRadius: 10, background: bg, color: col, fontWeight: 700, fontSize: 12 }}>
+                      {emoji} {h}
+                    </span>
+                    {e.contato_email && (
+                      <a href={`mailto:${e.contato_email}?subject=Oi, ${e.contato_nome || e.nome}! Posso ajudar?`}
+                        title="Enviar e-mail" style={{ textDecoration: "none", fontSize: 16 }}>📧</a>
+                    )}
+                    {waNum && (
+                      <a href={`https://wa.me/55${waNum}?text=${waMsg}`} target="_blank" rel="noreferrer"
+                        title="Abrir WhatsApp" style={{ textDecoration: "none", fontSize: 16 }}>💬</a>
+                    )}
+                  </div>
                 </div>
-                <span style={{ fontWeight: 800, fontSize: 16, color: C.danger }}>{e.health}</span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </>
       )}
@@ -336,15 +354,15 @@ export default function Admin() {
                     })()}
                   </td>
                   <td style={{ padding: "12px 16px", whiteSpace: "nowrap" }}>
-                    <span style={{
-                      fontWeight: 700, fontSize: 13,
-                      color: e.health >= 70 ? "#2e9e5b" : e.health >= 30 ? "#b45309" : C.danger,
-                    }}>
-                      {e.health ?? 0}
-                    </span>
-                    {e.health < 30 && (
-                      <span title="Empresa em risco de abandono" style={{ marginLeft: 6, fontSize: 12 }}>⚠️</span>
-                    )}
+                    {(() => {
+                      const h = e.health ?? 0;
+                      const [emoji, bg, col] = h >= 80 ? ["🟢", "#2e9e5b18", "#2e9e5b"] : h >= 50 ? ["🟡", "#b07a1e18", "#b45309"] : ["🔴", "#dc262618", "#dc2626"];
+                      return (
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 8px", borderRadius: 10, background: bg, color: col, fontWeight: 700, fontSize: 12 }}>
+                          {emoji} {h}
+                        </span>
+                      );
+                    })()}
                   </td>
                   <td style={{ padding: "12px 16px", whiteSpace: "nowrap" }}>
                     {e.trial_ativo ? (

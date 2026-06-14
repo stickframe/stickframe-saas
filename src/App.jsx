@@ -21,6 +21,7 @@ import { useUndoStore } from "./store/undoStore";
 import { useHotkeys } from "react-hotkeys-hook";
 import PortalColaborador from "./pages/PortalColaborador";
 import Admin from "./pages/Admin";
+import AdminMobile from "./pages/AdminMobile";
 
 // Auto-reload on chunk fetch failure (stale SW cache after deploy)
 function lazyWithRetry(fn) {
@@ -54,6 +55,7 @@ const Configuracoes  = lazyWithRetry(() => import("./pages/Configuracoes"));
 const Fornecedores   = lazyWithRetry(() => import("./pages/Fornecedores"));
 const Calculadora       = lazyWithRetry(() => import("./pages/Calculadora"));
 const OrcamentoTecnico  = lazyWithRetry(() => import("./pages/OrcamentoTecnico"));
+const OrcamentoSF       = lazyWithRetry(() => import("./pages/OrcamentoSF"));
 const MonitorPrecos     = lazyWithRetry(() => import("./pages/MonitorPrecos"));
 const Equipamentos      = lazyWithRetry(() => import("./pages/Equipamentos"));
 const Checklists        = lazyWithRetry(() => import("./pages/Checklists"));
@@ -93,6 +95,7 @@ const PAGES = {
   fornecedores:      Fornecedores,
   calculadora:       Calculadora,
   orcamento_tecnico: OrcamentoTecnico,
+  orcamento_sf:      OrcamentoSF,
   monitor_precos: MonitorPrecos,
   equipamentos:   Equipamentos,
   checklists:     Checklists,
@@ -229,6 +232,11 @@ export default function App() {
           <Route path="/admin" element={
             <RequireAdmin>
               <Admin />
+            </RequireAdmin>
+          } />
+          <Route path="/admin/mobile" element={
+            <RequireAdmin>
+              <AdminMobile />
             </RequireAdmin>
           } />
           <Route path="/login"                element={<LoginScreen />} />
