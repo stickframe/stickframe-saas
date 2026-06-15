@@ -17,6 +17,7 @@ import Input from "../components/ui/Input";
 import Select from "../components/ui/Select";
 import WebhookConfig from "../components/configuracoes/WebhookConfig";
 import ModalUpgradePro from "../components/ui/ModalUpgradePro";
+import { ConfigSFTab } from "../components/configuracoes/ConfigSF";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 function LabelF({ children, required }) {
