@@ -85,7 +85,6 @@ const KITS = [
     tagCor: "#2e9e5b",
     descricao: "Ideal para uso individual, home office ou kitnet. Layout inteligente e construção rápida.",
     quartos: 1, banheiros: 1, salas: 1,
-    emoji: "🏠",
     destaques: ["Entrega em 45 dias", "Kit completo estrutural", "Perfeito para kitnet"],
   },
   {
@@ -96,7 +95,6 @@ const KITS = [
     tagCor: "#4a9eff",
     descricao: "Casa térrea completa para família pequena. Conforto e economia em um só projeto.",
     quartos: 2, banheiros: 1, salas: 1,
-    emoji: "🏡",
     destaques: ["2 quartos confortáveis", "Varanda integrada", "Custo-benefício ótimo"],
   },
   {
@@ -107,7 +105,6 @@ const KITS = [
     tagCor: "#981915",
     descricao: "O modelo mais completo para família de 4 pessoas. Suíte master, sala ampla e área gourmet.",
     quartos: 3, banheiros: 2, salas: 2,
-    emoji: "🏘",
     destaques: ["Suíte master com closet", "Área gourmet", "Sala de TV + jantar"],
   },
   {
@@ -118,7 +115,6 @@ const KITS = [
     tagCor: "#8b5cf6",
     descricao: "Sobrado moderno com térreo social e pavimento superior privativo. Máxima privacidade.",
     quartos: 3, banheiros: 3, salas: 2,
-    emoji: "🏗",
     destaques: ["Térreo social separado", "3 suítes no andar", "Sacada com guarda-corpo"],
   },
   {
@@ -129,7 +125,6 @@ const KITS = [
     tagCor: "#e07020",
     descricao: "Para quem não abre mão do melhor. Acabamentos superiores, ambientes generosos e projeto exclusivo.",
     quartos: 4, banheiros: 3, salas: 3,
-    emoji: "🏛",
     destaques: ["4 suítes amplas", "Home theater", "Piscina prevista"],
   },
   {
@@ -140,7 +135,6 @@ const KITS = [
     tagCor: "#c0392b",
     descricao: "Nossa flagship — o lar dos sonhos em Steel Frame. Projeto inspirado em casas européias modernas.",
     quartos: 4, banheiros: 4, salas: 3,
-    emoji: "🏰",
     destaques: ["Estilo europeu moderno", "Pé-direito duplo na sala", "Área total de lazer"],
   },
 ];
@@ -633,36 +627,38 @@ function CalcKits({ onEnviarOrcamento, listaInsumos = INSUMOS }) {
           }, 0);
           return (
             <div key={kit.id} onClick={() => calcularKit(kit)} style={{
-              background: sel ? "linear-gradient(135deg,#1a0a0a,#2d0f0f)" : "#fff",
-              border: `2px solid ${sel ? "#981915" : C.border}`,
-              borderRadius: 20, padding: "22px", cursor: "pointer",
+              background: sel ? "var(--brick-soft)" : "#fff",
+              border: `2px solid ${sel ? "var(--brick)" : "var(--line)"}`,
+              borderRadius: 16, padding: "22px", cursor: "pointer",
               transition: "all .2s", position: "relative", overflow: "hidden",
-              boxShadow: sel ? "0 12px 40px rgba(152,25,21,.3)" : "0 2px 12px rgba(0,0,0,.06)",
-              transform: sel ? "translateY(-3px)" : "none",
+              boxShadow: sel ? "0 4px 16px rgba(152,25,21,.14)" : "0 1px 2px rgba(40,30,20,.05)",
+              transform: sel ? "translateY(-2px)" : "none",
             }}
-              onMouseEnter={e => { if (!sel) { e.currentTarget.style.transform="translateY(-2px)"; e.currentTarget.style.boxShadow="0 8px 28px rgba(0,0,0,.12)"; }}}
-              onMouseLeave={e => { if (!sel) { e.currentTarget.style.transform="none"; e.currentTarget.style.boxShadow="0 2px 12px rgba(0,0,0,.06)"; }}}
+              onMouseEnter={e => { if (!sel) { e.currentTarget.style.transform="translateY(-2px)"; e.currentTarget.style.boxShadow="0 6px 18px rgba(40,30,20,.08)"; }}}
+              onMouseLeave={e => { if (!sel) { e.currentTarget.style.transform="none"; e.currentTarget.style.boxShadow="0 1px 2px rgba(40,30,20,.05)"; }}}
             >
               {/* tag */}
               <div style={{ position: "absolute", top: 14, right: 14, background: kit.tagCor, color: "#fff", fontSize: 9, fontWeight: 800, padding: "3px 8px", borderRadius: 20, letterSpacing: .8 }}>
                 {kit.tag}
               </div>
 
-              <div style={{ fontSize: 40, marginBottom: 12 }}>{kit.emoji}</div>
-              <div style={{ fontSize: 18, fontWeight: 900, color: sel ? "#fff" : C.text, marginBottom: 4 }}>{kit.nome}</div>
-              <div style={{ fontSize: 12, color: sel ? "rgba(255,255,255,.6)" : C.muted, marginBottom: 14, lineHeight: 1.5 }}>{kit.descricao}</div>
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--brick)" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" style={{ width: 34, height: 34, marginBottom: 12 }}>
+                <path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/>
+              </svg>
+              <div style={{ fontSize: 18, fontWeight: 900, color: "var(--ink)", marginBottom: 4 }}>{kit.nome}</div>
+              <div style={{ fontSize: 12, color: "var(--muted)", marginBottom: 14, lineHeight: 1.5 }}>{kit.descricao}</div>
 
               {/* specs */}
               <div style={{ display: "flex", gap: 12, marginBottom: 14, flexWrap: "wrap" }}>
                 {[
-                  { icon: "📐", val: `${kit.area} m²` },
-                  { icon: "🛏", val: `${kit.quartos} qts` },
-                  { icon: "🚿", val: `${kit.banheiros} ban` },
-                  { icon: "🏠", val: `${kit.pavs}P` },
-                ].map(({ icon, val }) => (
-                  <div key={val} style={{ display: "flex", alignItems: "center", gap: 4, background: sel ? "rgba(255,255,255,.1)" : C.darker, borderRadius: 8, padding: "4px 10px" }}>
-                    <span style={{ fontSize: 12 }}>{icon}</span>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: sel ? "#fff" : C.text }}>{val}</span>
+                  { path: <><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18"/></>, val: `${kit.area} m²` },
+                  { path: <><path d="M3 18v-6a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3v6"/><path d="M3 18h18"/><path d="M7 11V7"/></>, val: `${kit.quartos} qts` },
+                  { path: <><path d="M5 14a7 7 0 0 1 14 0"/><path d="M12 14v7"/><path d="M9 21h6"/></>, val: `${kit.banheiros} ban` },
+                  { path: <><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></>, val: `${kit.pavs}P` },
+                ].map(({ path, val }) => (
+                  <div key={val} style={{ display: "flex", alignItems: "center", gap: 5, background: "var(--surface-2)", borderRadius: 8, padding: "4px 10px" }}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="var(--ink-2)" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" style={{ width: 12, height: 12 }}>{path}</svg>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: "var(--ink)" }}>{val}</span>
                   </div>
                 ))}
               </div>
@@ -670,18 +666,31 @@ function CalcKits({ onEnviarOrcamento, listaInsumos = INSUMOS }) {
               {/* destaques */}
               <div style={{ marginBottom: 16 }}>
                 {kit.destaques.map(d => (
-                  <div key={d} style={{ fontSize: 11, color: sel ? "rgba(255,255,255,.7)" : C.muted, marginBottom: 3 }}>✓ {d}</div>
+                  <div key={d} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: "var(--muted)", marginBottom: 3 }}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="var(--brick)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: 10, height: 10, flexShrink: 0 }}>
+                      <path d="M20 6 9 17l-5-5"/>
+                    </svg>
+                    {d}
+                  </div>
                 ))}
               </div>
 
               {/* preço ref */}
-              <div style={{ borderTop: `1px solid ${sel ? "rgba(255,255,255,.15)" : C.border}`, paddingTop: 12, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div style={{ borderTop: "1px solid var(--line)", paddingTop: 12, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <div>
-                  <div style={{ fontSize: 9, color: sel ? "rgba(255,255,255,.5)" : C.muted, letterSpacing: .8, marginBottom: 2 }}>MATERIAIS A PARTIR DE</div>
-                  <div style={{ fontSize: 20, fontWeight: 900, color: sel ? "#ffb3b0" : "#981915" }}>{fmtR(totalRef)}</div>
+                  <div style={{ fontSize: 9, color: "var(--muted)", letterSpacing: .8, marginBottom: 2 }}>MATERIAIS A PARTIR DE</div>
+                  <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: 20, fontWeight: 700, color: "var(--brick)" }}>{fmtR(totalRef)}</div>
                 </div>
-                <div style={{ background: sel ? "rgba(255,255,255,.15)" : "#981915", color: "#fff", fontSize: 11, fontWeight: 700, padding: "8px 16px", borderRadius: 10 }}>
-                  {sel ? "✓ Selecionado" : "Calcular"}
+                <div style={{
+                  display: "flex", alignItems: "center", gap: 6,
+                  background: sel ? "var(--brick)" : "var(--brick)", color: "#fff", fontSize: 11, fontWeight: 700, padding: "8px 16px", borderRadius: 9,
+                }}>
+                  {sel && (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ width: 10, height: 10 }}>
+                      <path d="M20 6 9 17l-5-5"/>
+                    </svg>
+                  )}
+                  {sel ? "Selecionado" : "Calcular"}
                 </div>
               </div>
             </div>
@@ -698,9 +707,10 @@ function CalcKits({ onEnviarOrcamento, listaInsumos = INSUMOS }) {
         return (
         <div id="kit-result-scroll" style={{ animation: "fadeUp .4s ease" }}>
           <div style={{
-            background: "linear-gradient(135deg,#1a0a0a,#981915)",
-            borderRadius: 20, padding: "28px 32px", marginBottom: 16, color: "#fff",
+            background: "var(--graphite)", position: "relative", overflow: "hidden",
+            borderRadius: 16, padding: "28px 32px", marginBottom: 16, color: "#fff",
           }}>
+            <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 4, background: "var(--brick)" }} />
             <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 16, marginBottom: 20 }}>
               <div>
                 <div style={{ fontSize: 11, opacity: .6, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 6 }}>Kit selecionado</div>
@@ -709,7 +719,7 @@ function CalcKits({ onEnviarOrcamento, listaInsumos = INSUMOS }) {
               </div>
               <div style={{ textAlign: "right" }}>
                 <div style={{ fontSize: 11, opacity: .6, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }}>Total incluído</div>
-                <div style={{ fontSize: 38, fontWeight: 900, letterSpacing: -1 }}>{fmtR(totalAtivo)}</div>
+                <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: 38, fontWeight: 700, letterSpacing: -1 }}>{fmtR(totalAtivo)}</div>
               </div>
             </div>
             {/* toggles de categorias opcionais */}
@@ -726,7 +736,18 @@ function CalcKits({ onEnviarOrcamento, listaInsumos = INSUMOS }) {
                     color: ativo ? "#fff" : "rgba(255,255,255,.45)",
                     fontSize: 12, fontWeight: 700, transition: "all .2s",
                   }}>
-                    <span style={{ fontSize: 14 }}>{ativo ? "☑" : "☐"}</span>
+                    <div style={{
+                      width: 14, height: 14, borderRadius: 3, flexShrink: 0,
+                      border: `1.5px solid ${ativo ? "var(--brick)" : "rgba(255,255,255,.3)"}`,
+                      background: ativo ? "var(--brick)" : "transparent",
+                      display: "grid", placeItems: "center",
+                    }}>
+                      {ativo && (
+                        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: 9, height: 9 }}>
+                          <path d="M20 6 9 17l-5-5"/>
+                        </svg>
+                      )}
+                    </div>
                     <span>{cat}</span>
                     <span style={{ opacity: .7 }}>{fmtR(sub)}</span>
                   </button>
@@ -757,10 +778,10 @@ function CalcKits({ onEnviarOrcamento, listaInsumos = INSUMOS }) {
             const subtotal = itens.reduce((s, i) => s + i.total, 0);
             const ativa = catsAtivas[cat];
             return (
-              <div key={cat} style={{ background: "#fff", borderRadius: 16, border: `1px solid ${C.border}`, marginBottom: 12, overflow: "hidden", opacity: ativa ? 1 : 0.35, transition: "opacity .2s" }}>
-                <div style={{ background: C.darker, padding: "10px 18px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span style={{ fontSize: 12, fontWeight: 800, color: C.text, letterSpacing: .5 }}>{cat}</span>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: "#981915" }}>{fmtR(subtotal)}{!ativa && <span style={{ marginLeft: 8, fontSize: 10, color: C.muted }}>(excluído)</span>}</span>
+              <div key={cat} style={{ background: "#fff", borderRadius: 14, border: `1px solid ${C.border}`, marginBottom: 12, overflow: "hidden", opacity: ativa ? 1 : 0.35, transition: "opacity .2s" }}>
+                <div style={{ background: "var(--surface-2)", padding: "10px 18px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", letterSpacing: .8, textTransform: "uppercase" }}>{cat}</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: "var(--brick)" }}>{fmtR(subtotal)}{!ativa && <span style={{ marginLeft: 8, fontSize: 10, color: C.muted }}>(excluído)</span>}</span>
                 </div>
                 {itens.map(i => (
                   <div key={i.nome} style={{ display: "grid", gridTemplateColumns: "1fr auto auto auto", gap: 12, padding: "10px 18px", borderTop: `1px solid ${C.border}`, alignItems: "center" }}>
@@ -770,7 +791,7 @@ function CalcKits({ onEnviarOrcamento, listaInsumos = INSUMOS }) {
                     </div>
                     <div style={{ textAlign: "right", fontSize: 13, fontWeight: 700, color: C.text }}>{i.qtd} {i.un}</div>
                     <div style={{ textAlign: "right", fontSize: 11, color: C.muted }}>{fmtR(i.preco)}/{i.un}</div>
-                    <div style={{ textAlign: "right", fontSize: 13, fontWeight: 700, color: "#2e9e5b" }}>{fmtR(i.total)}</div>
+                    <div style={{ textAlign: "right", fontSize: 13, fontWeight: 700, color: "var(--pos)" }}>{fmtR(i.total)}</div>
                   </div>
                 ))}
               </div>
@@ -784,11 +805,17 @@ function CalcKits({ onEnviarOrcamento, listaInsumos = INSUMOS }) {
               const wb = XLSX.utils.book_new();
               XLSX.utils.book_append_sheet(wb, ws, "Kit");
               XLSX.writeFile(wb, `kit-${result.id}-${result.area}m2.xlsx`);
-            }} style={{ padding: "12px 22px", background: C.darker, border: `1px solid ${C.border}`, borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", color: C.text }}>
-              📥 Exportar Excel
+            }} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "12px 22px", background: "#fff", border: `1px solid ${C.border}`, borderRadius: 9, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", color: "var(--ink-2)" }}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" style={{ width: 14, height: 14 }}>
+                <path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 21h16"/>
+              </svg>
+              Exportar Excel
             </button>
-            <button onClick={() => onEnviarOrcamento(result)} style={{ padding: "12px 28px", background: "linear-gradient(135deg,#981915,#c0392b)", color: "#fff", border: "none", borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", boxShadow: "0 4px 16px rgba(152,25,21,.3)" }}>
-              📋 Enviar para Orçamento
+            <button onClick={() => onEnviarOrcamento(result)} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "12px 28px", background: "var(--brick)", color: "#fff", border: "none", borderRadius: 9, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" style={{ width: 14, height: 14 }}>
+                <path d="M6 2h8l4 4v16H6z"/><path d="M14 2v4h4M9 13h6M9 17h6"/>
+              </svg>
+              Enviar para Orçamento
             </button>
           </div>
         </div>
@@ -1294,7 +1321,7 @@ export default function Calculadora() {
                 opacity: excluida ? 0.4 : 1, transition: "opacity .2s",
               }}>
                 <div style={{
-                  padding: "10px 18px", background: "#f8f8f8",
+                  padding: "10px 18px", background: "var(--surface-2)",
                   borderBottom: `1px solid ${C.border}`,
                   display: "flex", justifyContent: "space-between", alignItems: "center",
                 }}>
@@ -1307,12 +1334,12 @@ export default function Calculadora() {
                 </div>
                 <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
                   <thead>
-                    <tr style={{ background: "#fafafa" }}>
-                      <th style={{ padding: "8px 18px", textAlign: "left",  fontSize: 10, color: C.muted, fontWeight: 600 }}>Material</th>
-                      <th style={{ padding: "8px 10px", textAlign: "right", fontSize: 10, color: C.muted, fontWeight: 600, width: 70 }}>Qtd</th>
-                      <th style={{ padding: "8px 10px", textAlign: "left",  fontSize: 10, color: C.muted, fontWeight: 600, width: 45 }}>Un</th>
-                      <th style={{ padding: "8px 12px", textAlign: "right", fontSize: 10, color: C.muted, fontWeight: 600, width: 95 }}>Preço ref.</th>
-                      <th style={{ padding: "8px 18px", textAlign: "right", fontSize: 10, color: C.muted, fontWeight: 600, width: 100 }}>Total</th>
+                    <tr style={{ background: "var(--surface-2)" }}>
+                      <th style={{ padding: "8px 18px", textAlign: "left",  fontSize: 10, color: C.muted, fontWeight: 700, textTransform: "uppercase", letterSpacing: .5 }}>Material</th>
+                      <th style={{ padding: "8px 10px", textAlign: "right", fontSize: 10, color: C.muted, fontWeight: 700, textTransform: "uppercase", letterSpacing: .5, width: 70 }}>Qtd</th>
+                      <th style={{ padding: "8px 10px", textAlign: "left",  fontSize: 10, color: C.muted, fontWeight: 700, textTransform: "uppercase", letterSpacing: .5, width: 45 }}>Un</th>
+                      <th style={{ padding: "8px 12px", textAlign: "right", fontSize: 10, color: C.muted, fontWeight: 700, textTransform: "uppercase", letterSpacing: .5, width: 95 }}>Preço ref.</th>
+                      <th style={{ padding: "8px 18px", textAlign: "right", fontSize: 10, color: C.muted, fontWeight: 700, textTransform: "uppercase", letterSpacing: .5, width: 100 }}>Total</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1333,8 +1360,11 @@ export default function Calculadora() {
             );
           })}
 
-          <p style={{ fontSize: 12, color: C.muted, textAlign: "center", marginTop: 8 }}>
-            ⚠️ Preços de referência — sujeitos à variação regional e de mercado.
+          <p style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, fontSize: 12, color: C.muted, textAlign: "center", marginTop: 8 }}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" style={{ width: 13, height: 13, flexShrink: 0 }}>
+              <circle cx="12" cy="12" r="9"/><path d="M12 7v6"/><path d="M12 16.5h.01"/>
+            </svg>
+            Preços de referência — sujeitos à variação regional e de mercado.
           </p>
         </div>
 
@@ -1442,7 +1472,7 @@ export default function Calculadora() {
                 cursor: resultado ? "pointer" : "not-allowed", fontFamily: "inherit",
                 opacity: resultado ? 1 : .4,
               }}>
-                📥 Excel
+                Excel
               </button>
               <button onClick={() => window.print()} disabled={!resultado} style={{
                 flex: 1, padding: "9px 0",
@@ -1451,7 +1481,7 @@ export default function Calculadora() {
                 cursor: resultado ? "pointer" : "not-allowed", fontFamily: "inherit",
                 opacity: resultado ? 1 : .4,
               }}>
-                🖨️ Imprimir
+                Imprimir
               </button>
             </div>
 
@@ -1472,7 +1502,7 @@ export default function Calculadora() {
                 color: C.muted, fontSize: 11, fontWeight: 700, cursor: "pointer",
                 fontFamily: "inherit", opacity: cubCarregando ? .6 : 1,
               }}>
-                {cubCarregando ? "..." : "🔄"}
+                {cubCarregando ? "..." : "↻"}
               </button>
             </div>
 
@@ -1490,7 +1520,7 @@ export default function Calculadora() {
           <div style={{ background: "#fff", borderRadius: 16, border: `1px solid ${C.border}`, overflow: "hidden", marginTop: 8 }}>
             {/* Header */}
             <div style={{ padding: "13px 20px", background: C.dark, borderBottom: `1px solid ${C.border}` }}>
-              <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: 1.5, color: C.graphite, textTransform: "uppercase" }}>🔧 Otimização de Corte</div>
+              <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: 1.5, color: C.graphite, textTransform: "uppercase" }}>Otimização de Corte</div>
               <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>
                 Algoritmo FFD (First Fit Decreasing) — minimize desperdício de ~10% para ~2–3%
               </div>
@@ -1528,14 +1558,14 @@ export default function Calculadora() {
               <button onClick={calcularOtimizacao} style={{
                 padding: "9px 22px", background: C.red, color: "#fff", border: "none",
                 borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
-              }}>🔧 Calcular</button>
+              }}>Calcular</button>
             </div>
 
             {/* Banco de Retalhos disponíveis */}
             {retalhos.length > 0 && (
               <div style={{ padding: "12px 20px", borderBottom: `1px solid ${C.border}`, background: "#f0faf4" }}>
                 <div style={{ fontSize: 11, fontWeight: 700, color: C.success, letterSpacing: 1, marginBottom: 8, textTransform: "uppercase" }}>
-                  📦 Banco de Retalhos — {retalhos.length} peça{retalhos.length !== 1 ? "s" : ""} disponível{retalhos.length !== 1 ? "is" : ""}
+                  Banco de Retalhos — {retalhos.length} peça{retalhos.length !== 1 ? "s" : ""} disponível{retalhos.length !== 1 ? "is" : ""}
                 </div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                   {retalhos.map((r) => (
@@ -1595,7 +1625,7 @@ export default function Calculadora() {
                           borderLeft: "1px solid #ddd", borderRight: "1px solid #ddd",
                           fontSize: 11, fontWeight: 700, color: C.success,
                         }}>
-                          📦 {prof.cobertas} peça{prof.cobertas !== 1 ? "s" : ""} coberta{prof.cobertas !== 1 ? "s" : ""} por retalhos
+                          {prof.cobertas} peça{prof.cobertas !== 1 ? "s" : ""} coberta{prof.cobertas !== 1 ? "s" : ""} por retalhos
                           &nbsp;·&nbsp;
                           <span style={{ fontWeight: 400, color: "#555" }}>
                             {prof.barras.length} barra{prof.barras.length !== 1 ? "s" : ""} novas necessárias
@@ -1625,7 +1655,7 @@ export default function Calculadora() {
                       }}>
                         <span>{numCortadas} de {prof.barras.length} cortadas</span>
                         {numCortadas === prof.barras.length && prof.barras.length > 0 && (
-                          <span style={{ fontWeight: 700, color: C.success }}>✅ Concluído!</span>
+                          <span style={{ fontWeight: 700, color: C.success }}>Concluído!</span>
                         )}
                       </div>
 
@@ -1633,7 +1663,7 @@ export default function Calculadora() {
                       {numCortadas === prof.barras.length && prof.barras.length > 0 && (
                         <div style={{ padding: "10px 14px", borderLeft: "1px solid #ddd", borderRight: "1px solid #ddd", background: desvio !== null && desvio >= 15 ? "#fff1f1" : "#fff" }}>
                           <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, marginBottom: 6 }}>
-                            ⚠️ ALERTA DE DESVIO — barras efetivamente usadas na obra:
+                            ALERTA DE DESVIO — barras efetivamente usadas na obra:
                           </div>
                           <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
                             <input
@@ -1650,7 +1680,7 @@ export default function Calculadora() {
                                 color:      desvio >= 15 ? C.danger        : desvio >= 5 ? "#92400e"   : C.success,
                                 borderLeft: `3px solid ${desvio >= 15 ? C.danger : desvio >= 5 ? "#d97706" : C.success}`,
                               }}>
-                                {desvio > 0 ? `▲ +${desvio.toFixed(1)}% acima do planejado` : desvio < 0 ? `▼ ${Math.abs(desvio).toFixed(1)}% abaixo (ótimo!)` : "✅ Sem desvio"}
+                                {desvio > 0 ? `▲ +${desvio.toFixed(1)}% acima do planejado` : desvio < 0 ? `▼ ${Math.abs(desvio).toFixed(1)}% abaixo (ótimo!)` : "Sem desvio"}
                                 {desvio >= 15 && <div style={{ fontSize: 11, fontWeight: 400, marginTop: 3 }}>Investigar: erro de medição, retrabalho ou furto de material?</div>}
                               </div>
                             )}
@@ -1676,7 +1706,7 @@ export default function Calculadora() {
                                   fontSize: 15, fontWeight: 800, color: isCortada ? C.success : "#1a1a1a",
                                   letterSpacing: 0.3,
                                 }}>
-                                  {isCortada ? "✅ " : ""}BARRA {String(b.id).padStart(2, "0")}
+                                  {isCortada ? "✓ " : ""}BARRA {String(b.id).padStart(2, "0")}
                                 </span>
                                 <span style={{
                                   fontSize: 12, fontWeight: 700, padding: "3px 10px", borderRadius: 6,
@@ -1736,7 +1766,7 @@ export default function Calculadora() {
                                 color: isCortada ? "#fff" : "#555",
                                 transition: "all .2s",
                               }}>
-                                {isCortada ? "✅ Cortada — toque para desfazer" : "Marcar como Cortada"}
+                                {isCortada ? "✓ Cortada — toque para desfazer" : "Marcar como Cortada"}
                               </button>
 
                               {/* Registrar retalho de sobra */}
@@ -1752,7 +1782,7 @@ export default function Calculadora() {
                                     fontFamily: "inherit", fontSize: 12, fontWeight: 700,
                                     color: C.success, opacity: salvandoRet === key ? 0.6 : 1,
                                   }}>
-                                  {salvandoRet === key ? "Salvando…" : `📦 Registrar retalho de ${fmtMm(b.sobra)} no banco`}
+                                  {salvandoRet === key ? "Salvando…" : `Registrar retalho de ${fmtMm(b.sobra)} no banco`}
                                 </button>
                               )}
                             </div>
@@ -1815,7 +1845,7 @@ export default function Calculadora() {
                   padding: "12px 14px", background: "#fffbeb",
                   border: "1px solid #fde68a", borderRadius: 8, fontSize: 12, color: "#78350f", lineHeight: 1.5,
                 }}>
-                  ⚠️ Comprimentos de referência. Confirme com a tabela de corte do projeto estrutural.
+                  Comprimentos de referência. Confirme com a tabela de corte do projeto estrutural.
                   Peças de sobra ≥ 400mm devem ser catalogadas para reaproveitamento.
                 </div>
               </div>
