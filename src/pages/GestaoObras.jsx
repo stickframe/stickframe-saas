@@ -587,6 +587,169 @@ function ObraChatPanel({ obraId, userName, userPerfil, empresaId }) {
   );
 }
 
+// ─── Tab Quantitativos ────────────────────────────────────────────────────────
+function TabQuantitativos({ obraId }) {
+  const [modal, setModal] = useState(false);
+  const [form, setForm] = useState({ item:'', cat:'Estrutura', un:'un', qtd:'', preco:'' });
+  const [itens, setItens] = useState([]);
+
+  useEffect(() => {
+    listarQuantitativos(obraId).then(data => setItens(data || [])).catch(() => setItens([]));
+  }, [obraId]);
+
+  const total = itens.reduce((a,i) => a + (i.qtd||0)*(i.preco||0), 0);
+
+  function gerarId() { return Math.random().toString(36).slice(2,9); }
+  function fmtR(v) { return 'R$ ' + (v||0).toLocaleString('pt-BR',{minimumFractionDigits:2}); }
+
+  async function salvar() {
+    if(!form.item.trim()) return;
+    const item = { item: form.item, cat: form.cat, un: form.un, qtd: parseFloat(form.qtd)||0, preco: parseFloat((form.preco||'0').replace(',','.'))||0, obra_id: obraId };
+    try {
+      const { criarQuantitativo } = await import('../services/repositories/quantitativoRepository');
+      const novo = await criarQuantitativo(item);
+      setItens(prev => [...prev, novo || { ...item, id: gerarId() }]);
+    } catch {
+      setItens(prev => [...prev, { ...item, id: gerarId() }]);
+    }
+    setModal(false);
+    setForm({ item:'', cat:'Estrutura', un:'un', qtd:'', preco:'' });
+  }
+
+  async function remover(itemId) {
+    try {
+      const { deletarQuantitativo } = await import('../services/repositories/quantitativoRepository');
+      await deletarQuantitativo(itemId);
+    } catch { /* ignore */ }
+    setItens(prev => prev.filter(i => i.id !== itemId));
+  }
+
+  async function carregarTemplate() {
+    const template = [
+      {item:'Montante 90mm 0,90',cat:'Estrutura',un:'un',qtd:0,preco:18.50},
+      {item:'Guia 90mm 0,90',cat:'Estrutura',un:'un',qtd:0,preco:16.40},
+      {item:'Placa Cimentícia 10mm',cat:'Fechamento',un:'m²',qtd:0,preco:42.00},
+      {item:'Lã de Vidro 50mm',cat:'Isolamento',un:'m²',qtd:0,preco:28.60},
+      {item:'Telha Shingle',cat:'Cobertura',un:'m²',qtd:0,preco:55.90},
+      {item:'Parafuso Auto-atarraxante',cat:'Fixação',un:'cx',qtd:0,preco:24.00},
+    ];
+    try {
+      const { criarQuantitativo } = await import('../services/repositories/quantitativoRepository');
+      const criados = await Promise.all(template.map(t => criarQuantitativo({ ...t, obra_id: obraId }).catch(() => ({ ...t, id: gerarId() }))));
+      setItens(prev => [...prev, ...criados]);
+    } catch {
+      setItens(prev => [...prev, ...template.map(t => ({ ...t, id: gerarId() }))]);
+    }
+  }
+
+  return (
+    <div>
+      {itens.length === 0 ? (
+        <div style={{ padding:'64px 40px', textAlign:'center', background:'var(--surface)', borderRadius:12 }}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--muted)" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" style={{ width:44,height:44,margin:'0 auto 16px',display:'block' }}>
+            <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
+            <rect x="9" y="3" width="6" height="4" rx="1"/>
+            <path d="M9 12h6M9 16h4"/>
+          </svg>
+          <div style={{ fontWeight:700, fontSize:18, color:'var(--ink)', marginBottom:8 }}>Nenhum item cadastrado</div>
+          <div style={{ fontSize:13, color:'var(--muted)', maxWidth:340, margin:'0 auto 22px', lineHeight:1.65 }}>Use o template Steel Frame ou adicione itens manualmente.</div>
+          <div style={{ display:'flex', gap:10, justifyContent:'center', flexWrap:'wrap' }}>
+            <button onClick={carregarTemplate} style={{ padding:'9px 18px', background:'var(--brick)', color:'#fff', border:'none', borderRadius:8, fontWeight:700, fontSize:13, cursor:'pointer', fontFamily:'inherit' }}>
+              Usar template Steel Frame
+            </button>
+            <button onClick={() => setModal(true)} style={{ padding:'9px 18px', background:'var(--surface)', color:'var(--ink)', border:'1px solid var(--line)', borderRadius:8, fontWeight:700, fontSize:13, cursor:'pointer', fontFamily:'inherit' }}>
+              + Adicionar manualmente
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div>
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14 }}>
+            <div style={{ fontWeight:700, fontSize:20, color:'var(--ink)' }}>
+              {itens.length} iten{itens.length!==1?'s':''} · Total: <span style={{ color:'var(--brick)' }}>{fmtR(total)}</span>
+            </div>
+            <button onClick={() => setModal(true)} style={{ padding:'9px 18px', background:'var(--brick)', color:'#fff', border:'none', borderRadius:8, fontWeight:700, fontSize:13, cursor:'pointer', fontFamily:'inherit' }}>
+              + Novo item
+            </button>
+          </div>
+          <div style={{ background:'var(--surface)', borderRadius:12, overflow:'hidden', border:'1px solid var(--line)' }}>
+            <table style={{ width:'100%', borderCollapse:'collapse' }}>
+              <thead>
+                <tr>{['Item','Categoria','Un.','Qtd','Preço unit.','Total',''].map(h =>
+                  <th key={h} style={{ fontSize:11,fontWeight:700,letterSpacing:1,color:'var(--muted)',textTransform:'uppercase',padding:'10px 14px',textAlign:'left',borderBottom:'1px solid var(--line)' }}>{h}</th>
+                )}</tr>
+              </thead>
+              <tbody>
+                {itens.map(i => (
+                  <tr key={i.id} style={{ borderBottom:'1px solid var(--line-2)' }}>
+                    <td style={{ padding:'11px 14px', fontSize:13.5, fontWeight:700, color:'var(--ink)' }}>{i.item}</td>
+                    <td style={{ padding:'11px 14px', fontSize:12.5, color:'var(--muted)' }}>{i.cat}</td>
+                    <td style={{ padding:'11px 14px', fontSize:12.5, color:'var(--muted)' }}>{i.un}</td>
+                    <td style={{ padding:'11px 14px', fontWeight:700, fontSize:15 }}>{i.qtd}</td>
+                    <td style={{ padding:'11px 14px', fontSize:14, color:'var(--ink-2)' }}>{fmtR(i.preco)}</td>
+                    <td style={{ padding:'11px 14px', fontSize:15, fontWeight:700, color:'var(--brick)' }}>{fmtR(i.qtd*i.preco)}</td>
+                    <td style={{ padding:'11px 14px', textAlign:'right' }}>
+                      <button onClick={() => remover(i.id)}
+                        style={{ padding:'5px 8px', background:'var(--surface-2)', border:'1px solid var(--line)', borderRadius:6, cursor:'pointer', color:'var(--neg,#a33327)', fontFamily:'inherit', fontSize:11, fontWeight:700 }}>
+                        Remover
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {modal && (
+        <div style={{ position:'fixed',inset:0,background:'rgba(0,0,0,.45)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:1000 }}
+          onClick={e => { if(e.target===e.currentTarget) setModal(false); }}>
+          <div style={{ background:'var(--surface)',borderRadius:14,padding:28,width:480,maxWidth:'calc(100vw - 32px)' }}>
+            <div style={{ fontWeight:800,fontSize:18,marginBottom:20 }}>Novo item</div>
+            <div style={{ marginBottom:14 }}>
+              <label style={{ fontSize:12,fontWeight:700,color:'var(--muted)',display:'block',marginBottom:6 }}>Item *</label>
+              <input autoFocus placeholder="Ex: Montante 90mm 0,90" value={form.item}
+                onChange={e => setForm(f => ({...f,item:e.target.value}))}
+                style={{ width:'100%',padding:'10px 12px',border:'1.5px solid var(--line)',borderRadius:9,fontSize:13.5,fontFamily:'inherit',outline:'none',boxSizing:'border-box' }} />
+            </div>
+            <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:14,marginBottom:14 }}>
+              <div>
+                <label style={{ fontSize:12,fontWeight:700,color:'var(--muted)',display:'block',marginBottom:6 }}>Categoria</label>
+                <select value={form.cat} onChange={e => setForm(f => ({...f,cat:e.target.value}))}
+                  style={{ width:'100%',padding:'10px 12px',border:'1.5px solid var(--line)',borderRadius:9,fontSize:13.5,fontFamily:'inherit',outline:'none',background:'var(--surface-2)',boxSizing:'border-box' }}>
+                  {['Estrutura','Fechamento','Isolamento','Cobertura','Fixação','Impermeabilização','Elétrica','Hidráulica'].map(c => <option key={c}>{c}</option>)}
+                </select>
+              </div>
+              <div>
+                <label style={{ fontSize:12,fontWeight:700,color:'var(--muted)',display:'block',marginBottom:6 }}>Unidade</label>
+                <input placeholder="un, m², kg…" value={form.un} onChange={e => setForm(f => ({...f,un:e.target.value}))}
+                  style={{ width:'100%',padding:'10px 12px',border:'1.5px solid var(--line)',borderRadius:9,fontSize:13.5,fontFamily:'inherit',outline:'none',boxSizing:'border-box' }} />
+              </div>
+            </div>
+            <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:14,marginBottom:24 }}>
+              <div>
+                <label style={{ fontSize:12,fontWeight:700,color:'var(--muted)',display:'block',marginBottom:6 }}>Quantidade</label>
+                <input type="number" placeholder="0" value={form.qtd} onChange={e => setForm(f => ({...f,qtd:e.target.value}))}
+                  style={{ width:'100%',padding:'10px 12px',border:'1.5px solid var(--line)',borderRadius:9,fontSize:13.5,fontFamily:'inherit',outline:'none',boxSizing:'border-box' }} />
+              </div>
+              <div>
+                <label style={{ fontSize:12,fontWeight:700,color:'var(--muted)',display:'block',marginBottom:6 }}>Preço unitário (R$)</label>
+                <input placeholder="0,00" value={form.preco} onChange={e => setForm(f => ({...f,preco:e.target.value}))}
+                  style={{ width:'100%',padding:'10px 12px',border:'1.5px solid var(--line)',borderRadius:9,fontSize:13.5,fontFamily:'inherit',outline:'none',boxSizing:'border-box' }} />
+              </div>
+            </div>
+            <div style={{ display:'flex',gap:10,justifyContent:'flex-end' }}>
+              <button onClick={() => setModal(false)} style={{ padding:'9px 18px',background:'var(--surface-2)',border:'1px solid var(--line)',borderRadius:8,fontWeight:700,fontSize:13,cursor:'pointer',fontFamily:'inherit' }}>Cancelar</button>
+              <button onClick={salvar} style={{ padding:'9px 18px',background:'var(--brick)',color:'#fff',border:'none',borderRadius:8,fontWeight:700,fontSize:13,cursor:'pointer',fontFamily:'inherit' }}>Salvar</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function GestaoObras() {
   const { toast, mostrarToast } = useToast();
   useModuleLoad("obras");
@@ -1502,7 +1665,7 @@ export default function GestaoObras() {
                 {/* Abas */}
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: `1px solid ${C.border}` }}>
                 <div style={{ display: "flex", flex: 1, overflowX: "auto", scrollbarWidth: "thin" }}>
-                  {[["fases", "Fases"], ["tarefas", "✅ Tarefas"], ["financeiro", "Financeiro"], ["fluxo", "Fluxo"], ["cronograma", "Cronograma"], ["diario", "Diário"], ["fotos", "Fotos"], ["arquivos", "Arquivos"], ["ncr", "NCR"], ["rfis", "RFIs"], ["rastreio", "Rastreio"], ["historico", "Histórico"], ...(obra.status === "Concluída" ? [["garantia", "Garantia"]] : []), ["garantias", "Garantias"], ...(perfil === "diretor" ? [["membros", "Membros"]] : []), ["presenca", "Presença"], ["comentarios", "Comentários"], ["chat", "💬 Chat"]].map(([k, l]) => (
+                  {[["fases", "Fases"], ["tarefas", "✅ Tarefas"], ["financeiro", "Financeiro"], ["fluxo", "Fluxo"], ["cronograma", "Cronograma"], ["diario", "Diário"], ["quantitativos", "Quantitativos"], ["fotos", "Fotos"], ["arquivos", "Arquivos"], ["ncr", "NCR"], ["rfis", "RFIs"], ["rastreio", "Rastreio"], ["historico", "Histórico"], ...(obra.status === "Concluída" ? [["garantia", "Garantia"]] : []), ["garantias", "Garantias"], ...(perfil === "diretor" ? [["membros", "Membros"]] : []), ["presenca", "Presença"], ["comentarios", "Comentários"], ["chat", "💬 Chat"]].map(([k, l]) => (
                     <button key={k} onClick={() => {
                       if (k === "diario" && userId) {
                         const pendentes = arqObra.filter((a) => a.disciplina && a.status_doc !== "Desatualizado" && !(a.cientes_uids || []).includes(userId));
@@ -2059,6 +2222,13 @@ export default function GestaoObras() {
                       addDiario={addDiario}
                     />
                     <GaleriaAmbiente obraId={obraId} />
+                  </div>
+                )}
+
+                {/* ABA QUANTITATIVOS */}
+                {abaAtiva === "quantitativos" && (
+                  <div style={{ background: "var(--surface)", borderRadius: "0 0 12px 12px", border: `1px solid ${C.border}`, borderTop: "none", padding: 22 }}>
+                    <TabQuantitativos obraId={obraId} />
                   </div>
                 )}
 

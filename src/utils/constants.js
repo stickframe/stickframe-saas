@@ -53,6 +53,7 @@ export const NAV = [
   { key: "quantitativos",     label: "Quantitativos",        icon: "Hash",              grupo: "Obras" },
   { key: "contratos",         label: "Contratos",            icon: "FileCheck",         grupo: "Obras" },
   { key: "equipe",            label: "Equipe",               brand: "StickTeam™",       icon: "HardHat",         grupo: "Obras" },
+  { key: "equipe_sf",         label: "Equipe SF",            icon: "UsersRound",        grupo: "Obras", badge: "NOVO" },
   { key: "sst",               label: "SST",                  icon: "ShieldAlert",       grupo: "Obras" },
   { key: "financeiro",        label: "Financeiro",           brand: "StickCash™",       icon: "DollarSign",      grupo: "Financeiro" },
   { key: "rentabilidade",     label: "Rentabilidade",        icon: "TrendingUp",        grupo: "Financeiro", badge: "PRO" },
@@ -76,7 +77,7 @@ export const PERFIS = {
   diretor: {
     label: "Diretor",
     cor: C.red,
-    paginas: ["dashboard","agenda","crm","orcamentos","obras","cronograma","medicoes","diario","vistorias","bim","quantitativos","financeiro","rentabilidade","contratos","historico","fornecedores","monitor_precos","calculadora","orcamento_tecnico","orcamento_sf","equipamentos","checklists","equipe","sst","suprimentos","inteligencia","bi","ecossistema","configuracoes"],
+    paginas: ["dashboard","agenda","crm","orcamentos","obras","cronograma","medicoes","diario","vistorias","bim","quantitativos","financeiro","rentabilidade","contratos","historico","fornecedores","monitor_precos","calculadora","orcamento_tecnico","orcamento_sf","equipamentos","checklists","equipe","equipe_sf","sst","suprimentos","inteligencia","bi","ecossistema","configuracoes"],
   },
   comercial: {
     label: "Comercial",
@@ -86,7 +87,7 @@ export const PERFIS = {
   engenheiro: {
     label: "Engenheiro",
     cor: C.steel,
-    paginas: ["dashboard","obras","cronograma","medicoes","diario","vistorias","bim","quantitativos","fornecedores","monitor_precos","calculadora","orcamento_tecnico","orcamento_sf","equipamentos","checklists","equipe","sst","suprimentos","historico","inteligencia","configuracoes"],
+    paginas: ["dashboard","obras","cronograma","medicoes","diario","vistorias","bim","quantitativos","fornecedores","monitor_precos","calculadora","orcamento_tecnico","orcamento_sf","equipamentos","checklists","equipe","equipe_sf","sst","suprimentos","historico","inteligencia","configuracoes"],
   },
   financeiro: {
     label: "Financeiro",

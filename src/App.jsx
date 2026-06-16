@@ -50,6 +50,7 @@ const Equipe      = lazyWithRetry(() => import("./pages/Equipe"));
 const Cronograma  = lazyWithRetry(() => import("./pages/Cronograma"));
 const Vistorias   = lazyWithRetry(() => import("./pages/Vistorias"));
 const BIM           = lazyWithRetry(() => import("./pages/BIM"));
+const BimSF         = lazyWithRetry(() => import("./pages/BimSF"));
 const Quantitativos  = lazyWithRetry(() => import("./pages/Quantitativos"));
 const Configuracoes  = lazyWithRetry(() => import("./pages/Configuracoes"));
 const Fornecedores   = lazyWithRetry(() => import("./pages/Fornecedores"));
@@ -72,6 +73,7 @@ const Rentabilidade        = lazyWithRetry(() => import("./pages/Rentabilidade")
 const Ecossistema          = lazyWithRetry(() => import("./pages/Ecossistema"));
 const SST                  = lazyWithRetry(() => import("./pages/SST"));
 const Suprimentos          = lazyWithRetry(() => import("./pages/Suprimentos"));
+const EquipeSF             = lazyWithRetry(() => import("./pages/EquipeSF"));
 
 const PAGES = {
   dashboard:  Dashboard,
@@ -90,6 +92,7 @@ const PAGES = {
   cronograma: Cronograma,
   vistorias:  Vistorias,
   bim:           BIM,
+  bim_sf:        BimSF,
   quantitativos:  Quantitativos,
   configuracoes:  Configuracoes,
   fornecedores:      Fornecedores,
@@ -103,6 +106,7 @@ const PAGES = {
   bi:             BI,
   sst:            SST,
   suprimentos:    Suprimentos,
+  equipe_sf:      EquipeSF,
 };
 
 function AuthenticatedApp() {
