@@ -377,6 +377,7 @@ export default function Configuracoes() {
         <Tab label="⚙️ Sistema"   active={tab === "sistema"}  onClick={() => setTab("sistema")} />
         <Tab label="🤖 Robô IA"   active={tab === "ia"}       onClick={() => setTab("ia")} />
         <Tab label="📅 Integrações" active={tab === "integracoes"} onClick={() => setTab("integracoes")} />
+        <Tab label="🏗️ Orçamento SF" active={tab === "orcamento_sf"} onClick={() => setTab("orcamento_sf")} />
         {user?.perfil === "diretor" && (
           <Tab label="🔗 Webhooks" active={tab === "webhooks"} onClick={() => setTab("webhooks")} />
         )}
@@ -1263,6 +1264,10 @@ export default function Configuracoes() {
             </div>
           </Card>
         </>
+      )}
+
+      {tab === "orcamento_sf" && (
+        <ConfigSFTab />
       )}
     </>
   );
