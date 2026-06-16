@@ -72,6 +72,7 @@ const Rentabilidade        = lazyWithRetry(() => import("./pages/Rentabilidade")
 const Ecossistema          = lazyWithRetry(() => import("./pages/Ecossistema"));
 const SST                  = lazyWithRetry(() => import("./pages/SST"));
 const Suprimentos          = lazyWithRetry(() => import("./pages/Suprimentos"));
+const EquipeSF             = lazyWithRetry(() => import("./pages/EquipeSF"));
 
 const PAGES = {
   dashboard:  Dashboard,
@@ -103,6 +104,7 @@ const PAGES = {
   bi:             BI,
   sst:            SST,
   suprimentos:    Suprimentos,
+  equipe_sf:      EquipeSF,
 };
 
 function AuthenticatedApp() {
