@@ -1466,21 +1466,29 @@ export default function Calculadora() {
 
             <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
               <button onClick={exportarExcel} disabled={!resultado} style={{
+                display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6,
                 flex: 1, padding: "9px 0",
                 background: C.surface2, border: `1px solid ${C.border}`,
                 borderRadius: 8, color: C.text, fontSize: 12, fontWeight: 700,
                 cursor: resultado ? "pointer" : "not-allowed", fontFamily: "inherit",
                 opacity: resultado ? 1 : .4,
               }}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" style={{ width: 13, height: 13 }}>
+                  <path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 21h16"/>
+                </svg>
                 Excel
               </button>
               <button onClick={() => window.print()} disabled={!resultado} style={{
+                display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6,
                 flex: 1, padding: "9px 0",
                 background: C.surface2, border: `1px solid ${C.border}`,
                 borderRadius: 8, color: C.text, fontSize: 12, fontWeight: 700,
                 cursor: resultado ? "pointer" : "not-allowed", fontFamily: "inherit",
                 opacity: resultado ? 1 : .4,
               }}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" style={{ width: 13, height: 13 }}>
+                  <rect x="6" y="9" width="12" height="7" rx="1"/><path d="M6 9V4h12v5"/><path d="M8 17v3h8v-3"/>
+                </svg>
                 Imprimir
               </button>
             </div>
@@ -1497,12 +1505,17 @@ export default function Calculadora() {
                 </div>
               </div>
               <button onClick={atualizarCub} disabled={cubCarregando} style={{
+                display: "inline-flex", alignItems: "center", justifyContent: "center",
                 padding: "6px 10px", background: C.surface2,
                 border: `1px solid ${C.border}`, borderRadius: 6,
                 color: C.muted, fontSize: 11, fontWeight: 700, cursor: "pointer",
                 fontFamily: "inherit", opacity: cubCarregando ? .6 : 1,
               }}>
-                {cubCarregando ? "..." : "↻"}
+                {cubCarregando ? "..." : (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" style={{ width: 12, height: 12 }}>
+                    <path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 21v-5h5"/>
+                  </svg>
+                )}
               </button>
             </div>
 
@@ -1604,7 +1617,7 @@ export default function Calculadora() {
                       {/* Cabeçalho do grupo */}
                       <div style={{
                         display: "flex", justifyContent: "space-between", alignItems: "flex-start",
-                        padding: "12px 14px", background: "#1a1a1a", borderRadius: "10px 10px 0 0",
+                        padding: "12px 14px", background: "var(--graphite)", borderRadius: "10px 10px 0 0",
                       }}>
                         <div>
                           <div style={{ fontSize: 13, fontWeight: 800, color: "#fff", letterSpacing: 0.5 }}>{prof.nome}</div>
@@ -1679,8 +1692,16 @@ export default function Calculadora() {
                                 background: desvio >= 15 ? C.danger + "15" : desvio >= 5 ? "#fef3c7" : C.success + "15",
                                 color:      desvio >= 15 ? C.danger        : desvio >= 5 ? "#92400e"   : C.success,
                                 borderLeft: `3px solid ${desvio >= 15 ? C.danger : desvio >= 5 ? "#d97706" : C.success}`,
+                                display: "flex", alignItems: "center", gap: 5,
                               }}>
-                                {desvio > 0 ? `▲ +${desvio.toFixed(1)}% acima do planejado` : desvio < 0 ? `▼ ${Math.abs(desvio).toFixed(1)}% abaixo (ótimo!)` : "Sem desvio"}
+                                {desvio !== 0 && (
+                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" style={{ width: 12, height: 12, flexShrink: 0 }}>
+                                    {desvio > 0 ? <path d="M18 15 12 9 6 15"/> : <path d="M6 9 12 15 18 9"/>}
+                                  </svg>
+                                )}
+                                <span>
+                                  {desvio > 0 ? `+${desvio.toFixed(1)}% acima do planejado` : desvio < 0 ? `${Math.abs(desvio).toFixed(1)}% abaixo (ótimo!)` : "Sem desvio"}
+                                </span>
                                 {desvio >= 15 && <div style={{ fontSize: 11, fontWeight: 400, marginTop: 3 }}>Investigar: erro de medição, retrabalho ou furto de material?</div>}
                               </div>
                             )}
@@ -1703,7 +1724,7 @@ export default function Calculadora() {
                               {/* Linha superior */}
                               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
                                 <span style={{
-                                  fontSize: 15, fontWeight: 800, color: isCortada ? C.success : "#1a1a1a",
+                                  fontSize: 15, fontWeight: 800, color: isCortada ? C.success : "var(--graphite)",
                                   letterSpacing: 0.3,
                                 }}>
                                   {isCortada ? "✓ " : ""}BARRA {String(b.id).padStart(2, "0")}
@@ -1794,11 +1815,15 @@ export default function Calculadora() {
                         <button onClick={() => setVerTodas((v) => ({ ...v, [prof.nome]: !v[prof.nome] }))}
                           style={{
                             marginTop: 8, width: "100%", padding: "10px 0",
+                            display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6,
                             background: "none", border: `1px solid ${C.border}`,
                             borderRadius: 8, fontSize: 12, cursor: "pointer",
                             fontFamily: "inherit", color: C.muted, fontWeight: 600,
                           }}>
-                          {verTodas[prof.nome] ? "▲ Recolher" : `▼ Ver mais ${prof.barras.length - 10} barras`}
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 12, height: 12 }}>
+                            {verTodas[prof.nome] ? <path d="M18 15 12 9 6 15"/> : <path d="M6 9 12 15 18 9"/>}
+                          </svg>
+                          {verTodas[prof.nome] ? "Recolher" : `Ver mais ${prof.barras.length - 10} barras`}
                         </button>
                       )}
                     </div>
@@ -1810,7 +1835,7 @@ export default function Calculadora() {
                   <div style={{
                     borderRadius: 10, border: "1px solid #ddd", overflow: "hidden", marginBottom: 20,
                   }}>
-                    <div style={{ padding: "12px 14px", background: "#1a1a1a", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div style={{ padding: "12px 14px", background: "var(--graphite)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                       <div>
                         <div style={{ fontSize: 13, fontWeight: 800, color: "#fff" }}>{otimizacao.guia.nome}</div>
                         <div style={{ fontSize: 11, color: "rgba(255,255,255,0.55)", marginTop: 2 }}>
@@ -1830,7 +1855,7 @@ export default function Calculadora() {
                         <span style={{ color: C.muted }}> necessários</span>
                       </div>
                       <div style={{ fontSize: 13 }}>
-                        <span style={{ fontWeight: 800, color: "#1a1a1a" }}>{otimizacao.guia.nb} barras</span>
+                        <span style={{ fontWeight: 800, color: "var(--graphite)" }}>{otimizacao.guia.nb} barras</span>
                         <span style={{ color: C.muted, fontSize: 11 }}> de {tamBarra / 1000}m</span>
                       </div>
                       <div style={{ fontSize: 12, color: otimizacao.guia.sobra > 500 ? C.danger : C.muted }}>
