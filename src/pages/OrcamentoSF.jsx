@@ -104,6 +104,8 @@ export default function OrcamentoSF() {
   var [saving, setSaving] = useState(false);
   var saveTimer = useRef(null);
   var recordId = useRef(null);
+  var latestProjetos = useRef(state.projetos);
+  var isDirty = useRef(false);
 
   // Navegação interna
   function navigate(path) {
@@ -143,33 +145,51 @@ export default function OrcamentoSF() {
       });
   }, []);
 
-  // Auto-salva no Supabase quando state.projetos muda (debounce 1.5s)
+  // Mantém ref sempre atualizada para poder salvar no unmount
+  useEffect(function(){
+    latestProjetos.current = state.projetos;
+  }, [state.projetos]);
+
+  // Função de save reutilizável
+  function doSave(projetos) {
+    var empId = getEmpresaId();
+    if(!empId) return;
+    var payload = { empresa_id: empId, data: { projetos: projetos }, updated_at: new Date().toISOString() };
+    var promise;
+    if(recordId.current) {
+      promise = sb.from('sf_orcamentos').update(payload).eq('id', recordId.current);
+    } else {
+      promise = sb.from('sf_orcamentos').insert(payload).select().single();
+    }
+    return promise.then(function(res){
+      if(!recordId.current && res.data) recordId.current = res.data.id;
+    });
+  }
+
+  // Auto-salva com debounce enquanto o componente está montado
   useEffect(function(){
     if(loading) return;
+    isDirty.current = true;
     if(saveTimer.current) clearTimeout(saveTimer.current);
+    setSaving(true);
     saveTimer.current = setTimeout(function(){
-      var empId = getEmpresaId();
-      if(!empId) return;
-      setSaving(true);
-      var payload = { empresa_id: empId, data: { projetos: state.projetos }, updated_at: new Date().toISOString() };
-      var promise;
-      if(recordId.current) {
-        promise = sb.from('sf_orcamentos').update(payload).eq('id', recordId.current);
-      } else {
-        promise = sb.from('sf_orcamentos').insert(payload).select().single();
-      }
-      promise.then(function(res){
-        if(!recordId.current && res.data) {
-          recordId.current = res.data.id;
-        }
-        setSaving(false);
-      }).catch(function(){
-        setSaving(false);
-      });
-    }, 1500);
-    return function(){ if(saveTimer.current) clearTimeout(saveTimer.current); };
+      doSave(latestProjetos.current).finally(function(){ setSaving(false); });
+      isDirty.current = false;
+    }, 800);
+    // NÃO cancela o timer no cleanup — o save deve acontecer mesmo após navegar
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.projetos, loading]);
+
+  // Flush imediato ao desmontar se ainda houver save pendente
+  useEffect(function(){
+    return function(){
+      if(isDirty.current && saveTimer.current) {
+        clearTimeout(saveTimer.current);
+        doSave(latestProjetos.current);
+      }
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if(loading) {
     return (
