@@ -77,7 +77,193 @@ function Card({ children, title, subtitle }) {
   );
 }
 
-//  Componente principal 
+// ── Captação de Leads — setup wizard ─────────────────────────────────────────
+const WEBHOOK_URL = "https://gpzmglcxmbboxxogbibq.supabase.co/functions/v1/receber-lead";
+
+function CaptacaoLeadsSetup({ mostrarToast }) {
+  const [copied, setCopied] = useState(false);
+
+  function copy() {
+    navigator.clipboard?.writeText(WEBHOOK_URL);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1800);
+    mostrarToast(" URL do webhook copiada!");
+  }
+
+  const steps = [
+    {
+      n: 1,
+      title: "Backend pronto",
+      badge: "ATIVO",
+      badgeColor: C.success,
+      done: true,
+      content: (
+        <p style={{ fontSize: 13, color: C.muted, lineHeight: 1.6 }}>
+          A tabela <code style={{ background: C.darker, padding: "1px 5px", borderRadius: 4, fontSize: 12 }}>leads_captacao</code> e a Edge Function já estão no ar.
+          Seu sistema está pronto pra receber contatos via webhook.
+        </p>
+      ),
+    },
+    {
+      n: 2,
+      title: "Copie a URL do webhook",
+      badge: "PRONTO",
+      badgeColor: C.success,
+      done: true,
+      content: (
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <p style={{ fontSize: 13, color: C.muted, lineHeight: 1.5 }}>
+            É o endereço que recebe os leads. Você vai colar essa URL no Zapier no próximo passo.
+          </p>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, background: "#1a191c", borderRadius: 10, padding: "12px 16px" }}>
+            <span style={{ fontSize: 11, color: "rgba(255,255,255,.45)", fontWeight: 800, letterSpacing: .5, textTransform: "uppercase", flexShrink: 0 }}>URL</span>
+            <span style={{ flex: 1, fontFamily: "ui-monospace,Menlo,monospace", fontSize: 12, color: "#cdeedb", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {WEBHOOK_URL}
+            </span>
+            <button onClick={copy}
+              style={{ background: copied ? C.success : "rgba(255,255,255,.12)", border: "none", color: "#fff", fontFamily: "inherit", fontSize: 12, fontWeight: 700, padding: "7px 14px", borderRadius: 7, cursor: "pointer", flexShrink: 0, transition: ".14s" }}>
+              {copied ? "Copiado ✓" : "Copiar"}
+            </button>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8 }}>
+            {[
+              { f: "nome", l: "Nome completo" },
+              { f: "telefone", l: "WhatsApp" },
+              { f: "email", l: "E-mail" },
+              { f: "origem", l: '"google-ads"' },
+            ].map(({ f, l }) => (
+              <div key={f} style={{ background: C.darker, border: `1px solid ${C.border}`, borderRadius: 9, padding: "10px 12px" }}>
+                <div style={{ fontSize: 11, fontWeight: 800, color: C.red, marginBottom: 4 }}>{f}</div>
+                <div style={{ fontSize: 11.5, color: C.muted }}>{l}</div>
+              </div>
+            ))}
+          </div>
+          <p style={{ fontSize: 11.5, color: C.muted }}>
+            Campos obrigatórios: <strong>nome</strong>, <strong>telefone</strong>. Opcionais: email, origem, cidade, area, padrao.
+          </p>
+        </div>
+      ),
+    },
+    {
+      n: 3,
+      title: 'Crie o "Zap" no Zapier',
+      badge: "VOCÊ ESTÁ AQUI",
+      badgeColor: C.red,
+      done: false,
+      content: (
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <p style={{ fontSize: 13, color: C.muted, lineHeight: 1.6 }}>
+            No Zapier, crie uma automação:
+          </p>
+          <ol style={{ paddingLeft: 20, fontSize: 13, color: C.muted, lineHeight: 2 }}>
+            <li><strong style={{ color: C.text }}>Trigger:</strong> Google Ads → "New Lead Form Entry"</li>
+            <li><strong style={{ color: C.text }}>Action:</strong> Webhooks by Zapier → "POST"</li>
+            <li>Cole a URL acima em <strong style={{ color: C.text }}>URL</strong></li>
+            <li>Mapeie os campos: <code style={{ background: C.darker, padding: "1px 5px", borderRadius: 4, fontSize: 11 }}>nome</code> → Full Name, <code style={{ background: C.darker, padding: "1px 5px", borderRadius: 4, fontSize: 11 }}>telefone</code> → Phone, <code style={{ background: C.darker, padding: "1px 5px", borderRadius: 4, fontSize: 11 }}>email</code> → Email, <code style={{ background: C.darker, padding: "1px 5px", borderRadius: 4, fontSize: 11 }}>origem</code> → "google-ads" (fixo)</li>
+          </ol>
+          <a href="https://zapier.com/app/editor" target="_blank" rel="noopener noreferrer"
+            style={{ display: "inline-flex", alignItems: "center", gap: 8, background: C.red, color: "#fff", border: "none", borderRadius: 9, padding: "11px 20px", fontSize: 13, fontWeight: 700, cursor: "pointer", textDecoration: "none", alignSelf: "flex-start" }}>
+            Abrir Zapier →
+          </a>
+        </div>
+      ),
+    },
+    {
+      n: 4,
+      title: "Teste e ative o anúncio",
+      badge: "AGUARDANDO",
+      badgeColor: C.muted,
+      done: false,
+      content: (
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <p style={{ fontSize: 13, color: C.muted, lineHeight: 1.6 }}>
+            No Google Ads, ative o anúncio com Lead Form Extension. O Zapier detecta o preenchimento e envia para o webhook — o lead aparece no módulo <strong style={{ color: C.text }}>Oportunidades</strong> em tempo real.
+          </p>
+          <div style={{ background: C.darker, border: `1px solid ${C.border}`, borderRadius: 10, padding: "14px 18px" }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: C.text, marginBottom: 8 }}>Palavras-chave recomendadas para Steel Frame:</div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+              {["casa steel frame", "construção steel frame", "casa modular", "casa pré-fabricada", "construção rápida", "steel frame preço"].map(k => (
+                <span key={k} style={{ background: C.darker, border: `1px solid ${C.border}`, borderRadius: 20, padding: "4px 11px", fontSize: 11.5, color: C.muted }}>{k}</span>
+              ))}
+            </div>
+          </div>
+        </div>
+      ),
+    },
+  ];
+
+  const doneCnt = steps.filter(s => s.done).length;
+
+  return (
+    <div style={{ maxWidth: 740 }}>
+      {/* Banner de progresso */}
+      <div style={{ background: "#1a191c", borderRadius: 14, padding: "20px 28px", marginBottom: 28, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 20, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          {[
+            { label: "Google Ads", done: true },
+            { label: "Zapier / Make", done: false, zap: true },
+            { label: "Supabase", done: true },
+            { label: "Oportunidades", done: true },
+          ].map((it, i, arr) => (
+            <div key={it.label} style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 5 }}>
+                <div style={{
+                  width: 40, height: 40, borderRadius: 10, display: "grid", placeItems: "center",
+                  background: it.done ? C.success : (it.zap ? "#b07a1e" : "rgba(255,255,255,.1)"),
+                  fontSize: 18,
+                }}>
+                  {it.done ? "✓" : (it.zap ? "⚡" : "○")}
+                </div>
+                <span style={{ fontSize: 10, color: "rgba(255,255,255,.5)", fontWeight: 600, whiteSpace: "nowrap" }}>{it.label}</span>
+              </div>
+              {i < arr.length - 1 && <span style={{ color: "rgba(255,255,255,.25)", fontSize: 16, marginBottom: 16 }}>→</span>}
+            </div>
+          ))}
+        </div>
+        <div style={{ textAlign: "right" }}>
+          <div style={{ fontFamily: "var(--cond)", fontSize: 22, fontWeight: 700, color: "#fff", lineHeight: 1 }}>
+            {doneCnt >= steps.length ? "Tudo pronto!" : `Falta ${steps.length - doneCnt} passo${steps.length - doneCnt > 1 ? "s" : ""}`}
+          </div>
+          <div style={{ fontSize: 12, color: "rgba(255,255,255,.45)", marginTop: 4 }}>
+            Conecte o Zapier pra abrir a torneira de leads
+          </div>
+        </div>
+      </div>
+
+      {/* Steps */}
+      <div style={{ position: "relative" }}>
+        <div style={{ position: "absolute", left: 19, top: 20, bottom: 20, width: 2, background: C.border }} />
+        <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+          {steps.map((st, i) => (
+            <div key={st.n} style={{ display: "flex", gap: 20, paddingBottom: i < steps.length - 1 ? 24 : 0 }}>
+              {/* Dot */}
+              <div style={{ flexShrink: 0, width: 40, height: 40, borderRadius: "50%", display: "grid", placeItems: "center", zIndex: 1,
+                background: st.done ? C.success : (i === 2 ? C.red : "var(--surface)"),
+                border: `2.5px solid ${st.done ? C.success : (i === 2 ? C.red : C.border)}`,
+                color: st.done || i === 2 ? "#fff" : C.muted,
+                fontFamily: "var(--cond)", fontWeight: 700, fontSize: 15,
+              }}>
+                {st.done ? "✓" : st.n}
+              </div>
+              {/* Card */}
+              <div style={{ flex: 1, background: "var(--surface)", border: `1px solid ${C.border}`, borderRadius: 13, padding: "18px 22px", marginTop: 4 }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14, gap: 10 }}>
+                  <div style={{ fontWeight: 700, fontSize: 16, color: C.text }}>{st.title}</div>
+                  <span style={{ fontSize: 10.5, fontWeight: 800, padding: "3px 10px", borderRadius: 5, letterSpacing: ".5px", background: `${st.badgeColor}22`, color: st.badgeColor, flexShrink: 0 }}>
+                    {st.badge}
+                  </span>
+                </div>
+                {st.content}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+//  Componente principal
 export default function Configuracoes() {
   const user      = useAppStore((s) => s.user);
   const empresaId = useAppStore((s) => s.empresaId);
@@ -378,6 +564,7 @@ export default function Configuracoes() {
         <Tab label=" Robô IA"   active={tab === "ia"}       onClick={() => setTab("ia")} />
         <Tab label=" Integrações" active={tab === "integracoes"} onClick={() => setTab("integracoes")} />
         <Tab label=" Orçamento SF" active={tab === "orcamento_sf"} onClick={() => setTab("orcamento_sf")} />
+        <Tab label=" Captação de Leads" active={tab === "captacao"} onClick={() => setTab("captacao")} />
         {user?.perfil === "diretor" && (
           <Tab label=" Webhooks" active={tab === "webhooks"} onClick={() => setTab("webhooks")} />
         )}
@@ -1269,6 +1456,8 @@ export default function Configuracoes() {
       {tab === "orcamento_sf" && (
         <ConfigSFTab />
       )}
+
+      {tab === "captacao" && <CaptacaoLeadsSetup mostrarToast={mostrarToast} />}
     </>
   );
 }
