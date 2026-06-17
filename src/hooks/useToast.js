@@ -2,9 +2,9 @@ import { useCallback } from "react";
 import { useToast as useGlobalToast } from "../components/ui/Toast";
 
 const EMOJI_TYPE = {
-  "✅": "success", "💾": "success", "🎉": "success",
-  "❌": "error",   "⚠️": "warn",
-  "🗑": "info",    "📋": "info",
+  "": "success", "": "success", "": "success",
+  "": "error",   "": "warn",
+  "": "info",    "": "info",
 };
 
 function detectType(msg) {

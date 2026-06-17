@@ -7,18 +7,18 @@ import {
   LineChart, Line, Legend,
 } from "recharts";
 
-// ─── Access Guard ─────────────────────────────────────────────────────────────
+//  Access Guard 
 function AccessDenied() {
   return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "60vh", flexDirection: "column", gap: 12 }}>
-      <div style={{ fontSize: 40 }}>🔒</div>
+      <div style={{ fontSize: 40 }}></div>
       <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>Acesso restrito</div>
       <div style={{ fontSize: 13, color: C.muted }}>Esta área é exclusiva para o perfil Diretor.</div>
     </div>
   );
 }
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+//  Helpers 
 function scoreColor(v) {
   if (v >= 70) return C.success;
   if (v >= 40) return C.warning;
@@ -53,7 +53,7 @@ function fmtBRL(n) {
   return "R$ " + n.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-// ─── KPI Card ─────────────────────────────────────────────────────────────────
+//  KPI Card 
 function KpiCard({ label, value, sub, color }) {
   return (
     <div style={{
@@ -67,7 +67,7 @@ function KpiCard({ label, value, sub, color }) {
   );
 }
 
-// ─── Sortable Table ───────────────────────────────────────────────────────────
+//  Sortable Table 
 function RankingTable({ rows }) {
   const [sortKey, setSortKey]   = useState("score");
   const [sortDir, setSortDir]   = useState("desc");
@@ -139,7 +139,7 @@ function RankingTable({ rows }) {
                 </td>
                 <td style={{ padding: "10px 12px", textAlign: "center" }}>
                   {r.concluida
-                    ? (r.prazoOk ? <span style={{ color: C.success }}>✔ No prazo</span> : <span style={{ color: C.danger }}>✘ Atrasada</span>)
+                    ? (r.prazoOk ? <span style={{ color: C.success }}> No prazo</span> : <span style={{ color: C.danger }}> Atrasada</span>)
                     : <span style={{ color: C.muted }}>Em andamento</span>}
                 </td>
                 <td style={{ padding: "10px 12px", textAlign: "right", ...cellColor(ncrNorm, false) }}>
@@ -168,7 +168,7 @@ function RankingTable({ rows }) {
   );
 }
 
-// ─── Main Page ────────────────────────────────────────────────────────────────
+//  Main Page 
 export default function BI() {
   const user = useAppStore((s) => s.user);
 
@@ -200,7 +200,7 @@ export default function BI() {
     load();
   }, []);
 
-  // ── Date filter helper ────────────────────────────────────────────────────
+  //  Date filter helper 
   const now = new Date();
   function inPeriod(dateStr) {
     if (periodo === "tudo" || !dateStr) return true;
@@ -211,7 +211,7 @@ export default function BI() {
     return true;
   }
 
-  // ── Filtered obras ────────────────────────────────────────────────────────
+  //  Filtered obras 
   const filteredObras = useMemo(() => {
     return obras.filter((o) => {
       const statusOk = filtroStatus === "Todas" || o.status === filtroStatus;
@@ -220,7 +220,7 @@ export default function BI() {
     });
   }, [obras, filtroStatus, periodo]);
 
-  // ── Per-obra aggregations ─────────────────────────────────────────────────
+  //  Per-obra aggregations 
   const obraRows = useMemo(() => {
     return filteredObras.map((o) => {
       const fins   = financeiro.filter((l) => l.obra_id === o.id);
@@ -240,7 +240,7 @@ export default function BI() {
     });
   }, [filteredObras, financeiro, ncrs]);
 
-  // ── Score computation ─────────────────────────────────────────────────────
+  //  Score computation 
   const custoM2Vals  = obraRows.map((r) => r.custoM2).filter(Boolean);
   const margemVals   = obraRows.map((r) => r.margem);
   const ncrVals      = obraRows.map((r) => r.ncrs);
@@ -260,7 +260,7 @@ export default function BI() {
     return obraRows.reduce((sum, r) => sum + (r.area_m2 || 0), 0);
   }, [obraRows]);
 
-  // ── KPIs ─────────────────────────────────────────────────────────────────
+  //  KPIs 
   const kpis = useMemo(() => {
     const withArea      = obraRows.filter((r) => r.area_m2 > 0 && r.custoM2 > 0);
     const avgCustoM2    = withArea.length > 0 ? withArea.reduce((s, r) => s + r.custoM2, 0) / withArea.length : 0;
@@ -273,7 +273,7 @@ export default function BI() {
     return { avgCustoM2, taxaPrazo, avgMargem, avgNcr, concluidas, noPrazo };
   }, [obraRows, ncrs, filteredObras]);
 
-  // ── Bar chart data ────────────────────────────────────────────────────────
+  //  Bar chart data 
   const barData = useMemo(() => {
     return [...scoredRows]
       .filter((r) => r.custoM2 > 0)
@@ -281,7 +281,7 @@ export default function BI() {
       .map((r) => ({ name: r.nome.length > 20 ? r.nome.slice(0, 18) + "…" : r.nome, custoM2: Math.round(r.custoM2) }));
   }, [scoredRows]);
 
-  // ── Line chart: monthly margin for last 6 months ──────────────────────────
+  //  Line chart: monthly margin for last 6 months 
   const lineData = useMemo(() => {
     const months = [];
     for (let i = 5; i >= 0; i--) {
@@ -297,7 +297,7 @@ export default function BI() {
     return months;
   }, [financeiro]);
 
-  // ── Insights ─────────────────────────────────────────────────────────────
+  //  Insights 
   const insights = useMemo(() => {
     const list = [];
     if (scoredRows.length === 0) return list;
@@ -316,7 +316,7 @@ export default function BI() {
     return list;
   }, [scoredRows, kpis]);
 
-  // ── Styles ────────────────────────────────────────────────────────────────
+  //  Styles 
   const sectionStyle = {
     background: C.surface, borderRadius: 12, padding: "24px",
     boxShadow: C.shadow, border: `1px solid ${C.border}`, marginBottom: 24,
@@ -393,7 +393,7 @@ export default function BI() {
           {/* Sustentabilidade (ESG) */}
           <div style={sectionStyle}>
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
-              <span style={{ fontSize: 24 }}>🌱</span>
+              <span style={{ fontSize: 24 }}></span>
               <div>
                 <h2 style={{ fontSize: 16, fontWeight: 800, color: C.text, margin: 0 }}>Sustentabilidade & Impacto ESG</h2>
                 <p style={{ fontSize: 12, color: C.muted, margin: "2px 0 0" }}>Indicadores ecológicos baseados em {fmt(totalM2)} m² de área construída em LSF (Light Steel Frame)</p>
@@ -405,7 +405,7 @@ export default function BI() {
               <div style={{ background: C.darker, borderRadius: 10, padding: "18px 20px", border: `1px solid ${C.border}`, boxShadow: "0 4px 6px rgba(0,0,0,0.02)" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
                   <span style={{ fontSize: 10, fontWeight: 700, color: C.muted, letterSpacing: 1 }}>ÁGUA ECONOMIZADA</span>
-                  <span style={{ fontSize: 20 }}>💧</span>
+                  <span style={{ fontSize: 20 }}></span>
                 </div>
                 <div style={{ fontSize: 24, fontWeight: 800, color: "#3182ce" }}>{fmt(totalM2 * 1000)} L</div>
                 <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>Redução de ~1.000 litros por m² comparado com alvenaria convencional (construção seca)</div>
@@ -415,7 +415,7 @@ export default function BI() {
               <div style={{ background: C.darker, borderRadius: 10, padding: "18px 20px", border: `1px solid ${C.border}`, boxShadow: "0 4px 6px rgba(0,0,0,0.02)" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
                   <span style={{ fontSize: 10, fontWeight: 700, color: C.muted, letterSpacing: 1 }}>REDUÇÃO DE CO₂</span>
-                  <span style={{ fontSize: 20 }}>🍃</span>
+                  <span style={{ fontSize: 20 }}></span>
                 </div>
                 <div style={{ fontSize: 24, fontWeight: 800, color: C.success }}>{fmt(totalM2 * 150)} kg</div>
                 <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>Emissões evitadas de CO₂ equivalente no ciclo de fabricação e montagem de perfis</div>
@@ -425,7 +425,7 @@ export default function BI() {
               <div style={{ background: C.darker, borderRadius: 10, padding: "18px 20px", border: `1px solid ${C.border}`, boxShadow: "0 4px 6px rgba(0,0,0,0.02)" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
                   <span style={{ fontSize: 10, fontWeight: 700, color: C.muted, letterSpacing: 1 }}>RESÍDUOS EVITADOS</span>
-                  <span style={{ fontSize: 20 }}>🏗️</span>
+                  <span style={{ fontSize: 20 }}></span>
                 </div>
                 <div style={{ fontSize: 24, fontWeight: 800, color: C.warning }}>{fmt(totalM2 * 120)} kg</div>
                 <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>Redução de entulho e desperdício de material (perda menor que 1% de aço)</div>
@@ -435,7 +435,7 @@ export default function BI() {
               <div style={{ background: C.darker, borderRadius: 10, padding: "18px 20px", border: `1px solid ${C.border}`, boxShadow: "0 4px 6px rgba(0,0,0,0.02)" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
                   <span style={{ fontSize: 10, fontWeight: 700, color: C.muted, letterSpacing: 1 }}>AÇO RECICLADO</span>
-                  <span style={{ fontSize: 20 }}>♻️</span>
+                  <span style={{ fontSize: 20 }}></span>
                 </div>
                 <div style={{ fontSize: 24, fontWeight: 800, color: "#805ad5" }}>{fmt(totalM2 * 24)} kg</div>
                 <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>Estrutura composta por perfis de aço contendo cerca de 60% de matéria-prima reciclada</div>
@@ -526,7 +526,7 @@ export default function BI() {
                       fontSize: 13, color: C.text,
                     }}
                   >
-                    <span style={{ fontSize: 16 }}>{ins.type === "warn" ? "⚠️" : "💡"}</span>
+                    <span style={{ fontSize: 16 }}>{ins.type === "warn" ? "" : ""}</span>
                     <span>{ins.text}</span>
                   </div>
                 ))}

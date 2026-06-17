@@ -18,7 +18,7 @@ function Card({ label, value, color, sub }) {
 }
 
 function Pill({ h }) {
-  const [emoji, bg, col] = h >= 80 ? ["🟢", "#2e9e5b18", "#2e9e5b"] : h >= 50 ? ["🟡", "#b07a1e18", "#b45309"] : ["🔴", "#dc262618", "#dc2626"];
+  const [emoji, bg, col] = h >= 80 ? ["", "#2e9e5b18", "#2e9e5b"] : h >= 50 ? ["", "#b07a1e18", "#b45309"] : ["", "#dc262618", "#dc2626"];
   return (
     <span style={{ display: "inline-flex", alignItems: "center", gap: 3, padding: "2px 8px", borderRadius: 8, background: bg, color: col, fontWeight: 700, fontSize: 12 }}>
       {emoji} {h}
@@ -59,7 +59,7 @@ export default function AdminMobile() {
   if (loading) return (
     <div style={{ ...s, display: "flex", alignItems: "center", justifyContent: "center" }}>
       <div style={{ textAlign: "center" }}>
-        <div style={{ fontSize: 28, marginBottom: 12 }}>📊</div>
+        <div style={{ fontSize: 28, marginBottom: 12 }}></div>
         <div style={{ color: "rgba(255,255,255,.4)", fontSize: 14 }}>Carregando...</div>
       </div>
     </div>
@@ -136,7 +136,7 @@ export default function AdminMobile() {
       {/* Alerta atenção */}
       {temAtencao && (
         <div style={{ margin: "16px 16px 0", background: "#dc262610", border: "1px solid #dc262630", borderRadius: 14, padding: "14px 16px" }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: "#dc2626", marginBottom: 8, letterSpacing: "0.04em" }}>⚠️ ATENÇÃO</div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: "#dc2626", marginBottom: 8, letterSpacing: "0.04em" }}> ATENÇÃO</div>
           {(asaas?.inadimplentes ?? 0) > 0 && (
             <div style={{ fontSize: 13, color: "rgba(255,255,255,.6)", marginBottom: 4 }}>
               • {asaas.inadimplentes} cliente(s) com cobrança vencida
@@ -192,11 +192,11 @@ export default function AdminMobile() {
                     <Pill h={e.health ?? 0} />
                     {e.contato_email && (
                       <a href={`mailto:${e.contato_email}?subject=Posso ajudar?`}
-                        style={{ textDecoration: "none", fontSize: 18, lineHeight: 1 }}>📧</a>
+                        style={{ textDecoration: "none", fontSize: 18, lineHeight: 1 }}></a>
                     )}
                     {waNum && (
                       <a href={`https://wa.me/55${waNum}?text=${waMsg}`} target="_blank" rel="noreferrer"
-                        style={{ textDecoration: "none", fontSize: 18, lineHeight: 1 }}>💬</a>
+                        style={{ textDecoration: "none", fontSize: 18, lineHeight: 1 }}></a>
                     )}
                   </div>
                 </div>

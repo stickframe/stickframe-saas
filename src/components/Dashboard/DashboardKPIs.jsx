@@ -13,14 +13,14 @@ async function fetchKPIs(empresaId) {
     sb.from("clientes").select("id, status").eq("empresa_id", empresaId),
   ]);
 
-  // ── Obras ──────────────────────────────────────────────────────────────────
+  //  Obras 
   const obras = obrasRes.data || [];
   const totalObras = obras.length;
   const obrasAtivas = obras.filter(
     (o) => o.status && o.status !== "Concluída" && o.status !== "Cancelada"
   ).length;
 
-  // ── Orçamentos / Pipeline ──────────────────────────────────────────────────
+  //  Orçamentos / Pipeline 
   const orcamentos = orcamentosRes.data || [];
   const statusPipeline = ["Enviado", "Em análise", "Revisão", "Aguardando aprovação", "Pendente"];
   const excluidos = ["Fechado", "Cancelado"];
@@ -28,7 +28,7 @@ async function fetchKPIs(empresaId) {
   const totalPipeline = orcPipeline.reduce((acc, o) => acc + (Number(o.valor) || 0), 0);
   const aguardando = orcamentos.filter((o) => statusPipeline.includes(o.status)).length;
 
-  // ── Conversão CRM (clientes com status "Fechado" / total) ──────────────────
+  //  Conversão CRM (clientes com status "Fechado" / total) 
   const clientes = clientesRes.data || [];
   const totalClientes = clientes.length;
   const fechados = clientes.filter((c) => c.status === "Fechado").length;
@@ -67,7 +67,7 @@ export default function DashboardKPIs() {
       valor: loading ? null : dados ? String(dados.obrasAtivas) : "—",
       sub: loading ? null : dados ? `de ${dados.totalObras} total` : "sem dados",
       cor: C.red,
-      icon: "◆",
+      icon: "",
     },
     {
       id: 2,
@@ -75,7 +75,7 @@ export default function DashboardKPIs() {
       valor: loading ? null : dados ? fmtBRL(dados.totalPipeline) : "—",
       sub: loading ? null : dados ? `${dados.aguardando} aguardando` : "sem dados",
       cor: C.warning,
-      icon: "◻",
+      icon: "",
     },
     {
       id: 3,
@@ -91,7 +91,7 @@ export default function DashboardKPIs() {
       valor: loading ? null : dados && dados.conversao != null ? fmtPct(dados.conversao) : "—",
       sub: loading ? null : dados ? `${dados.fechados} fechados` : "sem dados",
       cor: C.steel,
-      icon: "◈",
+      icon: "",
     },
   ];
 

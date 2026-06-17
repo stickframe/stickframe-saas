@@ -167,7 +167,7 @@ export default function WebhookConfig() {
         <div style={{ textAlign: "center", padding: "32px 0", color: C.muted }}>Carregando…</div>
       ) : webhooks.length === 0 ? (
         <div style={{ textAlign: "center", padding: "40px 0", color: C.muted }}>
-          <div style={{ fontSize: 28, marginBottom: 8 }}>🔗</div>
+          <div style={{ fontSize: 28, marginBottom: 8 }}></div>
           Nenhum webhook configurado. Clique em "Novo webhook" para começar.
         </div>
       ) : (
@@ -228,9 +228,9 @@ export default function WebhookConfig() {
                       background: C.danger + "11", color: C.danger,
                     }}
                   >
-                    ✕
+                    
                   </button>
-                  <span style={{ color: C.muted, fontSize: 10 }}>{expandedId === wh.id ? "▲" : "▼"}</span>
+                  <span style={{ color: C.muted, fontSize: 10 }}>{expandedId === wh.id ? "" : ""}</span>
                 </div>
               </div>
 

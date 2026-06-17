@@ -1,9 +1,9 @@
-// ── STICK FRAME · Orçamento SF · Telas de Edição ────────────────────────
+//  STICK FRAME · Orçamento SF · Telas de Edição 
 import React from 'react';
 import { gerarId, fmtR, fmtN, calcProjeto, calcAmbiente } from '../../utils/sf-orcamento';
 import { SFIc, SFBtn, SFBadge, SFModal, SFConfirmModal, SFEmptyState } from './SFui';
 
-/* ── Lista de Projetos ── */
+/*  Lista de Projetos  */
 export function ViewProjetos({ state, dispatch, navigate }) {
   var [confirmId, setConfirmId] = React.useState(null);
   var [showModal, setShowModal] = React.useState(false);
@@ -95,7 +95,7 @@ export function ViewProjetos({ state, dispatch, navigate }) {
   );
 }
 
-/* ── Detalhe do Projeto ── */
+/*  Detalhe do Projeto  */
 export function ViewProjeto({ state, dispatch, projetoId, navigate }) {
   var proj = (state.projetos||[]).find(function(p){ return p.id === projetoId; });
   var [confirmId, setConfirmId] = React.useState(null);
@@ -151,7 +151,7 @@ export function ViewProjeto({ state, dispatch, projetoId, navigate }) {
               ? <div style={{display:'flex',gap:8,alignItems:'center'}}>
                   <div className="sf-orc-input-w" style={{maxWidth:100}}><input type="number" autoFocus min="0" max="99" value={margemVal} onChange={function(e){ setMargemVal(e.target.value); }} /><span className="sf-orc-suf">%</span></div>
                   <SFBtn v="primary" sm onClick={saveMargem}>OK</SFBtn>
-                  <SFBtn v="ghost" sm onClick={function(){ setEditMargem(false); }}>✕</SFBtn>
+                  <SFBtn v="ghost" sm onClick={function(){ setEditMargem(false); }}></SFBtn>
                 </div>
               : <div style={{display:'flex',alignItems:'center',gap:8}}>
                   <div className="num" style={{fontSize:22,fontWeight:700,color:'var(--pos)'}}>{fmtN(proj.margem||30,0)}%</div>
@@ -213,7 +213,7 @@ export function ViewProjeto({ state, dispatch, projetoId, navigate }) {
   );
 }
 
-/* ── Ambiente + Editor de Painéis ── */
+/*  Ambiente + Editor de Painéis  */
 export function ViewAmbiente({ state, dispatch, projetoId, ambienteId, navigate }) {
   var proj = (state.projetos||[]).find(function(p){ return p.id === projetoId; });
   var amb  = proj && (proj.ambientes||[]).find(function(a){ return a.id === ambienteId; });
@@ -306,7 +306,7 @@ export function ViewAmbiente({ state, dispatch, projetoId, ambienteId, navigate 
   );
 }
 
-/* ── Modal de Painel ── */
+/*  Modal de Painel  */
 export function PainelModal({ painel, composicoes, onSave, onClose }) {
   var [form, setForm] = React.useState(painel);
   function upd(k, v){ setForm(function(f){ return {...f, [k]:v}; }); }

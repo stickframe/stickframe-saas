@@ -160,13 +160,13 @@ export default function Pricing() {
             <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
               {p.items.map((item) => (
                 <div key={item} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13, color: "rgba(255,255,255,.75)" }}>
-                  <span style={{ color: "#3f7a4b", fontSize: 14, flexShrink: 0 }}>✓</span>
+                  <span style={{ color: "#3f7a4b", fontSize: 14, flexShrink: 0 }}></span>
                   {item}
                 </div>
               ))}
               {p.nao.map((item) => (
                 <div key={item} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13, color: "rgba(255,255,255,.2)" }}>
-                  <span style={{ fontSize: 14, flexShrink: 0 }}>✕</span>
+                  <span style={{ fontSize: 14, flexShrink: 0 }}></span>
                   {item}
                 </div>
               ))}

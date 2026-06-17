@@ -284,7 +284,7 @@ export default function ChangeOrders({ obraId, userPerfil }) {
 
                   {/* Lock icon for approved */}
                   {co.status === "Aprovado" && (
-                    <span style={{ fontSize: 16, color: "#15803d" }} title="Aprovado — bloqueado">🔒</span>
+                    <span style={{ fontSize: 16, color: "#15803d" }} title="Aprovado — bloqueado"></span>
                   )}
 
                   {/* Actions */}
@@ -302,9 +302,9 @@ export default function ChangeOrders({ obraId, userPerfil }) {
                       <>
                         {isDiretor && (
                           <>
-                            <Btn variant="success" size="sm" onClick={() => handleAprovar(co.id)}>✅ Aprovar</Btn>
+                            <Btn variant="success" size="sm" onClick={() => handleAprovar(co.id)}> Aprovar</Btn>
                             <Btn variant="danger" size="sm" onClick={() => { setRejeitarModal(co.id); setMotivoRejeicao(""); }}>
-                              ❌ Rejeitar
+                               Rejeitar
                             </Btn>
                           </>
                         )}

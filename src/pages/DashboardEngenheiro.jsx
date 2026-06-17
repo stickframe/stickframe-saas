@@ -80,7 +80,7 @@ function ObraCard({ obra, financeiro, medicoes, bimApontamentos, hoje, destaque 
           <div style={{ fontSize: 10, color: C.muted, marginTop: 3 }}>previsto: {fmt(previsto)}</div>
           {desvio !== null && (
             <div style={{ fontSize: 10, fontWeight: 700, color: desvioPos ? C.danger : C.success, marginTop: 2 }}>
-              {desvioPos ? `▲ +${desvio}% acima` : `▼ ${Math.abs(Number(desvio))}% abaixo`}
+              {desvioPos ? ` +${desvio}% acima` : ` ${Math.abs(Number(desvio))}% abaixo`}
             </div>
           )}
           {previsto > 0 && <div style={{ marginTop: 8 }}><BarraProgresso valor={despTotal} max={previsto} cor={desvioPos ? C.danger : C.success} /></div>}
@@ -114,7 +114,7 @@ function ObraCard({ obra, financeiro, medicoes, bimApontamentos, hoje, destaque 
         }}>
           <span style={{ fontSize: 12, color: C.muted }}>Entrega prevista: <strong>{prazoFim.toLocaleDateString("pt-BR")}</strong></span>
           <span style={{ fontSize: 12, fontWeight: 800, color: prazoAtrasado ? C.danger : diasRestantes <= 14 ? C.warning : C.success }}>
-            {prazoAtrasado ? `⚠ ${Math.abs(diasRestantes)} dias atrasado` : diasRestantes === 0 ? "Entrega hoje!" : `${diasRestantes} dias restantes`}
+            {prazoAtrasado ? ` ${Math.abs(diasRestantes)} dias atrasado` : diasRestantes === 0 ? "Entrega hoje!" : `${diasRestantes} dias restantes`}
           </span>
         </div>
       )}
@@ -150,7 +150,7 @@ export default function DashboardEngenheiro() {
   const outrasObras = obrasAtivas.filter((o) => !minhasObras.find((m) => m.id === o.id));
   const hoje          = new Date();
 
-  // ── KPIs ──────────────────────────────────────────────────────────────────
+  //  KPIs 
   const allMedicoes   = Object.values(medicoes).flat();
   const medPendentes  = allMedicoes.filter((m) => m.status === "Pendente");
   const atrasadas     = obras.filter((o) => o.prazo_fim && o.status !== "Concluída" && new Date(o.prazo_fim) < hoje);
@@ -170,7 +170,7 @@ export default function DashboardEngenheiro() {
       {/* Header */}
       <div style={{ marginBottom: 24 }}>
         <h2 style={{ fontSize: 22, fontWeight: 800 }}>
-          {saudacao()}, {user?.nome?.split(" ")[0] || "Engenheiro"} 👷
+          {saudacao()}, {user?.nome?.split(" ")[0] || "Engenheiro"} 
         </h2>
         <p style={{ color: C.muted, fontSize: 13, marginTop: 4 }}>
           {new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" })}
@@ -187,7 +187,7 @@ export default function DashboardEngenheiro() {
       {minhasObras.length > 0 && (
         <div style={{ marginBottom: 28 }}>
           <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: 1, color: C.red, textTransform: "uppercase", marginBottom: 12 }}>
-            ◆ Minhas obras ({minhasObras.length})
+             Minhas obras ({minhasObras.length})
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             {minhasObras.map((obra) => <ObraCard key={obra.id} obra={obra} financeiro={financeiro} medicoes={medicoes} bimApontamentos={bimApontamentos} hoje={hoje} destaque />)}
@@ -208,7 +208,7 @@ export default function DashboardEngenheiro() {
           background: "#fff", borderRadius: 16, border: `1px solid ${C.border}`,
           padding: "48px 0", textAlign: "center", color: C.muted,
         }}>
-          <div style={{ fontSize: 32, marginBottom: 12 }}>◆</div>
+          <div style={{ fontSize: 32, marginBottom: 12 }}></div>
           <div style={{ fontSize: 15, fontWeight: 700 }}>Nenhuma obra em andamento</div>
         </div>
       ) : (

@@ -17,7 +17,7 @@ export async function verificarAlertas(empresaId, userId) {
 
     if (garantias?.length) {
       await sendPush(userId, {
-        title: `⚠️ ${garantias.length} garantia(s) vencendo em breve`,
+        title: ` ${garantias.length} garantia(s) vencendo em breve`,
         body: garantias.map(g => `${g.item}: ${new Date(g.data_fim).toLocaleDateString("pt-BR")}`).join(" · "),
         url: "/obras",
       });
@@ -32,7 +32,7 @@ export async function verificarAlertas(empresaId, userId) {
 
     if (followups?.length) {
       await sendPush(userId, {
-        title: `🔔 ${followups.length} follow-up(s) pendente(s)`,
+        title: ` ${followups.length} follow-up(s) pendente(s)`,
         body: followups.slice(0, 3).map(f => f.nome).join(", ") + (followups.length > 3 ? ` e mais ${followups.length - 3}` : ""),
         url: "/crm",
       });
@@ -47,7 +47,7 @@ export async function verificarAlertas(empresaId, userId) {
 
     if (vencidas?.length) {
       await sendPush(userId, {
-        title: `🔴 ${vencidas.length} garantia(s) vencida(s)`,
+        title: ` ${vencidas.length} garantia(s) vencida(s)`,
         body: vencidas.slice(0, 3).map(g => g.item).join(", "),
         url: "/obras",
       });
@@ -62,7 +62,7 @@ export async function verificarAlertas(empresaId, userId) {
 
     if (certs?.length) {
       await sendPush(userId, {
-        title: `🛡️ ${certs.length} certificação(ões) NR vencendo`,
+        title: ` ${certs.length} certificação(ões) NR vencendo`,
         body: certs.slice(0, 3).map(c => `${c.colaborador?.nome} — ${c.nr}`).join(" · "),
         url: "/equipe",
       });

@@ -120,12 +120,12 @@ export function ConfigSFTab() {
         ))}
         {saved && (
           <span style={{ marginLeft: 12, fontSize: 12, color: '#2e9e5b', fontWeight: 700, alignSelf: 'center' }}>
-            Salvo ✓
+            Salvo 
           </span>
         )}
       </div>
 
-      {/* ── Preços ── */}
+      {/*  Preços  */}
       {subTab === 'Preços' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           {Object.entries(SF_CATS).map(([cat, keys]) => (
@@ -157,7 +157,7 @@ export function ConfigSFTab() {
         </div>
       )}
 
-      {/* ── Composições ── */}
+      {/*  Composições  */}
       {subTab === 'Composições' && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
           {composicoes.map((comp, idx) => (

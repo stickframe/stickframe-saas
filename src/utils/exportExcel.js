@@ -4,7 +4,7 @@ function hoje() {
   return new Date().toISOString().slice(0, 10);
 }
 
-// ─── Lista de obras ───────────────────────────────────────────────────────────
+//  Lista de obras 
 export function exportarObrasExcel(obras) {
   const rows = obras.map((o) => ({
     "Nome da Obra":    o.nome || "",
@@ -25,7 +25,7 @@ export function exportarObrasExcel(obras) {
   XLSX.writeFile(wb, `obras-stickframe-${hoje()}.xlsx`);
 }
 
-// ─── Relatório financeiro completo ────────────────────────────────────────────
+//  Relatório financeiro completo 
 export function exportarFinanceiroExcel(obras, financeiro) {
   const wb = XLSX.utils.book_new();
 
@@ -71,7 +71,7 @@ export function exportarFinanceiroExcel(obras, financeiro) {
   XLSX.writeFile(wb, `financeiro-stickframe-${hoje()}.xlsx`);
 }
 
-// ─── Suprimentos — Pedidos ────────────────────────────────────────────────────
+//  Suprimentos — Pedidos 
 export function exportarPedidosExcel(pedidos) {
   const rows = pedidos.map((p) => ({
     "Item":            p.item || "",
@@ -94,7 +94,7 @@ export function exportarPedidosExcel(pedidos) {
   XLSX.writeFile(wb, `pedidos-suprimentos-${hoje()}.xlsx`);
 }
 
-// ─── Suprimentos — Estoque ────────────────────────────────────────────────────
+//  Suprimentos — Estoque 
 export function exportarEstoqueExcel(estoque, movimentos = []) {
   const wb = XLSX.utils.book_new();
   const wsEst = XLSX.utils.json_to_sheet(estoque.map((e) => ({
@@ -123,7 +123,7 @@ export function exportarEstoqueExcel(estoque, movimentos = []) {
   XLSX.writeFile(wb, `estoque-suprimentos-${hoje()}.xlsx`);
 }
 
-// ─── SST — EPIs ───────────────────────────────────────────────────────────────
+//  SST — EPIs 
 export function exportarEpisExcel(epis) {
   const rows = epis.map((e) => ({
     "Colaborador":    e.colaborador?.nome || "",
@@ -143,7 +143,7 @@ export function exportarEpisExcel(epis) {
   XLSX.writeFile(wb, `epis-sst-${hoje()}.xlsx`);
 }
 
-// ─── SST — DDS ────────────────────────────────────────────────────────────────
+//  SST — DDS 
 export function exportarDdsExcel(dds) {
   const rows = dds.map((d) => ({
     "Data":           d.data || "",

@@ -14,7 +14,7 @@ import { createBimSlice }          from "./slices/bimSlice";
 import { createFornecedoresSlice } from "./slices/fornecedoresSlice";
 import { createGarantiaSlice }     from "./slices/garantiaSlice";
 
-// ─── ESTADO BASE (loading + loaded + activePage) ─────────────────────────────
+//  ESTADO BASE (loading + loaded + activePage) 
 const createBaseSlice = (set) => ({
   activePage: "dashboard",
   setActivePage: (page) => set({ activePage: page }),
@@ -54,7 +54,7 @@ const createBaseSlice = (set) => ({
   },
 });
 
-// ─── STORE PRINCIPAL — composição de slices ───────────────────────────────────
+//  STORE PRINCIPAL — composição de slices 
 const useAppStore = create(
   persist(
     (...a) => ({

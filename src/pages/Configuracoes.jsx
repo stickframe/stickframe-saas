@@ -19,7 +19,7 @@ import WebhookConfig from "../components/configuracoes/WebhookConfig";
 import ModalUpgradePro from "../components/ui/ModalUpgradePro";
 import { ConfigSFTab } from "../components/configuracoes/ConfigSF";
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+//  Helpers 
 function LabelF({ children, required }) {
   return (
     <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 6, textTransform: "uppercase" }}>
@@ -41,7 +41,7 @@ function LinkCopiavel({ label, url, desc }) {
           onClick={() => { navigator.clipboard.writeText(url); setCopiado(true); setTimeout(() => setCopiado(false), 2000); }}
           style={{ padding: "10px 16px", background: copiado ? "#16a34a" : C.red, color: "#fff", border: "none", borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap", transition: "background .2s" }}
         >
-          {copiado ? "✓ Copiado!" : "📋 Copiar"}
+          {copiado ? " Copiado!" : " Copiar"}
         </button>
       </div>
       <div style={{ fontSize: 11, color: C.muted, marginTop: 5 }}>{desc}</div>
@@ -77,13 +77,13 @@ function Card({ children, title, subtitle }) {
   );
 }
 
-// ─── Componente principal ─────────────────────────────────────────────────────
+//  Componente principal 
 export default function Configuracoes() {
   const user      = useAppStore((s) => s.user);
   const empresaId = useAppStore((s) => s.empresaId);
 
   const { toast, mostrarToast: _toast } = useToast(3500);
-  const mostrarToast = (msg, err) => _toast(err ? `❌ ${msg}` : msg);
+  const mostrarToast = (msg, err) => _toast(err ? ` ${msg}` : msg);
 
   const [tab,     setTab]     = useState("empresa");
   const [saving,  setSaving]  = useState(false);
@@ -146,7 +146,7 @@ export default function Configuracoes() {
 
 
 
-  // ── Carrega dados ─────────────────────────────────────────────────────────
+  //  Carrega dados 
   useEffect(() => {
     if (!empresaId) return;
     buscarEmpresa().then((data) => {
@@ -182,7 +182,7 @@ export default function Configuracoes() {
     setBiometriaAtiva(hasSavedCredential());
   }, []);
 
-  // ── Logo ─────────────────────────────────────────────────────────────────
+  //  Logo 
   function handleLogoChange(e) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -190,7 +190,7 @@ export default function Configuracoes() {
     setLogoPreview(URL.createObjectURL(file));
   }
 
-  // ── Salvar empresa ────────────────────────────────────────────────────────
+  //  Salvar empresa 
   async function salvarEmpresa() {
     if (!empresa.nome) return;
     setSaving(true);
@@ -209,35 +209,35 @@ export default function Configuracoes() {
       });
       setEmpresa((f) => ({ ...f, logo_url: logoUrl }));
       setLogoFile(null);
-      mostrarToast("✅ Dados da empresa salvos!");
+      mostrarToast(" Dados da empresa salvos!");
     } catch (e) {
-      mostrarToast("❌ Erro ao salvar: " + e.message, true);
+      mostrarToast(" Erro ao salvar: " + e.message, true);
     } finally { setSaving(false); }
   }
 
-  // ── Salvar perfil ─────────────────────────────────────────────────────────
+  //  Salvar perfil 
   async function salvarPerfil() {
     if (!user?.uid) return;
     setSaving(true);
     try {
       await atualizarPerfil(user.uid, { nome: perfil.nome, cargo: perfil.cargo });
-      mostrarToast("✅ Perfil atualizado!");
+      mostrarToast(" Perfil atualizado!");
     } catch (e) {
-      mostrarToast("❌ Erro: " + e.message, true);
+      mostrarToast(" Erro: " + e.message, true);
     } finally { setSaving(false); }
   }
 
-  // ── Trocar senha ──────────────────────────────────────────────────────────
+  //  Trocar senha 
   async function handleTrocarSenha() {
     if (!senhaForm.nova || senhaForm.nova !== senhaForm.confirmar) return;
-    if (senhaForm.nova.length < 6) { mostrarToast("❌ Senha deve ter ao menos 6 caracteres.", true); return; }
+    if (senhaForm.nova.length < 6) { mostrarToast(" Senha deve ter ao menos 6 caracteres.", true); return; }
     setSaving(true);
     try {
       await trocarSenha(senhaForm.nova);
       setSenhaForm({ nova: "", confirmar: "" });
-      mostrarToast("✅ Senha alterada com sucesso!");
+      mostrarToast(" Senha alterada com sucesso!");
     } catch (e) {
-      mostrarToast("❌ Erro: " + e.message, true);
+      mostrarToast(" Erro: " + e.message, true);
     } finally { setSaving(false); }
   }
 
@@ -245,7 +245,7 @@ export default function Configuracoes() {
     try {
       await atualizarPerfilUsuario(uid, { perfil: novoPerfil });
       setUsuarios((prev) => prev.map((u) => u.id === uid ? { ...u, perfil: novoPerfil } : u));
-      mostrarToast("✅ Perfil atualizado!");
+      mostrarToast(" Perfil atualizado!");
     } catch (e) {
       mostrarToast("Erro: " + e.message, true);
     }
@@ -255,7 +255,7 @@ export default function Configuracoes() {
     try {
       await atualizarPerfilUsuario(uid, { ativo: !ativoAtual });
       setUsuarios((prev) => prev.map((u) => u.id === uid ? { ...u, ativo: !ativoAtual } : u));
-      mostrarToast(!ativoAtual ? "✅ Usuário ativado!" : "✅ Usuário desativado!");
+      mostrarToast(!ativoAtual ? " Usuário ativado!" : " Usuário desativado!");
     } catch (e) {
       mostrarToast("Erro: " + e.message, true);
     }
@@ -268,11 +268,11 @@ export default function Configuracoes() {
       await convidarUsuario(convite.email, convite.nome, convite.perfil);
       setShowConvite(false);
       setConvite({ email: "", nome: "", perfil: "comercial" });
-      mostrarToast("✅ Convite enviado!");
+      mostrarToast(" Convite enviado!");
       listarUsuariosEmpresa().then((data) => { if (data) setUsuarios(data); }).catch(() => {});
     } catch (e) {
       if (e.message?.startsWith("LIMITE_PLANO:")) {
-        mostrarToast("⚠️ " + e.message.replace("LIMITE_PLANO:", ""));
+        mostrarToast(" " + e.message.replace("LIMITE_PLANO:", ""));
       } else {
         mostrarToast("Erro: " + e.message, true);
       }
@@ -285,7 +285,7 @@ export default function Configuracoes() {
     try {
       removeBiometric();
       setBiometriaAtiva(false);
-      mostrarToast("✅ Biometria removida!");
+      mostrarToast(" Biometria removida!");
     } catch (e) {
       mostrarToast("Erro: " + e.message, true);
     }
@@ -305,9 +305,9 @@ export default function Configuracoes() {
       setApiKey(newKey);
       setApiKeyCreatedAt(now);
       setApiKeyRevealed(true);
-      mostrarToast("✅ Nova chave gerada com sucesso!");
+      mostrarToast(" Nova chave gerada com sucesso!");
     } catch (e) {
-      mostrarToast("❌ Erro ao gerar chave: " + e.message, true);
+      mostrarToast(" Erro ao gerar chave: " + e.message, true);
     } finally {
       setGerandoChave(false);
     }
@@ -323,9 +323,9 @@ export default function Configuracoes() {
         .eq("id", empresaId);
       if (error) throw error;
       setEmpresa((f) => ({ ...f, ical_token: novoToken }));
-      mostrarToast("✅ Novo token de calendário gerado com sucesso!");
+      mostrarToast(" Novo token de calendário gerado com sucesso!");
     } catch (e) {
-      mostrarToast("❌ Erro ao gerar token: " + e.message, true);
+      mostrarToast(" Erro ao gerar token: " + e.message, true);
     } finally {
       setGerandoIcal(false);
     }
@@ -340,9 +340,9 @@ export default function Configuracoes() {
       {toast && (
         <div style={{
           position: "fixed", bottom: 28, right: 28, zIndex: 999,
-          background: C.surface, border: `1px solid ${String(toast).startsWith("❌") ? C.danger : C.success}`,
+          background: C.surface, border: `1px solid ${String(toast).startsWith("") ? C.danger : C.success}`,
           borderRadius: 10, padding: "12px 20px", fontSize: 13, fontWeight: 600,
-          boxShadow: "0 8px 32px #0006", color: String(toast).startsWith("❌") ? C.danger : C.text,
+          boxShadow: "0 8px 32px #0006", color: String(toast).startsWith("") ? C.danger : C.text,
         }}>{toast}</div>
       )}
 
@@ -355,7 +355,7 @@ export default function Configuracoes() {
         <div style={{ display: "flex", alignItems: "center", gap: 10, background: empresa.plano === "pro" ? "#e6f9f0" : "#f0f4ff", border: `1px solid ${empresa.plano === "pro" ? "#2e9e5b" : "#4a7af8"}`, borderRadius: 10, padding: "10px 16px" }}>
           <div>
             <div style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, color: empresa.plano === "pro" ? "#1a6b40" : "#2c4a9e" }}>
-              Plano {empresa.plano === "pro" ? "Pro ✓" : "Free"}
+              Plano {empresa.plano === "pro" ? "Pro " : "Free"}
             </div>
             <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>
               {empresa.plano === "free" ? `${empresa.limite_obras ?? 2} obras ativas · 1 usuário` : "Obras ilimitadas · usuários ilimitados"}
@@ -371,22 +371,22 @@ export default function Configuracoes() {
 
       {/* Tabs */}
       <div style={{ display: "flex", gap: 8, marginBottom: 24 }}>
-        <Tab label="🏢 Empresa"   active={tab === "empresa"}  onClick={() => setTab("empresa")} />
-        <Tab label="👤 Meu perfil" active={tab === "perfil"}   onClick={() => setTab("perfil")} />
-        <Tab label="👥 Usuários"  active={tab === "usuarios"} onClick={() => setTab("usuarios")} />
-        <Tab label="⚙️ Sistema"   active={tab === "sistema"}  onClick={() => setTab("sistema")} />
-        <Tab label="🤖 Robô IA"   active={tab === "ia"}       onClick={() => setTab("ia")} />
-        <Tab label="📅 Integrações" active={tab === "integracoes"} onClick={() => setTab("integracoes")} />
-        <Tab label="🏗️ Orçamento SF" active={tab === "orcamento_sf"} onClick={() => setTab("orcamento_sf")} />
+        <Tab label=" Empresa"   active={tab === "empresa"}  onClick={() => setTab("empresa")} />
+        <Tab label=" Meu perfil" active={tab === "perfil"}   onClick={() => setTab("perfil")} />
+        <Tab label=" Usuários"  active={tab === "usuarios"} onClick={() => setTab("usuarios")} />
+        <Tab label=" Sistema"   active={tab === "sistema"}  onClick={() => setTab("sistema")} />
+        <Tab label=" Robô IA"   active={tab === "ia"}       onClick={() => setTab("ia")} />
+        <Tab label=" Integrações" active={tab === "integracoes"} onClick={() => setTab("integracoes")} />
+        <Tab label=" Orçamento SF" active={tab === "orcamento_sf"} onClick={() => setTab("orcamento_sf")} />
         {user?.perfil === "diretor" && (
-          <Tab label="🔗 Webhooks" active={tab === "webhooks"} onClick={() => setTab("webhooks")} />
+          <Tab label=" Webhooks" active={tab === "webhooks"} onClick={() => setTab("webhooks")} />
         )}
         {user?.perfil === "diretor" && (
-          <Tab label="🌐 API"      active={tab === "api"}      onClick={() => setTab("api")} />
+          <Tab label=" API"      active={tab === "api"}      onClick={() => setTab("api")} />
         )}
       </div>
 
-      {/* ══ Aba: Empresa ══ */}
+      {/*  Aba: Empresa  */}
       {tab === "empresa" && (
         <>
           <Card title="Logo da empresa" subtitle="Aparece nos relatórios, propostas e portal do cliente.">
@@ -406,7 +406,7 @@ export default function Configuracoes() {
                   <img src={logoAtual} alt="Logo" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
                 ) : (
                   <div style={{ textAlign: "center" }}>
-                    <div style={{ fontSize: 24, marginBottom: 4 }}>🖼</div>
+                    <div style={{ fontSize: 24, marginBottom: 4 }}></div>
                     <div style={{ fontSize: 9, color: C.muted }}>Clique para enviar</div>
                   </div>
                 )}
@@ -498,7 +498,7 @@ export default function Configuracoes() {
           </Card>
 
           {/* Links White-Label */}
-          <Card title="🔗 Seus links personalizados" subtitle="Compartilhe com clientes e colaboradores — os links exibem o nome e logo da sua empresa.">
+          <Card title=" Seus links personalizados" subtitle="Compartilhe com clientes e colaboradores — os links exibem o nome e logo da sua empresa.">
             {calcToken ? (
               <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                 <LinkCopiavel
@@ -519,13 +519,13 @@ export default function Configuracoes() {
 
           <div style={{ display: "flex", justifyContent: "flex-end" }}>
             <Btn disabled={!empresa.nome || saving} onClick={salvarEmpresa}>
-              {saving ? "Salvando…" : "💾 Salvar dados da empresa"}
+              {saving ? "Salvando…" : " Salvar dados da empresa"}
             </Btn>
           </div>
         </>
       )}
 
-      {/* ══ Aba: Meu perfil ══ */}
+      {/*  Aba: Meu perfil  */}
       {tab === "perfil" && (
         <>
           {/* Info do usuário */}
@@ -567,7 +567,7 @@ export default function Configuracoes() {
 
             <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 20 }}>
               <Btn disabled={saving} onClick={salvarPerfil}>
-                {saving ? "Salvando…" : "💾 Salvar perfil"}
+                {saving ? "Salvando…" : " Salvar perfil"}
               </Btn>
             </div>
           </Card>
@@ -580,7 +580,7 @@ export default function Configuracoes() {
                     fontSize: 13, fontWeight: 700, padding: "6px 14px", borderRadius: 20,
                     background: C.success + "18", color: C.success,
                     border: `1px solid ${C.success}44`,
-                  }}>🔐 Biometria ativa neste dispositivo</span>
+                  }}> Biometria ativa neste dispositivo</span>
                   <Btn variant="ghost" onClick={handleRemoverBiometria}>Remover biometria</Btn>
                 </div>
               ) : (
@@ -641,7 +641,7 @@ export default function Configuracoes() {
 
               <div style={{ display: "flex", justifyContent: "flex-end" }}>
                 <Btn disabled={!senhaOk || saving} onClick={handleTrocarSenha}>
-                  {saving ? "Alterando…" : "🔒 Alterar senha"}
+                  {saving ? "Alterando…" : " Alterar senha"}
                 </Btn>
               </div>
             </div>
@@ -649,7 +649,7 @@ export default function Configuracoes() {
         </>
       )}
 
-      {/* ══ Aba: Usuários ══ */}
+      {/*  Aba: Usuários  */}
       {tab === "usuarios" && (
         <>
           {showConvite && (
@@ -704,7 +704,7 @@ export default function Configuracoes() {
             )}
             {usuarios.length === 0 ? (
               <div style={{ textAlign: "center", padding: "32px 0", color: C.muted }}>
-                <div style={{ fontSize: 28, marginBottom: 8 }}>👥</div>
+                <div style={{ fontSize: 28, marginBottom: 8 }}></div>
                 Nenhum usuário encontrado.
               </div>
             ) : (
@@ -823,7 +823,7 @@ export default function Configuracoes() {
           <PerfisCustomizados />
         </>
       )}
-      {/* ══ Aba: Sistema ══ */}
+      {/*  Aba: Sistema  */}
       {tab === "sistema" && (
         <>
           <Card title="Monitoramento de Erros (Sentry)" subtitle="Rastreamento automático de erros em produção">
@@ -831,7 +831,7 @@ export default function Configuracoes() {
               <div style={{ background: C.darker, borderRadius: 10, padding: "14px 18px" }}>
                 <div style={{ fontSize: 11, color: C.muted, marginBottom: 4 }}>Status</div>
                 <div style={{ fontSize: 14, fontWeight: 700, color: import.meta.env.VITE_SENTRY_DSN ? C.success : C.warning }}>
-                  {import.meta.env.VITE_SENTRY_DSN ? "✓ Ativo" : "⚠ DSN não configurado"}
+                  {import.meta.env.VITE_SENTRY_DSN ? " Ativo" : " DSN não configurado"}
                 </div>
               </div>
               <div style={{ background: C.darker, borderRadius: 10, padding: "14px 18px" }}>
@@ -844,7 +844,7 @@ export default function Configuracoes() {
             </div>
             <Btn variant="ghost" onClick={() => {
               try { throw new Error("[Teste Sentry] Erro manual de verificação — pode ignorar."); }
-              catch (e) { Sentry.captureException(e); mostrarToast("✅ Erro de teste enviado ao Sentry!"); }
+              catch (e) { Sentry.captureException(e); mostrarToast(" Erro de teste enviado ao Sentry!"); }
             }}>
               Enviar erro de teste
             </Btn>
@@ -886,11 +886,11 @@ export default function Configuracoes() {
                       "Alto Padrão": { label: "Alto Padrão", m2: precosM2.altoPadrao },
                     };
                     localStorage.setItem("sf_precos_m2", JSON.stringify(toSave));
-                    mostrarToast("✅ Preços atualizados com sucesso!");
+                    mostrarToast(" Preços atualizados com sucesso!");
                   } catch (e) {
                     mostrarToast("Erro ao salvar preços.", true);
                   }
-                }}>💾 Salvar valores de m²</Btn>
+                }}> Salvar valores de m²</Btn>
               </div>
             </div>
           </Card>
@@ -901,7 +901,7 @@ export default function Configuracoes() {
                 ["Versão",     import.meta.env.VITE_APP_VERSION || "—"],
                 ["Modo",       import.meta.env.MODE],
                 ["Base URL",   import.meta.env.BASE_URL],
-                ["Supabase",   import.meta.env.VITE_SUPABASE_URL ? "✓ Configurado" : "✗ Ausente"],
+                ["Supabase",   import.meta.env.VITE_SUPABASE_URL ? " Configurado" : " Ausente"],
               ].map(([label, value]) => (
                 <div key={label} style={{ background: C.darker, borderRadius: 10, padding: "12px 16px" }}>
                   <div style={{ fontSize: 10, color: C.muted, marginBottom: 3 }}>{label}</div>
@@ -912,17 +912,17 @@ export default function Configuracoes() {
           </Card>
         </>
       )}
-      {/* ══ Aba: Robô IA / WhatsApp ══ */}
+      {/*  Aba: Robô IA / WhatsApp  */}
       {tab === "ia" && <AbaRoboIA empresaId={empresaId} mostrarToast={mostrarToast} />}
 
-      {/* ══ Aba: Webhooks (somente diretores) ══ */}
+      {/*  Aba: Webhooks (somente diretores)  */}
       {tab === "webhooks" && user?.perfil === "diretor" && (
         <Card title="Webhooks" subtitle="Configure endpoints externos para receber eventos automáticos do StickFrame.">
           <WebhookConfig />
         </Card>
       )}
 
-      {/* ══ Aba: API pública (somente diretores) ══ */}
+      {/*  Aba: API pública (somente diretores)  */}
       {tab === "api" && user?.perfil === "diretor" && (
         <>
           {/* API Key management */}
@@ -953,7 +953,7 @@ export default function Configuracoes() {
                       {apiKeyRevealed ? "Ocultar" : "Revelar"}
                     </button>
                     <button
-                      onClick={() => { navigator.clipboard.writeText(apiKey); mostrarToast("✅ Chave copiada!"); }}
+                      onClick={() => { navigator.clipboard.writeText(apiKey); mostrarToast(" Chave copiada!"); }}
                       style={{
                         padding: "10px 14px", background: C.darker, border: `1px solid ${C.border}`,
                         borderRadius: 8, cursor: "pointer", fontFamily: "inherit", fontSize: 12, color: C.text,
@@ -977,7 +977,7 @@ export default function Configuracoes() {
 
               <div>
                 <Btn onClick={gerarApiKey} disabled={gerandoChave}>
-                  {gerandoChave ? "Gerando…" : apiKey ? "🔄 Gerar nova chave" : "🔑 Gerar chave de API"}
+                  {gerandoChave ? "Gerando…" : apiKey ? " Gerar nova chave" : " Gerar chave de API"}
                 </Btn>
                 {apiKey && (
                   <div style={{ fontSize: 11, color: C.warning, marginTop: 6 }}>
@@ -1004,7 +1004,7 @@ export default function Configuracoes() {
                     }}
                   />
                   <button
-                    onClick={() => { navigator.clipboard.writeText(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/api`); mostrarToast("✅ URL copiada!"); }}
+                    onClick={() => { navigator.clipboard.writeText(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/api`); mostrarToast(" URL copiada!"); }}
                     style={{
                       padding: "10px 14px", background: C.darker, border: `1px solid ${C.border}`,
                       borderRadius: 8, cursor: "pointer", fontFamily: "inherit", fontSize: 12, color: C.text,
@@ -1083,7 +1083,7 @@ export default function Configuracoes() {
                   <button
                     onClick={() => {
                       navigator.clipboard.writeText(`curl -H "Authorization: Bearer ${apiKey}" \\\n  ${import.meta.env.VITE_SUPABASE_URL}/functions/v1/api/obras`);
-                      mostrarToast("✅ Exemplo copiado!");
+                      mostrarToast(" Exemplo copiado!");
                     }}
                     style={{
                       marginTop: 8, padding: "6px 12px", background: C.darker, border: `1px solid ${C.border}`,
@@ -1099,7 +1099,7 @@ export default function Configuracoes() {
 
           {/* Google Calendar / iCal */}
           <Card
-            title="📅 Google Calendar / iCal"
+            title=" Google Calendar / iCal"
             subtitle="Adicione seus compromissos do StickFrame no Google Calendar, Apple Calendar ou Outlook"
           >
             {apiKey ? (
@@ -1123,7 +1123,7 @@ export default function Configuracoes() {
                     <button
                       onClick={() => {
                         navigator.clipboard.writeText(`https://gpzmglcxmbboxxogbibq.supabase.co/functions/v1/agenda-ical?token=${apiKey}`);
-                        mostrarToast("✅ Link copiado!");
+                        mostrarToast(" Link copiado!");
                       }}
                       style={{
                         padding: "10px 16px", background: C.red, color: "#fff",
@@ -1131,7 +1131,7 @@ export default function Configuracoes() {
                         cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap",
                       }}
                     >
-                      📋 Copiar link
+                       Copiar link
                     </button>
                     <button
                       onClick={() => {
@@ -1144,7 +1144,7 @@ export default function Configuracoes() {
                         cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap",
                       }}
                     >
-                      📆 Abrir no Google Calendar
+                       Abrir no Google Calendar
                     </button>
                   </div>
                 </div>
@@ -1172,24 +1172,24 @@ export default function Configuracoes() {
         </>
       )}
 
-      {/* ══ Aba: Integrações ══ */}
+      {/*  Aba: Integrações  */}
       {tab === "integracoes" && (
         <>
           <Card 
-            title="📅 Sincronização com Google Calendar e Calendários Externos" 
+            title=" Sincronização com Google Calendar e Calendários Externos" 
             subtitle="Adicione seus compromissos e visitas de obras diretamente ao seu calendário favorito (Google Calendar, Apple Calendar, Outlook, etc.) usando um link de assinatura seguro."
           >
             <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
               
               {/* Informação sobre como funciona */}
               <div style={{ display: "flex", gap: 12, alignItems: "flex-start", background: C.darker, border: `1px solid ${C.border}`, borderRadius: 10, padding: "14px 18px" }}>
-                <span style={{ fontSize: 20 }}>💡</span>
+                <span style={{ fontSize: 20 }}></span>
                 <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.5 }}>
                   <strong style={{ color: C.text, display: "block", marginBottom: 4 }}>Como funciona a sincronização?</strong>
                   Ao assinar este link, seu aplicativo de calendário irá atualizar automaticamente e buscar os eventos futuros e passados cadastrados na Agenda do StickFrame.
                   <br />
                   <span style={{ color: C.warning, display: "block", marginTop: 4 }}>
-                    ⚠️ Nota: O Google Calendar atualiza as assinaturas de URL periodicamente (geralmente a cada 8 a 12 horas). Portanto, novos compromissos podem demorar um pouco para aparecer na sua agenda do Google.
+                     Nota: O Google Calendar atualiza as assinaturas de URL periodicamente (geralmente a cada 8 a 12 horas). Portanto, novos compromissos podem demorar um pouco para aparecer na sua agenda do Google.
                   </span>
                 </div>
               </div>
@@ -1211,7 +1211,7 @@ export default function Configuracoes() {
                     <button
                       onClick={() => { 
                         navigator.clipboard.writeText(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ical-feed?token=${empresa.ical_token}`); 
-                        mostrarToast("✅ Link do iCal copiado!"); 
+                        mostrarToast(" Link do iCal copiado!"); 
                       }}
                       style={{
                         padding: "10px 14px", background: C.darker, border: `1px solid ${C.border}`,
@@ -1234,7 +1234,7 @@ export default function Configuracoes() {
                 {user?.perfil === "diretor" ? (
                   <div>
                     <Btn onClick={gerarNovoIcalToken} disabled={gerandoIcal}>
-                      {gerandoIcal ? "Gerando..." : empresa.ical_token ? "🔄 Revogar e Gerar Novo Token" : "📅 Gerar Token iCal"}
+                      {gerandoIcal ? "Gerando..." : empresa.ical_token ? " Revogar e Gerar Novo Token" : " Gerar Token iCal"}
                     </Btn>
                     {empresa.ical_token && (
                       <div style={{ fontSize: 11, color: C.warning, marginTop: 6 }}>
@@ -1251,7 +1251,7 @@ export default function Configuracoes() {
 
               {/* Instruções de Configuração detalhadas */}
               <div style={{ background: C.darker, borderRadius: 10, padding: "16px 20px", fontSize: 12, color: C.muted }}>
-                <div style={{ fontWeight: 700, color: C.text, marginBottom: 8 }}>📋 Como adicionar no Google Agenda (Computador):</div>
+                <div style={{ fontWeight: 700, color: C.text, marginBottom: 8 }}> Como adicionar no Google Agenda (Computador):</div>
                 <ol style={{ paddingLeft: 18, lineHeight: 1.8 }}>
                   <li>Acesse o <a href="https://calendar.google.com" target="_blank" rel="noreferrer" style={{ color: C.red, textDecoration: "underline" }}>Google Agenda</a> no computador.</li>
                   <li>No menu lateral esquerdo, clique no botão <strong>+</strong> ao lado de "Outras agendas".</li>
@@ -1273,7 +1273,7 @@ export default function Configuracoes() {
   );
 }
 
-// ─── Aba Robô IA ─────────────────────────────────────────────────────────────
+//  Aba Robô IA 
 
 function AbaRoboIA({ empresaId, mostrarToast }) {
   const [cfg,    setCfg]    = useState({ openai_key: "", waba_token: "", phone_number_id: "", sistema_prompt: "", modelo_openai: "gpt-4o-mini", ativo: false, verify_token: "" });
@@ -1298,11 +1298,11 @@ function AbaRoboIA({ empresaId, mostrarToast }) {
     setSaving(true);
     try {
       await sb.from("ia_config").upsert({ ...cfg, empresa_id: empresaId }, { onConflict: "empresa_id" });
-      mostrarToast("✅ Configuração salva!");
+      mostrarToast(" Configuração salva!");
       // Reload to get verify_token if newly created
       const { data } = await sb.from("ia_config").select("verify_token").eq("empresa_id", empresaId).single();
       if (data?.verify_token) setCfg((f) => ({ ...f, verify_token: data.verify_token }));
-    } catch (e) { mostrarToast(`❌ ${e.message}`, true); }
+    } catch (e) { mostrarToast(` ${e.message}`, true); }
     finally { setSaving(false); }
   }
 
@@ -1314,7 +1314,7 @@ function AbaRoboIA({ empresaId, mostrarToast }) {
       {/* Status ativo */}
       <div style={{ background: cfg.ativo ? "#f0fdf4" : "#fff5f5", border: `1px solid ${cfg.ativo ? "#86efac" : "#fca5a5"}`, borderRadius: 14, padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
-          <div style={{ fontWeight: 700, fontSize: 14, color: cfg.ativo ? "#166534" : "#991b1b" }}>{cfg.ativo ? "🟢 Robô ativo" : "🔴 Robô desativado"}</div>
+          <div style={{ fontWeight: 700, fontSize: 14, color: cfg.ativo ? "#166534" : "#991b1b" }}>{cfg.ativo ? " Robô ativo" : " Robô desativado"}</div>
           <div style={{ fontSize: 12, color: "#6b7280", marginTop: 3 }}>Responde automaticamente às mensagens no WhatsApp da construtora</div>
         </div>
         <button onClick={() => setCfg((f) => ({ ...f, ativo: !f.ativo }))} style={{ padding: "8px 20px", borderRadius: 10, border: "none", background: cfg.ativo ? "#fee2e2" : "#dcfce7", color: cfg.ativo ? "#991b1b" : "#166534", fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}>
@@ -1327,7 +1327,7 @@ function AbaRoboIA({ empresaId, mostrarToast }) {
         <Label>URL do Webhook (configurar no Meta)</Label>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
           <input readOnly value={webhookUrl} style={{ ...inp, fontFamily: "monospace", fontSize: 11, background: "#e0f2fe", flex: 1 }} />
-          <button onClick={() => { navigator.clipboard.writeText(webhookUrl); mostrarToast("✅ URL copiada!"); }} style={{ padding: "10px 14px", background: "#0ea5e9", border: "none", borderRadius: 8, color: "#fff", fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap" }}>Copiar</button>
+          <button onClick={() => { navigator.clipboard.writeText(webhookUrl); mostrarToast(" URL copiada!"); }} style={{ padding: "10px 14px", background: "#0ea5e9", border: "none", borderRadius: 8, color: "#fff", fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap" }}>Copiar</button>
         </div>
         {cfg.verify_token && (
           <div style={{ marginTop: 10 }}>
@@ -1339,7 +1339,7 @@ function AbaRoboIA({ empresaId, mostrarToast }) {
 
       {/* Credenciais */}
       <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 14, padding: "20px" }}>
-        <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 16 }}>🔑 Credenciais</div>
+        <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 16 }}> Credenciais</div>
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <div>
             <Label>OpenAI API Key</Label>
@@ -1364,7 +1364,7 @@ function AbaRoboIA({ empresaId, mostrarToast }) {
 
       {/* Prompt do sistema */}
       <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 14, padding: "20px" }}>
-        <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>💬 Personalidade do Robô</div>
+        <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}> Personalidade do Robô</div>
         <div style={{ fontSize: 12, color: "#6b7280", marginBottom: 12 }}>Descreva como o robô deve se comportar. O sistema injeta automaticamente os dados da obra e vencimentos.</div>
         <textarea value={cfg.sistema_prompt} onChange={(e) => set("sistema_prompt")(e.target.value)}
           placeholder={`Ex: Você é a Lara, assistente virtual da Construtora Silva. Seja simpática, objetiva e sempre finalize com "Posso ajudar em algo mais?"`}
@@ -1372,7 +1372,7 @@ function AbaRoboIA({ empresaId, mostrarToast }) {
       </div>
 
       <div style={{ background: "#f9fafb", borderRadius: 12, padding: "14px 18px", fontSize: 12, color: "#6b7280" }}>
-        <div style={{ fontWeight: 700, marginBottom: 6 }}>📋 Como configurar no Meta Business:</div>
+        <div style={{ fontWeight: 700, marginBottom: 6 }}> Como configurar no Meta Business:</div>
         <ol style={{ paddingLeft: 18, lineHeight: 1.8 }}>
           <li>Acesse <strong>developers.facebook.com</strong> → seu app → WhatsApp → Configuração</li>
           <li>Cole a URL do Webhook acima no campo "URL de callback"</li>
@@ -1383,7 +1383,7 @@ function AbaRoboIA({ empresaId, mostrarToast }) {
       </div>
 
       <button onClick={salvar} disabled={saving} style={{ padding: "13px", background: saving ? "#ccc" : "#981915", border: "none", borderRadius: 12, color: "#fff", fontSize: 14, fontWeight: 800, cursor: "pointer", fontFamily: "inherit" }}>
-        {saving ? "Salvando..." : "💾 Salvar configuração"}
+        {saving ? "Salvando..." : " Salvar configuração"}
       </button>
     </div>
   );

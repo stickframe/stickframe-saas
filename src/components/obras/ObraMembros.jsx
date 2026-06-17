@@ -55,9 +55,9 @@ export default function ObraMembros({ obraId }) {
       const m = await adicionarMembro(obraId, novoUserId, novoNivel);
       sync([...membros.filter((x) => x.usuario_id !== novoUserId), m]);
       setNovoUserId("");
-      mostrarToast("✅ Membro adicionado");
+      mostrarToast(" Membro adicionado");
     } catch (e) {
-      mostrarToast("❌ " + e.message);
+      mostrarToast(" " + e.message);
     }
   };
 
@@ -65,9 +65,9 @@ export default function ObraMembros({ obraId }) {
     try {
       await removerMembro(obraId, usuarioId);
       sync(membros.filter((m) => m.usuario_id !== usuarioId));
-      mostrarToast("🗑 Membro removido");
+      mostrarToast(" Membro removido");
     } catch (e) {
-      mostrarToast("❌ " + e.message);
+      mostrarToast(" " + e.message);
     }
   };
 
@@ -76,7 +76,7 @@ export default function ObraMembros({ obraId }) {
       const m = await atualizarNivel(obraId, usuarioId, nivel);
       sync(membros.map((x) => x.usuario_id === usuarioId ? m : x));
     } catch (e) {
-      mostrarToast("❌ " + e.message);
+      mostrarToast(" " + e.message);
     }
   };
 

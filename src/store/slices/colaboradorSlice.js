@@ -38,7 +38,7 @@ export const createColaboradorSlice = (set, get) => ({
     get().registrar("colaborador", "deletado", `Colaborador ${c?.nome} removido`);
   },
 
-  // ── Alocações ─────────────────────────────────────────────────────────────
+  //  Alocações 
   loadAlocacoes: async () => {
     const data = await listarAlocacoes();
     set({ alocacoes: data });
@@ -53,7 +53,7 @@ export const createColaboradorSlice = (set, get) => ({
     set((s) => ({ alocacoes: s.alocacoes.filter((x) => x.id !== id) }));
   },
 
-  // ── Horas trabalhadas ──────────────────────────────────────────────────────
+  //  Horas trabalhadas 
   loadHorasTrabalhadas: async () => {
     const data = await listarHoras();
     set({ horasTrabalhadas: data });

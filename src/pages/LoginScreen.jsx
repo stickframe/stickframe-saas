@@ -122,7 +122,7 @@ export default function LoginScreen() {
     navigate("/");
   };
 
-  // ── Biometric prompt screen ───────────────────────────────────────────────
+  //  Biometric prompt screen 
   if (bioPrompt) {
     return (
       <div style={{ minHeight: "100vh", background: "var(--bg,#f4f1ec)", display: "flex", alignItems: "center", justifyContent: "center", padding: "0 16px" }}>
@@ -130,7 +130,7 @@ export default function LoginScreen() {
           <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700, letterSpacing: 3, fontSize: 22, marginBottom: 16 }}>
             <span style={{ color: "var(--ink,#26231f)" }}>STICK</span><span style={{ color: "var(--brick,#981915)" }}>FRAME</span>
           </div>
-          <div style={{ fontSize: 56, marginBottom: 16 }}>🔐</div>
+          <div style={{ fontSize: 56, marginBottom: 16 }}></div>
           <h2 style={{ color: "var(--ink,#26231f)", fontSize: 20, fontWeight: 800, margin: "0 0 10px", fontFamily: "'Hanken Grotesk',sans-serif" }}>Ativar login biométrico?</h2>
           <p style={{ color: "var(--muted,#8c847a)", fontSize: 14, lineHeight: 1.6, margin: "0 0 28px", fontFamily: "'Hanken Grotesk',sans-serif" }}>
             Use Face ID, Touch ID ou Windows Hello para entrar mais rápido nos próximos acessos.
@@ -139,7 +139,7 @@ export default function LoginScreen() {
             onClick={handleRegisterBio}
             style={{ width: "100%", padding: "14px 0", background: "var(--brick,#981915)", border: "none", borderRadius: 10, color: "#fff", fontSize: 15, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", marginBottom: 10 }}
           >
-            ✦ Ativar biometria
+             Ativar biometria
           </button>
           <button
             onClick={() => { setBioPrompt(null); navigate("/"); }}
@@ -157,7 +157,7 @@ export default function LoginScreen() {
       className="sf-login-wrap"
       style={{ minHeight: "100vh", display: "flex", background: "var(--graphite,#2b2b2e)" }}
     >
-      {/* ── Left panel ── */}
+      {/*  Left panel  */}
       <div
         className="sf-login-left"
         style={{
@@ -188,9 +188,9 @@ export default function LoginScreen() {
         {/* Feature bullets */}
         <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
           {[
-            { icon: "📐", title: "Orçamentos em minutos", desc: "Gere propostas com cálculo SF automático." },
-            { icon: "🏗️", title: "Obras em tempo real", desc: "Cronograma, diário e medições num painel." },
-            { icon: "💰", title: "Financeiro por obra", desc: "Margem, fluxo de caixa e DRE integrados." },
+            { icon: "", title: "Orçamentos em minutos", desc: "Gere propostas com cálculo SF automático." },
+            { icon: "", title: "Obras em tempo real", desc: "Cronograma, diário e medições num painel." },
+            { icon: "", title: "Financeiro por obra", desc: "Margem, fluxo de caixa e DRE integrados." },
           ].map((f) => (
             <div key={f.title} style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
               <span style={{ fontSize: 24, lineHeight: 1, marginTop: 2 }}>{f.icon}</span>
@@ -220,7 +220,7 @@ export default function LoginScreen() {
         </div>
       </div>
 
-      {/* ── Right panel ── */}
+      {/*  Right panel  */}
       <div
         className="sf-login-right"
         style={{
@@ -271,7 +271,7 @@ export default function LoginScreen() {
                 justifyContent: "center", gap: 10, transition: "all .2s",
               }}
             >
-              <span style={{ fontSize: 22 }}>🔐</span>
+              <span style={{ fontSize: 22 }}></span>
               {bioLoading ? "Verificando..." : "Entrar com biometria"}
             </button>
           )}

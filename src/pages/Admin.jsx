@@ -133,9 +133,9 @@ export default function Admin() {
   const { empresas = [], totals = {}, crescimento = {}, funil = {}, origens = {}, asaas = null, proStats = {} } = data || {};
 
   const ESTADO_BADGE = {
-    pago:         { label: "Paga ✓",        bg: "#2e9e5b18", color: "#2e9e5b" },
+    pago:         { label: "Paga ",        bg: "#2e9e5b18", color: "#2e9e5b" },
     trial:        { label: "Trial ⏳",       bg: "#f59e0b18", color: "#b45309" },
-    inadimplente: { label: "Vencida ⚠️",     bg: "#dc262618", color: "#dc2626" },
+    inadimplente: { label: "Vencida ",     bg: "#dc262618", color: "#dc2626" },
     aguardando:   { label: "Aguardando",     bg: "#3b6ea518", color: "#3b6ea5" },
   };
 
@@ -182,8 +182,8 @@ export default function Admin() {
         <StatCard big accent="#b45309" label="Inadimplentes" value={asaas?.inadimplentes ?? 0} color={(asaas?.inadimplentes ?? 0) > 0 ? C.danger : C.text} />
       </div>
 
-      {/* 🟢 Crescimento */}
-      {sectionTitle("🟢 Crescimento")}
+      {/*  Crescimento */}
+      {sectionTitle(" Crescimento")}
       <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginBottom: 8 }}>
         <StatCard accent="#2e9e5b" label="Cadastros hoje" value={crescimento.hoje ?? 0} />
         <StatCard accent="#2e9e5b" label="Últimos 7 dias" value={crescimento.semana ?? 0} />
@@ -201,10 +201,10 @@ export default function Admin() {
         <CadastrosChart empresas={empresas} />
       </div>
 
-      {/* 🔵 Receita (Asaas) */}
+      {/*  Receita (Asaas) */}
       {asaas && (
         <>
-          {sectionTitle("🔵 Receita · Asaas")}
+          {sectionTitle(" Receita · Asaas")}
           <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginBottom: 8 }}>
             <StatCard accent="#3b6ea5" label="MRR" value={fmtBRL(asaas.mrr)} color="#2e9e5b" />
             <StatCard accent="#3b6ea5" label="ARR projetado" value={fmtBRL(asaas.arr)} />
@@ -213,8 +213,8 @@ export default function Admin() {
         </>
       )}
 
-      {/* 🟠 Atenção */}
-      {sectionTitle("🟠 Atenção")}
+      {/*  Atenção */}
+      {sectionTitle(" Atenção")}
       <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginBottom: 8 }}>
         <StatCard accent="#b45309" label="Inadimplentes" value={asaas?.inadimplentes ?? 0} color={(asaas?.inadimplentes ?? 0) > 0 ? C.danger : C.muted} />
         <StatCard accent="#b45309" label="Trials vencendo (7d)" value={crescimento.trials_vencendo_7d ?? 0} color="#b45309" />
@@ -225,11 +225,11 @@ export default function Admin() {
       {/* Empresas em risco */}
       {empresas.some((e) => e.health < 30) && (
         <>
-          {sectionTitle("⚠️ Empresas em risco de abandono")}
+          {sectionTitle(" Empresas em risco de abandono")}
           <div style={{ background: C.surface, border: `1px solid ${C.danger}40`, borderRadius: 12, padding: "14px 20px", boxShadow: C.shadow }}>
             {empresas.filter((e) => e.health < 30).sort((a, b) => a.health - b.health).map((e) => {
               const h = e.health ?? 0;
-              const [emoji, bg, col] = h >= 50 ? ["🟡", "#b07a1e18", "#b45309"] : ["🔴", "#dc262618", "#dc2626"];
+              const [emoji, bg, col] = h >= 50 ? ["", "#b07a1e18", "#b45309"] : ["", "#dc262618", "#dc2626"];
               const waNum = (e.telefone || "").replace(/\D/g, "");
               const waMsg = encodeURIComponent(`Olá${e.contato_nome ? ", " + e.contato_nome : ""}! Vi que a ${e.nome} não está usando muito o StickFrame. Posso ajudar com algo?`);
               return (
@@ -244,11 +244,11 @@ export default function Admin() {
                     </span>
                     {e.contato_email && (
                       <a href={`mailto:${e.contato_email}?subject=Oi, ${e.contato_nome || e.nome}! Posso ajudar?`}
-                        title="Enviar e-mail" style={{ textDecoration: "none", fontSize: 16 }}>📧</a>
+                        title="Enviar e-mail" style={{ textDecoration: "none", fontSize: 16 }}></a>
                     )}
                     {waNum && (
                       <a href={`https://wa.me/55${waNum}?text=${waMsg}`} target="_blank" rel="noreferrer"
-                        title="Abrir WhatsApp" style={{ textDecoration: "none", fontSize: 16 }}>💬</a>
+                        title="Abrir WhatsApp" style={{ textDecoration: "none", fontSize: 16 }}></a>
                     )}
                   </div>
                 </div>
@@ -356,7 +356,7 @@ export default function Admin() {
                   <td style={{ padding: "12px 16px", whiteSpace: "nowrap" }}>
                     {(() => {
                       const h = e.health ?? 0;
-                      const [emoji, bg, col] = h >= 80 ? ["🟢", "#2e9e5b18", "#2e9e5b"] : h >= 50 ? ["🟡", "#b07a1e18", "#b45309"] : ["🔴", "#dc262618", "#dc2626"];
+                      const [emoji, bg, col] = h >= 80 ? ["", "#2e9e5b18", "#2e9e5b"] : h >= 50 ? ["", "#b07a1e18", "#b45309"] : ["", "#dc262618", "#dc2626"];
                       return (
                         <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 8px", borderRadius: 10, background: bg, color: col, fontWeight: 700, fontSize: 12 }}>
                           {emoji} {h}

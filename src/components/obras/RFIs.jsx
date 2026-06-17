@@ -114,9 +114,9 @@ export default function RFIs({ obraId, userPerfil }) {
       {/* Summary bar */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
         <div style={{ display: "flex", gap: 16, fontSize: 13 }}>
-          <span>📋 <b>{total}</b> total</span>
-          <span>🔴 <b>{abertos}</b> abertos</span>
-          <span>🟢 <b>{respondidos}</b> respondidos</span>
+          <span> <b>{total}</b> total</span>
+          <span> <b>{abertos}</b> abertos</span>
+          <span> <b>{respondidos}</b> respondidos</span>
         </div>
         <button
           onClick={() => { setForm({ disciplina: "Estrutural", urgencia: "Normal" }); setModal("new"); }}
@@ -125,7 +125,7 @@ export default function RFIs({ obraId, userPerfil }) {
       </div>
 
       {loading ? <p>Carregando...</p> : rfis.length === 0 ? (
-        <div style={{ textAlign: "center", padding: 40, color: "#6b7280" }}>📝 Nenhuma RFI registrada.</div>
+        <div style={{ textAlign: "center", padding: 40, color: "#6b7280" }}> Nenhuma RFI registrada.</div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {rfis.map(r => (
@@ -147,27 +147,27 @@ export default function RFIs({ obraId, userPerfil }) {
               {r.descricao && <p style={{ margin: "8px 0 0", fontSize: 13, color: "#6b7280" }}>{r.descricao}</p>}
 
               <div style={{ display: "flex", gap: 12, marginTop: 10, flexWrap: "wrap", alignItems: "center", fontSize: 12, color: "#6b7280" }}>
-                <span>📐 {r.disciplina}</span>
-                {r.solicitante && <span>👤 {r.solicitante}</span>}
-                {r.data_solicitacao && <span>📅 {r.data_solicitacao}</span>}
+                <span> {r.disciplina}</span>
+                {r.solicitante && <span> {r.solicitante}</span>}
+                {r.data_solicitacao && <span> {r.data_solicitacao}</span>}
 
                 <div style={{ marginLeft: "auto", display: "flex", gap: 6 }}>
                   {podeResponder && r.status !== "Fechado" && r.status !== "Respondido" && (
                     <button onClick={() => { setResponderModal(r); setResposta(""); }}
                       style={{ fontSize: 11, padding: "2px 10px", background: "#3b82f6", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer" }}>
-                      💬 Responder
+                       Responder
                     </button>
                   )}
                   {r.status === "Respondido" && (
                     <button onClick={() => fechar(r.id)}
                       style={{ fontSize: 11, padding: "2px 10px", background: "#6b7280", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer" }}>
-                      ✅ Fechar
+                       Fechar
                     </button>
                   )}
                   {r.status === "Aberto" && (
                     <button onClick={() => { setForm({ ...r }); setModal(r); }}
                       style={{ fontSize: 11, padding: "2px 8px", background: "none", border: "1px solid #e2e4ea", borderRadius: 4, cursor: "pointer" }}>
-                      ✏️ Editar
+                       Editar
                     </button>
                   )}
                 </div>
@@ -190,7 +190,7 @@ export default function RFIs({ obraId, userPerfil }) {
           <div style={{ background: "#ffffff", borderRadius: 12, padding: 24, width: "min(500px,95vw)", maxHeight: "90vh", overflowY: "auto" }}>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
               <h3 style={{ margin: 0 }}>{modal === "new" ? "Nova RFI" : "Editar RFI"}</h3>
-              <button onClick={() => setModal(null)} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer" }}>✕</button>
+              <button onClick={() => setModal(null)} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer" }}></button>
             </div>
 
             <label style={{ display: "block", marginBottom: 12 }}>
@@ -269,7 +269,7 @@ export default function RFIs({ obraId, userPerfil }) {
               <button onClick={() => setResponderModal(null)} style={{ padding: "8px 16px", borderRadius: 8, border: "1px solid #e2e4ea", background: "none", cursor: "pointer" }}>Cancelar</button>
               <button onClick={responder} disabled={!resposta.trim()}
                 style={{ padding: "8px 20px", borderRadius: 8, border: "none", background: "#22c55e", color: "#fff", cursor: "pointer", fontWeight: 700, opacity: !resposta.trim() ? 0.5 : 1 }}>
-                ✅ Enviar Resposta
+                 Enviar Resposta
               </button>
             </div>
           </div>

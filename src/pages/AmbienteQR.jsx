@@ -59,7 +59,7 @@ export default function AmbienteQR() {
   if (erro) return (
     <div style={{ minHeight: "100vh", background: C.dark, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Inter, system-ui, sans-serif" }}>
       <div style={{ textAlign: "center", padding: 24 }}>
-        <div style={{ fontSize: 40, marginBottom: 12 }}>⚠️</div>
+        <div style={{ fontSize: 40, marginBottom: 12 }}></div>
         <div style={{ fontWeight: 700 }}>{erro}</div>
       </div>
     </div>
@@ -77,13 +77,13 @@ export default function AmbienteQR() {
         </div>
         <div style={{ color: "#fff", fontSize: 22, fontWeight: 900 }}>{ambiente.nome}</div>
         {ambiente.andar && <div style={{ color: "rgba(255,255,255,0.75)", fontSize: 13, marginTop: 3 }}>{ambiente.andar}</div>}
-        {obra?.nome && <div style={{ color: "rgba(255,255,255,0.6)", fontSize: 12, marginTop: 4 }}>🏗️ {obra.nome}</div>}
+        {obra?.nome && <div style={{ color: "rgba(255,255,255,0.6)", fontSize: 12, marginTop: 4 }}> {obra.nome}</div>}
       </div>
 
       <div style={{ maxWidth: 480, margin: "0 auto", padding: "20px 16px" }}>
         {enviado ? (
           <div style={{ background: "#f0fdf4", border: "1px solid #86efac", borderRadius: 16, padding: "32px 24px", textAlign: "center" }}>
-            <div style={{ fontSize: 48, marginBottom: 12 }}>✅</div>
+            <div style={{ fontSize: 48, marginBottom: 12 }}></div>
             <div style={{ fontSize: 20, fontWeight: 900, color: C.success }}>Ocorrência registrada!</div>
             <div style={{ fontSize: 14, color: C.muted, marginTop: 8 }}>A equipe responsável foi notificada e irá analisar.</div>
             <button onClick={() => { setEnviado(false); setForm({ titulo: "", descricao: "", categoria: "Outro" }); setFoto(null); }}
@@ -128,13 +128,13 @@ export default function AmbienteQR() {
               <input ref={fileRef} type="file" accept="image/*" capture="environment" onChange={(e) => setFoto(e.target.files?.[0] || null)} style={{ display: "none" }} />
               {foto ? (
                 <div style={{ display: "flex", alignItems: "center", gap: 10, background: "#f0fdf4", border: "1px solid #86efac", borderRadius: 10, padding: "10px 14px" }}>
-                  <span style={{ fontSize: 20 }}>📷</span>
+                  <span style={{ fontSize: 20 }}></span>
                   <span style={{ flex: 1, fontSize: 13, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{foto.name}</span>
-                  <button onClick={() => setFoto(null)} style={{ background: "none", border: "none", color: C.muted, cursor: "pointer", fontSize: 16 }}>✕</button>
+                  <button onClick={() => setFoto(null)} style={{ background: "none", border: "none", color: C.muted, cursor: "pointer", fontSize: 16 }}></button>
                 </div>
               ) : (
                 <button onClick={() => fileRef.current?.click()} style={{ width: "100%", padding: "12px", border: `2px dashed ${C.border}`, borderRadius: 10, background: C.dark, color: C.muted, fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
-                  📷 Tirar foto / selecionar
+                   Tirar foto / selecionar
                 </button>
               )}
             </div>
@@ -144,7 +144,7 @@ export default function AmbienteQR() {
               border: "none", borderRadius: 12, color: "#fff", fontSize: 15, fontWeight: 800,
               cursor: "pointer", fontFamily: "inherit",
             }}>
-              {enviando ? "Enviando..." : "🚨 Reportar Ocorrência"}
+              {enviando ? "Enviando..." : " Reportar Ocorrência"}
             </button>
           </div>
         )}

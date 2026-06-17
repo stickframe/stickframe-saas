@@ -6,11 +6,11 @@ import { useModuleLoad } from "../hooks/useModuleLoad";
 import { limparHistorico } from "../services/repositories/historicoRepository";
 
 const TIPO_CONFIG = {
-  cliente:    { cor: "#2e9e5b", icone: "◈", label: "Cliente"    },
-  orcamento:  { cor: "#981915", icone: "◻", label: "Orçamento"  },
-  contrato:   { cor: "#c88a00", icone: "◑", label: "Contrato"   },
-  financeiro: { cor: "#4a9eff", icone: "◉", label: "Financeiro" },
-  obra:       { cor: "#414141", icone: "◆", label: "Obra"       },
+  cliente:    { cor: "#2e9e5b", icone: "", label: "Cliente"    },
+  orcamento:  { cor: "#981915", icone: "", label: "Orçamento"  },
+  contrato:   { cor: "#c88a00", icone: "", label: "Contrato"   },
+  financeiro: { cor: "#4a9eff", icone: "", label: "Financeiro" },
+  obra:       { cor: "#414141", icone: "", label: "Obra"       },
 };
 
 const ACAO_CONFIG = {
@@ -86,7 +86,7 @@ export default function Historico() {
             background: soMinhas ? C.red + "18" : "transparent",
             color: soMinhas ? C.red : C.muted,
           }}>
-            {soMinhas ? "● Minhas atividades" : "○ Minhas atividades"}
+            {soMinhas ? " Minhas atividades" : " Minhas atividades"}
           </button>
         )}
         {!tiposPermitidos && (
@@ -94,7 +94,7 @@ export default function Historico() {
             padding: "7px 14px", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
             border: `1px solid ${C.danger}44`, background: C.danger + "18", color: C.danger,
           }}>
-            🗑 Limpar histórico
+             Limpar histórico
           </button>
         )}
         </div>
@@ -125,7 +125,7 @@ export default function Historico() {
         {itens.length === 0 ? (
           <div style={{ padding: 32, textAlign: "center", color: C.muted, fontSize: 13 }}>{EMPTY_PERFIL[perfil] || "Nenhuma atividade encontrada."}</div>
         ) : itens.map((h, i) => {
-          const tc = TIPO_CONFIG[h.tipo] || { cor: C.muted, icone: "●", label: h.tipo };
+          const tc = TIPO_CONFIG[h.tipo] || { cor: C.muted, icone: "", label: h.tipo };
           const ac = ACAO_CONFIG[h.acao] || { cor: C.muted, label: h.acao };
           return (
             <div key={h.id} style={{ display: "flex", alignItems: "flex-start", gap: 16, padding: "14px 20px", borderBottom: i < itens.length - 1 ? `1px solid ${C.border}` : "none" }}>

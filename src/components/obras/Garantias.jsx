@@ -39,8 +39,8 @@ export default function Garantias({ obraId }) {
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
         <div style={{ display: "flex", gap: 12, fontSize: 13 }}>
-          {vencendo > 0 && <span style={{ color: "#f59e0b" }}>⚠️ {vencendo} vencendo em breve</span>}
-          {vencidas > 0 && <span style={{ color: "#ef4444" }}>🔴 {vencidas} vencida(s)</span>}
+          {vencendo > 0 && <span style={{ color: "#f59e0b" }}> {vencendo} vencendo em breve</span>}
+          {vencidas > 0 && <span style={{ color: "#ef4444" }}> {vencidas} vencida(s)</span>}
         </div>
         <button onClick={() => { setForm({ prazo_anos: 1 }); setModal("new"); }}
           style={{ padding: "7px 14px", background: "#b41e1e", color: "#fff", border: "none", borderRadius: 8, cursor: "pointer", fontWeight: 700 }}>
@@ -49,7 +49,7 @@ export default function Garantias({ obraId }) {
       </div>
 
       {loading ? <p>Carregando...</p> : garantias.length === 0 ? (
-        <div style={{ textAlign: "center", padding: 40, color: "#6b7280" }}>🛡️ Nenhuma garantia cadastrada.</div>
+        <div style={{ textAlign: "center", padding: 40, color: "#6b7280" }}> Nenhuma garantia cadastrada.</div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {garantias.map(g => (
@@ -67,7 +67,7 @@ export default function Garantias({ obraId }) {
               <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                 <span style={{ background: COR[g.status], color: "#fff", borderRadius: 4, padding: "3px 10px", fontSize: 11, fontWeight: 700 }}>{g.status}</span>
                 <button onClick={() => { setForm({...g}); setModal(g); }}
-                  style={{ fontSize: 11, padding: "3px 8px", background: "none", border: "1px solid #e2e4ea", borderRadius: 4, cursor: "pointer" }}>✏️</button>
+                  style={{ fontSize: 11, padding: "3px 8px", background: "none", border: "1px solid #e2e4ea", borderRadius: 4, cursor: "pointer" }}></button>
               </div>
             </div>
           ))}
@@ -79,7 +79,7 @@ export default function Garantias({ obraId }) {
           <div style={{ background: "#ffffff", borderRadius: 12, padding: 24, width: "min(460px,95vw)" }}>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
               <h3 style={{ margin: 0 }}>{modal === "new" ? "Nova garantia" : "Editar garantia"}</h3>
-              <button onClick={() => setModal(null)} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer" }}>✕</button>
+              <button onClick={() => setModal(null)} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer" }}></button>
             </div>
             {[["Item *","item","text"],["Fornecedor","fornecedor","text"],["Data início","data_inicio","date"],["Data fim *","data_fim","date"]].map(([l,k,t]) => (
               <label key={k} style={{ display: "block", marginBottom: 12 }}>

@@ -127,7 +127,7 @@ export default function PerfisCustomizados() {
           <div style={{ textAlign: "center", padding: "24px 0", color: C.muted, fontSize: 13 }}>Carregando…</div>
         ) : perfis.length === 0 ? (
           <div style={{ textAlign: "center", padding: "28px 0", color: C.muted }}>
-            <div style={{ fontSize: 28, marginBottom: 8 }}>🎭</div>
+            <div style={{ fontSize: 28, marginBottom: 8 }}></div>
             Nenhum perfil personalizado criado ainda.
           </div>
         ) : (

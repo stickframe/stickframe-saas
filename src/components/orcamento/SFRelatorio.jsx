@@ -1,4 +1,4 @@
-// ── STICK FRAME · Orçamento SF · Relatórios ─────────────────────────────
+//  STICK FRAME · Orçamento SF · Relatórios 
 import React from 'react';
 import { calcProjeto, fmtR, fmtN, SF_CATS, SF_LABELS, SF_UNIDADES } from '../../utils/sf-orcamento';
 import { SFIc, SFBtn } from './SFui';
@@ -46,7 +46,7 @@ export function ViewRelatorio({ state, projetoId, navigate }) {
   );
 }
 
-/* ── 1 · Lista de Compras ── */
+/*  1 · Lista de Compras  */
 function TabCompras({ r, precos }) {
   var cats = Object.keys(SF_CATS);
   var total = 0;
@@ -94,7 +94,7 @@ function TabCompras({ r, precos }) {
   );
 }
 
-/* ── 2 · Por Ambiente ── */
+/*  2 · Por Ambiente  */
 function TabAmbiente({ r, precos }) {
   return (
     <div>
@@ -137,7 +137,7 @@ function TabAmbiente({ r, precos }) {
   );
 }
 
-/* ── 3 · Proposta do Cliente ── */
+/*  3 · Proposta do Cliente  */
 function TabProposta({ proj, r }) {
   var hoje = new Date();
   var validade = new Date(hoje.getTime() + 30*24*3600*1000);
@@ -186,7 +186,7 @@ function TabProposta({ proj, r }) {
   );
 }
 
-/* ── 4 · Custo Interno ── */
+/*  4 · Custo Interno  */
 function TabCusto({ r, precos, margem, margemPct }) {
   var margem_min = 20;
   var low = margemPct < margem_min;

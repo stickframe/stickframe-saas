@@ -14,7 +14,7 @@ export default function IndicePrecos() {
   if (loading) return <div style={{ padding: 40, textAlign: "center", color: C.muted }}>Carregando cotações…</div>;
   if (!todas?.length) return (
     <div style={{ padding: 60, textAlign: "center", color: C.muted }}>
-      <div style={{ fontSize: 36, marginBottom: 12 }}>📈</div>
+      <div style={{ fontSize: 36, marginBottom: 12 }}></div>
       <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 8 }}>Nenhuma cotação registrada</div>
       <div style={{ fontSize: 13 }}>Cadastre fornecedores e registre cotações para construir o índice de preços.</div>
     </div>
@@ -68,7 +68,7 @@ export default function IndicePrecos() {
                 <div key={m.mes} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
                   {var_ !== null && (
                     <span style={{ fontSize: 9, fontWeight: 700, color: var_ > 0 ? C.danger : C.success }}>
-                      {var_ > 0 ? "▲" : "▼"}{Math.abs(var_).toFixed(0)}%
+                      {var_ > 0 ? "" : ""}{Math.abs(var_).toFixed(0)}%
                     </span>
                   )}
                   <div style={{ flex: 1, display: "flex", alignItems: "flex-end", width: "100%" }}>

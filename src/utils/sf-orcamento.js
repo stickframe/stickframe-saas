@@ -1,4 +1,4 @@
-// ── STICK FRAME · Orçamento SF · Dados + Engine de cálculo ──────────────
+//  STICK FRAME · Orçamento SF · Dados + Engine de cálculo 
 // ES module — named exports
 
 export var SF_COMP = [

@@ -71,7 +71,7 @@ export default function AppLayout({ children }) {
       <div className="main-area">
         <div className="topbar">
           <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
-            <button className="hamburger" onClick={() => setMenuOpen((v) => !v)}>☰</button>
+            <button className="hamburger" onClick={() => setMenuOpen((v) => !v)}></button>
 
             {/* Página atual */}
             <span className="topbar-page-title" style={{ fontSize: 15, fontWeight: 600, color: C.text, whiteSpace: "nowrap" }}>
@@ -124,7 +124,7 @@ export default function AppLayout({ children }) {
                 borderRadius: 8, color: C.muted,
               }}
             >
-              {darkMode ? "☀️" : "🌙"}
+              {darkMode ? "" : ""}
             </button>
           </div>
         </div>

@@ -92,13 +92,13 @@ export default function Suprimentos() {
     if (aba === "relatorio") { loadMovimentos(); loadEstoque(); }
   }, [aba, loadPedidos, loadEstoque, loadMovimentos]);
 
-  // ── KPIs ──────────────────────────────────────────────────────────────────
+  //  KPIs 
   const pedPendentes  = pedidos.filter(p => p.status === "Pendente").length;
   const pedTransito   = pedidos.filter(p => p.status === "Em trânsito").length;
   const pedUrgentes   = pedidos.filter(p => p.urgencia === "Crítico" && p.status !== "Entregue" && p.status !== "Cancelado").length;
   const abaixoMinimo  = estoque.filter(e => e.estoque_minimo > 0 && e.quantidade <= e.estoque_minimo).length;
 
-  // ── Pedido handlers ───────────────────────────────────────────────────────
+  //  Pedido handlers 
   function abrirNovoPed() {
     setPedEdit(null);
     setPedForm({ item: "", unidade: "un", quantidade: 1, urgencia: "Normal", status: "Pendente", obra_id: "", solicitante: "", data_pedido: hoje, data_entrega: "", valor_unitario: "", obs: "" });
@@ -118,7 +118,7 @@ export default function Suprimentos() {
     setPedModal(false); loadPedidos();
   }
 
-  // ── Dar entrada no estoque ────────────────────────────────────────────────
+  //  Dar entrada no estoque 
   async function darEntrada() {
     if (!entradaModal || !entradaEstoqueId) return;
     const ped = entradaModal;
@@ -139,7 +139,7 @@ export default function Suprimentos() {
     loadEstoque();
   }
 
-  // ── Estoque handlers ──────────────────────────────────────────────────────
+  //  Estoque handlers 
   function abrirNovoEst() {
     setEstEdit(null);
     setEstForm({ item: "", unidade: "un", quantidade: 0, estoque_minimo: 0, localizacao: "", valor_unitario: "" });
@@ -170,7 +170,7 @@ export default function Suprimentos() {
     if (confirm.tipo === "estoque") loadEstoque();
   }
 
-  // ── Relatório filtrado ────────────────────────────────────────────────────
+  //  Relatório filtrado 
   const movFiltrados = movimentos.filter(m => {
     if (relFiltro.tipo && m.tipo !== relFiltro.tipo) return false;
     if (relFiltro.item && !(m.estoque?.item || "").toLowerCase().includes(relFiltro.item.toLowerCase())) return false;
@@ -229,13 +229,13 @@ export default function Suprimentos() {
         ))}
       </div>
 
-      {/* ── Pedidos ── */}
+      {/*  Pedidos  */}
       {aba === "pedidos" && (
         <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: 20 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
             <h3 style={{ fontWeight: 700 }}>Pedidos de Material</h3>
             <div style={{ display: "flex", gap: 8 }}>
-              <Btn variant="ghost" onClick={() => exportarPedidosExcel(pedidos)}>📊 Exportar Excel</Btn>
+              <Btn variant="ghost" onClick={() => exportarPedidosExcel(pedidos)}> Exportar Excel</Btn>
               <Btn onClick={abrirNovoPed}>+ Novo Pedido</Btn>
             </div>
           </div>
@@ -267,7 +267,7 @@ export default function Suprimentos() {
                       </td>
                       <td style={{ padding: "10px 10px", whiteSpace: "nowrap" }}>
                         {p.status === "Entregue" && (
-                          <Btn variant="ghost" size="sm" style={{ color: C.success }} onClick={() => { setEntradaModal(p); setEntradaEstoqueId(""); loadEstoque(); }}>📦 Dar entrada</Btn>
+                          <Btn variant="ghost" size="sm" style={{ color: C.success }} onClick={() => { setEntradaModal(p); setEntradaEstoqueId(""); loadEstoque(); }}> Dar entrada</Btn>
                         )}
                         <Btn variant="ghost" size="sm" onClick={() => abrirEditPed(p)}>Editar</Btn>
                         <Btn variant="ghost" size="sm" style={{ color: C.danger }} onClick={() => setConfirm({ id: p.id, tipo: "pedido", label: p.item })}>Excluir</Btn>
@@ -281,13 +281,13 @@ export default function Suprimentos() {
         </div>
       )}
 
-      {/* ── Estoque ── */}
+      {/*  Estoque  */}
       {aba === "estoque" && (
         <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: 20 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
             <h3 style={{ fontWeight: 700 }}>Estoque / Almoxarifado</h3>
             <div style={{ display: "flex", gap: 8 }}>
-              <Btn variant="ghost" onClick={() => exportarEstoqueExcel(estoque, movimentos)}>📊 Exportar Excel</Btn>
+              <Btn variant="ghost" onClick={() => exportarEstoqueExcel(estoque, movimentos)}> Exportar Excel</Btn>
               <Btn onClick={abrirNovoEst}>+ Novo Item</Btn>
             </div>
           </div>
@@ -330,7 +330,7 @@ export default function Suprimentos() {
         </div>
       )}
 
-      {/* ── Relatório de Movimentações ── */}
+      {/*  Relatório de Movimentações  */}
       {aba === "relatorio" && (
         <div>
           {/* Filtros */}
@@ -407,7 +407,7 @@ export default function Suprimentos() {
         </div>
       )}
 
-      {/* ── Modal Pedido ── */}
+      {/*  Modal Pedido  */}
       {pedModal && (
         <Modal onClose={() => setPedModal(false)} title={pedEdit ? "Editar Pedido" : "Novo Pedido de Material"}>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -459,7 +459,7 @@ export default function Suprimentos() {
         </Modal>
       )}
 
-      {/* ── Modal Dar Entrada no Estoque ── */}
+      {/*  Modal Dar Entrada no Estoque  */}
       {entradaModal && (
         <Modal onClose={() => setEntradaModal(null)} title="Dar Entrada no Estoque">
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -479,13 +479,13 @@ export default function Suprimentos() {
             <p style={{ fontSize: 12, color: C.muted }}>A entrada será registrada automaticamente no histórico de movimentações.</p>
             <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
               <Btn variant="ghost" onClick={() => setEntradaModal(null)}>Cancelar</Btn>
-              <Btn onClick={darEntrada} disabled={!entradaEstoqueId}>📦 Confirmar entrada</Btn>
+              <Btn onClick={darEntrada} disabled={!entradaEstoqueId}> Confirmar entrada</Btn>
             </div>
           </div>
         </Modal>
       )}
 
-      {/* ── Modal Estoque ── */}
+      {/*  Modal Estoque  */}
       {estModal && (
         <Modal onClose={() => setEstModal(false)} title={estEdit ? "Editar Item" : "Novo Item de Estoque"}>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -512,7 +512,7 @@ export default function Suprimentos() {
         </Modal>
       )}
 
-      {/* ── Modal Movimentação ── */}
+      {/*  Modal Movimentação  */}
       {movModal && (
         <Modal onClose={() => setMovModal(null)} title={`Movimentar: ${movModal.item}`}>
           <p style={{ color: C.muted, marginBottom: 16, fontSize: 14 }}>Saldo atual: <strong>{movModal.quantidade} {movModal.unidade}</strong></p>
@@ -536,7 +536,7 @@ export default function Suprimentos() {
         </Modal>
       )}
 
-      {/* ── Confirm delete ── */}
+      {/*  Confirm delete  */}
       {confirm && (
         <Modal onClose={() => setConfirm(null)} title="Confirmar exclusão">
           <p style={{ marginBottom: 20 }}>Excluir <strong>{confirm.label}</strong>? Esta ação não pode ser desfeita.</p>

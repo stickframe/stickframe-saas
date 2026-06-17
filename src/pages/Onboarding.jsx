@@ -8,7 +8,7 @@ import Btn from "../components/ui/Btn";
 import Input from "../components/ui/Input";
 import Select from "../components/ui/Select";
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+//  Helpers 
 function LabelF({ children, required }) {
   return (
     <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 6, textTransform: "uppercase" }}>
@@ -39,7 +39,7 @@ function StepIndicator({ current, total, labels }) {
               color: done ? "#fff" : active ? C.red : C.muted,
               border: `2px solid ${done || active ? C.red : C.border}`,
             }}>
-              {done ? "✓" : i + 1}
+              {done ? "" : i + 1}
             </div>
             <div style={{ fontSize: 10, color: active ? C.red : done ? C.text : C.muted, fontWeight: active ? 700 : 400, marginTop: 6, textAlign: "center" }}>
               {label}
@@ -51,7 +51,7 @@ function StepIndicator({ current, total, labels }) {
   );
 }
 
-// ─── Componente principal ─────────────────────────────────────────────────────
+//  Componente principal 
 export default function Onboarding({ onComplete }) {
   const empresaId   = useAppStore((s) => s.empresaId);
   const addCliente  = useAppStore((s) => s.addCliente);
@@ -95,7 +95,7 @@ export default function Onboarding({ onComplete }) {
     }).catch(() => {});
   }, [empresaId]);
 
-  // ── Step 0: salvar empresa ─────────────────────────────────────────────────
+  //  Step 0: salvar empresa 
   async function salvarEmpresa() {
     if (!empresa.nome) return;
     setSaving(true);
@@ -111,13 +111,13 @@ export default function Onboarding({ onComplete }) {
       });
       setStep(1);
     } catch {
-      mostrarToast("❌ Erro ao salvar empresa.");
+      mostrarToast(" Erro ao salvar empresa.");
     } finally {
       setSaving(false);
     }
   }
 
-  // ── Step 1: salvar cliente ─────────────────────────────────────────────────
+  //  Step 1: salvar cliente 
   async function salvarCliente() {
     if (!cliente.nome) return;
     setSaving(true);
@@ -132,13 +132,13 @@ export default function Onboarding({ onComplete }) {
       });
       setStep(2);
     } catch {
-      mostrarToast("❌ Erro ao salvar cliente.");
+      mostrarToast(" Erro ao salvar cliente.");
     } finally {
       setSaving(false);
     }
   }
 
-  // ── Step 2: salvar obra ────────────────────────────────────────────────────
+  //  Step 2: salvar obra 
   async function salvarObra() {
     if (!obra.nome) return;
     setSaving(true);
@@ -156,13 +156,13 @@ export default function Onboarding({ onComplete }) {
       });
       await concluirOnboarding();
     } catch {
-      mostrarToast("❌ Erro ao salvar obra.");
+      mostrarToast(" Erro ao salvar obra.");
     } finally {
       setSaving(false);
     }
   }
 
-  // ── Concluir ───────────────────────────────────────────────────────────────
+  //  Concluir 
   async function concluirOnboarding() {
     await atualizarEmpresa({ onboarding_completo: true });
     onComplete();
@@ -205,7 +205,7 @@ export default function Onboarding({ onComplete }) {
 
         <StepIndicator current={step} total={STEPS.length} labels={STEPS} />
 
-        {/* ── Step 0: Empresa ── */}
+        {/*  Step 0: Empresa  */}
         {step === 0 && (
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             <div style={{ background: C.red + "10", border: `1px solid ${C.red}33`, borderRadius: 10, padding: "12px 16px", marginBottom: 4 }}>
@@ -250,11 +250,11 @@ export default function Onboarding({ onComplete }) {
           </div>
         )}
 
-        {/* ── Step 1: Primeiro cliente ── */}
+        {/*  Step 1: Primeiro cliente  */}
         {step === 1 && (
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             <div style={{ background: "#4a9eff10", border: "1px solid #4a9eff33", borderRadius: 10, padding: "12px 16px", marginBottom: 4 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: "#4a9eff", marginBottom: 2 }}>◈ Primeiro cliente</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#4a9eff", marginBottom: 2 }}> Primeiro cliente</div>
               <div style={{ fontSize: 12, color: C.muted }}>Cadastre o primeiro cliente ou lead para começar a usar o CRM.</div>
             </div>
 
@@ -294,11 +294,11 @@ export default function Onboarding({ onComplete }) {
           </div>
         )}
 
-        {/* ── Step 2: Primeira obra ── */}
+        {/*  Step 2: Primeira obra  */}
         {step === 2 && (
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             <div style={{ background: C.success + "10", border: `1px solid ${C.success}33`, borderRadius: 10, padding: "12px 16px", marginBottom: 4 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: C.success, marginBottom: 2 }}>◆ Primeira obra</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: C.success, marginBottom: 2 }}> Primeira obra</div>
               <div style={{ fontSize: 12, color: C.muted }}>Crie a primeira obra para acompanhar no Cronograma, Medições e Diário.</div>
             </div>
 
@@ -345,7 +345,7 @@ export default function Onboarding({ onComplete }) {
                   Pular etapa
                 </button>
                 <Btn disabled={!obra.nome || saving} onClick={salvarObra}>
-                  {saving ? "Criando…" : "✓ Concluir setup"}
+                  {saving ? "Criando…" : " Concluir setup"}
                 </Btn>
               </div>
             </div>

@@ -48,7 +48,7 @@ function AssinaturaInline({ onSalvar, onCancelar }) {
       <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
         <button onClick={limpar} style={btnStyle("#888")}>Limpar</button>
         <button onClick={onCancelar} style={btnStyle("#888")}>Cancelar</button>
-        <button disabled={vazio} onClick={() => onSalvar(canvasRef.current.toDataURL("image/png"))} style={btnStyle(vazio ? "#ccc" : C.red, "#fff", vazio)}>✅ Confirmar assinatura</button>
+        <button disabled={vazio} onClick={() => onSalvar(canvasRef.current.toDataURL("image/png"))} style={btnStyle(vazio ? "#ccc" : C.red, "#fff", vazio)}> Confirmar assinatura</button>
       </div>
     </div>
   );
@@ -115,7 +115,7 @@ export default function PortalColaborador() {
 
   if (erro) return (
     <div style={{ minHeight: "100vh", background: "#1A1A1A", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16, padding: 24 }}>
-      <div style={{ fontSize: 48 }}>🔒</div>
+      <div style={{ fontSize: 48 }}></div>
       <div style={{ fontSize: 18, fontWeight: 700, color: "#f0f0f0" }}>Link inválido</div>
       <div style={{ fontSize: 13, color: "#888" }}>{erro}</div>
     </div>
@@ -139,7 +139,7 @@ export default function PortalColaborador() {
         {/* Toast */}
         {toast && (
           <div style={{ background: C.success, color: "#fff", borderRadius: 10, padding: "12px 18px", marginBottom: 16, fontWeight: 700, fontSize: 13, textAlign: "center" }}>
-            ✅ {toast}
+             {toast}
           </div>
         )}
 
@@ -148,14 +148,14 @@ export default function PortalColaborador() {
           <div style={{ fontWeight: 800, fontSize: 15, marginBottom: 4 }}>⏱ Ponto Eletrônico</div>
           <p style={{ color: C.muted, fontSize: 13, marginBottom: 14 }}>Registre sua entrada e saída com localização GPS.</p>
           <a href={pontoUrl} style={{ display: "block", textAlign: "center", padding: "12px", borderRadius: 10, background: C.red, color: "#fff", fontWeight: 800, fontSize: 14, textDecoration: "none" }}>
-            📍 Bater ponto agora
+             Bater ponto agora
           </a>
         </div>
 
         {/* EPIs pendentes */}
         {episPendentes.length > 0 && (
           <div style={{ background: C.card, borderRadius: 14, padding: 20, marginBottom: 16, boxShadow: "0 2px 12px rgba(0,0,0,.06)", border: `2px solid ${C.warning}44` }}>
-            <div style={{ fontWeight: 800, fontSize: 15, marginBottom: 4, color: C.warning }}>🦺 {episPendentes.length} EPI(s) aguardando assinatura</div>
+            <div style={{ fontWeight: 800, fontSize: 15, marginBottom: 4, color: C.warning }}> {episPendentes.length} EPI(s) aguardando assinatura</div>
             <p style={{ color: C.muted, fontSize: 13, marginBottom: 16 }}>Assine o recebimento dos equipamentos de proteção abaixo.</p>
             {assEpi ? (
               <div>
@@ -173,7 +173,7 @@ export default function PortalColaborador() {
                       <div style={{ fontWeight: 700, fontSize: 14 }}>{e.item}</div>
                       <div style={{ fontSize: 12, color: C.muted }}>Entregue: {fmt(e.data_entrega)} · Qtd: {e.quantidade}</div>
                     </div>
-                    <button onClick={() => setAssEpi(e)} style={btnStyle(C.warning, "#fff")}>✍ Assinar</button>
+                    <button onClick={() => setAssEpi(e)} style={btnStyle(C.warning, "#fff")}> Assinar</button>
                   </div>
                 ))}
               </div>
@@ -184,7 +184,7 @@ export default function PortalColaborador() {
         {/* EPIs já assinados */}
         {episAssinados.length > 0 && (
           <div style={{ background: C.card, borderRadius: 14, padding: 20, marginBottom: 16, boxShadow: "0 2px 12px rgba(0,0,0,.06)" }}>
-            <div style={{ fontWeight: 800, fontSize: 15, marginBottom: 12 }}>✅ EPIs assinados ({episAssinados.length})</div>
+            <div style={{ fontWeight: 800, fontSize: 15, marginBottom: 12 }}> EPIs assinados ({episAssinados.length})</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {episAssinados.map(e => (
                 <div key={e.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 12px", borderRadius: 8, background: "#f0fdf4", border: "1px solid #86efac" }}>
@@ -192,7 +192,7 @@ export default function PortalColaborador() {
                     <div style={{ fontWeight: 600, fontSize: 13 }}>{e.item}</div>
                     <div style={{ fontSize: 11, color: C.muted }}>Entregue: {fmt(e.data_entrega)}{e.validade ? ` · Validade: ${fmt(e.validade)}` : ""}</div>
                   </div>
-                  <span style={{ fontSize: 18 }}>✅</span>
+                  <span style={{ fontSize: 18 }}></span>
                 </div>
               ))}
             </div>
@@ -202,7 +202,7 @@ export default function PortalColaborador() {
         {/* DDS recentes */}
         {dds.length > 0 && (
           <div style={{ background: C.card, borderRadius: 14, padding: 20, marginBottom: 16, boxShadow: "0 2px 12px rgba(0,0,0,.06)" }}>
-            <div style={{ fontWeight: 800, fontSize: 15, marginBottom: 12 }}>📋 DDS Recentes</div>
+            <div style={{ fontWeight: 800, fontSize: 15, marginBottom: 12 }}> DDS Recentes</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {dds.map(d => (
                 <div key={d.id} style={{ padding: "10px 12px", borderRadius: 8, background: "#f5f5f7", border: `1px solid ${C.border}` }}>

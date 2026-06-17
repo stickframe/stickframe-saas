@@ -42,7 +42,7 @@ export async function excluirChamado(id) {
   if (error) throw error;
 }
 
-// ─── Garantias (warranty tracking) ───────────────────────────────────────────
+//  Garantias (warranty tracking) 
 
 export async function listarGarantias(obraId) {
   const { data, error } = await sb.from("garantias")

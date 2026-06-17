@@ -14,7 +14,7 @@ import Concorrencias from "./Concorrencias";
 import { printHtml } from "../utils/printHtml";
 import { enviarWhatsApp } from "../services/whatsappService";
 
-/* ── Inline SVG icons (Lucide style) ───────────────────────────────────────── */
+/*  Inline SVG icons (Lucide style)  */
 const ICONS = {
   truck:     <g><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></g>,
   compete:   <g><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 3"/></g>,
@@ -117,7 +117,7 @@ function VirtualFornList({ lista, sel, onSelect }) {
   );
 }
 
-/* ── Monitor de Mercado — Lista / Cards + variação colorida ─────────────────── */
+/*  Monitor de Mercado — Lista / Cards + variação colorida  */
 const CAT_ICON = {
   "Estrutura de Aço": { icon: "layers", bg: "#eef3f9", ic: C.steel },
   "Estrutura":        { icon: "layers", bg: "#eef3f9", ic: C.steel },
@@ -507,7 +507,7 @@ ${(c.observacoes || poForm.observacoes_po) ? `
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", position: "relative", background: C.bg }}>
 
-      {/* ── Tab bar ── */}
+      {/*  Tab bar  */}
       <div style={{ display: "flex", borderBottom: `1px solid ${C.border}`, background: C.surface, padding: "0 24px", flexShrink: 0 }}>
         {TABS.map((t) => {
           const on = viewMode === t.k;
@@ -530,7 +530,7 @@ ${(c.observacoes || poForm.observacoes_po) ? `
       {viewMode === "fornecedores" && (
         <div style={{ display: "flex", flex: 1, overflow: "hidden", position: "relative" }}>
 
-          {/* ── Painel esquerdo ── */}
+          {/*  Painel esquerdo  */}
           <div style={{ width: isMobile ? "100%" : 340, flexShrink: 0, borderRight: `1px solid ${C.border}`, display: isMobile && sel ? "none" : "flex", flexDirection: "column", height: "100%", background: C.surface }}>
             <div style={{ padding: "20px 16px 8px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
@@ -558,7 +558,7 @@ ${(c.observacoes || poForm.observacoes_po) ? `
             )}
           </div>
 
-          {/* ── Painel direito ── */}
+          {/*  Painel direito  */}
           <div style={{ flex: 1, display: isMobile && !sel ? "none" : "flex", flexDirection: "column", overflow: "hidden" }}>
             {!sel ? (
               <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: 40 }}>
@@ -715,7 +715,7 @@ ${(c.observacoes || poForm.observacoes_po) ? `
         </div>
       )}
 
-      {/* ── Modal Fornecedor ── */}
+      {/*  Modal Fornecedor  */}
       {(modal === "novo-forn" || modal === "editar-forn") && (
         <Modal title={modal === "novo-forn" ? "Novo fornecedor" : "Editar fornecedor"} onClose={() => setModal(null)}>
           <div className="sf-col">
@@ -740,7 +740,7 @@ ${(c.observacoes || poForm.observacoes_po) ? `
         </Modal>
       )}
 
-      {/* ── Modal Cotação ── */}
+      {/*  Modal Cotação  */}
       {(modal === "nova-cot" || modal === "editar-cot") && (
         <Modal title={modal === "nova-cot" ? "Nova cotação" : "Editar cotação"} onClose={() => setModal(null)}>
           <div className="sf-col">
@@ -763,7 +763,7 @@ ${(c.observacoes || poForm.observacoes_po) ? `
         </Modal>
       )}
 
-      {/* ── Modal Pedido de Compra ── */}
+      {/*  Modal Pedido de Compra  */}
       {poModal && (
         <Modal title="Gerar Pedido de Compra" onClose={() => setPoModal(null)}>
           <div className="sf-col">

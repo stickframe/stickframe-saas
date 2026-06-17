@@ -66,7 +66,7 @@ export default function StickScoreBenchmark({ obras, financeiroPorObra = {}, med
       {/* Ranking */}
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         {scored.map((o, i) => {
-          const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : null;
+          const medal = i === 0 ? "" : i === 1 ? "" : i === 2 ? "" : null;
           const isFirst = i === 0;
           const isLast  = i === scored.length - 1;
           const barPct  = (o.score.total / 100) * 100;
@@ -147,8 +147,8 @@ export default function StickScoreBenchmark({ obras, financeiroPorObra = {}, med
       {melhor && pior && melhor.id !== pior.id && (
         <div style={{ marginTop: 12, padding: "10px 12px", background: "var(--surface-2)", borderRadius: "var(--radius-md)", fontSize: 12, color: "var(--muted)", lineHeight: 1.5 }}>
           {pior.score.total < 60
-            ? `⚠️ ${pior.nome} está em nível ${pior.score.nivel} — requer atenção nas dimensões mais baixas.`
-            : `🏆 ${melhor.nome} lidera com ${melhor.score.total} pts. Diferença de ${melhor.score.total - pior.score.total} pts para a última posição.`
+            ? ` ${pior.nome} está em nível ${pior.score.nivel} — requer atenção nas dimensões mais baixas.`
+            : ` ${melhor.nome} lidera com ${melhor.score.total} pts. Diferença de ${melhor.score.total - pior.score.total} pts para a última posição.`
           }
         </div>
       )}
@@ -160,7 +160,7 @@ export default function StickScoreBenchmark({ obras, financeiroPorObra = {}, med
           background: "rgba(0,0,0,0.45)", borderRadius: "var(--radius-lg)",
           display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, zIndex: 10,
         }}>
-          <span style={{ fontSize: 28 }}>🔒</span>
+          <span style={{ fontSize: 28 }}></span>
           <p style={{ fontSize: 13, fontWeight: 700, color: "#fff", margin: 0 }}>Benchmark disponível no plano PRO</p>
           <p style={{ fontSize: 11, color: "rgba(255,255,255,0.6)", margin: 0 }}>Compare o desempenho entre todas as suas obras</p>
         </div>

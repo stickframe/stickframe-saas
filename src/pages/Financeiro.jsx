@@ -15,7 +15,7 @@ import Modal from "../components/ui/Modal";
 import { ImportCSV } from "../components/ui/ImportCSV";
 import { sb, getEmpresaId } from "../services/supabase";
 
-// ─── Fluxo de Caixa Dinâmico ─────────────────────────────────────────────────
+//  Fluxo de Caixa Dinâmico 
 function FluxoCaixa({ lancamentos }) {
   const hoje = new Date();
   hoje.setHours(0, 0, 0, 0);
@@ -69,7 +69,7 @@ function FluxoCaixa({ lancamentos }) {
 
       {negativo.length > 0 && (
         <div style={{ background: "#fff5f5", border: "1px solid #fca5a5", borderRadius: 12, padding: "14px 18px" }}>
-          <div style={{ fontWeight: 700, color: "#991b1b", fontSize: 13, marginBottom: 6 }}>⚠️ Atenção: saldo projetado negativo em {negativo.length} dia(s)</div>
+          <div style={{ fontWeight: 700, color: "#991b1b", fontSize: 13, marginBottom: 6 }}> Atenção: saldo projetado negativo em {negativo.length} dia(s)</div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
             {negativo.slice(0, 5).map((d) => (
               <span key={d.iso} style={{ background: "#fee2e2", color: "#991b1b", borderRadius: 6, padding: "3px 10px", fontSize: 12, fontWeight: 600 }}>
@@ -161,7 +161,7 @@ function FluxoCaixa({ lancamentos }) {
   );
 }
 
-// ─── Mini gráfico ─────────────────────────────────────────────────────────────
+//  Mini gráfico 
 function BarChart({ data, height = 100 }) {
   const max = Math.max(...data.map((d) => d.value), 1);
   return (
@@ -185,7 +185,7 @@ function BarChart({ data, height = 100 }) {
   );
 }
 
-// ─── Label ───────────────────────────────────────────────────────────────────
+//  Label 
 function Label({ children }) {
   return (
     <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 6 }}>
@@ -194,7 +194,7 @@ function Label({ children }) {
   );
 }
 
-// ─── Formulário de lançamento (fora do componente) ───────────────────────────
+//  Formulário de lançamento (fora do componente) 
 function FormLancamento({ tipo, form, setForm, onSave, onCancel }) {
   const categorias = tipo === "receita" ? CATEGORIAS_RECEITA : CATEGORIAS_DESPESA;
   const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
@@ -256,14 +256,14 @@ function FormLancamento({ tipo, form, setForm, onSave, onCancel }) {
       }}>
         <Btn variant="ghost" onClick={onCancel}>Cancelar</Btn>
         <Btn disabled={!ok} onClick={onSave}>
-          {tipo === "receita" ? "✅ Registrar receita" : "⬇️ Registrar despesa"}
+          {tipo === "receita" ? " Registrar receita" : " Registrar despesa"}
         </Btn>
       </div>
     </div>
   );
 }
 
-// ─── Financeiro ───────────────────────────────────────────────────────────────
+//  Financeiro 
 const FORM_VAZIO = { categoria: "Materiais", valor: "", data: "", descricao: "", data_vencimento: "" };
 
 function FolhaPagamento({ folhaMes, setFolhaMes, folhaDados, folhaLoading, folhaPagos, setFolhaPagos, colaboradores, C, addLancamento }) {
@@ -337,7 +337,7 @@ function FolhaPagamento({ folhaMes, setFolhaMes, folhaDados, folhaLoading, folha
       </table>
       <div class="total">Valor a pagar: R$ ${valor.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
       <div style="margin-top:40px;font-size:11px;color:#6b7280">Gerado em ${new Date().toLocaleDateString("pt-BR")} · StickFrame</div>
-      <br><button onclick="window.print()">🖨️ Imprimir</button>
+      <br><button onclick="window.print()"> Imprimir</button>
     </body></html>`);
     w.document.close();
   }
@@ -398,7 +398,7 @@ function FolhaPagamento({ folhaMes, setFolhaMes, folhaDados, folhaLoading, folha
                     <td style={{ padding: "10px 14px", fontWeight: 700, color: C.success }}>{valor ? `R$ ${valor.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})}` : "—"}</td>
                     <td style={{ padding: "10px 14px" }}>
                       {pago
-                        ? <span style={{ background: C.success+"22", color: C.success, padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700 }}>✅ Pago</span>
+                        ? <span style={{ background: C.success+"22", color: C.success, padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700 }}> Pago</span>
                         : <span style={{ background: C.warning+"22", color: C.warning, padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700 }}>Pendente</span>}
                     </td>
                     <td style={{ padding: "10px 14px" }}>
@@ -409,7 +409,7 @@ function FolhaPagamento({ folhaMes, setFolhaMes, folhaDados, folhaLoading, folha
                         {col?.tipo_contrato === "Empreiteiro" && !pago && (
                           <span style={{ fontSize: 11, color: C.muted }}>Via medição</span>
                         )}
-                        <button onClick={() => imprimirHolerite(c)} style={{ padding: "5px 10px", borderRadius: 7, border: `1px solid ${C.border}`, background: "transparent", color: C.muted, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>🖨️ Holerite</button>
+                        <button onClick={() => imprimirHolerite(c)} style={{ padding: "5px 10px", borderRadius: 7, border: `1px solid ${C.border}`, background: "transparent", color: C.muted, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}> Holerite</button>
                       </div>
                     </td>
                   </tr>
@@ -443,7 +443,7 @@ export default function Financeiro() {
   const [orcForm,     setOrcForm]     = useState({});    // { [categoria]: valor }
   const [showImportFinanceiro, setShowImportFinanceiro] = useState(false);
 
-  // ── Folha de Pagamento ──────────────────────────────────────────────────────
+  //  Folha de Pagamento 
   const [folhaMes, setFolhaMes] = useState(() => {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
@@ -565,10 +565,10 @@ export default function Financeiro() {
     addLancamento(obraId, { ...form, tipo: modal, valor });
     setModal(null);
     setForm(FORM_VAZIO);
-    mostrarToast(modal === "receita" ? "✅ Receita registrada!" : "✅ Despesa registrada!");
+    mostrarToast(modal === "receita" ? " Receita registrada!" : " Despesa registrada!");
   }
 
-  // ── Dados da obra selecionada ───────────────────────────────────────────────
+  //  Dados da obra selecionada 
   const obra = obras.find((o) => o.id === obraId) || null;
   const fin  = (obraId && financeiro[obraId]) || { contrato: 0, lancamentos: [] };
 
@@ -605,7 +605,7 @@ export default function Financeiro() {
     };
   }, [fin.lancamentos, fin.contrato, obra?.orcamento_categorias]);
 
-  // ── Orçamento por categoria ────────────────────────────────────────────────
+  //  Orçamento por categoria 
   const orcCats = obra?.orcamento_categorias || {};
   const temOrcCats = Object.values(orcCats).some((v) => Number(v) > 0);
 
@@ -614,7 +614,7 @@ export default function Financeiro() {
     Object.entries(orcForm).forEach(([k, v]) => { parsed[k] = Number(v) || 0; });
     await updateObra(obraId, { orcamento_categorias: parsed });
     setEditOrc(false);
-    mostrarToast("✅ Orçamento por categoria salvo!");
+    mostrarToast(" Orçamento por categoria salvo!");
   }
 
   function abrirEditOrc() {
@@ -624,11 +624,11 @@ export default function Financeiro() {
     setEditOrc(true);
   }
 
-  // ── Empty state: sem obras ──────────────────────────────────────────────────
+  //  Empty state: sem obras 
   if (obras.length === 0) {
     return (
       <div style={{ textAlign: "center", padding: "80px 0" }}>
-        <div style={{ fontSize: 40, marginBottom: 16 }}>◉</div>
+        <div style={{ fontSize: 40, marginBottom: 16 }}></div>
         <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Nenhuma obra cadastrada</div>
         <div style={{ fontSize: 13, color: C.muted }}>
           Cadastre uma obra em <strong>Gestão de Obras</strong> para começar a registrar lançamentos financeiros.
@@ -654,7 +654,7 @@ export default function Financeiro() {
       {/* Modal */}
       {modal && (
         <Modal
-          title={modal === "receita" ? "📈 Nova receita" : "📉 Nova despesa"}
+          title={modal === "receita" ? " Nova receita" : " Nova despesa"}
           onClose={() => setModal(null)}
         >
           <FormLancamento
@@ -713,13 +713,13 @@ export default function Financeiro() {
               border: "1px solid #4a9eff44", borderRadius: 8,
               color: "#4a9eff", fontSize: 12, fontWeight: 700,
               cursor: "pointer", fontFamily: "inherit",
-            }}>📄 Exportar PDF</button>
+            }}> Exportar PDF</button>
             <button onClick={() => setShowImportFinanceiro(true)} style={{
               padding: "8px 16px", background: "#8b5cf622",
               border: "1px solid #8b5cf644", borderRadius: 8,
               color: "#8b5cf6", fontSize: 12, fontWeight: 700,
               cursor: "pointer", fontFamily: "inherit",
-            }}>⬆️ Importar CSV</button>
+            }}> Importar CSV</button>
             <Btn
               onClick={() => abrirModal("receita")}
               style={{ background: C.success + "22", border: `1px solid ${C.success}44`, color: C.success }}
@@ -771,7 +771,7 @@ export default function Financeiro() {
 
         {/* Tabs */}
         <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
-          {[["lancamentos", "📊 Análise"], ["fluxo", "📅 Fluxo de Caixa"], ["dre", "📊 DRE"], ["fluxo-mensal", "💸 Fluxo Mensal"], ["folha", "💰 Folha"]].map(([k, label]) => (
+          {[["lancamentos", " Análise"], ["fluxo", " Fluxo de Caixa"], ["dre", " DRE"], ["fluxo-mensal", " Fluxo Mensal"], ["folha", " Folha"]].map(([k, label]) => (
             <button key={k} onClick={() => setFinTab(k)} style={{
               padding: "7px 16px", borderRadius: 8, border: `1px solid ${finTab === k ? C.red : C.border}`,
               background: finTab === k ? C.red + "18" : "transparent",
@@ -939,8 +939,8 @@ export default function Financeiro() {
                   fontSize: 12, color: desvio > 0 ? C.danger : C.success, fontWeight: 600,
                 }}>
                   {desvio > 0
-                    ? `⚠ Custo ${pctDesvio.toFixed(1)}% acima do previsto para o progresso atual (${obra?.progresso || 0}% físico). Revise os lançamentos de despesa.`
-                    : `✓ Custo ${Math.abs(pctDesvio).toFixed(1)}% abaixo do previsto — obra dentro do orçamento.`
+                    ? ` Custo ${pctDesvio.toFixed(1)}% acima do previsto para o progresso atual (${obra?.progresso || 0}% físico). Revise os lançamentos de despesa.`
+                    : ` Custo ${Math.abs(pctDesvio).toFixed(1)}% abaixo do previsto — obra dentro do orçamento.`
                   }
                 </div>
               );
@@ -999,7 +999,7 @@ export default function Financeiro() {
 
             {desvioCategoria.length === 0 ? (
               <div style={{ textAlign: "center", padding: "32px 0" }}>
-                <div style={{ fontSize: 28, opacity: .4, marginBottom: 8 }}>◉</div>
+                <div style={{ fontSize: 28, opacity: .4, marginBottom: 8 }}></div>
                 <div style={{ fontSize: 12, color: C.muted }}>Nenhuma despesa lançada</div>
               </div>
             ) : (
@@ -1033,8 +1033,8 @@ export default function Financeiro() {
                       {!semOrc && (
                         <div style={{ fontSize: 10, color: cor, textAlign: "right" }}>
                           {acima
-                            ? `⚠ +${fmt(desvio)} (${pct?.toFixed(0)}% acima)`
-                            : `✓ ${fmt(Math.abs(desvio))} dentro do previsto`}
+                            ? ` +${fmt(desvio)} (${pct?.toFixed(0)}% acima)`
+                            : ` ${fmt(Math.abs(desvio))} dentro do previsto`}
                         </div>
                       )}
                     </div>
@@ -1059,7 +1059,7 @@ export default function Financeiro() {
             <div style={{ maxHeight: 380, overflowY: "auto" }}>
               {fin.lancamentos.length === 0 ? (
                 <div style={{ padding: "40px 0", textAlign: "center" }}>
-                  <div style={{ fontSize: 28, opacity: .4, marginBottom: 8 }}>◎</div>
+                  <div style={{ fontSize: 28, opacity: .4, marginBottom: 8 }}></div>
                   <div style={{ fontSize: 13, color: C.muted }}>Nenhum lançamento registrado</div>
                   <div style={{ fontSize: 11, color: C.muted, marginTop: 4 }}>Use "+ Receita" ou "+ Despesa" para começar</div>
                 </div>
@@ -1161,7 +1161,7 @@ export default function Financeiro() {
             </table>
             <div class="total">Valor a pagar: R$ ${valor.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
             <div style="margin-top:40px;font-size:11px;color:#6b7280">Gerado em ${new Date().toLocaleDateString("pt-BR")} · StickFrame</div>
-            <br><button onclick="window.print()">🖨️ Imprimir</button>
+            <br><button onclick="window.print()"> Imprimir</button>
           </body></html>`);
           w.document.close();
         }
@@ -1237,7 +1237,7 @@ export default function Financeiro() {
                           </td>
                           <td style={{ padding: "10px 14px" }}>
                             {pago
-                              ? <span style={{ background: C.success+"22", color: C.success, padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700 }}>✅ Pago</span>
+                              ? <span style={{ background: C.success+"22", color: C.success, padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700 }}> Pago</span>
                               : <span style={{ background: C.warning+"22", color: C.warning, padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700 }}>Pendente</span>
                             }
                           </td>
@@ -1254,7 +1254,7 @@ export default function Financeiro() {
                                 padding: "5px 10px", borderRadius: 7, border: `1px solid ${C.border}`,
                                 background: "transparent", color: C.muted, fontSize: 11,
                                 fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
-                              }}>🖨️ Holerite</button>
+                              }}> Holerite</button>
                             </div>
                           </td>
                         </tr>

@@ -80,7 +80,7 @@ export function RelatorioFotografico({ obra, arquivos }) {
   return (
     <button onClick={gerar} disabled={gerando}
       style={{ padding: "7px 14px", background: "#6366f1", color: "#fff", border: "none", borderRadius: 8, cursor: "pointer", fontWeight: 600, fontSize: 13, opacity: gerando ? 0.7 : 1, display: "inline-flex", alignItems: "center", gap: 6 }}>
-      {gerando ? "⏳ Gerando..." : "📸 Relatório fotográfico"}
+      {gerando ? "⏳ Gerando..." : " Relatório fotográfico"}
     </button>
   );
 }

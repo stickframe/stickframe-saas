@@ -92,13 +92,13 @@ export default function PortalOnline() {
 
   if (!obra) return (
     <div style={{ minHeight: "100vh", background: "#1A1A1A", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16, padding: 24 }}>
-      <div style={{ fontSize: 48 }}>🔒</div>
+      <div style={{ fontSize: 48 }}></div>
       <div style={{ fontSize: 18, fontWeight: 700, color: "#f0f0f0", textAlign: "center" }}>Link inválido ou expirado</div>
       <div style={{ fontSize: 13, color: "#888", textAlign: "center" }}>Entre em contato com a Stick Frame para obter o link correto.</div>
     </div>
   );
 
-  // ── Cálculos ──────────────────────────────────────────────────────────────
+  //  Cálculos 
   const rec       = financeiro.lancamentos.filter((l) => l.tipo === "receita").reduce((a, l) => a + (l.valor || 0), 0);
   const pctPago   = financeiro.contrato > 0 ? Math.round((rec / financeiro.contrato) * 100) : 0;
   const aReceber  = Math.max(financeiro.contrato - rec, 0);
@@ -197,11 +197,11 @@ export default function PortalOnline() {
             return (
               <div key={f} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: i < FASES.length - 1 ? "1px solid #f5f5f5" : "none" }}>
                 <div style={{ width: 22, height: 22, borderRadius: "50%", background: done ? "#2e9e5b" : curr ? "#981915" : "#f0f0f0", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 700, color: done || curr ? "#fff" : "#bbb", flexShrink: 0 }}>
-                  {done ? "✓" : i + 1}
+                  {done ? "" : i + 1}
                 </div>
                 <div style={{ fontSize: 13, color: done ? "#2e9e5b" : curr ? "#1a1a1a" : "#bbb", fontWeight: curr ? 700 : 400, flex: 1 }}>{f}</div>
                 {curr && <span style={{ background: "#981915", color: "#fff", borderRadius: 10, padding: "2px 10px", fontSize: 9, fontWeight: 700 }}>EM ANDAMENTO</span>}
-                {done && <span style={{ fontSize: 10, color: "#2e9e5b" }}>✓</span>}
+                {done && <span style={{ fontSize: 10, color: "#2e9e5b" }}></span>}
               </div>
             );
           })}
@@ -240,7 +240,7 @@ export default function PortalOnline() {
                 <div style={{ textAlign: "right" }}>
                   <div style={{ fontSize: 13, fontWeight: 800, color: m.status === "Aprovada" ? "#2e9e5b" : "#b97a00" }}>{fmt(m.valor)}</div>
                   {m.status === "Aprovada" ? (
-                    <div style={{ fontSize: 9, fontWeight: 700, color: "#2e9e5b", marginTop: 2 }}>✓ Aprovada</div>
+                    <div style={{ fontSize: 9, fontWeight: 700, color: "#2e9e5b", marginTop: 2 }}> Aprovada</div>
                   ) : (
                     <button
                       onClick={async () => {
@@ -249,7 +249,7 @@ export default function PortalOnline() {
                       }}
                       style={{ marginTop: 4, background: "#2e9e5b", color: "#fff", border: "none", borderRadius: 6, padding: "4px 12px", fontSize: 10, fontWeight: 700, cursor: "pointer" }}
                     >
-                      Aprovar ✓
+                      Aprovar 
                     </button>
                   )}
                 </div>
@@ -278,7 +278,7 @@ export default function PortalOnline() {
               </div>
               <div style={{ textAlign: "right" }}>
                 {obra.status === "Concluída" ? (
-                  <div style={{ background: "#2e9e5b", color: "#fff", borderRadius: 10, padding: "6px 16px", fontSize: 12, fontWeight: 700 }}>✓ Entregue</div>
+                  <div style={{ background: "#2e9e5b", color: "#fff", borderRadius: 10, padding: "6px 16px", fontSize: 12, fontWeight: 700 }}> Entregue</div>
                 ) : atrasada ? (
                   <div style={{ background: "#fff0f0", border: "1px solid #f5c6c6", borderRadius: 10, padding: "6px 16px" }}>
                     <div style={{ fontSize: 9, color: "#c0392b", fontWeight: 700, marginBottom: 2 }}>ATRASO</div>
@@ -304,7 +304,7 @@ export default function PortalOnline() {
                 <div style={{ fontSize: 13, color: "#333", lineHeight: 1.6 }}>{r.atividades}</div>
                 {r.ocorrencias && (
                   <div style={{ background: "#fff5f5", borderLeft: "3px solid #981915", padding: "6px 10px", borderRadius: "0 6px 6px 0", fontSize: 12, color: "#555", marginTop: 8, lineHeight: 1.5 }}>
-                    ⚠️ {r.ocorrencias}
+                     {r.ocorrencias}
                   </div>
                 )}
               </div>
@@ -368,7 +368,7 @@ export default function PortalOnline() {
                       background: aprovada ? "#dcfce7" : reprovada ? "#fee2e2" : "#fff7ed",
                       color: aprovada ? "#166534" : reprovada ? "#991b1b" : "#92400e",
                     }}>
-                      {aprovada ? "✓ Aprovado" : reprovada ? "✗ Reprovado" : v.resultado || "Pendente"}
+                      {aprovada ? " Aprovado" : reprovada ? " Reprovado" : v.resultado || "Pendente"}
                     </span>
                   </div>
                   {pct !== null && (
@@ -397,7 +397,7 @@ export default function PortalOnline() {
             <img src={fotoAberta} alt="Foto ampliada"
               style={{ maxWidth: "100%", maxHeight: "90vh", borderRadius: 10, objectFit: "contain" }} />
             <button onClick={() => setFotoAberta(null)}
-              style={{ position: "absolute", top: 16, right: 16, background: "rgba(255,255,255,0.15)", border: "none", color: "#fff", fontSize: 22, width: 40, height: 40, borderRadius: "50%", cursor: "pointer" }}>✕</button>
+              style={{ position: "absolute", top: 16, right: 16, background: "rgba(255,255,255,0.15)", border: "none", color: "#fff", fontSize: 22, width: 40, height: 40, borderRadius: "50%", cursor: "pointer" }}></button>
           </div>
         )}
 
@@ -416,7 +416,7 @@ export default function PortalOnline() {
                     color: isClient ? "#fff" : "#222", borderRadius: isClient ? "12px 12px 3px 12px" : "12px 12px 12px 3px",
                     padding: "8px 12px", fontSize: 12, lineHeight: 1.5,
                   }}>
-                    {!isClient && <div style={{ fontSize: 9, fontWeight: 700, color: "#981915", marginBottom: 3 }}>🏗️ {m.nome || "Equipe Stick Frame"}</div>}
+                    {!isClient && <div style={{ fontSize: 9, fontWeight: 700, color: "#981915", marginBottom: 3 }}> {m.nome || "Equipe Stick Frame"}</div>}
                     <div>{m.mensagem}</div>
                     <div style={{ fontSize: 9, opacity: .6, marginTop: 4, textAlign: "right" }}>
                       {m.created_at ? new Date(m.created_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : ""}
@@ -472,7 +472,7 @@ export default function PortalOnline() {
               </div>
               <a href={storageUrl(doc.storage_path)} target="_blank" rel="noreferrer"
                 style={{ background: "#981915", color: "#fff", border: "none", borderRadius: 6, padding: "4px 12px", fontSize: 10, fontWeight: 700, textDecoration: "none" }}>
-                ⬇ Baixar
+                 Baixar
               </a>
             </div>
           ))}
@@ -509,7 +509,7 @@ export default function PortalOnline() {
 
         {/* Garantia / Assistência Técnica — somente obra concluída */}
         {obra.status === "Concluída" && (
-          <Card title="🛠️ Assistência Técnica / Garantia">
+          <Card title=" Assistência Técnica / Garantia">
             <div style={{ fontSize: 12, color: "#555", marginBottom: 16, lineHeight: 1.6 }}>
               Sua obra foi entregue! Se precisar de suporte pós-obra, abra um chamado abaixo. Nossa equipe irá atender e registrar a ocorrência.
             </div>
@@ -566,7 +566,7 @@ export default function PortalOnline() {
                         <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 10, background: (ST_COR[ch.status] || "#aaa") + "22", color: ST_COR[ch.status] || "#aaa", flexShrink: 0, marginLeft: 8 }}>{ch.status}</span>
                       </div>
                       <div style={{ fontSize: 11, color: "#888", marginTop: 3 }}>{ch.categoria} · {new Date(ch.created_at).toLocaleDateString("pt-BR")}</div>
-                      {ch.resolucao && <div style={{ fontSize: 11, color: "#2e9e5b", marginTop: 4, fontStyle: "italic" }}>✓ {ch.resolucao}</div>}
+                      {ch.resolucao && <div style={{ fontSize: 11, color: "#2e9e5b", marginTop: 4, fontStyle: "italic" }}> {ch.resolucao}</div>}
                     </div>
                   );
                 })}
@@ -662,7 +662,7 @@ export default function PortalOnline() {
                   setSigEnv(false);
                 }
               }} style={{ flex: 2, padding: "9px 0", background: sigEnv || !sigNome.trim() ? "#ccc" : "#981915", color: "#fff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: sigEnv ? "wait" : "pointer" }}>
-                {sigEnv ? "Assinando..." : "✍ Assinar"}
+                {sigEnv ? "Assinando..." : " Assinar"}
               </button>
             </div>
           </Card>
@@ -670,7 +670,7 @@ export default function PortalOnline() {
         {obra.assinatura_data && (
           <Card title="Assinatura Digital">
             <div style={{ background: "#dcfce7", border: "1px solid #86efac", borderRadius: 8, padding: "12px 16px", display: "flex", alignItems: "center", gap: 10 }}>
-              <span style={{ fontSize: 20 }}>✓</span>
+              <span style={{ fontSize: 20 }}></span>
               <div>
                 <div style={{ fontSize: 13, fontWeight: 700, color: "#166534" }}>
                   Assinado por {obra.assinatura_nome}
@@ -693,12 +693,12 @@ export default function PortalOnline() {
               target="_blank" rel="noreferrer"
               style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#25D366", color: "#fff", borderRadius: 8, padding: "10px 24px", fontSize: 13, fontWeight: 700, textDecoration: "none" }}
             >
-              <span style={{ fontSize: 16 }}>💬</span> WhatsApp
+              <span style={{ fontSize: 16 }}></span> WhatsApp
             </a>
           ) : empresa?.email ? (
             <a href={`mailto:${empresa.email}?subject=Dúvida sobre obra: ${obra.nome}`}
               style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#981915", color: "#fff", borderRadius: 8, padding: "10px 24px", fontSize: 13, fontWeight: 700, textDecoration: "none" }}>
-              <span style={{ fontSize: 16 }}>✉️</span> Enviar e-mail
+              <span style={{ fontSize: 16 }}></span> Enviar e-mail
             </a>
           ) : null}
         </div>

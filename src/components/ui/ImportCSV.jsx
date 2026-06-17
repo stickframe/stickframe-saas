@@ -69,13 +69,13 @@ export function ImportCSV({ titulo, campos, onImportar, onClose, exemploUrl }) {
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center" }}>
       <div style={{ background: "var(--bg-card)", borderRadius: 14, padding: 28, width: "min(600px,95vw)", maxHeight: "90vh", overflowY: "auto" }}>
         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 20 }}>
-          <h3 style={{ margin: 0 }}>⬆️ Importar {titulo}</h3>
-          <button onClick={onClose} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer" }}>✕</button>
+          <h3 style={{ margin: 0 }}> Importar {titulo}</h3>
+          <button onClick={onClose} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer" }}></button>
         </div>
 
         {resultado ? (
           <div style={{ textAlign: "center", padding: 32 }}>
-            <div style={{ fontSize: 48, marginBottom: 12 }}>✅</div>
+            <div style={{ fontSize: 48, marginBottom: 12 }}></div>
             <h3>Importação concluída!</h3>
             <p style={{ color: "#22c55e" }}>{resultado.ok} registro(s) importado(s)</p>
             {resultado.erro > 0 && <p style={{ color: "#ef4444" }}>{resultado.erro} erro(s)</p>}
@@ -91,7 +91,7 @@ export function ImportCSV({ titulo, campos, onImportar, onClose, exemploUrl }) {
               style={{ border: "2px dashed var(--border)", borderRadius: 10, padding: 32, textAlign: "center", cursor: "pointer", marginBottom: 20, transition: "border-color 0.2s" }}
             >
               <input ref={inputRef} type="file" accept=".csv,.txt" style={{ display: "none" }} onChange={e => handleFile(e.target.files[0])} />
-              <p style={{ fontSize: 32, margin: "0 0 8px" }}>📁</p>
+              <p style={{ fontSize: 32, margin: "0 0 8px" }}></p>
               <p style={{ margin: 0, fontWeight: 600 }}>{arquivo ? arquivo.name : "Clique ou arraste um arquivo CSV"}</p>
               <p style={{ margin: "4px 0 0", fontSize: 12, color: "var(--text-muted)" }}>Separado por vírgula ou ponto-e-vírgula</p>
             </div>

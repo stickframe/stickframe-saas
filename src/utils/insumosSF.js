@@ -1,4 +1,4 @@
-// ─── CUB R1-N (Residencial 1 pavimento, Padrão Normal) ───────────────────────
+//  CUB R1-N (Residencial 1 pavimento, Padrão Normal) 
 // Valores de referência — atualizar mensalmente via SINDUSCON-UF
 export const CUB_ESTADOS = {
   AC: { nome: "Acre",                cub: 1950 },
@@ -37,19 +37,19 @@ export const PADROES_SF = {
   "Luxo":        { fator: 1.50, desc: "Materiais de alto luxo, totalmente personalizado" },
 };
 
-// ─── Estrutura de cada item ────────────────────────────────────────────────────
+//  Estrutura de cada item 
 // { nome, un, base (por m²), preco (unit ref R$), grupo (Orçamentos), categoria, desc? }
 // base: aplica fator de padrão se flagged; fixo se ehFundacao ou ehFixo
 
-// ─── SISTEMAS ─────────────────────────────────────────────────────────────────
+//  SISTEMAS 
 // Cada sistema: { id, label, icon, obrigatorio, mao_obra_cub, opcoes[] | itens[] }
 // mao_obra_cub: fração do CUB/m² aplicada à mão de obra deste sistema
 
 export const SISTEMAS_SF = [
 
-  // ── 1. FUNDAÇÃO ────────────────────────────────────────────────────────────
+  //  1. FUNDAÇÃO 
   {
-    id: "fundacao", label: "Fundação", icon: "🏗", obrigatorio: true,
+    id: "fundacao", label: "Fundação", icon: "", obrigatorio: true,
     mao_obra_cub: 0.05, // calibrado: SP R$1.000/m² total MO / CUB 2340
     opcoes: [
       {
@@ -110,9 +110,9 @@ export const SISTEMAS_SF = [
     ],
   },
 
-  // ── 2. ESTRUTURA STEEL FRAME ──────────────────────────────────────────────
+  //  2. ESTRUTURA STEEL FRAME 
   {
-    id: "estrutura", label: "Estrutura Steel Frame", icon: "🔩", obrigatorio: true,
+    id: "estrutura", label: "Estrutura Steel Frame", icon: "", obrigatorio: true,
     mao_obra_cub: 0.08,
     opcoes: [
       {
@@ -188,9 +188,9 @@ export const SISTEMAS_SF = [
     ],
   },
 
-  // ── 3. FECHAMENTO EXTERNO ─────────────────────────────────────────────────
+  //  3. FECHAMENTO EXTERNO 
   {
-    id: "fechamento_externo", label: "Fechamento Externo", icon: "🧱", obrigatorio: true,
+    id: "fechamento_externo", label: "Fechamento Externo", icon: "", obrigatorio: true,
     mao_obra_cub: 0.04,
     opcoes: [
       {
@@ -263,9 +263,9 @@ export const SISTEMAS_SF = [
     ],
   },
 
-  // ── 4. FECHAMENTO INTERNO ─────────────────────────────────────────────────
+  //  4. FECHAMENTO INTERNO 
   {
-    id: "fechamento_interno", label: "Fechamento Interno", icon: "🪟", obrigatorio: true,
+    id: "fechamento_interno", label: "Fechamento Interno", icon: "", obrigatorio: true,
     mao_obra_cub: 0.03,
     opcoes: [
       {
@@ -317,9 +317,9 @@ export const SISTEMAS_SF = [
     ],
   },
 
-  // ── 5. ISOLAMENTO TÉRMICO / ACÚSTICO ─────────────────────────────────────
+  //  5. ISOLAMENTO TÉRMICO / ACÚSTICO 
   {
-    id: "isolamento", label: "Isolamento", icon: "🌡", obrigatorio: true,
+    id: "isolamento", label: "Isolamento", icon: "", obrigatorio: true,
     mao_obra_cub: 0.01,
     opcoes: [
       {
@@ -361,9 +361,9 @@ export const SISTEMAS_SF = [
     ],
   },
 
-  // ── 6. COBERTURA ──────────────────────────────────────────────────────────
+  //  6. COBERTURA 
   {
-    id: "cobertura", label: "Cobertura", icon: "🏠", obrigatorio: true,
+    id: "cobertura", label: "Cobertura", icon: "", obrigatorio: true,
     mao_obra_cub: 0.04,
     opcoes: [
       {
@@ -421,9 +421,9 @@ export const SISTEMAS_SF = [
     ],
   },
 
-  // ── 7. ESTRUTURA DE COBERTURA (sempre inclusa) ────────────────────────────
+  //  7. ESTRUTURA DE COBERTURA (sempre inclusa) 
   {
-    id: "estrutura_cobertura", label: "Estrutura de Telhado", icon: "📐", obrigatorio: true,
+    id: "estrutura_cobertura", label: "Estrutura de Telhado", icon: "", obrigatorio: true,
     mao_obra_cub: 0.02,
     itens: [
       { nome: "Caibro C 90×40×15×1,25mm (m)",        un: "m",  base: 0.80, preco: 15,   grupo: "Cobertura", categoria: "Cobertura" },
@@ -434,9 +434,9 @@ export const SISTEMAS_SF = [
     ],
   },
 
-  // ── 8. FIXAÇÃO GERAL (sempre inclusa) ────────────────────────────────────
+  //  8. FIXAÇÃO GERAL (sempre inclusa) 
   {
-    id: "fixacao", label: "Fixação Geral", icon: "🔧", obrigatorio: true,
+    id: "fixacao", label: "Fixação Geral", icon: "", obrigatorio: true,
     mao_obra_cub: 0.00, // incluso no custo de montagem estrutural
     itens: [
       { nome: "Parafuso TEX 4,2×16mm flangeado (cx 500pç)", un: "cx", base: 0.40, preco: 52, grupo: "Fixação", categoria: "Fixação" },
@@ -452,9 +452,9 @@ export const SISTEMAS_SF = [
     ],
   },
 
-  // ── 9. IMPERMEABILIZAÇÃO ─────────────────────────────────────────────────
+  //  9. IMPERMEABILIZAÇÃO 
   {
-    id: "impermeabilizacao", label: "Impermeabilização", icon: "💧", obrigatorio: false,
+    id: "impermeabilizacao", label: "Impermeabilização", icon: "", obrigatorio: false,
     mao_obra_cub: 0.01,
     // Calculado sobre área molhada (parâmetro separado)
     usaAreaMolhada: true,
@@ -467,9 +467,9 @@ export const SISTEMAS_SF = [
     ],
   },
 
-  // ── 10. INSTALAÇÃO ELÉTRICA ───────────────────────────────────────────────
+  //  10. INSTALAÇÃO ELÉTRICA 
   {
-    id: "eletrica", label: "Instalação Elétrica", icon: "⚡", obrigatorio: false,
+    id: "eletrica", label: "Instalação Elétrica", icon: "", obrigatorio: false,
     mao_obra_cub: 0.04,
     itens: [
       { nome: "Eletroduto corrugado flexível 3/4\" (m)",  un: "m",  base: 1.80, preco: 2.80, grupo: "Instalações", categoria: "Instalação Elétrica" },
@@ -491,9 +491,9 @@ export const SISTEMAS_SF = [
     ],
   },
 
-  // ── 11. INSTALAÇÃO HIDRÁULICA ─────────────────────────────────────────────
+  //  11. INSTALAÇÃO HIDRÁULICA 
   {
-    id: "hidraulica", label: "Instalação Hidráulica", icon: "🚿", obrigatorio: false,
+    id: "hidraulica", label: "Instalação Hidráulica", icon: "", obrigatorio: false,
     mao_obra_cub: 0.04,
     itens: [
       { nome: "Tubo PPR 20mm PN20 (barra 3m)",           un: "m",  base: 1.00, preco: 9.50, grupo: "Instalações", categoria: "Instalação Hidráulica" },
@@ -514,9 +514,9 @@ export const SISTEMAS_SF = [
     ],
   },
 
-  // ── 12. INSTALAÇÃO DE GÁS ────────────────────────────────────────────────
+  //  12. INSTALAÇÃO DE GÁS 
   {
-    id: "gas", label: "Instalação de Gás", icon: "🔥", obrigatorio: false,
+    id: "gas", label: "Instalação de Gás", icon: "", obrigatorio: false,
     mao_obra_cub: 0.02,
     itens: [
       { nome: "Tubo de cobre 1/2\" (m)",                un: "m",  base: 0.50, preco: 22,   grupo: "Instalações", categoria: "Instalação Gás" },
@@ -529,9 +529,9 @@ export const SISTEMAS_SF = [
     ],
   },
 
-  // ── 13. ESQUADRIAS ────────────────────────────────────────────────────────
+  //  13. ESQUADRIAS 
   {
-    id: "esquadrias", label: "Esquadrias", icon: "🚪", obrigatorio: false,
+    id: "esquadrias", label: "Esquadrias", icon: "", obrigatorio: false,
     mao_obra_cub: 0.02,
     opcoes: [
       {
@@ -580,9 +580,9 @@ export const SISTEMAS_SF = [
     ],
   },
 
-  // ── 14. REVESTIMENTOS ─────────────────────────────────────────────────────
+  //  14. REVESTIMENTOS 
   {
-    id: "revestimentos", label: "Revestimentos e Acabamentos", icon: "🎨", obrigatorio: false,
+    id: "revestimentos", label: "Revestimentos e Acabamentos", icon: "", obrigatorio: false,
     mao_obra_cub: 0.05,
     opcoes: [
       {
@@ -628,9 +628,9 @@ export const SISTEMAS_SF = [
     ],
   },
 
-  // ── 15. LAJE SECA (piso do sobrado) ──────────────────────────────────────
+  //  15. LAJE SECA (piso do sobrado) 
   {
-    id: "laje_seca", label: "Laje Seca (piso do sobrado)", icon: "🏢", obrigatorio: false,
+    id: "laje_seca", label: "Laje Seca (piso do sobrado)", icon: "", obrigatorio: false,
     mao_obra_cub: 0.03,
     itens: [
       { nome: "OSB 18mm — base estrutural (1,22×2,44m)", un: "chp", base: 0.36, preco: 88,   grupo: "Laje Seca", categoria: "Estrutura de Aço" },

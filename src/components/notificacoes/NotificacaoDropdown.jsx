@@ -6,9 +6,9 @@ import { useNotificacoes } from "../../hooks/useNotificacoes";
 import { sb, getEmpresaId } from "../../services/supabase";
 import { playNotificationSound } from "../../utils/audio";
 
-const TIPO_ICON = { info: "ℹ️", sucesso: "✅", alerta: "⚠️", erro: "⛔" };
+const TIPO_ICON = { info: "ℹ", sucesso: "", alerta: "", erro: "" };
 const CAT_LABELS = { prazo: "Prazos", medicao: "Medições", vistoria: "Vistorias", orcamento: "Orçamentos", bim: "BIM", followup: "Follow-ups", lead: "Novos Leads", chat: "Mensagens", epi: "EPIs", incidente: "Incidentes", suprimentos: "Suprimentos", estoque: "Estoque", certificacao: "Cert. NR" };
-const CAT_ICONS  = { prazo: "⏰", medicao: "📐", vistoria: "🔍", orcamento: "📋", bim: "🧊", followup: "📅", lead: "🎯", chat: "💬", epi: "🦺", incidente: "⚠️", suprimentos: "📦", estoque: "🏭", certificacao: "🛡️" };
+const CAT_ICONS  = { prazo: "⏰", medicao: "", vistoria: "", orcamento: "", bim: "", followup: "", lead: "", chat: "", epi: "", incidente: "", suprimentos: "", estoque: "", certificacao: "" };
 
 function usePreOrcamentos() {
   const [preOrcs, setPreOrcs] = useState([]);
@@ -130,9 +130,9 @@ function useAlertas() {
       const diffDias  = Math.ceil((prazoDate - hoje) / 86400000);
       const nome      = obra.nome.split("—")[0].trim();
       if (diffDias < 0)
-        alertas.push({ categoria: "prazo", tipo: "erro",   cor: C.danger,  icon: "⛔", titulo: "Obra atrasada",  texto: `${nome} — prazo encerrado há ${Math.abs(diffDias)} dia(s)` });
+        alertas.push({ categoria: "prazo", tipo: "erro",   cor: C.danger,  icon: "", titulo: "Obra atrasada",  texto: `${nome} — prazo encerrado há ${Math.abs(diffDias)} dia(s)` });
       else if (diffDias <= 14)
-        alertas.push({ categoria: "prazo", tipo: "erro",   cor: "#c0392b", icon: "🚨", titulo: "Prazo urgente",  texto: `${nome} — vence em ${diffDias} dia(s)` });
+        alertas.push({ categoria: "prazo", tipo: "erro",   cor: "#c0392b", icon: "", titulo: "Prazo urgente",  texto: `${nome} — vence em ${diffDias} dia(s)` });
       else if (diffDias <= 45)
         alertas.push({ categoria: "prazo", tipo: "alerta", cor: C.warning, icon: "⏰", titulo: "Prazo próximo",  texto: `${nome} — vence em ${diffDias} dias` });
     });
@@ -144,7 +144,7 @@ function useAlertas() {
       (lista || []).filter((m) => m.status === "Pendente").forEach((m) => {
         const criado  = new Date(m.created_at || m.data || hoje);
         const diasPend = Math.ceil((hoje - criado) / 86400000);
-        alertas.push({ categoria: "medicao", tipo: "alerta", cor: "#4a9eff", icon: "📐", titulo: "Medição pendente", texto: `${nomeObra} — ${m.descricao || m.fase || "Medição"} (${diasPend > 0 ? `${diasPend}d pendente` : "hoje"})` });
+        alertas.push({ categoria: "medicao", tipo: "alerta", cor: "#4a9eff", icon: "", titulo: "Medição pendente", texto: `${nomeObra} — ${m.descricao || m.fase || "Medição"} (${diasPend > 0 ? `${diasPend}d pendente` : "hoje"})` });
       });
     });
 
@@ -154,7 +154,7 @@ function useAlertas() {
         const obra = obras.find((o) => o.id === v.obra_id);
         const nomeObra = obra?.nome?.split("—")[0]?.trim() || "Obra";
         const isRep = v.resultado === "Reprovado";
-        alertas.push({ categoria: "vistoria", tipo: isRep ? "erro" : "alerta", cor: isRep ? C.danger : C.warning, icon: isRep ? "🔴" : "🟡", titulo: `Vistoria ${v.resultado}`, texto: `${nomeObra} — ${v.tipo_servico || v.fase || "FVS"} (${v.data ? new Date(v.data + "T00:00").toLocaleDateString("pt-BR") : "—"})` });
+        alertas.push({ categoria: "vistoria", tipo: isRep ? "erro" : "alerta", cor: isRep ? C.danger : C.warning, icon: isRep ? "" : "", titulo: `Vistoria ${v.resultado}`, texto: `${nomeObra} — ${v.tipo_servico || v.fase || "FVS"} (${v.data ? new Date(v.data + "T00:00").toLocaleDateString("pt-BR") : "—"})` });
       });
     });
 
@@ -163,7 +163,7 @@ function useAlertas() {
       const criado  = new Date(o.created_at || hoje);
       const diasSem = Math.ceil((hoje - criado) / 86400000);
       if (diasSem >= 7)
-        alertas.push({ categoria: "orcamento", tipo: "alerta", cor: C.warning, icon: "📋", titulo: "Orçamento sem resposta", texto: `${o.cliente} (${o.ref || "—"}) — sem retorno há ${diasSem} dia(s)` });
+        alertas.push({ categoria: "orcamento", tipo: "alerta", cor: C.warning, icon: "", titulo: "Orçamento sem resposta", texto: `${o.cliente} (${o.ref || "—"}) — sem retorno há ${diasSem} dia(s)` });
     });
 
     // 5. Apontamentos BIM alta prioridade em aberto
@@ -172,7 +172,7 @@ function useAlertas() {
       const nomeObra = obra?.nome?.split("—")[0]?.trim() || "Obra";
       const criticos = (lista || []).filter((a) => a.prioridade === "Alta" && a.status === "Aberto");
       if (criticos.length > 0)
-        alertas.push({ categoria: "bim", tipo: "alerta", cor: "#9b59b6", icon: "🧊", titulo: "Apontamentos BIM críticos", texto: `${nomeObra} — ${criticos.length} apontamento(s) Alta prioridade em aberto` });
+        alertas.push({ categoria: "bim", tipo: "alerta", cor: "#9b59b6", icon: "", titulo: "Apontamentos BIM críticos", texto: `${nomeObra} — ${criticos.length} apontamento(s) Alta prioridade em aberto` });
     });
 
     // 6. Follow-ups vencidos no CRM
@@ -183,7 +183,7 @@ function useAlertas() {
         const diasAtraso = Math.ceil((new Date(hojeStr) - new Date(c.proximo_contato)) / 86400000);
         alertas.push({
           categoria: "followup", tipo: diasAtraso > 3 ? "erro" : "alerta",
-          cor: diasAtraso > 3 ? C.danger : C.warning, icon: "📅",
+          cor: diasAtraso > 3 ? C.danger : C.warning, icon: "",
           titulo: "Follow-up vencido",
           texto: `${c.nome} — ${diasAtraso === 0 ? "hoje" : `${diasAtraso} dia(s) em atraso`} (${c.status})`,
         });
@@ -192,7 +192,7 @@ function useAlertas() {
     // 7. Novos leads da calculadora pública
     preOrcs.forEach((p) => {
       alertas.push({
-        categoria: "lead", tipo: "info", cor: "#25D366", icon: "🎯",
+        categoria: "lead", tipo: "info", cor: "#25D366", icon: "",
         titulo: "Novo lead recebido",
         texto: `${p.nome} preencheu a calculadora — aguardando análise`,
       });
@@ -202,7 +202,7 @@ function useAlertas() {
     orcAceitos.forEach((o) => {
       const quando = o.aceite_data ? new Date(o.aceite_data).toLocaleDateString("pt-BR") : "—";
       alertas.push({
-        categoria: "orcamento", tipo: "sucesso", cor: "#2e9e5b", icon: "🎉",
+        categoria: "orcamento", tipo: "sucesso", cor: "#2e9e5b", icon: "",
         titulo: "Proposta aceita!",
         texto: `${o.cliente} assinou a proposta ${o.ref || ""} em ${quando}`,
       });
@@ -212,7 +212,7 @@ function useAlertas() {
     msgsPendentes.forEach((m) => {
       const obra = obras.find((o) => o.id === m.obra_id);
       alertas.push({
-        categoria: "chat", tipo: "info", cor: "#4a9eff", icon: "💬",
+        categoria: "chat", tipo: "info", cor: "#4a9eff", icon: "",
         titulo: "Mensagem do cliente",
         texto: `${m.nome || "Cliente"} — ${obra?.nome?.split("—")[0]?.trim() || "Obra"}: "${m.mensagem?.slice(0, 60)}${m.mensagem?.length > 60 ? "…" : ""}"`,
       });
@@ -221,7 +221,7 @@ function useAlertas() {
     // 9. Comentários recentes
     comentarios.forEach((c) => {
       alertas.push({
-        categoria: "chat", tipo: "info", cor: "#7c3aed", icon: "💬",
+        categoria: "chat", tipo: "info", cor: "#7c3aed", icon: "",
         titulo: "Novo comentário",
         texto: `${c.usuario?.nome || "Outro Usuário"} comentou em ${c.entidade === "obra" ? "Obra" : c.entidade === "medicao" ? "Medição" : c.entidade}: "${c.texto?.slice(0, 60)}${c.texto?.length > 60 ? "…" : ""}"`,
       });
@@ -257,37 +257,37 @@ function useAlertasOperacionais() {
     ]).then(([episVenc, episVend, incAbertos, pedCrit, estoqueItems, certVenc, certVend]) => {
       const result = [];
       (episVenc.data || []).forEach(e => result.push({
-        categoria: "epi", tipo: "erro", cor: "#e74c3c", icon: "🦺",
+        categoria: "epi", tipo: "erro", cor: "#e74c3c", icon: "",
         titulo: "EPI VENCIDO",
         texto: `${e.item}${e.colaborador?.nome ? ` — ${e.colaborador.nome}` : ""} (venceu em ${new Date(e.validade + "T00:00").toLocaleDateString("pt-BR")})`,
       }));
       (episVend.data || []).forEach(e => {
         const dias = Math.ceil((new Date(e.validade) - new Date()) / 86400000);
         result.push({
-          categoria: "epi", tipo: "alerta", cor: "#e67e22", icon: "🦺",
+          categoria: "epi", tipo: "alerta", cor: "#e67e22", icon: "",
           titulo: "EPI vencendo",
           texto: `${e.item}${e.colaborador?.nome ? ` — ${e.colaborador.nome}` : ""} — vence em ${dias} dia(s)`,
         });
       });
       (incAbertos.data || []).forEach(i => result.push({
         categoria: "incidente", tipo: i.gravidade === "Crítica" || i.gravidade === "Alta" ? "erro" : "alerta",
-        cor: i.gravidade === "Crítica" ? "#e74c3c" : "#e67e22", icon: "⚠️",
+        cor: i.gravidade === "Crítica" ? "#e74c3c" : "#e67e22", icon: "",
         titulo: `Incidente aberto — ${i.gravidade}`,
         texto: `${i.tipo} em ${new Date(i.data + "T00:00").toLocaleDateString("pt-BR")}`,
       }));
       (pedCrit.data || []).forEach(p => result.push({
-        categoria: "suprimentos", tipo: "erro", cor: "#e74c3c", icon: "📦",
+        categoria: "suprimentos", tipo: "erro", cor: "#e74c3c", icon: "",
         titulo: "Pedido CRÍTICO pendente",
         texto: `${p.item} — status: ${p.status}`,
       }));
       (estoqueItems.data || []).filter(e => e.quantidade <= e.estoque_minimo).forEach(e => result.push({
-        categoria: "estoque", tipo: "alerta", cor: "#e67e22", icon: "🏭",
+        categoria: "estoque", tipo: "alerta", cor: "#e67e22", icon: "",
         titulo: "Estoque abaixo do mínimo",
         texto: `${e.item} — saldo: ${e.quantidade} (mín: ${e.estoque_minimo})`,
       }));
       (certVenc.data || []).forEach(c => result.push({
         id: `cert-${c.id}-expired`,
-        categoria: "certificacao", tipo: "erro", cor: "#e74c3c", icon: "🛡️",
+        categoria: "certificacao", tipo: "erro", cor: "#e74c3c", icon: "",
         titulo: "Cert. NR VENCIDA",
         texto: `Cert. ${c.nr} — VENCIDA`,
       }));
@@ -296,7 +296,7 @@ function useAlertasOperacionais() {
         result.push({
           id: `cert-${c.id}-expiring`,
           categoria: "certificacao", tipo: diasRestantes <= 7 ? "erro" : "alerta",
-          cor: diasRestantes <= 7 ? "#e74c3c" : "#e67e22", icon: "🛡️",
+          cor: diasRestantes <= 7 ? "#e74c3c" : "#e67e22", icon: "",
           titulo: "Cert. NR vencendo",
           texto: `Cert. ${c.nr} vence em ${diasRestantes} dia(s)`,
         });
@@ -364,7 +364,7 @@ export default function NotificacaoDropdown() {
         fontSize: 16, display: "flex", alignItems: "center", gap: 6,
         fontFamily: "inherit", transition: "all .2s",
       }}>
-        🔔
+        
         {totalBadge > 0 && (
           <span style={{
             position: "absolute", top: -6, right: -6,
@@ -420,7 +420,7 @@ export default function NotificacaoDropdown() {
               ))}
             </div>
 
-            {/* ── Aba Alertas ── */}
+            {/*  Aba Alertas  */}
             {aba === "alertas" && (
               <>
                 {categorias.length > 1 && (
@@ -471,12 +471,12 @@ export default function NotificacaoDropdown() {
               </>
             )}
 
-            {/* ── Aba Sistema ── */}
+            {/*  Aba Sistema  */}
             {aba === "sistema" && (
               <div style={{ maxHeight: 360, overflowY: "auto" }}>
                 {notificacoes.length === 0 ? (
                   <div style={{ padding: "32px 18px", textAlign: "center", color: C.muted, fontSize: 13 }}>
-                    <div style={{ fontSize: 28, marginBottom: 8 }}>📭</div>
+                    <div style={{ fontSize: 28, marginBottom: 8 }}></div>
                     Nenhuma notificação do sistema.
                   </div>
                 ) : notificacoes.map((n) => (
@@ -486,7 +486,7 @@ export default function NotificacaoDropdown() {
                     cursor: n.lida ? "default" : "pointer",
                     display: "flex", gap: 10, alignItems: "flex-start",
                   }}>
-                    <span style={{ fontSize: 16, flexShrink: 0 }}>{TIPO_ICON[n.tipo] || "ℹ️"}</span>
+                    <span style={{ fontSize: 16, flexShrink: 0 }}>{TIPO_ICON[n.tipo] || "ℹ"}</span>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 12, fontWeight: n.lida ? 500 : 700, marginBottom: 2 }}>{n.titulo}</div>
                       {n.mensagem && <div style={{ fontSize: 11, color: C.muted, lineHeight: 1.4 }}>{n.mensagem}</div>}
@@ -501,7 +501,7 @@ export default function NotificacaoDropdown() {
             {/* Footer */}
             <div style={{ padding: "10px 16px", background: C.darker, borderTop: `1px solid ${C.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <span style={{ fontSize: 11, color: C.muted }}>
-                {totalBadge === 0 ? "✓ Tudo em dia" : `${alertas.length} alerta(s) · ${naoLidas} não lida(s)`}
+                {totalBadge === 0 ? " Tudo em dia" : `${alertas.length} alerta(s) · ${naoLidas} não lida(s)`}
               </span>
               <div style={{ display: "flex", gap: 6 }}>
                 {["erro", "alerta"].map((tipo) => {
@@ -512,7 +512,7 @@ export default function NotificacaoDropdown() {
                       fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 4,
                       background: tipo === "erro" ? C.danger + "20" : C.warning + "20",
                       color: tipo === "erro" ? C.danger : C.warning,
-                    }}>{tipo === "erro" ? "⛔" : "⚠️"} {count}</span>
+                    }}>{tipo === "erro" ? "" : ""} {count}</span>
                   );
                 })}
               </div>
