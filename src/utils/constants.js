@@ -42,7 +42,8 @@ export const C = {
 export const NAV = [
   { key: "dashboard",         label: "Dashboard",            brand: "StickHub™",        icon: "LayoutDashboard", grupo: null },
   { key: "agenda",            label: "Agenda",               icon: "CalendarDays",      grupo: null },
-  { key: "crm",               label: "CRM / Clientes",       brand: "StickLead™",       icon: "Users",           grupo: "Comercial" },
+  { key: "oportunidades",     label: "Oportunidades",        brand: "StickLead™",       icon: "Zap",             grupo: "Comercial" },
+  { key: "crm",               label: "CRM / Clientes",       icon: "Users",             grupo: "Comercial" },
   { key: "orcamentos",        label: "Orçamentos",           icon: "FileText",          grupo: "Comercial" },
   { key: "obras",             label: "Gestão de Obras",      icon: "Building2",         grupo: "Obras" },
   { key: "cronograma",        label: "Cronograma",           brand: "StickPlan™",       icon: "BarChart2",       grupo: "Obras" },
@@ -77,12 +78,12 @@ export const PERFIS = {
   diretor: {
     label: "Diretor",
     cor: C.red,
-    paginas: ["dashboard","agenda","crm","orcamentos","obras","cronograma","medicoes","diario","vistorias","bim","quantitativos","financeiro","rentabilidade","contratos","historico","fornecedores","monitor_precos","calculadora","orcamento_tecnico","orcamento_sf","equipamentos","checklists","equipe","equipe_sf","sst","suprimentos","inteligencia","bi","ecossistema","configuracoes"],
+    paginas: ["dashboard","agenda","oportunidades","crm","orcamentos","obras","cronograma","medicoes","diario","vistorias","bim","quantitativos","financeiro","rentabilidade","contratos","historico","fornecedores","monitor_precos","calculadora","orcamento_tecnico","orcamento_sf","equipamentos","checklists","equipe","equipe_sf","sst","suprimentos","inteligencia","bi","ecossistema","configuracoes"],
   },
   comercial: {
     label: "Comercial",
     cor: C.warning,
-    paginas: ["dashboard","agenda","crm","orcamentos","configuracoes"],
+    paginas: ["dashboard","agenda","oportunidades","crm","orcamentos","configuracoes"],
   },
   engenheiro: {
     label: "Engenheiro",
