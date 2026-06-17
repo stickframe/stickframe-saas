@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { sb, getEmpresaId } from "../../services/supabase";
 
-const CLIMAS = ["Ensolarado ☀️","Parcialmente nublado 🌤","Nublado ☁️","Chuva leve 🌦","Chuva forte 🌧","Tempestade ⛈"];
+const CLIMAS = ["Ensolarado ","Parcialmente nublado ","Nublado ","Chuva leve ","Chuva forte ","Tempestade "];
 
 export function RDOForm({ obraId, obraName, onSaved, onClose }) {
   const [form, setForm] = useState({
     data: new Date().toISOString().split("T")[0],
-    clima: "Ensolarado ☀️", temperatura: "", total_trabalhadores: "",
+    clima: "Ensolarado ", temperatura: "", total_trabalhadores: "",
     responsavel: "", atividades_realizadas: "", equipamentos_utilizados: "", intercorrencias: "",
   });
   const [saving, setSaving] = useState(false);
@@ -32,8 +32,8 @@ export function RDOForm({ obraId, obraName, onSaved, onClose }) {
   return (
     <div style={{ background:"var(--bg-card)", borderRadius:12, padding:24 }}>
       <div style={{ display:"flex", justifyContent:"space-between", marginBottom:20 }}>
-        <h3 style={{ margin:0 }}>📋 Novo RDO — {obraName}</h3>
-        {onClose && <button onClick={onClose} style={{ background:"none", border:"none", fontSize:20, cursor:"pointer" }}>✕</button>}
+        <h3 style={{ margin:0 }}> Novo RDO — {obraName}</h3>
+        {onClose && <button onClick={onClose} style={{ background:"none", border:"none", fontSize:20, cursor:"pointer" }}></button>}
       </div>
       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(180px, 1fr))", gap:14, marginBottom:16 }}>
         {[["Data","data","date"],["Temperatura (°C)","temperatura","number"],["Trabalhadores","total_trabalhadores","number"],["Responsável técnico","responsavel","text"]].map(([l,k,t]) => (

@@ -50,7 +50,7 @@ export function ArquivoVersoes({ arquivoId, arquivoNome, obraId, onClose }) {
       <div style={{ background:"var(--bg-card)", borderRadius:12, padding:24, width:"min(700px,95vw)", maxHeight:"80vh", overflowY:"auto" }}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
           <h3 style={{ margin:0 }}>Versões — {arquivoNome}</h3>
-          <button onClick={onClose} style={{ background:"none", border:"none", fontSize:20, cursor:"pointer" }}>✕</button>
+          <button onClick={onClose} style={{ background:"none", border:"none", fontSize:20, cursor:"pointer" }}></button>
         </div>
 
         {loading ? <p>Carregando...</p> : (
@@ -78,7 +78,7 @@ export function ArquivoVersoes({ arquivoId, arquivoNome, obraId, onClose }) {
                   <td style={{ padding:"8px", fontSize:13, color:"var(--text-muted)" }}>{v.notas_revisao || "—"}</td>
                   <td style={{ padding:"8px" }}>
                     <a href={downloadUrl(v.storage_path)} target="_blank" rel="noreferrer"
-                      style={{ fontSize:12, color:"#3b82f6" }}>⬇ Download</a>
+                      style={{ fontSize:12, color:"#3b82f6" }}> Download</a>
                   </td>
                 </tr>
               ))}

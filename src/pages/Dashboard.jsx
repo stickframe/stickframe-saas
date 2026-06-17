@@ -17,7 +17,7 @@ import { calcularStickScore, calcularStickScoreExecutivo, salvarSnapshotScore } 
 import { StickScoreInline, StickScoreHero, StickScoreExecutivoCard } from "../components/ui/StickScore";
 import StickScoreBenchmark from "../components/ui/StickScoreBenchmark";
 
-// ─── SVG icon helpers ─────────────────────────────────────────────────────────
+//  SVG icon helpers 
 const IC = {
   TrendUp: () => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" style={{ width: 16, height: 16 }}>
@@ -91,7 +91,7 @@ const IC = {
   ),
 };
 
-// ─── Mini Sparkline ───────────────────────────────────────────────────────────
+//  Mini Sparkline 
 function Sparkline({ data = [], color = "#4f7d57", height = 26 }) {
   if (!data || data.length < 2) return null;
   const max = Math.max(...data, 1);
@@ -133,7 +133,7 @@ const DashboardEngenheiro  = lazyWithRetry(() => import("./DashboardEngenheiro")
 const DashboardFinanceiro  = lazyWithRetry(() => import("./DashboardFinanceiro"));
 const DashboardAnalytics   = lazyWithRetry(() => import("./DashboardAnalytics"));
 
-// ─── Gráfico de barras ────────────────────────────────────────────────────────
+//  Gráfico de barras 
 function GraficoBarras({ data, height = 120 }) {
   if (!data.length) return (
     <div style={{ height, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted)", fontSize: 12 }}>Sem dados</div>
@@ -160,7 +160,7 @@ function GraficoBarras({ data, height = 120 }) {
   );
 }
 
-// ─── Gráfico de linha ─────────────────────────────────────────────────────────
+//  Gráfico de linha 
 function GraficoLinha({ data, height = 120 }) {
   if (data.length < 2) return (
     <div style={{ height, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted)", fontSize: 12 }}>Sem histórico suficiente</div>
@@ -197,7 +197,7 @@ function GraficoLinha({ data, height = 120 }) {
   );
 }
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+//  Helpers 
 const MESES = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
 
 function evolucaoMensal(lancamentos, tipo = "receita", mesesAtras = 6) {
@@ -219,7 +219,7 @@ function evolucaoMensal(lancamentos, tipo = "receita", mesesAtras = 6) {
   return result;
 }
 
-// ─── KPI Card ────────────────────────────────────────────────────────────────
+//  KPI Card 
 function KpiCard({ label, value, sub, accentColor, iconColor, iconBg, Icon, trend, sparkData }) {
   const [hovered, setHovered] = useState(false);
   const isUp = trend != null && trend >= 0;
@@ -245,7 +245,7 @@ function KpiCard({ label, value, sub, accentColor, iconColor, iconBg, Icon, tren
       <div style={{ fontSize: 10.5, color: "var(--muted)", marginTop: 5, display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap" }}>
         {trend != null && (
           <span style={{ fontWeight: 700, fontSize: 10.5, color: isUp ? "#4f7d57" : "#a33327", display: "inline-flex", alignItems: "center", gap: 2 }}>
-            {isUp ? "▲" : "▼"} {Math.abs(trend).toFixed(1)}%
+            {isUp ? "" : ""} {Math.abs(trend).toFixed(1)}%
           </span>
         )}
         <span>{sub}</span>
@@ -259,7 +259,7 @@ function KpiCard({ label, value, sub, accentColor, iconColor, iconBg, Icon, tren
   );
 }
 
-// ─── Dashboard (roteador por perfil) ─────────────────────────────────────────
+//  Dashboard (roteador por perfil) 
 export default function Dashboard() {
   const perfil = useAppStore((s) => s.user?.perfil);
   const [tab, setTab] = useState("visao-geral");
@@ -301,7 +301,7 @@ export default function Dashboard() {
   );
 }
 
-// ─── SST Operacional ─────────────────────────────────────────────────────────
+//  SST Operacional 
 function OperacionalKpis() {
   const [kpis, setKpis] = useState(null);
   useEffect(() => {
@@ -362,7 +362,7 @@ function OperacionalKpis() {
   );
 }
 
-// ─── DashboardDiretor ─────────────────────────────────────────────────────────
+//  DashboardDiretor 
 function DashboardDiretor() {
   useModuleLoad("clientes");
   useModuleLoad("orcamentos");
@@ -399,7 +399,7 @@ function DashboardDiretor() {
   const [precosMon, setPrecosMon] = useState([]);
   useEffect(() => { listarMonitorados().then(setPrecosMon).catch(() => {}); }, []);
 
-  // ── Financeiro ────────────────────────────────────────────────────────────
+  //  Financeiro 
   const allLancamentos = Object.values(financeiro).flatMap((f) => f.lancamentos || []);
   const totalRec  = allLancamentos.filter((l) => l.tipo === "receita").reduce((a, l) => a + (l.valor || 0), 0);
   const totalDesp = allLancamentos.filter((l) => l.tipo === "despesa").reduce((a, l) => a + (l.valor || 0), 0);
@@ -407,7 +407,7 @@ function DashboardDiretor() {
   const margem    = totalRec > 0 ? ((saldo / totalRec) * 100).toFixed(1) : "0.0";
   const pipelineOrc = orcamentos.filter((o) => !["Recusado"].includes(o.status)).reduce((a, o) => a + (o.valor || 0), 0);
 
-  // ── VGV ──────────────────────────────────────────────────────────────────
+  //  VGV 
   const STATUS_QUALIFICADO = ["Negociação", "Proposta Enviada", "Em Execução"];
   const leadsQualificados  = clientes.filter((c) => STATUS_QUALIFICADO.includes(c.status));
   const leadsBrutos        = clientes.filter((c) => c.status === "Lead");
@@ -430,18 +430,18 @@ function DashboardDiretor() {
   const vgvTotal    = vgvFunil.filter((f) => !f.bruto).reduce((a, f) => a + f.valor, 0);
   const vgvComLeads = vgvFunil.reduce((a, f) => a + f.valor, 0);
 
-  // ── Medições ──────────────────────────────────────────────────────────────
+  //  Medições 
   const allMedicoes   = Object.values(medicoes).flat();
   const medPendentes  = allMedicoes.filter((m) => m.status === "Pendente");
   const valorPendente = medPendentes.reduce((a, m) => a + (m.valor || 0), 0);
 
-  // ── Prazos ────────────────────────────────────────────────────────────────
+  //  Prazos 
   const hoje          = new Date();
   const obrasComPrazo = obras.filter((o) => o.prazo_fim && o.status !== "Concluída");
   const atrasadas     = obrasComPrazo.filter((o) => new Date(o.prazo_fim) < hoje);
   const noPrazo       = obrasComPrazo.filter((o) => new Date(o.prazo_fim) >= hoje);
 
-  // ── Compras Preditivas ────────────────────────────────────────────────────
+  //  Compras Preditivas 
   const FASE_THRESHOLDS = [
     { fase: "Fundação",     min: 0,  max: 15,  materiais: ["Brita", "Cimento Portland", "Armação CA-50", "Formas"] },
     { fase: "Levantamento", min: 15, max: 40,  materiais: ["Perfis C90/U90", "OSB 11mm", "Parafusos Selbohner", "Fita impermeabilizante"] },
@@ -467,7 +467,7 @@ function DashboardDiretor() {
       return alerts;
     }).sort((a, b) => a.diasAte - b.diasAte);
 
-  // ── KPI / Trends ─────────────────────────────────────────────────────────
+  //  KPI / Trends 
   const obrasAtivas = obras.filter((o) => o.status === "Em andamento").length;
   const agora2      = new Date();
   const mesAtual    = agora2.getMonth(), anoAtual = agora2.getFullYear();
@@ -484,7 +484,7 @@ function DashboardDiretor() {
   const sparkRec  = evolucaoMensal(allLancamentos, "receita", 6).map((d) => d.value);
   const sparkDesp = evolucaoMensal(allLancamentos, "despesa", 6).map((d) => d.value);
 
-  // ── CRM ──────────────────────────────────────────────────────────────────
+  //  CRM 
   const fechados = clientes.filter((c) => c.status === "Fechado").length;
   const taxaConv = clientes.length > 0 ? ((fechados / clientes.length) * 100).toFixed(0) : "0";
   const STATUS_CRM = ["Lead", "Em negociação", "Proposta enviada", "Fechado"];
@@ -495,7 +495,7 @@ function DashboardDiretor() {
     color: s === "Fechado" ? C.sage : s === "Lead" ? C.muted : C.ochre,
   }));
 
-  // ── Charts data ───────────────────────────────────────────────────────────
+  //  Charts data 
   const evolucao = evolucaoMensal(allLancamentos, "receita", 6);
 
   const graficoObras = obras.map((o) => {
@@ -529,7 +529,7 @@ function DashboardDiretor() {
     });
   })();
 
-  // ── Rentabilidade ─────────────────────────────────────────────────────────
+  //  Rentabilidade 
   const rentabilidade = obras.filter((o) => o.contrato > 0).map((o) => {
     const fin  = financeiro[o.id] || { lancamentos: [] };
     const rec  = fin.lancamentos.filter((l) => l.tipo === "receita").reduce((a, l) => a + (l.valor || 0), 0);
@@ -543,7 +543,7 @@ function DashboardDiretor() {
 
   const inadimplentes = rentabilidade.filter((o) => o.gapPagamento > 25 && o.status !== "Concluída");
 
-  // ── Relatório / PDF ───────────────────────────────────────────────────────
+  //  Relatório / PDF 
   function exportarPdf() {
     document.body.classList.add("printing");
     window.print();
@@ -564,7 +564,7 @@ function DashboardDiretor() {
     printHtml(html, `relatorio-executivo-${mes}`);
   }
 
-  // ── KPIs config ───────────────────────────────────────────────────────────
+  //  KPIs config 
   const kpisConfig = [
     { label: "Receitas",     value: fmt(totalRec),          sub: "total recebido",         accentColor: C.sage,    iconColor: C.sage,    iconBg: "rgba(79,125,87,.13)",   Icon: IC.TrendUp,   trend: trend(somarMes("receita", mesAtual, anoAtual), somarMes("receita", mesPrev, anoPrev)), sparkData: sparkRec  },
     { label: "Despesas",     value: fmt(totalDesp),         sub: "total lançado",          accentColor: C.danger,  iconColor: C.danger,  iconBg: "rgba(163,51,39,.12)",   Icon: IC.TrendDown, trend: trend(somarMes("despesa", mesAtual, anoAtual), somarMes("despesa", mesPrev, anoPrev)), sparkData: sparkDesp },
@@ -574,7 +574,7 @@ function DashboardDiretor() {
     { label: "Clientes",     value: String(clientes.length), sub: `${fechados} fechados`,  accentColor: C.steel,  iconColor: C.steel,   iconBg: "rgba(59,110,165,.12)",   Icon: IC.Users },
   ];
 
-  // ─────────────────────────────────────────────────────────────────────────
+  // 
   return (
     <div>
       {toastInadimpl && (
@@ -583,7 +583,7 @@ function DashboardDiretor() {
         </div>
       )}
 
-      {/* ── Page head ──────────────────────────────────────────────────────── */}
+      {/*  Page head  */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 22, flexWrap: "wrap", gap: 16 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <div style={{ width: 5, height: 30, borderRadius: 3, background: "#981915", flexShrink: 0 }} />
@@ -640,7 +640,7 @@ function DashboardDiretor() {
         );
       })()}
 
-      {/* ── VGV HERO ───────────────────────────────────────────────────────── */}
+      {/*  VGV HERO  */}
       <section style={{
         background: "radial-gradient(120% 140% at 100% 0%, rgba(152,25,21,.045) 0%, transparent 45%), var(--surface)",
         border: "1px solid var(--line)", borderRadius: "var(--radius-lg,16px)",
@@ -701,12 +701,12 @@ function DashboardDiretor() {
       {/* DashboardKPIs */}
       <div style={{ marginBottom: 18 }}><DashboardKPIs /></div>
 
-      {/* ── 6 KPI CARDS ────────────────────────────────────────────────────── */}
+      {/*  6 KPI CARDS  */}
       <section style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 12, marginBottom: 18 }}>
         {kpisConfig.map((k) => <KpiCard key={k.label} {...k} />)}
       </section>
 
-      {/* ── TRI MINI-CARDS ─────────────────────────────────────────────────── */}
+      {/*  TRI MINI-CARDS  */}
       <section style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 18 }}>
         {/* Medições pendentes */}
         <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: "var(--radius,12px)", padding: "15px 17px", boxShadow: "0 1px 2px rgba(40,30,20,.05)" }}>
@@ -757,7 +757,7 @@ function DashboardDiretor() {
         </div>
       </section>
 
-      {/* ── CHARTS ROW 1 ───────────────────────────────────────────────────── */}
+      {/*  CHARTS ROW 1  */}
       <section style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 14, marginBottom: 14 }}>
         <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: "var(--radius-lg,16px)", boxShadow: "0 1px 2px rgba(40,30,20,.05)", padding: "18px 20px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 15 }}>
@@ -781,7 +781,7 @@ function DashboardDiretor() {
         </div>
       </section>
 
-      {/* ── CHARTS ROW 2 ───────────────────────────────────────────────────── */}
+      {/*  CHARTS ROW 2  */}
       <section style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14, marginBottom: 18 }}>
         {/* Obras por fase */}
         <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: "var(--radius-lg,16px)", boxShadow: "0 1px 2px rgba(40,30,20,.05)", padding: "18px 20px" }}>
@@ -847,7 +847,7 @@ function DashboardDiretor() {
         </div>
       </section>
 
-      {/* ── Agenda + Monitor de preços ─────────────────────────────────────── */}
+      {/*  Agenda + Monitor de preços  */}
       {(() => {
         const hojeStr = new Date().toISOString().split("T")[0];
         const followUps = clientes.filter((c) =>
@@ -929,7 +929,7 @@ function DashboardDiretor() {
         );
       })()}
 
-      {/* ── Inadimplência ──────────────────────────────────────────────────── */}
+      {/*  Inadimplência  */}
       {inadimplentes.length > 0 && (
         <div style={{ background: C.danger + "0d", border: `1px solid ${C.danger}33`, borderRadius: "var(--radius-lg,16px)", padding: 20, marginBottom: 16 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 14 }}>
@@ -988,7 +988,7 @@ function DashboardDiretor() {
         </div>
       )}
 
-      {/* ── Compras Preditivas ─────────────────────────────────────────────── */}
+      {/*  Compras Preditivas  */}
       {alertasCompra.length > 0 && (
         <div style={{ background: "#fffbeb", border: "1px solid #fde68a", borderRadius: "var(--radius-lg,16px)", padding: 20, marginBottom: 16 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
@@ -1021,7 +1021,7 @@ function DashboardDiretor() {
         </div>
       )}
 
-      {/* ── Rentabilidade por obra ─────────────────────────────────────────── */}
+      {/*  Rentabilidade por obra  */}
       {rentabilidade.length > 0 && (
         <div style={{ background: "var(--surface)", borderRadius: "var(--radius-lg,16px)", boxShadow: "0 1px 2px rgba(40,30,20,.05)", padding: 20, border: "1px solid var(--line)", marginBottom: 16 }}>
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.1, color: "var(--muted)", textTransform: "uppercase", marginBottom: 16 }}>Rentabilidade por obra</div>
@@ -1065,7 +1065,7 @@ function DashboardDiretor() {
         </div>
       )}
 
-      {/* ── DRE Simplificado ───────────────────────────────────────────────── */}
+      {/*  DRE Simplificado  */}
       {(() => {
         const [drePeriodo, setDrePeriodo] = useState("mes");
         const fmtD = (v) => Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -1115,13 +1115,13 @@ function DashboardDiretor() {
         );
       })()}
 
-      {/* ── Operacional ────────────────────────────────────────────────────── */}
+      {/*  Operacional  */}
       <OperacionalKpis />
 
-      {/* ── Compliance NR ─────────────────────────────────────────────────── */}
+      {/*  Compliance NR  */}
       <div style={{ marginBottom: 16 }}><ComplianceNR /></div>
 
-      {/* ── Atividade Recente ──────────────────────────────────────────────── */}
+      {/*  Atividade Recente  */}
       {historico && historico.length > 0 && (
         <div style={{ background: "var(--surface)", borderRadius: "var(--radius-lg,16px)", padding: 20, marginBottom: 16, border: "1px solid var(--line)" }}>
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.1, color: "var(--muted)", textTransform: "uppercase", marginBottom: 16, display: "flex", alignItems: "center", gap: 6 }}>
@@ -1143,7 +1143,7 @@ function DashboardDiretor() {
         </div>
       )}
 
-      {/* ── Progresso das obras ────────────────────────────────────────────── */}
+      {/*  Progresso das obras  */}
       <div style={{ background: "var(--surface)", borderRadius: "var(--radius-lg,16px)", boxShadow: "0 1px 2px rgba(40,30,20,.05)", padding: 20, border: "1px solid var(--line)" }}>
         <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.1, color: "var(--muted)", textTransform: "uppercase", marginBottom: 16 }}>Progresso das obras</div>
         {obras.length === 0 ? (

@@ -4,19 +4,19 @@ import { C } from "../utils/constants";
 const DOCS = [
   {
     id: "projeto",
-    label: "📋 Análise do Projeto",
+    label: " Análise do Projeto",
     desc: "Arquitetura, módulos, banco de dados e oportunidades de melhoria",
     src: "/docs/analise-projeto.html",
   },
   {
     id: "procore",
-    label: "⚔️ StickFrame vs Procore",
+    label: " StickFrame vs Procore",
     desc: "Comparativo técnico em 9 dimensões e roadmap para fechar o gap",
     src: "/docs/stickframe-vs-procore.html",
   },
   {
     id: "frontend",
-    label: "🎨 Comparativo de Frontend",
+    label: " Comparativo de Frontend",
     desc: "Análise visual e de UX dos principais produtos do mercado",
     src: "/docs/comparativo-frontend.html",
   },

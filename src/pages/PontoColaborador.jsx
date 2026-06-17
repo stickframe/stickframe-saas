@@ -92,7 +92,7 @@ export default function PontoColaborador() {
   if (erro) return (
     <div style={{ minHeight: "100vh", background: C.dark, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Inter, system-ui, sans-serif" }}>
       <div style={{ textAlign: "center", padding: 24 }}>
-        <div style={{ fontSize: 40, marginBottom: 12 }}>❌</div>
+        <div style={{ fontSize: 40, marginBottom: 12 }}></div>
         <div style={{ fontWeight: 700, fontSize: 16 }}>{erro}</div>
       </div>
     </div>
@@ -131,7 +131,7 @@ export default function PontoColaborador() {
 
       <div style={{ maxWidth: 420, margin: "0 auto", padding: "20px 16px", display: "flex", flexDirection: "column", gap: 16 }}>
 
-        {/* ── ETAPA 1: selecionar obra ── */}
+        {/*  ETAPA 1: selecionar obra  */}
         {etapa === "obra" && (obras || []).length > 1 && (
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             <div style={{ textAlign: "center", padding: "8px 0 4px" }}>
@@ -170,7 +170,7 @@ export default function PontoColaborador() {
           </div>
         )}
 
-        {/* ── ETAPA 2: check-in ── */}
+        {/*  ETAPA 2: check-in  */}
         {etapa === "checkin" && (
           <>
             {/* Obra selecionada (se houver) — com botão voltar */}
@@ -204,7 +204,7 @@ export default function PontoColaborador() {
             {/* Resultado flash */}
             {resultado && (
               <div style={{ background: resultado.tipo === "entrada" ? "#f0fdf4" : "#fef9ec", border: `1px solid ${resultado.tipo === "entrada" ? "#86efac" : "#fde68a"}`, borderRadius: 14, padding: "18px 20px", textAlign: "center" }}>
-                <div style={{ fontSize: 40, marginBottom: 8 }}>{resultado.tipo === "entrada" ? "✅" : "👋"}</div>
+                <div style={{ fontSize: 40, marginBottom: 8 }}>{resultado.tipo === "entrada" ? "" : ""}</div>
                 <div style={{ fontSize: 20, fontWeight: 900, color: resultado.tipo === "entrada" ? C.success : "#92400e" }}>
                   {resultado.tipo === "entrada" ? "Entrada registrada!" : "Saída registrada!"}
                 </div>
@@ -212,13 +212,13 @@ export default function PontoColaborador() {
                 {resultado.distancia_m != null && (
                   <div style={{ marginTop: 10, padding: "8px 12px", borderRadius: 8, background: resultado.fora_da_obra ? "#fef2f2" : "#f0fdf4", border: `1px solid ${resultado.fora_da_obra ? "#fca5a5" : "#86efac"}` }}>
                     <span style={{ fontSize: 13, fontWeight: 700, color: resultado.fora_da_obra ? C.red : C.success }}>
-                      {resultado.fora_da_obra ? "⚠️" : "📍"} {resultado.distancia_m}m da obra
+                      {resultado.fora_da_obra ? "" : ""} {resultado.distancia_m}m da obra
                       {resultado.fora_da_obra && " — fora do perímetro"}
                     </span>
                   </div>
                 )}
                 {gpsStatus === "negado" && (
-                  <div style={{ marginTop: 8, fontSize: 11, color: C.muted }}>📵 GPS não disponível — localização não verificada</div>
+                  <div style={{ marginTop: 8, fontSize: 11, color: C.muted }}> GPS não disponível — localização não verificada</div>
                 )}
               </div>
             )}
@@ -231,11 +231,11 @@ export default function PontoColaborador() {
               fontFamily: "inherit", boxShadow: "0 4px 16px rgba(0,0,0,0.12)",
             }}>
               {enviando && gpsStatus === "obtendo"
-                ? "📡 Obtendo GPS..."
+                ? " Obtendo GPS..."
                 : enviando
                 ? "Registrando..."
                 : proximoTipo === "entrada"
-                ? "▶ Registrar Entrada"
+                ? " Registrar Entrada"
                 : "⏹ Registrar Saída"}
             </button>
 
@@ -254,7 +254,7 @@ export default function PontoColaborador() {
                 {(pontos_hoje || []).map((p, i) => (
                   <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 16px", borderBottom: i < pontos_hoje.length - 1 ? `1px solid ${C.border}` : "none" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <span style={{ fontSize: 18 }}>{p.tipo === "entrada" ? "▶" : "⏹"}</span>
+                      <span style={{ fontSize: 18 }}>{p.tipo === "entrada" ? "" : "⏹"}</span>
                       <span style={{ fontSize: 13, fontWeight: 700, color: p.tipo === "entrada" ? C.success : C.red, textTransform: "capitalize" }}>{p.tipo}</span>
                     </div>
                     <span style={{ fontSize: 14, fontWeight: 700, color: C.muted }}>

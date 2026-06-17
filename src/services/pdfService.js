@@ -4,7 +4,7 @@ import { hoje } from "../utils/date";
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
 
-// ─── NOVO HELPER: GERADOR DE PDF REAL NATIVO ─────────────────────────────────
+//  NOVO HELPER: GERADOR DE PDF REAL NATIVO 
 async function exportarParaPDFReal(htmlContent, filename) {
   // Cria um container temporário escondido na tela para renderizar o HTML
   const container = document.createElement("div");
@@ -61,7 +61,7 @@ async function exportarParaPDFReal(htmlContent, filename) {
   }
 }
 
-// ─── ESTILOS E COMPONENTES VISUAIS REUTILIZÁVEIS ─────────────────────────────
+//  ESTILOS E COMPONENTES VISUAIS REUTILIZÁVEIS 
 const BASE_HEADER = `
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700;800&display=swap');
   *{box-sizing:border-box;margin:0;padding:0;}
@@ -104,7 +104,7 @@ function logoHTML(titulo, subtitulo, branding = null) {
   <div class="red-bar" style="background: ${corPrimaria}"></div>`;
 }
 
-// ─── RELATÓRIO FINANCEIRO ────────────────────────────────────────────────────
+//  RELATÓRIO FINANCEIRO 
 export function gerarRelatorioFinanceiro(obras, financeiro) {
   const mes  = new Date().toLocaleString("pt-BR", { month: "long" });
   const ano  = new Date().getFullYear();
@@ -179,7 +179,7 @@ export function gerarRelatorioFinanceiro(obras, financeiro) {
   exportarParaPDFReal(html, `Relatorio_Financeiro_${mes}_${ano}.pdf`);
 }
 
-// ─── CONTRATO DE PRESTAÇÃO DE SERVIÇOS ───────────────────────────────────────
+//  CONTRATO DE PRESTAÇÃO DE SERVIÇOS 
 export function gerarContratoPDF(contrato) {
   const data = hoje();
   const v30 = fmt(contrato.valor * 0.30);
@@ -252,7 +252,7 @@ export function gerarContratoPDF(contrato) {
   exportarParaPDFReal(html, `Contrato_${contrato.ref}.pdf`);
 }
 
-// ─── DIÁRIO DE OBRA ──────────────────────────────────────────────────────────
+//  DIÁRIO DE OBRA 
 export function gerarDiarioPDF(obra, registros, branding = null) {
   const data = hoje();
 
@@ -295,7 +295,7 @@ export function gerarDiarioPDF(obra, registros, branding = null) {
   exportarParaPDFReal(html, `Diario_${obra.nome.split("—")[0].trim().replace(/\s/g, "_")}.pdf`);
 }
 
-// ─── RELATÓRIO DE OBRA (RDO COMPLETO) ────────────────────────────────────────
+//  RELATÓRIO DE OBRA (RDO COMPLETO) 
 export function gerarRelatorioObra(obra, arquivos = [], branding = null) {
   const data = hoje();
   const faseIdx = FASES.indexOf(obra.fase);
@@ -360,7 +360,7 @@ export function gerarRelatorioObra(obra, arquivos = [], branding = null) {
         const done = i < faseIdx, curr = i === faseIdx;
         const cls = done ? "done" : curr ? "current" : "pending";
         return `<div class="fase-row">
-          <div class="fase-dot ${cls}">${done ? "✓" : i + 1}</div>
+          <div class="fase-dot ${cls}">${done ? "" : i + 1}</div>
           <div class="fase-nome ${cls}">${f}</div>
           ${curr ? `<div class="fase-atual-badge">Fase atual</div>` : ""}
         </div>`;
@@ -372,7 +372,7 @@ export function gerarRelatorioObra(obra, arquivos = [], branding = null) {
   exportarParaPDFReal(html, `Relatorio_${obra.nome.split("—")[0].trim().replace(/\s/g, "_")}.pdf`);
 }
 
-// ─── PORTAL DO CLIENTE (DOWNLOAD CONSOLIDADO) ────────────────────────────────
+//  PORTAL DO CLIENTE (DOWNLOAD CONSOLIDADO) 
 export function gerarPortalCliente(obra, registros, financeiro) {
   const data = hoje();
   const fin  = financeiro[obra.id] || { contrato: 0, lancamentos: [] };
@@ -404,7 +404,7 @@ export function gerarPortalCliente(obra, registros, financeiro) {
       ${FASES.map((f, i) => {
         const done = i < faseIdx, curr = i === faseIdx;
         return `<div class="fase-row">
-          <span>${done ? "✓" : i + 1}</span>
+          <span>${done ? "" : i + 1}</span>
           <span style="color:${curr ? '#981915' : '#333'}">${f}</span>
         </div>`;
       }).join("")}
@@ -414,7 +414,7 @@ export function gerarPortalCliente(obra, registros, financeiro) {
   exportarParaPDFReal(html, `Portal_${obra.cliente.replace(/\s/g, "_")}.pdf`);
 }
 
-// ─── RDO INDIVIDUAL (SINGLE REPORT) ──────────────────────────────────────────
+//  RDO INDIVIDUAL (SINGLE REPORT) 
 export function gerarSingleRdoPDF(obra, r) {
   const data = hoje();
   const html = `<html><head><style>${BASE_HEADER}
@@ -451,7 +451,7 @@ export function gerarSingleRdoPDF(obra, r) {
           <div class="reg-section-label">Atividades Executadas</div>
           <div class="reg-section-val">${r.atividades || "—"}</div>
         </div>
-        ${r.ocorrencias ? `<div class="reg-section"><div class="ocorrencia">⚠️ ${r.ocorrencias}</div></div>` : ""}
+        ${r.ocorrencias ? `<div class="reg-section"><div class="ocorrencia"> ${r.ocorrencias}</div></div>` : ""}
       </div>
     </div>
     <div class="footer"><div>Stick Frame Sistemas Construtivos</div><div>${data}</div></div>

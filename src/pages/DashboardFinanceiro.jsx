@@ -134,7 +134,7 @@ export default function DashboardFinanceiro() {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
         <div>
           <h2 style={{ fontSize: 22, fontWeight: 800, marginBottom: 4 }}>
-            {saudacao}, {user?.nome?.split(" ")[0]} 👋
+            {saudacao}, {user?.nome?.split(" ")[0]} 
           </h2>
           <p style={{ color: C.muted, fontSize: 13 }}>Visão financeira consolidada da empresa</p>
         </div>
@@ -142,7 +142,7 @@ export default function DashboardFinanceiro() {
           background: C.red, color: "#fff", border: "none", borderRadius: 8,
           padding: "10px 18px", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
         }}>
-          📄 Relatório DRE
+           Relatório DRE
         </button>
       </div>
 
@@ -260,8 +260,8 @@ export default function DashboardFinanceiro() {
           })}
         </div>
         <div style={{ display: "flex", gap: 16, marginTop: 10, justifyContent: "flex-end" }}>
-          <span style={{ fontSize: 10, color: C.success, fontWeight: 700 }}>■ Receitas</span>
-          <span style={{ fontSize: 10, color: C.danger, fontWeight: 700 }}>■ Despesas</span>
+          <span style={{ fontSize: 10, color: C.success, fontWeight: 700 }}> Receitas</span>
+          <span style={{ fontSize: 10, color: C.danger, fontWeight: 700 }}> Despesas</span>
         </div>
       </div>
     </div>

@@ -9,7 +9,7 @@ import Input from "../components/ui/Input";
 import Select from "../components/ui/Select";
 import Modal from "../components/ui/Modal";
 
-// ─── Helpers de data ──────────────────────────────────────────────────────────
+//  Helpers de data 
 const MESES = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
 
 // Normaliza qualquer formato para ISO (YYYY-MM-DD) para comparar
@@ -38,7 +38,7 @@ function fmtDataBR(data = "") {
   return data;
 }
 
-// ─── Label ───────────────────────────────────────────────────────────────────
+//  Label 
 function Label({ children, required }) {
   return (
     <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 6 }}>
@@ -48,7 +48,7 @@ function Label({ children, required }) {
   );
 }
 
-// ─── Formulário de evento ────────────────────────────────────────────────────
+//  Formulário de evento 
 function FormEvento({ form, setForm, clientes, obras, tiposDisponiveis, onSave, onCancel }) {
   const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
 
@@ -134,7 +134,7 @@ function FormEvento({ form, setForm, clientes, obras, tiposDisponiveis, onSave, 
   );
 }
 
-// ─── Calendário ──────────────────────────────────────────────────────────────
+//  Calendário 
 const DIAS_SEMANA = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
 
 function CalendarioMes({ eventos, onDiaClick, mesRef }) {
@@ -197,7 +197,7 @@ function CalendarioMes({ eventos, onDiaClick, mesRef }) {
   );
 }
 
-// ─── Agenda ──────────────────────────────────────────────────────────────────
+//  Agenda 
 const hoje    = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
 
 const FORM_VAZIO = {
@@ -252,7 +252,7 @@ export default function Agenda() {
   const [diaModal,    setDiaModal]    = useState(null); // { iso, eventos }
   const [exportMenu,  setExportMenu]  = useState(false);
 
-  // ── iCal helpers ─────────────────────────────────────────────────────────────
+  //  iCal helpers 
   function toICalDate(dataISO, hora = "09:00") {
     const [y, m, d] = dataISO.split("-");
     const [hh, mm]  = hora.split(":");
@@ -341,10 +341,10 @@ export default function Agenda() {
     });
     setModal(false);
     setForm(FORM_VAZIO);
-    mostrarToast("✅ Compromisso agendado!");
+    mostrarToast(" Compromisso agendado!");
   }
 
-  // ── Filtragem e ordenação ──────────────────────────────────────────────────
+  //  Filtragem e ordenação 
   const sortFn = (a, b) => toISO(a.data).localeCompare(toISO(b.data)) || (a.hora || "").localeCompare(b.hora || "");
 
   const eventosFiltro = eventos
@@ -378,7 +378,7 @@ export default function Agenda() {
 
       {/* Modal novo compromisso */}
       {modal && (
-        <Modal title="📅 Novo compromisso" onClose={() => setModal(false)}>
+        <Modal title=" Novo compromisso" onClose={() => setModal(false)}>
           <FormEvento
             form={form} setForm={setForm}
             clientes={clientes} obras={obras} tiposDisponiveis={tiposDisponiveis}
@@ -420,12 +420,12 @@ export default function Agenda() {
             )}
 
             <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
-              <button onClick={() => { deleteEvento(verEvento.id); setVerEvento(null); mostrarToast("🗑 Compromisso removido."); }} style={{
+              <button onClick={() => { deleteEvento(verEvento.id); setVerEvento(null); mostrarToast(" Compromisso removido."); }} style={{
                 padding: "8px 16px", background: C.danger + "22",
                 border: `1px solid ${C.danger}44`, borderRadius: 6,
                 color: C.danger, fontSize: 12, fontWeight: 700,
                 cursor: "pointer", fontFamily: "inherit",
-              }}>🗑 Deletar</button>
+              }}> Deletar</button>
               <Btn variant="ghost" onClick={() => setVerEvento(null)}>Fechar</Btn>
             </div>
           </div>
@@ -439,12 +439,12 @@ export default function Agenda() {
             <h2 style={{ fontSize: 22, fontWeight: 800 }}>Agenda</h2>
             <p style={{ color: C.muted, fontSize: 13, marginTop: 4 }}>
               {eventos.length} compromisso{eventos.length !== 1 ? "s" : ""} cadastrado{eventos.length !== 1 ? "s" : ""}
-              {temHoje && <span style={{ marginLeft: 8, background: C.red + "22", color: C.red, borderRadius: 4, padding: "1px 8px", fontSize: 11, fontWeight: 700 }}>● Hoje</span>}
+              {temHoje && <span style={{ marginLeft: 8, background: C.red + "22", color: C.red, borderRadius: 4, padding: "1px 8px", fontSize: 11, fontWeight: 700 }}> Hoje</span>}
             </p>
           </div>
           <div style={{ display: "flex", gap: 8 }}>
             <div style={{ display: "flex", border: `1px solid ${C.border}`, borderRadius: 8, overflow: "hidden" }}>
-              {[["lista","☰ Lista"],["calendario","📅 Mês"]].map(([v, l]) => (
+              {[["lista"," Lista"],["calendario"," Mês"]].map(([v, l]) => (
                 <button key={v} onClick={() => setViewMode(v)} style={{
                   padding: "7px 14px", fontSize: 11, fontWeight: viewMode === v ? 700 : 400,
                   background: viewMode === v ? C.red + "18" : "transparent",
@@ -465,7 +465,7 @@ export default function Agenda() {
                   display: "flex", alignItems: "center", gap: 5,
                 }}
               >
-                📅 Exportar
+                 Exportar
               </button>
               {exportMenu && (
                 <>
@@ -478,8 +478,8 @@ export default function Agenda() {
                     zIndex: 50, minWidth: 200, overflow: "hidden",
                   }}>
                     {[
-                      { icon: "⬇️", label: "Baixar .ics", action: baixarICS },
-                      { icon: "📆", label: "Abrir no Google Calendar", action: abrirGoogleCalendar },
+                      { icon: "", label: "Baixar .ics", action: baixarICS },
+                      { icon: "", label: "Abrir no Google Calendar", action: abrirGoogleCalendar },
                     ].map(({ icon, label, action }) => (
                       <button key={label} onClick={action} style={{
                         width: "100%", padding: "12px 16px", textAlign: "left",
@@ -590,7 +590,7 @@ export default function Agenda() {
             border: `1px solid ${C.border}`, padding: "48px 0",
             textAlign: "center",
           }}>
-            <div style={{ fontSize: 32, marginBottom: 12 }}>📅</div>
+            <div style={{ fontSize: 32, marginBottom: 12 }}></div>
             <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 6 }}>
               {filtro === "hoje" ? "Nenhum compromisso hoje" : "Nenhum compromisso encontrado"}
             </div>

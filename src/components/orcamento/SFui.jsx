@@ -1,4 +1,4 @@
-// ── STICK FRAME · Orçamento SF · UI Compartilhado ───────────────────────
+//  STICK FRAME · Orçamento SF · UI Compartilhado 
 import React from 'react';
 import { SF_COMP, SF_COMP_COR } from '../../utils/sf-orcamento';
 

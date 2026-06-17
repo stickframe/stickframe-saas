@@ -33,7 +33,7 @@ import { gerarRelatorioObra, gerarRelatorioStickScore } from "../services/relato
 import { carregarHistoricoScore } from "../utils/stickScore";
 import { printHtml } from "../utils/printHtml";
 
-const ICONE_TIPO  = { pdf: "📄", imagem: "🖼️", outro: "📎" };
+const ICONE_TIPO  = { pdf: "", imagem: "", outro: "" };
 const CATS        = ["Projeto", "Foto", "Documento", "Outro"];
 const DISCIPLINAS = ["Arquitetônico","Estrutural","Steel Frame","Elétrico","Hidráulico","AVAC","Fundação","Administrativo","Outro"];
 const STATUS_DOC  = ["Ativo","Em revisão","Aprovado","Obsoleto"];
@@ -57,7 +57,7 @@ const STATUS_COR  = {
 };
 const statusColor = (s) => STATUS_COR[s] || "#888";
 
-// ─── Label ───────────────────────────────────────────────────────────────────
+//  Label 
 function Label({ children, required }) {
   return (
     <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 6, textTransform: "uppercase" }}>
@@ -67,7 +67,7 @@ function Label({ children, required }) {
   );
 }
 
-// ─── Formulário de obra ───────────────────────────────────────────────────────
+//  Formulário de obra 
 function FormObra({ form, setForm, clientes, onSave, onCancel, btnLabel }) {
   const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
 
@@ -156,8 +156,8 @@ function FormObra({ form, setForm, clientes, onSave, onCancel, btnLabel }) {
   );
 }
 
-// ─── Gestão de Obras ──────────────────────────────────────────────────────────
-// ─── Diário com foto ──────────────────────────────────────────────────────────
+//  Gestão de Obras 
+//  Diário com foto 
 function DiarioAba({ obraId, obra, diario, addDiario }) {
   const hoje = new Date().toISOString().split("T")[0];
   const [form, setForm] = useState({ data: hoje, turno: "Manhã", clima: "Ensolarado", atividades: "", ocorrencias: "" });
@@ -175,7 +175,7 @@ function DiarioAba({ obraId, obra, diario, addDiario }) {
   };
 
   const salvar = async () => {
-    if (!form.atividades.trim()) { mostrarToast("⚠️ Informe as atividades do dia."); return; }
+    if (!form.atividades.trim()) { mostrarToast(" Informe as atividades do dia."); return; }
     setSaving(true);
     try {
       let foto_url = null;
@@ -192,9 +192,9 @@ function DiarioAba({ obraId, obra, diario, addDiario }) {
       setForm({ data: hoje, turno: "Manhã", clima: "Ensolarado", atividades: "", ocorrencias: "" });
       setFotoFile(null);
       setFotoPreview(null);
-      mostrarToast("✅ Registro salvo no diário!");
+      mostrarToast(" Registro salvo no diário!");
     } catch (e) {
-      mostrarToast("❌ Erro ao salvar. Tente novamente.");
+      mostrarToast(" Erro ao salvar. Tente novamente.");
     } finally {
       setSaving(false);
     }
@@ -204,7 +204,7 @@ function DiarioAba({ obraId, obra, diario, addDiario }) {
     <div style={{ background: C.surface, borderRadius: "0 0 12px 12px", border: `1px solid ${C.border}`, borderTop: "none", padding: 22 }}>
       {/* Formulário */}
       <div style={{ background: C.dark, borderRadius: 10, padding: 18, marginBottom: 24 }}>
-        <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 14, color: C.text }}>📝 Novo registro</div>
+        <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 14, color: C.text }}> Novo registro</div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 12 }}>
           <div>
             <Label>Data</Label>
@@ -238,7 +238,7 @@ function DiarioAba({ obraId, obra, diario, addDiario }) {
           <Label>Foto da obra (opcional)</Label>
           <label style={{ display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }}>
             <div style={{ background: C.surface, border: `1px dashed ${C.border}`, borderRadius: 8, padding: "10px 18px", fontSize: 13, color: C.muted, display: "flex", alignItems: "center", gap: 8 }}>
-              📷 {fotoFile ? fotoFile.name : "Tirar foto ou escolher arquivo"}
+               {fotoFile ? fotoFile.name : "Tirar foto ou escolher arquivo"}
             </div>
             <input type="file" accept="image/*" capture="environment" onChange={handleFoto} style={{ display: "none" }} />
           </label>
@@ -247,7 +247,7 @@ function DiarioAba({ obraId, obra, diario, addDiario }) {
               style={{ marginTop: 10, maxWidth: 200, maxHeight: 150, borderRadius: 8, border: `1px solid ${C.border}`, cursor: "zoom-in", objectFit: "cover" }} />
           )}
         </div>
-        <Btn onClick={salvar} disabled={saving}>{saving ? "Salvando..." : "💾 Salvar registro"}</Btn>
+        <Btn onClick={salvar} disabled={saving}>{saving ? "Salvando..." : " Salvar registro"}</Btn>
       </div>
 
       {/* Lista de registros */}
@@ -265,7 +265,7 @@ function DiarioAba({ obraId, obra, diario, addDiario }) {
           <div style={{ fontSize: 13, color: C.text, marginBottom: r.ocorrencias ? 8 : 0, lineHeight: 1.5 }}>{r.atividades}</div>
           {r.ocorrencias && (
             <div style={{ background: "#fff5f5", borderLeft: `3px solid ${C.red}`, padding: "6px 12px", borderRadius: "0 6px 6px 0", fontSize: 12, color: "#555", marginBottom: 8 }}>
-              ⚠️ {r.ocorrencias}
+               {r.ocorrencias}
             </div>
           )}
           {r.foto_url && (
@@ -285,7 +285,7 @@ function DiarioAba({ obraId, obra, diario, addDiario }) {
   );
 }
 
-// ─── Galeria por Ambiente ──────────────────────────────────────────────────────
+//  Galeria por Ambiente 
 const AMBIENTES = ["Sala", "Quarto", "Banheiro", "Cozinha", "Estrutura", "Fachada", "Cobertura", "Fundação", "Outro"];
 const STATUS_FOTO = ["Em andamento", "Concluído", "Com problema"];
 const STATUS_FOTO_COR = { "Concluído": "#2e9e5b", "Em andamento": "#b97a00", "Com problema": "#c0392b" };
@@ -322,7 +322,7 @@ function GaleriaAmbiente({ obraId }) {
     <div style={{ marginTop: 28 }}>
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-        <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>📸 Galeria por Ambiente</div>
+        <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}> Galeria por Ambiente</div>
         <button
           onClick={() => setModalAberto(true)}
           style={{ padding: "7px 16px", background: C.red, color: "#fff", border: "none", borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}
@@ -364,7 +364,7 @@ function GaleriaAmbiente({ obraId }) {
                   onClick={() => removerFoto(f.id)}
                   style={{ position: "absolute", top: 6, right: 6, background: "rgba(0,0,0,0.5)", border: "none", borderRadius: 6, color: "#fff", fontSize: 12, width: 22, height: 22, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1 }}
                   title="Remover foto"
-                >✕</button>
+                ></button>
               </div>
             ))}
           </div>
@@ -406,7 +406,7 @@ function GaleriaAmbiente({ obraId }) {
             )}
             <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
               <button onClick={() => setModalAberto(false)} style={{ padding: "8px 18px", background: C.dark, border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, cursor: "pointer", fontFamily: "inherit", color: C.text }}>Cancelar</button>
-              <button onClick={salvarFoto} disabled={!form.url.trim()} style={{ padding: "8px 18px", background: C.red, color: "#fff", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "inherit", opacity: form.url.trim() ? 1 : 0.5 }}>💾 Salvar</button>
+              <button onClick={salvarFoto} disabled={!form.url.trim()} style={{ padding: "8px 18px", background: C.red, color: "#fff", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "inherit", opacity: form.url.trim() ? 1 : 0.5 }}> Salvar</button>
             </div>
           </div>
         </Modal>
@@ -429,7 +429,7 @@ const FORM_VAZIO = {
 };
 
 
-// ── helpers para chat ──────────────────────────────────────────────────────
+//  helpers para chat 
 function chatAvatarColor(nome) {
   if (!nome) return "#981915";
   const colors = ["#981915", "#2e9e5b", "#4a7af8", "#b97a00", "#7c3aed", "#0891b2"];
@@ -587,7 +587,7 @@ function ObraChatPanel({ obraId, userName, userPerfil, empresaId }) {
   );
 }
 
-// ─── Tab Quantitativos ────────────────────────────────────────────────────────
+//  Tab Quantitativos 
 function TabQuantitativos({ obraId }) {
   const [modal, setModal] = useState(false);
   const [form, setForm] = useState({ item:'', cat:'Estrutura', un:'un', qtd:'', preco:'' });
@@ -929,7 +929,7 @@ export default function GestaoObras() {
       .slice(0, 20);
     const token = `${base}-${new Date().getFullYear()}`;
     await updateObra(obraId, { token_portal: token });
-    mostrarToast("🔗 Token gerado!");
+    mostrarToast(" Token gerado!");
   }
 
   async function copiarLinkPortal() {
@@ -937,7 +937,7 @@ export default function GestaoObras() {
     if (!token) { await gerarTokenPortal(); return; }
     const url = `${window.location.origin}/portal/${token}`;
     navigator.clipboard.writeText(url);
-    mostrarToast("🔗 Link do portal copiado!");
+    mostrarToast(" Link do portal copiado!");
   }
 
   const obra      = obras.find((o) => o.id === obraId) || null;
@@ -988,12 +988,12 @@ export default function GestaoObras() {
       });
       setModal(null);
       setObraId(data.id);
-      mostrarToast("✅ Obra cadastrada com sucesso!");
+      mostrarToast(" Obra cadastrada com sucesso!");
     } catch (e) {
       if (e.message?.startsWith("LIMITE_PLANO:")) {
-        mostrarToast("⚠️ " + e.message.replace("LIMITE_PLANO:", ""));
+        mostrarToast(" " + e.message.replace("LIMITE_PLANO:", ""));
       } else {
-        mostrarToast("❌ Erro ao cadastrar obra. Verifique os dados.");
+        mostrarToast(" Erro ao cadastrar obra. Verifique os dados.");
       }
     }
   }
@@ -1014,9 +1014,9 @@ export default function GestaoObras() {
         progresso:     form.progresso || 0,
       });
       setModal(null);
-      mostrarToast("✅ Obra atualizada!");
+      mostrarToast(" Obra atualizada!");
     } catch (e) {
-      mostrarToast(`❌ Erro ao salvar: ${e?.message || "verifique os dados."}`);
+      mostrarToast(` Erro ao salvar: ${e?.message || "verifique os dados."}`);
     }
   }
 
@@ -1024,7 +1024,7 @@ export default function GestaoObras() {
     await deleteObra(obraId);
     setObraId(obras.find((o) => o.id !== obraId)?.id || null);
     setConfirm(false);
-    mostrarToast("🗑 Obra removida.");
+    mostrarToast(" Obra removida.");
   }
 
   function avancar() {
@@ -1059,7 +1059,7 @@ export default function GestaoObras() {
     if (!obra) return;
     mostrarToast("⏳ Gerando dossiê...");
     const win = window.open("", "_blank");
-    if (!win) { mostrarToast("❌ Popup bloqueado. Permita popups para este site."); return; }
+    if (!win) { mostrarToast(" Popup bloqueado. Permita popups para este site."); return; }
     win.document.write("<html><body style='font-family:sans-serif;padding:40px;color:#555'>⏳ Carregando dossiê...</body></html>");
     await Promise.all([loadMedicoes(obraId), loadDiario(obraId), loadVistorias(obraId)]);
     const quants = await listarQuantitativos(obraId).catch(() => []);
@@ -1079,32 +1079,32 @@ export default function GestaoObras() {
     const progresso = obra.progresso || 0;
     const totalQuant = quants.reduce((a, q) => a + (Number(q.quantidade) * Number(q.custo_unitario)), 0);
 
-    // ── Barra de progresso SVG ────────────────────────────────────────────────
+    //  Barra de progresso SVG 
     const barraProgresso = (pct, cor = "#981915") =>
       `<div style="background:#eee;border-radius:4px;height:8px;margin-top:4px">
         <div style="width:${Math.min(pct,100)}%;height:8px;background:${cor};border-radius:4px"></div>
       </div>`;
 
-    // ── Fases ─────────────────────────────────────────────────────────────────
+    //  Fases 
     const fasesHtml = `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:8px">
       ${FASES.map((f, i) => {
         const done = i < faseIdx, curr = i === faseIdx;
         const bg = done ? "#2e9e5b" : curr ? "#981915" : "#e5e7eb";
         const tc = done || curr ? "#fff" : "#9ca3af";
         return `<div style="background:${bg};border-radius:8px;padding:8px 10px;text-align:center">
-          <div style="font-size:9px;font-weight:700;color:${tc};letter-spacing:.5px">${done ? "✓ " : curr ? "▶ " : ""}${f}</div>
+          <div style="font-size:9px;font-weight:700;color:${tc};letter-spacing:.5px">${done ? " " : curr ? " " : ""}${f}</div>
         </div>`;
       }).join("")}
     </div>`;
 
-    // ── KPIs capa ─────────────────────────────────────────────────────────────
+    //  KPIs capa 
     const kpi = (label, value, cor = "#1a1a1a") =>
       `<div style="background:#f9fafb;border-radius:10px;padding:14px 18px;border:1px solid #e5e7eb">
         <div style="font-size:10px;color:#9ca3af;letter-spacing:1px;margin-bottom:6px">${label}</div>
         <div style="font-size:20px;font-weight:900;color:${cor}">${value}</div>
       </div>`;
 
-    // ── Medições ──────────────────────────────────────────────────────────────
+    //  Medições 
     const medsHtml = meds.length === 0
       ? "<p style='color:#9ca3af;font-size:13px;padding:12px 0'>Nenhuma medição registrada.</p>"
       : `<table><thead><tr><th>Nº</th><th>Descrição</th><th>Valor</th><th>Status</th></tr></thead><tbody>
@@ -1116,7 +1116,7 @@ export default function GestaoObras() {
           </tr>`).join("")}
         </tbody></table>`;
 
-    // ── Financeiro ────────────────────────────────────────────────────────────
+    //  Financeiro 
     const finHtml = fin.length === 0
       ? "<p style='color:#9ca3af;font-size:13px;padding:12px 0'>Nenhum lançamento registrado.</p>"
       : `<table><thead><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th>Valor</th></tr></thead><tbody>
@@ -1128,7 +1128,7 @@ export default function GestaoObras() {
           </tr>`).join("")}
         </tbody></table>`;
 
-    // ── Vistorias ─────────────────────────────────────────────────────────────
+    //  Vistorias 
     const vistsHtml = vists.length === 0
       ? "<p style='color:#9ca3af;font-size:13px;padding:12px 0'>Nenhuma vistoria registrada.</p>"
       : `<table><thead><tr><th>Tipo</th><th>Fase</th><th>Data</th><th>Responsável</th><th>Resultado</th><th>Conformidade</th></tr></thead><tbody>
@@ -1145,7 +1145,7 @@ export default function GestaoObras() {
           }).join("")}
         </tbody></table>`;
 
-    // ── Quantitativos ─────────────────────────────────────────────────────────
+    //  Quantitativos 
     const quantsHtml = quants.length === 0
       ? "<p style='color:#9ca3af;font-size:13px;padding:12px 0'>Nenhum item no quantitativo.</p>"
       : `<table><thead><tr><th>Fase</th><th>Descrição</th><th>Qtd</th><th>Un</th><th>Custo Unit.</th><th>Total</th></tr></thead><tbody>
@@ -1163,17 +1163,17 @@ export default function GestaoObras() {
           </tr>
         </tbody></table>`;
 
-    // ── Diário ────────────────────────────────────────────────────────────────
+    //  Diário 
     const diarioHtml = diarioObra.length === 0
       ? "<p style='color:#9ca3af;font-size:13px;padding:12px 0'>Nenhum registro no diário.</p>"
       : diarioObra.map((r) => `
           <div style="padding:10px 0;border-bottom:1px solid #e5e7eb">
             <div style="font-size:11px;color:#9ca3af;margin-bottom:4px">${r.data || "—"} · ${r.clima || ""} · ${r.turno || ""}</div>
             <div style="font-size:13px">${r.atividades || ""}</div>
-            ${r.ocorrencias ? `<div style="background:#fff5f5;border-left:3px solid #981915;padding:6px 12px;margin-top:6px;font-size:12px;color:#555">⚠ ${r.ocorrencias}</div>` : ""}
+            ${r.ocorrencias ? `<div style="background:#fff5f5;border-left:3px solid #981915;padding:6px 12px;margin-top:6px;font-size:12px;color:#555"> ${r.ocorrencias}</div>` : ""}
           </div>`).join("");
 
-    // ── Arquivos ──────────────────────────────────────────────────────────────
+    //  Arquivos 
     const arqHtml = arqs.length === 0
       ? "<p style='color:#9ca3af;font-size:13px;padding:12px 0'>Nenhum arquivo.</p>"
       : arqs.map((a) => `<div style="font-size:12px;padding:5px 0;border-bottom:1px solid #e5e7eb">${a.nome} <span style="color:#9ca3af">· ${a.categoria} · ${a.tamanho}</span></div>`).join("");
@@ -1225,7 +1225,7 @@ export default function GestaoObras() {
     <div class="page">
 
       <!-- RESUMO EXECUTIVO -->
-      <h2>📊 Resumo Executivo</h2>
+      <h2> Resumo Executivo</h2>
       <div class="kpi-grid">
         ${kpi("VALOR DO CONTRATO", fmtR(obra.contrato))}
         ${kpi("RECEITAS", fmtR(receitas), "#2e9e5b")}
@@ -1238,32 +1238,32 @@ export default function GestaoObras() {
       </div>
 
       <!-- FASES -->
-      <h2>🏗 Fases da Obra</h2>
+      <h2> Fases da Obra</h2>
       ${fasesHtml}
       <div style="font-size:12px;color:#6b7280;margin-top:6px">Fase atual: <strong style="color:#981915">${obra.fase || FASES[0]}</strong></div>
 
       <!-- VISTORIAS -->
-      <h2>🔍 Vistorias & FVS (${vists.length})</h2>
+      <h2> Vistorias & FVS (${vists.length})</h2>
       ${vistsHtml}
 
       <!-- MEDIÇÕES -->
-      <h2>📐 Medições (${meds.length})</h2>
+      <h2> Medições (${meds.length})</h2>
       ${medsHtml}
 
       <!-- QUANTITATIVOS -->
-      <h2>📋 Quantitativos de Materiais (${quants.length} itens)</h2>
+      <h2> Quantitativos de Materiais (${quants.length} itens)</h2>
       ${quantsHtml}
 
       <!-- FINANCEIRO -->
-      <h2>💰 Lançamentos Financeiros (${fin.length})</h2>
+      <h2> Lançamentos Financeiros (${fin.length})</h2>
       ${finHtml}
 
       <!-- DIÁRIO -->
-      <h2>📓 Diário de Obra (${diarioObra.length} registros)</h2>
+      <h2> Diário de Obra (${diarioObra.length} registros)</h2>
       ${diarioHtml}
 
       <!-- ARQUIVOS -->
-      <h2>📁 Documentos & Arquivos (${arqs.length})</h2>
+      <h2> Documentos & Arquivos (${arqs.length})</h2>
       ${arqHtml}
 
       <div style="margin-top:40px;padding-top:16px;border-top:1px solid #e5e7eb;font-size:11px;color:#9ca3af;text-align:center">
@@ -1383,9 +1383,9 @@ export default function GestaoObras() {
     setUploadMeta(null);
     try {
       await addArquivos(obraId, novos);
-      mostrarToast(`✅ ${novos.length} arquivo(s) enviado(s)!`);
+      mostrarToast(` ${novos.length} arquivo(s) enviado(s)!`);
     } catch (e) {
-      mostrarToast("❌ Erro ao enviar arquivo. Tente novamente.");
+      mostrarToast(" Erro ao enviar arquivo. Tente novamente.");
     }
   }
 
@@ -1445,7 +1445,7 @@ export default function GestaoObras() {
                   onChange={(v) => setUploadMeta((m) => ({ ...m, revisao: v }))}
                   options={["Rev. 00","Rev. 01","Rev. 02","Rev. 03","Rev. 04","Rev. 05","Rev. A","Rev. B","Rev. C"].map((v) => ({ value: v, label: v }))}
                 />
-                <div style={{ fontSize: 11, color: C.warning, marginTop: 5 }}>⚡ Ao enviar, revisões anteriores desta disciplina serão marcadas como Desatualizado.</div>
+                <div style={{ fontSize: 11, color: C.warning, marginTop: 5 }}> Ao enviar, revisões anteriores desta disciplina serão marcadas como Desatualizado.</div>
               </div>
             </div>
             <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
@@ -1574,18 +1574,18 @@ export default function GestaoObras() {
                       const diasAtraso = Math.ceil((new Date() - new Date(o.prazo_fim + "T00:00")) / 86400000);
                       await emailAlertaObraAtrasada({ nomeObra: o.nome, prazoFim: o.prazo_fim, diasAtraso, email: o.email_cliente || emailDest });
                     }
-                    mostrarToast(`📧 ${atrasadas.length} alerta(s) enviado(s)`);
+                    mostrarToast(` ${atrasadas.length} alerta(s) enviado(s)`);
                   }}
                   style={{ marginTop: 10, width: "100%", padding: "7px 0", background: C.danger + "22", border: `1px solid ${C.danger}44`, borderRadius: 6, color: C.danger, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}
                 >
-                  📧 Enviar alertas
+                   Enviar alertas
                 </button>
               </div>
             )}
             {emRisco.length > 0 && (
               <div style={{ flex: 1, background: "#b97a0018", border: `1px solid #b97a0044`, borderRadius: 10, padding: 16 }}>
                 <div style={{ fontSize: 12, fontWeight: 800, color: "#b97a00", display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontSize: 18 }}>⏱️</span> CRONOGRAMA EM RISCO ({emRisco.length})
+                  <span style={{ fontSize: 18 }}>⏱</span> CRONOGRAMA EM RISCO ({emRisco.length})
                 </div>
                 <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 6 }}>
                   {emRisco.map(o => (
@@ -1631,7 +1631,7 @@ export default function GestaoObras() {
       {/* Empty state */}
       {obras.length === 0 ? (
         <div style={{ textAlign: "center", padding: "80px 0" }}>
-          <div style={{ fontSize: 40, marginBottom: 16 }}>◆</div>
+          <div style={{ fontSize: 40, marginBottom: 16 }}></div>
           <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Nenhuma obra cadastrada</div>
           <div style={{ fontSize: 13, color: C.muted, marginBottom: 24 }}>Crie sua primeira obra para gerenciar fases, arquivos e lançamentos financeiros.</div>
           <Btn onClick={abrirNova}>+ Criar primeira obra</Btn>
@@ -1665,7 +1665,7 @@ export default function GestaoObras() {
                 {/* Abas */}
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: `1px solid ${C.border}` }}>
                 <div style={{ display: "flex", flex: 1, overflowX: "auto", scrollbarWidth: "thin" }}>
-                  {[["fases", "Fases"], ["tarefas", "✅ Tarefas"], ["financeiro", "Financeiro"], ["fluxo", "Fluxo"], ["cronograma", "Cronograma"], ["diario", "Diário"], ["quantitativos", "Quantitativos"], ["fotos", "Fotos"], ["arquivos", "Arquivos"], ["ncr", "NCR"], ["rfis", "RFIs"], ["rastreio", "Rastreio"], ["historico", "Histórico"], ...(obra.status === "Concluída" ? [["garantia", "Garantia"]] : []), ["garantias", "Garantias"], ...(perfil === "diretor" ? [["membros", "Membros"]] : []), ["presenca", "Presença"], ["comentarios", "Comentários"], ["chat", "💬 Chat"]].map(([k, l]) => (
+                  {[["fases", "Fases"], ["tarefas", " Tarefas"], ["financeiro", "Financeiro"], ["fluxo", "Fluxo"], ["cronograma", "Cronograma"], ["diario", "Diário"], ["quantitativos", "Quantitativos"], ["fotos", "Fotos"], ["arquivos", "Arquivos"], ["ncr", "NCR"], ["rfis", "RFIs"], ["rastreio", "Rastreio"], ["historico", "Histórico"], ...(obra.status === "Concluída" ? [["garantia", "Garantia"]] : []), ["garantias", "Garantias"], ...(perfil === "diretor" ? [["membros", "Membros"]] : []), ["presenca", "Presença"], ["comentarios", "Comentários"], ["chat", " Chat"]].map(([k, l]) => (
                     <button key={k} onClick={() => {
                       if (k === "diario" && userId) {
                         const pendentes = arqObra.filter((a) => a.disciplina && a.status_doc !== "Desatualizado" && !(a.cientes_uids || []).includes(userId));
@@ -1701,7 +1701,7 @@ export default function GestaoObras() {
                         <button
                           onClick={() => gerarRelatorioObra(obra, financeiro[obraId]?.lancamentos || [])}
                           style={{ padding: "5px 12px", borderRadius: 7, border: "none", background: "#b41e1e", color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}
-                        >📄 PDF</button>
+                        > PDF</button>
                         <Badge label={obra.status} color={statusColor(obra.status)} />
                       </div>
                     </div>
@@ -1730,7 +1730,7 @@ export default function GestaoObras() {
                               onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.color = "#fff"; }}
                               onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.55)"; }}
                             >
-                              📤 Compartilhar StickScore™
+                               Compartilhar StickScore™
                             </button>
                           )}
                         </div>
@@ -1765,7 +1765,7 @@ export default function GestaoObras() {
                             border: `2px solid ${past ? C.success : done ? C.red : C.border}`,
                             display: "flex", alignItems: "center", justifyContent: "center",
                             fontSize: 10, color: "#fff", fontWeight: 700,
-                          }}>{past ? "✓" : i + 1}</div>
+                          }}>{past ? "" : i + 1}</div>
                           <span style={{ fontSize: 13, color: done || past ? C.text : C.muted, fontWeight: done ? 700 : 400 }}>{f}</span>
                           {done && <Badge label="Atual" color={C.red} />}
                         </div>
@@ -1821,7 +1821,7 @@ export default function GestaoObras() {
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                               <div>
                                 <div style={{ fontSize: 11, fontWeight: 700, color: retLiberada ? "#2e9e5b" : "#b97a00", letterSpacing: 1, marginBottom: 3 }}>
-                                  {retLiberada ? "✓ RETENÇÃO LIBERADA" : "🔒 RETENÇÃO DE GARANTIA"}
+                                  {retLiberada ? " RETENÇÃO LIBERADA" : " RETENÇÃO DE GARANTIA"}
                                 </div>
                                 <div style={{ fontSize: 12, color: C.muted }}>{obra.retencao_pct}% do contrato · {retLiberada ? "Obra concluída" : "Liberado na entrega"}</div>
                               </div>
@@ -1857,7 +1857,7 @@ export default function GestaoObras() {
                         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                           {[...lans].sort((a, b) => (b.data || "").localeCompare(a.data || "")).map((l) => (
                             <div key={l.id} style={{ display: "grid", gridTemplateColumns: "auto 1fr auto auto", gap: 10, alignItems: "center", padding: "9px 12px", background: C.darker, borderRadius: 8, borderLeft: `3px solid ${l.tipo === "receita" ? "#2e9e5b" : C.danger}` }}>
-                              <span style={{ fontSize: 18 }}>{l.tipo === "receita" ? "📥" : "📤"}</span>
+                              <span style={{ fontSize: 18 }}>{l.tipo === "receita" ? "" : ""}</span>
                               <div>
                                 <div style={{ fontSize: 12, fontWeight: 600 }}>{l.descricao || "—"}</div>
                                 <div style={{ fontSize: 11, color: C.muted }}>
@@ -2015,7 +2015,7 @@ export default function GestaoObras() {
                               <div key={fase} style={{ marginBottom: 12 }}>
                                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, marginBottom: 4 }}>
                                   <span style={{ color: done ? C.success : curr ? C.text : C.muted, fontWeight: curr ? 700 : 400 }}>
-                                    {done ? "✓ " : curr ? "▶ " : ""}{fase}
+                                    {done ? " " : curr ? " " : ""}{fase}
                                   </span>
                                   <span style={{ color: C.muted, fontSize: 10 }}>
                                     {faseInicio.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })} – {faseFim.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}
@@ -2040,7 +2040,7 @@ export default function GestaoObras() {
                               <div style={{ position: "relative", height: 20, marginTop: 14 }}>
                                 <div style={{ position: "absolute", left: `${pctHoje}%`, top: 0, bottom: 0, width: 2, background: "#ffd700" }} />
                                 <div style={{ position: "absolute", left: `${pctHoje}%`, top: 0, fontSize: 9, color: "#ffd700", whiteSpace: "nowrap", transform: "translateX(-50%)" }}>
-                                  ◆ Hoje
+                                   Hoje
                                 </div>
                               </div>
                             );
@@ -2070,7 +2070,7 @@ export default function GestaoObras() {
                       onDrop={(e) => { e.preventDefault(); setDragOver(false); handleFiles(e.dataTransfer.files); }}
                     >
                       <input type="file" multiple accept="image/*" style={{ display: "none" }} onChange={(e) => handleFiles(e.target.files)} />
-                      <div style={{ fontSize: 11, color: C.muted }}>📷 Arraste fotos ou clique para enviar — as fotos ficam vinculadas à fase atual ({obra.fase})</div>
+                      <div style={{ fontSize: 11, color: C.muted }}> Arraste fotos ou clique para enviar — as fotos ficam vinculadas à fase atual ({obra.fase})</div>
                     </label>
 
                     {(() => {
@@ -2095,7 +2095,7 @@ export default function GestaoObras() {
                               }}>
                                 {f.url
                                   ? <img src={f.url} alt={f.nome} width="320" height="240" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                                  : <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", fontSize: 28 }}>🖼️</div>
+                                  : <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", fontSize: 28 }}></div>
                                 }
                               </div>
                             ))}
@@ -2125,7 +2125,7 @@ export default function GestaoObras() {
                       onDrop={(e) => { e.preventDefault(); setDragOver(false); handleFiles(e.dataTransfer.files); }}
                     >
                       <input type="file" multiple style={{ display: "none" }} onChange={(e) => handleFiles(e.target.files)} />
-                      <div style={{ fontSize: 28, marginBottom: 8 }}>📁</div>
+                      <div style={{ fontSize: 28, marginBottom: 8 }}></div>
                       <div style={{ fontSize: 13, fontWeight: 700, color: dragOver ? C.red : C.text, marginBottom: 4 }}>
                         {dragOver ? "Solte os arquivos aqui" : "Arraste arquivos ou clique para enviar"}
                       </div>
@@ -2172,7 +2172,7 @@ export default function GestaoObras() {
                             {desatualizado && (
                               <div style={{ position: "absolute", top: 8, right: 8, background: "#f59e0b", color: "#fff", fontSize: 9, fontWeight: 900, letterSpacing: 1.5, padding: "2px 8px", borderRadius: 4, transform: "rotate(-1deg)", textTransform: "uppercase" }}>DESATUALIZADO</div>
                             )}
-                            <span style={{ fontSize: 22, flexShrink: 0, marginTop: 2 }}>{ICONE_TIPO[a.tipo] || "📎"}</span>
+                            <span style={{ fontSize: 22, flexShrink: 0, marginTop: 2 }}>{ICONE_TIPO[a.tipo] || ""}</span>
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <div style={{ fontSize: 13, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", textDecoration: desatualizado ? "line-through" : "none", color: desatualizado ? C.muted : C.text }}>{a.nome}</div>
                               <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{a.tamanho} · {a.data}{a.revisao ? ` · ${a.revisao}` : ""}</div>
@@ -2180,20 +2180,20 @@ export default function GestaoObras() {
                                 {a.disciplina && <span style={{ background: "#4a9eff18", color: "#4a9eff", border: "1px solid #4a9eff33", borderRadius: 4, padding: "1px 7px", fontSize: 10, fontWeight: 700 }}>{a.disciplina}</span>}
                                 {a.fase && <span style={{ background: "#98191518", color: "#981915", border: "1px solid #98191533", borderRadius: 4, padding: "1px 7px", fontSize: 10, fontWeight: 700 }}>{a.fase}</span>}
                                 {a.status_doc && <span style={{ background: (STATUS_DOC_COR[a.status_doc] || C.muted) + "18", color: STATUS_DOC_COR[a.status_doc] || C.muted, border: `1px solid ${(STATUS_DOC_COR[a.status_doc] || C.muted)}33`, borderRadius: 4, padding: "1px 7px", fontSize: 10, fontWeight: 700 }}>{a.status_doc}</span>}
-                                {jaCiente && !desatualizado && <span style={{ background: C.success + "18", color: C.success, border: `1px solid ${C.success}33`, borderRadius: 4, padding: "1px 7px", fontSize: 10, fontWeight: 700 }}>✓ Ciente</span>}
+                                {jaCiente && !desatualizado && <span style={{ background: C.success + "18", color: C.success, border: `1px solid ${C.success}33`, borderRadius: 4, padding: "1px 7px", fontSize: 10, fontWeight: 700 }}> Ciente</span>}
                               </div>
                             </div>
                             <div style={{ display: "flex", flexDirection: "column", gap: 6, flexShrink: 0 }}>
                               {precisaCiencia && (
-                                <button onClick={async () => { await marcarCiente(obraId, a.id, userId); mostrarToast("✅ Ciência registrada!"); }} style={{ background: C.success + "22", border: `1px solid ${C.success}44`, borderRadius: 6, color: C.success, fontSize: 11, fontWeight: 700, cursor: "pointer", padding: "4px 10px", fontFamily: "inherit", whiteSpace: "nowrap" }}>✓ Ciente</button>
+                                <button onClick={async () => { await marcarCiente(obraId, a.id, userId); mostrarToast(" Ciência registrada!"); }} style={{ background: C.success + "22", border: `1px solid ${C.success}44`, borderRadius: 6, color: C.success, fontSize: 11, fontWeight: 700, cursor: "pointer", padding: "4px 10px", fontFamily: "inherit", whiteSpace: "nowrap" }}> Ciente</button>
                               )}
-                              <button onClick={() => setVerVersoes(a)} style={{ background: "#b97a0022", border: "1px solid #b97a0044", borderRadius: 6, color: "#b97a00", fontSize: 11, fontWeight: 700, cursor: "pointer", padding: "4px 10px", fontFamily: "inherit", whiteSpace: "nowrap" }}>📋 Versões</button>
+                              <button onClick={() => setVerVersoes(a)} style={{ background: "#b97a0022", border: "1px solid #b97a0044", borderRadius: 6, color: "#b97a00", fontSize: 11, fontWeight: 700, cursor: "pointer", padding: "4px 10px", fontFamily: "inherit", whiteSpace: "nowrap" }}> Versões</button>
                               {a.url && (
                                 <a href={a.url} target="_blank" rel="noreferrer" style={{ background: "#4a9eff22", border: "1px solid #4a9eff44", borderRadius: 6, color: "#4a9eff", fontSize: 11, fontWeight: 700, padding: "4px 10px", textDecoration: "none", textAlign: "center" }}>↓</a>
                               )}
-                              <button onClick={() => setVersaoModal({ id: a.id, nome: a.nome })} style={{ background: "#4a9eff22", border: "1px solid #4a9eff44", borderRadius: 6, color: "#4a9eff", fontSize: 11, fontWeight: 700, cursor: "pointer", padding: "4px 10px", fontFamily: "inherit", whiteSpace: "nowrap" }}>📋 Versões</button>
-                              <button onClick={() => setApontamentoModal(a)} style={{fontSize:11, padding:"2px 8px", background:"#f59e0b", color:"#fff", border:"none", borderRadius:4, cursor:"pointer", marginLeft:4}}>📌 Apontamentos</button>
-                              <button onClick={() => setPdfViewer(a)} style={{ fontSize: 11, padding: "4px 10px", background: "#6366f1", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap" }}>🖊 Anotar</button>
+                              <button onClick={() => setVersaoModal({ id: a.id, nome: a.nome })} style={{ background: "#4a9eff22", border: "1px solid #4a9eff44", borderRadius: 6, color: "#4a9eff", fontSize: 11, fontWeight: 700, cursor: "pointer", padding: "4px 10px", fontFamily: "inherit", whiteSpace: "nowrap" }}> Versões</button>
+                              <button onClick={() => setApontamentoModal(a)} style={{fontSize:11, padding:"2px 8px", background:"#f59e0b", color:"#fff", border:"none", borderRadius:4, cursor:"pointer", marginLeft:4}}> Apontamentos</button>
+                              <button onClick={() => setPdfViewer(a)} style={{ fontSize: 11, padding: "4px 10px", background: "#6366f1", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap" }}> Anotar</button>
                               <button onClick={() => deleteArquivo(obraId, a.id, a.path)} style={{ background: C.danger + "22", border: `1px solid ${C.danger}44`, borderRadius: 6, color: C.danger, fontSize: 11, fontWeight: 700, cursor: "pointer", padding: "4px 10px", fontFamily: "inherit" }}><Trash2 size={13} /></button>
                             </div>
                           </div>
@@ -2208,7 +2208,7 @@ export default function GestaoObras() {
                   <div>
                     <div style={{ padding: "16px 0 0" }}>
                       {!showRDO ? (
-                        <button onClick={() => setShowRDO(true)} style={{ padding:"8px 16px", background:"#b41e1e", color:"#fff", border:"none", borderRadius:8, cursor:"pointer", fontWeight:600, marginBottom:16 }}>📋 Novo RDO</button>
+                        <button onClick={() => setShowRDO(true)} style={{ padding:"8px 16px", background:"#b41e1e", color:"#fff", border:"none", borderRadius:8, cursor:"pointer", fontWeight:600, marginBottom:16 }}> Novo RDO</button>
                       ) : (
                         <div style={{ marginBottom: 16 }}>
                           <RDOForm obraId={obraId} obraName={obra?.nome} onSaved={() => {}} onClose={() => setShowRDO(false)} />
@@ -2245,7 +2245,7 @@ export default function GestaoObras() {
                       return (
                         <div key={h.id} style={{ display: "flex", gap: 14, paddingBottom: 16, marginBottom: 16, borderBottom: i < histObra.length - 1 ? `1px solid ${C.border}` : "none" }}>
                           <div style={{ width: 32, height: 32, borderRadius: "50%", flexShrink: 0, background: cor + "22", border: `2px solid ${cor}44`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12 }}>
-                            {h.acao === "criado" ? "+" : h.acao === "fase" ? "▶" : h.acao === "deletado" ? "✕" : "✎"}
+                            {h.acao === "criado" ? "+" : h.acao === "fase" ? "" : h.acao === "deletado" ? "" : ""}
                           </div>
                           <div style={{ flex: 1 }}>
                             <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 3 }}>{h.descricao}</div>
@@ -2278,12 +2278,12 @@ export default function GestaoObras() {
                     if (!payload.ifc_element_id) delete payload.ifc_element_id;
                     else payload.ifc_element_id = parseInt(payload.ifc_element_id);
                     const { data, error } = await sb.from("paineis").insert(payload).select().single();
-                    if (!error) { setPaineis((p) => [...p, data]); setPainelForm({ codigo: "", descricao: "", local_instalacao: "", ifc_element_id: "" }); mostrarToast("✅ Painel adicionado!"); }
+                    if (!error) { setPaineis((p) => [...p, data]); setPainelForm({ codigo: "", descricao: "", local_instalacao: "", ifc_element_id: "" }); mostrarToast(" Painel adicionado!"); }
                   }
                   async function addAmbiente() {
                     if (!ambForm.nome.trim()) return;
                     const { data, error } = await sb.from("ambientes_qr").insert({ ...ambForm, obra_id: obraId, empresa_id: empresaId }).select().single();
-                    if (!error) { setAmbientes((a) => [...a, data]); setAmbForm({ nome: "", andar: "" }); mostrarToast("✅ Ambiente adicionado!"); }
+                    if (!error) { setAmbientes((a) => [...a, data]); setAmbForm({ nome: "", andar: "" }); mostrarToast(" Ambiente adicionado!"); }
                   }
                   function gerarPlacaAmbiente(amb) {
                     const link = `${BASE}/ambiente/${amb.token}`;
@@ -2302,7 +2302,7 @@ export default function GestaoObras() {
 </style></head><body>
 <div class="card">
 <div class="lado-esq"><div><div class="titulo">Stick Frame</div><div class="amb-nome">${amb.nome}</div>${amb.andar ? `<div class="andar">${amb.andar}</div>` : ""}</div><div class="obra">${obra.nome}</div></div>
-<div class="lado-dir"><div class="instrucao">🚨 Encontrou um problema?</div><img src="${qrSrc}" width="130" height="130"/><div class="sub">Escaneie para reportar uma ocorrência neste ambiente</div></div>
+<div class="lado-dir"><div class="instrucao"> Encontrou um problema?</div><img src="${qrSrc}" width="130" height="130"/><div class="sub">Escaneie para reportar uma ocorrência neste ambiente</div></div>
 </div></body></html>`;
                     printHtml(html, `tag-${amb.nome.replace(/\s+/g,"-").toLowerCase()}`);
                   }
@@ -2322,7 +2322,7 @@ export default function GestaoObras() {
 </style></head><body>
 <div class="card">
 <div class="lado-esq"><div class="label">Painel</div><div class="codigo">${p.codigo}</div></div>
-<div class="lado-dir"><div class="desc">${p.descricao || p.codigo}</div>${p.local_instalacao ? `<div class="local">📍 ${p.local_instalacao}</div>` : ""}<img src="${qrSrc}" width="100" height="100"/><div class="sub">Escaneie para confirmar montagem</div></div>
+<div class="lado-dir"><div class="desc">${p.descricao || p.codigo}</div>${p.local_instalacao ? `<div class="local"> ${p.local_instalacao}</div>` : ""}<img src="${qrSrc}" width="100" height="100"/><div class="sub">Escaneie para confirmar montagem</div></div>
 </div></body></html>`;
                     printHtml(html, `etiqueta-${p.codigo}`);
                   }
@@ -2331,7 +2331,7 @@ export default function GestaoObras() {
                     <div style={{ background: C.surface, borderRadius: "0 0 12px 12px", border: `1px solid ${C.border}`, borderTop: "none", padding: 22 }}>
                       {/* Sub-tabs */}
                       <div style={{ display: "flex", gap: 0, borderBottom: `1px solid ${C.border}`, marginBottom: 20 }}>
-                        {[["paineis","🏷️ Painéis"],["ambientes","🚪 Ambientes"]].map(([k, l]) => (
+                        {[["paineis"," Painéis"],["ambientes"," Ambientes"]].map(([k, l]) => (
                           <button key={k} onClick={() => setRastreioTab(k)} style={{ padding: "8px 18px", border: "none", background: "none", cursor: "pointer", fontFamily: "inherit", fontSize: 13, fontWeight: rastreioTab === k ? 700 : 400, color: rastreioTab === k ? C.red : C.muted, borderBottom: `2px solid ${rastreioTab === k ? C.red : "transparent"}` }}>{l}</button>
                         ))}
                       </div>
@@ -2377,12 +2377,12 @@ export default function GestaoObras() {
                               <div style={{ flex: 1, minWidth: 0 }}>
                                 <div style={{ fontWeight: 700, fontSize: 14 }}>{p.codigo}</div>
                                 {p.descricao && <div style={{ fontSize: 12, color: C.muted }}>{p.descricao}</div>}
-                                {p.local_instalacao && <div style={{ fontSize: 11, color: C.muted }}>📍 {p.local_instalacao}</div>}
-                                {p.ifc_element_id && <div style={{ fontSize: 11, color: "#4a9eff" }}>🧊 IFC #{p.ifc_element_id}</div>}
-                                {p.montado_por && <div style={{ fontSize: 11, color: C.success, marginTop: 3 }}>✓ {p.montado_por} · {p.montado_em ? new Date(p.montado_em).toLocaleDateString("pt-BR") : ""}</div>}
+                                {p.local_instalacao && <div style={{ fontSize: 11, color: C.muted }}> {p.local_instalacao}</div>}
+                                {p.ifc_element_id && <div style={{ fontSize: 11, color: "#4a9eff" }}> IFC #{p.ifc_element_id}</div>}
+                                {p.montado_por && <div style={{ fontSize: 11, color: C.success, marginTop: 3 }}> {p.montado_por} · {p.montado_em ? new Date(p.montado_em).toLocaleDateString("pt-BR") : ""}</div>}
                               </div>
                               <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 8, background: (p.status === "Montado" ? C.success : C.warning) + "20", color: p.status === "Montado" ? C.success : C.warning, flexShrink: 0 }}>{p.status}</span>
-                              <button onClick={() => gerarEtiquetaPainel(p)} title="Gerar etiqueta" style={{ padding: "5px 10px", background: "#7c3aed22", border: "1px solid #7c3aed44", borderRadius: 6, fontSize: 12, cursor: "pointer", fontFamily: "inherit", color: "#7c3aed", fontWeight: 700, flexShrink: 0 }}>🖨️</button>
+                              <button onClick={() => gerarEtiquetaPainel(p)} title="Gerar etiqueta" style={{ padding: "5px 10px", background: "#7c3aed22", border: "1px solid #7c3aed44", borderRadius: 6, fontSize: 12, cursor: "pointer", fontFamily: "inherit", color: "#7c3aed", fontWeight: 700, flexShrink: 0 }}></button>
                             </div>
                           ))}
                         </>
@@ -2405,13 +2405,13 @@ export default function GestaoObras() {
                             <div style={{ textAlign: "center", padding: "32px 0", color: C.muted, fontSize: 13 }}>Nenhum ambiente cadastrado.</div>
                           ) : ambientes.map((a) => (
                             <div key={a.id} style={{ background: "#fff", border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 14px", marginBottom: 8, display: "flex", alignItems: "center", gap: 12 }}>
-                              <span style={{ fontSize: 22 }}>🚪</span>
+                              <span style={{ fontSize: 22 }}></span>
                               <div style={{ flex: 1 }}>
                                 <div style={{ fontWeight: 700, fontSize: 14 }}>{a.nome}</div>
                                 {a.andar && <div style={{ fontSize: 12, color: C.muted }}>{a.andar}</div>}
                               </div>
-                              <button onClick={() => { navigator.clipboard?.writeText(`${BASE}/ambiente/${a.token}`); mostrarToast("📋 Link copiado!"); }} style={{ padding: "5px 10px", background: C.dark, border: `1px solid ${C.border}`, borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>📋</button>
-                              <button onClick={() => gerarPlacaAmbiente(a)} style={{ padding: "5px 10px", background: "#7c3aed22", border: "1px solid #7c3aed44", borderRadius: 6, fontSize: 12, cursor: "pointer", fontFamily: "inherit", color: "#7c3aed", fontWeight: 700 }}>🖨️</button>
+                              <button onClick={() => { navigator.clipboard?.writeText(`${BASE}/ambiente/${a.token}`); mostrarToast(" Link copiado!"); }} style={{ padding: "5px 10px", background: C.dark, border: `1px solid ${C.border}`, borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}></button>
+                              <button onClick={() => gerarPlacaAmbiente(a)} style={{ padding: "5px 10px", background: "#7c3aed22", border: "1px solid #7c3aed44", borderRadius: 6, fontSize: 12, cursor: "pointer", fontFamily: "inherit", color: "#7c3aed", fontWeight: 700 }}></button>
                             </div>
                           ))}
                         </>
@@ -2434,13 +2434,13 @@ export default function GestaoObras() {
                     try {
                       if (chamadoEd) {
                         await updateChamado(obraId, chamadoEd.id, chamadoForm);
-                        mostrarToast("✅ Chamado atualizado!");
+                        mostrarToast(" Chamado atualizado!");
                       } else {
                         await addChamado(obraId, chamadoForm);
-                        mostrarToast("✅ Chamado aberto!");
+                        mostrarToast(" Chamado aberto!");
                       }
                       setChamadoModal(false); setChamadoEd(null);
-                    } catch (e) { mostrarToast("❌ " + e.message); }
+                    } catch (e) { mostrarToast(" " + e.message); }
                     finally { setChamadoSaving(false); }
                   }
 
@@ -2470,7 +2470,7 @@ export default function GestaoObras() {
 
                       {listaChamados.length === 0 ? (
                         <div style={{ textAlign: "center", padding: "32px 0", color: C.muted, fontSize: 13 }}>
-                          <div style={{ fontSize: 28, marginBottom: 8 }}>🛠️</div>
+                          <div style={{ fontSize: 28, marginBottom: 8 }}></div>
                           Nenhum chamado de garantia registrado.
                         </div>
                       ) : listaChamados.map((ch) => (
@@ -2482,20 +2482,20 @@ export default function GestaoObras() {
                               <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 6, background: (STATUS_CHAMADO_COR[ch.status] || C.muted) + "20", color: STATUS_CHAMADO_COR[ch.status] || C.muted }}>{ch.status}</span>
                             </div>
                           </div>
-                          <div style={{ fontSize: 12, color: C.muted, marginBottom: ch.descricao ? 6 : 0 }}>{ch.categoria} · {new Date(ch.created_at).toLocaleDateString("pt-BR")}{ch.criado_pelo_cliente ? " · 👤 Cliente" : ""}</div>
+                          <div style={{ fontSize: 12, color: C.muted, marginBottom: ch.descricao ? 6 : 0 }}>{ch.categoria} · {new Date(ch.created_at).toLocaleDateString("pt-BR")}{ch.criado_pelo_cliente ? " ·  Cliente" : ""}</div>
                           {ch.descricao && <div style={{ fontSize: 12, color: C.graphite, lineHeight: 1.5, marginBottom: 6 }}>{ch.descricao}</div>}
-                          {ch.resolucao && <div style={{ fontSize: 12, background: C.success + "12", border: `1px solid ${C.success}33`, borderRadius: 6, padding: "6px 10px", color: C.success, marginBottom: 6 }}>✓ {ch.resolucao}</div>}
+                          {ch.resolucao && <div style={{ fontSize: 12, background: C.success + "12", border: `1px solid ${C.success}33`, borderRadius: 6, padding: "6px 10px", color: C.success, marginBottom: 6 }}> {ch.resolucao}</div>}
                           {ch.custo_reparo > 0 && <div style={{ fontSize: 12, color: C.danger, fontWeight: 700 }}>Custo: R$ {Number(ch.custo_reparo).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</div>}
                           <div style={{ display: "flex", gap: 8, marginTop: 10, justifyContent: "flex-end" }}>
-                            <button onClick={() => { setChamadoForm({ titulo: ch.titulo, descricao: ch.descricao || "", categoria: ch.categoria, prioridade: ch.prioridade, status: ch.status, resolucao: ch.resolucao || "", custo_reparo: ch.custo_reparo || "", agendado_para: ch.agendado_para || "" }); setChamadoEd(ch); setChamadoModal(true); }} style={{ padding: "5px 12px", background: C.dark, border: `1px solid ${C.border}`, borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>✎ Editar</button>
-                            <button onClick={async () => { if (!confirm("Excluir chamado?")) return; await deleteChamado(obraId, ch.id); mostrarToast("Chamado removido."); }} style={{ padding: "5px 12px", background: C.danger + "15", border: `1px solid ${C.danger}33`, borderRadius: 6, fontSize: 11, fontWeight: 600, color: C.danger, cursor: "pointer", fontFamily: "inherit" }}>✕</button>
+                            <button onClick={() => { setChamadoForm({ titulo: ch.titulo, descricao: ch.descricao || "", categoria: ch.categoria, prioridade: ch.prioridade, status: ch.status, resolucao: ch.resolucao || "", custo_reparo: ch.custo_reparo || "", agendado_para: ch.agendado_para || "" }); setChamadoEd(ch); setChamadoModal(true); }} style={{ padding: "5px 12px", background: C.dark, border: `1px solid ${C.border}`, borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}> Editar</button>
+                            <button onClick={async () => { if (!confirm("Excluir chamado?")) return; await deleteChamado(obraId, ch.id); mostrarToast("Chamado removido."); }} style={{ padding: "5px 12px", background: C.danger + "15", border: `1px solid ${C.danger}33`, borderRadius: 6, fontSize: 11, fontWeight: 600, color: C.danger, cursor: "pointer", fontFamily: "inherit" }}></button>
                           </div>
                         </div>
                       ))}
 
                       {/* Modal chamado */}
                       {chamadoModal && (
-                        <Modal title={chamadoEd ? "Editar chamado" : "🛠️ Abrir chamado de garantia"} onClose={() => { setChamadoModal(false); setChamadoEd(null); }}>
+                        <Modal title={chamadoEd ? "Editar chamado" : " Abrir chamado de garantia"} onClose={() => { setChamadoModal(false); setChamadoEd(null); }}>
                           <div className="sf-col">
                             <div>
                               <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 6 }}>TÍTULO *</div>
@@ -2687,7 +2687,7 @@ export default function GestaoObras() {
                   <div style={{ display: "flex", gap: 8 }}>
                     <Btn onClick={retornar} disabled={FASES.indexOf(obra.fase) <= 0} variant="ghost" size="sm" style={{ flex: 1 }}>← Retornar</Btn>
                     <Btn onClick={avancar} disabled={obra.fase === "Entrega"} size="sm" style={{ flex: 1 }}>
-                      {obra.fase === "Entrega" ? "✓ Concluída" : "Avançar →"}
+                      {obra.fase === "Entrega" ? " Concluída" : "Avançar →"}
                     </Btn>
                   </div>
                   {obra.fase !== "Entrega" && (
@@ -2696,19 +2696,19 @@ export default function GestaoObras() {
                     </div>
                   )}
                   <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 8 }}>
-                    <Btn variant="ghost" size="sm" fullWidth onClick={abrirEditar} disabled={!podeEditar()}>✏️ Editar obra</Btn>
+                    <Btn variant="ghost" size="sm" fullWidth onClick={abrirEditar} disabled={!podeEditar()}> Editar obra</Btn>
                     <button onClick={gerarDossie} style={{
                       width: "100%", padding: "8px 0",
                       background: "#2e9e5b22", border: "1px solid #2e9e5b44",
                       borderRadius: 6, color: "#2e9e5b", fontSize: 12, fontWeight: 700,
                       cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
-                    }}>📄 Dossiê</button>
+                    }}> Dossiê</button>
                     <button onClick={() => { setRelPdfWaLink(null); setRelPdfModal(true); }} style={{
                       width: "100%", padding: "8px 0",
                       background: C.red + "18", border: `1px solid ${C.red}44`,
                       borderRadius: 6, color: C.red, fontSize: 12, fontWeight: 700,
                       cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
-                    }}>📄 Relatório</button>
+                    }}> Relatório</button>
                     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                       <button onClick={copiarLinkPortal} style={{
                         width: "100%", padding: "8px 0",
@@ -2716,7 +2716,7 @@ export default function GestaoObras() {
                         borderRadius: 6, color: "#4a9eff", fontSize: 12, fontWeight: 700,
                         cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
                       }}>
-                        {obra.token_portal ? "🔗 Link do portal" : "🔗 Gerar link"}
+                        {obra.token_portal ? " Link do portal" : " Gerar link"}
                       </button>
                       {obra.token_portal && (
                         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -2734,18 +2734,18 @@ export default function GestaoObras() {
                         background: "#7c3aed22", border: "1px solid #7c3aed44",
                         borderRadius: 6, color: "#7c3aed", fontSize: 12, fontWeight: 700,
                         cursor: "pointer", fontFamily: "inherit",
-                      }}>📱 QR Code</button>
+                      }}> QR Code</button>
                       <button onClick={() => setShowPlacaQR(true)} style={{
                         width: "100%", padding: "8px 0",
                         background: "#ea580c22", border: "1px solid #ea580c44",
                         borderRadius: 6, color: "#ea580c", fontSize: 12, fontWeight: 700,
                         cursor: "pointer", fontFamily: "inherit", marginTop: 4,
-                      }}>📋 Placa de QR Codes</button>
+                      }}> Placa de QR Codes</button>
                     </div>
                     {/* Chat do Portal */}
                     {obra?.token_portal && (
                       <div style={{ marginTop: 16, borderTop: `1px solid ${C.border}`, paddingTop: 14 }}>
-                        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 10 }}>💬 CHAT COM CLIENTE</div>
+                        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 10 }}> CHAT COM CLIENTE</div>
                         <div style={{ maxHeight: 220, overflowY: "auto", display: "flex", flexDirection: "column", gap: 6, marginBottom: 10 }}>
                           {portalMsgs.length === 0 && <div style={{ fontSize: 11, color: C.muted, textAlign: "center", padding: 8 }}>Nenhuma mensagem ainda.</div>}
                           {portalMsgs.map((m, i) => {
@@ -2759,7 +2759,7 @@ export default function GestaoObras() {
                                   color: isCliente ? C.text : "#fff",
                                   border: `1px solid ${isCliente ? C.border : C.red}`,
                                 }}>
-                                  {isCliente && <div style={{ fontSize: 9, fontWeight: 700, color: C.red, marginBottom: 2 }}>👤 {m.nome || "Cliente"}</div>}
+                                  {isCliente && <div style={{ fontSize: 9, fontWeight: 700, color: C.red, marginBottom: 2 }}> {m.nome || "Cliente"}</div>}
                                   <div>{m.mensagem}</div>
                                   <div style={{ fontSize: 9, opacity: 0.6, marginTop: 2, textAlign: "right" }}>
                                     {m.created_at ? new Date(m.created_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : ""}
@@ -2786,7 +2786,7 @@ export default function GestaoObras() {
                               setPortalMsgs((prev) => [...prev, { autor: "empresa", nome: "Equipe Stick Frame", mensagem: portalReply.trim(), created_at: new Date().toISOString() }]);
                               setPortalReply("");
                             } else {
-                              mostrarToast("❌ Erro ao enviar: " + error.message);
+                              mostrarToast(" Erro ao enviar: " + error.message);
                             }
                             setPortalSending(false);
                           }}
@@ -2802,7 +2802,7 @@ export default function GestaoObras() {
                       background: C.danger + "22", border: `1px solid ${C.danger}44`,
                       borderRadius: 6, color: C.danger, fontSize: 12, fontWeight: 700,
                       cursor: "pointer", fontFamily: "inherit",
-                    }}>🗑 Deletar obra</button>
+                    }}> Deletar obra</button>
                   </div>
                 </div>
 
@@ -2853,7 +2853,7 @@ export default function GestaoObras() {
                     background: checklistMarcados[i] ? "#2e9e5b" : "transparent",
                     display: "flex", alignItems: "center", justifyContent: "center",
                   }}>
-                    {checklistMarcados[i] && <span style={{ color: "#fff", fontSize: 12, fontWeight: 700 }}>✓</span>}
+                    {checklistMarcados[i] && <span style={{ color: "#fff", fontSize: 12, fontWeight: 700 }}></span>}
                   </div>
                   <span style={{ fontSize: 13, color: checklistMarcados[i] ? C.muted : C.text, textDecoration: checklistMarcados[i] ? "line-through" : "none" }}>
                     {item}
@@ -2890,7 +2890,7 @@ export default function GestaoObras() {
                 {url}
               </div>
               <div style={{ display: "flex", gap: 8, width: "100%" }}>
-                <Btn variant="ghost" fullWidth onClick={() => { navigator.clipboard.writeText(url); mostrarToast("📋 Link copiado!"); }}>
+                <Btn variant="ghost" fullWidth onClick={() => { navigator.clipboard.writeText(url); mostrarToast(" Link copiado!"); }}>
                   Copiar link
                 </Btn>
                 <Btn fullWidth onClick={() => window.open(url, "_blank")}>
@@ -2935,16 +2935,16 @@ export default function GestaoObras() {
     </div>
     <div class="body">
       <div class="instrucao">
-        <p>📱 <span class="destaque">Escaneie o QR Code</span> para acessar<br>os projetos, modelos 3D e status da obra</p>
+        <p> <span class="destaque">Escaneie o QR Code</span> para acessar<br>os projetos, modelos 3D e status da obra</p>
       </div>
       <div class="qr-wrap">
         <img src="${qrBig}" width="300" height="300" alt="QR Code" />
       </div>
       <div class="bullets">
-        <div class="bullet"><div class="icone">📄</div><div class="texto">Projetos em PDF</div></div>
-        <div class="bullet"><div class="icone">🧊</div><div class="texto">Modelo BIM 3D</div></div>
-        <div class="bullet"><div class="icone">📊</div><div class="texto">Status da obra</div></div>
-        <div class="bullet"><div class="icone">✅</div><div class="texto">Check-in de equipe</div></div>
+        <div class="bullet"><div class="icone"></div><div class="texto">Projetos em PDF</div></div>
+        <div class="bullet"><div class="icone"></div><div class="texto">Modelo BIM 3D</div></div>
+        <div class="bullet"><div class="icone"></div><div class="texto">Status da obra</div></div>
+        <div class="bullet"><div class="icone"></div><div class="texto">Check-in de equipe</div></div>
       </div>
       <div class="footer">Powered by Stickframe · stickframe.com.br</div>
     </div>
@@ -2957,7 +2957,7 @@ export default function GestaoObras() {
                 background: "#7c3aed22", border: "1px solid #7c3aed44",
                 borderRadius: 8, color: "#7c3aed", fontSize: 13, fontWeight: 700,
                 cursor: "pointer", fontFamily: "inherit",
-              }}>🖨️ Gerar Placa para Impressão</button>
+              }}> Gerar Placa para Impressão</button>
             </div>
           </Modal>
         );
@@ -2969,7 +2969,7 @@ export default function GestaoObras() {
         return (
           <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center" }}>
             <div style={{ background: "#fff", borderRadius: 16, padding: 28, width: 420, boxShadow: "0 20px 60px rgba(0,0,0,0.4)" }}>
-              <div style={{ fontSize: 22, marginBottom: 8 }}>⚠️</div>
+              <div style={{ fontSize: 22, marginBottom: 8 }}></div>
               <div style={{ fontSize: 16, fontWeight: 800, marginBottom: 8 }}>Novas revisões de projeto</div>
               <div style={{ fontSize: 13, color: C.muted, marginBottom: 16, lineHeight: 1.6 }}>
                 Você precisa confirmar ciência das seguintes revisões antes de acessar o Diário de Obras:
@@ -2981,15 +2981,15 @@ export default function GestaoObras() {
                       <div style={{ fontSize: 13, fontWeight: 700 }}>{a.nome}</div>
                       <div style={{ fontSize: 11, color: C.muted }}>{a.disciplina}{a.revisao ? ` · ${a.revisao}` : ""}</div>
                     </div>
-                    <button onClick={async () => { await marcarCiente(obraId, a.id, userId); mostrarToast("✅ Ciência registrada!"); }} style={{ padding: "6px 14px", background: C.success, border: "none", borderRadius: 6, color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", flexShrink: 0 }}>
-                      ✓ Ciente
+                    <button onClick={async () => { await marcarCiente(obraId, a.id, userId); mostrarToast(" Ciência registrada!"); }} style={{ padding: "6px 14px", background: C.success, border: "none", borderRadius: 6, color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", flexShrink: 0 }}>
+                       Ciente
                     </button>
                   </div>
                 ))}
               </div>
               {pendentes.every((a) => (a.cientes_uids || []).includes(userId)) ? (
                 <button onClick={() => { setGedTravaModal(false); setAbaAtiva("diario"); }} style={{ width: "100%", padding: "12px", background: C.red, border: "none", borderRadius: 8, color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
-                  📓 Abrir Diário de Obras
+                   Abrir Diário de Obras
                 </button>
               ) : (
                 <button onClick={() => setGedTravaModal(false)} style={{ width: "100%", padding: "12px", background: C.dark, border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
@@ -3005,7 +3005,7 @@ export default function GestaoObras() {
       {showQR && obra?.token_portal && (
         <div onClick={() => setShowQR(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div onClick={(e) => e.stopPropagation()} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: 28, width: 340, boxShadow: "0 20px 60px rgba(0,0,0,0.4)", textAlign: "center" }}>
-            <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 4 }}>📱 QR Code do Portal</div>
+            <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 4 }}> QR Code do Portal</div>
             <div style={{ fontSize: 12, color: C.muted, marginBottom: 16 }}>{obra.nome}</div>
             <img
               src={`https://chart.googleapis.com/chart?chs=300x300&cht=qr&chl=${encodeURIComponent(`${window.location.origin}/portal/${obra.token_portal}`)}&choe=UTF-8`}
@@ -3022,7 +3022,7 @@ export default function GestaoObras() {
                 a.download = `qrcode-${obra.nome}.png`;
                 a.click();
               }} style={{ flex: 1, padding: "10px 0", background: "#7c3aed", border: "none", borderRadius: 8, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
-                ⬇ Baixar
+                 Baixar
               </button>
               <button onClick={() => setShowQR(false)} style={{ flex: 1, padding: "10px 0", background: C.dark, border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
                 Fechar
@@ -3048,7 +3048,7 @@ export default function GestaoObras() {
         ];
 
         return (
-          <Modal title="📋 Placa de QR Codes do Canteiro" onClose={() => setShowPlacaQR(false)}>
+          <Modal title=" Placa de QR Codes do Canteiro" onClose={() => setShowPlacaQR(false)}>
             <div style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 640, minWidth: 320 }}>
               <div style={{ fontSize: 13, color: C.muted }}>
                 Esta placa contém um QR Code mestre para o portal e QR Codes específicos para cada etapa do checklist da obra. Ideal para imprimir e colar no canteiro de obras.
@@ -3153,7 +3153,7 @@ export default function GestaoObras() {
     </div>
     
     <div class="grid-section">
-      <div class="grid-title">📋 Acesso Direto por Etapa da Obra</div>
+      <div class="grid-title"> Acesso Direto por Etapa da Obra</div>
       <div class="qr-grid">
         ${fasesHtml}
       </div>
@@ -3168,7 +3168,7 @@ export default function GestaoObras() {
 </body></html>`;
                   printHtml(html, `placa-checklists-${obra.nome.replace(/\s+/g,"-").toLowerCase()}`);
                 }}>
-                  🖨️ Imprimir Placa
+                   Imprimir Placa
                 </Btn>
               </div>
             </div>
@@ -3180,7 +3180,7 @@ export default function GestaoObras() {
       {relPdfModal && obra && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 14, padding: 28, width: 360, boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
-            <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 4 }}>📄 Relatório PDF</div>
+            <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 4 }}> Relatório PDF</div>
             <div style={{ fontSize: 12, color: C.muted, marginBottom: 20 }}>Selecione as seções a incluir no relatório.</div>
             {[
               ["resumo", "Resumo Geral"],
@@ -3202,7 +3202,7 @@ export default function GestaoObras() {
                 <button
                   onClick={() => window.open(relPdfWaLink, "_blank")}
                   style={{ width: "100%", padding: "9px 0", background: "#25d36622", border: "1px solid #25d36644", borderRadius: 8, fontSize: 13, fontWeight: 700, color: "#25d366", cursor: "pointer", fontFamily: "inherit" }}
-                >📲 Compartilhar via WhatsApp</button>
+                > Compartilhar via WhatsApp</button>
               </div>
             )}
             <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
@@ -3217,7 +3217,7 @@ export default function GestaoObras() {
       {relMensalModal && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div style={{ background: "#fff", borderRadius: 14, padding: 28, width: 340, boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
-            <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 6 }}>📅 Relatório Mensal</div>
+            <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 6 }}> Relatório Mensal</div>
             <div style={{ fontSize: 12, color: C.muted, marginBottom: 18 }}>Selecione o mês para gerar o relatório gerencial.</div>
             <label style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: 1, textTransform: "uppercase", display: "block", marginBottom: 6 }}>Mês de referência</label>
             <input
@@ -3228,7 +3228,7 @@ export default function GestaoObras() {
             />
             <div style={{ display: "flex", gap: 10 }}>
               <button onClick={() => setRelMensalModal(false)} style={{ flex: 1, padding: "9px 0", background: C.darker, border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}>Cancelar</button>
-              <button onClick={() => gerarRelatorioMensal(relMensalMes)} style={{ flex: 1, padding: "9px 0", background: "#4a9eff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 700, color: "#fff", cursor: "pointer", fontFamily: "inherit" }}>📄 Gerar PDF</button>
+              <button onClick={() => gerarRelatorioMensal(relMensalMes)} style={{ flex: 1, padding: "9px 0", background: "#4a9eff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 700, color: "#fff", cursor: "pointer", fontFamily: "inherit" }}> Gerar PDF</button>
             </div>
           </div>
         </div>
@@ -3265,7 +3265,7 @@ export default function GestaoObras() {
           <img src={fotoAmpliada.url} alt={fotoAmpliada.nome} width="1200" height="900" style={{
             maxWidth: "90vw", maxHeight: "88vh", objectFit: "contain", borderRadius: 8,
           }} />
-          <div style={{ position: "absolute", top: 18, right: 22, color: "#fff", fontSize: 24, fontWeight: 700 }}>✕</div>
+          <div style={{ position: "absolute", top: 18, right: 22, color: "#fff", fontSize: 24, fontWeight: 700 }}></div>
           <div style={{ position: "absolute", bottom: 16, left: 0, right: 0, textAlign: "center", color: "rgba(255,255,255,0.6)", fontSize: 12 }}>
             {fotoAmpliada.nome}{fotoAmpliada.fase ? ` · ${fotoAmpliada.fase}` : ""}
           </div>

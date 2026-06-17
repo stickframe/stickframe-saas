@@ -69,7 +69,7 @@ function ApontamentoModal({ ap, obraId, onClose, onSave }) {
       <div style={{ background: "var(--bg-card)", borderRadius: 12, padding: 24, width: "min(480px, 95vw)" }}>
         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
           <h3 style={{ margin: 0 }}>{ap?.id ? "Editar apontamento" : "Novo apontamento"}</h3>
-          <button onClick={onClose} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer" }}>✕</button>
+          <button onClick={onClose} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer" }}></button>
         </div>
 
         <label style={{ display: "block", marginBottom: 12 }}>
@@ -167,17 +167,17 @@ export function PlantaApontamentos({ arquivo, obraId, onClose }) {
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 2000, display: "flex", flexDirection: "column" }}>
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 16px", background: "#1e1e2e", flexWrap: "wrap" }}>
-        <button onClick={onClose} style={{ background: "#ef4444", color: "#fff", border: "none", borderRadius: 6, padding: "4px 12px", cursor: "pointer" }}>✕ Fechar</button>
+        <button onClick={onClose} style={{ background: "#ef4444", color: "#fff", border: "none", borderRadius: 6, padding: "4px 12px", cursor: "pointer" }}> Fechar</button>
         <span style={{ color: "#fff", fontWeight: 700 }}>{arquivo.nome} — Apontamentos</span>
         <div style={{ display: "flex", gap: 8, marginLeft: "auto" }}>
-          <span style={{ color: "#ef4444", fontSize: 13 }}>🔴 {abertos} abertos</span>
-          <span style={{ color: "#f59e0b", fontSize: 13 }}>🟡 {emAndamento} em andamento</span>
-          <span style={{ color: "#22c55e", fontSize: 13 }}>🟢 {resolvidos} resolvidos</span>
+          <span style={{ color: "#ef4444", fontSize: 13 }}> {abertos} abertos</span>
+          <span style={{ color: "#f59e0b", fontSize: 13 }}> {emAndamento} em andamento</span>
+          <span style={{ color: "#22c55e", fontSize: 13 }}> {resolvidos} resolvidos</span>
         </div>
         <button
           onClick={() => setModoAdicionar(m => !m)}
           style={{ padding: "6px 14px", borderRadius: 8, border: "none", background: modoAdicionar ? "#f59e0b" : "#3b82f6", color: "#fff", cursor: "pointer", fontWeight: 700 }}>
-          {modoAdicionar ? "🎯 Clique na planta..." : "📌 Adicionar apontamento"}
+          {modoAdicionar ? " Clique na planta..." : " Adicionar apontamento"}
         </button>
       </div>
 
@@ -212,7 +212,7 @@ export function PlantaApontamentos({ arquivo, obraId, onClose }) {
         <div style={{ position: "fixed", right: 16, top: 80, width: 300, background: "var(--bg-card)", borderRadius: 12, padding: 16, boxShadow: "0 8px 32px rgba(0,0,0,0.4)", zIndex: 2100 }}>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
             <h4 style={{ margin: 0 }}>{selecionado.titulo}</h4>
-            <button onClick={() => setSelecionado(null)} style={{ background: "none", border: "none", cursor: "pointer" }}>✕</button>
+            <button onClick={() => setSelecionado(null)} style={{ background: "none", border: "none", cursor: "pointer" }}></button>
           </div>
           <p style={{ fontSize: 13, color: "var(--text-muted)", margin: "0 0 8px" }}>{selecionado.descricao}</p>
           <div style={{ display: "flex", gap: 6, marginBottom: 12, flexWrap: "wrap" }}>
@@ -222,9 +222,9 @@ export function PlantaApontamentos({ arquivo, obraId, onClose }) {
           {selecionado.prazo && <p style={{ fontSize: 12, color: "var(--text-muted)" }}>Prazo: {selecionado.prazo}</p>}
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             <button onClick={() => { setSelecionado(null); setNovoPin({ ...selecionado, _edit: true }); }}
-              style={{ padding: "4px 10px", fontSize: 12, borderRadius: 6, border: "1px solid var(--border)", cursor: "pointer" }}>✏️ Editar</button>
+              style={{ padding: "4px 10px", fontSize: 12, borderRadius: 6, border: "1px solid var(--border)", cursor: "pointer" }}> Editar</button>
             <button onClick={() => handleDelete(selecionado.id)}
-              style={{ padding: "4px 10px", fontSize: 12, borderRadius: 6, border: "none", background: "#ef4444", color: "#fff", cursor: "pointer" }}>🗑 Excluir</button>
+              style={{ padding: "4px 10px", fontSize: 12, borderRadius: 6, border: "none", background: "#ef4444", color: "#fff", cursor: "pointer" }}> Excluir</button>
           </div>
         </div>
       )}

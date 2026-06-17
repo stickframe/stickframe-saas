@@ -1,4 +1,4 @@
-// ─── HELPERS DE DATA ─────────────────────────────────────────────────────────
+//  HELPERS DE DATA 
 export const hoje = () => new Date().toLocaleDateString("pt-BR");
 
 export const hojeISO = () => new Date().toISOString().split("T")[0];

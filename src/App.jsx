@@ -204,7 +204,7 @@ function GlobalHotkeys() {
     if (!entry) return;
     try {
       await entry.restoreFn();
-      toast.success(`↩️ Desfeito: ${entry.label}`);
+      toast.success(`↩ Desfeito: ${entry.label}`);
     } catch (err) {
       toast.error(`Erro ao desfazer: ${err.message}`);
     }

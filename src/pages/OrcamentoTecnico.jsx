@@ -15,7 +15,7 @@ const fmtBRL = (v) => v.toLocaleString("pt-BR", { style: "currency", currency: "
 const fmtN   = (v, d = 2) => Number(v).toLocaleString("pt-BR", { minimumFractionDigits: d, maximumFractionDigits: d });
 const parseN = (s) => parseFloat(String(s).replace(",", ".")) || 0;
 
-// ─── Inline SVG icon set (Lucide-style) ──────────────────────────────────────
+//  Inline SVG icon set (Lucide-style) 
 const ICON_PATHS = {
   mappin:   <g><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></g>,
   hardhat:  <g><path d="M2 18a1 1 0 0 0 1 1h18a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v2z" /><path d="M10 10V5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v5" /><path d="M4 15v-3a8 8 0 0 1 16 0v3" /></g>,
@@ -47,7 +47,7 @@ function Ic({ n, w = 15, c }) {
 // Cores categóricas do handoff para a composição por categoria
 const CAT_CORES = ["#b8624a", "#981915", "#3b6ea5", "#c0892d", "#4f7d57", "#6d557e", "#3b6ea5", "#57514a", "#7d1411"];
 
-// ─── style atoms ─────────────────────────────────────────────────────────────
+//  style atoms 
 const inputSt = {
   width: "100%", padding: "8px 10px", border: `1px solid ${C.border}`,
   borderRadius: 6, fontSize: 13, background: "#fff", boxSizing: "border-box",
@@ -71,7 +71,7 @@ const btnGhost = {
   fontSize: 12.5, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
 };
 
-// ─── helpers ─────────────────────────────────────────────────────────────────
+//  helpers 
 function Card({ title, icon, iconBg, children }) {
   return (
     <div style={{ marginBottom: 0 }}>
@@ -126,7 +126,7 @@ function SummaryCard({ label, value, sub, color }) {
   );
 }
 
-// ─── Composição por categoria (painel de resultados do handoff) ──────────────
+//  Composição por categoria (painel de resultados do handoff) 
 function ComposicaoCategoria({ breakdown, totalGeral, incluiMO, totalMO }) {
   const cats = breakdown.map((s, i) => ({
     label: s.opcaoLabel ? `${s.label}` : s.label,
@@ -258,14 +258,14 @@ function SistemaRow({ s, aberto, toggle, precosEditados, onPrecoEdit }) {
   );
 }
 
-// ─── main component ───────────────────────────────────────────────────────────
+//  main component 
 const CRM_LEAD_KEY = "sf_crm_lead";
 
 export default function OrcamentoTecnico() {
   const setActivePage  = useAppStore((s) => s.setActivePage);
   const updateCliente  = useAppStore((s) => s.updateCliente);
 
-  // ── Restaura form do localStorage ──────────────────────────────────────────
+  //  Restaura form do localStorage 
   const savedForm = (() => { try { return JSON.parse(localStorage.getItem(LS_KEY) || "{}"); } catch { return {}; } })();
   const { toast, mostrarToast } = useToast();
 
@@ -550,7 +550,7 @@ export default function OrcamentoTecnico() {
       const cor = v.isAtual ? "#981915" : v.diffTotal > 0 ? "#b07a1e" : v.diffTotal < 0 ? "#3f7a4b" : "#374151";
       const diffTxt = v.isAtual ? "versão atual" : v.diffTotal > 0 ? `+${fmtBRL(v.diffTotal)} (+${v.diffPct.toFixed(1)}%)` : `${fmtBRL(v.diffTotal)} (${v.diffPct.toFixed(1)}%)`;
       return `<tr style="border-bottom:1px solid #e5e7eb;background:${v.isAtual ? "#f3e7e5" : "#fff"}">
-        <td style="padding:12px 14px;font-weight:${v.isAtual ? 700 : 400};font-size:13px">${v.isAtual ? "► " : ""}${v.opcaoLabel}</td>
+        <td style="padding:12px 14px;font-weight:${v.isAtual ? 700 : 400};font-size:13px">${v.isAtual ? " " : ""}${v.opcaoLabel}</td>
         <td style="padding:12px 14px;text-align:right;font-size:13px">${fmtBRL(v.totalMat)}</td>
         ${resultado.incluiMO ? `<td style="padding:12px 14px;text-align:right;font-size:13px;color:#2563eb">${fmtBRL(v.totalMO)}</td>` : ""}
         <td style="padding:12px 14px;text-align:right;font-size:13px">${fmtBRL(v.total)}</td>
@@ -1201,7 +1201,7 @@ export default function OrcamentoTecnico() {
     <div style={{ display: "flex", gap: 20, padding: "20px 24px", minHeight: "100vh",
       background: C.bg, alignItems: "flex-start", flexWrap: "wrap" }}>
 
-      {/* ── LEFT: configuração ─────────────────────────────────── */}
+      {/*  LEFT: configuração  */}
       <div style={{ width: 400, flexShrink: 0, display: "flex", flexDirection: "column", gap: 14 }}>
         <div>
           <h2 className="num" style={{ margin: 0, fontSize: 26, fontWeight: 700, color: C.text, lineHeight: 1 }}>Orçamento Técnico</h2>
@@ -1373,7 +1373,7 @@ export default function OrcamentoTecnico() {
         </button>
       </div>
 
-      {/* ── RIGHT: resultado ─────────────────────────────────────── */}
+      {/*  RIGHT: resultado  */}
       <div style={{ flex: 1, minWidth: 0 }}>
         {!resultado ? (
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
@@ -1468,7 +1468,7 @@ export default function OrcamentoTecnico() {
               <div style={{ background: C.surface, borderRadius: 14, border: `1px solid ${C.border}`, overflow: "hidden" }}>
                 <div style={{ padding: "12px 18px", borderBottom: `1px solid ${C.border}`, fontWeight: 700, fontSize: 14, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <span style={{ display: "inline-flex", alignItems: "center", gap: 7 }}><Ic n="scale" w={15} /> Comparativo de Padrões</span>
-                  <button onClick={() => setComparativo(null)} style={{ background: "none", border: "none", color: C.muted, cursor: "pointer", fontSize: 12 }}>✕ fechar</button>
+                  <button onClick={() => setComparativo(null)} style={{ background: "none", border: "none", color: C.muted, cursor: "pointer", fontSize: 12 }}> fechar</button>
                 </div>
                 <div style={{ overflowX: "auto" }}>
                   <table style={{ width: "100%", borderCollapse: "collapse" }}>
@@ -1487,7 +1487,7 @@ export default function OrcamentoTecnico() {
                       {comparativo.map((c, i) => (
                         <tr key={c.padrao} style={{ background: c.padrao === resultado.padrao ? C.red + "12" : i % 2 ? "#f9f9fc" : "#fff", fontWeight: c.padrao === resultado.padrao ? 700 : 400 }}>
                           <td style={{ ...tdSt }}>
-                            {c.padrao === resultado.padrao && <span style={{ color: C.red, marginRight: 4 }}>►</span>}
+                            {c.padrao === resultado.padrao && <span style={{ color: C.red, marginRight: 4 }}></span>}
                             {c.padrao}
                             <span style={{ marginLeft: 6, fontSize: 10, color: C.muted }}>×{PADROES_SF[c.padrao]?.fator}</span>
                           </td>
@@ -1512,7 +1512,7 @@ export default function OrcamentoTecnico() {
                   <span style={{ display: "inline-flex", alignItems: "center", gap: 7 }}><Ic n="sliders" w={15} /> Comparativo de Espessuras de Estrutura</span>
                   <div style={{ display: "flex", gap: 8 }}>
                     <button onClick={exportarComparativoPDF} style={{ background: "#0f766e", color: "#fff", border: "none", borderRadius: 5, padding: "4px 12px", fontSize: 12, cursor: "pointer" }}><FileText size={13} /> PDF</button>
-                    <button onClick={() => setComparativoVersoes(null)} style={{ background: "none", border: "none", color: C.muted, cursor: "pointer", fontSize: 12 }}>✕ fechar</button>
+                    <button onClick={() => setComparativoVersoes(null)} style={{ background: "none", border: "none", color: C.muted, cursor: "pointer", fontSize: 12 }}> fechar</button>
                   </div>
                 </div>
                 <div style={{ overflowX: "auto" }}>
@@ -1539,7 +1539,7 @@ export default function OrcamentoTecnico() {
                         return (
                           <tr key={v.opcaoId} style={{ background: v.isAtual ? C.red + "12" : "transparent", fontWeight: v.isAtual ? 700 : 400 }}>
                             <td style={tdSt}>
-                              {v.isAtual && <span style={{ color: C.red, marginRight: 4 }}>►</span>}
+                              {v.isAtual && <span style={{ color: C.red, marginRight: 4 }}></span>}
                               {v.opcaoLabel}
                             </td>
                             <td style={{ ...tdSt, textAlign: "right" }}>{fmtBRL(v.totalMat)}</td>

@@ -56,7 +56,7 @@ export function DRE({ obraId }) {
   return (
     <div style={{ background: "var(--bg-card)", borderRadius: 12, padding: 24 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-        <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>📊 DRE — Demonstrativo de Resultado</h3>
+        <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}> DRE — Demonstrativo de Resultado</h3>
         <div style={{ display: "flex", gap: 16 }}>
           <div style={{ textAlign: "right" }}>
             <div style={{ fontSize: 11, color: "var(--text-muted)", textTransform: "uppercase" }}>Resultado</div>

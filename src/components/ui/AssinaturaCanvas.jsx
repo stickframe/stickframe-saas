@@ -95,7 +95,7 @@ export default function AssinaturaCanvas({ onSalvar, onCancelar, titulo = "Assin
       <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
         <Btn variant="ghost" onClick={limpar}>Limpar</Btn>
         <Btn variant="ghost" onClick={onCancelar}>Cancelar</Btn>
-        <Btn disabled={vazio} onClick={salvar}>✅ Confirmar assinatura</Btn>
+        <Btn disabled={vazio} onClick={salvar}> Confirmar assinatura</Btn>
       </div>
     </div>
   );

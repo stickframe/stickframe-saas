@@ -16,9 +16,9 @@ async function loadFabric() {
 
 const TOOLS = [
   { id: "select", label: "↖ Selecionar" },
-  { id: "pencil", label: "✏️ Caneta" },
-  { id: "rect", label: "▭ Retângulo" },
-  { id: "circle", label: "◯ Círculo" },
+  { id: "pencil", label: " Caneta" },
+  { id: "rect", label: " Retângulo" },
+  { id: "circle", label: " Círculo" },
   { id: "arrow", label: "→ Seta" },
   { id: "text", label: "T Texto" },
 ];
@@ -166,7 +166,7 @@ export function PdfViewer({ arquivo, obraId, onClose }) {
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 2000, display: "flex", flexDirection: "column" }}>
       {/* Toolbar */}
       <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 16px", background: "#1e1e2e", flexWrap: "wrap" }}>
-        <button onClick={onClose} style={{ marginRight: 8, background: "#ef4444", color: "#fff", border: "none", borderRadius: 6, padding: "4px 12px", cursor: "pointer" }}>✕ Fechar</button>
+        <button onClick={onClose} style={{ marginRight: 8, background: "#ef4444", color: "#fff", border: "none", borderRadius: 6, padding: "4px 12px", cursor: "pointer" }}> Fechar</button>
         <span style={{ color: "#fff", fontWeight: 700, marginRight: 8 }}>{arquivo.nome}</span>
         {TOOLS.map(t => (
           <button key={t.id} onClick={() => { setTool(t.id); if (["rect","circle","text","arrow"].includes(t.id)) setTimeout(addShape, 100); }}
@@ -175,9 +175,9 @@ export function PdfViewer({ arquivo, obraId, onClose }) {
           </button>
         ))}
         <input type="color" value={color} onChange={e => setColor(e.target.value)} style={{ width: 32, height: 28, borderRadius: 4, border: "none", cursor: "pointer" }} title="Cor" />
-        <button onClick={limpar} style={{ padding: "4px 10px", borderRadius: 6, border: "none", cursor: "pointer", background: "#6b7280", color: "#fff", fontSize: 12 }}>🗑 Limpar</button>
+        <button onClick={limpar} style={{ padding: "4px 10px", borderRadius: 6, border: "none", cursor: "pointer", background: "#6b7280", color: "#fff", fontSize: 12 }}> Limpar</button>
         <button onClick={salvar} disabled={saving} style={{ padding: "4px 14px", borderRadius: 6, border: "none", cursor: "pointer", background: "#22c55e", color: "#fff", fontWeight: 700, fontSize: 12 }}>
-          {saving ? "Salvando..." : "💾 Salvar"}
+          {saving ? "Salvando..." : " Salvar"}
         </button>
         {totalPages > 1 && (
           <div style={{ display: "flex", gap: 4, alignItems: "center", color: "#fff" }}>

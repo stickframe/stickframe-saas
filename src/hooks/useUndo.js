@@ -15,7 +15,7 @@ export function useUndo({ maxHistory = 5 } = {}) {
     if (!entry) return;
     try {
       await entry.restoreFn();
-      toast.success(`↩️ Desfeito: ${entry.label}`);
+      toast.success(`↩ Desfeito: ${entry.label}`);
     } catch (e) {
       toast.error(`Erro ao desfazer: ${e.message}`);
     }

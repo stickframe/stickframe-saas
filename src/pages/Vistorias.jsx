@@ -6,7 +6,7 @@ import useAppStore from "../store/useAppStore";
 import { useModuleLoad } from "../hooks/useModuleLoad";
 import { useObraPermission, useObrasVisiveis } from "../hooks/useObraPermission";
 
-// ─── Checklists guiados por serviço ──────────────────────────────────────────
+//  Checklists guiados por serviço 
 const FVS_TEMPLATES = {
   "Fundação":              ["Eixos e cotas conferidos com projeto","Prumo e nível verificados","Dimensões das sapatas/blocos conforme projeto","Armação/ferragem conforme projeto","Recobrimento de concreto adequado","Fôrmas niveladas e escoradas","Lançamento do concreto aprovado","Cura do concreto executada"],
   "Estrutura Steel Frame": ["Peças e perfis conforme projeto estrutural","Bitolas e espessuras corretas","Parafusamento correto (torque verificado)","Prumo das colunas verificado","Travamento lateral instalado","Contraventamento conforme projeto","Conexões e emendas verificadas","Pintura anticorrosiva aplicada","Ancoragem na fundação conforme projeto"],
@@ -43,7 +43,7 @@ function pctConformes(itens = []) {
   return Math.round((conf / respondidos.length) * 100);
 }
 
-// ─── Modal de criação/edição ──────────────────────────────────────────────────
+//  Modal de criação/edição 
 function ModalVistoria({ obra, onSave, onClose }) {
   const [step, setStep]   = useState(1);
   const [tipo, setTipo]   = useState("FVS");
@@ -137,7 +137,7 @@ function ModalVistoria({ obra, onSave, onClose }) {
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
               {nc > 0 && (
                 <div style={{ background: "#fff5f5", border: "1px solid #f5c6c6", borderRadius: 8, padding: "8px 14px", fontSize: 12, color: "#c0392b", fontWeight: 700, marginBottom: 8 }}>
-                  ⚠️ {nc} item(ns) Não Conforme(s) detectado(s)
+                   {nc} item(ns) Não Conforme(s) detectado(s)
                 </div>
               )}
               {itens.map((it, idx) => (
@@ -194,7 +194,7 @@ function ModalVistoria({ obra, onSave, onClose }) {
             </button>
           ) : (
             <button onClick={salvar} disabled={saving} style={{ padding: "9px 18px", borderRadius: 6, border: "none", background: saving ? C.border : C.red, color: "#fff", fontSize: 13, fontWeight: 700, cursor: saving ? "not-allowed" : "pointer", fontFamily: "inherit" }}>
-              {saving ? "Salvando..." : "💾 Salvar vistoria"}
+              {saving ? "Salvando..." : " Salvar vistoria"}
             </button>
           )}
         </div>
@@ -203,7 +203,7 @@ function ModalVistoria({ obra, onSave, onClose }) {
   );
 }
 
-// ─── Modal de visualização ────────────────────────────────────────────────────
+//  Modal de visualização 
 function ModalVer({ v, onClose }) {
   const pct = pctConformes(v.itens || []);
   const nc  = (v.itens || []).filter((i) => i.resultado === "Não Conforme");
@@ -260,7 +260,7 @@ function ModalVer({ v, onClose }) {
   );
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+//  Helpers 
 function Row({ label, children }) {
   return (
     <div>
@@ -271,7 +271,7 @@ function Row({ label, children }) {
 }
 const sel = { width: "100%", padding: "9px 12px", borderRadius: 7, border: `1px solid #dcdce4`, background: "#fff", color: "#1a1a1a", fontSize: 13, fontFamily: "inherit", outline: "none" };
 
-// ─── Página principal ─────────────────────────────────────────────────────────
+//  Página principal 
 export default function Vistorias() {
   useModuleLoad("obras");
   const _obras        = useAppStore((s) => s.obras);
@@ -319,7 +319,7 @@ export default function Vistorias() {
       {toast && (
         <div style={{ position: "fixed", bottom: 28, right: 28, zIndex: 999, background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 20px", fontSize: 13, fontWeight: 600, boxShadow: "0 8px 32px #0006" }}>{toast}</div>
       )}
-      {modal && <ModalVistoria obra={obra} onClose={() => setModal(false)} onSave={async (v) => { await addVistoria(obraId, v); mostrarToast("✅ Vistoria registrada!"); }} />}
+      {modal && <ModalVistoria obra={obra} onClose={() => setModal(false)} onSave={async (v) => { await addVistoria(obraId, v); mostrarToast(" Vistoria registrada!"); }} />}
       {verV  && <ModalVer v={verV} onClose={() => setVerV(null)} />}
 
       {/* Header */}
@@ -389,7 +389,7 @@ export default function Vistorias() {
             return (
               <div key={v.id} style={{ background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", border: `1px solid ${v.resultado === "Reprovado" ? "#f5c6c6" : C.border}`, padding: "16px 20px", display: "flex", alignItems: "center", gap: 16 }}>
                 <div style={{ width: 44, height: 44, borderRadius: 10, background: cor + "20", border: `2px solid ${cor}44`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0 }}>
-                  {v.resultado === "Aprovado" ? "✓" : v.resultado === "Reprovado" ? "✕" : v.resultado === "Aprovado com ressalvas" ? "⚠" : "⏳"}
+                  {v.resultado === "Aprovado" ? "" : v.resultado === "Reprovado" ? "" : v.resultado === "Aprovado com ressalvas" ? "" : "⏳"}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 4, flexWrap: "wrap" }}>
@@ -411,7 +411,7 @@ export default function Vistorias() {
                 </div>
                 <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
                   <button onClick={() => setVerV(v)} style={{ padding: "7px 14px", borderRadius: 6, border: `1px solid ${C.border}`, background: "transparent", color: C.muted, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>Ver</button>
-                  <button onClick={async () => { await deleteVistoria(obraId, v.id); mostrarToast("🗑 Vistoria removida."); }} style={{ padding: "7px 10px", borderRadius: 6, border: `1px solid ${C.danger}44`, background: C.danger + "18", color: C.danger, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}><Trash2 size={13} /></button>
+                  <button onClick={async () => { await deleteVistoria(obraId, v.id); mostrarToast(" Vistoria removida."); }} style={{ padding: "7px 10px", borderRadius: 6, border: `1px solid ${C.danger}44`, background: C.danger + "18", color: C.danger, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}><Trash2 size={13} /></button>
                 </div>
               </div>
             );

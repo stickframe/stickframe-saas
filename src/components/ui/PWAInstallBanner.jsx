@@ -58,7 +58,7 @@ export default function PWAInstallBanner() {
           padding: "8px 16px", display: "flex", alignItems: "center", justifyContent: "center",
           fontSize: 13, fontWeight: 600, gap: 8,
         }}>
-          <span>📡</span> Sem conexão — modo offline
+          <span></span> Sem conexão — modo offline
         </div>
       )}
 
@@ -70,7 +70,7 @@ export default function PWAInstallBanner() {
           boxShadow: "0 4px 24px rgba(0,0,0,0.18)",
           display: "flex", alignItems: "center", gap: 12,
         }}>
-          <span style={{ fontSize: 28 }}>🔔</span>
+          <span style={{ fontSize: 28 }}></span>
           <div style={{ flex: 1 }}>
             <div style={{ fontWeight: 700, fontSize: 14, color: "#2563eb" }}>Ativar notificações</div>
             <div style={{ fontSize: 12, color: "#555" }}>Receba aviso quando um lead novo chegar</div>

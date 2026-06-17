@@ -17,7 +17,7 @@ import Badge from "../components/ui/Badge";
 import Modal from "../components/ui/Modal";
 import FormAiMemorial from "../components/ui/FormAiMemorial";
 
-// ─── Status ──────────────────────────────────────────────────────────────────
+//  Status 
 const STATUS_OPTS = ["Aguardando resposta", "Em revisão", "Aprovado", "Recusado"];
 const STATUS_COR  = {
   "Aguardando resposta": "#c88a00",
@@ -58,8 +58,8 @@ const getValidadeText = (criado, validadeDias = 30) => {
   }
 };
 
-// ─── Cálculo ─────────────────────────────────────────────────────────────────
-// ─── Cálculo ─────────────────────────────────────────────────────────────────
+//  Cálculo 
+//  Cálculo 
 function calcOrcamento({ area, unidades, padrao, desconto = 0, valor_m2_custom = 0, valor = 0 }) {
   let valor_m2 = Number(valor_m2_custom) || 0;
   if (valor_m2 === 0 && valor > 0) {
@@ -76,7 +76,7 @@ function calcOrcamento({ area, unidades, padrao, desconto = 0, valor_m2_custom =
   return { valor_m2, valor_uh, valor_base, desc_valor, valor_total };
 }
 
-// ─── Label auxiliar ──────────────────────────────────────────────────────────
+//  Label auxiliar 
 function Label({ children, required }) {
   return (
     <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 6 }}>
@@ -86,7 +86,7 @@ function Label({ children, required }) {
   );
 }
 
-// ─── Formulário (fora do componente) ─────────────────────────────────────────
+//  Formulário (fora do componente) 
 function FormOrc({ form, setForm, clientes, onSave, onCancel, onDelete, btnLabel, addCliente }) {
   const set  = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
   const calc = calcOrcamento({
@@ -181,7 +181,7 @@ function FormOrc({ form, setForm, clientes, onSave, onCancel, onDelete, btnLabel
               </div>
             </div>
             {cliErro && (
-              <div style={{ fontSize: 11, color: C.danger }}>⚠️ {cliErro}</div>
+              <div style={{ fontSize: 11, color: C.danger }}> {cliErro}</div>
             )}
             <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 4 }}>
               <button
@@ -206,7 +206,7 @@ function FormOrc({ form, setForm, clientes, onSave, onCancel, onDelete, btnLabel
             <Select value={form.cliente_id} onChange={set("cliente_id")} options={clienteOpts} />
             {!clientes.length && (
               <div style={{ fontSize: 11, color: C.warning, marginTop: 4 }}>
-                ⚠️ Cadastre um cliente no CRM ou crie um novo inline.
+                 Cadastre um cliente no CRM ou crie um novo inline.
               </div>
             )}
           </>
@@ -362,7 +362,7 @@ function FormOrc({ form, setForm, clientes, onSave, onCancel, onDelete, btnLabel
   );
 }
 
-// ─── Gerador de PDF ───────────────────────────────────────────────────────────
+//  Gerador de PDF 
 function gerarPDF(o) {
   const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
   <title>Orçamento ${o.ref}</title>
@@ -412,7 +412,7 @@ function gerarPDF(o) {
   printHtml(html, `orcamento-${o?.ref || "proposta"}`);
 }
 
-// ─── Contrato PDF ─────────────────────────────────────────────────────────────
+//  Contrato PDF 
 function gerarContratoHTML(o) {
   const hoje = new Date().toLocaleDateString("pt-BR");
   const html = `<!DOCTYPE html><html><head><title>Contrato</title><style>
@@ -474,7 +474,7 @@ function gerarContratoHTML(o) {
   setTimeout(() => w.print(), 400);
 }
 
-// ─── Proposta Comercial PDF profissional ─────────────────────────────────────
+//  Proposta Comercial PDF profissional 
 function gerarPropostaComercialPDF(o) {
   const fmtBRL = (v) => Number(v).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
   const dataHoje = new Date().toLocaleDateString("pt-BR");
@@ -581,8 +581,8 @@ function gerarPropostaComercialPDF(o) {
   printHtml(html, `proposta-comercial-${o.ref || "orcamento"}`);
 }
 
-// ─── Índices técnicos StickFrame (baseados em obras reais) ───────────────────
-// ─── Opções selecionáveis da calculadora ─────────────────────────────────────
+//  Índices técnicos StickFrame (baseados em obras reais) 
+//  Opções selecionáveis da calculadora 
 const FECHAMENTO_EXT_OPTS = [
   { value: "glasroc",    label: "Glasroc X 12,5mm",    precoUnit: 86.80 },
   { value: "cimenticia", label: "Placa cimentícia",     precoUnit: 65.00 },
@@ -655,13 +655,13 @@ function CalculadoraEstimativa({ onAplicar, onClose }) {
     const WASTE   = 1.10; // 10% perda
 
     const resultado = [
-      // ── Estrutura ──────────────────────────────────────────────────────────
+      //  Estrutura 
       { grupo: "Estrutura", item: "Aço LSF LE230 / Z275 (lista de corte)", un: "kg",
         qtd: arred(aParTotal * 12), precoUnit: 15.00 },
       { grupo: "Estrutura", item: "Acessórios estrutura (parafusos, conectores)", un: "vb",
         qtd: arred(aParTotal * 12 * 0.15), precoUnit: 15.00 },
 
-      // ── Vedação externa ────────────────────────────────────────────────────
+      //  Vedação externa 
       { grupo: "Vedação externa", item: `${fechOpt.label} (fechamento externo)`, un: "m²",
         qtd: arred(aParExt * WASTE), precoUnit: fechOpt.precoUnit },
       { grupo: "Vedação externa", item: "Membrana hidrófuga (WRB)", un: "m²",
@@ -673,11 +673,11 @@ function CalculadoraEstimativa({ onAplicar, onClose }) {
       { grupo: "Vedação externa", item: "Massa Base Coat 20kg", un: "sc",
         qtd: arred(aParExt / 30), precoUnit: 88.00 },
 
-      // ── Isolamento ─────────────────────────────────────────────────────────
+      //  Isolamento 
       { grupo: "Isolamento", item: "Lã de vidro 50mm", un: "m²",
         qtd: arred(aParTotal * WASTE), precoUnit: 16.00 },
 
-      // ── Vedação interna ────────────────────────────────────────────────────
+      //  Vedação interna 
       { grupo: "Vedação interna", item: `${vedOpt.label} — paredes secas (2 faces)`, un: "m²",
         qtd: arred(aParInt * 2 * WASTE), precoUnit: vedOpt.precoUnit },
       { grupo: "Vedação interna", item: "Placa Gesso RU 12,5mm — áreas molhadas (2 faces)", un: "m²",
@@ -687,7 +687,7 @@ function CalculadoraEstimativa({ onAplicar, onClose }) {
       { grupo: "Vedação interna", item: "Fita papel perfurada (junta)", un: "pc",
         qtd: arred((aParInt * 2 + aMolhWall * 2) / 150), precoUnit: 60.00 },
 
-      // ── Forro ──────────────────────────────────────────────────────────────
+      //  Forro 
       { grupo: "Forro", item: "Placa Gesso Leve 12,5mm (forro)", un: "m²",
         qtd: arred(pisoVal * WASTE), precoUnit: 22.00 },
       { grupo: "Forro", item: "Perfil forro F530 3000mm", un: "pc",
@@ -695,7 +695,7 @@ function CalculadoraEstimativa({ onAplicar, onClose }) {
       { grupo: "Forro", item: "Pendural REG F530", un: "pc",
         qtd: Math.ceil(pisoVal / 1.44), precoUnit: 1.60 },
 
-      // ── Cobertura (opcional) ───────────────────────────────────────────────
+      //  Cobertura (opcional) 
       ...(cobertura ? [
         { grupo: "Cobertura", item: "Telha metálica sanduíche", un: "m²",
           qtd: arred(pisoVal * 1.15), precoUnit: 119.11 },
@@ -711,7 +711,7 @@ function CalculadoraEstimativa({ onAplicar, onClose }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
 
-      {/* ── Medidas do projeto ── */}
+      {/*  Medidas do projeto  */}
       <div style={{ background: C.darker, borderRadius: 10, padding: 16, display: "flex", flexDirection: "column", gap: 14 }}>
         <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.red }}>MEDIDAS DO PROJETO</div>
 
@@ -757,7 +757,7 @@ function CalculadoraEstimativa({ onAplicar, onClose }) {
         )}
       </div>
 
-      {/* ── Opções de materiais ── */}
+      {/*  Opções de materiais  */}
       <div style={{ background: C.darker, borderRadius: 10, padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
         <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.red }}>OPÇÕES DE MATERIAIS</div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
@@ -795,7 +795,7 @@ function CalculadoraEstimativa({ onAplicar, onClose }) {
           </div>
         </div>
         <div style={{ fontSize: 11, color: C.muted, padding: "6px 10px", background: C.surface, borderRadius: 6 }}>
-          ✓ Membrana hidrófuga · Massa Base Coat · Telas fibra vidro · Lã de vidro · Gesso RU (área molhada) · Gesso Leve (forro) — sempre incluídos
+           Membrana hidrófuga · Massa Base Coat · Telas fibra vidro · Lã de vidro · Gesso RU (área molhada) · Gesso Leve (forro) — sempre incluídos
         </div>
       </div>
 
@@ -804,10 +804,10 @@ function CalculadoraEstimativa({ onAplicar, onClose }) {
         border: "none", borderRadius: 8, padding: "12px 0", fontSize: 14, fontWeight: 700,
         cursor: mlExt === 0 ? "not-allowed" : "pointer", fontFamily: "inherit",
       }}>
-        {mlExt === 0 ? "Informe ao menos uma parede externa para calcular" : "⚡ Calcular estimativo"}
+        {mlExt === 0 ? "Informe ao menos uma parede externa para calcular" : " Calcular estimativo"}
       </button>
 
-      {/* ── Resultado ── */}
+      {/*  Resultado  */}
       {itens && (
         <>
           <div style={{ border: `1px solid ${C.border}`, borderRadius: 10, overflow: "hidden" }}>
@@ -930,7 +930,7 @@ export default function Orcamentos() {
     const chBc = sb.channel(`orcamentos-public:${empId}`)
       .on("broadcast", { event: "aceite" }, () => {
         loadOrcamentos(true);
-        mostrarToast("📢 Um cliente acabou de aceitar a proposta comercial online!");
+        mostrarToast(" Um cliente acabou de aceitar a proposta comercial online!");
       })
       .subscribe();
 
@@ -1027,7 +1027,7 @@ export default function Orcamentos() {
       setPreOrcAtivo(null);
     }
     setModal(false);
-    mostrarToast("✅ Orçamento gerado com sucesso!");
+    mostrarToast(" Orçamento gerado com sucesso!");
   }
 
   function salvarEdicao() {
@@ -1043,7 +1043,7 @@ export default function Orcamentos() {
       status:     form.status,
     });
     setModal(false);
-    mostrarToast("✅ Orçamento atualizado!");
+    mostrarToast(" Orçamento atualizado!");
   }
 
   function confirmarDelete(id) { setConfirm(id); }
@@ -1061,7 +1061,7 @@ export default function Orcamentos() {
       status:     "Aguardando resposta",
       criado:     new Date().toLocaleDateString("pt-BR"),
     });
-    mostrarToast("✅ Orçamento duplicado!");
+    mostrarToast(" Orçamento duplicado!");
   }
 
   function abrirConverter(o) {
@@ -1136,7 +1136,7 @@ export default function Orcamentos() {
           }));
           await inserirTemplate(obraCriada.id, rows);
         } catch (e) {
-          mostrarToast(`⚠️ Não foi possível importar itens para Quantitativos: ${e?.message || e}`);
+          mostrarToast(` Não foi possível importar itens para Quantitativos: ${e?.message || e}`);
         }
       }
 
@@ -1159,8 +1159,8 @@ export default function Orcamentos() {
 
       setConverterOrc(null);
       mostrarToast(estimativo?.itens?.length
-        ? `✅ Obra criada com ${estimativo.itens.length} itens do estimativo nos quantitativos!`
-        : "✅ Obra criada! Redirecionando...");
+        ? ` Obra criada com ${estimativo.itens.length} itens do estimativo nos quantitativos!`
+        : " Obra criada! Redirecionando...");
       setTimeout(() => setActivePage("obras"), 1500);
 
     } catch (err) {
@@ -1178,7 +1178,7 @@ export default function Orcamentos() {
         console.error("Erro no rollback da conversão:", rollbackErr);
       }
       
-      mostrarToast(`❌ Erro na conversão: ${err?.message || err}`);
+      mostrarToast(` Erro na conversão: ${err?.message || err}`);
     }
   }
   async function gerarLinkProposta(o) {
@@ -1191,13 +1191,13 @@ export default function Orcamentos() {
       const url = `${window.location.origin}/proposta/${token}`;
       if (navigator.share) {
         await navigator.share({ title: "Proposta Stickframe", url });
-        mostrarToast("🔗 Proposta compartilhada!");
+        mostrarToast(" Proposta compartilhada!");
       } else {
         await navigator.clipboard.writeText(url);
-        mostrarToast("🔗 Link da proposta copiado!");
+        mostrarToast(" Link da proposta copiado!");
       }
     } catch {
-      mostrarToast("❌ Erro ao gerar link.");
+      mostrarToast(" Erro ao gerar link.");
     }
   }
 
@@ -1212,14 +1212,14 @@ export default function Orcamentos() {
       const msg = encodeURIComponent(`Olá! Segue o link da sua proposta Stickframe:\n${url}`);
       window.open(`https://wa.me/?text=${msg}`, "_blank");
     } catch {
-      mostrarToast("❌ Erro ao gerar link.");
+      mostrarToast(" Erro ao gerar link.");
     }
   }
 
   function executarDelete() {
     deleteOrcamento(confirm);
     setConfirm(null);
-    mostrarToast("🗑 Orçamento removido.");
+    mostrarToast(" Orçamento removido.");
   }
 
   return (
@@ -1238,7 +1238,7 @@ export default function Orcamentos() {
 
       {/* Modal Calculadora */}
       {calculadora && (
-        <Modal title="⚡ Calculadora Estimativa Steel Frame" onClose={() => setCalculadora(false)}>
+        <Modal title=" Calculadora Estimativa Steel Frame" onClose={() => setCalculadora(false)}>
           <CalculadoraEstimativa onAplicar={aplicarEstimativo} onClose={() => setCalculadora(false)} />
         </Modal>
       )}
@@ -1352,12 +1352,12 @@ export default function Orcamentos() {
             )}
 
             <div style={{ background: "#4a9eff11", border: "1px solid #4a9eff33", borderRadius: 8, padding: "10px 14px", fontSize: 12, color: "#4a9eff" }}>
-              ✔ O valor do contrato ({fmt(converterOrc.valor)}) será preenchido automaticamente no financeiro da obra.
+               O valor do contrato ({fmt(converterOrc.valor)}) será preenchido automaticamente no financeiro da obra.
             </div>
 
             <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", paddingTop: 12, borderTop: `1px solid ${C.border}` }}>
               <Btn variant="ghost" onClick={() => setConverterOrc(null)}>Cancelar</Btn>
-              <Btn disabled={!obraForm.nome} onClick={confirmarConverter}>◆ Criar Obra</Btn>
+              <Btn disabled={!obraForm.nome} onClick={confirmarConverter}> Criar Obra</Btn>
             </div>
           </div>
         </Modal>
@@ -1388,7 +1388,7 @@ export default function Orcamentos() {
               borderRadius: 8, padding: "9px 16px", fontSize: 13, fontWeight: 700,
               cursor: "pointer", fontFamily: "inherit",
             }}>
-              ⚖️ Comparar
+               Comparar
             </button>
             <Btn onClick={abrirNovo}>+ Novo orçamento</Btn>
           </div>
@@ -1415,7 +1415,7 @@ export default function Orcamentos() {
                       <span style={{ fontSize: 13, fontWeight: 700 }}>{p.nome}</span>
                       {kitNome && (
                         <span style={{ fontSize: 10, fontWeight: 800, background: "#98191518", color: "#981915", borderRadius: 4, padding: "2px 7px", border: "1px solid #98191533" }}>
-                          🏠 Kit: {kitNome}
+                           Kit: {kitNome}
                         </span>
                       )}
                     </div>
@@ -1435,7 +1435,7 @@ export default function Orcamentos() {
                         localStorage.setItem("sf_kit_lead", JSON.stringify({ kitId, padrao: p.padrao }));
                         setActivePage("calculadora");
                       }} style={{ background: "#98191518", border: "1px solid #98191544", borderRadius: 6, color: "#981915", fontSize: 11, fontWeight: 700, padding: "6px 12px", cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap" }}>
-                        🔧 Simular na Calculadora
+                         Simular na Calculadora
                       </button>
                     )}
                     <button onClick={() => {
@@ -1457,18 +1457,18 @@ export default function Orcamentos() {
                       setPreOrcAtivo(p.id);
                       setModal("novo");
                     }} style={{ background: "#2e9e5b22", border: "1px solid #2e9e5b44", borderRadius: 6, color: "#2e9e5b", fontSize: 11, fontWeight: 700, padding: "6px 12px", cursor: "pointer", fontFamily: "inherit" }}>
-                      ✓ Criar Orçamento
+                       Criar Orçamento
                     </button>
                     <div style={{ display: "flex", gap: 6 }}>
                       <button onClick={async () => {
                         await sb.from("pre_orcamentos").update({ status: "Analisado" }).eq("id", p.id);
                         setPreOrcamentos((prev) => prev.filter((x) => x.id !== p.id));
                       }} style={{ background: "#99999918", border: "1px solid #99999933", borderRadius: 6, color: "#999", fontSize: 11, fontWeight: 700, padding: "5px 10px", cursor: "pointer", fontFamily: "inherit", flex: 1 }}>
-                        ✕ Dispensar
+                         Dispensar
                       </button>
                       <button onClick={() => {
                         const num = (p.contato || "").replace(/\D/g, "");
-                        const msg = `Olá ${p.nome}! 👋\n\nRecebi sua simulação de Steel Frame${kitNome ? ` — ${kitNome}` : ` (${p.area}m² · ${p.padrao})`}.\n\nVou preparar uma proposta detalhada para você. Posso entrar em contato agora?\n\nStick Frame · Santo André/SP`;
+                        const msg = `Olá ${p.nome}! \n\nRecebi sua simulação de Steel Frame${kitNome ? ` — ${kitNome}` : ` (${p.area}m² · ${p.padrao})`}.\n\nVou preparar uma proposta detalhada para você. Posso entrar em contato agora?\n\nStick Frame · Santo André/SP`;
                         window.open(`https://wa.me/${num.startsWith("55") ? num : "55" + num}?text=${encodeURIComponent(msg)}`, "_blank");
                       }} style={{ background: "#25D36622", border: "1px solid #25D36644", borderRadius: 6, color: "#25D366", fontSize: 11, fontWeight: 700, padding: "5px 10px", cursor: "pointer", fontFamily: "inherit", flex: 1 }}>
                         <Smartphone size={13} />
@@ -1492,7 +1492,7 @@ export default function Orcamentos() {
               </div>
               <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                 <button onClick={() => setEstimativoAberto((v) => !v)} style={{ background: C.red + "18", border: `1px solid ${C.red}44`, borderRadius: 6, padding: "4px 10px", color: C.red, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
-                  {estimativoAberto ? "▲ Ocultar" : "▼ Ver itens"}
+                  {estimativoAberto ? " Ocultar" : " Ver itens"}
                 </button>
                 <button onClick={() => { setEstimativo(null); setEstimativoAberto(false); }} style={{ background: "none", border: "none", color: C.muted, cursor: "pointer", fontSize: 18 }}>×</button>
               </div>
@@ -1538,7 +1538,7 @@ export default function Orcamentos() {
             background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", border: `1px solid ${C.border}`,
             padding: 48, textAlign: "center", color: C.muted,
           }}>
-            <div style={{ fontSize: 32, marginBottom: 12 }}>◻</div>
+            <div style={{ fontSize: 32, marginBottom: 12 }}></div>
             <div style={{ fontSize: 14, fontWeight: 600 }}>Nenhum orçamento ainda</div>
             <div style={{ fontSize: 12, marginTop: 4 }}>Clique em "+ Novo orçamento" para começar</div>
           </div>
@@ -1594,7 +1594,7 @@ export default function Orcamentos() {
                         color: selecionados.includes(o.id) ? "#fff" : "#2563eb",
                         fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
                       }}>
-                        {selecionados.includes(o.id) ? "✓ Selecionado" : "Selecionar"}
+                        {selecionados.includes(o.id) ? " Selecionado" : "Selecionar"}
                       </button>
                     )}
 
@@ -1614,7 +1614,7 @@ export default function Orcamentos() {
                         onClick={() => abrirConverter(o)}
                         className="sf-btn sf-btn-sm sf-btn-success"
                       >
-                        ◆ Converter em Obra
+                         Converter em Obra
                       </button>
                     )}
 
@@ -1654,7 +1654,7 @@ export default function Orcamentos() {
                                 fontFamily: "inherit", borderBottom: `1px solid ${C.border}`, display: "flex", alignItems: "center", gap: 6
                               }}
                             >
-                              🔗 {o.proposta_token ? "Copiar link online" : "Gerar link online"}
+                               {o.proposta_token ? "Copiar link online" : "Gerar link online"}
                             </button>
                             {o.proposta_token && (
                               <button
@@ -1665,7 +1665,7 @@ export default function Orcamentos() {
                                   fontFamily: "inherit", borderBottom: `1px solid ${C.border}`, display: "flex", alignItems: "center", gap: 6
                                 }}
                               >
-                                💬 WhatsApp (Link)
+                                 WhatsApp (Link)
                               </button>
                             )}
                             {clienteOrc?.contato && (
@@ -1677,7 +1677,7 @@ export default function Orcamentos() {
                                   fontFamily: "inherit", borderBottom: `1px solid ${C.border}`, display: "flex", alignItems: "center", gap: 6
                                 }}
                               >
-                                📱 WhatsApp (Texto)
+                                 WhatsApp (Texto)
                               </button>
                             )}
                             <button
@@ -1688,7 +1688,7 @@ export default function Orcamentos() {
                                 fontFamily: "inherit", borderBottom: `1px solid ${C.border}`, display: "flex", alignItems: "center", gap: 6
                               }}
                             >
-                              📝 Gerar Contrato
+                               Gerar Contrato
                             </button>
                             <button
                               onClick={() => { setAbertoDropId(null); gerarPDF(o); }}
@@ -1698,7 +1698,7 @@ export default function Orcamentos() {
                                 fontFamily: "inherit", borderBottom: `1px solid ${C.border}`, display: "flex", alignItems: "center", gap: 6
                               }}
                             >
-                              📄 PDF Simples (Rascunho)
+                               PDF Simples (Rascunho)
                             </button>
                             <button
                               onClick={() => { setAbertoDropId(null); setMemorialOrcamento(o); }}
@@ -1708,7 +1708,7 @@ export default function Orcamentos() {
                                 fontFamily: "inherit", borderBottom: `1px solid ${C.border}`, display: "flex", alignItems: "center", gap: 6
                               }}
                             >
-                              🤖 Memorial IA
+                               Memorial IA
                             </button>
                             <button
                               onClick={() => { setAbertoDropId(null); duplicarOrcamento(o); }}
@@ -1718,7 +1718,7 @@ export default function Orcamentos() {
                                 fontFamily: "inherit", borderBottom: `1px solid ${C.border}`, display: "flex", alignItems: "center", gap: 6
                               }}
                             >
-                              📋 Duplicar
+                               Duplicar
                             </button>
                             <button
                               onClick={() => { setAbertoDropId(null); confirmarDelete(o.id); }}
@@ -1728,7 +1728,7 @@ export default function Orcamentos() {
                                 fontFamily: "inherit", fontWeight: 700, display: "flex", alignItems: "center", gap: 6
                               }}
                             >
-                              🗑 Excluir
+                               Excluir
                             </button>
                           </div>
                         </>
@@ -1769,7 +1769,7 @@ export default function Orcamentos() {
         return (
           <div style={{ marginTop: 24, background: C.surface, border: `1px solid #2563eb44`, borderRadius: 16, padding: 24, boxShadow: "0 4px 24px rgba(37,99,235,0.08)" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
-              <div style={{ fontSize: 15, fontWeight: 800, color: "#2563eb" }}>⚖️ Comparativo de Orçamentos</div>
+              <div style={{ fontSize: 15, fontWeight: 800, color: "#2563eb" }}> Comparativo de Orçamentos</div>
               <button onClick={() => { setModoComparar(false); setSelecionados([]); }} style={{
                 background: "none", border: `1px solid ${C.border}`, borderRadius: 8,
                 padding: "6px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", color: C.muted,
@@ -1791,12 +1791,12 @@ export default function Orcamentos() {
                       padding: "10px 12px", fontWeight: highlight === "a" ? 800 : 400,
                       color: highlight === "a" ? "#2e9e5b" : undefined,
                       background: highlight === "a" ? "#2e9e5b0a" : "#2563eb06",
-                    }}>{vA}{highlight === "a" && <span style={{ marginLeft: 6, fontSize: 11, color: "#2e9e5b" }}>✓</span>}</td>
+                    }}>{vA}{highlight === "a" && <span style={{ marginLeft: 6, fontSize: 11, color: "#2e9e5b" }}></span>}</td>
                     <td style={{
                       padding: "10px 12px", fontWeight: highlight === "b" ? 800 : 400,
                       color: highlight === "b" ? "#2e9e5b" : undefined,
                       background: highlight === "b" ? "#2e9e5b0a" : "#7c3aed06",
-                    }}>{vB}{highlight === "b" && <span style={{ marginLeft: 6, fontSize: 11, color: "#2e9e5b" }}>✓</span>}</td>
+                    }}>{vB}{highlight === "b" && <span style={{ marginLeft: 6, fontSize: 11, color: "#2e9e5b" }}></span>}</td>
                   </tr>
                 ))}
               </tbody>

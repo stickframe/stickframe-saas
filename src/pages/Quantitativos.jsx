@@ -17,7 +17,7 @@ import {
 import { criarCotacao } from "../services/repositories/fornecedoresRepository";
 import { listarMonitorados } from "../services/repositories/precosRepository";
 
-// ─── Templates Steel Frame por fase ──────────────────────────────────────────
+//  Templates Steel Frame por fase 
 const UNIDADES = ["m²","m","m³","un","kg","vb","l","hrs","cj"];
 
 const CATEGORIAS = ["Estrutura","Fundação","Vedação","Cobertura","Instalações","Acabamento","Projeto","Administração","Outros"];
@@ -100,7 +100,7 @@ const TEMPLATES = {
   ],
 };
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+//  Helpers 
 function LabelF({ children, required }) {
   return (
     <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 6, textTransform: "uppercase" }}>
@@ -115,7 +115,7 @@ const COR_CAT = {
   Projeto: C.red, Administração: C.muted, Outros: C.muted,
 };
 
-// ─── Componente principal ─────────────────────────────────────────────────────
+//  Componente principal 
 const FORM_VAZIO = { fase: FASES[0], descricao: "", unidade: "m²", quantidade: "", custo_unitario: "", categoria: "Estrutura", observacoes: "" };
 
 export default function Quantitativos() {
@@ -159,7 +159,7 @@ export default function Quantitativos() {
 
   useEffect(() => { carregar(); }, [carregar]);
 
-  // ── CRUD ─────────────────────────────────────────────────────────────────
+  //  CRUD 
   async function salvarItem() {
     if (!form.descricao || !form.quantidade || !form.custo_unitario) return;
     const payload = {
@@ -175,11 +175,11 @@ export default function Quantitativos() {
     if (editId) {
       const updated = await atualizarQuantitativo(editId, payload);
       setItems((prev) => prev.map((i) => i.id === editId ? updated : i));
-      mostrarToast("✅ Item atualizado!");
+      mostrarToast(" Item atualizado!");
     } else {
       const created = await criarQuantitativo(payload);
       setItems((prev) => [...prev, created]);
-      mostrarToast("✅ Item adicionado!");
+      mostrarToast(" Item adicionado!");
     }
     setModal(null); setEditId(null); setForm(FORM_VAZIO);
   }
@@ -188,7 +188,7 @@ export default function Quantitativos() {
     await deletarQuantitativo(id);
     setItems((prev) => prev.filter((i) => i.id !== id));
     setConfirm(null);
-    mostrarToast("🗑 Item removido.");
+    mostrarToast(" Item removido.");
   }
 
   // Edição inline de quantidade e custo_unitario
@@ -201,7 +201,7 @@ export default function Quantitativos() {
     setEditCell(null);
   }
 
-  // ── Template ──────────────────────────────────────────────────────────────
+  //  Template 
   function abrirTemplate() {
     const iniciais = {};
     FASES.forEach((f) => { if (TEMPLATES[f]) iniciais[f] = true; });
@@ -218,10 +218,10 @@ export default function Quantitativos() {
     const criados = await inserirTemplate(obraId, rows);
     setItems((prev) => [...prev, ...criados]);
     setTemplateModal(false);
-    mostrarToast(`✅ ${criados.length} itens importados do template!`);
+    mostrarToast(` ${criados.length} itens importados do template!`);
   }
 
-  // ── Exportar CSV ──────────────────────────────────────────────────────────
+  //  Exportar CSV 
   function exportarCSV() {
     const header = ["Fase","Categoria","Descrição","Unidade","Quantidade","Custo Unitário","Custo Total"];
     const rows = filtrados.map((i) => [
@@ -229,14 +229,14 @@ export default function Quantitativos() {
       i.quantidade, i.custo_unitario, (Number(i.quantidade) * Number(i.custo_unitario)).toFixed(2),
     ]);
     const csv = [header, ...rows].map((r) => r.map((v) => `"${v}"`).join(",")).join("\n");
-    const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8" });
+    const blob = new Blob(["" + csv], { type: "text/csv;charset=utf-8" });
     const url  = URL.createObjectURL(blob);
     const a    = document.createElement("a");
     a.href = url; a.download = `quantitativos-${obra?.nome?.split("—")[0]?.trim() || "obra"}.csv`;
     a.click(); URL.revokeObjectURL(url);
   }
 
-  // ── Exportar PDF ──────────────────────────────────────────────────────────
+  //  Exportar PDF 
   function exportarPDF() {
     const tabelaFases = faseGrupos.map((fase) => {
       const itensFase = filtrados.filter((i) => i.fase === fase);
@@ -298,7 +298,7 @@ ${tabelaFases}
     printHtml(html, `quantitativos-${obra?.nome?.split("—")[0]?.trim() || "obra"}`);
   }
 
-  // ── Filtros e cálculos ────────────────────────────────────────────────────
+  //  Filtros e cálculos 
   const filtrados = useMemo(() => items.filter((i) => {
     const mF = faseFiltro === "Todas" || i.fase === faseFiltro;
     const mC = catFiltro  === "Todas" || i.categoria === catFiltro;
@@ -327,7 +327,7 @@ ${tabelaFases}
 
   const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
 
-  // ── Cotar com fornecedor ─────────────────────────────────────────────────
+  //  Cotar com fornecedor 
   async function confirmarCotacao() {
     if (!cotarForm.fornecedor_id || !cotarItem) return;
     const valor = parseFloat(String(cotarForm.valor).replace(",", ".")) || null;
@@ -345,10 +345,10 @@ ${tabelaFases}
     }
     setCotarItem(null);
     setCotarForm({ fornecedor_id: "", valor: "", observacoes: "", atualizar_custo: true });
-    mostrarToast("✅ Cotação registrada" + (cotarForm.atualizar_custo && valor ? " e custo atualizado!" : "!"));
+    mostrarToast(" Cotação registrada" + (cotarForm.atualizar_custo && valor ? " e custo atualizado!" : "!"));
   }
 
-  // ── Substituir item por produto monitorado ───────────────────────────────
+  //  Substituir item por produto monitorado 
   async function confirmarSubstituicao() {
     const m = monitorados.find((x) => x.id === monitorSel);
     if (!m || !monitorarItem) return;
@@ -361,7 +361,7 @@ ${tabelaFases}
     setItems((prev) => prev.map((i) => i.id === monitorarItem.id ? updated : i));
     setMonitorarItem(null);
     setMonitorSel("");
-    mostrarToast("✅ Item substituído pelo produto monitorado!");
+    mostrarToast(" Item substituído pelo produto monitorado!");
   }
 
   return (
@@ -374,7 +374,7 @@ ${tabelaFases}
         }}>{toast}</div>
       )}
 
-      {/* ── Modal item ── */}
+      {/*  Modal item  */}
       {modal && (
         <Modal title={editId ? "Editar item" : "Novo item"} onClose={() => { setModal(null); setEditId(null); setForm(FORM_VAZIO); }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -428,7 +428,7 @@ ${tabelaFases}
         </Modal>
       )}
 
-      {/* ── Modal template ── */}
+      {/*  Modal template  */}
       {templateModal && (
         <Modal title="Importar template Steel Frame" onClose={() => setTemplateModal(false)}>
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -458,16 +458,16 @@ ${tabelaFases}
                 disabled={!Object.values(templateFases).some(Boolean)}
                 onClick={aplicarTemplate}
               >
-                📥 Importar selecionados
+                 Importar selecionados
               </Btn>
             </div>
           </div>
         </Modal>
       )}
 
-      {/* ── Modal Cotar com Fornecedor ── */}
+      {/*  Modal Cotar com Fornecedor  */}
       {cotarItem && (
-        <Modal title="🏭 Cotar com Fornecedor" onClose={() => setCotarItem(null)}>
+        <Modal title=" Cotar com Fornecedor" onClose={() => setCotarItem(null)}>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             <div style={{ background: C.darker, borderRadius: 8, padding: "10px 14px", fontSize: 13 }}>
               <span style={{ color: C.muted }}>Item: </span>
@@ -486,7 +486,7 @@ ${tabelaFases}
               />
               {fornecedores.length === 0 && (
                 <div style={{ fontSize: 11, color: C.warning, marginTop: 4 }}>
-                  ⚠️ Cadastre fornecedores no módulo Fornecedores primeiro.
+                   Cadastre fornecedores no módulo Fornecedores primeiro.
                 </div>
               )}
             </div>
@@ -521,16 +521,16 @@ ${tabelaFases}
             <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", paddingTop: 12, borderTop: `1px solid ${C.border}` }}>
               <Btn variant="ghost" onClick={() => setCotarItem(null)}>Cancelar</Btn>
               <Btn disabled={!cotarForm.fornecedor_id} onClick={confirmarCotacao}>
-                🏭 Registrar cotação
+                 Registrar cotação
               </Btn>
             </div>
           </div>
         </Modal>
       )}
 
-      {/* ── Modal substituir por monitorado ── */}
+      {/*  Modal substituir por monitorado  */}
       {monitorarItem && (
-        <Modal title="📊 Substituir por produto monitorado" onClose={() => setMonitorarItem(null)}>
+        <Modal title=" Substituir por produto monitorado" onClose={() => setMonitorarItem(null)}>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             <div style={{ background: C.darker, borderRadius: 8, padding: "10px 14px", fontSize: 13 }}>
               <span style={{ color: C.muted }}>Item atual: </span>
@@ -541,7 +541,7 @@ ${tabelaFases}
               <LabelF required>Produto monitorado</LabelF>
               {monitorados.filter((m) => m.preco_atual).length === 0 ? (
                 <div style={{ fontSize: 12, color: C.warning, padding: "10px 0" }}>
-                  ⚠️ Nenhum produto monitorado com preço capturado. Acesse o Monitor de Preços e atualize os preços primeiro.
+                   Nenhum produto monitorado com preço capturado. Acesse o Monitor de Preços e atualize os preços primeiro.
                 </div>
               ) : (
                 <Select
@@ -562,7 +562,7 @@ ${tabelaFases}
               if (!m) return null;
               return (
                 <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 8, padding: "10px 14px", fontSize: 12 }}>
-                  <div style={{ fontWeight: 700, color: "#15803d", marginBottom: 4 }}>✅ Será substituído por:</div>
+                  <div style={{ fontWeight: 700, color: "#15803d", marginBottom: 4 }}> Será substituído por:</div>
                   <div><strong>Descrição:</strong> {m.nome_produto}</div>
                   <div><strong>Preço unitário:</strong> {Number(m.preco_atual).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</div>
                   {m.loja && <div><strong>Loja:</strong> {m.loja}</div>}
@@ -572,14 +572,14 @@ ${tabelaFases}
             <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", paddingTop: 12, borderTop: `1px solid ${C.border}` }}>
               <Btn variant="ghost" onClick={() => setMonitorarItem(null)}>Cancelar</Btn>
               <Btn disabled={!monitorSel} onClick={confirmarSubstituicao}>
-                📊 Confirmar substituição
+                 Confirmar substituição
               </Btn>
             </div>
           </div>
         </Modal>
       )}
 
-      {/* ── Confirm delete ── */}
+      {/*  Confirm delete  */}
       {confirm && (
         <div style={{ position: "fixed", inset: 0, background: "#000b", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12, padding: 28, width: 340, textAlign: "center" }}>
@@ -609,7 +609,7 @@ ${tabelaFases}
                 padding: "8px 16px", background: C.red + "18", border: `1px solid ${C.red}44`,
                 borderRadius: 8, color: C.red, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
               }}>
-                📥 Usar template Steel Frame
+                 Usar template Steel Frame
               </button>
             )}
             {obraId && items.length > 0 && (
@@ -617,15 +617,15 @@ ${tabelaFases}
                 <button onClick={abrirTemplate} style={{
                   padding: "8px 14px", background: "transparent", border: `1px solid ${C.border}`,
                   borderRadius: 8, color: C.muted, fontSize: 12, cursor: "pointer", fontFamily: "inherit",
-                }}>📥 Template</button>
+                }}> Template</button>
                 <button onClick={exportarCSV} style={{
                   padding: "8px 14px", background: C.success + "18", border: `1px solid ${C.success}44`,
                   borderRadius: 8, color: C.success, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
-                }}>⬇ CSV</button>
+                }}> CSV</button>
                 <button onClick={exportarPDF} style={{
                   padding: "8px 14px", background: "#4a9eff22", border: "1px solid #4a9eff44",
                   borderRadius: 8, color: "#4a9eff", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
-                }}>📄 PDF</button>
+                }}> PDF</button>
                 <Btn onClick={() => { setForm({ ...FORM_VAZIO, fase: obra?.fase || FASES[0] }); setModal("novo"); }}>
                   + Adicionar item
                 </Btn>
@@ -661,7 +661,7 @@ ${tabelaFases}
               <button onClick={abrirTemplate} style={{
                 padding: "10px 20px", background: C.red, border: "none",
                 borderRadius: 8, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
-              }}>📥 Usar template Steel Frame</button>
+              }}> Usar template Steel Frame</button>
               <Btn variant="ghost" onClick={() => { setForm({ ...FORM_VAZIO, fase: obra?.fase || FASES[0] }); setModal("novo"); }}>
                 + Adicionar manualmente
               </Btn>
@@ -812,11 +812,11 @@ ${tabelaFases}
                                   <button
                                     title="Cotar com fornecedor"
                                     onClick={() => { setCotarItem(item); setCotarForm({ fornecedor_id: "", valor: "", observacoes: "", atualizar_custo: true }); }}
-                                    style={{ background: "none", border: "none", cursor: "pointer", color: "#4a9eff", fontSize: 13, padding: 3 }}>🏭</button>
+                                    style={{ background: "none", border: "none", cursor: "pointer", color: "#4a9eff", fontSize: 13, padding: 3 }}></button>
                                   <button
                                     title="Substituir por produto monitorado"
                                     onClick={() => { setMonitorarItem(item); setMonitorSel(""); listarMonitorados().then(setMonitorados).catch(() => {}); }}
-                                    style={{ background: "none", border: "none", cursor: "pointer", color: "#16a34a", fontSize: 13, padding: 3 }}>📊</button>
+                                    style={{ background: "none", border: "none", cursor: "pointer", color: "#16a34a", fontSize: 13, padding: 3 }}></button>
                                   <button onClick={() => {
                                     setEditId(item.id);
                                     setForm({ fase: item.fase, descricao: item.descricao, unidade: item.unidade, quantidade: String(item.quantidade), custo_unitario: String(item.custo_unitario), categoria: item.categoria || "Outros", observacoes: item.observacoes || "" });

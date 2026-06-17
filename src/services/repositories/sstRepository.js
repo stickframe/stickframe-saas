@@ -1,6 +1,6 @@
 import { sb, getEmpresaId } from "../supabase";
 
-// ── DDS ──────────────────────────────────────────────────────────────────────
+//  DDS 
 export async function listarDDS(filters = {}) {
   let q = sb.from("sst_dds")
     .select("*, obra:obras(nome), assinaturas_count:sst_dds_assinaturas(count)")
@@ -30,7 +30,7 @@ export async function deletarDDS(id) {
   if (error) throw error;
 }
 
-// ── Incidentes ───────────────────────────────────────────────────────────────
+//  Incidentes 
 export async function listarIncidentes(filters = {}) {
   let q = sb.from("sst_incidentes")
     .select("*, obra:obras(nome), colaborador:colaboradores(nome)")
@@ -60,7 +60,7 @@ export async function deletarIncidente(id) {
   if (error) throw error;
 }
 
-// ── EPIs ─────────────────────────────────────────────────────────────────────
+//  EPIs 
 export async function listarEpis(filters = {}) {
   let q = sb.from("sst_epis")
     .select("*, colaborador:colaboradores(nome), obra:obras(nome)")

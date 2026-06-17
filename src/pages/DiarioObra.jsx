@@ -14,7 +14,7 @@ import { gerarSingleRdoPDF } from "../services/pdfService";
 
 const MESES = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
 
-// ─── Helpers de data ──────────────────────────────────────────────────────────
+//  Helpers de data 
 // Suporta YYYY-MM-DD (type=date) e DD/MM/AAAA (legado)
 function parseDia(data = "") {
   if (data.includes("-")) return data.split("-")[2]; // YYYY-MM-DD
@@ -33,7 +33,7 @@ function fmtDataBR(data = "") {
   return data;
 }
 
-// ─── Label ───────────────────────────────────────────────────────────────────
+//  Label 
 function Label({ children, required }) {
   return (
     <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 6 }}>
@@ -43,7 +43,7 @@ function Label({ children, required }) {
   );
 }
 
-// ─── Textarea estilizado ──────────────────────────────────────────────────────
+//  Textarea estilizado 
 function Textarea({ value, onChange, placeholder, rows = 4 }) {
   return (
     <textarea
@@ -62,7 +62,7 @@ function Textarea({ value, onChange, placeholder, rows = 4 }) {
   );
 }
 
-// ─── Formulário de registro ───────────────────────────────────────────────────
+//  Formulário de registro 
 function FormDiario({ form, setForm, onSave, onCancel }) {
   const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
   const ok  = form.data && form.responsavel && form.atividades;
@@ -144,7 +144,7 @@ function FormDiario({ form, setForm, onSave, onCancel }) {
   );
 }
 
-// ─── Modal de detalhes ────────────────────────────────────────────────────────
+//  Modal de detalhes 
 function ModalDetalhes({ reg, obra, onClose }) {
   return (
     <Modal title={`Diário — ${fmtDataBR(reg.data)}`} onClose={onClose}>
@@ -203,7 +203,7 @@ function ModalDetalhes({ reg, obra, onClose }) {
         {/* Ocorrências */}
         {reg.ocorrencias && (
           <div>
-            <div style={{ fontSize: 11, color: C.muted, marginBottom: 6 }}>⚠️ OCORRÊNCIAS</div>
+            <div style={{ fontSize: 11, color: C.muted, marginBottom: 6 }}> OCORRÊNCIAS</div>
             <div style={{
               background: C.red + "0f",
               border: `1px solid ${C.red}33`,
@@ -228,7 +228,7 @@ function ModalDetalhes({ reg, obra, onClose }) {
               display: "flex", alignItems: "center", gap: 6
             }}
           >
-            📄 Exportar RDO PDF
+             Exportar RDO PDF
           </button>
           <div style={{ fontSize: 11, color: C.muted }}>
             Registrado por <strong>{reg.responsavel}</strong> · {reg.created}
@@ -239,11 +239,11 @@ function ModalDetalhes({ reg, obra, onClose }) {
   );
 }
 
-// ─── Diário de Obra ───────────────────────────────────────────────────────────
+//  Diário de Obra 
 const FORM_VAZIO = {
   data: new Date().toISOString().slice(0, 10),
   turno: "Integral",
-  clima: "☀️ Ensolarado",
+  clima: " Ensolarado",
   equipe: 1,
   responsavel: "",
   atividades: "",
@@ -313,13 +313,13 @@ export default function DiarioObra() {
       setPendentes((n) => n + 1);
       setModal(false);
       setForm(FORM_VAZIO);
-      mostrarToast("📴 Sem internet — salvo localmente. Será sincronizado ao reconectar.");
+      mostrarToast(" Sem internet — salvo localmente. Será sincronizado ao reconectar.");
       return;
     }
     addDiario(obraId, form);
     setModal(false);
     setForm(FORM_VAZIO);
-    mostrarToast("✅ Registro salvo no diário!");
+    mostrarToast(" Registro salvo no diário!");
   }
 
   const obra      = obras.find((o) => o.id === obraId) || null;
@@ -354,7 +354,7 @@ export default function DiarioObra() {
 
       {/* Modal novo registro */}
       {modal && (
-        <Modal title="📋 Novo registro de diário" onClose={() => setModal(false)}>
+        <Modal title=" Novo registro de diário" onClose={() => setModal(false)}>
           <FormDiario form={form} setForm={setForm} onSave={salvar} onCancel={() => setModal(false)} />
         </Modal>
       )}
@@ -370,7 +370,7 @@ export default function DiarioObra() {
             background: "#b97a0018", border: "1px solid #b97a0055", borderRadius: 10,
             padding: "12px 18px", marginBottom: 16, display: "flex", alignItems: "center", gap: 12,
           }}>
-            <span style={{ fontSize: 20 }}>📴</span>
+            <span style={{ fontSize: 20 }}></span>
             <div>
               <div style={{ fontWeight: 700, fontSize: 13, color: "#b97a00" }}>Sem conexão com a internet</div>
               <div style={{ fontSize: 12, color: C.muted }}>
@@ -385,7 +385,7 @@ export default function DiarioObra() {
             background: C.success + "18", border: `1px solid ${C.success}44`, borderRadius: 10,
             padding: "12px 18px", marginBottom: 16, display: "flex", alignItems: "center", gap: 12,
           }}>
-            <span style={{ fontSize: 20 }}>🔄</span>
+            <span style={{ fontSize: 20 }}></span>
             <div style={{ flex: 1 }}>
               <div style={{ fontWeight: 700, fontSize: 13, color: C.success }}>Conexão restaurada</div>
               <div style={{ fontSize: 12, color: C.muted }}>{pendentes} registro(s) offline sendo sincronizados…</div>
@@ -479,14 +479,14 @@ export default function DiarioObra() {
                       <span style={{ background: "#41414133", color: C.muted, borderRadius: 4, padding: "1px 8px", fontSize: 11 }}>
                         {r.turno}
                       </span>
-                      <span style={{ fontSize: 11, color: C.muted }}>👥 {r.equipe} pessoas</span>
+                      <span style={{ fontSize: 11, color: C.muted }}> {r.equipe} pessoas</span>
                       {r.ocorrencias && (
                         <span style={{
                           background: C.red + "18", color: C.red,
                           border: `1px solid ${C.red}33`,
                           borderRadius: 4, padding: "1px 8px",
                           fontSize: 11, fontWeight: 700,
-                        }}>⚠️ Ocorrência</span>
+                        }}> Ocorrência</span>
                       )}
                     </div>
                     <div style={{

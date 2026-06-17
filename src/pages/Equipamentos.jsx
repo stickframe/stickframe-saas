@@ -31,7 +31,7 @@ const FORM_VAZIO = {
   valor_aquisicao: "", obs: "",
 };
 
-/* ── Ícones SVG inline (Lucide) ──────────────────────────────────────────── */
+/*  Ícones SVG inline (Lucide)  */
 function Ic({ n, w, c }) {
   const P = {
     box:     <g><path d="M12 2l10 6.5v7L12 22 2 15.5v-7L12 2z" /><path d="M2 7.5l10 5.5 10-5.5" /><path d="M12 22V13" /></g>,

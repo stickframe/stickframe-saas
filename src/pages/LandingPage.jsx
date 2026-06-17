@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { salvarOrigemLead } from "../utils/leadOrigem";
 
-// ─── SVG Icon set ─────────────────────────────────────────────────────────────
+//  SVG Icon set 
 const IcBuilding = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
     <path d="M3 21h18M6 21V9M10 21V9"/><path d="M4 9h16l-2-5H8z"/><path d="M16 9v6m0 0a2 2 0 1 0 .01 0"/>
@@ -53,7 +53,7 @@ const IcClose = () => (
   </svg>
 );
 
-// ─── Data ─────────────────────────────────────────────────────────────────────
+//  Data 
 const FEATS = [
   { Icon: IcBuilding, title: "Gestão de Obras",           desc: "Cronograma, diário, medições e vistorias em um só painel. Acompanhe cada etapa em tempo real." },
   { Icon: IcDoc,      title: "Orçamentos & Contratos",    desc: "Gere propostas profissionais em minutos. Envie, aprove e controle contratos na plataforma." },
@@ -90,7 +90,7 @@ const DEPOIMENTOS = [
   { text: "O financeiro por obra acabou com as planilhas soltas. Sei a margem de cada projeto em tempo real.", nome: "Carlos Melo", cargo: "Construtor · São Paulo", ini: "CM" },
 ];
 
-// ─── CSS ─────────────────────────────────────────────────────────────────────
+//  CSS 
 const CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap');
   :root {
@@ -246,7 +246,7 @@ const CSS = `
   }
 `;
 
-// ─── Component ────────────────────────────────────────────────────────────────
+//  Component 
 export default function LandingPage() {
   const [solid, setSolid] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -262,7 +262,7 @@ export default function LandingPage() {
     <div className="lp">
       <style>{CSS}</style>
 
-      {/* ── Nav ── */}
+      {/*  Nav  */}
       <nav className={`lp-nav${solid ? " solid" : ""}`}>
         <div className="lp-wrap">
           <div className="lp-nav-in">
@@ -283,7 +283,7 @@ export default function LandingPage() {
         </div>
       </nav>
 
-      {/* ── Mobile menu ── */}
+      {/*  Mobile menu  */}
       <div
         className={`lp-m-menu${menuOpen ? " open" : ""}`}
         onClick={(e) => { if (e.target.tagName === "A" || e.target === e.currentTarget) setMenuOpen(false); }}
@@ -299,7 +299,7 @@ export default function LandingPage() {
         <a href="/cadastro" className="btn btn-brick" onClick={() => setMenuOpen(false)}>Começar grátis</a>
       </div>
 
-      {/* ── Hero — tijolo ── */}
+      {/*  Hero — tijolo  */}
       <section className="lp-hero">
         <div className="ring" />
         <div className="ring2" />
@@ -319,7 +319,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Funcionalidades — banda grafite ── */}
+      {/*  Funcionalidades — banda grafite  */}
       <section className="lp-feats" id="funcionalidades">
         <div className="lp-wrap">
           <div className="sec-head">
@@ -338,7 +338,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Produto ── */}
+      {/*  Produto  */}
       <section className="lp-produto" id="produto">
         <div className="lp-wrap">
           <div className="sec-head center">
@@ -374,7 +374,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Preços ── */}
+      {/*  Preços  */}
       <section className="lp-precos" id="precos">
         <div className="lp-wrap">
           <div className="sec-head center">
@@ -406,7 +406,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Depoimentos ── */}
+      {/*  Depoimentos  */}
       <section className="lp-depo">
         <div className="lp-wrap">
           <div className="sec-head center">
@@ -431,7 +431,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── CTA Calculadora ── */}
+      {/*  CTA Calculadora  */}
       <section className="lp-calcsec" id="calculadora">
         <div className="lp-wrap">
           <div className="calcband">
@@ -447,7 +447,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Footer ── */}
+      {/*  Footer  */}
       <footer className="lp-foot">
         <div className="lp-wrap">
           <div className="f-row">

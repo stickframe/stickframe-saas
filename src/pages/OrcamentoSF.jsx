@@ -1,4 +1,4 @@
-// ── STICK FRAME · Orçamento SF · Página Principal ───────────────────────
+//  STICK FRAME · Orçamento SF · Página Principal 
 import React, { useReducer, useEffect, useRef, useState } from 'react';
 import { sb, getEmpresaId } from '../services/supabase';
 import { SF_COMP, SF_PRECOS } from '../utils/sf-orcamento';
@@ -6,14 +6,14 @@ import { ViewProjetos, ViewProjeto, ViewAmbiente } from '../components/orcamento
 import { ViewRelatorio } from '../components/orcamento/SFRelatorio';
 import '../styles/sf-orcamento.css';
 
-// ── Estado inicial ──────────────────────────────────────────────────────
+//  Estado inicial 
 var INITIAL_STATE = {
   projetos: [],
   composicoes: SF_COMP,
   precos: { ...SF_PRECOS },
 };
 
-// ── Reducer ─────────────────────────────────────────────────────────────
+//  Reducer 
 function reducer(state, action) {
   switch(action.type) {
 
@@ -81,7 +81,7 @@ function reducer(state, action) {
   }
 }
 
-// ── Parse de rota interna ────────────────────────────────────────────────
+//  Parse de rota interna 
 // Rota esperada: /orcamento-sf, /orcamento-sf/:id, /orcamento-sf/:id/:ambId, /orcamento-sf/:id/relatorio
 function parseRota(path) {
   var stripped = (path || '').replace(/^\/(orcamento[_-]sf)\/?/, '');
@@ -94,7 +94,7 @@ function parseRota(path) {
   return { view: 'ambiente', projetoId, ambienteId: parts[1] };
 }
 
-// ── Componente principal ─────────────────────────────────────────────────
+//  Componente principal 
 export default function OrcamentoSF() {
   var [state, dispatch] = useReducer(reducer, INITIAL_STATE);
   var [rota, setRota] = useState(function(){

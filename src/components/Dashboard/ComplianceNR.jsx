@@ -43,7 +43,7 @@ export default function ComplianceNR() {
 
       {alertas.length === 0 ? (
         <div className="empty-state" style={{ padding: "24px 0" }}>
-          <div className="empty-state-icon" style={{ fontSize: 32 }}>🛡️</div>
+          <div className="empty-state-icon" style={{ fontSize: 32 }}></div>
           <div className="empty-state-title" style={{ fontSize: 14 }}>Tudo certo por aqui</div>
           <p className="sf-muted-sm">Nenhuma certificação vence nos próximos 30 dias.</p>
         </div>

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import useAppStore from "../store/useAppStore";
 
-// ─── Inline SVG Icon helper ────────────────────────────────────────────────
+//  Inline SVG Icon helper 
 const PATHS = {
   cube3d:  <><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></>,
   refresh: <><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></>,
@@ -32,7 +32,7 @@ function Ic({ n, w = 15, c }) {
   );
 }
 
-// ─── KPI data ─────────────────────────────────────────────────────────────────
+//  KPI data 
 const KPIS_INIT = [
   { v: 0, l: "Modelos 3D",       c: "var(--steel, #3b6ea5)" },
   { v: 0, l: "Apontamentos",     c: "var(--ink-2, #57514a)" },
@@ -40,7 +40,7 @@ const KPIS_INIT = [
   { v: 0, l: "Resolvidos",       c: "var(--pos, #3f7a4b)" },
 ];
 
-// ─── Shared button components ─────────────────────────────────────────────────
+//  Shared button components 
 function BtnPrimary({ onClick, children }) {
   return (
     <button
@@ -74,7 +74,7 @@ function BtnGhost({ onClick, children }) {
   );
 }
 
-// ─── Empty state card ─────────────────────────────────────────────────────────
+//  Empty state card 
 function EmptyBox({ icon, title, sub, children, style }) {
   return (
     <div style={{
@@ -99,7 +99,7 @@ function EmptyBox({ icon, title, sub, children, style }) {
   );
 }
 
-// ─── Sub-tab: Modelos ─────────────────────────────────────────────────────────
+//  Sub-tab: Modelos 
 function TabModelos() {
   return (
     <EmptyBox
@@ -114,7 +114,7 @@ function TabModelos() {
   );
 }
 
-// ─── Sub-tab: Revisões ────────────────────────────────────────────────────────
+//  Sub-tab: Revisões 
 function TabRevisoes() {
   return (
     <EmptyBox
@@ -129,7 +129,7 @@ function TabRevisoes() {
   );
 }
 
-// ─── Sub-tab: Apontamentos ────────────────────────────────────────────────────
+//  Sub-tab: Apontamentos 
 function TabApontamentos() {
   return (
     <div>
@@ -153,7 +153,7 @@ function TabApontamentos() {
   );
 }
 
-// ─── Sub-tab: Viewer 3D ───────────────────────────────────────────────────────
+//  Sub-tab: Viewer 3D 
 function TabViewer() {
   const tools = [
     { ic: "layers", l: "Plantas por pavimento", s: "Separar modelo por andar" },
@@ -218,7 +218,7 @@ function TabViewer() {
   );
 }
 
-// ─── Sub-tab: Preview Kit ─────────────────────────────────────────────────────
+//  Sub-tab: Preview Kit 
 function TabPreviewKit() {
   return (
     <div>
@@ -257,7 +257,7 @@ function TabPreviewKit() {
   );
 }
 
-// ─── Tab config ───────────────────────────────────────────────────────────────
+//  Tab config 
 const TABS = [
   { id: "modelos",      l: "Modelos",      icon: "cube3d"   },
   { id: "revisoes",     l: "Revisões",     icon: "refresh"  },
@@ -266,7 +266,7 @@ const TABS = [
   { id: "preview",      l: "Preview Kit",  icon: "home"     },
 ];
 
-// ─── Main export ──────────────────────────────────────────────────────────────
+//  Main export 
 export default function BimSF() {
   const [tab, setTab] = useState("modelos");
   const obras = useAppStore((s) => s.obras);

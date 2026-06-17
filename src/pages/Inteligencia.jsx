@@ -4,7 +4,7 @@ import { fmt } from "../utils/format";
 import useAppStore from "../store/useAppStore";
 import { useModuleLoad } from "../hooks/useModuleLoad";
 
-/* ── Lucide icons (viewBox 0 0 24 24) ── */
+/*  Lucide icons (viewBox 0 0 24 24)  */
 function Ic({ n, w = 16, c = "currentColor" }) {
   const P = {
     brain: <g><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2Z"/></g>,
@@ -101,7 +101,7 @@ export default function Inteligencia() {
   const tendCor = tendencia === "Alta" ? C.danger : tendencia === "Baixa" ? C.success : C.muted;
   const tendIcon = tendencia === "Alta" ? "trendU" : tendencia === "Baixa" ? "trendD" : "activity";
 
-  /* ── Header (sempre visível) ── */
+  /*  Header (sempre visível)  */
   const Header = (
     <div style={{ marginBottom: 20 }}>
       <h1 style={{ fontFamily: cond, fontWeight: 700, fontSize: 28, color: C.text, marginBottom: 4 }}>
@@ -113,7 +113,7 @@ export default function Inteligencia() {
     </div>
   );
 
-  /* ── Empty state contextual ── */
+  /*  Empty state contextual  */
   if (obrasAnalisadas === 0 && projetadoM2 === 0) {
     return (
       <div>
@@ -254,7 +254,7 @@ export default function Inteligencia() {
   );
 }
 
-/* ── KPI Card ── */
+/*  KPI Card  */
 function KpiCard({ accent, icon, label, val, unit, sub }) {
   return (
     <div className="card" style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12, padding: "16px 18px" }}>
@@ -274,7 +274,7 @@ function KpiCard({ accent, icon, label, val, unit, sub }) {
   );
 }
 
-/* ── Insights (lógica preservada) ── */
+/*  Insights (lógica preservada)  */
 function insights({ dadosPadrao, projetadoM2, custoMedio, tendencia, prazoMedio }) {
   const out = [];
   if (dadosPadrao.length > 0) {
@@ -302,7 +302,7 @@ function insights({ dadosPadrao, projetadoM2, custoMedio, tendencia, prazoMedio 
   return out;
 }
 
-/* ── Botões ── */
+/*  Botões  */
 const btnBase = {
   display: "inline-flex", alignItems: "center", gap: 8, padding: "9px 16px",
   borderRadius: 9, fontSize: 13, fontWeight: 700, cursor: "pointer",

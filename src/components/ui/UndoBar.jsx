@@ -29,7 +29,7 @@ export default function UndoBar() {
     if (!entry) return;
     try {
       await entry.restoreFn();
-      toast.success(`↩️ Desfeito: ${entry.label}`);
+      toast.success(`↩ Desfeito: ${entry.label}`);
       setVisible(false);
     } catch (e) {
       toast.error(`Erro ao desfazer: ${e.message}`);

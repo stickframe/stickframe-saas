@@ -38,7 +38,7 @@ export const C = {
   clay: '#b8624a',
 };
 
-// ─── NAV ─────────────────────────────────────────────────────────────────────
+//  NAV 
 export const NAV = [
   { key: "dashboard",         label: "Dashboard",            brand: "StickHub™",        icon: "LayoutDashboard", grupo: null },
   { key: "agenda",            label: "Agenda",               icon: "CalendarDays",      grupo: null },
@@ -72,7 +72,7 @@ export const NAV = [
   { key: "configuracoes",     label: "Configurações",        icon: "Settings",          grupo: null },
 ];
 
-// ─── PERFIS ──────────────────────────────────────────────────────────────────
+//  PERFIS 
 export const PERFIS = {
   diretor: {
     label: "Diretor",
@@ -96,17 +96,17 @@ export const PERFIS = {
   },
 };
 
-// ─── FASES ───────────────────────────────────────────────────────────────────
+//  FASES 
 export const FASES = [
   "Projeto executivo","Fundação","Estrutura Steel Frame",
   "Fechamentos","Instalações","Acabamento","Entrega"
 ];
 
-// ─── CATEGORIAS ──────────────────────────────────────────────────────────────
+//  CATEGORIAS 
 export const CATEGORIAS_DESPESA = ["Materiais","Mão de obra","Projeto","Transporte","Equipamentos","Administrativo","Outros"];
 export const CATEGORIAS_RECEITA = ["Entrada contrato","Medição 1","Medição 2","Medição 3","Saldo final","Outros"];
 
-// ─── PRECOS POR PADRÃO ───────────────────────────────────────────────────────
+//  PRECOS POR PADRÃO 
 const defaultPrecos = {
   "Econômico":   { label: "Econômico",   m2: 2800 },
   "Padrão":      { label: "Padrão",      m2: 3500 },
@@ -144,7 +144,7 @@ export const PRECOS = new Proxy({}, {
   }
 });
 
-// ─── TIPOS EVENTO ────────────────────────────────────────────────────────────
+//  TIPOS EVENTO 
 export const TIPOS_EVENTO = ["Visita de obra","Reunião com cliente","Vistoria","Entrega de documentos","Medição","Outro"];
 
 export const COR_TIPO_EVENTO = {
@@ -156,6 +156,6 @@ export const COR_TIPO_EVENTO = {
   "Outro":                  C.muted,
 };
 
-// ─── CLIMAS ──────────────────────────────────────────────────────────────────
-export const CLIMAS = ["☀️ Ensolarado","⛅ Nublado","🌧️ Chuvoso","⛈️ Tempestade","🌫️ Neblina"];
+//  CLIMAS 
+export const CLIMAS = [" Ensolarado"," Nublado"," Chuvoso"," Tempestade"," Neblina"];
 export const TURNOS = ["Manhã","Tarde","Integral"];

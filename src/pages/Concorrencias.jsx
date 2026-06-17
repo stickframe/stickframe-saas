@@ -29,7 +29,7 @@ function ItemRow({ item, onChange, onRemove }) {
         placeholder="Qtd" type="number" min="0" style={{ flex: 1, padding: "8px 10px", border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, fontFamily: "inherit", outline: "none" }} />
       <input value={item.unidade} onChange={(e) => onChange("unidade", e.target.value)}
         placeholder="Un" style={{ flex: 1, padding: "8px 10px", border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, fontFamily: "inherit", outline: "none" }} />
-      <button onClick={onRemove} style={{ background: C.danger + "15", border: `1px solid ${C.danger}33`, borderRadius: 6, padding: "7px 10px", color: C.danger, cursor: "pointer", fontFamily: "inherit", fontSize: 13 }}>✕</button>
+      <button onClick={onRemove} style={{ background: C.danger + "15", border: `1px solid ${C.danger}33`, borderRadius: 6, padding: "7px 10px", color: C.danger, cursor: "pointer", fontFamily: "inherit", fontSize: 13 }}></button>
     </div>
   );
 }
@@ -41,7 +41,7 @@ function PartRow({ part, onChange, onRemove }) {
         placeholder="Nome do fornecedor" style={{ flex: 2, padding: "8px 10px", border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, fontFamily: "inherit", outline: "none" }} />
       <input value={part.telefone} onChange={(e) => onChange("telefone", e.target.value)}
         placeholder="WhatsApp (opcional)" style={{ flex: 2, padding: "8px 10px", border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, fontFamily: "inherit", outline: "none" }} />
-      <button onClick={onRemove} style={{ background: C.danger + "15", border: `1px solid ${C.danger}33`, borderRadius: 6, padding: "7px 10px", color: C.danger, cursor: "pointer", fontFamily: "inherit", fontSize: 13 }}>✕</button>
+      <button onClick={onRemove} style={{ background: C.danger + "15", border: `1px solid ${C.danger}33`, borderRadius: 6, padding: "7px 10px", color: C.danger, cursor: "pointer", fontFamily: "inherit", fontSize: 13 }}></button>
     </div>
   );
 }
@@ -79,7 +79,7 @@ export default function Concorrencias() {
     try {
       const res = await getResultado(conc.id);
       setResultado(res);
-    } catch { mostrarToast("❌ Erro ao carregar resultado"); }
+    } catch { mostrarToast(" Erro ao carregar resultado"); }
     finally { setLoadingRes(false); }
   }
 
@@ -97,8 +97,8 @@ export default function Concorrencias() {
       const atualizada = await listarConcorrencias();
       setLista(atualizada);
       setModal(false);
-      mostrarToast("✅ Concorrência criada!");
-    } catch (e) { mostrarToast("❌ " + e.message); }
+      mostrarToast(" Concorrência criada!");
+    } catch (e) { mostrarToast(" " + e.message); }
     finally { setSaving(false); }
   }
 
@@ -120,8 +120,8 @@ export default function Concorrencias() {
       await abrirResultado(atualizada.find((c) => c.id === sel.id));
       setAddPartModal(false);
       setNovoPartForm({ nome_fornecedor: "", telefone: "" });
-      mostrarToast("✅ Fornecedor adicionado!");
-    } catch (e) { mostrarToast("❌ " + e.message); }
+      mostrarToast(" Fornecedor adicionado!");
+    } catch (e) { mostrarToast(" " + e.message); }
   }
 
   function setItem(i, k, v) {
@@ -131,7 +131,7 @@ export default function Concorrencias() {
     setForm((f) => { const participantes = [...f.participantes]; participantes[i] = { ...participantes[i], [k]: v }; return { ...f, participantes }; });
   }
 
-  // ── Calcular vencedor por item e total ────────────────────────────────────────
+  //  Calcular vencedor por item e total 
   function calcularResultado(res) {
     if (!res) return null;
     const { itens, participantes, propostas } = res;
@@ -221,7 +221,7 @@ export default function Concorrencias() {
       <div style={{ flex: 1, overflowY: "auto", padding: isMobile ? "16px" : "24px", display: isMobile && !sel ? "none" : "block" }}>
         {!sel ? (
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", color: C.muted }}>
-            <div style={{ fontSize: 40, marginBottom: 12 }}>🤝</div>
+            <div style={{ fontSize: 40, marginBottom: 12 }}></div>
             <div style={{ fontSize: 15, fontWeight: 700 }}>Selecione uma concorrência</div>
             <div style={{ fontSize: 13, marginTop: 6 }}>ou crie um novo processo de cotação</div>
           </div>
@@ -241,8 +241,8 @@ export default function Concorrencias() {
                 <h2 style={{ fontSize: 20, fontWeight: 900, margin: "0 0 4px" }}>{resultado.concorrencia.titulo}</h2>
                 {resultado.concorrencia.descricao && <p style={{ fontSize: 13, color: C.muted, margin: 0 }}>{resultado.concorrencia.descricao}</p>}
                 <div style={{ display: "flex", gap: 12, marginTop: 8, fontSize: 12, color: C.muted }}>
-                  {resultado.concorrencia.prazo_resposta && <span>📅 Prazo: {new Date(resultado.concorrencia.prazo_resposta + "T00:00").toLocaleDateString("pt-BR")}</span>}
-                  <span>👥 {resultado.participantes.length} fornecedores · {resultado.participantes.filter((p) => p.respondido).length} responderam</span>
+                  {resultado.concorrencia.prazo_resposta && <span> Prazo: {new Date(resultado.concorrencia.prazo_resposta + "T00:00").toLocaleDateString("pt-BR")}</span>}
+                  <span> {resultado.participantes.length} fornecedores · {resultado.participantes.filter((p) => p.respondido).length} responderam</span>
                 </div>
               </div>
               <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
@@ -259,7 +259,7 @@ export default function Concorrencias() {
             {/* Vencedor */}
             {analise?.vencedor && (
               <div style={{ background: C.success + "10", border: `1px solid ${C.success}33`, borderRadius: 12, padding: "14px 18px", marginBottom: 24, display: "flex", alignItems: "center", gap: 14 }}>
-                <span style={{ fontSize: 28 }}>🏆</span>
+                <span style={{ fontSize: 28 }}></span>
                 <div>
                   <div style={{ fontSize: 11, fontWeight: 700, color: C.success, letterSpacing: 1, textTransform: "uppercase" }}>Melhor proposta geral</div>
                   <div style={{ fontSize: 18, fontWeight: 900 }}>{analise.vencedor.nome_fornecedor}</div>
@@ -282,12 +282,12 @@ export default function Concorrencias() {
                       </div>
                       <div style={{ display: "flex", gap: 6, flexShrink: 0, alignItems: "center" }}>
                         <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 8, background: p.respondido ? C.success + "22" : C.warning + "22", color: p.respondido ? C.success : C.warning }}>
-                          {p.respondido ? "✓ Enviou" : "Pendente"}
+                          {p.respondido ? " Enviou" : "Pendente"}
                         </span>
-                        <button onClick={() => { navigator.clipboard?.writeText(link); mostrarToast("Link copiado!"); }} style={{ padding: "5px 10px", background: C.dark, border: `1px solid ${C.border}`, borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>📋</button>
+                        <button onClick={() => { navigator.clipboard?.writeText(link); mostrarToast("Link copiado!"); }} style={{ padding: "5px 10px", background: C.dark, border: `1px solid ${C.border}`, borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}></button>
                         {p.telefone && (
                           <button onClick={() => enviarWhatsApp(p.telefone, `Olá ${p.nome_fornecedor.split(" ")[0]}! Você foi convidado para participar do nosso processo de cotação "${resultado.concorrencia.titulo}". Acesse o link para enviar sua proposta: ${link}`)}
-                            style={{ padding: "5px 10px", background: "#25D36622", border: "1px solid #25D36644", borderRadius: 6, fontSize: 11, fontWeight: 700, color: "#25D366", cursor: "pointer", fontFamily: "inherit" }}>📲 WA</button>
+                            style={{ padding: "5px 10px", background: "#25D36622", border: "1px solid #25D36644", borderRadius: 6, fontSize: 11, fontWeight: 700, color: "#25D366", cursor: "pointer", fontFamily: "inherit" }}> WA</button>
                         )}
                       </div>
                     </div>
@@ -308,7 +308,7 @@ export default function Concorrencias() {
                         <th style={{ padding: "10px 10px", textAlign: "center", fontWeight: 700, fontSize: 10, color: C.muted, borderBottom: `1px solid ${C.border}` }}>QTD</th>
                         {resultado.participantes.filter((p) => p.respondido).map((p) => (
                           <th key={p.id} style={{ padding: "10px 12px", textAlign: "right", fontWeight: 700, fontSize: 11, color: analise?.vencedor?.id === p.id ? C.success : C.muted, borderBottom: `1px solid ${C.border}`, whiteSpace: "nowrap" }}>
-                            {analise?.vencedor?.id === p.id ? "🏆 " : ""}{p.nome_fornecedor}
+                            {analise?.vencedor?.id === p.id ? " " : ""}{p.nome_fornecedor}
                           </th>
                         ))}
                       </tr>
@@ -327,7 +327,7 @@ export default function Concorrencias() {
                                   <div>
                                     <div>R$ {Number(prop.preco_unitario).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</div>
                                     {prop.observacao && <div style={{ fontSize: 10, color: C.muted, fontWeight: 400 }}>{prop.observacao}</div>}
-                                    {isMenor && <div style={{ fontSize: 10, color: C.success }}>▼ menor</div>}
+                                    {isMenor && <div style={{ fontSize: 10, color: C.success }}> menor</div>}
                                   </div>
                                 ) : <span style={{ color: C.muted }}>—</span>}
                               </td>
@@ -367,7 +367,7 @@ export default function Concorrencias() {
 
       {/* Modal criar concorrência */}
       {modal && (
-        <Modal title="🤝 Nova Concorrência" onClose={() => setModal(false)}>
+        <Modal title=" Nova Concorrência" onClose={() => setModal(false)}>
           <div className="sf-col">
             <div>
               <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 6 }}>TÍTULO *</div>
@@ -413,7 +413,7 @@ export default function Concorrencias() {
             <div className="sf-actions">
               <Btn variant="ghost" onClick={() => setModal(false)}>Cancelar</Btn>
               <Btn disabled={!form.titulo || form.itens.every((i) => !i.descricao) || saving} onClick={criar}>
-                {saving ? "Criando…" : "🤝 Criar concorrência"}
+                {saving ? "Criando…" : " Criar concorrência"}
               </Btn>
             </div>
           </div>

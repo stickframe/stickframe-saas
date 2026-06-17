@@ -225,7 +225,7 @@ export function gerarBoletimMedicao(obra, medicoes = []) {
   doc.save(`boletim-${(obra.nome||"obra").replace(/\s+/g,"-").toLowerCase()}.pdf`);
 }
 
-// ── StickScore™ Relatório Compartilhável ─────────────────────────────────────
+//  StickScore™ Relatório Compartilhável 
 
 export function gerarRelatorioStickScore(obra, score, historico = []) {
   const { total, scores, nivel, cor, penalidade } = score;
@@ -314,8 +314,8 @@ export function gerarRelatorioStickScore(obra, score, historico = []) {
   const insightStyle = {
     positivo: { bg: "#2e9e5b20", border: "#2e9e5b40", color: "#6ee7b7", icon: "↑" },
     negativo: { bg: "#98191520", border: "#98191540", color: "#fca5a5", icon: "↓" },
-    alerta:   { bg: "#b07a1e20", border: "#b07a1e40", color: "#fcd34d", icon: "⚠" },
-    dica:     { bg: "#3b6ea520", border: "#3b6ea540", color: "#93c5fd", icon: "💡" },
+    alerta:   { bg: "#b07a1e20", border: "#b07a1e40", color: "#fcd34d", icon: "" },
+    dica:     { bg: "#3b6ea520", border: "#3b6ea540", color: "#93c5fd", icon: "" },
   };
   const insightsHtml = insights.length > 0 ? `
     <div style="margin-top:20px;display:flex;flex-direction:column;gap:8px">
@@ -330,7 +330,7 @@ export function gerarRelatorioStickScore(obra, score, historico = []) {
   // Penalidade
   const penalHtml = penalidade ? `
     <div style="margin-top:16px;padding:10px 12px;border-radius:8px;background:#b07a1e20;border:1px solid #b07a1e40;font-size:12px;color:#fcd34d;display:flex;gap:8px">
-      <span>⚠</span><span>Score limitado a ${total} — ${penalidade}</span>
+      <span></span><span>Score limitado a ${total} — ${penalidade}</span>
     </div>` : "";
 
   // Delta badge
@@ -376,9 +376,9 @@ export function gerarRelatorioStickScore(obra, score, historico = []) {
   <div style="background:#fff;border:1px solid #e5e0d8;border-radius:12px;padding:18px 20px;margin-bottom:20px">
     <div style="font-size:18px;font-weight:900;color:#1a1a2e;margin-bottom:6px">${obra.nome || "Sem nome"}</div>
     <div style="display:flex;gap:20px;flex-wrap:wrap">
-      ${obra.cliente ? `<span style="font-size:12px;color:#6b7280">👤 ${obra.cliente}</span>` : ""}
-      ${obra.status  ? `<span style="font-size:12px;color:#6b7280">● ${obra.status}</span>` : ""}
-      ${obra.progresso != null ? `<span style="font-size:12px;color:#6b7280">📊 ${obra.progresso}% concluído</span>` : ""}
+      ${obra.cliente ? `<span style="font-size:12px;color:#6b7280"> ${obra.cliente}</span>` : ""}
+      ${obra.status  ? `<span style="font-size:12px;color:#6b7280"> ${obra.status}</span>` : ""}
+      ${obra.progresso != null ? `<span style="font-size:12px;color:#6b7280"> ${obra.progresso}% concluído</span>` : ""}
     </div>
   </div>
 

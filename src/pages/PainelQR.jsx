@@ -46,7 +46,7 @@ export default function PainelQR() {
   if (erro) return (
     <div style={{ minHeight: "100vh", background: C.dark, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Inter, system-ui, sans-serif" }}>
       <div style={{ textAlign: "center", padding: 24 }}>
-        <div style={{ fontSize: 40, marginBottom: 12 }}>⚠️</div>
+        <div style={{ fontSize: 40, marginBottom: 12 }}></div>
         <div style={{ fontWeight: 700 }}>{erro}</div>
       </div>
     </div>
@@ -71,7 +71,7 @@ export default function PainelQR() {
           <div>
             <div style={{ color: "#fff", fontSize: 26, fontWeight: 900 }}>{painel.codigo}</div>
             {painel.descricao && <div style={{ color: "rgba(255,255,255,0.8)", fontSize: 14, marginTop: 3 }}>{painel.descricao}</div>}
-            {obra?.nome && <div style={{ color: "rgba(255,255,255,0.6)", fontSize: 12, marginTop: 4 }}>🏗️ {obra.nome}</div>}
+            {obra?.nome && <div style={{ color: "rgba(255,255,255,0.6)", fontSize: 12, marginTop: 4 }}> {obra.nome}</div>}
           </div>
           <div style={{ background: jaMontado ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.15)", borderRadius: 10, padding: "8px 14px", textAlign: "center", flexShrink: 0 }}>
             <div style={{ color: "#fff", fontSize: 20, fontWeight: 900 }}>{progresso}%</div>
@@ -87,13 +87,13 @@ export default function PainelQR() {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
             <div style={{ fontSize: 14, fontWeight: 700 }}>Status do painel</div>
             <span style={{ fontSize: 12, fontWeight: 700, padding: "4px 12px", borderRadius: 10, background: jaMontado ? C.success + "22" : C.warning + "22", color: jaMontado ? C.success : C.warning }}>
-              {jaMontado ? "✓ Montado" : "⏳ Pendente"}
+              {jaMontado ? " Montado" : "⏳ Pendente"}
             </span>
           </div>
 
           {painel.local_instalacao && (
             <div style={{ background: C.dark, borderRadius: 10, padding: "10px 14px", marginBottom: 12, display: "flex", gap: 10, alignItems: "center" }}>
-              <span style={{ fontSize: 20 }}>📍</span>
+              <span style={{ fontSize: 20 }}></span>
               <div>
                 <div style={{ fontSize: 11, color: C.muted, fontWeight: 700, letterSpacing: 0.5 }}>LOCAL DE INSTALAÇÃO</div>
                 <div style={{ fontSize: 14, fontWeight: 700 }}>{painel.local_instalacao}</div>
@@ -106,7 +106,7 @@ export default function PainelQR() {
               display: "flex", alignItems: "center", gap: 10, background: "#1a1a2e",
               borderRadius: 10, padding: "12px 14px", textDecoration: "none", marginBottom: 12,
             }}>
-              <span style={{ fontSize: 22 }}>🧊</span>
+              <span style={{ fontSize: 22 }}></span>
               <div>
                 <div style={{ fontSize: 13, fontWeight: 700, color: "#7eb8ff" }}>Ver localização no Modelo BIM 3D</div>
                 <div style={{ fontSize: 11, color: "#8888aa" }}>Abre o modelo com este painel destacado em vermelho</div>
@@ -117,7 +117,7 @@ export default function PainelQR() {
 
           {jaMontado && (
             <div style={{ background: "#f0fdf4", border: "1px solid #86efac", borderRadius: 10, padding: "12px 14px" }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: C.success, marginBottom: 4 }}>✅ Montado com sucesso!</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: C.success, marginBottom: 4 }}> Montado com sucesso!</div>
               {painel.montado_por && <div style={{ fontSize: 12, color: C.muted }}>Por: <strong>{painel.montado_por}</strong></div>}
               {painel.montado_em && <div style={{ fontSize: 12, color: C.muted }}>Em: {new Date(painel.montado_em).toLocaleString("pt-BR")}</div>}
             </div>
@@ -151,7 +151,7 @@ export default function PainelQR() {
               border: "none", borderRadius: 12, color: "#fff", fontSize: 16, fontWeight: 800,
               cursor: "pointer", fontFamily: "inherit",
             }}>
-              {enviando ? "Registrando..." : "✅ Marcar como Montado"}
+              {enviando ? "Registrando..." : " Marcar como Montado"}
             </button>
             <div style={{ fontSize: 11, color: C.muted, marginTop: 8, textAlign: "center" }}>
               Isso atualiza automaticamente o progresso físico da obra.

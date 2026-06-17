@@ -13,7 +13,7 @@ import Select from "../components/ui/Select";
 import Badge from "../components/ui/Badge";
 import Modal from "../components/ui/Modal";
 
-// ─── Geração de PDF ──────────────────────────────────────────────────────────
+//  Geração de PDF 
 function gerarPDFContrato(c, emp) {
   const fases = [
     { nome: "Projeto executivo",                   pct: 8  },
@@ -118,7 +118,7 @@ function gerarPDFContrato(c, emp) {
   printHtml(html, `contrato-${c.ref || "contrato"}`);
 }
 
-// ─── Status ──────────────────────────────────────────────────────────────────
+//  Status 
 const STATUS_OPTS = ["Aguardando", "Assinado", "Em execução", "Encerrado", "Cancelado"];
 const statusColor = (s) => {
   if (s === "Assinado" || s === "Em execução") return "#2e9e5b";
@@ -127,7 +127,7 @@ const statusColor = (s) => {
   return "#888";
 };
 
-// ─── Label ───────────────────────────────────────────────────────────────────
+//  Label 
 function Label({ children, required }) {
   return (
     <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 6 }}>
@@ -137,7 +137,7 @@ function Label({ children, required }) {
   );
 }
 
-// ─── Formulário (fora do componente) ─────────────────────────────────────────
+//  Formulário (fora do componente) 
 function FormContrato({ form, setForm, clientes, obras, onSave, onCancel, btnLabel }) {
   const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
 
@@ -246,7 +246,7 @@ function FormContrato({ form, setForm, clientes, obras, onSave, onCancel, btnLab
   );
 }
 
-// ─── Contratos ───────────────────────────────────────────────────────────────
+//  Contratos 
 const FORM_VAZIO = {
   cliente_id: "", cliente: "",
   obra_id:    "", obra: "",
@@ -318,7 +318,7 @@ export default function Contratos() {
       data:     new Date().toLocaleDateString("pt-BR"),
     });
     setModal(null);
-    mostrarToast("✅ Contrato criado com sucesso!");
+    mostrarToast(" Contrato criado com sucesso!");
   }
 
   function salvarEdicao() {
@@ -335,13 +335,13 @@ export default function Contratos() {
       status:     form.status,
     });
     setModal(null);
-    mostrarToast("✅ Contrato atualizado!");
+    mostrarToast(" Contrato atualizado!");
   }
 
   function executarDelete() {
     deleteContrato(confirm);
     setConfirm(null);
-    mostrarToast("🗑 Contrato removido.");
+    mostrarToast(" Contrato removido.");
   }
 
   const contratoParaDelete = contratos.find((c) => c.id === confirm);
@@ -444,7 +444,7 @@ export default function Contratos() {
         {/* Empty state */}
         {contratos.length === 0 ? (
           <div style={{ background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", border: `1px solid ${C.border}`, padding: 48, textAlign: "center" }}>
-            <div style={{ fontSize: 36, marginBottom: 12 }}>◑</div>
+            <div style={{ fontSize: 36, marginBottom: 12 }}></div>
             <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 8 }}>Nenhum contrato cadastrado</div>
             <div style={{ fontSize: 13, color: C.muted, marginBottom: 24 }}>Crie um contrato vinculando cliente e obra para formalizar o projeto.</div>
             <Btn onClick={abrirNovo}>+ Criar primeiro contrato</Btn>
@@ -512,7 +512,7 @@ export default function Contratos() {
                           border: `1px solid ${C.red}44`, borderRadius: 6,
                           color: C.red, fontSize: 12, fontWeight: 700,
                           cursor: "pointer", fontFamily: "inherit", width: "100%",
-                        }}>📄 Gerar PDF</button>
+                        }}> Gerar PDF</button>
                         {cl?.contato && (
                           <button onClick={() => enviarWhatsApp(cl.contato, msgContrato(c))} style={{
                             padding: "8px 0", background: "#25D36622",
@@ -526,7 +526,7 @@ export default function Contratos() {
                           border: `1px solid ${C.danger}44`, borderRadius: 6,
                           color: C.danger, fontSize: 12, fontWeight: 700,
                           cursor: "pointer", fontFamily: "inherit", width: "100%",
-                        }}>🗑 Deletar</button>
+                        }}> Deletar</button>
                       </div>
                     </div>
                   </div>

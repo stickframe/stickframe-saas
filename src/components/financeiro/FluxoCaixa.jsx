@@ -48,7 +48,7 @@ export function FluxoCaixa({ obraId }) {
 
   if (dados.length === 0) return (
     <div style={{ background: "var(--bg-card)", borderRadius: 12, padding: 40, textAlign: "center", color: "var(--text-muted)" }}>
-      <p style={{ fontSize: 32, margin: "0 0 8px" }}>💸</p>
+      <p style={{ fontSize: 32, margin: "0 0 8px" }}></p>
       <p>Nenhum lançamento encontrado para gerar o fluxo de caixa.</p>
     </div>
   );
@@ -56,7 +56,7 @@ export function FluxoCaixa({ obraId }) {
   return (
     <div style={{ background: "var(--bg-card)", borderRadius: 12, padding: 24 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
-        <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>💸 Fluxo de Caixa</h3>
+        <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}> Fluxo de Caixa</h3>
         <div style={{ display: "flex", gap: 16 }}>
           {[
             { label: "Total entradas", valor: totalEntradas, color: "#22c55e" },

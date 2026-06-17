@@ -109,7 +109,7 @@ export default function Cadastro() {
         <div style={{ background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.1)", borderRadius: 16, padding: "32px 28px" }}>
           {sucesso ? (
             <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: 48, marginBottom: 16 }}>✅</div>
+              <div style={{ fontSize: 48, marginBottom: 16 }}></div>
               <div style={{ fontSize: 20, fontWeight: 800, color: "#fff", marginBottom: 10 }}>
                 Conta criada com sucesso!
               </div>

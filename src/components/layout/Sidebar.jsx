@@ -334,7 +334,7 @@ export default function Sidebar({ open, onClose }) {
               <button onClick={() => setBusca("")} style={{
                 position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)",
                 background: "none", border: "none", color: "#4a5060", cursor: "pointer", fontSize: 14, lineHeight: 1,
-              }}>✕</button>
+              }}></button>
             )}
           </div>
         </div>
@@ -375,7 +375,7 @@ export default function Sidebar({ open, onClose }) {
       <aside className="sidebar-mobile-drawer" style={drawerStyle}>
         <div style={{ padding: "20px 18px 14px", borderBottom: "1px solid #25282e", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <img src={LOGO_STICKFRAME} style={{ height: "30px", width: "auto", objectFit: "contain" }} alt="Logo StickFrame" />
-          <button onClick={onClose} style={{ background: "none", border: "none", color: "#9aa0a8", fontSize: 22, cursor: "pointer", padding: 4 }}>✕</button>
+          <button onClick={onClose} style={{ background: "none", border: "none", color: "#9aa0a8", fontSize: 22, cursor: "pointer", padding: 4 }}></button>
         </div>
         {/* Search mobile */}
         <div style={{ padding: "8px 12px", borderBottom: "1px solid #1e2127" }}>
@@ -397,7 +397,7 @@ export default function Sidebar({ open, onClose }) {
               <button onClick={() => setBusca("")} style={{
                 position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)",
                 background: "none", border: "none", color: "#4a5060", cursor: "pointer", fontSize: 16, lineHeight: 1,
-              }}>✕</button>
+              }}></button>
             )}
           </div>
         </div>

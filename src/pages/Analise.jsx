@@ -5,19 +5,19 @@ import useAppStore from "../store/useAppStore";
 const DOCS = [
   {
     id: "projeto",
-    label: "📋 Análise do Projeto",
+    label: " Análise do Projeto",
     desc: "Arquitetura, módulos, banco de dados e oportunidades de melhoria",
     src: "/docs/analise-projeto.html",
   },
   {
     id: "procore",
-    label: "⚔️ StickFrame vs Procore",
+    label: " StickFrame vs Procore",
     desc: "Comparativo técnico em 9 dimensões e roadmap para fechar o gap",
     src: "/docs/stickframe-vs-procore.html",
   },
   {
     id: "frontend",
-    label: "🎨 Comparativo de Frontend",
+    label: " Comparativo de Frontend",
     desc: "Análise visual e de UX dos principais produtos do mercado",
     src: "/docs/comparativo-frontend.html",
   },
@@ -30,7 +30,7 @@ export default function Analise() {
   if (user?.perfil !== "diretor") {
     return (
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "60vh", flexDirection: "column", gap: 12 }}>
-        <div style={{ fontSize: 40 }}>🔒</div>
+        <div style={{ fontSize: 40 }}></div>
         <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>Acesso restrito</div>
         <div style={{ fontSize: 13, color: C.muted }}>Esta área é exclusiva para o perfil Diretor.</div>
       </div>

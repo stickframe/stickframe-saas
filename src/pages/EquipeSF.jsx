@@ -1,10 +1,10 @@
 import { useState } from "react";
 
-// ── Design tokens via CSS vars ────────────────────────────────────────────────
+//  Design tokens via CSS vars 
 // --brick:#981915  --graphite:#2b2b2e  --ink:#26231f  --ink-2:#57514a
 // --muted:#8c847a  --line:#e7e1d8  --bg:#f4f1ec  --surface:#fff  --surface-2:#faf8f4
 
-// ── SVG icon helper ───────────────────────────────────────────────────────────
+//  SVG icon helper 
 function Ic({ n, w = 15, c }) {
   const P = {
     users:    <g><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></g>,
@@ -37,7 +37,7 @@ function Ic({ n, w = 15, c }) {
   );
 }
 
-// ── Mock data ─────────────────────────────────────────────────────────────────
+//  Mock data 
 const MEMBROS = [
   { id: 1, nome: "AJUDANTE - 1",            cargo: "AJUDANTE",    area: "Ajudante",      salario: 150,  status: "Ativo", nrs: [],                                                              email: "",                          tel: "" },
   { id: 2, nome: "ANDRE QUEIROZ CANDIDO",   cargo: "DIRETOR",     area: "Administração", salario: 300,  status: "Ativo", nrs: ["Habilitação","NR-35","NR-12","NR-18","NR-10","NR-6","ASO"],   email: "andre@stickframe.com.br",    tel: "" },
@@ -63,7 +63,7 @@ function fmtBRL(v) {
   return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
-// ── Sub-components ────────────────────────────────────────────────────────────
+//  Sub-components 
 function StatusPill({ status }) {
   const styles = {
     Ativo:    { background: "#e8f3eb", color: "#3f7a4b" },
@@ -259,7 +259,7 @@ function EmptyState({ icon, title, text, action }) {
   );
 }
 
-// ── Main page ─────────────────────────────────────────────────────────────────
+//  Main page 
 export default function EquipeSF() {
   const [tab, setTab]     = useState("equipe");
   const [filtro, setFiltro] = useState("Todos");

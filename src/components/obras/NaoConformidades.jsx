@@ -110,8 +110,8 @@ export default function NaoConformidades({ obraId }) {
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
         <div style={{ display: "flex", gap: 16, fontSize: 13 }}>
-          <span style={{ color: C.danger, fontWeight: 700 }}>● {ncrs.filter(n => n.status !== "Fechada").length} abertas</span>
-          <span style={{ color: C.success, fontWeight: 700 }}>● {ncrs.filter(n => n.status === "Fechada").length} fechadas</span>
+          <span style={{ color: C.danger, fontWeight: 700 }}> {ncrs.filter(n => n.status !== "Fechada").length} abertas</span>
+          <span style={{ color: C.success, fontWeight: 700 }}> {ncrs.filter(n => n.status === "Fechada").length} fechadas</span>
         </div>
         <button
           onClick={() => { setForm({ disciplina: "Civil", gravidade: "Media" }); setModal("new"); }}
@@ -142,14 +142,14 @@ export default function NaoConformidades({ obraId }) {
               </div>
               {n.descricao && <p style={{ margin: "8px 0 0", fontSize: 13, color: C.muted }}>{n.descricao}</p>}
               <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap", alignItems: "center" }}>
-                <span style={{ fontSize: 12, color: C.muted }}>📐 {n.disciplina}</span>
-                {n.prazo && <span style={{ fontSize: 12, color: C.muted }}>📅 {new Date(n.prazo + "T00:00").toLocaleDateString("pt-BR")}</span>}
+                <span style={{ fontSize: 12, color: C.muted }}> {n.disciplina}</span>
+                {n.prazo && <span style={{ fontSize: 12, color: C.muted }}> {new Date(n.prazo + "T00:00").toLocaleDateString("pt-BR")}</span>}
                 {n.status !== "Fechada" && (
                   <>
                     <button onClick={() => { setForm({ ...n }); setModal(n); }}
-                      style={{ marginLeft: "auto", fontSize: 11, padding: "4px 10px", background: C.dark, border: `1px solid ${C.border}`, borderRadius: 6, cursor: "pointer", fontFamily: "inherit" }}>✏️ Editar</button>
+                      style={{ marginLeft: "auto", fontSize: 11, padding: "4px 10px", background: C.dark, border: `1px solid ${C.border}`, borderRadius: 6, cursor: "pointer", fontFamily: "inherit" }}> Editar</button>
                     <button onClick={() => setFecharId(n.id)}
-                      style={{ fontSize: 11, padding: "4px 10px", background: C.success + "18", color: C.success, border: `1px solid ${C.success}44`, borderRadius: 6, cursor: "pointer", fontFamily: "inherit", fontWeight: 700 }}>✅ Fechar</button>
+                      style={{ fontSize: 11, padding: "4px 10px", background: C.success + "18", color: C.success, border: `1px solid ${C.success}44`, borderRadius: 6, cursor: "pointer", fontFamily: "inherit", fontWeight: 700 }}> Fechar</button>
                   </>
                 )}
               </div>
@@ -169,7 +169,7 @@ export default function NaoConformidades({ obraId }) {
           <div style={{ background: C.surface, borderRadius: 12, padding: 24, width: "min(480px,95vw)", maxHeight: "90vh", overflowY: "auto", boxShadow: "0 8px 32px rgba(0,0,0,0.18)" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
               <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800 }}>{modal === "new" ? "Nova NCR" : "Editar NCR"}</h3>
-              <button onClick={() => setModal(null)} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: C.muted }}>✕</button>
+              <button onClick={() => setModal(null)} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: C.muted }}></button>
             </div>
             <label style={{ display: "block", marginBottom: 12 }}>
               <span style={{ fontSize: 12, color: C.muted, fontWeight: 600 }}>Título *</span>
@@ -219,7 +219,7 @@ export default function NaoConformidades({ obraId }) {
             </label>
             <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
               <button onClick={() => setFecharId(null)} style={{ padding: "8px 16px", borderRadius: 8, border: `1px solid ${C.border}`, background: "none", cursor: "pointer", fontFamily: "inherit" }}>Cancelar</button>
-              <button onClick={fechar} disabled={!acaoCorretiva.trim()} style={{ padding: "8px 20px", borderRadius: 8, border: "none", background: C.success, color: "#fff", cursor: "pointer", fontWeight: 700, fontFamily: "inherit", opacity: !acaoCorretiva.trim() ? 0.5 : 1 }}>✅ Confirmar</button>
+              <button onClick={fechar} disabled={!acaoCorretiva.trim()} style={{ padding: "8px 20px", borderRadius: 8, border: "none", background: C.success, color: "#fff", cursor: "pointer", fontWeight: 700, fontFamily: "inherit", opacity: !acaoCorretiva.trim() ? 0.5 : 1 }}> Confirmar</button>
             </div>
           </div>
         </div>

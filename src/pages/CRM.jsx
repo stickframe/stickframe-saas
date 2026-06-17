@@ -16,7 +16,7 @@ import Select from "../components/ui/Select";
 import Badge from "../components/ui/Badge";
 import Modal from "../components/ui/Modal";
 
-// ─── Status e Origens ────────────────────────────────────────────────────────
+//  Status e Origens 
 const STATUS_OPTS = ["Lead", "Em negociação", "Proposta enviada", "Fechado", "Em execução"];
 const ORIGEM_OPTS = ["Indicação", "Instagram", "Google", "Site", "Outros"];
 
@@ -29,7 +29,7 @@ const STATUS_COR = {
 };
 function statusColor(s) { return STATUS_COR[s] || C.muted; }
 
-// ─── Score de lead ────────────────────────────────────────────────────────────
+//  Score de lead 
 function calcularScore(c) {
   const hoje = new Date().toISOString().split("T")[0];
   let pts = 0;
@@ -75,21 +75,21 @@ function calcularScore(c) {
   pts += cPts; breakdown.push({ label: "Contato", pts: cPts, max: 10 });
 
   const score = Math.min(pts, 100);
-  if (score >= 70) return { score, label: "🔥 Quente", cor: "#c0392b", bg: "#fdecea", breakdown };
-  if (score >= 40) return { score, label: "🟡 Morno",  cor: "#c88a00", bg: "#fff8e1", breakdown };
-  return               { score, label: "❄️ Frio",   cor: "#4a9eff", bg: "#e8f4ff", breakdown };
+  if (score >= 70) return { score, label: " Quente", cor: "#c0392b", bg: "#fdecea", breakdown };
+  if (score >= 40) return { score, label: " Morno",  cor: "#c88a00", bg: "#fff8e1", breakdown };
+  return               { score, label: " Frio",   cor: "#4a9eff", bg: "#e8f4ff", breakdown };
 }
 
-// ─── Templates WhatsApp ───────────────────────────────────────────────────────
+//  Templates WhatsApp 
 const WA_TEMPLATES = [
-  { id: "primeiro_contato", label: "1º Contato", icon: "👋",
-    msg: (c) => `Olá ${c.nome}! 👋\n\nVi que você tem interesse em construção em *Steel Frame*.\n\nSomos a *Stick Frame Sistemas Construtivos* — especialistas em sistemas estruturais metálicos. Podemos conversar sobre seu projeto?\n\nStick Frame · Santo André/SP` },
-  { id: "follow_up", label: "Follow-up", icon: "🔁",
-    msg: (c) => `Olá ${c.nome}! 👋\n\nPassando para dar continuidade ao nosso contato sobre seu projeto de construção.\n\nTem alguma dúvida ou posso ajudar com mais informações?\n\nStick Frame · Santo André/SP` },
-  { id: "proposta", label: "Proposta", icon: "📋",
-    msg: (c) => `Olá ${c.nome}! 👋\n\nEnviamos a proposta comercial do seu projeto. Já teve chance de analisar?\n\nEstou à disposição para esclarecer qualquer dúvida sobre valores, prazo ou sistema construtivo.\n\nStick Frame · Santo André/SP` },
-  { id: "fechamento", label: "Fechamento", icon: "🤝",
-    msg: (c) => `Olá ${c.nome}! 👋\n\nGostaria de dar um retorno sobre nossa proposta — podemos agendar uma conversa rápida para fechar os detalhes do seu projeto?\n\nStick Frame · Santo André/SP` },
+  { id: "primeiro_contato", label: "1º Contato", icon: "",
+    msg: (c) => `Olá ${c.nome}! \n\nVi que você tem interesse em construção em *Steel Frame*.\n\nSomos a *Stick Frame Sistemas Construtivos* — especialistas em sistemas estruturais metálicos. Podemos conversar sobre seu projeto?\n\nStick Frame · Santo André/SP` },
+  { id: "follow_up", label: "Follow-up", icon: "",
+    msg: (c) => `Olá ${c.nome}! \n\nPassando para dar continuidade ao nosso contato sobre seu projeto de construção.\n\nTem alguma dúvida ou posso ajudar com mais informações?\n\nStick Frame · Santo André/SP` },
+  { id: "proposta", label: "Proposta", icon: "",
+    msg: (c) => `Olá ${c.nome}! \n\nEnviamos a proposta comercial do seu projeto. Já teve chance de analisar?\n\nEstou à disposição para esclarecer qualquer dúvida sobre valores, prazo ou sistema construtivo.\n\nStick Frame · Santo André/SP` },
+  { id: "fechamento", label: "Fechamento", icon: "",
+    msg: (c) => `Olá ${c.nome}! \n\nGostaria de dar um retorno sobre nossa proposta — podemos agendar uma conversa rápida para fechar os detalhes do seu projeto?\n\nStick Frame · Santo André/SP` },
 ];
 
 // Mensagem padrão por etapa do funil
@@ -103,7 +103,7 @@ const WA_POR_STATUS = {
   "Perdido":           WA_TEMPLATES[1],
 };
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+//  Helpers 
 function fmtTel(v) {
   const d = v.replace(/\D/g, "").slice(0, 11);
   if (d.length <= 2)  return d;
@@ -122,7 +122,7 @@ function parseMoeda(v) {
 }
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-// ─── Label auxiliar ──────────────────────────────────────────────────────────
+//  Label auxiliar 
 function Label({ children, required }) {
   return (
     <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 6 }}>
@@ -131,7 +131,7 @@ function Label({ children, required }) {
   );
 }
 
-// ─── Textarea ────────────────────────────────────────────────────────────────
+//  Textarea 
 function Textarea({ value, onChange, placeholder, rows = 3 }) {
   return (
     <textarea
@@ -150,7 +150,7 @@ function Textarea({ value, onChange, placeholder, rows = 3 }) {
   );
 }
 
-// ─── Seção do formulário ─────────────────────────────────────────────────────
+//  Seção do formulário 
 function Secao({ titulo }) {
   return (
     <div style={{
@@ -163,7 +163,7 @@ function Secao({ titulo }) {
   );
 }
 
-// ─── Formulário (fora do componente para não re-montar a cada render) ─────────
+//  Formulário (fora do componente para não re-montar a cada render) 
 const FormCliente = memo(function FormCliente({ form, setForm, onSave, onCancel, onDelete, btnLabel, disabled }) {
   const [erros, setErros] = useState({});
   const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
@@ -323,7 +323,7 @@ const FormCliente = memo(function FormCliente({ form, setForm, onSave, onCancel,
   );
 });
 
-// ─── CRM principal ───────────────────────────────────────────────────────────
+//  CRM principal 
 const FILTERS_VAZIO = { status: "", origem: "", valorMin: "", valorMax: "", busca: "" };
 
 const FORM_VAZIO = {
@@ -476,9 +476,9 @@ export default function CRM() {
         valor:    form.valor || 0,
       });
       setModal(false);
-      mostrarToast("✅ Cliente cadastrado com sucesso!");
+      mostrarToast(" Cliente cadastrado com sucesso!");
     } catch (e) {
-      mostrarToast("❌ " + e.message);
+      mostrarToast(" " + e.message);
     } finally {
       setIsSaving(false);
     }
@@ -498,9 +498,9 @@ export default function CRM() {
         responsavel:     form.responsavel || null,
       });
       setModal(false);
-      mostrarToast("✅ Cliente atualizado!");
+      mostrarToast(" Cliente atualizado!");
     } catch (e) {
-      mostrarToast("❌ " + e.message);
+      mostrarToast(" " + e.message);
     } finally {
       setIsSaving(false);
     }
@@ -510,7 +510,7 @@ export default function CRM() {
     deleteCliente(sel);
     setSel(null);
     setConfirm(false);
-    mostrarToast("🗑 Cliente removido.");
+    mostrarToast(" Cliente removido.");
   }
 
   async function criarSequenciaFollowUp(c) {
@@ -547,9 +547,9 @@ export default function CRM() {
       const d3 = new Date(hoje);
       d3.setDate(d3.getDate() + 3);
       await updateCliente(c.id, { proximo_contato: d3.toISOString().split("T")[0], follow_seq_ativa: true });
-      mostrarToast("✅ Sequência D+3, D+7, D+15 criada na agenda!");
+      mostrarToast(" Sequência D+3, D+7, D+15 criada na agenda!");
     } catch (e) {
-      mostrarToast("❌ Erro ao criar sequência: " + e.message);
+      mostrarToast(" Erro ao criar sequência: " + e.message);
     } finally {
       setSeqLoading(false);
     }
@@ -598,7 +598,7 @@ export default function CRM() {
       const data = await importClientes(csvPreview);
       setCsvModal(false);
       setCsvPreview([]);
-      mostrarToast(`✅ ${data.length} clientes importados!`);
+      mostrarToast(` ${data.length} clientes importados!`);
     } catch (e) {
       setCsvErro("Erro ao importar: " + e.message);
     }
@@ -694,7 +694,7 @@ export default function CRM() {
                   gap: 8, padding: "28px 20px", border: `2px dashed ${C.border}`, borderRadius: 10,
                   cursor: "pointer", color: C.muted, fontSize: 13,
                 }}>
-                  <span style={{ fontSize: 28 }}>📂</span>
+                  <span style={{ fontSize: 28 }}></span>
                   Clique para selecionar o arquivo CSV
                   <input type="file" accept=".csv,text/csv" style={{ display: "none" }} onChange={(e) => handleCSVFile(e.target.files[0])} />
                 </label>
@@ -743,8 +743,8 @@ export default function CRM() {
           <p style={{ color: C.muted, fontSize: 13, marginTop: 4 }}>Gerencie seu funil de vendas e contatos</p>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
-          <Btn variant="ghost" onClick={() => { setCsvPreview([]); setCsvErro(""); setCsvModal(true); }}>⬆ Importar CSV</Btn>
-          <Btn variant="ghost" onClick={() => setAiImportModal(true)}>🤖 Importar por IA</Btn>
+          <Btn variant="ghost" onClick={() => { setCsvPreview([]); setCsvErro(""); setCsvModal(true); }}> Importar CSV</Btn>
+          <Btn variant="ghost" onClick={() => setAiImportModal(true)}> Importar por IA</Btn>
           <Btn onClick={abrirNovo}>+ Nova oportunidade</Btn>
         </div>
       </div>
@@ -889,7 +889,7 @@ export default function CRM() {
               boxShadow: view === "list" ? "0 2px 8px #0004" : "none",
               transition: "all 0.2s"
             }}>
-            ☰ Lista
+             Lista
           </button>
         </div>
       </div>
@@ -911,7 +911,7 @@ export default function CRM() {
                       const id = e.dataTransfer.getData("text/plain");
                       if (id) {
                         updateCliente(id, { status });
-                        mostrarToast(`✅ Movido para ${status}`);
+                        mostrarToast(` Movido para ${status}`);
                         if (status === "Em execução") {
                           const c = clientes.find((x) => x.id === id);
                           if (c) setCriarObraModal(c);
@@ -961,7 +961,7 @@ export default function CRM() {
                             
                             <div style={{ fontSize: 11, color: C.muted, marginTop: 10, display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 8, borderTop: `1px dashed ${C.border}` }}>
                               <span style={{ background: C.darker, padding: "2px 6px", borderRadius: 4 }}>{c.origem || "Indicação"}</span>
-                              {atrasado && <span style={{ color: C.danger, fontWeight: 700, fontSize: 10, background: C.danger+"22", padding: "2px 6px", borderRadius: 4 }}>⚠️ FOLLOW-UP</span>}
+                              {atrasado && <span style={{ color: C.danger, fontWeight: 700, fontSize: 10, background: C.danger+"22", padding: "2px 6px", borderRadius: 4 }}> FOLLOW-UP</span>}
                             </div>
                             {(c.origem === "Calculadora" || c.origem?.startsWith("Kit-")) && (() => {
                               const kitId = c.origem?.startsWith("Kit-")
@@ -985,7 +985,7 @@ export default function CRM() {
                                   onMouseEnter={e => e.currentTarget.style.background = "#98191520"}
                                   onMouseLeave={e => e.currentTarget.style.background = "#98191510"}
                                 >
-                                  🔧 Simular kit
+                                   Simular kit
                                 </button>
                               );
                             })()}
@@ -1005,7 +1005,7 @@ export default function CRM() {
                                 onMouseEnter={e => e.currentTarget.style.background = "#25D36622"}
                                 onMouseLeave={e => e.currentTarget.style.background = "#25D36610"}
                               >
-                                💬 Contatar
+                                 Contatar
                               </button>
                             )}
                           </div>
@@ -1049,7 +1049,7 @@ export default function CRM() {
             <div style={{ background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", border: `1px solid ${C.border}`, overflow: "hidden" }}>
               {clientesFiltrados.length === 0 ? (
                 <div style={{ padding: 48, textAlign: "center", color: C.muted }}>
-                  <div style={{ fontSize: 32, marginBottom: 12 }}>◈</div>
+                  <div style={{ fontSize: 32, marginBottom: 12 }}></div>
                   <div style={{ fontSize: 14, fontWeight: 600 }}>{clientes.length === 0 ? "Nenhum cliente ainda" : "Nenhum resultado para os filtros"}</div>
                   <div style={{ fontSize: 12, marginTop: 4 }}>{clientes.length === 0 ? 'Clique em "+ Nova oportunidade" para começar' : "Tente ajustar ou limpar os filtros"}</div>
                 </div>
@@ -1114,7 +1114,7 @@ export default function CRM() {
         {criarObraModal && (
           <div style={{ position: "fixed", inset: 0, background: "#000a", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center" }}>
             <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 14, padding: 28, width: 420, maxWidth: "95vw" }}>
-              <div style={{ fontSize: 18, fontWeight: 800, marginBottom: 6 }}>🏗️ Criar obra?</div>
+              <div style={{ fontSize: 18, fontWeight: 800, marginBottom: 6 }}> Criar obra?</div>
               <div style={{ fontSize: 13, color: C.muted, marginBottom: 20, lineHeight: 1.6 }}>
                 <strong>{criarObraModal.nome}</strong> foi movido para <strong>Em execução</strong>.<br />
                 Deseja criar uma obra automaticamente para este cliente?
@@ -1134,7 +1134,7 @@ export default function CRM() {
                     contrato: c.valor || 0,
                   });
                   setCriarObraModal(null);
-                  mostrarToast("🏗️ Obra criada com sucesso!");
+                  mostrarToast(" Obra criada com sucesso!");
                 }}>
                   Sim, criar obra
                 </Btn>
@@ -1264,7 +1264,7 @@ export default function CRM() {
                 fontWeight: 700, cursor: seqLoading ? "wait" : "pointer", fontFamily: "inherit",
               }}
             >
-              {seqLoading ? "Criando..." : "📅 Sequência D+3 / D+7 / D+15"}
+              {seqLoading ? "Criando..." : " Sequência D+3 / D+7 / D+15"}
             </button>
 
             <button
@@ -1276,7 +1276,7 @@ export default function CRM() {
                 fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
               }}
             >
-              🔩 Gerar Orçamento Técnico
+               Gerar Orçamento Técnico
             </button>
 
             <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
@@ -1288,7 +1288,7 @@ export default function CRM() {
                   borderRadius: 6, color: C.danger, fontSize: 12,
                   fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
                 }}>
-                  🗑 Deletar
+                   Deletar
                 </button>
               )}
             </div>
@@ -1303,7 +1303,7 @@ export default function CRM() {
                   fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
                 }}
               >
-                📲 Enviar WhatsApp
+                 Enviar WhatsApp
               </button>
             )}
           </div>

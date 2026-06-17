@@ -145,17 +145,17 @@ export default function MonitorPrecos() {
       {/* KPIs Rápidos */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16, marginBottom: 28 }}>
         <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12, padding: 18, borderTop: `3px solid ${C.danger}` }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 8, textTransform: "uppercase" }}>Em Alta 📈</div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 8, textTransform: "uppercase" }}>Em Alta </div>
           <div style={{ fontSize: 28, fontWeight: 900, color: C.danger }}>{emAlta.length}</div>
           <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>Itens subiram de preço</div>
         </div>
         <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12, padding: 18, borderTop: `3px solid ${C.success}` }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 8, textTransform: "uppercase" }}>Em Baixa 📉</div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 8, textTransform: "uppercase" }}>Em Baixa </div>
           <div style={{ fontSize: 28, fontWeight: 900, color: C.success }}>{emBaixa.length}</div>
           <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>Oportunidades de compra</div>
         </div>
         <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12, padding: 18, borderTop: `3px solid ${C.muted}` }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 8, textTransform: "uppercase" }}>Estáveis ➖</div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 8, textTransform: "uppercase" }}>Estáveis </div>
           <div style={{ fontSize: 28, fontWeight: 900, color: C.text }}>{estaveis.length}</div>
           <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>Sem variação recente</div>
         </div>
@@ -183,7 +183,7 @@ export default function MonitorPrecos() {
                     <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>Ref: {item.loja || "Mercado"}</div>
                   </div>
                   <div style={{ background: badgeBg, color: color, padding: "4px 8px", borderRadius: 6, fontSize: 12, fontWeight: 800, display: "flex", alignItems: "center", gap: 4 }}>
-                    {isAlta ? "▲" : isBaixa ? "▼" : "➖"} {variacao}%
+                    {isAlta ? "" : isBaixa ? "" : ""} {variacao}%
                   </div>
                 </div>
                 

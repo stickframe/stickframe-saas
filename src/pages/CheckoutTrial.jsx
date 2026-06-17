@@ -109,13 +109,13 @@ export default function CheckoutTrial() {
             <div style={{ fontSize: 12, fontWeight: 800, color: "#fff", marginBottom: 2 }}>Plano {plano.label} — 14 dias grátis</div>
             <div style={{ fontSize: 11, color: "rgba(255,255,255,.45)" }}>Depois R$ {plano.valor}/mês · cancele antes sem custo</div>
           </div>
-          <div style={{ fontSize: 22, fontWeight: 900, color: "#981915", fontFamily: "sans-serif" }}>🎯</div>
+          <div style={{ fontSize: 22, fontWeight: 900, color: "#981915", fontFamily: "sans-serif" }}></div>
         </div>
 
         <div style={s.card}>
           {sucesso ? (
             <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: 52, marginBottom: 14 }}>🚀</div>
+              <div style={{ fontSize: 52, marginBottom: 14 }}></div>
               <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", marginBottom: 10 }}>Trial ativado!</div>
               <div style={{ fontSize: 14, color: "rgba(255,255,255,.6)", lineHeight: 1.7, marginBottom: 24 }}>
                 Você tem <strong style={{ color: "#fff" }}>14 dias de acesso completo</strong> ao plano {plano.label}.<br />
@@ -188,7 +188,7 @@ export default function CheckoutTrial() {
               <ul style={{ marginTop: 20, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 8 }}>
                 {[`14 dias de acesso ao ${plano.label} completo`, "Sem cobrança agora — primeiro pagamento em 14 dias", "Cancele antes sem custo, sem multa"].map((it) => (
                   <li key={it} style={{ fontSize: 12, color: "rgba(255,255,255,.45)", display: "flex", gap: 8, alignItems: "flex-start" }}>
-                    <span style={{ color: "#3f7a4b", flexShrink: 0 }}>✓</span>{it}
+                    <span style={{ color: "#3f7a4b", flexShrink: 0 }}></span>{it}
                   </li>
                 ))}
               </ul>

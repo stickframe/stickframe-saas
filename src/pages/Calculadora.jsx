@@ -8,7 +8,7 @@ import {
   listarRetalhos, registrarRetalho, marcarUsado,
 } from "../services/repositories/retalhosRepository";
 
-// ─── Insumos por m² de área construída ───────────────────────────────────────
+//  Insumos por m² de área construída 
 // fund:true = não multiplica por pavs/padrão | serv:true = mão de obra (não é material)
 const INSUMOS = [
   // Estrutura
@@ -75,7 +75,7 @@ const PADROES = {
   "Alto Padrão": { fator: 1.20 },
 };
 
-// ─── Kits de modelos de casa ──────────────────────────────────────────────────
+//  Kits de modelos de casa 
 const KITS = [
   {
     id: "studio",
@@ -143,7 +143,7 @@ const KITS = [
 const fmtR  = (v) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 const fmtMm = (mm) => mm >= 1000 ? `${(mm / 1000).toFixed(2).replace(".", ",")} m` : `${mm} mm`;
 
-// ─── First Fit Decreasing ─────────────────────────────────────────────────────
+//  First Fit Decreasing 
 function otimizarCorte(pecas, tamBarra) {
   const lista = [];
   pecas.forEach((p) => {
@@ -161,7 +161,7 @@ function otimizarCorte(pecas, tamBarra) {
   return barras;
 }
 
-// ─── Calculadora Parede Drywall ───────────────────────────────────────────────
+//  Calculadora Parede Drywall 
 function CalcParedeDrywall({ listaInsumos = INSUMOS }) {
   const [comp,     setComp]     = useState("");
   const [alt,      setAlt]      = useState("2.80");
@@ -278,12 +278,12 @@ function CalcParedeDrywall({ listaInsumos = INSUMOS }) {
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(190px,1fr))", gap: 12, marginBottom: 16 }}>
             {[
-              { icon: "⬜", label: "Placas Drywall",    qtd: `${result.placas} chp`,    sub: `${TIPOS[tipo].label} · ${result.area.toFixed(1)} m²`, val: result.totalPlacas },
-              { icon: "⠿",  label: "Montantes (C 90)",  qtd: `${result.montantes} pç`,  sub: `espaç. ${esp}mm`,                                      val: result.totalMont },
+              { icon: "", label: "Placas Drywall",    qtd: `${result.placas} chp`,    sub: `${TIPOS[tipo].label} · ${result.area.toFixed(1)} m²`, val: result.totalPlacas },
+              { icon: "",  label: "Montantes (C 90)",  qtd: `${result.montantes} pç`,  sub: `espaç. ${esp}mm`,                                      val: result.totalMont },
               { icon: "—",  label: "Guias (U 92)",       qtd: `${result.guias} m`,       sub: "superior + inferior",                                  val: result.totalGuia },
-              { icon: "⬡",  label: "Parafusos TEX",     qtd: `${result.cxPar} cx`,      sub: `${result.parafusos} pçs (~15/m²)`,                     val: result.totalPar },
-              { icon: "◎",  label: "Massa p/ Juntas",   qtd: `${Math.ceil(result.massa)} saco`, sub: `${(result.massa).toFixed(1)} × 15kg`,          val: result.totalMassa },
-              { icon: "〜", label: "Fita p/ Juntas",    qtd: `${result.fita} m`,         sub: `~1,2 m/m² de placa`,                                  val: result.totalFita },
+              { icon: "",  label: "Parafusos TEX",     qtd: `${result.cxPar} cx`,      sub: `${result.parafusos} pçs (~15/m²)`,                     val: result.totalPar },
+              { icon: "",  label: "Massa p/ Juntas",   qtd: `${Math.ceil(result.massa)} saco`, sub: `${(result.massa).toFixed(1)} × 15kg`,          val: result.totalMassa },
+              { icon: "", label: "Fita p/ Juntas",    qtd: `${result.fita} m`,         sub: `~1,2 m/m² de placa`,                                  val: result.totalFita },
             ].map(({ icon, label, qtd, sub, val }) => (
               <div key={label} style={{
                 background: "#fff", borderRadius: 14, border: `1px solid ${C.border}`,
@@ -320,7 +320,7 @@ function CalcParedeDrywall({ listaInsumos = INSUMOS }) {
   );
 }
 
-// ─── Calculadora Forro Drywall ─────────────────────────────────────────────────
+//  Calculadora Forro Drywall 
 function CalcForroDrywall() {
   const [compA,    setCompA]    = useState("");
   const [compB,    setCompB]    = useState("");
@@ -425,12 +425,12 @@ function CalcForroDrywall() {
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))", gap: 12, marginBottom: 16 }}>
             {[
-              { icon: "⬜", label: "Placas Drywall",       qtd: `${result.placas} chp`,                   sub: TIPOS[tipo].label,             val: result.totalPlacas },
-              { icon: "⠿",  label: "Perfil T47",            qtd: `${result.perfis} m`,                     sub: `módulo ${modulo}`,             val: result.totalPerfis },
-              { icon: "⬇",  label: "Pendurais + Tirantes",  qtd: `${result.pendurais} pç`,                 sub: "1 a cada 1,2 m²",             val: result.totalPend },
-              { icon: "⬡",  label: "Parafusos TEX",        qtd: `${result.cxPar} cx`,                     sub: "~8 por m²",                   val: result.totalPar },
-              { icon: "◎",  label: "Massa p/ Juntas",      qtd: `${Math.ceil(result.massa/15)} saco`,     sub: `${result.massa} kg`,          val: result.totalMassa },
-              { icon: "〜", label: "Fita p/ Juntas",       qtd: `${result.fita} m`,                       sub: "1 m/m² de forro",             val: result.totalFita },
+              { icon: "", label: "Placas Drywall",       qtd: `${result.placas} chp`,                   sub: TIPOS[tipo].label,             val: result.totalPlacas },
+              { icon: "",  label: "Perfil T47",            qtd: `${result.perfis} m`,                     sub: `módulo ${modulo}`,             val: result.totalPerfis },
+              { icon: "",  label: "Pendurais + Tirantes",  qtd: `${result.pendurais} pç`,                 sub: "1 a cada 1,2 m²",             val: result.totalPend },
+              { icon: "",  label: "Parafusos TEX",        qtd: `${result.cxPar} cx`,                     sub: "~8 por m²",                   val: result.totalPar },
+              { icon: "",  label: "Massa p/ Juntas",      qtd: `${Math.ceil(result.massa/15)} saco`,     sub: `${result.massa} kg`,          val: result.totalMassa },
+              { icon: "", label: "Fita p/ Juntas",       qtd: `${result.fita} m`,                       sub: "1 m/m² de forro",             val: result.totalFita },
             ].map(({ icon, label, qtd, sub, val }) => (
               <div key={label} style={{
                 background: "#fff", borderRadius: 14, border: `1px solid ${C.border}`, padding: "16px 18px",
@@ -466,7 +466,7 @@ function CalcForroDrywall() {
   );
 }
 
-// ─── Comparativo BA × RU × RF ─────────────────────────────────────────────────
+//  Comparativo BA × RU × RF 
 function CalcComparativo() {
   const [area, setArea] = useState("");
   const [result, setResult] = useState(null);
@@ -567,7 +567,7 @@ function CalcComparativo() {
   );
 }
 
-// ─── Calculadora Kits ─────────────────────────────────────────────────────────
+//  Calculadora Kits 
 const CATS_OPCIONAIS = ["Projetos e Engenharia", "Mão de Obra"];
 
 function CalcKits({ onEnviarOrcamento, listaInsumos = INSUMOS }) {
@@ -1087,7 +1087,7 @@ export default function Calculadora() {
   return (
     <div style={{ maxWidth: 960, margin: "0 auto", padding: "0 0 40px" }}>
 
-      {/* ── PAGE HEAD ── */}
+      {/*  PAGE HEAD  */}
       <div style={{ marginBottom: 28 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
           <div style={{ width: 5, height: 30, background: "var(--brick)", borderRadius: 3, flexShrink: 0 }} />
@@ -1140,7 +1140,7 @@ export default function Calculadora() {
         </div>
       </div>
 
-      {/* ── Seletor de modo — cards grandes ── */}
+      {/*  Seletor de modo — cards grandes  */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))", gap: 12, marginBottom: 32 }}>
         {[
           { key: "kits",        icon: <path d="M3 11l9-7 9 7"/>, icon2: <path d="M5 10v10h14V10"/>, title: "Kits de Casa",       sub: "Modelos prontos p/ orçar" },
@@ -1181,12 +1181,12 @@ export default function Calculadora() {
       {modo !== "steelframe" && modo !== "parede" && modo !== "forro" && modo !== "comparativo" && modo !== "kits" && null}
       {modo !== "steelframe" ? null : (<>
 
-      {/* ── 2-column layout: Form + Sticky Result ── */}
+      {/*  2-column layout: Form + Sticky Result  */}
       <div className="calc-sf-grid" style={{ display: "grid", gridTemplateColumns: "1fr 400px", gap: 16, alignItems: "start" }}>
 
-        {/* ── LEFT: Form panel ── */}
+        {/*  LEFT: Form panel  */}
         <div>
-          {/* ── Fieldset: Projeto (Área + Pavimentos) ── */}
+          {/*  Fieldset: Projeto (Área + Pavimentos)  */}
           <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "var(--radius-lg)", overflow: "hidden", marginBottom: 12 }}>
             <div style={{ padding: "20px 22px", borderBottom: "1px solid var(--line,#efeae2)" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 14 }}>
@@ -1229,7 +1229,7 @@ export default function Calculadora() {
               </div>
             </div>
 
-            {/* ── Padrão de acabamento — opt-cards ── */}
+            {/*  Padrão de acabamento — opt-cards  */}
             <div style={{ padding: "20px 22px", borderBottom: "1px solid var(--line,#efeae2)" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 14 }}>
                 <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "1.1px", color: "var(--muted)", textTransform: "uppercase" }}>Padrão de acabamento</span>
@@ -1269,7 +1269,7 @@ export default function Calculadora() {
               </div>
             </div>
 
-            {/* ── Itens adicionais — extras ── */}
+            {/*  Itens adicionais — extras  */}
             <div style={{ padding: "20px 22px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 14 }}>
                 <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "1.1px", color: "var(--muted)", textTransform: "uppercase" }}>Itens adicionais</span>
@@ -1368,7 +1368,7 @@ export default function Calculadora() {
           </p>
         </div>
 
-        {/* ── RIGHT: Sticky result panel ── */}
+        {/*  RIGHT: Sticky result panel  */}
         <div style={{ position: "sticky", top: 20 }}>
           {/* res-hero */}
           <div style={{
@@ -1526,10 +1526,10 @@ export default function Calculadora() {
         </div>
       </div>
 
-      {/* ── Otimizador de Corte (below 2-col layout) ── */}
+      {/*  Otimizador de Corte (below 2-col layout)  */}
       {resultado && (<>
 
-          {/* ── Otimizador de Corte ── */}
+          {/*  Otimizador de Corte  */}
           <div style={{ background: "#fff", borderRadius: 16, border: `1px solid ${C.border}`, overflow: "hidden", marginTop: 8 }}>
             {/* Header */}
             <div style={{ padding: "13px 20px", background: C.dark, borderBottom: `1px solid ${C.border}` }}>
@@ -1727,7 +1727,7 @@ export default function Calculadora() {
                                   fontSize: 15, fontWeight: 800, color: isCortada ? C.success : "var(--graphite)",
                                   letterSpacing: 0.3,
                                 }}>
-                                  {isCortada ? "✓ " : ""}BARRA {String(b.id).padStart(2, "0")}
+                                  {isCortada ? " " : ""}BARRA {String(b.id).padStart(2, "0")}
                                 </span>
                                 <span style={{
                                   fontSize: 12, fontWeight: 700, padding: "3px 10px", borderRadius: 6,
@@ -1787,7 +1787,7 @@ export default function Calculadora() {
                                 color: isCortada ? "#fff" : "#555",
                                 transition: "all .2s",
                               }}>
-                                {isCortada ? "✓ Cortada — toque para desfazer" : "Marcar como Cortada"}
+                                {isCortada ? " Cortada — toque para desfazer" : "Marcar como Cortada"}
                               </button>
 
                               {/* Registrar retalho de sobra */}

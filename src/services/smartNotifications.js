@@ -6,7 +6,7 @@ export async function gerarAlertas(empresaId) {
   const hoje = new Date();
 
   try {
-    // ── 1. Obras com prazo próximo mas baixo progresso ──
+    //  1. Obras com prazo próximo mas baixo progresso 
     const { data: obras } = await sb
       .from("obras")
       .select("id, nome, prazo, progresso, status")
@@ -31,7 +31,7 @@ export async function gerarAlertas(empresaId) {
       }
     }
 
-    // ── 2. Follow-ups de clientes vencidos ──
+    //  2. Follow-ups de clientes vencidos 
     const { data: clientes } = await sb
       .from("clientes")
       .select("id, nome, proximo_contato, status")
@@ -54,7 +54,7 @@ export async function gerarAlertas(empresaId) {
       }
     }
 
-    // ── 3. Diário de obra sem registro há mais de 15 dias ──
+    //  3. Diário de obra sem registro há mais de 15 dias 
     const { data: diarios } = await sb
       .from("diario")
       .select("obra_id, data")
@@ -83,7 +83,7 @@ export async function gerarAlertas(empresaId) {
       }
     }
 
-    // ── 4. Medição não registrada há 30 dias em obra ativa ──
+    //  4. Medição não registrada há 30 dias em obra ativa 
     const { data: medicoes } = await sb
       .from("medicoes")
       .select("obra_id, data_medicao")
