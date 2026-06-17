@@ -1,5 +1,4 @@
 import { useState } from "react";
-import useAppStore from "../store/useAppStore";
 
 // SVG icon helper
 function Ic({ n, w = 15, c }) {
@@ -210,7 +209,7 @@ function ModalMembro({ membro, onSave, onClose }) {
 }
 
 // ── Card ──────────────────────────────────────────────────────────────────────
-function CardMembro({ m, onEdit, onCracha, onPortal, onDelete }) {
+function CardMembro({ m, onEdit, onCracha, onDelete }) {
   const initials = m.nome.split(" ").slice(0, 2).map(w => w[0]).join("");
   return (
     <div style={{ background: "var(--surface)", border: "1.5px solid var(--line)", borderRadius: 14,
@@ -274,7 +273,6 @@ function CardMembro({ m, onEdit, onCracha, onPortal, onDelete }) {
         {[
           { icon: "pencil", label: "Editar",  action: onEdit },
           { icon: "badge",  label: "Crachá",  action: onCracha },
-          { icon: "globe",  label: "Portal",  action: onPortal },
         ].map(a => (
           <button key={a.label} onClick={a.action}
             style={{ display: "inline-flex", alignItems: "center", gap: 5,
@@ -326,8 +324,6 @@ function EmptyState({ icon, title, text, action, onAction }) {
 
 // ── Componente principal ──────────────────────────────────────────────────────
 export default function EquipeSF() {
-  const setActivePage = useAppStore(s => s.setActivePage);
-
   const [membros, setMembros] = useState(MEMBROS_INICIAL);
   const [tab, setTab]         = useState("equipe");
   const [filtro, setFiltro]   = useState("Todos");
@@ -447,7 +443,6 @@ export default function EquipeSF() {
                 <CardMembro key={m.id} m={m}
                   onEdit={() => setEditando(m)}
                   onCracha={() => imprimirCracha(m)}
-                  onPortal={() => setActivePage("portal_colaborador")}
                   onDelete={() => setConfirmDel(m.id)} />
               ))}
             </div>
