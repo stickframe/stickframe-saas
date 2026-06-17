@@ -852,7 +852,7 @@ export default function Equipe() {
                           <Btn variant="ghost" size="sm" onClick={() => gerarCracha(c, certsByColab[c.id] || [])}> Crachá</Btn>
                         )}
                         {c.token_ponto && (
-                          <Btn variant="ghost" size="sm" onClick={() => window.open(`${window.location.origin}/portal/${c.token_ponto}`, "_blank")}> Portal</Btn>
+                          <Btn variant="ghost" size="sm" onClick={() => window.open(`${window.location.origin}/colaborador/${c.token_ponto}`, "_blank")}> Portal</Btn>
                         )}
                         <button onClick={() => setConfirm(c.id)} style={{
                           padding: "6px 12px", background: C.danger + "22",
