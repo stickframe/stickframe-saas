@@ -352,7 +352,7 @@ function FormOrc({ form, setForm, clientes, onSave, onCancel, onDelete, btnLabel
         )}
         <Btn variant="ghost" onClick={onCancel}>Cancelar</Btn>
         <Btn
-          disabled={!form.cliente_id || !clientes.length}
+          disabled={!form.cliente_id}
           onClick={onSave}
         >
           {btnLabel}
