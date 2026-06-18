@@ -53,16 +53,17 @@ function fmtBRL(n) {
   return "R$ " + n.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-//  KPI Card 
+//  KPI Card
 function KpiCard({ label, value, sub, color }) {
   return (
     <div style={{
-      background: C.surface, borderRadius: 12, padding: "20px 24px",
-      boxShadow: C.shadow, border: `1px solid ${C.border}`, flex: 1, minWidth: 180,
+      background: "var(--surface)", borderRadius: 12, padding: "16px 18px",
+      border: "1px solid var(--line)", flex: 1, minWidth: 180,
     }}>
-      <div style={{ fontSize: 12, color: C.muted, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>{label}</div>
-      <div style={{ fontSize: 28, fontWeight: 800, color: color || C.text }}>{value}</div>
-      {sub && <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>{sub}</div>}
+      <div style={{ height: 3, width: 28, borderRadius: 2, background: color || "var(--brick)", marginBottom: 12 }} />
+      <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 1.2, color: "var(--muted)", textTransform: "uppercase", marginBottom: 6 }}>{label}</div>
+      <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 32, fontWeight: 700, color: color || "var(--ink)", lineHeight: 1, marginBottom: 4 }}>{value}</div>
+      {sub && <div style={{ fontSize: 11.5, color: "var(--muted)" }}>{sub}</div>}
     </div>
   );
 }
@@ -331,23 +332,28 @@ export default function BI() {
   return (
     <div style={{ padding: "24px 28px", maxWidth: 1300, margin: "0 auto" }}>
       {/* Header */}
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 800, color: C.text, margin: 0 }}>Analytics</h1>
-        <p style={{ fontSize: 13, color: C.muted, margin: "4px 0 0" }}>Comparativo de performance entre obras</p>
+      <div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 22 }}>
+        <div style={{ width: 4, height: 42, borderRadius: 3, background: "var(--brick)", flexShrink: 0, marginTop: 2 }} />
+        <div>
+          <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 28, fontWeight: 700, color: "var(--ink)", margin: 0, lineHeight: 1.1 }}>Analytics</h1>
+          <p style={{ fontSize: 13, color: "var(--muted)", margin: "4px 0 0" }}>Comparativo de performance entre obras</p>
+        </div>
       </div>
 
       {/* Filters */}
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 24, alignItems: "center" }}>
-        <span style={{ fontSize: 13, color: C.muted, fontWeight: 600 }}>Período:</span>
-        {["mes", "trimestre", "ano", "tudo"].map((p) => (
-          <button key={p} style={PILL(periodo === p)} onClick={() => setPeriodo(p)}>
-            {{ mes: "Mês", trimestre: "Trimestre", ano: "Ano", tudo: "Tudo" }[p]}
-          </button>
-        ))}
-        <span style={{ fontSize: 13, color: C.muted, fontWeight: 600, marginLeft: 12 }}>Status:</span>
-        {["Todas", "Em andamento", "Concluída"].map((s) => (
-          <button key={s} style={PILL(filtroStatus === s)} onClick={() => setFiltroStatus(s)}>{s}</button>
-        ))}
+      <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginBottom: 20, alignItems: "center" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+          <span style={{ fontSize: 12, color: "var(--muted)", fontWeight: 600 }}>Período:</span>
+          {[["mes","Mês"],["trimestre","Trimestre"],["ano","Ano"],["tudo","Tudo"]].map(([k,l]) => (
+            <button key={k} onClick={() => setPeriodo(k)} style={{ padding: "6px 14px", borderRadius: 20, border: periodo === k ? "1.5px solid var(--brick)" : "1.5px solid var(--line)", background: periodo === k ? "var(--brick)" : "var(--surface)", fontSize: 12.5, fontWeight: 600, color: periodo === k ? "#fff" : "var(--ink-2)", cursor: "pointer", transition: ".12s", fontFamily: "inherit" }}>{l}</button>
+          ))}
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+          <span style={{ fontSize: 12, color: "var(--muted)", fontWeight: 600 }}>Status:</span>
+          {["Todas", "Em andamento", "Concluída"].map((s) => (
+            <button key={s} onClick={() => setFiltroStatus(s)} style={{ padding: "6px 14px", borderRadius: 20, border: filtroStatus === s ? "1.5px solid var(--brick)" : "1.5px solid var(--line)", background: filtroStatus === s ? "var(--brick)" : "var(--surface)", fontSize: 12.5, fontWeight: 600, color: filtroStatus === s ? "#fff" : "var(--ink-2)", cursor: "pointer", transition: ".12s", fontFamily: "inherit" }}>{s}</button>
+          ))}
+        </div>
       </div>
 
       {loading ? (
