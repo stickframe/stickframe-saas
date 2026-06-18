@@ -52,11 +52,11 @@ function LinkCopiavel({ label, url, desc }) {
 function Tab({ label, active, onClick }) {
   return (
     <button onClick={onClick} style={{
-      padding: "8px 20px", fontSize: 12, fontWeight: active ? 700 : 400,
-      background: active ? C.red : "transparent",
-      color: active ? "#fff" : C.muted,
-      border: `1px solid ${active ? C.red : C.border}`,
-      borderRadius: 8, cursor: "pointer", fontFamily: "inherit", transition: "all .15s",
+      padding: "7px 16px", fontSize: 12.5, fontWeight: active ? 700 : 500,
+      background: active ? "var(--surface)" : "transparent",
+      color: active ? "var(--ink)" : "var(--muted)",
+      border: "none", borderRadius: 7, cursor: "pointer", fontFamily: "inherit",
+      boxShadow: active ? "0 1px 4px #0001" : "none", transition: "all .15s",
     }}>
       {label}
     </button>
@@ -534,9 +534,12 @@ export default function Configuracoes() {
 
       {/* Header */}
       <div style={{ marginBottom: 24, display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
-        <div>
-          <h2 style={{ fontSize: 22, fontWeight: 800 }}>Configurações</h2>
-          <p style={{ color: C.muted, fontSize: 13, marginTop: 4 }}>Empresa · Perfil · Usuários</p>
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+          <div style={{ width: 4, height: 42, borderRadius: 3, background: "var(--brick)", flexShrink: 0, marginTop: 2 }} />
+          <div>
+            <div style={{ fontFamily: "var(--cond)", fontWeight: 700, fontSize: 28, color: "var(--ink)", lineHeight: 1 }}>Configurações</div>
+            <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4 }}>Empresa · Perfil · Usuários</div>
+          </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10, background: empresa.plano === "pro" ? "#e6f9f0" : "#f0f4ff", border: `1px solid ${empresa.plano === "pro" ? "#2e9e5b" : "#4a7af8"}`, borderRadius: 10, padding: "10px 16px" }}>
           <div>
@@ -556,7 +559,7 @@ export default function Configuracoes() {
       </div>
 
       {/* Tabs */}
-      <div style={{ display: "flex", gap: 8, marginBottom: 24 }}>
+      <div style={{ display: "flex", gap: 2, marginBottom: 24, background: "var(--surface-2)", border: "1px solid var(--line)", borderRadius: 9, padding: 3, flexWrap: "wrap" }}>
         <Tab label=" Empresa"   active={tab === "empresa"}  onClick={() => setTab("empresa")} />
         <Tab label=" Meu perfil" active={tab === "perfil"}   onClick={() => setTab("perfil")} />
         <Tab label=" Usuários"  active={tab === "usuarios"} onClick={() => setTab("usuarios")} />

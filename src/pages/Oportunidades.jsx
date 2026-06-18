@@ -365,13 +365,12 @@ export default function Oportunidades() {
 
       {/* Cabeçalho */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 18, gap: 12, flexWrap: 'wrap' }}>
-        <div>
-          <h1 style={{ fontFamily: 'var(--cond)', fontWeight: 700, fontSize: 28, color: 'var(--ink)', lineHeight: 1 }}>
-            Oportunidades
-          </h1>
-          <p style={{ fontSize: 13, color: 'var(--muted)', marginTop: 4 }}>
-            Leads de alta intenção · atualiza em tempo real conforme chegam do Google, Landing e Calculadora
-          </p>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+          <div style={{ width: 4, height: 42, borderRadius: 3, background: 'var(--brick)', flexShrink: 0, marginTop: 2 }} />
+          <div>
+            <div style={{ fontFamily: 'var(--cond)', fontWeight: 700, fontSize: 28, color: 'var(--ink)', lineHeight: 1 }}>Oportunidades</div>
+            <div style={{ fontSize: 13, color: 'var(--muted)', marginTop: 4 }}>Leads de alta intenção · atualiza em tempo real conforme chegam do Google, Landing e Calculadora</div>
+          </div>
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 7, background: '#e8f3eb', border: '1px solid #c4e3cd', borderRadius: 8, padding: '5px 11px' }}>

@@ -31,15 +31,15 @@ function LabelField({ children, required }) {
   );
 }
 
-//  Tab 
+//  Tab
 function Tab({ label, active, onClick }) {
   return (
     <button onClick={onClick} style={{
-      padding: "8px 18px", fontSize: 12, fontWeight: active ? 700 : 400,
-      background: active ? C.red : "transparent",
-      color: active ? "#fff" : C.muted,
-      border: `1px solid ${active ? C.red : C.border}`,
-      borderRadius: 8, cursor: "pointer", fontFamily: "inherit", transition: "all .15s",
+      padding: "7px 16px", fontSize: 12.5, fontWeight: active ? 700 : 500,
+      background: active ? "var(--surface)" : "transparent",
+      color: active ? "var(--ink)" : "var(--muted)",
+      border: "none", borderRadius: 7, cursor: "pointer", fontFamily: "inherit",
+      boxShadow: active ? "0 1px 4px #0001" : "none", transition: "all .15s",
     }}>
       {label}
     </button>
@@ -708,12 +708,15 @@ export default function Equipe() {
       <div>
         {/* Header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-          <div>
-            <h2 style={{ fontSize: 22, fontWeight: 800 }}>Equipe</h2>
-            <p style={{ color: C.muted, fontSize: 13, marginTop: 4 }}>
-              {ativos} ativo{ativos !== 1 ? "s" : ""}
-              {folha > 0 && <span style={{ marginLeft: 10, color: C.success, fontWeight: 600 }}>· Folha: {fmt(folha)}</span>}
-            </p>
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+            <div style={{ width: 4, height: 42, borderRadius: 3, background: "var(--brick)", flexShrink: 0, marginTop: 2 }} />
+            <div>
+              <div style={{ fontFamily: "var(--cond)", fontWeight: 700, fontSize: 28, color: "var(--ink)", lineHeight: 1 }}>Equipe</div>
+              <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4 }}>
+                {ativos} ativo{ativos !== 1 ? "s" : ""}
+                {folha > 0 && <span style={{ marginLeft: 10, color: C.success, fontWeight: 600 }}>· Folha: {fmt(folha)}</span>}
+              </div>
+            </div>
           </div>
           <div style={{ display: "flex", gap: 8 }}>
             {tab === "equipe" && folha > 0 && (
@@ -733,7 +736,7 @@ export default function Equipe() {
         </div>
 
         {/* Tabs */}
-        <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
+        <div style={{ display: "flex", gap: 2, marginBottom: 20, background: "var(--surface-2)", border: "1px solid var(--line)", borderRadius: 9, padding: 3, width: "fit-content" }}>
           <Tab label=" Equipe"        active={tab === "equipe"}       onClick={() => setTab("equipe")} />
           <Tab label=" Empreiteiros" active={tab === "empreiteiros"} onClick={() => setTab("empreiteiros")} />
           <Tab label=" Alocações"    active={tab === "alocacoes"}    onClick={() => setTab("alocacoes")} />
@@ -791,8 +794,8 @@ export default function Equipe() {
                   const certs = Object.values(certsMap);
                   return (
                     <div key={c.id} style={{
-                      background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", padding: "18px 20px",
-                      border: `1px solid ${C.border}`, borderTop: `3px solid ${STATUS_COR[c.status] || C.muted}`,
+                      background: "var(--surface)", borderRadius: 12, padding: "18px 20px",
+                      border: "1px solid var(--line)",
                     }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
                         <div>
@@ -1030,14 +1033,15 @@ export default function Equipe() {
             {/* KPIs */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 20 }}>
               {[
-                { label: "Total de horas", value: `${totalHorasFiltradas.toFixed(1)} h`, sub: "no filtro atual", accent: "#4a9eff" },
-                { label: "Custo estimado", value: fmt(totalCustoFiltrado), sub: "baseado na diária", accent: C.red },
-                { label: "Lançamentos", value: String(horasFiltradas.length), sub: "registros de horas", accent: C.success },
+                { label: "Total de horas", value: `${totalHorasFiltradas.toFixed(1)} h`, sub: "no filtro atual", accent: "var(--steel)" },
+                { label: "Custo estimado", value: fmt(totalCustoFiltrado), sub: "baseado na diária", accent: "var(--brick)" },
+                { label: "Lançamentos", value: String(horasFiltradas.length), sub: "registros de horas", accent: "var(--pos)" },
               ].map((k) => (
-                <div key={k.label} style={{ background: C.surface, borderRadius: 14, padding: "14px 16px", border: `1px solid ${C.border}`, borderTop: `3px solid ${k.accent}` }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1, color: C.muted, textTransform: "uppercase", marginBottom: 6 }}>{k.label}</div>
-                  <div style={{ fontSize: 20, fontWeight: 900 }}>{k.value}</div>
-                  <div style={{ fontSize: 11, color: C.muted, marginTop: 3 }}>{k.sub}</div>
+                <div key={k.label} style={{ background: "var(--surface)", borderRadius: 12, padding: "16px 18px", border: "1px solid var(--line)" }}>
+                  <div style={{ height: 3, width: 28, borderRadius: 2, background: k.accent, marginBottom: 12 }} />
+                  <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 1.2, color: "var(--muted)", textTransform: "uppercase", marginBottom: 6 }}>{k.label}</div>
+                  <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: 30, fontWeight: 700, color: "var(--ink)", lineHeight: 1 }}>{k.value}</div>
+                  <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 4 }}>{k.sub}</div>
                 </div>
               ))}
             </div>
