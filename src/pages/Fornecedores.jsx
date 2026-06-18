@@ -250,9 +250,9 @@ function MonitorDeMercado() {
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12, marginBottom: 18 }}>
         {[{ l: "Em alta", v: emAlta, c: C.danger }, { l: "Em baixa", v: emBaixa, c: C.success }, { l: "Estáveis", v: estaveis, c: C.text }].map((k) => (
-          <div key={k.l} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, padding: "14px 16px" }}>
-            <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 1, color: C.muted, textTransform: "uppercase", marginBottom: 5 }}>{k.l}</div>
-            <div className="num" style={{ fontSize: 30, fontWeight: 700, color: k.c }}>{k.v}</div>
+          <div key={k.l} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12, padding: "16px 18px" }}>
+            <div style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: 1, color: C.muted, textTransform: "uppercase", marginBottom: 6 }}>{k.l}</div>
+            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 34, fontWeight: 700, color: k.c, lineHeight: 1 }}>{k.v}</div>
           </div>
         ))}
       </div>
@@ -276,7 +276,7 @@ function MonitorDeMercado() {
                   </td>
                   <td style={{ padding: "11px 12px", fontSize: 13, color: C.muted, borderBottom: `1px solid #efeae2` }}>{m.categoria || "—"}</td>
                   <td style={{ padding: "11px 12px", fontSize: 13, color: C.muted, borderBottom: `1px solid #efeae2` }}>{m.unidade}</td>
-                  <td className="num" style={{ padding: "11px 12px", fontSize: 15, fontWeight: 700, color: C.text, borderBottom: `1px solid #efeae2` }}>{fmtBRL(m.preco_atual)}</td>
+                  <td style={{ padding: "11px 12px", fontFamily: "'Barlow Condensed', sans-serif", fontSize: 16, fontWeight: 700, color: C.text, borderBottom: `1px solid #efeae2` }}>{fmtBRL(m.preco_atual)}</td>
                   <td style={{ padding: "11px 12px", borderBottom: `1px solid #efeae2` }}><VarBadge pct={m.pct} inline /></td>
                   <td style={{ padding: "11px 12px", borderBottom: `1px solid #efeae2` }}><Sparkline hist={m.hist} color={m.pct > 0 ? C.danger : m.pct < 0 ? C.success : C.border} /></td>
                 </tr>
@@ -291,7 +291,7 @@ function MonitorDeMercado() {
               <div style={{ width: 32, height: 32, borderRadius: 8, background: m.bg, display: "grid", placeItems: "center", marginBottom: 10 }}><Ic n={m.icon} w={15} c={m.ic} /></div>
               <div style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 3 }}>{m.nome_produto}</div>
               <div style={{ fontSize: 11, color: C.muted, marginBottom: 8 }}>{m.categoria || "Material"} · {m.unidade}</div>
-              <div className="num" style={{ fontSize: 22, fontWeight: 700, color: C.text, marginBottom: 4 }}>{fmtBRL(m.preco_atual)}</div>
+              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 24, fontWeight: 700, color: C.text, marginBottom: 4 }}>{fmtBRL(m.preco_atual)}</div>
               <VarBadge pct={m.pct} />
             </div>
           ))}
@@ -534,9 +534,12 @@ ${(c.observacoes || poForm.observacoes_po) ? `
           <div style={{ width: isMobile ? "100%" : 340, flexShrink: 0, borderRight: `1px solid ${C.border}`, display: isMobile && sel ? "none" : "flex", flexDirection: "column", height: "100%", background: C.surface }}>
             <div style={{ padding: "20px 16px 8px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-                <div>
-                  <div style={{ fontFamily: "var(--cond)", fontWeight: 700, fontSize: 22, color: C.text, lineHeight: 1 }}>Fornecedores</div>
-                  <div style={{ fontSize: 11.5, color: C.muted, marginTop: 2 }}>{fornecedores.length} cadastrados</div>
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+                  <div style={{ width: 4, height: 36, borderRadius: 3, background: "var(--brick)", flexShrink: 0, marginTop: 1 }} />
+                  <div>
+                    <div style={{ fontFamily: "var(--cond)", fontWeight: 700, fontSize: 26, color: C.text, lineHeight: 1 }}>Fornecedores</div>
+                    <div style={{ fontSize: 11.5, color: C.muted, marginTop: 2 }}>{fornecedores.length} cadastrados</div>
+                  </div>
                 </div>
                 <Btn size="sm" onClick={() => { setForm(FORM_FORN); setModal("novo-forn"); }}><Ic n="plus" w={13} c="#fff" /> Novo</Btn>
               </div>
@@ -562,10 +565,10 @@ ${(c.observacoes || poForm.observacoes_po) ? `
           <div style={{ flex: 1, display: isMobile && !sel ? "none" : "flex", flexDirection: "column", overflow: "hidden" }}>
             {!sel ? (
               <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: 40 }}>
-                <div style={{ width: 52, height: 52, borderRadius: 14, background: C.surface2, border: `1px solid ${C.border}`, display: "grid", placeItems: "center", marginBottom: 18 }}>
-                  <Ic n="building" w={26} c={C.muted} />
+                <div style={{ width: 52, height: 52, borderRadius: 14, background: "var(--brick-soft)", display: "grid", placeItems: "center", marginBottom: 18 }}>
+                  <Ic n="building" w={26} c="var(--brick)" />
                 </div>
-                <div style={{ fontFamily: "var(--cond)", fontWeight: 700, fontSize: 20, color: C.text, marginBottom: 7 }}>Selecione um fornecedor</div>
+                <div style={{ fontFamily: "var(--cond)", fontWeight: 700, fontSize: 22, color: C.text, marginBottom: 7 }}>Selecione um fornecedor</div>
                 <div style={{ fontSize: 13, color: C.muted, maxWidth: 280, lineHeight: 1.6 }}>Clique em um fornecedor da lista para ver os dados de contato, histórico de cotações e avaliações.</div>
               </div>
             ) : (
@@ -645,7 +648,7 @@ ${(c.observacoes || poForm.observacoes_po) ? `
                         {[{ l: "Total", v: cotsSel.length }, { l: "Aprovadas", v: totalAprovadas }, { l: "Média geral", v: mediaGeral }].map((k) => (
                           <div key={k.l}>
                             <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 1, color: C.muted, textTransform: "uppercase", marginBottom: 4 }}>{k.l}</div>
-                            <div className="num" style={{ fontSize: 22, fontWeight: 700, color: C.text }}>{k.v}</div>
+                            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 26, fontWeight: 700, color: C.text, lineHeight: 1 }}>{k.v}</div>
                           </div>
                         ))}
                       </div>
@@ -664,7 +667,7 @@ ${(c.observacoes || poForm.observacoes_po) ? `
                             {c.observacoes   && <div style={{ fontSize: 12, color: C.muted, marginTop: 6, fontStyle: "italic" }}>{c.observacoes}</div>}
                           </div>
                           <div style={{ textAlign: "right" }}>
-                            {c.valor != null && <div className="num" style={{ fontSize: 20, fontWeight: 700, color: C.red, marginBottom: 6 }}>R$ {Number(c.valor).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</div>}
+                            {c.valor != null && <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 22, fontWeight: 700, color: C.red, marginBottom: 6 }}>R$ {Number(c.valor).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</div>}
                             <span style={{ fontSize: 10.5, fontWeight: 800, padding: "3px 10px", borderRadius: 5, background: (COT_STATUS_COR[c.status] || C.muted) + "22", color: COT_STATUS_COR[c.status] || C.muted }}>{c.status}</span>
                           </div>
                         </div>
@@ -698,7 +701,7 @@ ${(c.observacoes || poForm.observacoes_po) ? `
                             <span style={{ fontWeight: 600, fontSize: 13, color: C.text }}>{st}</span>
                             <span style={{ fontSize: 12, color: C.muted }}>({items.length})</span>
                           </div>
-                          <span className="num" style={{ fontWeight: 700, fontSize: 15, color: C.text }}>{total > 0 ? `R$ ${total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}` : "—"}</span>
+                          <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 17, color: C.text }}>{total > 0 ? `R$ ${total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}` : "—"}</span>
                         </div>
                       );
                     })}
