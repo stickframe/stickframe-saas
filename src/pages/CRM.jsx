@@ -449,6 +449,7 @@ export default function CRM() {
   }
 
   function abrirEditar(c) {
+    setSel(c.id);
     setForm({
       nome:            c.nome || "",
       cidade:          c.cidade || "",
