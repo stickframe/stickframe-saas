@@ -59,9 +59,9 @@ const CTA_TAGS = ["StickScore™", "StickBrain™", "Cronograma", "Financeiro", 
 
 function SectionTitle({ children }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-      <div style={{ width: 4, height: 20, background: "var(--brick,#981915)", borderRadius: 2 }} />
-      <div style={{ fontFamily: cond, fontWeight: 700, fontSize: 20, color: "var(--ink,#26231f)" }}>{children}</div>
+    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18 }}>
+      <div style={{ width: 4, height: 22, background: "var(--brick,#981915)", borderRadius: 2 }} />
+      <div style={{ fontFamily: cond, fontWeight: 700, fontSize: 22, color: "var(--ink,#26231f)" }}>{children}</div>
     </div>
   );
 }
@@ -101,14 +101,14 @@ export default function Ecossistema() {
       {/* Diferenciais — grid de cards escuros */}
       <div style={{ marginBottom: 28 }}>
         <SectionTitle>Por que Stick Frame?</SectionTitle>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 12 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
           {DIFERENCIAIS.map((d) => (
             <div key={d.title} style={{ background: "#2e2c31", borderRadius: 12, padding: "18px 20px", border: "1px solid rgba(255,255,255,.06)" }}>
-              <div style={{ width: 36, height: 36, borderRadius: 9, background: "rgba(255,255,255,.06)", display: "grid", placeItems: "center", marginBottom: 14 }}>
+              <div style={{ width: 36, height: 36, borderRadius: 9, background: "rgba(255,255,255,.08)", display: "grid", placeItems: "center", marginBottom: 14 }}>
                 <Ic n={d.icon} w={18} c={d.cor} />
               </div>
-              <div style={{ fontFamily: cond, fontWeight: 700, fontSize: 17, color: "#fff", marginBottom: 6, lineHeight: 1.2 }}>{d.title}</div>
-              <div style={{ fontSize: 12.5, color: "rgba(255,255,255,.5)", lineHeight: 1.6 }}>{d.desc}</div>
+              <div style={{ fontFamily: cond, fontWeight: 700, fontSize: 18, color: "#fff", marginBottom: 6, lineHeight: 1.2 }}>{d.title}</div>
+              <div style={{ fontSize: 12.5, color: "rgba(255,255,255,.52)", lineHeight: 1.6 }}>{d.desc}</div>
             </div>
           ))}
         </div>
@@ -117,7 +117,7 @@ export default function Ecossistema() {
       {/* Módulos disponíveis */}
       <div style={{ marginBottom: 28 }}>
         <SectionTitle>Módulos disponíveis</SectionTitle>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(230px, 1fr))", gap: 10 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 10 }}>
           {MODULOS.map((m) => {
             const nav = m.key ? () => setActivePage(m.key) : undefined;
             return (
@@ -131,8 +131,8 @@ export default function Ecossistema() {
                 <div style={{ width: 36, height: 36, borderRadius: 9, background: m.bg, display: "grid", placeItems: "center", marginBottom: 12 }}>
                   <Ic n={m.icon} w={18} c={m.ic} />
                 </div>
-                <div style={{ fontSize: 13.5, fontWeight: 800, color: "var(--ink,#26231f)", marginBottom: 2 }}>{m.brand}</div>
-                <div style={{ fontSize: 10, fontWeight: 600, color: "var(--muted,#8c847a)", textTransform: "uppercase", letterSpacing: ".5px", marginBottom: 6 }}>{m.label}</div>
+                <div style={{ fontFamily: cond, fontSize: 15, fontWeight: 700, color: "var(--ink,#26231f)", marginBottom: 2, lineHeight: 1.1 }}>{m.brand}</div>
+                <div style={{ fontSize: 10.5, fontWeight: 600, color: "var(--muted,#8c847a)", textTransform: "uppercase", letterSpacing: ".5px", marginBottom: 6 }}>{m.label}</div>
                 <div style={{ fontSize: 11.5, color: "var(--muted,#8c847a)", lineHeight: 1.5 }}>{m.desc}</div>
                 {nav ? (
                   <div style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 4, fontSize: 11.5, fontWeight: 700, color: "var(--brick,#981915)" }}>
