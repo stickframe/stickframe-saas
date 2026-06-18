@@ -12,9 +12,18 @@ import {
 import logoSF from "../assets/logo_branco.png";
 
 const FEATS = [
-  { ic: "📐", t: "Orçamentos em minutos", d: "Gere propostas completas com cálculo de materiais SF automatizado." },
-  { ic: "🏗️", t: "Obras em tempo real",   d: "Cronograma, diário e medições — tudo num painel só." },
-  { ic: "💰", t: "Financeiro por obra",    d: "Margem, fluxo de caixa e DRE sem planilhas soltas." },
+  {
+    ic: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" style={{width:18,height:18}}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>,
+    t: "Orçamentos em minutos", d: "Gere propostas completas com cálculo de materiais SF automatizado."
+  },
+  {
+    ic: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" style={{width:18,height:18}}><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
+    t: "Obras em tempo real", d: "Cronograma, diário e medições — tudo num painel só."
+  },
+  {
+    ic: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" style={{width:18,height:18}}><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>,
+    t: "Financeiro por obra", d: "Margem, fluxo de caixa e DRE sem planilhas soltas."
+  },
 ];
 
 const STATS = [
@@ -185,13 +194,16 @@ export default function LoginScreen() {
           <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700, letterSpacing: 3, fontSize: 22, marginBottom: 16 }}>
             <span style={{ color: "var(--ink,#26231f)" }}>STICK</span><span style={{ color: "var(--brick,#981915)" }}>FRAME</span>
           </div>
-          <div style={{ fontSize: 56, marginBottom: 16 }}>🔒</div>
+          <div style={{ marginBottom: 16, display: "grid", placeItems: "center", color: "var(--brick,#981915)" }}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" style={{width:56,height:56}}><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </div>
           <h2 style={{ color: "var(--ink,#26231f)", fontSize: 20, fontWeight: 800, margin: "0 0 10px" }}>Ativar login biométrico?</h2>
           <p style={{ color: "var(--muted,#8c847a)", fontSize: 14, lineHeight: 1.6, margin: "0 0 28px" }}>
             Use Face ID, Touch ID ou Windows Hello para entrar mais rápido nos próximos acessos.
           </p>
-          <button onClick={handleRegisterBio} style={{ width: "100%", padding: "14px 0", background: "var(--brick,#981915)", border: "none", borderRadius: 10, color: "#fff", fontSize: 15, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", marginBottom: 10 }}>
-            🔐 Ativar biometria
+          <button onClick={handleRegisterBio} style={{ width: "100%", padding: "14px 0", background: "var(--brick,#981915)", border: "none", borderRadius: 10, color: "#fff", fontSize: 15, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", marginBottom: 10, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" style={{width:16,height:16}}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Ativar biometria
           </button>
           <button onClick={() => { setBioPrompt(null); navigate("/"); }} style={{ width: "100%", padding: "11px 0", background: "transparent", border: "1px solid var(--line,#e7e1d8)", borderRadius: 10, color: "var(--muted,#8c847a)", fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}>
             Agora não
@@ -241,7 +253,7 @@ export default function LoginScreen() {
           <div style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 40 }}>
             {FEATS.map((f) => (
               <div key={f.t} style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
-                <div style={{ width: 38, height: 38, borderRadius: 10, background: "rgba(255,255,255,.1)", display: "grid", placeItems: "center", fontSize: 17, flexShrink: 0 }}>{f.ic}</div>
+                <div style={{ width: 38, height: 38, borderRadius: 10, background: "rgba(255,255,255,.1)", display: "grid", placeItems: "center", flexShrink: 0, color: "rgba(255,255,255,.85)" }}>{f.ic}</div>
                 <div>
                   <div style={{ fontSize: 14, fontWeight: 800, color: "#fff", marginBottom: 2 }}>{f.t}</div>
                   <div style={{ fontSize: 12.5, color: "rgba(255,255,255,.65)", lineHeight: 1.5 }}>{f.d}</div>
@@ -295,7 +307,7 @@ export default function LoginScreen() {
                 disabled={bioLoading}
                 style={{ width: "100%", padding: "14px 0", marginBottom: 16, background: "var(--surface-2,#faf8f4)", border: "1px solid var(--line,#e7e1d8)", borderRadius: 10, color: "var(--ink,#26231f)", fontSize: 15, fontWeight: 700, cursor: bioLoading ? "not-allowed" : "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}
               >
-                <span style={{ fontSize: 22 }}>🔐</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" style={{width:18,height:18}}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                 {bioLoading ? "Verificando..." : "Entrar com biometria"}
               </button>
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
