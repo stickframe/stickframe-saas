@@ -695,12 +695,6 @@ function DashboardDiretor() {
         </div>
       </section>
 
-      {/* Calculadora rápida */}
-      <div style={{ marginBottom: 18 }}><CalculadoraRapida /></div>
-
-      {/* DashboardKPIs */}
-      <div style={{ marginBottom: 18 }}><DashboardKPIs /></div>
-
       {/*  6 KPI CARDS  */}
       <section style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 12, marginBottom: 18 }}>
         {kpisConfig.map((k) => <KpiCard key={k.label} {...k} />)}
@@ -846,6 +840,9 @@ function DashboardDiretor() {
             : <div style={{ textAlign: "center", padding: "28px 0", color: "var(--muted)", fontSize: 12 }}>Sem despesas lançadas</div>}
         </div>
       </section>
+
+      {/* Calculadora rápida */}
+      <div style={{ marginBottom: 18 }}><CalculadoraRapida /></div>
 
       {/*  Agenda + Monitor de preços  */}
       {(() => {
