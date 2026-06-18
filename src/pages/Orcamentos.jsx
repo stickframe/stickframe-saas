@@ -122,8 +122,10 @@ function FormOrc({ form, setForm, clientes, onSave, onCancel, onDelete, btnLabel
     }
   }
 
-  const clienteOpts = clientes.map((c) => ({ value: c.id, label: c.nome }));
-  if (!clienteOpts.length) clienteOpts.push({ value: "", label: "— Nenhum cliente cadastrado —" });
+  const clienteOpts = [
+    { value: "", label: clientes.length ? "— Selecione um cliente —" : "— Nenhum cliente cadastrado —" },
+    ...clientes.map((c) => ({ value: c.id, label: c.nome })),
+  ];
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -892,7 +894,7 @@ export default function Orcamentos() {
   const [confirm,      setConfirm]      = useState(null);
   const [abertoDropId, setAbertoDropId] = useState(null);
   const { toast, mostrarToast } = useToast();
-  const [form,         setForm]         = useState({ ...FORM_VAZIO, cliente_id: clientes[0]?.id || "" });
+  const [form,         setForm]         = useState({ ...FORM_VAZIO });
   const [converterOrc, setConverterOrc] = useState(null);
   const [calculadora,  setCalculadora]  = useState(false);
   const [preOrcamentos, setPreOrcamentos] = useState([]);
@@ -963,7 +965,7 @@ export default function Orcamentos() {
 
 
   function abrirNovo() {
-    setForm({ ...FORM_VAZIO, cliente_id: clientes[0]?.id || "" });
+    setForm({ ...FORM_VAZIO });
     setModal("novo");
   }
 
@@ -971,7 +973,7 @@ export default function Orcamentos() {
     setEstimativo({ itens, totalGeral, area, tipo });
     setCalculadora(false);
     // Pré-preenche o formulário de novo orçamento com a área calculada
-    setForm((f) => ({ ...f, area, cliente_id: clientes[0]?.id || "" }));
+    setForm((f) => ({ ...f, area }));
     setModal("novo");
   }
 
