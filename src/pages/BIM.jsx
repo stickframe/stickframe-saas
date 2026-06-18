@@ -33,7 +33,7 @@ function exportarRelatorioApontamentos(apts, obraNome) {
         <td style="padding:10px 8px;font-size:11px"><span style="background:${corStatus}18;color:${corStatus};border-radius:4px;padding:2px 8px;font-weight:700">${a.status}</span></td>
         <td style="padding:10px 8px;font-size:11px"><span style="background:${corPrio}18;color:${corPrio};border-radius:4px;padding:2px 8px;font-weight:700">${a.prioridade}</span></td>
         <td style="padding:10px 8px;font-size:11px;color:#888">${a.tipo}</td>
-        <td style="padding:10px 8px;font-size:11px;color:#4a9eff">${a.disciplina}</td>
+        <td style="padding:10px 8px;font-size:11px;color:var(--steel)">${a.disciplina}</td>
         <td style="padding:10px 8px;font-size:11px">${a.responsavel || "—"}</td>
         <td style="padding:10px 8px;font-size:11px;color:#888">${a.prazo ? new Date(a.prazo + "T00:00").toLocaleDateString("pt-BR") : "—"}</td>
       </tr>`;
@@ -426,7 +426,7 @@ function ModalApontamento({ modelos, elementoSelecionado, onSave, onClose }) {
         </div>
 
         {elementoSelecionado && (
-          <div style={{ margin: "14px 24px 0", background: "#4a9eff18", border: "1px solid #4a9eff33", borderRadius: 8, padding: "10px 14px", fontSize: 12, color: "#4a9eff" }}>
+          <div style={{ margin: "14px 24px 0", background: "#3b6ea518", border: "1px solid #3b6ea533", borderRadius: 8, padding: "10px 14px", fontSize: 12, color: "var(--steel)" }}>
              Elemento selecionado no modelo · Express ID: <strong>{elementoSelecionado.expressId}</strong>
           </div>
         )}
@@ -524,7 +524,7 @@ function ModalUpload({ onSave, onClose }) {
               <div>
                 <div style={{ fontSize: 13, fontWeight: 700 }}>Clique ou arraste o arquivo</div>
                 <div style={{ fontSize: 11, color: C.muted, marginTop: 4 }}>
-                  <span style={{ background: "#4a9eff22", color: "#4a9eff", borderRadius: 4, padding: "2px 8px", marginRight: 6 }}>.IFC</span>
+                  <span style={{ background: "#3b6ea522", color: "var(--steel)", borderRadius: 4, padding: "2px 8px", marginRight: 6 }}>.IFC</span>
                   <span style={{ background: "#2e9e5b22", color: "#2e9e5b", borderRadius: 4, padding: "2px 8px" }}>.DAE</span>
                 </div>
                 <div style={{ fontSize: 10, color: C.muted, marginTop: 6 }}>Tamanho máximo: 100 MB</div>
@@ -578,7 +578,7 @@ function Field({ label, children }) {
 //  Página BIM 
 //  Kits para o preview 3D 
 const KITS_3D = [
-  { id: "studio",    nome: "Studio 42m²",         area: 42,  larg: 7,  comp: 6,  pavs: 1, quartos: 1, cor: "#4a9eff" },
+  { id: "studio",    nome: "Studio 42m²",         area: 42,  larg: 7,  comp: 6,  pavs: 1, quartos: 1, cor: "#3b6ea5" },
   { id: "vila",      nome: "Vila 78m²",            area: 78,  larg: 9,  comp: 8.5,pavs: 1, quartos: 2, cor: "#2e9e5b" },
   { id: "casa120",   nome: "Casa Serena 120m²",    area: 120, larg: 12, comp: 10, pavs: 1, quartos: 3, cor: "#981915" },
   { id: "sobrado",   nome: "Sobrado 160m²",        area: 160, larg: 10, comp: 8,  pavs: 2, quartos: 3, cor: "#8b5cf6" },
@@ -929,9 +929,12 @@ export default function BIM() {
 
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-        <div>
-          <h2 style={{ fontSize: 22, fontWeight: 800 }}>BIM</h2>
-          <p style={{ color: C.muted, fontSize: 13, marginTop: 4 }}>Modelos IFC · Visualização 3D · Apontamentos</p>
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+          <div style={{ width: 4, height: 42, borderRadius: 3, background: "var(--brick)", flexShrink: 0, marginTop: 2 }} />
+          <div>
+            <div style={{ fontFamily: "var(--cond)", fontWeight: 700, fontSize: 28, color: "var(--ink)", lineHeight: 1 }}>BIM</div>
+            <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4 }}>Modelos IFC · Visualização 3D · Apontamentos</div>
+          </div>
         </div>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
           {todosApt.length > 0 && (
@@ -961,14 +964,15 @@ export default function BIM() {
       {/* KPIs */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 20 }}>
         {[
-          ["Modelos 3D",    modelos.length,  "#4a9eff"],
-          ["Apontamentos",  stats.total,     C.muted],
-          ["Alta prioridade", stats.alta,    "#c0392b"],
-          ["Resolvidos",    stats.resolvidos,"#2e9e5b"],
+          ["Modelos 3D",    modelos.length,  "var(--steel)"],
+          ["Apontamentos",  stats.total,     "var(--muted)"],
+          ["Alta prioridade", stats.alta,    "var(--neg)"],
+          ["Resolvidos",    stats.resolvidos,"var(--pos)"],
         ].map(([l, v, cor]) => (
-          <div key={l} style={{ background: C.surface, borderRadius: 14, border: `1px solid ${C.border}`, padding: "14px 18px" }}>
-            <div style={{ fontSize: 24, fontWeight: 800, color: cor }}>{v}</div>
-            <div style={{ fontSize: 11, color: C.muted, marginTop: 3 }}>{l}</div>
+          <div key={l} style={{ background: "var(--surface)", borderRadius: 12, border: "1px solid var(--line)", padding: "16px 18px" }}>
+            <div style={{ height: 3, width: 28, borderRadius: 2, background: cor, marginBottom: 12 }} />
+            <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 1.2, color: "var(--muted)", textTransform: "uppercase", marginBottom: 6 }}>{l}</div>
+            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 32, fontWeight: 700, color: cor === "var(--muted)" ? "var(--ink)" : cor, lineHeight: 1 }}>{v}</div>
           </div>
         ))}
       </div>
@@ -1006,7 +1010,7 @@ export default function BIM() {
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {modelos.map((m) => (
                 <div key={m.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 18px", background: C.darker, borderRadius: 10, border: `1px solid ${C.border}` }}>
-                  <div style={{ width: 42, height: 42, borderRadius: 8, background: "#4a9eff20", border: "2px solid #4a9eff44", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}><Box size={36} /></div>
+                  <div style={{ width: 42, height: 42, borderRadius: 8, background: "#3b6ea520", border: "2px solid #3b6ea544", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}><Box size={36} /></div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 13, fontWeight: 700 }}>{m.nome}</div>
                     <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>
@@ -1014,7 +1018,7 @@ export default function BIM() {
                     </div>
                   </div>
                   <div style={{ display: "flex", gap: 8 }}>
-                    <button onClick={() => abrirModelo(m)} style={{ padding: "7px 16px", borderRadius: 6, border: "1px solid #4a9eff44", background: "#4a9eff18", color: "#4a9eff", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+                    <button onClick={() => abrirModelo(m)} style={{ padding: "7px 16px", borderRadius: 6, border: "1px solid #3b6ea544", background: "#3b6ea518", color: "var(--steel)", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
                        Visualizar 3D
                     </button>
                     <button onClick={async () => { await deleteBimModelo(obraId, m.id, m.storage_path); mostrarToast(" Modelo removido."); }} style={{ padding: "7px 10px", borderRadius: 6, border: `1px solid ${C.danger}44`, background: C.danger + "18", color: C.danger, fontSize: 11, cursor: "pointer", fontFamily: "inherit" }}><Trash2 size={13} /></button>
@@ -1066,7 +1070,7 @@ export default function BIM() {
                             {m.disciplina} · {m.tamanho} · {new Date(m.created_at).toLocaleDateString("pt-BR")}
                           </div>
                         </div>
-                        <button onClick={() => abrirModelo(m)} style={{ padding: "5px 12px", borderRadius: 5, border: "1px solid #4a9eff44", background: "#4a9eff18", color: "#4a9eff", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+                        <button onClick={() => abrirModelo(m)} style={{ padding: "5px 12px", borderRadius: 5, border: "1px solid #3b6ea544", background: "#3b6ea518", color: "var(--steel)", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
                            Abrir
                         </button>
                       </div>
@@ -1094,7 +1098,7 @@ export default function BIM() {
             ))}
             <span style={{ fontSize: 10, fontWeight: 700, color: C.muted, letterSpacing: .5, marginLeft: 12, marginRight: 4 }}>DISC.</span>
             {["Todas", ...DISCIPLINAS_BIM].map((d) => (
-              <button key={d} onClick={() => setFiltroDisciplina(d)} style={{ padding: "3px 10px", borderRadius: 5, fontSize: 11, fontWeight: filtroDisciplina === d ? 700 : 400, border: `1px solid ${filtroDisciplina === d ? "#4a9eff" : C.border}`, background: filtroDisciplina === d ? "#4a9eff18" : "transparent", color: filtroDisciplina === d ? "#4a9eff" : C.muted, cursor: "pointer", fontFamily: "inherit" }}>{d}</button>
+              <button key={d} onClick={() => setFiltroDisciplina(d)} style={{ padding: "3px 10px", borderRadius: 5, fontSize: 11, fontWeight: filtroDisciplina === d ? 700 : 400, border: `1px solid ${filtroDisciplina === d ? "var(--steel)" : C.border}`, background: filtroDisciplina === d ? "#3b6ea518" : "transparent", color: filtroDisciplina === d ? "var(--steel)" : C.muted, cursor: "pointer", fontFamily: "inherit" }}>{d}</button>
             ))}
             {todosApt.length > 0 && (
               <button onClick={() => exportarRelatorioApontamentos(apts, obraAtual?.nome || "Obra")} style={{ marginLeft: "auto", padding: "4px 12px", borderRadius: 5, border: `1px solid ${C.border}`, background: "transparent", color: C.muted, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
@@ -1124,7 +1128,7 @@ export default function BIM() {
                         <span style={{ background: scorCor + "18", color: scorCor, border: `1px solid ${scorCor}33`, borderRadius: 4, padding: "1px 8px", fontSize: 10, fontWeight: 700 }}>{a.status}</span>
                         <span style={{ background: prioCor + "18", color: prioCor, borderRadius: 4, padding: "1px 8px", fontSize: 10, fontWeight: 700 }}>{a.prioridade}</span>
                         <span style={{ background: "#41414122", color: C.muted, borderRadius: 4, padding: "1px 8px", fontSize: 10 }}>{a.tipo}</span>
-                        <span style={{ background: "#4a9eff18", color: "#4a9eff", borderRadius: 4, padding: "1px 8px", fontSize: 10 }}>{a.disciplina}</span>
+                        <span style={{ background: "#3b6ea518", color: "var(--steel)", borderRadius: 4, padding: "1px 8px", fontSize: 10 }}>{a.disciplina}</span>
                       </div>
                       {a.descricao && <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.5, marginBottom: 4 }}>{a.descricao}</div>}
                       <div style={{ fontSize: 11, color: C.muted }}>
