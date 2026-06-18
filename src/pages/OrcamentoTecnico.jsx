@@ -116,12 +116,12 @@ function Row({ label, children }) {
 function SummaryCard({ label, value, sub, color }) {
   return (
     <div style={{
-      background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10,
+      background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 12,
       padding: "14px 16px",
     }}>
-      <div style={{ fontSize: 10.5, fontWeight: 800, color: C.muted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }}>{label}</div>
-      <div className="num" style={{ fontSize: 26, fontWeight: 700, color, lineHeight: 1 }}>{value}</div>
-      {sub && <div style={{ fontSize: 11, color: C.muted, marginTop: 5 }}>{sub}</div>}
+      <div style={{ fontSize: 10.5, fontWeight: 800, color: "var(--muted)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 6 }}>{label}</div>
+      <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 26, fontWeight: 700, color: color || "var(--ink)", lineHeight: 1 }}>{value}</div>
+      {sub && <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 5 }}>{sub}</div>}
     </div>
   );
 }
@@ -185,7 +185,7 @@ function SistemaRow({ s, aberto, toggle, precosEditados, onPrecoEdit }) {
           )}
         </span>
         {s.totalMO > 0 && (
-          <span style={{ fontSize: 11, color: "#4a9eff", whiteSpace: "nowrap" }}>
+          <span style={{ fontSize: 11, color: C.steel, whiteSpace: "nowrap" }}>
             MO {fmtBRL(s.totalMO)}
           </span>
         )}
@@ -1203,11 +1203,14 @@ export default function OrcamentoTecnico() {
 
       {/*  LEFT: configuração  */}
       <div style={{ width: 400, flexShrink: 0, display: "flex", flexDirection: "column", gap: 14 }}>
-        <div>
-          <h2 className="num" style={{ margin: 0, fontSize: 26, fontWeight: 700, color: C.text, lineHeight: 1 }}>Orçamento Técnico</h2>
-          <p style={{ margin: "4px 0 0", color: C.muted, fontSize: 12.5 }}>
-            Composição completa de insumos Steel Frame — preços regionais via CUB
-          </p>
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+          <div style={{ width: 4, height: 42, borderRadius: 3, background: "var(--brick)", flexShrink: 0, marginTop: 2 }} />
+          <div>
+            <h2 style={{ margin: 0, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 28, fontWeight: 700, color: "var(--ink)", lineHeight: 1.1 }}>Orçamento Técnico</h2>
+            <p style={{ margin: "4px 0 0", color: "var(--muted)", fontSize: 12.5 }}>
+              Composição completa de insumos Steel Frame — preços regionais via CUB
+            </p>
+          </div>
         </div>
 
         {crmLead && (
@@ -1363,10 +1366,11 @@ export default function OrcamentoTecnico() {
           onClick={calcular}
           disabled={!area}
           style={{
-            padding: "14px 0", background: C.red, color: "#fff", border: "none",
-            borderRadius: 10, fontSize: 15, fontWeight: 700,
+            padding: "14px 0", background: "var(--brick)", color: "#fff", border: "none",
+            borderRadius: 11, fontSize: 14.5, fontWeight: 700,
             cursor: area ? "pointer" : "not-allowed", opacity: area ? 1 : 0.5,
             display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
+            fontFamily: "inherit", letterSpacing: .3,
           }}
         >
           <Ic n="barchart" w={16} c="#fff" /> Calcular Orçamento
@@ -1377,24 +1381,27 @@ export default function OrcamentoTecnico() {
       <div style={{ flex: 1, minWidth: 0 }}>
         {!resultado ? (
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-            textAlign: "center", padding: "80px 40px", color: C.muted,
-            background: C.surface, borderRadius: 16, boxShadow: C.shadow, border: `1px solid ${C.border}` }}>
-            <div style={{ width: 56, height: 56, borderRadius: 14, background: C.surface2, border: `1px solid ${C.border}`, display: "grid", placeItems: "center", marginBottom: 20 }}>
-              <Ic n="barchart" w={28} c={C.muted} />
+            textAlign: "center", padding: "80px 40px",
+            background: "var(--surface)", borderRadius: 16, border: "1px solid var(--line)" }}>
+            <div style={{ width: 56, height: 56, borderRadius: 14, background: "var(--brick-soft)", color: "var(--brick)", display: "grid", placeItems: "center", marginBottom: 18 }}>
+              <Ic n="barchart" w={26} c="var(--brick)" />
             </div>
-            <div className="num" style={{ fontWeight: 700, fontSize: 22, color: C.text, marginBottom: 8 }}>Configure e calcule</div>
-            <p style={{ fontSize: 13.5, margin: 0, maxWidth: 320, lineHeight: 1.6 }}>
-              Preencha os parâmetros ao lado e clique em <strong style={{ color: C.text }}>Calcular Orçamento</strong>.
+            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 24, color: "var(--ink)", marginBottom: 8 }}>Configure e calcule</div>
+            <p style={{ fontSize: 13.5, margin: 0, maxWidth: 320, lineHeight: 1.6, color: "var(--muted)" }}>
+              Preencha os parâmetros ao lado e clique em <strong style={{ color: "var(--ink)" }}>Calcular Orçamento</strong>.
               Gera composição detalhada de todos os insumos com preços regionais calibrados por CUB.
             </p>
           </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             {/* título do painel de resultados */}
-            <div>
-              <div className="num" style={{ fontWeight: 700, fontSize: 22, color: C.text, marginBottom: 3 }}>Composição calculada</div>
-              <div style={{ fontSize: 12.5, color: C.muted }}>
-                Preços calibrados por CUB · {CUB_ESTADOS[resultado.estado]?.nome} ({resultado.estado}) · {resultado.area} m² · {resultado.padrao} (×{resultado.fatorPadrao})
+            <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+              <div style={{ width: 4, height: 36, borderRadius: 3, background: "var(--brick)", flexShrink: 0, marginTop: 2 }} />
+              <div>
+                <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 24, color: "var(--ink)", lineHeight: 1.1, marginBottom: 3 }}>Composição calculada</div>
+                <div style={{ fontSize: 12.5, color: "var(--muted)" }}>
+                  Preços calibrados por CUB · {CUB_ESTADOS[resultado.estado]?.nome} ({resultado.estado}) · {resultado.area} m² · {resultado.padrao} (×{resultado.fatorPadrao})
+                </div>
               </div>
             </div>
 
@@ -1422,34 +1429,34 @@ export default function OrcamentoTecnico() {
             />
 
             {/* action buttons */}
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              <button onClick={() => setModalSalvar(true)} style={btnPrimary}>
-                <Ic n="save" w={13} c="#fff" /> Salvar como Orçamento
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
+              <button onClick={() => setModalSalvar(true)} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "9px 15px", background: "var(--brick)", color: "#fff", border: "1px solid var(--brick)", borderRadius: 9, fontSize: 12.5, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+                <Ic n="save" w={13} c="#fff" /> Salvar Orçamento
               </button>
-              <button onClick={exportarPDF} style={btnGhost}>
-                <Ic n="print" w={13} /> Exportar PDF
+              <button onClick={exportarPropostaCliente} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "9px 15px", background: "var(--surface)", color: "var(--ink-2)", border: "1px solid var(--line)", borderRadius: 9, fontSize: 12.5, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+                <Ic n="clip" w={13} /> Proposta ao Cliente
               </button>
-              <button onClick={exportarExcel} style={btnGhost}>
-                <Ic n="dl" w={13} /> Exportar Excel
+              <button onClick={exportarPDF} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "9px 15px", background: "var(--surface)", color: "var(--ink-2)", border: "1px solid var(--line)", borderRadius: 9, fontSize: 12.5, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+                <Ic n="print" w={13} /> PDF Técnico
               </button>
-              <button onClick={gerarComparativo} style={btnGhost}>
+              <button onClick={exportarExcel} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "9px 15px", background: "var(--surface)", color: "var(--ink-2)", border: "1px solid var(--line)", borderRadius: 9, fontSize: 12.5, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+                <Ic n="dl" w={13} /> Excel
+              </button>
+              <button onClick={gerarComparativo} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "9px 15px", background: "var(--surface)", color: "var(--ink-2)", border: "1px solid var(--line)", borderRadius: 9, fontSize: 12.5, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
                 <Ic n="scale" w={13} /> Comparar Padrões
               </button>
-              <button onClick={gerarComparativoVersoes} style={btnGhost}>
-                <Ic n="sliders" w={13} /> Comparar Espessuras
+              <button onClick={gerarComparativoVersoes} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "9px 15px", background: "var(--surface)", color: "var(--ink-2)", border: "1px solid var(--line)", borderRadius: 9, fontSize: 12.5, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+                <Ic n="sliders" w={13} /> Espessuras
               </button>
-              <button onClick={() => setModalFinanc(true)} style={btnGhost}>
-                <Ic n="bank" w={13} /> Simular Financiamento
-              </button>
-              <button onClick={exportarPropostaCliente} style={btnGhost}>
-                <Ic n="clip" w={13} /> Proposta para Cliente
+              <button onClick={() => setModalFinanc(true)} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "9px 15px", background: "var(--surface)", color: "var(--ink-2)", border: "1px solid var(--line)", borderRadius: 9, fontSize: 12.5, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+                <Ic n="bank" w={13} /> Financiamento
               </button>
               {Object.keys(precosEditados).length > 0 && (
-                <button onClick={() => { setPrecosEditados({}); calcular(); }} style={btnGhost}>
-                  <Ic n="refresh" w={13} /> Limpar ajustes de preço
+                <button onClick={() => { setPrecosEditados({}); calcular(); }} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "9px 15px", background: "var(--surface)", color: "var(--ink-2)", border: "1px solid var(--line)", borderRadius: 9, fontSize: 12.5, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+                  <Ic n="refresh" w={13} /> Limpar ajustes
                 </button>
               )}
-              <button onClick={() => setResultado(null)} style={btnGhost}>
+              <button onClick={() => setResultado(null)} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "9px 15px", background: "var(--surface)", color: "var(--muted)", border: "1px solid var(--line)", borderRadius: 9, fontSize: 12.5, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
                 <Ic n="refresh" w={13} /> Recalcular
               </button>
             </div>
