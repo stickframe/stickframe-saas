@@ -701,32 +701,25 @@ export default function Financeiro() {
             <h2 style={{ fontSize: 22, fontWeight: 800 }}>Financeiro</h2>
             <p style={{ color: C.muted, fontSize: 13, marginTop: 4 }}>Receitas, despesas e margem por obra</p>
           </div>
-          <div style={{ display: "flex", gap: 10 }}>
-            <button onClick={() => exportarFinanceiroExcel(obras, financeiro)} style={{
-              padding: "8px 16px", background: "#2e9e5b22",
-              border: "1px solid #2e9e5b44", borderRadius: 8,
-              color: "#2e9e5b", fontSize: 12, fontWeight: 700,
+          <div style={{ display: "flex", gap: 8 }}>
+            <button onClick={() => abrirModal("receita")} style={{
+              display: "inline-flex", alignItems: "center", gap: 7, padding: "9px 15px",
+              background: "#eaf3ec", border: "1px solid #b8dfc0", borderRadius: 9,
+              color: "var(--pos,#3f7a4b)", fontSize: 12.5, fontWeight: 600,
               cursor: "pointer", fontFamily: "inherit",
-            }}><BarChart2 size={13} /> Exportar Excel</button>
-            <button onClick={exportarRelatorio} style={{
-              padding: "8px 16px", background: "#4a9eff22",
-              border: "1px solid #4a9eff44", borderRadius: 8,
-              color: "#4a9eff", fontSize: 12, fontWeight: 700,
-              cursor: "pointer", fontFamily: "inherit",
-            }}> Exportar PDF</button>
-            <button onClick={() => setShowImportFinanceiro(true)} style={{
-              padding: "8px 16px", background: "#8b5cf622",
-              border: "1px solid #8b5cf644", borderRadius: 8,
-              color: "#8b5cf6", fontSize: 12, fontWeight: 700,
-              cursor: "pointer", fontFamily: "inherit",
-            }}> Importar CSV</button>
-            <Btn
-              onClick={() => abrirModal("receita")}
-              style={{ background: C.success + "22", border: `1px solid ${C.success}44`, color: C.success }}
-            >
+            }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M17 7h4v4"/></svg>
               + Receita
-            </Btn>
-            <Btn onClick={() => abrirModal("despesa")}>+ Despesa</Btn>
+            </button>
+            <button onClick={() => abrirModal("despesa")} style={{
+              display: "inline-flex", alignItems: "center", gap: 7, padding: "9px 15px",
+              background: "#fef2f1", border: "1px solid #f5c9c7", borderRadius: 9,
+              color: "var(--neg,#a33327)", fontSize: 12.5, fontWeight: 600,
+              cursor: "pointer", fontFamily: "inherit",
+            }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M3 7l6 6 4-4 8 8"/><path d="M17 17h4v-4"/></svg>
+              + Despesa
+            </button>
           </div>
         </div>
 
@@ -770,13 +763,15 @@ export default function Financeiro() {
         )}
 
         {/* Tabs */}
-        <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
-          {[["lancamentos", " Análise"], ["fluxo", " Fluxo de Caixa"], ["dre", " DRE"], ["fluxo-mensal", " Fluxo Mensal"], ["folha", " Folha"]].map(([k, label]) => (
+        <div style={{ display: "flex", gap: 4, background: "var(--surface-2,#faf8f4)", border: "1px solid var(--line,#e7e1d8)", borderRadius: 11, padding: 4, width: "max-content", marginBottom: 20, flexWrap: "wrap" }}>
+          {[["lancamentos", "Análise"], ["fluxo", "Fluxo de Caixa"], ["dre", "DRE"], ["fluxo-mensal", "Fluxo Mensal"], ["folha", "Folha"]].map(([k, label]) => (
             <button key={k} onClick={() => setFinTab(k)} style={{
-              padding: "7px 16px", borderRadius: 8, border: `1px solid ${finTab === k ? C.red : C.border}`,
-              background: finTab === k ? C.red + "18" : "transparent",
-              color: finTab === k ? C.text : C.muted, fontSize: 12, fontWeight: finTab === k ? 700 : 400,
-              cursor: "pointer", fontFamily: "inherit",
+              padding: "8px 16px", border: "none", borderRadius: 8,
+              background: finTab === k ? "var(--surface,#fff)" : "none",
+              color: finTab === k ? "var(--brick,#981915)" : "var(--muted,#8c847a)",
+              fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
+              boxShadow: finTab === k ? "0 2px 8px rgba(0,0,0,0.08)" : "none",
+              transition: ".12s", whiteSpace: "nowrap",
             }}>{label}</button>
           ))}
         </div>
@@ -800,19 +795,19 @@ export default function Financeiro() {
         {/* KPIs */}
         <div className="kpi-grid-5" style={{ marginBottom: 18 }}>
           {[
-            { label: "Contrato",    value: fmt(fin.contrato),  color: C.border,                           sub: "valor total" },
-            { label: "Recebido",    value: fmt(receitas),      color: C.success,                          sub: `${fmtPct(pctRec)} do contrato` },
-            { label: "A receber",   value: fmt(aReceber),      color: C.warning,                          sub: "saldo em aberto" },
-            { label: "Despesas",    value: fmt(despesas),      color: C.red,                              sub: `${fin.lancamentos.filter(l => l.tipo === "despesa").length} lançamentos` },
-            { label: "Margem real", value: fmtPct(margem * 100), color: margem > 0 ? C.success : C.danger, sub: saldo >= 0 ? `saldo +${fmt(saldo)}` : `saldo ${fmt(saldo)}` },
+            { label: "CONTRATO",    value: fmt(fin.contrato),    color: "var(--muted,#8c847a)",              sub: "valor total" },
+            { label: "RECEBIDO",    value: fmt(receitas),        color: "var(--pos,#3f7a4b)",                sub: `${fmtPct(pctRec)} do contrato` },
+            { label: "A RECEBER",   value: fmt(aReceber),        color: "var(--warn,#b07a1e)",               sub: "saldo em aberto" },
+            { label: "DESPESAS",    value: fmt(despesas),        color: "var(--neg,#a33327)",                sub: `${fin.lancamentos.filter(l => l.tipo === "despesa").length} lançamentos` },
+            { label: "MARGEM REAL", value: fmtPct(margem * 100), color: margem > 0 ? "var(--pos,#3f7a4b)" : "var(--neg,#a33327)", sub: saldo >= 0 ? `saldo +${fmt(saldo)}` : `saldo ${fmt(saldo)}` },
           ].map((k, i) => (
             <div key={i} style={{
-              background: C.surface, borderRadius: 14, padding: "16px 18px",
-              border: `1px solid ${C.border}`, borderTop: `3px solid ${k.color}`,
+              background: "var(--surface,#fff)", borderRadius: 14, padding: "16px 20px",
+              border: "1px solid var(--line,#e7e1d8)",
             }}>
-              <div style={{ fontSize: 10, color: C.muted, letterSpacing: 1, marginBottom: 8 }}>{k.label.toUpperCase()}</div>
-              <div style={{ fontSize: 18, fontWeight: 800, color: k.color === C.border ? C.text : k.color }}>{k.value}</div>
-              <div style={{ fontSize: 10, color: C.muted, marginTop: 4 }}>{k.sub}</div>
+              <div style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: 1.1, color: "var(--muted,#8c847a)", marginBottom: 6 }}>{k.label}</div>
+              <div style={{ fontSize: 24, fontWeight: 700, color: k.color, lineHeight: 1, fontFamily: "'Barlow Condensed',sans-serif" }}>{k.value}</div>
+              <div style={{ fontSize: 11, color: "var(--muted,#8c847a)", marginTop: 4 }}>{k.sub}</div>
             </div>
           ))}
         </div>
