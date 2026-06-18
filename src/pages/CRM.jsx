@@ -20,14 +20,15 @@ import Modal from "../components/ui/Modal";
 const STATUS_OPTS = ["Lead", "Em negociação", "Proposta enviada", "Fechado", "Em execução"];
 const ORIGEM_OPTS = ["Indicação", "Instagram", "Google", "Site", "Outros"];
 
-const STATUS_COR = {
-  "Lead":             "#4a9eff",
-  "Em negociação":    "#c88a00",
-  "Proposta enviada": "#981915",
-  "Fechado":          "#2e9e5b",
-  "Em execução":      "#2e9e5b",
-};
-function statusColor(s) { return STATUS_COR[s] || C.muted; }
+const ETAPAS = [
+  { id: "Lead",             label: "Lead",           cor: "#8c847a", bg: "#f4f1ec" },
+  { id: "Em negociação",    label: "Em negociação",  cor: "#3b6ea5", bg: "#e8f2fb" },
+  { id: "Proposta enviada", label: "Proposta",       cor: "#c0892d", bg: "#fef5e7" },
+  { id: "Fechado",          label: "Fechado",        cor: "#6d557e", bg: "#f3eef8" },
+  { id: "Em execução",      label: "Em execução",    cor: "#981915", bg: "#f3e7e5" },
+];
+function etapaInfo(s) { return ETAPAS.find((e) => e.id === s) || { cor: "#8c847a", bg: "#f4f1ec", label: s }; }
+function statusColor(s) { return etapaInfo(s).cor; }
 
 //  Score de lead 
 function calcularScore(c) {
@@ -437,7 +438,9 @@ export default function CRM() {
       if (c.proximo_contato && !isConvertido && c.proximo_contato <= hojeStr) followUpsPendentes++;
     });
     const taxa = total === 0 ? 0 : Math.round((convertidos / total) * 100);
-    return { total, convertidos, taxa, porOrigem, followUpsPendentes };
+    const totalVgv = clientes.reduce((s, c) => s + (c.valor || 0), 0);
+    const emAberto = clientes.filter((c) => c.status !== "Fechado" && c.status !== "Em execução").length;
+    return { total, convertidos, taxa, porOrigem, followUpsPendentes, totalVgv, emAberto };
   }, [clientes, hojeStr]);
 
   function abrirNovo() {
@@ -831,37 +834,19 @@ export default function CRM() {
         }}
       />
 
-      {/* Dashboard de Métricas */}
-      <div style={{ display: "flex", gap: 16, marginBottom: 20, flexWrap: "wrap" }}>
-        <div style={{ flex: "1 1 200px", background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", border: `1px solid ${C.border}`, padding: 16 }}>
-          <div style={{ fontSize: 11, color: C.muted, fontWeight: 700, letterSpacing: 1 }}>TAXA DE CONVERSÃO</div>
-          <div style={{ fontSize: 26, fontWeight: 800, color: stats.taxa > 20 ? C.green : C.text, marginTop: 4 }}>{stats.taxa}%</div>
-          <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>{stats.convertidos} convertidos de {stats.total} leads</div>
-        </div>
-
-        <div style={{ flex: "2 1 300px", background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, padding: 16 }}>
-          <div style={{ fontSize: 11, color: C.muted, fontWeight: 700, letterSpacing: 1 }}>CONVERSÃO POR ORIGEM</div>
-          <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
-            {Object.entries(stats.porOrigem).length === 0 ? (
-              <span style={{ fontSize: 12, color: C.muted }}>Nenhum dado</span>
-            ) : (
-              Object.entries(stats.porOrigem).map(([orig, dados]) => (
-                <div key={orig} style={{ background: C.darker, padding: "6px 10px", borderRadius: 6, fontSize: 12 }}>
-                  <span style={{ color: C.muted, marginRight: 6 }}>{orig}</span>
-                  <strong style={{ color: C.text }}>{Math.round((dados.convertidos / dados.total) * 100)}%</strong>
-                </div>
-              ))
-            )}
+      {/* KPIs */}
+      <div style={{ display: "flex", gap: 14, marginBottom: 20, flexWrap: "wrap" }}>
+        {[
+          { l: "VGV DO PIPELINE",      v: fmt(stats.totalVgv),           sub: `${stats.total} lead(s) cadastrados`,                                                                   cor: "#4f7d57" },
+          { l: "LEADS EM ABERTO",      v: stats.emAberto,                 sub: `de ${stats.total} total`,                                                                              cor: "#3b6ea5" },
+          { l: "FOLLOW-UPS PENDENTES", v: stats.followUpsPendentes,       sub: stats.followUpsPendentes === 1 ? "contato atrasado" : "contatos atrasados",                            cor: stats.followUpsPendentes > 0 ? "var(--neg,#a33327)" : "var(--muted,#8c847a)" },
+        ].map(({ l, v, sub, cor }) => (
+          <div key={l} style={{ flex: "1 1 200px", background: "var(--surface,#fff)", borderRadius: 14, border: "1px solid var(--line,#e7e1d8)", padding: "16px 20px" }}>
+            <div style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: 1.1, color: "var(--muted,#8c847a)", textTransform: "uppercase", marginBottom: 6 }}>{l}</div>
+            <div style={{ fontSize: 28, fontWeight: 700, color: cor, lineHeight: 1, fontFamily: "'Barlow Condensed',sans-serif" }}>{v}</div>
+            <div style={{ fontSize: 12, color: "var(--muted,#8c847a)", marginTop: 4 }}>{sub}</div>
           </div>
-        </div>
-
-        <div style={{ flex: "1 1 200px", background: stats.followUpsPendentes > 0 ? C.danger + "11" : C.surface, borderRadius: 12, border: `1px solid ${stats.followUpsPendentes > 0 ? C.danger + "44" : C.border}`, padding: 16 }}>
-          <div style={{ fontSize: 11, color: stats.followUpsPendentes > 0 ? C.danger : C.muted, fontWeight: 700, letterSpacing: 1 }}>FOLLOW-UPS PENDENTES</div>
-          <div style={{ fontSize: 26, fontWeight: 800, color: stats.followUpsPendentes > 0 ? C.danger : C.text, marginTop: 4 }}>{stats.followUpsPendentes}</div>
-          <div style={{ fontSize: 12, color: stats.followUpsPendentes > 0 ? C.danger : C.muted, marginTop: 2 }}>
-            {stats.followUpsPendentes === 1 ? "contato atrasado ou p/ hoje" : "contatos atrasados ou p/ hoje"}
-          </div>
-        </div>
+        ))}
       </div>
 
       {/* Toggle View */}
@@ -903,8 +888,10 @@ export default function CRM() {
             <div style={{ display: "flex", gap: 12, overflowX: "auto", paddingBottom: 16 }}>
               {STATUS_OPTS.map(status => {
                 const clientesColuna = clientesFiltrados.filter(c => c.status === status);
+                const etapa = etapaInfo(status);
+                const vgvCol = clientesColuna.reduce((s, c) => s + (c.valor || 0), 0);
                 return (
-                  <div 
+                  <div
                     key={status}
                     onDragOver={e => e.preventDefault()}
                     onDrop={e => {
@@ -918,22 +905,23 @@ export default function CRM() {
                         }
                       }
                     }}
-                    style={{ 
-                      width: 220, flexShrink: 0, background: C.surface, borderRadius: 14, border: `1px solid ${C.border}`,
+                    style={{
+                      width: 230, flexShrink: 0, background: "var(--surface,#fff)", borderRadius: 14, border: `1px solid ${etapa.cor}22`,
                       display: "flex", flexDirection: "column"
                     }}
                   >
-                    <div style={{ padding: "12px 16px", borderBottom: `1px solid ${C.border}`, display: "flex", justifyContent: "space-between", alignItems: "center", background: C.darker, borderTopLeftRadius: 10, borderTopRightRadius: 10 }}>
-                      <div style={{ fontSize: 12, fontWeight: 700, display: "flex", alignItems: "center", gap: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>
-                        <div style={{ width: 10, height: 10, borderRadius: 5, background: statusColor(status) }} />
-                        {status}
+                    <div style={{ padding: "10px 14px", background: etapa.bg, borderTopLeftRadius: 10, borderTopRightRadius: 10, borderBottom: `1px solid ${etapa.cor}22`, display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                      <div>
+                        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: 1, textTransform: "uppercase", color: etapa.cor }}>{etapa.label}</div>
+                        {vgvCol > 0 && <div style={{ fontSize: 12, fontWeight: 700, color: etapa.cor, marginTop: 2, fontFamily: "'Barlow Condensed',sans-serif" }}>{fmt(vgvCol)}</div>}
                       </div>
-                      <Badge label={clientesColuna.length.toString()} color={C.muted} />
+                      <span style={{ fontSize: 16, fontWeight: 800, fontFamily: "'Barlow Condensed',sans-serif", color: etapa.cor }}>{clientesColuna.length}</span>
                     </div>
-                    
+
                     <div style={{ padding: 12, display: "flex", flexDirection: "column", gap: 10, overflowY: "auto", minHeight: 120, maxHeight: "calc(100vh - 320px)" }}>
                       {clientesColuna.map(c => {
                         const atrasado = c.proximo_contato && c.proximo_contato <= hojeStr && status !== "Fechado" && status !== "Em execução";
+                        const cEtapa = etapaInfo(c.status);
                         return (
                           <div
                             key={c.id}
@@ -941,11 +929,13 @@ export default function CRM() {
                             onDragStart={e => { e.dataTransfer.setData("text/plain", c.id); setDragging(true); }}
                             onDragEnd={() => setDragging(false)}
                             onClick={() => abrirEditar(c)}
-                            style={{ 
-                              background: C.surface, borderRadius: 8, padding: 14, cursor: "grab", 
-                              border: atrasado ? `1px solid ${C.danger}` : `1px solid ${C.border}`,
-                              boxShadow: sel === c.id ? `0 0 0 2px ${C.red}` : "0 2px 4px #0001",
-                              transition: "all 0.2s",
+                            onMouseEnter={e => { e.currentTarget.style.boxShadow = "0 8px 24px rgba(0,0,0,0.12)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
+                            onMouseLeave={e => { e.currentTarget.style.boxShadow = sel === c.id ? `0 0 0 2px ${cEtapa.cor}` : "0 2px 4px #0001"; e.currentTarget.style.transform = ""; }}
+                            style={{
+                              background: "var(--surface,#fff)", borderRadius: 10, padding: 14, cursor: "grab",
+                              border: atrasado ? `1px solid ${C.danger}` : sel === c.id ? `1.5px solid ${cEtapa.cor}` : `1px solid ${cEtapa.cor}33`,
+                              boxShadow: sel === c.id ? `0 0 0 2px ${cEtapa.cor}44` : "0 2px 4px #0001",
+                              transition: "box-shadow .14s, transform .14s",
                               position: "relative"
                             }}
                           >
@@ -960,7 +950,7 @@ export default function CRM() {
                             {c.valor > 0 && <div style={{ fontSize: 12, color: C.success, fontWeight: 700 }}>{fmt(c.valor)}</div>}
                             
                             <div style={{ fontSize: 11, color: C.muted, marginTop: 10, display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 8, borderTop: `1px dashed ${C.border}` }}>
-                              <span style={{ background: C.darker, padding: "2px 6px", borderRadius: 4 }}>{c.origem || "Indicação"}</span>
+                              <span style={{ background: cEtapa.bg, color: cEtapa.cor, padding: "2px 7px", borderRadius: 4, fontSize: 10, fontWeight: 700 }}>{c.origem || "Indicação"}</span>
                               {atrasado && <span style={{ color: C.danger, fontWeight: 700, fontSize: 10, background: C.danger+"22", padding: "2px 6px", borderRadius: 4 }}> FOLLOW-UP</span>}
                             </div>
                             {(c.origem === "Calculadora" || c.origem?.startsWith("Kit-")) && (() => {
