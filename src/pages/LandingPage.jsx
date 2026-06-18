@@ -272,9 +272,6 @@ export default function LandingPage() {
               <a href="#produto">O produto</a>
               <a href="#precos">Preços</a>
               <a href="/login">Entrar</a>
-              <a href="/cadastro" className="btn btn-white" style={{ padding: "9px 18px", fontSize: 14 }}>
-                Começar grátis
-              </a>
             </div>
             <button className="lp-burger" aria-label="Abrir menu" onClick={() => setMenuOpen(true)}>
               <IcMenu />
