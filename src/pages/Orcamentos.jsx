@@ -1608,6 +1608,7 @@ export default function Orcamentos() {
 
                     {/* Ações Secundárias */}
                     <Btn variant="ghost" size="sm" onClick={() => abrirEditar(o)}><Pencil size={13} /> Editar</Btn>
+                    <Btn variant="danger" size="sm" onClick={() => confirmarDelete(o.id)}><Trash2 size={13} /> Excluir</Btn>
 
                     {o.status !== "Aprovado" && o.status !== "Recusado" && (
                       <button
