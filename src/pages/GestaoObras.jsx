@@ -1523,15 +1523,15 @@ export default function GestaoObras() {
         return (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px,1fr))", gap: 12, marginBottom: 20 }}>
             {[
-              { label: "Em andamento", value: ativas.length, sub: `${concluidas.length} concluída(s)`, color: "#2e9e5b" },
-              { label: "Carteira ativa", value: fmtC(valorTotal), sub: "valor dos contratos ativos", color: C.red },
-              { label: "Progresso médio", value: `${progMedio}%`, sub: "obras em andamento", color: "#4a9eff" },
-              { label: "Custo lançado", value: fmtC(totalDespesas), sub: "despesas registradas", color: "#b97a00" },
+              { label: "OBRAS ATIVAS",    value: ativas.length,        sub: `${concluidas.length} concluída(s)`,    color: "#981915" },
+              { label: "VGV TOTAL",       value: fmtC(valorTotal),     sub: "valor dos contratos ativos",           color: "#4f7d57" },
+              { label: "PROGRESSO MÉDIO", value: `${progMedio}%`,      sub: "das obras em andamento",               color: "#3b6ea5" },
+              { label: "CUSTO LANÇADO",   value: fmtC(totalDespesas),  sub: "despesas registradas",                 color: "#b97a00" },
             ].map((m) => (
-              <div key={m.label} style={{ background: C.surface, border: `1px solid ${C.border}`, borderTop: `3px solid ${m.color}`, borderRadius: 10, padding: "14px 16px" }}>
-                <div style={{ fontSize: 11, color: C.muted, marginBottom: 4 }}>{m.label}</div>
-                <div style={{ fontSize: 18, fontWeight: 800, color: m.color }}>{m.value}</div>
-                <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{m.sub}</div>
+              <div key={m.label} style={{ background: "var(--surface,#fff)", border: "1px solid var(--line,#e7e1d8)", borderRadius: 14, padding: "16px 20px" }}>
+                <div style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: 1.1, color: "var(--muted,#8c847a)", textTransform: "uppercase", marginBottom: 6 }}>{m.label}</div>
+                <div style={{ fontSize: 26, fontWeight: 700, color: m.color, lineHeight: 1, fontFamily: "'Barlow Condensed',sans-serif" }}>{m.value}</div>
+                <div style={{ fontSize: 12, color: "var(--muted,#8c847a)", marginTop: 4 }}>{m.sub}</div>
               </div>
             ))}
           </div>
@@ -1604,16 +1604,15 @@ export default function GestaoObras() {
       {/* Filtros */}
       {obras.length > 0 && (
         <div style={{ display: "flex", gap: 10, marginBottom: 14, flexWrap: "wrap", alignItems: "center" }}>
-          <input
-            value={busca}
-            onChange={(e) => setBusca(e.target.value)}
-            placeholder="Buscar obra ou cliente..."
-            style={{
-              flex: "1 1 200px", padding: "8px 14px", borderRadius: 8,
-              border: `1px solid ${C.border}`, background: C.surface,
-              color: C.text, fontSize: 12, outline: "none", fontFamily: "inherit",
-            }}
-          />
+          <div style={{ display: "flex", alignItems: "center", background: "var(--surface,#fff)", border: "1px solid var(--line,#e7e1d8)", borderRadius: 10, padding: "8px 12px", flex: "1 1 200px", maxWidth: 360, gap: 8 }}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--muted,#8c847a)" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+            <input
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+              placeholder="Buscar obra ou cliente…"
+              style={{ border: "none", background: "none", outline: "none", fontFamily: "inherit", fontSize: 13.5, color: "var(--ink,#26231f)", width: "100%" }}
+            />
+          </div>
           {["Todos", ...STATUS_OBRA].map((s) => (
             <button key={s} onClick={() => setStatusFiltro(s)} style={{
               padding: "7px 14px", borderRadius: 7, fontSize: 11, cursor: "pointer",
@@ -1638,23 +1637,59 @@ export default function GestaoObras() {
         </div>
       ) : (
         <>
-          {/* Seletor de obra */}
-          <div style={{ display: "flex", gap: 8, margin: "8px 0 16px", flexWrap: "wrap" }}>
-            {obrasFiltradas.length === 0 && (
-              <div style={{ fontSize: 13, color: C.muted, padding: "8px 0" }}>Nenhuma obra encontrada para os filtros selecionados.</div>
-            )}
-            {obrasFiltradas.map((o) => (
-              <button key={o.id} onClick={() => setObraId(o.id)} style={{
-                padding: "8px 16px", borderRadius: 8,
-                border: `1px solid ${obraId === o.id ? C.red : C.border}`,
-                background: obraId === o.id ? C.red + "18" : "transparent",
-                color: obraId === o.id ? C.text : C.muted,
-                fontSize: 12, fontWeight: obraId === o.id ? 700 : 400,
-                cursor: "pointer", fontFamily: "inherit", transition: "all .15s",
-              }}>
-                {o.nome?.split("—")[0]?.trim()}
-              </button>
-            ))}
+          {/* Card grid de obras */}
+          {obrasFiltradas.length === 0 && (
+            <div style={{ fontSize: 13, color: C.muted, padding: "8px 0 16px" }}>Nenhuma obra encontrada para os filtros selecionados.</div>
+          )}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 12, marginBottom: 20 }}>
+            {obrasFiltradas.map((o) => {
+              const dias = o.prazo_fim ? Math.round((new Date(o.prazo_fim + "T00:00") - new Date()) / 86400000) : null;
+              const sel = obraId === o.id;
+              return (
+                <div
+                  key={o.id}
+                  onClick={() => setObraId(o.id)}
+                  onMouseEnter={e => { if (!sel) { e.currentTarget.style.boxShadow = "0 8px 24px rgba(0,0,0,0.12)"; e.currentTarget.style.transform = "translateY(-2px)"; } }}
+                  onMouseLeave={e => { e.currentTarget.style.boxShadow = sel ? `0 0 0 2px ${C.red}44` : "0 2px 6px #0001"; e.currentTarget.style.transform = ""; }}
+                  style={{
+                    background: "var(--surface,#fff)",
+                    border: sel ? `1.5px solid ${C.red}` : "1px solid var(--line,#e7e1d8)",
+                    borderRadius: 14, cursor: "pointer", overflow: "hidden",
+                    boxShadow: sel ? `0 0 0 2px ${C.red}44` : "0 2px 6px #0001",
+                    transition: "box-shadow .14s, transform .14s",
+                    display: "flex", flexDirection: "column",
+                  }}
+                >
+                  {/* progress bar top */}
+                  <div style={{ height: 4, background: "var(--line-2,#efeae2)" }}>
+                    <div style={{ height: "100%", width: `${o.progresso || 0}%`, background: statusColor(o.status), borderRadius: 0, transition: "width .4s" }} />
+                  </div>
+                  <div style={{ padding: "16px 18px 0", flex: 1 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 5 }}>
+                      <div style={{ fontSize: 14.5, fontWeight: 800, color: "var(--ink,#26231f)", lineHeight: 1.3, flex: 1, paddingRight: 8 }}>{o.nome?.split("—")[0]?.trim()}</div>
+                      <span style={{ fontSize: 10, fontWeight: 700, padding: "3px 8px", borderRadius: 5, background: (statusColor(o.status)) + "22", color: statusColor(o.status), border: `1px solid ${statusColor(o.status)}33`, whiteSpace: "nowrap" }}>{o.status}</span>
+                    </div>
+                    <div style={{ fontSize: 12, color: "var(--muted,#8c847a)", marginBottom: 12 }}>{o.cliente}</div>
+                    <div style={{ display: "flex", gap: 18 }}>
+                      <div>
+                        <div style={{ fontSize: 10, color: "var(--muted,#8c847a)", fontWeight: 700, letterSpacing: .8, textTransform: "uppercase" }}>Contrato</div>
+                        <div style={{ fontSize: 15, fontWeight: 700, marginTop: 2, fontFamily: "'Barlow Condensed',sans-serif" }}>{Number(o.contrato || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 10, color: "var(--muted,#8c847a)", fontWeight: 700, letterSpacing: .8, textTransform: "uppercase" }}>Progresso</div>
+                        <div style={{ fontSize: 15, fontWeight: 700, marginTop: 2, fontFamily: "'Barlow Condensed',sans-serif" }}>{o.progresso || 0}%</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ padding: "10px 18px", borderTop: "1px solid var(--line-2,#efeae2)", display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 12 }}>
+                    <div style={{ fontSize: 11.5, color: dias === null ? C.muted : dias < 0 ? "var(--neg,#a33327)" : dias < 30 ? "var(--warn,#b07a1e)" : "var(--muted,#8c847a)", fontWeight: dias !== null && dias < 30 ? 700 : 400 }}>
+                      {o.status === "Concluída" ? "Concluída" : dias === null ? "Sem prazo" : dias < 0 ? `${Math.abs(dias)} dias de atraso` : `${dias} dias restantes`}
+                    </div>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--muted,#8c847a)" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
           {obra && (
