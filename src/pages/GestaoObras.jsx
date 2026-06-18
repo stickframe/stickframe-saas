@@ -50,10 +50,10 @@ const CHECKLIST_FASES = {
   "Entrega":              ["Vistoria final realizada e aprovada", "Manual do proprietário entregue", "Documentação técnica enviada"],
 };
 const STATUS_COR  = {
-  "Em andamento": "#2e9e5b",
-  "Planejamento": "#4a9eff",
-  "Pausada":      "#c88a00",
-  "Concluída":    C.muted,
+  "Em andamento": C.steel,
+  "Planejamento": "#c0892d",
+  "Pausada":      C.muted,
+  "Concluída":    "#4f7d57",
 };
 const statusColor = (s) => STATUS_COR[s] || "#888";
 
