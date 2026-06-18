@@ -352,8 +352,11 @@ function OperacionalKpis() {
       <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.1, color: "var(--muted)", textTransform: "uppercase", marginBottom: 14 }}>SST &amp; Suprimentos</div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: 10 }}>
         {kpiOp.map(k => (
-          <div key={k.label} style={{ borderRadius: 10, padding: "12px 14px", borderLeft: `3px solid ${k.cor}`, background: "var(--surface-2,#faf8f4)" }}>
-            <div className="num" style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 20, fontWeight: 700, color: k.cor }}>{k.value}</div>
+          <div key={k.label} style={{ borderRadius: 10, padding: "12px 14px", background: "var(--surface-2,#faf8f4)", border: "1px solid var(--line)" }}>
+            <div style={{ width: 28, height: 28, borderRadius: 7, background: k.cor + "1a", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 7 }}>
+              <div style={{ width: 8, height: 8, borderRadius: 2, background: k.cor }} />
+            </div>
+            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 20, fontWeight: 700, color: k.cor }}>{k.value}</div>
             <div style={{ fontSize: 10, color: "var(--muted)", marginTop: 2, lineHeight: 1.3 }}>{k.label}</div>
           </div>
         ))}
@@ -867,7 +870,7 @@ function DashboardDiretor() {
                 <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.1, color: "var(--muted)", textTransform: "uppercase", display: "flex", alignItems: "center", gap: 6 }}>
                   <IC.Calendar /> Agenda do dia
                 </span>
-                {followUps.length > 0 && <span style={{ background: C.danger + "22", color: C.danger, borderRadius: 10, fontSize: 10, fontWeight: 700, padding: "2px 8px" }}>{followUps.length} pendente{followUps.length > 1 ? "s" : ""}</span>}
+                {followUps.length > 0 && <span style={{ background: C.danger + "1a", color: C.danger, borderRadius: 5, fontSize: 10.5, fontWeight: 800, padding: "3px 9px", border: `1px solid ${C.danger}33` }}>{followUps.length} pendente{followUps.length > 1 ? "s" : ""}</span>}
               </div>
               {followUps.length === 0 ? (
                 <div style={{ textAlign: "center", padding: "24px 0", color: "var(--muted)", fontSize: 12 }}>Nenhum follow-up pendente para hoje</div>
@@ -968,7 +971,7 @@ function DashboardDiretor() {
                     <div style={{ fontSize: 13, fontWeight: 700 }}>{o.nome}</div>
                     <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 2 }}>{o.fase} · {o.status}</div>
                   </div>
-                  <span style={{ background: C.danger + "22", color: C.danger, borderRadius: 6, fontSize: 11, fontWeight: 700, padding: "3px 10px" }}>+{o.gapPagamento.toFixed(0)}% gap</span>
+                  <span style={{ background: C.danger + "1a", color: C.danger, borderRadius: 5, fontSize: 10.5, fontWeight: 800, padding: "3px 9px", border: `1px solid ${C.danger}33` }}>+{o.gapPagamento.toFixed(0)}% gap</span>
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, fontSize: 11 }}>
                   <div><div style={{ color: "var(--muted)", marginBottom: 2 }}>Progresso</div><div style={{ fontWeight: 700 }}>{o.progresso || 0}%</div></div>
@@ -1003,7 +1006,7 @@ function DashboardDiretor() {
                     <div style={{ fontSize: 13, fontWeight: 700 }}>{a.obra.nome?.split("—")[0]?.trim()}</div>
                     <div style={{ fontSize: 11, color: "#92400e" }}>Entrando em <strong>{a.fase}</strong> em {a.diasAte === 0 ? "hoje" : `${a.diasAte} dia${a.diasAte > 1 ? "s" : ""}`}</div>
                   </div>
-                  <span style={{ background: a.diasAte <= 3 ? "#fee2e2" : "#fef9ec", color: a.diasAte <= 3 ? "#991b1b" : "#92400e", borderRadius: 8, padding: "3px 10px", fontSize: 11, fontWeight: 700 }}>
+                  <span style={{ background: a.diasAte <= 3 ? C.danger + "1a" : C.ochre + "1a", color: a.diasAte <= 3 ? C.danger : C.ochre, borderRadius: 5, padding: "3px 9px", fontSize: 10.5, fontWeight: 800, border: `1px solid ${a.diasAte <= 3 ? C.danger : C.ochre}33` }}>
                     {a.diasAte === 0 ? "Hoje" : `${a.diasAte}d`}
                   </span>
                 </div>
@@ -1051,7 +1054,7 @@ function DashboardDiretor() {
                       <td style={{ padding: "10px 12px", textAlign: "right", fontWeight: 700, color: margemColor }}>{o.margemReal.toFixed(1)}%</td>
                       <td style={{ padding: "10px 12px", textAlign: "right" }}>{o.pctRecebido.toFixed(0)}%</td>
                       <td style={{ padding: "10px 12px", textAlign: "right" }}>
-                        <span style={{ background: situacao.bg, color: situacao.color, borderRadius: 6, padding: "2px 8px", fontSize: 10, fontWeight: 700 }}>{situacao.label}</span>
+                        <span style={{ background: situacao.color + "1a", color: situacao.color, borderRadius: 5, padding: "3px 9px", fontSize: 10.5, fontWeight: 800, border: `1px solid ${situacao.color}33` }}>{situacao.label}</span>
                       </td>
                     </tr>
                   );
@@ -1089,9 +1092,9 @@ function DashboardDiretor() {
           <div style={{ background: "var(--surface)", borderRadius: "var(--radius-lg,16px)", padding: 20, border: "1px solid var(--line)", marginBottom: 16 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
               <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.1, color: "var(--muted)", textTransform: "uppercase" }}>DRE Simplificado</div>
-              <div style={{ display: "flex", gap: 6 }}>
+              <div style={{ display: "flex", gap: 3, background: "var(--surface-2,#faf8f4)", border: "1px solid var(--line)", borderRadius: 9, padding: 3 }}>
                 {Object.entries(periodos).map(([k, p]) => (
-                  <button key={k} onClick={() => setDrePeriodo(k)} style={{ padding: "4px 10px", borderRadius: 6, fontSize: 11, cursor: "pointer", fontFamily: "inherit", fontWeight: drePeriodo === k ? 700 : 400, border: `1px solid ${drePeriodo === k ? C.red : "var(--line)"}`, background: drePeriodo === k ? C.red + "18" : "transparent", color: drePeriodo === k ? "var(--ink,#26231f)" : "var(--muted)" }}>{p.label}</button>
+                  <button key={k} onClick={() => setDrePeriodo(k)} style={{ padding: "4px 10px", borderRadius: 6, fontSize: 11, cursor: "pointer", fontFamily: "inherit", fontWeight: 600, border: "none", background: drePeriodo === k ? "var(--surface)" : "transparent", color: drePeriodo === k ? "var(--ink,#26231f)" : "var(--muted)", boxShadow: drePeriodo === k ? "0 1px 2px rgba(40,30,20,.05)" : "none", transition: "all .12s" }}>{p.label}</button>
                 ))}
               </div>
             </div>
@@ -1127,7 +1130,7 @@ function DashboardDiretor() {
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {historico.slice(0, 5).map((h, i) => (
               <div key={h.id || i} style={{ display: "flex", gap: 12, alignItems: "flex-start", paddingBottom: 10, borderBottom: i < 4 ? "1px solid var(--line)" : "none" }}>
-                <div style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--surface-2,#faf8f4)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, color: "var(--muted)" }}>
+                <div style={{ width: 32, height: 32, borderRadius: 8, background: "var(--brick-soft,#f3e7e5)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, color: "#981915" }}>
                   <IC.Clock />
                 </div>
                 <div style={{ flex: 1 }}>
@@ -1144,7 +1147,10 @@ function DashboardDiretor() {
       <div style={{ background: "var(--surface)", borderRadius: "var(--radius-lg,16px)", boxShadow: "0 1px 2px rgba(40,30,20,.05)", padding: 20, border: "1px solid var(--line)" }}>
         <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.1, color: "var(--muted)", textTransform: "uppercase", marginBottom: 16 }}>Progresso das obras</div>
         {obras.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "28px 0", color: "var(--muted)", fontSize: 12 }}>Nenhuma obra cadastrada</div>
+          <div style={{ textAlign: "center", padding: "32px 0", color: "var(--muted)", fontSize: 12, display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: "var(--brick-soft,#f3e7e5)", display: "flex", alignItems: "center", justifyContent: "center", color: "#981915" }}><IC.Building /></div>
+            Nenhuma obra cadastrada
+          </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             {obras.map((o) => {
