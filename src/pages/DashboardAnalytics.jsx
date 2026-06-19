@@ -209,7 +209,7 @@ export default function DashboardAnalytics() {
       {/*  1. KPI Row  */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14, marginBottom: 20 }}>
         <KpiCard label="Obras Ativas" value={kpis.obrasAtivas} sub="em andamento" accent={C.red} />
-        <KpiCard label="Valor em Carteira" value={fmt(kpis.carteira)} sub="contratos ativos" accent="#4a9eff" />
+        <KpiCard label="Valor em Carteira" value={fmt(kpis.carteira)} sub="contratos ativos" accent="#3b6ea5" />
         <KpiCard label="Receitas do Mes" value={fmt(kpis.receitaMes)} sub="lancadas este mes" accent={C.success} />
         <KpiCard label="Despesas do Mes" value={fmt(kpis.despesaMes)} sub="lancadas este mes" accent={C.danger} />
       </div>
@@ -260,7 +260,7 @@ export default function DashboardAnalytics() {
               <XAxis type="number" tick={{ fontSize: 11, fill: C.muted }} tickFormatter={(v) => `R$${(v / 1000).toFixed(0)}k`} />
               <YAxis type="category" dataKey="nome" width={130} tick={{ fontSize: 11, fill: C.muted }} />
               <Tooltip contentStyle={tooltipStyle} formatter={(v) => fmt(v)} />
-              <Bar dataKey="contrato" name="Contrato" fill="#4a9eff" radius={[0, 4, 4, 0]} />
+              <Bar dataKey="contrato" name="Contrato" fill="#3b6ea5" radius={[0, 4, 4, 0]} />
             </BarChart>
           </ResponsiveContainer>
         )}

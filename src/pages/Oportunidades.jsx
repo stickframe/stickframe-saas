@@ -387,7 +387,7 @@ export default function Oportunidades() {
       </div>
 
       {/* Webhook bar */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: '#1a191c',
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: '#26231f',
         borderRadius: 11, padding: '11px 14px', marginBottom: 20 }}>
         <Ic n="target" w={16} c="#cdeedb" />
         <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: .5, color: 'rgba(255,255,255,.5)', textTransform: 'uppercase', flexShrink: 0 }}>Webhook</span>
@@ -558,8 +558,8 @@ export default function Oportunidades() {
         .st-proposta    { border:1.5px solid #f0ddb8; background:#fdf3e3; color:#c0892d; }
         .st-ganho       { border:1.5px solid #bfe0c9; background:#3f7a4b; color:#fff; }
         .st-perdido     { border:1.5px solid #eccac4; background:#fdf0ef; color:#a33327; }
-        .btn-wa { margin-left:auto; display:inline-flex; align-items:center; gap:6px; background:#1faa59; color:#fff; border:none; border-radius:8px; padding:7px 13px; font-family:inherit; font-size:12.5px; font-weight:700; cursor:pointer; text-decoration:none; transition:.12s; }
-        .btn-wa:hover { background:#178a47; }
+        .btn-wa { margin-left:auto; display:inline-flex; align-items:center; gap:6px; background:#3f7a4b; color:#fff; border:none; border-radius:8px; padding:7px 13px; font-family:inherit; font-size:12.5px; font-weight:700; cursor:pointer; text-decoration:none; transition:.12s; }
+        .btn-wa:hover { background:#3f7a4b; }
         .btn-del { display:inline-flex; align-items:center; background:#fdf0ef; border:none; border-radius:6px; padding:6px 8px; cursor:pointer; }
         .chip { padding:5px 13px; border-radius:20px; font-size:12px; font-weight:600; cursor:pointer; border:1.5px solid var(--line); background:var(--surface); color:var(--muted); font-family:inherit; transition:.12s; }
         .chip:hover { border-color:var(--ink); color:var(--ink); }
@@ -582,8 +582,8 @@ export default function Oportunidades() {
         .dr-sec:first-child { margin-top:0; }
         .dr-field { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--line-2); }
         .dr-val { font-size:13.5px; color:var(--ink); font-weight:600; }
-        .btn-wa-sm { margin-left:auto; display:inline-flex; align-items:center; gap:5px; background:#1faa59; color:#fff; border-radius:7px; padding:5px 10px; font-size:11.5px; font-weight:700; text-decoration:none; }
-        .btn-wa-sm:hover { background:#178a47; }
+        .btn-wa-sm { margin-left:auto; display:inline-flex; align-items:center; gap:5px; background:#3f7a4b; color:#fff; border-radius:7px; padding:5px 10px; font-size:11.5px; font-weight:700; text-decoration:none; }
+        .btn-wa-sm:hover { background:#3f7a4b; }
         .tl { position:relative; padding-left:20px; }
         .tl::before { content:''; position:absolute; left:5px; top:4px; bottom:4px; width:2px; background:var(--line); }
         .tl-item { position:relative; padding:0 0 16px; }
@@ -601,7 +601,7 @@ export default function Oportunidades() {
         .btn-convert-done { background:#3f7a4b; cursor:default; }
 
         /* Toast */
-        .opp-toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:#1a191c; color:#fff; padding:12px 20px; border-radius:11px; font-size:13px; font-weight:600; z-index:50; display:flex; align-items:center; gap:9px; box-shadow:0 8px 30px rgba(0,0,0,.25); animation:toastin .3s ease; }
+        .opp-toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:#26231f; color:#fff; padding:12px 20px; border-radius:11px; font-size:13px; font-weight:600; z-index:50; display:flex; align-items:center; gap:9px; box-shadow:0 8px 30px rgba(0,0,0,.25); animation:toastin .3s ease; }
         .opp-toast-err { background:#a33327; }
         @keyframes toastin { from{opacity:0;transform:translate(-50%,12px)} to{opacity:1;transform:translate(-50%,0)} }
       `}</style>

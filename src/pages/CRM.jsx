@@ -76,9 +76,9 @@ function calcularScore(c) {
   pts += cPts; breakdown.push({ label: "Contato", pts: cPts, max: 10 });
 
   const score = Math.min(pts, 100);
-  if (score >= 70) return { score, label: " Quente", cor: "#c0392b", bg: "#fdecea", breakdown };
-  if (score >= 40) return { score, label: " Morno",  cor: "#c88a00", bg: "#fff8e1", breakdown };
-  return               { score, label: " Frio",   cor: "#4a9eff", bg: "#e8f4ff", breakdown };
+  if (score >= 70) return { score, label: " Quente", cor: "#a33327", bg: "#fdecea", breakdown };
+  if (score >= 40) return { score, label: " Morno",  cor: "#c0892d", bg: "#fff8e1", breakdown };
+  return               { score, label: " Frio",   cor: "#3b6ea5", bg: "#e8f4ff", breakdown };
 }
 
 //  Templates WhatsApp 
@@ -989,12 +989,12 @@ export default function CRM() {
                                 }}
                                 style={{
                                   marginTop: 8, width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-                                  padding: "6px 0", borderRadius: 7, border: "1px solid #25D36633",
-                                  background: "#25D36610", color: "#25D366", fontSize: 11, fontWeight: 700,
+                                  padding: "6px 0", borderRadius: 7, border: "1px solid #3f7a4b33",
+                                  background: "#3f7a4b10", color: "#3f7a4b", fontSize: 11, fontWeight: 700,
                                   cursor: "pointer", transition: "background 0.15s",
                                 }}
-                                onMouseEnter={e => e.currentTarget.style.background = "#25D36622"}
-                                onMouseLeave={e => e.currentTarget.style.background = "#25D36610"}
+                                onMouseEnter={e => e.currentTarget.style.background = "#3f7a4b22"}
+                                onMouseLeave={e => e.currentTarget.style.background = "#3f7a4b10"}
                               >
                                  Contatar
                               </button>
@@ -1179,10 +1179,10 @@ export default function CRM() {
                   <div key={b.label} style={{ marginBottom: 10 }}>
                     <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, marginBottom: 3 }}>
                       <span style={{ color: C.muted }}>{b.label}</span>
-                      <span style={{ fontWeight: 700, color: b.pts === b.max ? "#2e9e5b" : C.text }}>{b.pts}/{b.max}</span>
+                      <span style={{ fontWeight: 700, color: b.pts === b.max ? "#3f7a4b" : C.text }}>{b.pts}/{b.max}</span>
                     </div>
                     <div style={{ height: 5, background: C.dark, borderRadius: 3, overflow: "hidden" }}>
-                      <div style={{ height: 5, width: `${(b.pts / b.max) * 100}%`, background: b.pts === b.max ? "#2e9e5b" : s.cor, borderRadius: 3 }} />
+                      <div style={{ height: 5, width: `${(b.pts / b.max) * 100}%`, background: b.pts === b.max ? "#3f7a4b" : s.cor, borderRadius: 3 }} />
                     </div>
                   </div>
                 ))}
@@ -1250,8 +1250,8 @@ export default function CRM() {
               disabled={seqLoading}
               style={{
                 marginTop: 14, width: "100%", padding: "9px 0",
-                background: "#4a9eff22", border: "1px solid #4a9eff44",
-                borderRadius: 6, color: "#4a9eff", fontSize: 12,
+                background: "#3b6ea522", border: "1px solid #3b6ea544",
+                borderRadius: 6, color: "#3b6ea5", fontSize: 12,
                 fontWeight: 700, cursor: seqLoading ? "wait" : "pointer", fontFamily: "inherit",
               }}
             >
@@ -1289,8 +1289,8 @@ export default function CRM() {
                 onClick={() => setWaModal(cliente)}
                 style={{
                   marginTop: 8, width: "100%", padding: "9px 0",
-                  background: "#25D36622", border: "1px solid #25D36644",
-                  borderRadius: 6, color: "#25D366", fontSize: 12,
+                  background: "#3f7a4b22", border: "1px solid #3f7a4b44",
+                  borderRadius: 6, color: "#3f7a4b", fontSize: 12,
                   fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
                 }}
               >

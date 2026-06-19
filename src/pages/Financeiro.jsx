@@ -69,10 +69,10 @@ function FluxoCaixa({ lancamentos }) {
 
       {negativo.length > 0 && (
         <div style={{ background: "#fff5f5", border: "1px solid #fca5a5", borderRadius: 12, padding: "14px 18px" }}>
-          <div style={{ fontWeight: 700, color: "#991b1b", fontSize: 13, marginBottom: 6 }}> Atenção: saldo projetado negativo em {negativo.length} dia(s)</div>
+          <div style={{ fontWeight: 700, color: "#981915", fontSize: 13, marginBottom: 6 }}> Atenção: saldo projetado negativo em {negativo.length} dia(s)</div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
             {negativo.slice(0, 5).map((d) => (
-              <span key={d.iso} style={{ background: "#fee2e2", color: "#991b1b", borderRadius: 6, padding: "3px 10px", fontSize: 12, fontWeight: 600 }}>
+              <span key={d.iso} style={{ background: "#fee2e2", color: "#981915", borderRadius: 6, padding: "3px 10px", fontSize: 12, fontWeight: 600 }}>
                 {d.d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })} · {fmt(d.saldo)}
               </span>
             ))}
@@ -111,7 +111,7 @@ function FluxoCaixa({ lancamentos }) {
             })}
             {/* Linha de saldo acumulado */}
             <polyline
-              fill="none" stroke="#4a9eff" strokeWidth={1.5} opacity={0.8}
+              fill="none" stroke="#3b6ea5" strokeWidth={1.5} opacity={0.8}
               points={dias.map((d, i) => {
                 const x = i * 18 + 10;
                 const y = 130 - (d.saldo / maxAbs) * 90;
@@ -125,7 +125,7 @@ function FluxoCaixa({ lancamentos }) {
             <text x={15} y={168} fontSize={9} fill={C.muted}>Entradas</text>
             <rect x={60} y={160} width={8} height={8} fill={C.red} rx={1} />
             <text x={71} y={168} fontSize={9} fill={C.muted}>Saídas</text>
-            <line x1={116} y1={164} x2={128} y2={164} stroke="#4a9eff" strokeWidth={2} />
+            <line x1={116} y1={164} x2={128} y2={164} stroke="#3b6ea5" strokeWidth={2} />
             <text x={131} y={168} fontSize={9} fill={C.muted}>Saldo acum.</text>
           </svg>
         </div>
@@ -320,7 +320,7 @@ function FolhaPagamento({ folhaMes, setFolhaMes, folhaDados, folhaLoading, folha
         table{width:100%;border-collapse:collapse;margin-top:16px;font-size:13px}
         th{background:#f0f0f3;padding:8px 12px;text-align:left;font-size:11px;color:#6b7280}
         td{padding:8px 12px;border-bottom:1px solid #e4e4ea}
-        .total{font-size:18px;font-weight:800;color:#2e9e5b;margin-top:24px}
+        .total{font-size:18px;font-weight:800;color:#3f7a4b;margin-top:24px}
         @media print{button{display:none}}
       </style></head><body>
       <div class="logo">STICK<span>FRAME</span></div>
@@ -503,7 +503,7 @@ export default function Financeiro() {
         <td>${l.tipo === "receita" ? "Receita" : "Despesa"}</td>
         <td>${l.categoria || "—"}</td>
         <td>${l.descricao || "—"}</td>
-        <td style="text-align:right;color:${l.tipo === "receita" ? "#2e9e5b" : "#c0392b"};font-weight:700">
+        <td style="text-align:right;color:${l.tipo === "receita" ? "#3f7a4b" : "#a33327"};font-weight:700">
           ${l.tipo === "receita" ? "+" : "-"}R$ ${(l.valor || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
         </td>
       </tr>`).join("");
@@ -535,9 +535,9 @@ export default function Financeiro() {
       </div>
     </div>
     <div class="kpis">
-      <div class="kpi"><div class="label">RECEITAS</div><div class="value" style="color:#2e9e5b">R$ ${rec.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})}</div></div>
-      <div class="kpi"><div class="label">DESPESAS</div><div class="value" style="color:#c0392b">R$ ${dep.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})}</div></div>
-      <div class="kpi"><div class="label">SALDO</div><div class="value" style="color:${rec-dep>=0?"#2e9e5b":"#c0392b"}">R$ ${(rec-dep).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})}</div></div>
+      <div class="kpi"><div class="label">RECEITAS</div><div class="value" style="color:#3f7a4b">R$ ${rec.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})}</div></div>
+      <div class="kpi"><div class="label">DESPESAS</div><div class="value" style="color:#a33327">R$ ${dep.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})}</div></div>
+      <div class="kpi"><div class="label">SALDO</div><div class="value" style="color:${rec-dep>=0?"#3f7a4b":"#a33327"}">R$ ${(rec-dep).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})}</div></div>
     </div>
     <table><thead><tr><th>DATA</th><th>TIPO</th><th>CATEGORIA</th><th>DESCRIÇÃO</th><th style="text-align:right">VALOR</th></tr></thead>
     <tbody>${rows || '<tr><td colspan="5" style="text-align:center;color:#6b7280;padding:24px">Nenhum lançamento</td></tr>'}</tbody></table>
@@ -822,7 +822,7 @@ export default function Financeiro() {
             <div style={{
               height: 10,
               width: `${Math.min(pctRec * 100, 100)}%`,
-              background: `linear-gradient(90deg,${C.success},#1a7a40)`,
+              background: `linear-gradient(90deg,${C.success},#3f7a4b)`,
               borderRadius: 5, transition: "width .5s",
             }} />
           </div>
@@ -845,7 +845,7 @@ export default function Financeiro() {
                   <span style={{ fontWeight: 700, color: C.red }}>{obra?.progresso || 0}%</span>
                 </div>
                 <div style={{ height: 10, background: C.dark, borderRadius: 5, overflow: "hidden" }}>
-                  <div style={{ height: 10, width: `${Math.min(obra?.progresso || 0, 100)}%`, background: `linear-gradient(90deg,${C.red},#6e1210)`, borderRadius: 5, transition: "width .5s" }} />
+                  <div style={{ height: 10, width: `${Math.min(obra?.progresso || 0, 100)}%`, background: `linear-gradient(90deg,${C.red},#7d1411)`, borderRadius: 5, transition: "width .5s" }} />
                 </div>
               </div>
               <div>
@@ -860,8 +860,8 @@ export default function Financeiro() {
                     height: 10,
                     width: `${fin.contrato > 0 ? Math.min((despesas / fin.contrato) * 100, 100) : 0}%`,
                     background: fin.contrato > 0 && despesas / fin.contrato > (obra?.progresso || 0) / 100 + 0.05
-                      ? `linear-gradient(90deg,${C.danger},#8b0000)`
-                      : `linear-gradient(90deg,${C.success},#1a7a40)`,
+                      ? `linear-gradient(90deg,${C.danger},#7d1411)`
+                      : `linear-gradient(90deg,${C.success},#3f7a4b)`,
                     borderRadius: 5, transition: "width .5s",
                   }} />
                 </div>
@@ -1139,7 +1139,7 @@ export default function Financeiro() {
               table{width:100%;border-collapse:collapse;margin-top:16px;font-size:13px}
               th{background:#f0f0f3;padding:8px 12px;text-align:left;font-size:11px;color:#6b7280}
               td{padding:8px 12px;border-bottom:1px solid #e4e4ea}
-              .total{font-size:18px;font-weight:800;color:#2e9e5b;margin-top:24px}
+              .total{font-size:18px;font-weight:800;color:#3f7a4b;margin-top:24px}
               @media print{button{display:none}}
             </style></head><body>
             <div class="logo">STICK<span>FRAME</span></div>

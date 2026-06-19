@@ -221,9 +221,9 @@ function ModalDetalhes({ reg, obra, onClose }) {
           <button
             onClick={() => gerarSingleRdoPDF(obra, reg)}
             style={{
-              padding: "8px 16px", background: "#4a9eff22",
-              border: "1px solid #4a9eff44", borderRadius: 8,
-              color: "#4a9eff", fontSize: 12, fontWeight: 700,
+              padding: "8px 16px", background: "#3b6ea522",
+              border: "1px solid #3b6ea544", borderRadius: 8,
+              color: "#3b6ea5", fontSize: 12, fontWeight: 700,
               cursor: "pointer", fontFamily: "inherit",
               display: "flex", alignItems: "center", gap: 6
             }}
@@ -367,12 +367,12 @@ export default function DiarioObra() {
         {/* Banner offline */}
         {!online && (
           <div style={{
-            background: "#b97a0018", border: "1px solid #b97a0055", borderRadius: 10,
+            background: "#b07a1e18", border: "1px solid #b07a1e55", borderRadius: 10,
             padding: "12px 18px", marginBottom: 16, display: "flex", alignItems: "center", gap: 12,
           }}>
             <span style={{ fontSize: 20 }}></span>
             <div>
-              <div style={{ fontWeight: 700, fontSize: 13, color: "#b97a00" }}>Sem conexão com a internet</div>
+              <div style={{ fontWeight: 700, fontSize: 13, color: "#b07a1e" }}>Sem conexão com a internet</div>
               <div style={{ fontSize: 12, color: C.muted }}>
                 Os registros serão salvos localmente e sincronizados automaticamente ao reconectar.
                 {pendentes > 0 && ` ${pendentes} registro(s) aguardando sync.`}
@@ -476,7 +476,7 @@ export default function DiarioObra() {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 5, flexWrap: "wrap" }}>
                       <span style={{ fontSize: 12, fontWeight: 700 }}>{r.clima}</span>
-                      <span style={{ background: "#41414133", color: C.muted, borderRadius: 4, padding: "1px 8px", fontSize: 11 }}>
+                      <span style={{ background: "#57514a33", color: C.muted, borderRadius: 4, padding: "1px 8px", fontSize: 11 }}>
                         {r.turno}
                       </span>
                       <span style={{ fontSize: 11, color: C.muted }}> {r.equipe} pessoas</span>

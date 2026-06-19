@@ -36,9 +36,9 @@ function gerarPDFContrato(c, emp) {
   const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:Arial,sans-serif;background:#fff;color:#1a1a1a;font-size:13px}
-    .header{background:#1a1a1a;padding:18px 32px;display:flex;justify-content:space-between;align-items:center}
-    .hero{background:linear-gradient(135deg,#981915,#6e1210);padding:24px 32px;color:#fff}
+    body{font-family:Arial,sans-serif;background:#fff;color:#26231f;font-size:13px}
+    .header{background:#26231f;padding:18px 32px;display:flex;justify-content:space-between;align-items:center}
+    .hero{background:linear-gradient(135deg,#981915,#7d1411);padding:24px 32px;color:#fff}
     .body{padding:24px 32px}
     .card{background:#fff;border:1px solid #e8e8e8;border-radius:10px;padding:20px;margin-bottom:14px}
     .label{font-size:10px;font-weight:700;letter-spacing:1px;color:#888;text-transform:uppercase;margin-bottom:10px}
@@ -47,7 +47,7 @@ function gerarPDFContrato(c, emp) {
     th.r{text-align:right} td{border-bottom:1px solid #f5f5f5}
     .footer{background:#f9f9f9;border-top:1px solid #eee;padding:16px 32px;font-size:10px;color:#888;text-align:center}
     .assinatura{margin-top:32px;display:grid;grid-template-columns:1fr 1fr;gap:40px}
-    .assbox{border-top:2px solid #1a1a1a;padding-top:8px}
+    .assbox{border-top:2px solid #26231f;padding-top:8px}
     @media print{@page{margin:0;size:A4}body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
   </style></head><body>
   <div class="header">
@@ -121,9 +121,9 @@ function gerarPDFContrato(c, emp) {
 //  Status 
 const STATUS_OPTS = ["Aguardando", "Assinado", "Em execução", "Encerrado", "Cancelado"];
 const statusColor = (s) => {
-  if (s === "Assinado" || s === "Em execução") return "#2e9e5b";
+  if (s === "Assinado" || s === "Em execução") return "#3f7a4b";
   if (s === "Aguardando") return "#c88a00";
-  if (s === "Cancelado")  return "#c0392b";
+  if (s === "Cancelado")  return "#a33327";
   return "#888";
 };
 
@@ -515,9 +515,9 @@ export default function Contratos() {
                         }}> Gerar PDF</button>
                         {cl?.contato && (
                           <button onClick={() => enviarWhatsApp(cl.contato, msgContrato(c))} style={{
-                            padding: "8px 0", background: "#25D36622",
-                            border: "1px solid #25D36644", borderRadius: 6,
-                            color: "#25D366", fontSize: 12, fontWeight: 700,
+                            padding: "8px 0", background: "#3f7a4b22",
+                            border: "1px solid #3f7a4b44", borderRadius: 6,
+                            color: "#3f7a4b", fontSize: 12, fontWeight: 700,
                             cursor: "pointer", fontFamily: "inherit", width: "100%",
                           }}><Smartphone size={13} /> WhatsApp</button>
                         )}

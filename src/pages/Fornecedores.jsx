@@ -382,21 +382,21 @@ export default function Fornecedores() {
     const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${poNum}</title>
 <style>
   body { font-family: Arial, sans-serif; margin: 0; padding: 40px; color: #1a1a1a; background: #fff; }
-  .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #c0392b; padding-bottom: 20px; margin-bottom: 28px; }
-  .logo-area h1 { margin: 0; font-size: 24px; color: #c0392b; font-weight: 900; letter-spacing: -0.5px; }
+  .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #a33327; padding-bottom: 20px; margin-bottom: 28px; }
+  .logo-area h1 { margin: 0; font-size: 24px; color: #a33327; font-weight: 900; letter-spacing: -0.5px; }
   .logo-area p { margin: 4px 0 0; font-size: 12px; color: #666; }
-  .po-badge { background: #c0392b; color: #fff; padding: 10px 20px; border-radius: 8px; text-align: center; }
+  .po-badge { background: #a33327; color: #fff; padding: 10px 20px; border-radius: 8px; text-align: center; }
   .po-badge .num { font-size: 18px; font-weight: 900; }
   .po-badge .label { font-size: 11px; letter-spacing: 1px; opacity: 0.85; }
   .section { margin-bottom: 24px; }
-  .section-title { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #c0392b; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 4px; }
+  .section-title { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #a33327; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 4px; }
   .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
   .field label { font-size: 10px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 3px; }
   .field span { font-size: 13px; font-weight: 600; }
   .item-table { width: 100%; border-collapse: collapse; }
   .item-table th { background: #f5f5f5; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; padding: 10px 14px; text-align: left; border-bottom: 2px solid #ddd; }
   .item-table td { padding: 14px; border-bottom: 1px solid #eee; font-size: 13px; }
-  .item-table .valor { font-size: 18px; font-weight: 900; color: #c0392b; text-align: right; }
+  .item-table .valor { font-size: 18px; font-weight: 900; color: #a33327; text-align: right; }
   .footer { margin-top: 48px; border-top: 1px solid #eee; padding-top: 20px; display: flex; justify-content: space-between; }
   .assinatura { border-top: 1px solid #333; width: 200px; padding-top: 8px; font-size: 11px; color: #666; text-align: center; }
   .obs { background: #fafafa; border: 1px solid #eee; border-radius: 6px; padding: 12px 14px; font-size: 12px; color: #555; }

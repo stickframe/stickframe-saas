@@ -5,9 +5,9 @@ import { useModuleLoad } from "../hooks/useModuleLoad";
 
 const STATUS_COR = {
   "Em andamento": "#981915",
-  "Planejamento": "#4a9eff",
-  "Pausada":      "#b97a00",
-  "Concluída":    "#2e9e5b",
+  "Planejamento": "#3b6ea5",
+  "Pausada":      "#b07a1e",
+  "Concluída":    "#3f7a4b",
 };
 
 function addMonths(date, n) {

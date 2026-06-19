@@ -21,7 +21,7 @@ const TIPOS_INC  = ["Quase-acidente", "Acidente", "Incidente"];
 const STATUS_INC = ["Aberto", "Em andamento", "Fechado"];
 const ITENS_EPI  = ["Capacete","Óculos de proteção","Luvas","Botina","Colete refletivo","Protetor auricular","Máscara PFF2","Cinto de segurança","Uniforme","Outros"];
 
-const corGravidade = { Baixa: C.success, Média: C.warning, Alta: "#e67e22", Crítica: C.danger };
+const corGravidade = { Baixa: C.success, Média: C.warning, Alta: "#c0892d", Crítica: C.danger };
 const corStatus    = { Aberto: C.danger, "Em andamento": C.warning, Fechado: C.success };
 
 function kpiStyle(cor) {
@@ -267,7 +267,7 @@ export default function SST() {
                     <td style={{ padding: "10px 10px", color: C.muted }}>{d.obra?.nome || "—"}</td>
                     <td style={{ padding: "10px 10px", color: C.muted }}>{(d.participantes || []).length} pessoa(s)</td>
                     <td style={{ padding: "10px 10px" }}>
-                      <Btn variant="ghost" size="sm" onClick={() => abrirVerAss(d)} style={{ color: "#4a9eff" }}>
+                      <Btn variant="ghost" size="sm" onClick={() => abrirVerAss(d)} style={{ color: "#3b6ea5" }}>
                          Ver ({d.assinaturas_count ?? "—"})
                       </Btn>
                     </td>

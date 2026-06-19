@@ -761,9 +761,9 @@ export default function OrcamentoTecnico() {
           <div style="font-size:15px;font-weight:700;color:#981915">${fmtBRL(r.totalGeral)}</div>
           <div style="font-size:11px;color:#888">${fmtBRL(r.m2)}/m²</div>
         </div>
-        <div style="border-top:3px solid #2e9e5b;background:#fff;border:1px solid #eee;border-radius:8px;padding:12px 14px">
+        <div style="border-top:3px solid #3f7a4b;background:#fff;border:1px solid #eee;border-radius:8px;padding:12px 14px">
           <div style="font-size:10px;color:#666">PREÇO DE VENDA (BDI ${r.bdi}%)</div>
-          <div style="font-size:15px;font-weight:700;color:#2e9e5b">${fmtBRL(r.precoVenda)}</div>
+          <div style="font-size:15px;font-weight:700;color:#3f7a4b">${fmtBRL(r.precoVenda)}</div>
           <div style="font-size:11px;color:#888">${fmtBRL(r.m2Venda)}/m²</div>
         </div>
       </div>
@@ -1072,7 +1072,7 @@ export default function OrcamentoTecnico() {
       </div>
 
       <!-- DESTAQUE DO VALOR -->
-      <div style="background:linear-gradient(135deg,#981915,#c0392b);color:#fff;border-radius:12px;padding:28px 32px;margin-bottom:28px;text-align:center">
+      <div style="background:linear-gradient(135deg,#981915,#a33327);color:#fff;border-radius:12px;padding:28px 32px;margin-bottom:28px;text-align:center">
         <div style="font-size:13px;letter-spacing:2px;opacity:0.85;margin-bottom:8px">INVESTIMENTO TOTAL</div>
         <div style="font-size:42px;font-weight:800;letter-spacing:-1px">${fmtBRL(r.precoVenda)}</div>
         <div style="font-size:14px;opacity:0.85;margin-top:6px">${fmtBRL(r.m2Venda)}/m² · ${r.area} m² · Padrão ${r.padrao}</div>
@@ -1777,8 +1777,8 @@ export default function OrcamentoTecnico() {
                   </div>
                 </div>
                 {/* SAC */}
-                <div style={{ border: "2px solid #2e9e5b", borderRadius: 10, padding: 16 }}>
-                  <div style={{ fontWeight: 700, fontSize: 13, color: "#2e9e5b", marginBottom: 10 }}>Sistema SAC (parcela decrescente)</div>
+                <div style={{ border: "2px solid #3f7a4b", borderRadius: 10, padding: 16 }}>
+                  <div style={{ fontWeight: 700, fontSize: 13, color: "#3f7a4b", marginBottom: 10 }}>Sistema SAC (parcela decrescente)</div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 13 }}>
                     <div style={{ display: "flex", justifyContent: "space-between" }}>
                       <span style={{ color: "#666" }}>Entrada</span><strong>{fmtBRL(fin.entrada)}</strong>
@@ -1787,8 +1787,8 @@ export default function OrcamentoTecnico() {
                       <span style={{ color: "#666" }}>Financiado</span><strong>{fmtBRL(fin.financiado)}</strong>
                     </div>
                     <div style={{ display: "flex", justifyContent: "space-between", fontSize: 15, borderTop: "1px solid #eee", paddingTop: 8, marginTop: 4 }}>
-                      <span style={{ color: "#2e9e5b", fontWeight: 700 }}>1ª parcela</span>
-                      <strong style={{ color: "#2e9e5b", fontSize: 16 }}>{fmtBRL(fin.primeiroSAC)}</strong>
+                      <span style={{ color: "#3f7a4b", fontWeight: 700 }}>1ª parcela</span>
+                      <strong style={{ color: "#3f7a4b", fontSize: 16 }}>{fmtBRL(fin.primeiroSAC)}</strong>
                     </div>
                     <div style={{ display: "flex", justifyContent: "space-between" }}>
                       <span style={{ color: "#666" }}>Última parcela</span><strong>{fmtBRL(fin.ultimoSAC)}</strong>

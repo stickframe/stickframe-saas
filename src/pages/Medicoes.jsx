@@ -35,8 +35,8 @@ function CurvaS({ medicoes }) {
           <YAxis unit="%" tick={{ fontSize: 11 }} domain={[0, 100]} />
           <Tooltip formatter={v => `${v}%`} />
           <Legend />
-          <Line type="monotone" dataKey="previsto" name="Previsto" stroke="#3b82f6" strokeDasharray="5 5" strokeWidth={2} dot={false} />
-          <Line type="monotone" dataKey="realizado" name="Realizado" stroke="#22c55e" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+          <Line type="monotone" dataKey="previsto" name="Previsto" stroke="#3b6ea5" strokeDasharray="5 5" strokeWidth={2} dot={false} />
+          <Line type="monotone" dataKey="realizado" name="Realizado" stroke="#3f7a4b" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6 }} />
         </LineChart>
       </ResponsiveContainer>
     </div>
@@ -198,7 +198,7 @@ export default function Medicoes() {
           </div>
           <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
             <button onClick={() => gerarBoletimMedicao(obra, lista)}
-              style={{ padding: "7px 14px", background: "#b41e1e", color: "#fff", border: "none", borderRadius: 8, cursor: "pointer", fontWeight: 600, fontSize: 13, display: "inline-flex", alignItems: "center", gap: 6 }}>
+              style={{ padding: "7px 14px", background: "#981915", color: "#fff", border: "none", borderRadius: 8, cursor: "pointer", fontWeight: 600, fontSize: 13, display: "inline-flex", alignItems: "center", gap: 6 }}>
                Boletim PDF
             </button>
             {podeEditar() && <Btn onClick={() => setModal(true)}>+ Nova medição</Btn>}
@@ -230,7 +230,7 @@ export default function Medicoes() {
             <span style={{ fontWeight: 700 }}>{pctMedido}% do contrato</span>
           </div>
           <div style={{ height: 8, background: C.dark, borderRadius: 4 }}>
-            <div style={{ height: 8, width: `${Math.min(pctMedido, 100)}%`, background: `linear-gradient(90deg,${C.red},#6e1210)`, borderRadius: 4, transition: "width .5s" }} />
+            <div style={{ height: 8, width: `${Math.min(pctMedido, 100)}%`, background: `linear-gradient(90deg,${C.red},#7d1411)`, borderRadius: 4, transition: "width .5s" }} />
           </div>
         </div>
 
@@ -266,7 +266,7 @@ export default function Medicoes() {
                         <button onClick={() => aprovarMedicao(obraId, m.id)} style={{ padding: "5px 12px", background: C.success + "22", border: `1px solid ${C.success}44`, borderRadius: 6, color: C.success, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}> Aprovar</button>
                       )}
                       {m.status !== "Pago" && (
-                        <button onClick={() => { setAsaasModal(m); setVencimentoAsaas(defaultVencimento()); }} style={{ padding: "5px 10px", background: "#1a56db22", border: "1px solid #1a56db44", borderRadius: 6, color: "#1a56db", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}> Cobrança</button>
+                        <button onClick={() => { setAsaasModal(m); setVencimentoAsaas(defaultVencimento()); }} style={{ padding: "5px 10px", background: "#3b6ea522", border: "1px solid #3b6ea544", borderRadius: 6, color: "#3b6ea5", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}> Cobrança</button>
                       )}
                       {m.link_pagamento && (
                         <a href={m.link_pagamento} target="_blank" rel="noreferrer" style={{ padding: "5px 8px", background: C.border, border: `1px solid ${C.border}`, borderRadius: 6, color: C.text, fontSize: 12, textDecoration: "none" }} title="Abrir link de pagamento"><Link size={11} /></a>

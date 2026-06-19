@@ -110,8 +110,8 @@ function LabelF({ children, required }) {
 }
 
 const COR_CAT = {
-  Estrutura: "#4a9eff", Fundação: "#c88a00", Vedação: "#9b59b6",
-  Cobertura: "#2e9e5b", Instalações: "#e67e22", Acabamento: "#1abc9c",
+  Estrutura: "#3b6ea5", Fundação: "#c88a00", Vedação: "#9b59b6",
+  Cobertura: "#3f7a4b", Instalações: "#c0892d", Acabamento: "#3f7a4b",
   Projeto: C.red, Administração: C.muted, Outros: C.muted,
 };
 
@@ -275,7 +275,7 @@ export default function Quantitativos() {
     const html = `<!DOCTYPE html><html><head>
 <meta charset="utf-8">
 <title>Quantitativos — ${obra?.nome || "Obra"}</title>
-<style>* { box-sizing: border-box; margin: 0; padding: 0; } body { font-family: -apple-system, sans-serif; color: #1a1a1a; padding: 32px; max-width: 960px; margin: auto; } @media print { body { padding: 16px; } }</style>
+<style>* { box-sizing: border-box; margin: 0; padding: 0; } body { font-family: -apple-system, sans-serif; color: #26231f; padding: 32px; max-width: 960px; margin: auto; } @media print { body { padding: 16px; } }</style>
 </head><body>
 <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:28px;padding-bottom:16px;border-bottom:3px solid #981915">
   <div>
@@ -285,7 +285,7 @@ export default function Quantitativos() {
   </div>
   <div style="text-align:right;font-size:12px;color:#6b7280">
     <div>Gerado em ${new Date().toLocaleDateString("pt-BR")}</div>
-    <div style="font-size:24px;font-weight:900;color:#1a1a1a;margin-top:4px">${totalGeral.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</div>
+    <div style="font-size:24px;font-weight:900;color:#26231f;margin-top:4px">${totalGeral.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</div>
     <div style="font-size:11px">custo total estimado</div>
   </div>
 </div>
@@ -562,7 +562,7 @@ ${tabelaFases}
               if (!m) return null;
               return (
                 <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 8, padding: "10px 14px", fontSize: 12 }}>
-                  <div style={{ fontWeight: 700, color: "#15803d", marginBottom: 4 }}> Será substituído por:</div>
+                  <div style={{ fontWeight: 700, color: "#3f7a4b", marginBottom: 4 }}> Será substituído por:</div>
                   <div><strong>Descrição:</strong> {m.nome_produto}</div>
                   <div><strong>Preço unitário:</strong> {Number(m.preco_atual).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</div>
                   {m.loja && <div><strong>Loja:</strong> {m.loja}</div>}
@@ -623,8 +623,8 @@ ${tabelaFases}
                   borderRadius: 8, color: C.success, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
                 }}> CSV</button>
                 <button onClick={exportarPDF} style={{
-                  padding: "8px 14px", background: "#4a9eff22", border: "1px solid #4a9eff44",
-                  borderRadius: 8, color: "#4a9eff", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
+                  padding: "8px 14px", background: "#3b6ea522", border: "1px solid #3b6ea544",
+                  borderRadius: 8, color: "#3b6ea5", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
                 }}> PDF</button>
                 <Btn onClick={() => { setForm({ ...FORM_VAZIO, fase: obra?.fase || FASES[0] }); setModal("novo"); }}>
                   + Adicionar item
@@ -673,7 +673,7 @@ ${tabelaFases}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12, marginBottom: 20 }}>
               {[
                 { label: "Custo total",   value: fmt(totalGeral),          sub: `${filtrados.length} itens`, accent: C.red     },
-                { label: "Custo / m²",    value: fmt(custoPorM2),          sub: `${areaTotal} m² total`,     accent: "#4a9eff" },
+                { label: "Custo / m²",    value: fmt(custoPorM2),          sub: `${areaTotal} m² total`,     accent: "#3b6ea5" },
                 { label: "Fases",         value: String(faseGrupos.length),sub: `de ${FASES.length} fases`,  accent: C.warning },
                 { label: "Itens totais",  value: String(items.length),     sub: "planilha completa",          accent: C.success },
               ].map((k) => (
@@ -812,11 +812,11 @@ ${tabelaFases}
                                   <button
                                     title="Cotar com fornecedor"
                                     onClick={() => { setCotarItem(item); setCotarForm({ fornecedor_id: "", valor: "", observacoes: "", atualizar_custo: true }); }}
-                                    style={{ background: "none", border: "none", cursor: "pointer", color: "#4a9eff", fontSize: 13, padding: 3 }}></button>
+                                    style={{ background: "none", border: "none", cursor: "pointer", color: "#3b6ea5", fontSize: 13, padding: 3 }}></button>
                                   <button
                                     title="Substituir por produto monitorado"
                                     onClick={() => { setMonitorarItem(item); setMonitorSel(""); listarMonitorados().then(setMonitorados).catch(() => {}); }}
-                                    style={{ background: "none", border: "none", cursor: "pointer", color: "#16a34a", fontSize: 13, padding: 3 }}></button>
+                                    style={{ background: "none", border: "none", cursor: "pointer", color: "#3f7a4b", fontSize: 13, padding: 3 }}></button>
                                   <button onClick={() => {
                                     setEditId(item.id);
                                     setForm({ fase: item.fase, descricao: item.descricao, unidade: item.unidade, quantidade: String(item.quantidade), custo_unitario: String(item.custo_unitario), categoria: item.categoria || "Outros", observacoes: item.observacoes || "" });
