@@ -674,8 +674,8 @@ ${(c.observacoes || poForm.observacoes_po) ? `
                         <div style={{ display: "flex", gap: 8, marginTop: 12, justifyContent: "flex-end" }}>
                           {c.status === "Aprovada" && (
                             <button onClick={() => { setPoModal(c); setPoForm({ local_entrega: obras.find((o) => o.id === c.obra_id)?.endereco || "", condicao_pagamento: "30 dias", observacoes_po: "" }); }}
-                              style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 12px", background: "#166534" + "22", border: "1px solid #16653444", borderRadius: 6, fontSize: 11, fontWeight: 700, color: "#166534", cursor: "pointer", fontFamily: "inherit" }}>
-                              <Ic n="cart" w={13} c="#166534" /> Gerar PO
+                              style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 12px", background: C.success + "22", border: `1px solid ${C.success}44`, borderRadius: 6, fontSize: 11, fontWeight: 700, color: C.success, cursor: "pointer", fontFamily: "inherit" }}>
+                              <Ic n="cart" w={13} c={C.success} /> Gerar PO
                             </button>
                           )}
                           <button onClick={() => { setFormCot({ ...FORM_COT, ...c, obra_id: c.obra_id || "" }); setCotSel(c); setModal("editar-cot"); }}
@@ -794,8 +794,8 @@ ${(c.observacoes || poForm.observacoes_po) ? `
               <Label>Observações adicionais</Label>
               <Input value={poForm.observacoes_po} onChange={(v) => setPoForm((f) => ({ ...f, observacoes_po: v }))} placeholder="Ex: Entregar das 8h às 17h" />
             </div>
-            <div style={{ background: "#166534" + "10", border: "1px solid #16653433", borderRadius: 8, padding: "10px 14px", fontSize: 12, color: "#166534", fontWeight: 600, display: "flex", alignItems: "flex-start", gap: 8 }}>
-              <Ic n="check" w={14} c="#166534" style={{ marginTop: 1 }} />
+            <div style={{ background: C.success + "10", border: `1px solid ${C.success}33`, borderRadius: 8, padding: "10px 14px", fontSize: 12, color: C.success, fontWeight: 600, display: "flex", alignItems: "flex-start", gap: 8 }}>
+              <Ic n="check" w={14} c={C.success} style={{ marginTop: 1 }} />
               <span>Ao confirmar: PDF do pedido será gerado · Despesa criada no Financeiro como Pendente{sel?.telefone ? " · WhatsApp aberto para o fornecedor" : ""}</span>
             </div>
             <div className="sf-actions">
