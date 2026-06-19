@@ -1,5 +1,13 @@
 import { useState, useEffect } from "react";
-import { CheckCircle, Zap } from "../components/ui/Icon";
+// Inline SVG icons — no external dependencies needed
+function IcInline({ d, w = 14, c = "currentColor" }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"
+      style={{ width: w, height: w, flexShrink: 0, verticalAlign: "middle", display: "inline-block" }}>
+      {d}
+    </svg>
+  );
+}
 import { sb } from "../services/supabase";
 
 //  Kit data (shared with internal Calculadora) 
@@ -383,7 +391,7 @@ export default function CalculadoraPublica() {
           font-size: 13px;
           font-weight: 600;
           margin-bottom: 6px;
-          color: #5c5750;
+          color: #8c847a;
         }
         .calc-input {
           width: 100%;
@@ -622,7 +630,7 @@ export default function CalculadoraPublica() {
         .kit-breakdown-val { font-size: 14px; font-weight: 800; color: #26231f; }
         .kit-cat-block { background: #ffffff; border-radius: 10px; border: 1px solid #e7e1d8; margin-bottom: 10px; overflow: hidden; transition: opacity .2s; }
         .kit-cat-header { background: #f4f1ec; padding: 8px 14px; display: flex; justify-content: space-between; align-items: center; color: #26231f; font-weight: 700; }
-        .kit-cat-row { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; padding: 8px 14px; border-top: 1px solid #e7e1d8; align-items: center; font-size: 12px; color: #5c5750; }
+        .kit-cat-row { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; padding: 8px 14px; border-top: 1px solid #e7e1d8; align-items: center; font-size: 12px; color: #8c847a; }
         .back-link {
           display: inline-block;
           font-size: 13px;
@@ -732,7 +740,9 @@ export default function CalculadoraPublica() {
         </header>
 
         <div className="calc-hero">
-          <div className="calc-hero-tag"> Calculadora Gratuita</div>
+          <div className="calc-hero-tag">
+            <IcInline d={<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>} w={11} c="#981915" /> Calculadora Gratuita
+          </div>
           <h1>Quanto custa sua<br /><span>casa em Steel Frame?</span></h1>
           <p>Simule o custo completo em segundos — materiais, projetos e mão de obra. Sem compromisso.</p>
           <div className="calc-hero-stats">
@@ -756,8 +766,12 @@ export default function CalculadoraPublica() {
           {/* ============ MODO TABS ============ */}
           {(step === "form" || modo === "kits") && (
             <div className="mode-tabs">
-              <button className={`mode-tab${modo === "metro" ? " active" : ""}`} onClick={() => { setModo("metro"); setStep("form"); }}> Simular por m²</button>
-              <button className={`mode-tab${modo === "kits" ? " active" : ""}`} onClick={() => { setModo("kits"); setKitStep("lista"); }}> Kits de Casa</button>
+              <button className={`mode-tab${modo === "metro" ? " active" : ""}`} onClick={() => { setModo("metro"); setStep("form"); }}>
+                <IcInline d={<><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></>} w={13} /> Simular por m²
+              </button>
+              <button className={`mode-tab${modo === "kits" ? " active" : ""}`} onClick={() => { setModo("kits"); setKitStep("lista"); }}>
+                <IcInline d={<><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></>} w={13} /> Kits de Casa
+              </button>
             </div>
           )}
 
@@ -775,14 +789,16 @@ export default function CalculadoraPublica() {
                   return (
                     <div key={kit.id} className="kit-card">
                       <div className="kit-tag" style={{ background: kit.tagCor }}>{kit.tag}</div>
-                      <div className="kit-emoji">{kit.emoji}</div>
+                      <div className="kit-emoji">
+                        <IcInline d={<><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></>} w={28} c={kit.tagCor} />
+                      </div>
                       <div className="kit-name">{kit.nome}</div>
                       <div className="kit-desc">{kit.descricao}</div>
                       <div className="kit-meta">
-                        <span className="kit-chip"> {kit.area} m²</span>
-                        <span className="kit-chip"> {kit.quartos} qts</span>
-                        <span className="kit-chip"> {kit.banheiros} ban</span>
-                        <span className="kit-chip"> {kit.pavs}P</span>
+                        <span className="kit-chip">{kit.area} m²</span>
+                        <span className="kit-chip">{kit.quartos} qts</span>
+                        <span className="kit-chip">{kit.banheiros} ban</span>
+                        <span className="kit-chip">{kit.pavs}P</span>
                       </div>
                       <div className="kit-price-label">Materiais a partir de</div>
                       <div className="kit-price">{fmtR(items.filter(i => !["Projetos e Engenharia","Mão de Obra"].includes(i.categoria)).reduce((s,i)=>s+i.total,0))}</div>
@@ -819,7 +835,7 @@ export default function CalculadoraPublica() {
                         background: ativo ? "rgba(255,255,255,.15)" : "rgba(0,0,0,.2)",
                         color: ativo ? "#fff" : "rgba(255,255,255,.45)",
                       }}>
-                        <span>{ativo ? "" : ""}</span>
+                        <IcInline d={ativo ? <><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></> : <><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>} w={12} c={ativo ? "#fff" : "rgba(255,255,255,.45)"} />
                         <span>{cat}</span>
                         <span style={{ opacity: .7, fontSize: 11 }}>{fmtR(sub)}</span>
                       </button>
@@ -837,7 +853,7 @@ export default function CalculadoraPublica() {
               </div>
 
               <button className="calc-btn" style={{ marginTop: 4 }} onClick={() => { setNome(""); setWhatsapp(""); setEmail(""); setKitStep("contact"); window.scrollTo({top:0,behavior:"smooth"}); }}>
-                 Solicitar orçamento completo
+                Solicitar orçamento completo
               </button>
             </div>
           )}
@@ -864,7 +880,9 @@ export default function CalculadoraPublica() {
 
           {modo === "kits" && kitStep === "success" && (
             <div className="calc-card">
-              <div className="success-icon"></div>
+              <div className="success-icon">
+                <IcInline d={<><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></>} w={48} c="#3f7a4b" />
+              </div>
               <div className="success-title">Recebemos seu contato!</div>
               <p className="success-msg">Nossa equipe vai entrar em contato em até 24h pelo WhatsApp <strong>{whatsapp}</strong> com a proposta do kit <strong>{kitSel?.nome}</strong>.</p>
               <button className="btn-outline" onClick={() => { setModo("kits"); setKitStep("lista"); setKitSel(null); setKitItems(null); }}>Ver outros modelos</button>
@@ -939,7 +957,9 @@ export default function CalculadoraPublica() {
               {!leadUnlocked && (
                 <div style={{ position: "fixed", inset: 0, zIndex: 300, background: "rgba(38,35,31,.7)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "16px" }}>
                   <div style={{ background: "#fff", borderRadius: 16, padding: "32px 28px", maxWidth: 420, width: "100%", boxShadow: "0 24px 60px rgba(0,0,0,.25)" }}>
-                    <div style={{ fontSize: 28, textAlign: "center", marginBottom: 8 }}></div>
+                    <div style={{ textAlign: "center", marginBottom: 8 }}>
+                      <IcInline d={<><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></>} w={32} c="#3f7a4b" />
+                    </div>
                     <div className="cta-heading" style={{ textAlign: "center", marginBottom: 6 }}>Sua estimativa está pronta!</div>
                     <p className="cta-sub" style={{ textAlign: "center", marginBottom: 24 }}>Informe seus dados para liberar o resultado completo. Nossa equipe também entra em contato em até 24h.</p>
                     <form onSubmit={handleContact}>
@@ -992,9 +1012,9 @@ export default function CalculadoraPublica() {
                   <div className="result-faixa">{formatBRL(sfMin)} – {formatBRL(sfMax)}</div>
                   <div className="result-prazo">Prazo médio: {PRAZOS_SF[padrao]}</div>
                   <div className="result-tags">
-                    <span className="result-tag green"> Mais leve</span>
-                    <span className="result-tag green"> Menos resíduos</span>
-                    <span className="result-tag green"> Alta precisão</span>
+                    <span className="result-tag green"><IcInline d={<path d="M20 6 9 17l-5-5"/>} w={11} c="#3f7a4b" /> Mais leve</span>
+                    <span className="result-tag green"><IcInline d={<path d="M20 6 9 17l-5-5"/>} w={11} c="#3f7a4b" /> Menos resíduos</span>
+                    <span className="result-tag green"><IcInline d={<path d="M20 6 9 17l-5-5"/>} w={11} c="#3f7a4b" /> Alta precisão</span>
                   </div>
                 </div>
 
@@ -1013,7 +1033,7 @@ export default function CalculadoraPublica() {
 
                 {speedPct > 0 && (
                   <div className="comparison-note">
-                    <Zap size={13} /> Steel Frame pode ser até <strong>{speedPct}% mais rápido</strong> que a alvenaria convencional
+                    <IcInline d={<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>} w={13} c="#c0892d" /> Steel Frame pode ser até <strong>{speedPct}% mais rápido</strong> que a alvenaria convencional
                   </div>
                 )}
               </div>
@@ -1023,7 +1043,9 @@ export default function CalculadoraPublica() {
           {/* ============ STEP: SUCCESS ============ */}
           {modo === "metro" && step === "success" && (
             <div className="calc-card">
-              <div className="success-icon"><CheckCircle size={14} /></div>
+              <div className="success-icon">
+                <IcInline d={<><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></>} w={48} c="#3f7a4b" />
+              </div>
               <div className="success-title">Recebemos seu contato!</div>
               <p className="success-msg">
                 Nossa equipe vai entrar em contato em até 24h pelo WhatsApp <strong>{whatsapp}</strong>.

@@ -60,9 +60,10 @@ function FluxoCaixa({ lancamentos }) {
           { label: "Saídas próx. 7 dias",   value: fmt(totalSaida7),   color: C.red },
           { label: "Dias c/ saldo negativo", value: String(negativo.length), color: negativo.length > 0 ? C.danger : C.success },
         ].map((k, i) => (
-          <div key={i} style={{ background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, borderTop: `3px solid ${k.color}`, padding: "14px 16px" }}>
-            <div style={{ fontSize: 10, color: C.muted, letterSpacing: 1, marginBottom: 6 }}>{k.label.toUpperCase()}</div>
-            <div style={{ fontSize: 20, fontWeight: 800, color: k.color }}>{k.value}</div>
+          <div key={i} style={{ background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, padding: "14px 16px" }}>
+            <div style={{ height: 3, width: 28, borderRadius: 2, marginBottom: 10, background: k.color }} />
+            <div style={{ fontSize: 10, fontWeight: 800, color: C.muted, letterSpacing: 1.2, marginBottom: 6 }}>{k.label.toUpperCase()}</div>
+            <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: 28, fontWeight: 700, color: C.text, lineHeight: 1 }}>{k.value}</div>
           </div>
         ))}
       </div>
@@ -363,9 +364,10 @@ function FolhaPagamento({ folhaMes, setFolhaMes, folhaDados, folhaLoading, folha
           { label: "Horas Totais",  value: `${totalHoras.toFixed(1)}h`, color: C.warning },
           { label: "Total a Pagar", value: `R$ ${totalPagar.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})}`, color: C.success },
         ].map((k, i) => (
-          <div key={i} style={{ background: C.surface, borderRadius: 14, padding: "16px 18px", border: `1px solid ${C.border}`, borderTop: `3px solid ${k.color}` }}>
-            <div style={{ fontSize: 10, color: C.muted, letterSpacing: 1, marginBottom: 8 }}>{k.label.toUpperCase()}</div>
-            <div style={{ fontSize: 18, fontWeight: 800, color: k.color === C.border ? C.text : k.color }}>{k.value}</div>
+          <div key={i} style={{ background: C.surface, borderRadius: 14, padding: "16px 18px", border: `1px solid ${C.border}` }}>
+            <div style={{ height: 3, width: 28, borderRadius: 2, marginBottom: 10, background: k.color === C.border ? C.muted : k.color }} />
+            <div style={{ fontSize: 10, fontWeight: 800, color: C.muted, letterSpacing: 1.2, marginBottom: 6 }}>{k.label.toUpperCase()}</div>
+            <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: 26, fontWeight: 700, color: C.text, lineHeight: 1 }}>{k.value}</div>
           </div>
         ))}
       </div>

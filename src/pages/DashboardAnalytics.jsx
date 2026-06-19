@@ -40,12 +40,13 @@ function KpiCard({ label, value, sub, accent }) {
   return (
     <div style={{
       background: C.surface, borderRadius: 16, padding: "18px 16px",
-      border: `1px solid ${C.border}`, borderTop: `3px solid ${accent}`,
-      boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+      border: `1px solid ${C.border}`,
+      boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
     }}>
-      <div style={{ fontSize: 10, color: C.muted, letterSpacing: 1, marginBottom: 8 }}>{label.toUpperCase()}</div>
-      <div style={{ fontSize: 20, fontWeight: 900, color: accent }}>{value}</div>
-      <div style={{ fontSize: 11, color: C.muted, marginTop: 4 }}>{sub}</div>
+      <div style={{ height: 3, width: 28, borderRadius: 2, marginBottom: 12, background: accent }} />
+      <div style={{ fontSize: 10, fontWeight: 800, color: C.muted, letterSpacing: 1.2, marginBottom: 6 }}>{label.toUpperCase()}</div>
+      <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 30, fontWeight: 700, color: C.text, lineHeight: 1 }}>{value}</div>
+      <div style={{ fontSize: 11, color: C.muted, marginTop: 6 }}>{sub}</div>
     </div>
   );
 }
