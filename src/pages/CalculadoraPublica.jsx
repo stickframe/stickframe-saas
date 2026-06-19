@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { CheckCircle, Zap } from "../components/ui/Icon";
 import { sb } from "../services/supabase";
 
-// ─── Kit data (shared with internal Calculadora) ─────────────────────────────
+//  Kit data (shared with internal Calculadora) 
 const INSUMOS_KIT = [
   { categoria: "Estrutura de Aço",      nome: "Montante C 90×40×15×1,25mm",         un: "pç",  base: 1.50,  preco: 18.50 },
   { categoria: "Estrutura de Aço",      nome: "Guia U 92×40×1,25mm",                un: "m",   base: 1.10,  preco: 12.00 },
@@ -44,12 +44,12 @@ const CATS_OPCIONAIS_KIT = ["Projetos e Engenharia", "Mão de Obra"];
 const PADROES_KIT = { "Econômico": { fator: 0.85 }, "Padrão": { fator: 1.00 }, "Alto Padrão": { fator: 1.20 } };
 
 const KITS = [
-  { id: "studio",    nome: "Studio Compact",       area: 42,  pavs: 1, padrao: "Padrão",      tag: "MAIS VENDIDO",  tagCor: "#2e9e5b", emoji: "🏠", quartos: 1, banheiros: 1, descricao: "Ideal para uso individual, home office ou kitnet. Layout inteligente e construção rápida.", destaques: ["Entrega em 45 dias","Kit completo estrutural","Perfeito para kitnet"] },
-  { id: "vila",      nome: "Vila 78m²",             area: 78,  pavs: 1, padrao: "Padrão",      tag: "POPULAR",       tagCor: "#4a9eff", emoji: "🏡", quartos: 2, banheiros: 1, descricao: "Casa térrea completa para família pequena. Conforto e economia em um só projeto.", destaques: ["2 quartos confortáveis","Varanda integrada","Custo-benefício ótimo"] },
-  { id: "casa120",   nome: "Casa Serena 120m²",     area: 120, pavs: 1, padrao: "Padrão",      tag: "RECOMENDADO",   tagCor: "#981915", emoji: "🏘", quartos: 3, banheiros: 2, descricao: "O modelo mais completo para família de 4 pessoas. Suíte master, sala ampla e área gourmet.", destaques: ["Suíte master com closet","Área gourmet","Sala de TV + jantar"] },
-  { id: "sobrado160",nome: "Sobrado Vivo 160m²",    area: 160, pavs: 2, padrao: "Padrão",      tag: "2 PAVIMENTOS",  tagCor: "#8b5cf6", emoji: "🏗", quartos: 3, banheiros: 3, descricao: "Sobrado moderno com térreo social e pavimento superior privativo.", destaques: ["Térreo social separado","3 suítes no andar","Sacada com guarda-corpo"] },
-  { id: "alto200",   nome: "Residência Alto 200m²", area: 200, pavs: 1, padrao: "Alto Padrão", tag: "ALTO PADRÃO",   tagCor: "#e07020", emoji: "🏛", quartos: 4, banheiros: 3, descricao: "Para quem não abre mão do melhor. Acabamentos superiores e projeto exclusivo.", destaques: ["4 suítes amplas","Home theater","Piscina prevista"] },
-  { id: "vigo273",   nome: "Casa Vigo 273m²",       area: 273, pavs: 2, padrao: "Alto Padrão", tag: "PREMIUM",       tagCor: "#c0392b", emoji: "🏰", quartos: 4, banheiros: 4, descricao: "Nossa flagship — o lar dos sonhos em Steel Frame. Projeto inspirado em casas europeias.", destaques: ["Estilo europeu moderno","Pé-direito duplo na sala","Área total de lazer"] },
+  { id: "studio",    nome: "Studio Compact",       area: 42,  pavs: 1, padrao: "Padrão",      tag: "MAIS VENDIDO",  tagCor: "#3f7a4b", emoji: "", quartos: 1, banheiros: 1, descricao: "Ideal para uso individual, home office ou kitnet. Layout inteligente e construção rápida.", destaques: ["Entrega em 45 dias","Kit completo estrutural","Perfeito para kitnet"] },
+  { id: "vila",      nome: "Vila 78m²",             area: 78,  pavs: 1, padrao: "Padrão",      tag: "POPULAR",       tagCor: "#3b6ea5", emoji: "", quartos: 2, banheiros: 1, descricao: "Casa térrea completa para família pequena. Conforto e economia em um só projeto.", destaques: ["2 quartos confortáveis","Varanda integrada","Custo-benefício ótimo"] },
+  { id: "casa120",   nome: "Casa Serena 120m²",     area: 120, pavs: 1, padrao: "Padrão",      tag: "RECOMENDADO",   tagCor: "#981915", emoji: "", quartos: 3, banheiros: 2, descricao: "O modelo mais completo para família de 4 pessoas. Suíte master, sala ampla e área gourmet.", destaques: ["Suíte master com closet","Área gourmet","Sala de TV + jantar"] },
+  { id: "sobrado160",nome: "Sobrado Vivo 160m²",    area: 160, pavs: 2, padrao: "Padrão",      tag: "2 PAVIMENTOS",  tagCor: "#8b5cf6", emoji: "", quartos: 3, banheiros: 3, descricao: "Sobrado moderno com térreo social e pavimento superior privativo.", destaques: ["Térreo social separado","3 suítes no andar","Sacada com guarda-corpo"] },
+  { id: "alto200",   nome: "Residência Alto 200m²", area: 200, pavs: 1, padrao: "Alto Padrão", tag: "ALTO PADRÃO",   tagCor: "#e07020", emoji: "", quartos: 4, banheiros: 3, descricao: "Para quem não abre mão do melhor. Acabamentos superiores e projeto exclusivo.", destaques: ["4 suítes amplas","Home theater","Piscina prevista"] },
+  { id: "vigo273",   nome: "Casa Vigo 273m²",       area: 273, pavs: 2, padrao: "Alto Padrão", tag: "PREMIUM",       tagCor: "#a33327", emoji: "", quartos: 4, banheiros: 4, descricao: "Nossa flagship — o lar dos sonhos em Steel Frame. Projeto inspirado em casas europeias.", destaques: ["Estilo europeu moderno","Pé-direito duplo na sala","Área total de lazer"] },
 ];
 
 const fmtR = (v) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 0, maximumFractionDigits: 0 });
@@ -176,6 +176,8 @@ export default function CalculadoraPublica() {
 
   // Step: "form" | "result" | "success"
   const [step, setStep] = useState("form");
+  // Lead gate: result is blurred until user submits contact
+  const [leadUnlocked, setLeadUnlocked] = useState(false);
 
   // Form values
   const [area, setArea] = useState(120);
@@ -215,7 +217,7 @@ export default function CalculadoraPublica() {
         const { data: waNum } = await sb.rpc("get_empresa_whatsapp_alertas");
         const numLimpo = (waNum || "").replace(/\D/g, "");
         if (numLimpo) {
-          const msg = `🏠 *Novo lead — Kit ${kitSel.nome}*\n\n👤 *${nome}*\n📱 ${whatsapp}\n\n💰 Estimativa: ${fmtR(totalAtivo)}\n🏗 ${kitSel.area}m² · ${kitSel.pavs} pav. · ${kitSel.padrao}\n\nAcesse: https://stickframe.com.br`;
+          const msg = ` *Novo lead — Kit ${kitSel.nome}*\n\n *${nome}*\n ${whatsapp}\n\n Estimativa: ${fmtR(totalAtivo)}\n ${kitSel.area}m² · ${kitSel.pavs} pav. · ${kitSel.padrao}\n\nAcesse: https://stickframe.com.br`;
           window.open(`https://wa.me/${numLimpo.startsWith("55") ? numLimpo : "55" + numLimpo}?text=${encodeURIComponent(msg)}`, "_blank");
         }
       } catch (_) {}
@@ -243,6 +245,7 @@ export default function CalculadoraPublica() {
     setAlMin(Math.round(alValor * 0.92));
     setAlMax(Math.round(alValor * 1.12));
     setSfMidValue(Math.round(sfValor));
+    setLeadUnlocked(false);
     setStep("result");
     window.scrollTo({ top: 0, behavior: "smooth" });
 
@@ -304,7 +307,7 @@ export default function CalculadoraPublica() {
 
       // Open WhatsApp notification to empresa owner
       try {
-        const msg = `🔔 *Novo lead via Calculadora!*\n\n👤 *${nome}*\n📱 ${whatsapp}\n📍 ${cidade || "—"}\n\n🏗 *Projeto:*\n• Área: ${area}m² · ${pavimentos}\n• Padrão: ${padrao}\n• Estimativa: R$ ${Math.round(sfValor * 0.92).toLocaleString("pt-BR")} – R$ ${Math.round(sfValor * 1.12).toLocaleString("pt-BR")}\n\nAcesse o sistema para responder: https://stickframe.com.br`;
+        const msg = ` *Novo lead via Calculadora!*\n\n *${nome}*\n ${whatsapp}\n ${cidade || "—"}\n\n *Projeto:*\n• Área: ${area}m² · ${pavimentos}\n• Padrão: ${padrao}\n• Estimativa: R$ ${Math.round(sfValor * 0.92).toLocaleString("pt-BR")} – R$ ${Math.round(sfValor * 1.12).toLocaleString("pt-BR")}\n\nAcesse o sistema para responder: https://stickframe.com.br`;
         const { data: waNum } = await sb.rpc("get_empresa_whatsapp_alertas");
         const numLimpo = (waNum || "").replace(/\D/g, "");
         if (numLimpo) {
@@ -312,7 +315,7 @@ export default function CalculadoraPublica() {
         }
       } catch (_) { /* WhatsApp notification is non-critical */ }
 
-      setStep("success");
+      setLeadUnlocked(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {
       setSendError("Erro ao enviar. Tente novamente.");
@@ -330,6 +333,7 @@ export default function CalculadoraPublica() {
     setNome("");
     setWhatsapp("");
     setSendError("");
+    setLeadUnlocked(false);
     setStep("form");
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -728,7 +732,7 @@ export default function CalculadoraPublica() {
         </header>
 
         <div className="calc-hero">
-          <div className="calc-hero-tag">🏗 Calculadora Gratuita</div>
+          <div className="calc-hero-tag"> Calculadora Gratuita</div>
           <h1>Quanto custa sua<br /><span>casa em Steel Frame?</span></h1>
           <p>Simule o custo completo em segundos — materiais, projetos e mão de obra. Sem compromisso.</p>
           <div className="calc-hero-stats">
@@ -752,8 +756,8 @@ export default function CalculadoraPublica() {
           {/* ============ MODO TABS ============ */}
           {(step === "form" || modo === "kits") && (
             <div className="mode-tabs">
-              <button className={`mode-tab${modo === "metro" ? " active" : ""}`} onClick={() => { setModo("metro"); setStep("form"); }}>📐 Simular por m²</button>
-              <button className={`mode-tab${modo === "kits" ? " active" : ""}`} onClick={() => { setModo("kits"); setKitStep("lista"); }}>🏠 Kits de Casa</button>
+              <button className={`mode-tab${modo === "metro" ? " active" : ""}`} onClick={() => { setModo("metro"); setStep("form"); }}> Simular por m²</button>
+              <button className={`mode-tab${modo === "kits" ? " active" : ""}`} onClick={() => { setModo("kits"); setKitStep("lista"); }}> Kits de Casa</button>
             </div>
           )}
 
@@ -775,10 +779,10 @@ export default function CalculadoraPublica() {
                       <div className="kit-name">{kit.nome}</div>
                       <div className="kit-desc">{kit.descricao}</div>
                       <div className="kit-meta">
-                        <span className="kit-chip">📐 {kit.area} m²</span>
-                        <span className="kit-chip">🛏 {kit.quartos} qts</span>
-                        <span className="kit-chip">🚿 {kit.banheiros} ban</span>
-                        <span className="kit-chip">🏠 {kit.pavs}P</span>
+                        <span className="kit-chip"> {kit.area} m²</span>
+                        <span className="kit-chip"> {kit.quartos} qts</span>
+                        <span className="kit-chip"> {kit.banheiros} ban</span>
+                        <span className="kit-chip"> {kit.pavs}P</span>
                       </div>
                       <div className="kit-price-label">Materiais a partir de</div>
                       <div className="kit-price">{fmtR(items.filter(i => !["Projetos e Engenharia","Mão de Obra"].includes(i.categoria)).reduce((s,i)=>s+i.total,0))}</div>
@@ -815,7 +819,7 @@ export default function CalculadoraPublica() {
                         background: ativo ? "rgba(255,255,255,.15)" : "rgba(0,0,0,.2)",
                         color: ativo ? "#fff" : "rgba(255,255,255,.45)",
                       }}>
-                        <span>{ativo ? "☑" : "☐"}</span>
+                        <span>{ativo ? "" : ""}</span>
                         <span>{cat}</span>
                         <span style={{ opacity: .7, fontSize: 11 }}>{fmtR(sub)}</span>
                       </button>
@@ -833,7 +837,7 @@ export default function CalculadoraPublica() {
               </div>
 
               <button className="calc-btn" style={{ marginTop: 4 }} onClick={() => { setNome(""); setWhatsapp(""); setEmail(""); setKitStep("contact"); window.scrollTo({top:0,behavior:"smooth"}); }}>
-                📋 Solicitar orçamento completo
+                 Solicitar orçamento completo
               </button>
             </div>
           )}
@@ -860,7 +864,7 @@ export default function CalculadoraPublica() {
 
           {modo === "kits" && kitStep === "success" && (
             <div className="calc-card">
-              <div className="success-icon">✅</div>
+              <div className="success-icon"></div>
               <div className="success-title">Recebemos seu contato!</div>
               <p className="success-msg">Nossa equipe vai entrar em contato em até 24h pelo WhatsApp <strong>{whatsapp}</strong> com a proposta do kit <strong>{kitSel?.nome}</strong>.</p>
               <button className="btn-outline" onClick={() => { setModo("kits"); setKitStep("lista"); setKitSel(null); setKitItems(null); }}>Ver outros modelos</button>
@@ -931,7 +935,51 @@ export default function CalculadoraPublica() {
             <>
               <span className="back-link" onClick={handleReset}>← Nova simulação</span>
 
-              <div className="calc-card">
+              {/* Lead gate modal — shown OVER the blurred result until unlocked */}
+              {!leadUnlocked && (
+                <div style={{ position: "fixed", inset: 0, zIndex: 300, background: "rgba(38,35,31,.7)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "16px" }}>
+                  <div style={{ background: "#fff", borderRadius: 16, padding: "32px 28px", maxWidth: 420, width: "100%", boxShadow: "0 24px 60px rgba(0,0,0,.25)" }}>
+                    <div style={{ fontSize: 28, textAlign: "center", marginBottom: 8 }}></div>
+                    <div className="cta-heading" style={{ textAlign: "center", marginBottom: 6 }}>Sua estimativa está pronta!</div>
+                    <p className="cta-sub" style={{ textAlign: "center", marginBottom: 24 }}>Informe seus dados para liberar o resultado completo. Nossa equipe também entra em contato em até 24h.</p>
+                    <form onSubmit={handleContact}>
+                      <label className="calc-label">Nome completo</label>
+                      <input
+                        className="calc-input"
+                        type="text"
+                        placeholder="Seu nome"
+                        value={nome}
+                        onChange={(e) => setNome(e.target.value)}
+                        required
+                      />
+                      <label className="calc-label">WhatsApp</label>
+                      <input
+                        className="calc-input"
+                        type="tel"
+                        placeholder="(11) 99999-9999"
+                        value={whatsapp}
+                        onChange={(e) => setWhatsapp(e.target.value)}
+                        required
+                      />
+                      <label className="calc-label">E-mail <span style={{color:"#888",fontWeight:400}}>(opcional)</span></label>
+                      <input
+                        className="calc-input"
+                        type="email"
+                        placeholder="seu@email.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                      />
+                      {sendError && <p className="error-msg">{sendError}</p>}
+                      <button className="calc-btn" type="submit" disabled={sending}>
+                        {sending ? "Enviando..." : "Ver minha estimativa →"}
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              )}
+
+              {/* Result — blurred until lead is captured */}
+              <div className="calc-card" style={!leadUnlocked ? { filter: "blur(6px)", userSelect: "none", pointerEvents: "none" } : {}}>
                 <p className="result-headline">Sua estimativa está pronta!</p>
 
                 {/* Steel Frame */}
@@ -944,9 +992,9 @@ export default function CalculadoraPublica() {
                   <div className="result-faixa">{formatBRL(sfMin)} – {formatBRL(sfMax)}</div>
                   <div className="result-prazo">Prazo médio: {PRAZOS_SF[padrao]}</div>
                   <div className="result-tags">
-                    <span className="result-tag green">✓ Mais leve</span>
-                    <span className="result-tag green">✓ Menos resíduos</span>
-                    <span className="result-tag green">✓ Alta precisão</span>
+                    <span className="result-tag green"> Mais leve</span>
+                    <span className="result-tag green"> Menos resíduos</span>
+                    <span className="result-tag green"> Alta precisão</span>
                   </div>
                 </div>
 
@@ -968,48 +1016,6 @@ export default function CalculadoraPublica() {
                     <Zap size={13} /> Steel Frame pode ser até <strong>{speedPct}% mais rápido</strong> que a alvenaria convencional
                   </div>
                 )}
-
-                <div className="divider" />
-
-                <div className="cta-heading">Quer uma proposta detalhada e sem compromisso?</div>
-                <p className="cta-sub">Preencha abaixo e nossa equipe entra em contato em até 24h.</p>
-
-                <form onSubmit={handleContact}>
-                  <label className="calc-label">Nome completo</label>
-                  <input
-                    className="calc-input"
-                    type="text"
-                    placeholder="Seu nome"
-                    value={nome}
-                    onChange={(e) => setNome(e.target.value)}
-                    required
-                  />
-
-                  <label className="calc-label">WhatsApp</label>
-                  <input
-                    className="calc-input"
-                    type="tel"
-                    placeholder="Ex: (11) 99999-9999 ou +1 555 000-0000"
-                    value={whatsapp}
-                    onChange={(e) => setWhatsapp(e.target.value)}
-                    required
-                  />
-
-                  <label className="calc-label">E-mail <span style={{color:"#888",fontWeight:400}}>(opcional)</span></label>
-                  <input
-                    className="calc-input"
-                    type="email"
-                    placeholder="seu@email.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-
-                  {sendError && <p className="error-msg">{sendError}</p>}
-
-                  <button className="calc-btn" type="submit" disabled={sending}>
-                    {sending ? "Enviando..." : "Receber proposta grátis"}
-                  </button>
-                </form>
               </div>
             </>
           )}

@@ -105,7 +105,7 @@ function ObraCard({ obra, fins }) {
           background: "#981915" + "12", border: `1px solid #981915` + "30",
           fontSize: 11, color: "#981915", fontWeight: 600,
         }}>
-          ⚠️ Custo real {fmtPct(desvioCusto)} acima do orçamento
+           Custo real {fmtPct(desvioCusto)} acima do orçamento
         </div>
       )}
     </div>
@@ -176,13 +176,13 @@ export default function Rentabilidade() {
 
       {/* KPIs globais */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12, marginBottom: 24 }}>
-        <KpiCard label="Receita Total" value={fmt(totalReceita)} icon="💰" color="#2e9e5b" />
-        <KpiCard label="Custo Total" value={fmt(totalCusto)} icon="📦" color={C.text} />
-        <KpiCard label="Lucro Total" value={fmt(totalLucro)} icon="📈" color={totalLucro >= 0 ? "#2e9e5b" : "#981915"} />
+        <KpiCard label="Receita Total" value={fmt(totalReceita)} icon="" color="#2e9e5b" />
+        <KpiCard label="Custo Total" value={fmt(totalCusto)} icon="" color={C.text} />
+        <KpiCard label="Lucro Total" value={fmt(totalLucro)} icon="" color={totalLucro >= 0 ? "#2e9e5b" : "#981915"} />
         <KpiCard
           label="Margem Geral"
           value={margemGeral.toFixed(1) + "%"}
-          icon="🎯"
+          icon=""
           color={margemGeral >= 20 ? "#2e9e5b" : margemGeral >= 10 ? "#b07a1e" : "#981915"}
           sub={`${obrasComDados.length} obra${obrasComDados.length !== 1 ? "s" : ""}`}
         />
@@ -192,7 +192,7 @@ export default function Rentabilidade() {
       {obrasComDados.length > 1 && (
         <div style={{ background: "#fff", border: `1px solid ${C.border}`, borderRadius: 14, padding: "16px 20px", marginBottom: 24 }}>
           <div style={{ fontSize: 12, fontWeight: 800, color: C.text, marginBottom: 14, textTransform: "uppercase", letterSpacing: 0.5 }}>
-            🏆 Ranking de Obras
+             Ranking de Obras
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {obrasComDados.slice(0, 5).map((o, i) => {
@@ -243,7 +243,7 @@ export default function Rentabilidade() {
           background: "#981915" + "10", border: `1px solid #981915` + "25",
           fontSize: 12, color: "#981915", fontWeight: 600,
         }}>
-          ⚠️ {obrasComDados.filter(o => o.custo > (o.orcamento || 0) && o.orcamento > 0).length} obra(s) com custo acima do orçamento
+           {obrasComDados.filter(o => o.custo > (o.orcamento || 0) && o.orcamento > 0).length} obra(s) com custo acima do orçamento
         </div>
       )}
 

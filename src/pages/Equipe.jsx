@@ -31,22 +31,22 @@ function LabelField({ children, required }) {
   );
 }
 
-// ─── Tab ─────────────────────────────────────────────────────────────────────
+//  Tab
 function Tab({ label, active, onClick }) {
   return (
     <button onClick={onClick} style={{
-      padding: "8px 18px", fontSize: 12, fontWeight: active ? 700 : 400,
-      background: active ? C.red : "transparent",
-      color: active ? "#fff" : C.muted,
-      border: `1px solid ${active ? C.red : C.border}`,
-      borderRadius: 8, cursor: "pointer", fontFamily: "inherit", transition: "all .15s",
+      padding: "7px 16px", fontSize: 12.5, fontWeight: active ? 700 : 500,
+      background: active ? "var(--surface)" : "transparent",
+      color: active ? "var(--ink)" : "var(--muted)",
+      border: "none", borderRadius: 7, cursor: "pointer", fontFamily: "inherit",
+      boxShadow: active ? "0 1px 4px #0001" : "none", transition: "all .15s",
     }}>
       {label}
     </button>
   );
 }
 
-// ─── Formulário colaborador ───────────────────────────────────────────────────
+//  Formulário colaborador 
 const FORM_VAZIO = {
   nome: "", cargo: "", email: "", telefone: "",
   especialidade: "Montador", status: "Ativo", salario: "", observacoes: "",
@@ -88,7 +88,7 @@ function FormColaborador({ form, setForm, onSave, onCancel, btnLabel }) {
         </div>
         <div>
           <label style={{ display: "inline-block", padding: "7px 14px", borderRadius: 6, border: `1px solid ${C.border}`, fontSize: 12, fontWeight: 600, cursor: "pointer", color: C.muted }}>
-            {uploadingFoto ? "Enviando..." : "📷 Foto do colaborador"}
+            {uploadingFoto ? "Enviando..." : " Foto do colaborador"}
             <input type="file" accept="image/*" style={{ display: "none" }} onChange={handleFotoUpload} disabled={uploadingFoto} />
           </label>
           {form.foto_url && <button onClick={() => set("foto_url")("")} style={{ marginLeft: 8, background: "none", border: "none", color: C.danger, fontSize: 11, cursor: "pointer" }}>Remover</button>}
@@ -184,7 +184,7 @@ function FormColaborador({ form, setForm, onSave, onCancel, btnLabel }) {
   );
 }
 
-// ─── Componente principal ─────────────────────────────────────────────────────
+//  Componente principal 
 export default function Equipe() {
   const { toast, mostrarToast } = useToast();
   useModuleLoad("colaboradores");
@@ -317,7 +317,7 @@ export default function Equipe() {
   }, []);
   useEffect(() => { recarregarCerts(); }, [recarregarCerts]);
 
-  // ── Crachá / QR Ponto ────────────────────────────────────────────────────
+  //  Crachá / QR Ponto 
   const NR_ICONES = {
     "NR-01": { icon: "fa-clipboard-check",   label: "PGR" },
     "NR-05": { icon: "fa-users",             label: "CIPA" },
@@ -356,7 +356,7 @@ export default function Equipe() {
           const nrVal = (cert.nr != null && cert.nr !== "" && cert.nr !== "undefined") ? String(cert.nr) : "";
           const key = nrVal ? Object.keys(NR_ICONES).find((k) => nrVal.includes(k)) : undefined;
           const info = key ? NR_ICONES[key] : null;
-          const icon = info ? `<i class="fas ${info.icon}"></i>` : "🏅";
+          const icon = info ? `<i class="fas ${info.icon}"></i>` : "";
           const rawLabel = nrVal.replace(/\s*\(.*\)/, "").trim();
           const label = info?.label || (rawLabel && rawLabel !== "undefined" ? rawLabel.slice(0, 7) : "NR");
           const valid = cert.data_validade ? new Date(cert.data_validade) > new Date() : true;
@@ -397,7 +397,7 @@ export default function Equipe() {
     `, `cracha-${c.nome}`);
   }
 
-  // ── Equipe CRUD ──────────────────────────────────────────────────────────
+  //  Equipe CRUD 
   function abrirNovo() { setForm(FORM_VAZIO); setModal("novo"); }
 
   function abrirEditar(c) {
@@ -416,23 +416,23 @@ export default function Equipe() {
     const payload = { ...form, salario: form.salario ? Number(form.salario) : null, valor_producao: form.valor_producao ? Number(form.valor_producao) : null };
     await addColaborador(payload);
     setModal(null);
-    mostrarToast("✅ Colaborador cadastrado!");
+    mostrarToast(" Colaborador cadastrado!");
   }
 
   async function salvarEdicao() {
     const payload = { ...form, salario: form.salario ? Number(form.salario) : null, valor_producao: form.valor_producao ? Number(form.valor_producao) : null };
     await updateColaborador(editId, payload);
     setModal(null);
-    mostrarToast("✅ Dados atualizados!");
+    mostrarToast(" Dados atualizados!");
   }
 
   async function executarDelete() {
     await deleteColaborador(confirm);
     setConfirm(null);
-    mostrarToast("🗑 Colaborador removido.");
+    mostrarToast(" Colaborador removido.");
   }
 
-  // ── Folha ────────────────────────────────────────────────────────────────
+  //  Folha 
   const colaboradoresAtivosComSalario = colaboradores.filter((c) => c.status === "Ativo" && c.salario);
   const totalSelecionado = colaboradoresAtivosComSalario
     .filter((c) => selecionados[c.id])
@@ -459,10 +459,10 @@ export default function Equipe() {
       data: new Date().toLocaleDateString("pt-BR"),
     });
     setFolhaModal(false);
-    mostrarToast(`✅ Folha de ${fmt(totalSelecionado)} lançada!`);
+    mostrarToast(` Folha de ${fmt(totalSelecionado)} lançada!`);
   }
 
-  // ── Alocações ─────────────────────────────────────────────────────────────
+  //  Alocações 
   async function salvarAlocacao() {
     if (!alocForm.colaborador_id || !alocForm.obra_id) return;
     await addAlocacao({
@@ -474,14 +474,14 @@ export default function Equipe() {
     });
     setAlocModal(false);
     setAlocForm({ colaborador_id: "", obra_id: "", funcao: "Montador", data_inicio: "", data_fim: "" });
-    mostrarToast("✅ Alocação registrada!");
+    mostrarToast(" Alocação registrada!");
   }
 
   const alocacoesFiltradas = alocFiltroObra
     ? alocacoes.filter((a) => a.obra_id === alocFiltroObra)
     : alocacoes;
 
-  // ── Horas ─────────────────────────────────────────────────────────────────
+  //  Horas 
   async function salvarHoras() {
     if (!horaForm.colaborador_id || !horaForm.obra_id || !horaForm.horas) return;
     await addHorasTrabalhadas({
@@ -493,7 +493,7 @@ export default function Equipe() {
     });
     setHoraModal(false);
     setHoraForm({ colaborador_id: "", obra_id: "", data: "", horas: "", descricao: "" });
-    mostrarToast("✅ Horas registradas!");
+    mostrarToast(" Horas registradas!");
   }
 
   const horasFiltradas = horasTrabalhadas.filter((h) => {
@@ -512,7 +512,7 @@ export default function Equipe() {
   const totalHorasFiltradas = horasFiltradas.reduce((a, h) => a + Number(h.horas), 0);
   const totalCustoFiltrado  = horasFiltradas.reduce((a, h) => a + custoPorHoras(h.colaborador_id, Number(h.horas)), 0);
 
-  // ── KPIs ──────────────────────────────────────────────────────────────────
+  //  KPIs 
   const ativos = colaboradores.filter((c) => c.status === "Ativo").length;
   const folha  = colaboradores.filter((c) => c.status === "Ativo" && c.salario).reduce((a, c) => a + (c.salario || 0), 0);
 
@@ -537,7 +537,7 @@ export default function Equipe() {
         }}>{toast}</div>
       )}
 
-      {/* ── Modais colaborador ── */}
+      {/*  Modais colaborador  */}
       {(modal === "novo" || modal === "editar") && (
         <Modal title={modal === "novo" ? "Novo colaborador" : "Editar colaborador"} onClose={() => setModal(null)}>
           <FormColaborador
@@ -566,7 +566,7 @@ export default function Equipe() {
         </div>
       )}
 
-      {/* ── Modal folha ── */}
+      {/*  Modal folha  */}
       {folhaModal && (
         <Modal title="Lançar folha no Financeiro" onClose={() => setFolhaModal(false)}>
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -619,7 +619,7 @@ export default function Equipe() {
         </Modal>
       )}
 
-      {/* ── Modal alocação ── */}
+      {/*  Modal alocação  */}
       {alocModal && (
         <Modal title="Nova alocação" onClose={() => setAlocModal(false)}>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -661,7 +661,7 @@ export default function Equipe() {
         </Modal>
       )}
 
-      {/* ── Modal horas ── */}
+      {/*  Modal horas  */}
       {horaModal && (
         <Modal title="Registrar horas" onClose={() => setHoraModal(false)}>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -704,16 +704,19 @@ export default function Equipe() {
         </Modal>
       )}
 
-      {/* ── Layout ── */}
+      {/*  Layout  */}
       <div>
         {/* Header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-          <div>
-            <h2 style={{ fontSize: 22, fontWeight: 800 }}>Equipe</h2>
-            <p style={{ color: C.muted, fontSize: 13, marginTop: 4 }}>
-              {ativos} ativo{ativos !== 1 ? "s" : ""}
-              {folha > 0 && <span style={{ marginLeft: 10, color: C.success, fontWeight: 600 }}>· Folha: {fmt(folha)}</span>}
-            </p>
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+            <div style={{ width: 4, height: 42, borderRadius: 3, background: "var(--brick)", flexShrink: 0, marginTop: 2 }} />
+            <div>
+              <div style={{ fontFamily: "var(--cond)", fontWeight: 700, fontSize: 28, color: "var(--ink)", lineHeight: 1 }}>Equipe</div>
+              <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4 }}>
+                {ativos} ativo{ativos !== 1 ? "s" : ""}
+                {folha > 0 && <span style={{ marginLeft: 10, color: C.success, fontWeight: 600 }}>· Folha: {fmt(folha)}</span>}
+              </div>
+            </div>
           </div>
           <div style={{ display: "flex", gap: 8 }}>
             {tab === "equipe" && folha > 0 && (
@@ -733,16 +736,16 @@ export default function Equipe() {
         </div>
 
         {/* Tabs */}
-        <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
-          <Tab label="👷 Equipe"        active={tab === "equipe"}       onClick={() => setTab("equipe")} />
-          <Tab label="🔨 Empreiteiros" active={tab === "empreiteiros"} onClick={() => setTab("empreiteiros")} />
-          <Tab label="📋 Alocações"    active={tab === "alocacoes"}    onClick={() => setTab("alocacoes")} />
+        <div style={{ display: "flex", gap: 2, marginBottom: 20, background: "var(--surface-2)", border: "1px solid var(--line)", borderRadius: 9, padding: 3, width: "fit-content" }}>
+          <Tab label=" Equipe"        active={tab === "equipe"}       onClick={() => setTab("equipe")} />
+          <Tab label=" Empreiteiros" active={tab === "empreiteiros"} onClick={() => setTab("empreiteiros")} />
+          <Tab label=" Alocações"    active={tab === "alocacoes"}    onClick={() => setTab("alocacoes")} />
           <Tab label="⏱ Horas"        active={tab === "horas"}        onClick={() => setTab("horas")} />
-          <Tab label="🛡️ Compliance"  active={tab === "compliance"}   onClick={() => setTab("compliance")} />
-          <Tab label="📊 Horas"       active={tab === "relatorio"}    onClick={() => setTab("relatorio")} />
+          <Tab label=" Compliance"  active={tab === "compliance"}   onClick={() => setTab("compliance")} />
+          <Tab label=" Horas"       active={tab === "relatorio"}    onClick={() => setTab("relatorio")} />
         </div>
 
-        {/* ══ Tab: Equipe ══ */}
+        {/*  Tab: Equipe  */}
         {tab === "equipe" && (
           <>
             {colaboradores.length > 0 && (
@@ -770,7 +773,7 @@ export default function Equipe() {
 
             {colaboradores.length === 0 ? (
               <div style={{ background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", border: `1px solid ${C.border}`, padding: "60px 0", textAlign: "center" }}>
-                <div style={{ fontSize: 36, marginBottom: 12 }}>👷</div>
+                <div style={{ fontSize: 36, marginBottom: 12 }}></div>
                 <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 8 }}>Nenhum colaborador cadastrado</div>
                 <div style={{ fontSize: 13, color: C.muted, marginBottom: 24 }}>Cadastre sua equipe para controlar disponibilidade e custos.</div>
                 <Btn onClick={abrirNovo}>+ Cadastrar primeiro colaborador</Btn>
@@ -791,8 +794,8 @@ export default function Equipe() {
                   const certs = Object.values(certsMap);
                   return (
                     <div key={c.id} style={{
-                      background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", padding: "18px 20px",
-                      border: `1px solid ${C.border}`, borderTop: `3px solid ${STATUS_COR[c.status] || C.muted}`,
+                      background: "var(--surface)", borderRadius: 12, padding: "18px 20px",
+                      border: "1px solid var(--line)",
                     }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
                         <div>
@@ -803,7 +806,7 @@ export default function Equipe() {
                       </div>
 
                       <div style={{ display: "flex", flexDirection: "column", gap: 5, marginBottom: 12 }}>
-                        {c.email    && <div style={{ fontSize: 12, color: C.muted }}>✉ {c.email}</div>}
+                        {c.email    && <div style={{ fontSize: 12, color: C.muted }}> {c.email}</div>}
                         {c.telefone && <div style={{ fontSize: 12, color: C.muted }}><Phone size={12} /> {c.telefone}</div>}
                         {c.salario  && <div style={{ fontSize: 12, color: C.success, fontWeight: 700 }}><DollarSign size={13} /> {fmt(c.salario)}</div>}
                       </div>
@@ -815,7 +818,7 @@ export default function Equipe() {
                               fontSize: 11, padding: "4px 8px", borderRadius: 5, marginBottom: 4,
                               background: C.red + "12", color: C.red, fontWeight: 600,
                             }}>
-                              ◆ {nomeObra(a.obra_id)} {a.funcao ? `· ${a.funcao}` : ""}
+                               {nomeObra(a.obra_id)} {a.funcao ? `· ${a.funcao}` : ""}
                             </div>
                           ))}
                           {alocAtivas.length > 2 && (
@@ -849,10 +852,10 @@ export default function Equipe() {
                       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                         <Btn variant="ghost" size="sm" onClick={() => abrirEditar(c)}><Pencil size={13} /> Editar</Btn>
                         {c.token_ponto && (
-                          <Btn variant="ghost" size="sm" onClick={() => gerarCracha(c, certsByColab[c.id] || [])}>🪪 Crachá</Btn>
+                          <Btn variant="ghost" size="sm" onClick={() => gerarCracha(c, certsByColab[c.id] || [])}> Crachá</Btn>
                         )}
                         {c.token_ponto && (
-                          <Btn variant="ghost" size="sm" onClick={() => window.open(`${window.location.origin}/portal/${c.token_ponto}`, "_blank")}>🌐 Portal</Btn>
+                          <Btn variant="ghost" size="sm" onClick={() => window.open(`${window.location.origin}/colaborador/${c.token_ponto}`, "_blank")}> Portal</Btn>
                         )}
                         <button onClick={() => setConfirm(c.id)} style={{
                           padding: "6px 12px", background: C.danger + "22",
@@ -869,14 +872,14 @@ export default function Equipe() {
           </>
         )}
 
-        {/* ══ Tab: Empreiteiros ══ */}
+        {/*  Tab: Empreiteiros  */}
         {tab === "empreiteiros" && (() => {
           const empreiteiros = colaboradores.filter((c) => c.tipo_contrato === "Empreiteiro");
           return (
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               {empreiteiros.length === 0 ? (
                 <div style={{ background: C.surface, borderRadius: 16, border: `1px solid ${C.border}`, padding: "50px 0", textAlign: "center" }}>
-                  <div style={{ fontSize: 40, marginBottom: 12 }}>🔨</div>
+                  <div style={{ fontSize: 40, marginBottom: 12 }}></div>
                   <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 8 }}>Nenhum empreiteiro cadastrado</div>
                   <div style={{ fontSize: 12, color: C.muted }}>Cadastre um colaborador e defina o tipo como "Empreiteiro"</div>
                 </div>
@@ -895,7 +898,7 @@ export default function Equipe() {
                   <button
                     onClick={() => { setEmpModal({ colaborador: c }); setEmpForm({ obra_id: obras[0]?.id || "", quantidade: "", descricao: "", data_inicio: new Date(Date.now() - 6 * 86400000).toISOString().slice(0, 10), data_fim: new Date().toISOString().slice(0, 10) }); }}
                     style={{ padding: "8px 18px", background: "#7c3aed22", border: "1px solid #7c3aed44", borderRadius: 8, color: "#7c3aed", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
-                    💰 Apurar Pagamento
+                     Apurar Pagamento
                   </button>
                 </div>
               ))}
@@ -907,7 +910,7 @@ export default function Equipe() {
         {empModal && (
           <div style={{ position: "fixed", inset: 0, background: "#000b", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
             <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, width: "100%", maxWidth: 460, padding: "28px 28px 22px" }}>
-              <div style={{ fontSize: 16, fontWeight: 800, marginBottom: 18 }}>💰 Apurar Pagamento — {empModal.colaborador.nome}</div>
+              <div style={{ fontSize: 16, fontWeight: 800, marginBottom: 18 }}> Apurar Pagamento — {empModal.colaborador.nome}</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 <div>
                   <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 5 }}>OBRA</div>
@@ -939,9 +942,9 @@ export default function Equipe() {
                         p_obra_id: empForm.obra_id, p_data_inicio: empForm.data_inicio, p_data_fim: empForm.data_fim,
                       });
                       if (error) throw error;
-                      mostrarToast(`✅ Lançado R$ ${data.total?.toFixed(2)} — ${data.quantidade} ${data.unidade}`);
+                      mostrarToast(` Lançado R$ ${data.total?.toFixed(2)} — ${data.quantidade} ${data.unidade}`);
                       setEmpModal(null);
-                    } catch (e) { mostrarToast(`❌ ${e.message}`, true); }
+                    } catch (e) { mostrarToast(` ${e.message}`, true); }
                     finally { setEmpApurando(false); }
                   }}>
                     {empApurando ? "Apurando..." : "Gerar Pagamento"}
@@ -952,7 +955,7 @@ export default function Equipe() {
           </div>
         )}
 
-        {/* ══ Tab: Alocações ══ */}
+        {/*  Tab: Alocações  */}
         {tab === "alocacoes" && (
           <div>
             {/* Filtro por obra */}
@@ -1002,7 +1005,7 @@ export default function Equipe() {
                     {alocacoesFiltradas.map((a, i) => (
                       <tr key={a.id} style={{ borderTop: i > 0 ? `1px solid ${C.border}` : "none" }}>
                         <td style={{ padding: "12px 16px", fontWeight: 600 }}>{nomeColab(a.colaborador_id)}</td>
-                        <td style={{ padding: "12px 16px", color: C.red, fontWeight: 600 }}>◆ {nomeObra(a.obra_id)}</td>
+                        <td style={{ padding: "12px 16px", color: C.red, fontWeight: 600 }}> {nomeObra(a.obra_id)}</td>
                         <td style={{ padding: "12px 16px", color: C.muted }}>{a.funcao || "—"}</td>
                         <td style={{ padding: "12px 16px", color: C.muted, fontSize: 12 }}>
                           {a.data_inicio ? new Date(a.data_inicio + "T00:00").toLocaleDateString("pt-BR") : "—"}
@@ -1024,20 +1027,21 @@ export default function Equipe() {
           </div>
         )}
 
-        {/* ══ Tab: Horas ══ */}
+        {/*  Tab: Horas  */}
         {tab === "horas" && (
           <div>
             {/* KPIs */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 20 }}>
               {[
-                { label: "Total de horas", value: `${totalHorasFiltradas.toFixed(1)} h`, sub: "no filtro atual", accent: "#4a9eff" },
-                { label: "Custo estimado", value: fmt(totalCustoFiltrado), sub: "baseado na diária", accent: C.red },
-                { label: "Lançamentos", value: String(horasFiltradas.length), sub: "registros de horas", accent: C.success },
+                { label: "Total de horas", value: `${totalHorasFiltradas.toFixed(1)} h`, sub: "no filtro atual", accent: "var(--steel)" },
+                { label: "Custo estimado", value: fmt(totalCustoFiltrado), sub: "baseado na diária", accent: "var(--brick)" },
+                { label: "Lançamentos", value: String(horasFiltradas.length), sub: "registros de horas", accent: "var(--pos)" },
               ].map((k) => (
-                <div key={k.label} style={{ background: C.surface, borderRadius: 14, padding: "14px 16px", border: `1px solid ${C.border}`, borderTop: `3px solid ${k.accent}` }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1, color: C.muted, textTransform: "uppercase", marginBottom: 6 }}>{k.label}</div>
-                  <div style={{ fontSize: 20, fontWeight: 900 }}>{k.value}</div>
-                  <div style={{ fontSize: 11, color: C.muted, marginTop: 3 }}>{k.sub}</div>
+                <div key={k.label} style={{ background: "var(--surface)", borderRadius: 12, padding: "16px 18px", border: "1px solid var(--line)" }}>
+                  <div style={{ height: 3, width: 28, borderRadius: 2, background: k.accent, marginBottom: 12 }} />
+                  <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 1.2, color: "var(--muted)", textTransform: "uppercase", marginBottom: 6 }}>{k.label}</div>
+                  <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: 30, fontWeight: 700, color: "var(--ink)", lineHeight: 1 }}>{k.value}</div>
+                  <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 4 }}>{k.sub}</div>
                 </div>
               ))}
             </div>
@@ -1098,7 +1102,7 @@ export default function Equipe() {
                             {h.data ? new Date(h.data + "T00:00").toLocaleDateString("pt-BR") : "—"}
                           </td>
                           <td style={{ padding: "12px 16px", fontWeight: 600 }}>{nomeColab(h.colaborador_id)}</td>
-                          <td style={{ padding: "12px 16px", color: C.red, fontWeight: 600 }}>◆ {nomeObra(h.obra_id)}</td>
+                          <td style={{ padding: "12px 16px", color: C.red, fontWeight: 600 }}> {nomeObra(h.obra_id)}</td>
                           <td style={{ padding: "12px 16px", color: C.muted }}>{h.descricao || "—"}</td>
                           <td style={{ padding: "12px 16px", textAlign: "right", fontWeight: 700 }}>{Number(h.horas).toFixed(1)} h</td>
                           <td style={{ padding: "12px 16px", textAlign: "right", fontWeight: 700, color: custo > 0 ? C.red : C.muted }}>
@@ -1120,12 +1124,12 @@ export default function Equipe() {
           </div>
         )}
 
-        {/* ══ Tab: Compliance ══ */}
+        {/*  Tab: Compliance  */}
         {tab === "compliance" && (
           <Certificacoes onSaved={recarregarCerts} />
         )}
 
-        {/* ══ Tab: Relatório de Horas ══ */}
+        {/*  Tab: Relatório de Horas  */}
         {tab === "relatorio" && (
           <div>
             {/* Controls */}
@@ -1151,12 +1155,12 @@ export default function Equipe() {
               <button
                 onClick={carregarRelatorio}
                 style={{ padding: "8px 18px", borderRadius: 8, border: `1px solid ${C.red}`, background: C.red + "18", color: C.red, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}
-              >{relLoading ? "Carregando..." : "🔄 Atualizar"}</button>
+              >{relLoading ? "Carregando..." : " Atualizar"}</button>
               {relDados.length > 0 && (
                 <button
                   onClick={exportarRelatorioExcel}
                   style={{ padding: "8px 18px", borderRadius: 8, border: `1px solid ${C.success}`, background: C.success + "18", color: C.success, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}
-                >📥 Exportar Excel</button>
+                > Exportar Excel</button>
               )}
             </div>
 
@@ -1164,7 +1168,7 @@ export default function Equipe() {
               <div style={{ textAlign: "center", padding: "50px 0", color: C.muted, fontSize: 13 }}>Carregando dados...</div>
             ) : relDados.length === 0 ? (
               <div style={{ background: C.surface, borderRadius: 16, border: `1px solid ${C.border}`, padding: "60px 0", textAlign: "center" }}>
-                <div style={{ fontSize: 36, marginBottom: 12 }}>📊</div>
+                <div style={{ fontSize: 36, marginBottom: 12 }}></div>
                 <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 8 }}>Nenhum registro de ponto no período</div>
                 <div style={{ fontSize: 12, color: C.muted }}>Selecione outro mês ou verifique os registros de ponto eletrônico.</div>
               </div>

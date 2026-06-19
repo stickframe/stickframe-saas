@@ -42,7 +42,7 @@ export async function emailFaseAvancada({ obraEmail, obraNome, fase, progresso, 
            <div style="height:6px;width:${progresso}%;background:linear-gradient(90deg,#981915,#6e1210);border-radius:3px;"></div>
          </div>
        </div>
-       ${portalUrl ? `<div style="text-align:center;margin:20px 0;"><a href="${portalUrl}" style="display:inline-block;background:linear-gradient(135deg,#981915,#6e1210);color:#fff;text-decoration:none;padding:13px 28px;border-radius:8px;font-weight:700;font-size:14px;">🏗 Ver minha obra no portal</a></div><p style="font-size:11px;color:#aaa;text-align:center;">Ou acesse: <a href="${portalUrl}" style="color:#981915;">${portalUrl}</a></p>` : "<p style=\"color:#444;line-height:1.6;\">Entre em contato para mais detalhes.</p>"}`
+       ${portalUrl ? `<div style="text-align:center;margin:20px 0;"><a href="${portalUrl}" style="display:inline-block;background:linear-gradient(135deg,#981915,#6e1210);color:#fff;text-decoration:none;padding:13px 28px;border-radius:8px;font-weight:700;font-size:14px;"> Ver minha obra no portal</a></div><p style="font-size:11px;color:#aaa;text-align:center;">Ou acesse: <a href="${portalUrl}" style="color:#981915;">${portalUrl}</a></p>` : "<p style=\"color:#444;line-height:1.6;\">Entre em contato para mais detalhes.</p>"}`
     ),
   });
 }
@@ -65,7 +65,7 @@ export async function emailAlertaPreco({ nomeProduto, precoAnterior, precoAtual,
   const fmtBRL = (v) => Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
   await enviarEmail({
     to: email,
-    subject: `⚠️ Alerta de preço: ${nomeProduto} subiu ${variacao}%`,
+    subject: ` Alerta de preço: ${nomeProduto} subiu ${variacao}%`,
     html: templateBase(
       `Alerta de variação de preço`,
       `<p style="color:#444;line-height:1.6;">O produto <strong>${nomeProduto}</strong> teve um aumento de preço acima do limite configurado.</p>
@@ -82,7 +82,7 @@ export async function emailAlertaPreco({ nomeProduto, precoAnterior, precoAtual,
            </div>
            <div style="text-align:center;background:#fef2f2;border-radius:8px;padding:10px 16px;">
              <div style="font-size:11px;color:#9ca3af;margin-bottom:4px;">VARIAÇÃO</div>
-             <div style="font-size:22px;font-weight:900;color:#dc2626;">▲ ${Number(variacao).toFixed(1)}%</div>
+             <div style="font-size:22px;font-weight:900;color:#dc2626;"> ${Number(variacao).toFixed(1)}%</div>
            </div>
          </div>
          ${loja ? `<div style="margin-top:10px;font-size:11px;color:#9ca3af;">Loja: <strong>${loja}</strong></div>` : ""}
@@ -97,7 +97,7 @@ export async function emailAlertaObraAtrasada({ nomeObra, prazoFim, diasAtraso, 
   const portalUrl = window.location.origin + "/obras";
   await enviarEmail({
     to: email,
-    subject: `🚨 Obra atrasada: ${nomeObra} (${diasAtraso} dias)`,
+    subject: ` Obra atrasada: ${nomeObra} (${diasAtraso} dias)`,
     html: templateBase(
       `Obra atrasada: ${nomeObra}`,
       `<p style="color:#444;line-height:1.6;">A obra <strong>${nomeObra}</strong> está atrasada em relação ao prazo previsto.</p>
@@ -114,7 +114,7 @@ export async function emailAlertaObraAtrasada({ nomeObra, prazoFim, diasAtraso, 
          </div>
        </div>
        <div style="text-align:center;margin:20px 0;">
-         <a href="${portalUrl}" style="display:inline-block;background:linear-gradient(135deg,#981915,#6e1210);color:#fff;text-decoration:none;padding:13px 28px;border-radius:8px;font-weight:700;font-size:14px;">🏗 Acessar painel de obras</a>
+         <a href="${portalUrl}" style="display:inline-block;background:linear-gradient(135deg,#981915,#6e1210);color:#fff;text-decoration:none;padding:13px 28px;border-radius:8px;font-weight:700;font-size:14px;"> Acessar painel de obras</a>
        </div>
        <p style="color:#444;line-height:1.6;">Acesse o sistema para reagendar o prazo ou atualizar o status da obra.</p>`
     ),
@@ -145,7 +145,7 @@ export async function emailAlertaInadimplencia({ email, lancamentos }) {
   `;
   return enviarEmail({
     to: email,
-    subject: `⚠️ ${lancamentos.length} lançamento(s) vencido(s) — StickFrame`,
+    subject: ` ${lancamentos.length} lançamento(s) vencido(s) — StickFrame`,
     html: templateBase("Alerta de Inadimplência", corpo),
   });
 }
@@ -197,7 +197,7 @@ export async function emailNovoLead({ email, nome, padrao, area, valorMin, valor
        </div>
        <p style="color:#444;line-height:1.6;">Nossa equipe entrará em contato em breve para apresentar uma proposta detalhada. Qualquer dúvida, estamos à disposição!</p>
        <div style="text-align:center;margin:24px 0;">
-         <a href="https://stickframe.com.br" style="display:inline-block;background:linear-gradient(135deg,#981915,#6e1210);color:#fff;text-decoration:none;padding:13px 28px;border-radius:8px;font-weight:700;font-size:14px;">🏠 Conheça nosso trabalho</a>
+         <a href="https://stickframe.com.br" style="display:inline-block;background:linear-gradient(135deg,#981915,#6e1210);color:#fff;text-decoration:none;padding:13px 28px;border-radius:8px;font-weight:700;font-size:14px;"> Conheça nosso trabalho</a>
        </div>`
     ),
   });

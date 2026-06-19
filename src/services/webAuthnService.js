@@ -37,7 +37,7 @@ function fromB64url(str) {
   return Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
 }
 
-// ── Chave de cifragem não-extraível, persistida no IndexedDB ────────────────
+//  Chave de cifragem não-extraível, persistida no IndexedDB 
 // O AES-GCM key nunca é exposto ao JS (extractable:false); um getItem no
 // localStorage não devolve mais o refresh token em claro.
 function idb() {

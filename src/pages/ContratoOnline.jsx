@@ -47,7 +47,7 @@ export default function ContratoOnline() {
 
   if (!dados) return (
     <div style={{ minHeight: "100vh", background: "#1A1A1A", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16, padding: 24 }}>
-      <div style={{ fontSize: 48 }}>🔒</div>
+      <div style={{ fontSize: 48 }}></div>
       <div style={{ fontSize: 18, fontWeight: 700, color: "#f0f0f0" }}>Contrato não encontrado</div>
       <div style={{ fontSize: 13, color: "#888", textAlign: "center" }}>O link pode ter expirado ou ser inválido.</div>
     </div>
@@ -255,7 +255,7 @@ export default function ContratoOnline() {
                   fontFamily: "inherit",
                 }}
               >
-                {enviando ? "Registrando assinatura..." : "✍️ Assinar contrato digitalmente"}
+                {enviando ? "Registrando assinatura..." : " Assinar contrato digitalmente"}
               </button>
               <p style={{ fontSize: 10, color: "#aaa", marginTop: 10, textAlign: "center" }}>
                 Assinatura eletrônica com validade legal · data e hora registradas automaticamente
@@ -274,7 +274,7 @@ export default function ContratoOnline() {
               target="_blank" rel="noreferrer"
               style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#25D366", color: "#fff", borderRadius: 8, padding: "10px 24px", fontSize: 13, fontWeight: 700, textDecoration: "none" }}
             >
-              💬 WhatsApp
+               WhatsApp
             </a>
           </div>
         )}

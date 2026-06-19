@@ -117,7 +117,7 @@ Escreva o texto em português, com termos formais e de engenharia civil, com alt
 
   function copiarParaTransferencia() {
     navigator.clipboard.writeText(memorialText);
-    alert("📋 Memorial copiado para a área de transferência!");
+    alert(" Memorial copiado para a área de transferência!");
   }
 
   function imprimirPdf() {
@@ -176,7 +176,7 @@ Escreva o texto em português, com termos formais e de engenharia civil, com alt
 
   if (loadingConfig) {
     return (
-      <Modal title="🤖 Memorial Descritivo via IA" onClose={onClose}>
+      <Modal title=" Memorial Descritivo via IA" onClose={onClose}>
         <div style={{ padding: 24, textAlign: "center", color: C.muted }}>
           Carregando configurações...
         </div>
@@ -186,9 +186,9 @@ Escreva o texto em português, com termos formais e de engenharia civil, com alt
 
   if (!openaiConfig || !openaiConfig.openai_key) {
     return (
-      <Modal title="🤖 Memorial Descritivo via IA" onClose={onClose}>
+      <Modal title=" Memorial Descritivo via IA" onClose={onClose}>
         <div style={{ padding: 20, textAlign: "center" }}>
-          <div style={{ fontSize: 36, marginBottom: 12 }}>🔑</div>
+          <div style={{ fontSize: 36, marginBottom: 12 }}></div>
           <div style={{ fontWeight: 700, fontSize: 16, color: C.text, marginBottom: 8 }}>Chave OpenAI não configurada</div>
           <div style={{ fontSize: 13, color: C.muted, lineHeight: 1.5, marginBottom: 20 }}>
             Para gerar memoriais técnicos via IA, você precisa cadastrar sua chave de API da OpenAI nas configurações do sistema.
@@ -200,7 +200,7 @@ Escreva o texto em português, com termos formais e de engenharia civil, com alt
   }
 
   return (
-    <Modal title="🤖 Memorial Descritivo via IA" onClose={onClose}>
+    <Modal title=" Memorial Descritivo via IA" onClose={onClose}>
       <div style={{ display: "flex", flexDirection: "column", gap: 16, minWidth: 320, maxWidth: 680 }}>
         {/* Info do orçamento */}
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap", background: C.dark, borderRadius: 10, padding: "10px 14px", border: `1px solid ${C.border}` }}>
@@ -221,13 +221,13 @@ Escreva o texto em português, com termos formais e de engenharia civil, com alt
         {/* Estado da Geração */}
         {!memorialText && !loading && (
           <div style={{ padding: "30px 20px", textAlign: "center", border: `1.5px dashed ${C.border}`, borderRadius: 14 }}>
-            <div style={{ fontSize: 40, marginBottom: 14 }}>🤖</div>
+            <div style={{ fontSize: 40, marginBottom: 14 }}></div>
             <div style={{ fontWeight: 800, fontSize: 17, color: C.text, marginBottom: 6 }}>Gerador de Memorial Construtivo</div>
             <div style={{ fontSize: 13, color: C.muted, lineHeight: 1.5, marginBottom: 24, maxWidth: 460, margin: "0 auto" }}>
               Nossa inteligência artificial analisará os dados do orçamento para gerar uma especificação técnica formal da fundação, estrutura, vedações, coberturas e prazos de garantia.
             </div>
             <Btn onClick={gerarMemorial} style={{ margin: "0 auto" }}>
-              ⚡ Gerar Memorial Descritivo
+               Gerar Memorial Descritivo
             </Btn>
           </div>
         )}
@@ -272,10 +272,10 @@ Escreva o texto em português, com termos formais e de engenharia civil, com alt
                 ↺ Refazer
               </Btn>
               <Btn variant="ghost" onClick={copiarParaTransferencia}>
-                📋 Copiar Texto
+                 Copiar Texto
               </Btn>
               <Btn onClick={imprimirPdf}>
-                🖨️ Imprimir / Salvar PDF
+                 Imprimir / Salvar PDF
               </Btn>
             </div>
           </div>

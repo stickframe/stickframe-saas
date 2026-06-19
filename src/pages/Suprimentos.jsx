@@ -17,10 +17,12 @@ const STATUS_PED    = ["Pendente", "Aprovado", "Em trânsito", "Entregue", "Canc
 const UNIDADES      = ["un", "m", "m²", "m³", "kg", "t", "L", "cx", "pç", "sc", "gl", "vb"];
 
 const corUrgencia   = { Normal: C.success, Urgente: C.warning, Crítico: C.danger };
-const corStatus     = { Pendente: C.muted, Aprovado: "#4a9eff", "Em trânsito": C.warning, Entregue: C.success, Cancelado: C.danger };
+const corStatus     = { Pendente: C.muted, Aprovado: C.steel, "Em trânsito": C.warning, Entregue: C.success, Cancelado: C.danger };
 
-function kpiStyle(cor) {
-  return { background: cor + "18", borderLeft: `4px solid ${cor}`, borderRadius: 10, padding: "14px 18px" };
+const PILL_ST = { fontSize: 10.5, fontWeight: 800, padding: "3px 9px", borderRadius: 5, letterSpacing: .3, display: "inline-block" };
+
+function StatusPill({ label, cor }) {
+  return <span style={{ ...PILL_ST, background: cor + "1a", color: cor, border: `1px solid ${cor}33` }}>{label}</span>;
 }
 
 export default function Suprimentos() {
@@ -92,13 +94,13 @@ export default function Suprimentos() {
     if (aba === "relatorio") { loadMovimentos(); loadEstoque(); }
   }, [aba, loadPedidos, loadEstoque, loadMovimentos]);
 
-  // ── KPIs ──────────────────────────────────────────────────────────────────
+  //  KPIs 
   const pedPendentes  = pedidos.filter(p => p.status === "Pendente").length;
   const pedTransito   = pedidos.filter(p => p.status === "Em trânsito").length;
   const pedUrgentes   = pedidos.filter(p => p.urgencia === "Crítico" && p.status !== "Entregue" && p.status !== "Cancelado").length;
   const abaixoMinimo  = estoque.filter(e => e.estoque_minimo > 0 && e.quantidade <= e.estoque_minimo).length;
 
-  // ── Pedido handlers ───────────────────────────────────────────────────────
+  //  Pedido handlers 
   function abrirNovoPed() {
     setPedEdit(null);
     setPedForm({ item: "", unidade: "un", quantidade: 1, urgencia: "Normal", status: "Pendente", obra_id: "", solicitante: "", data_pedido: hoje, data_entrega: "", valor_unitario: "", obs: "" });
@@ -118,7 +120,7 @@ export default function Suprimentos() {
     setPedModal(false); loadPedidos();
   }
 
-  // ── Dar entrada no estoque ────────────────────────────────────────────────
+  //  Dar entrada no estoque 
   async function darEntrada() {
     if (!entradaModal || !entradaEstoqueId) return;
     const ped = entradaModal;
@@ -139,7 +141,7 @@ export default function Suprimentos() {
     loadEstoque();
   }
 
-  // ── Estoque handlers ──────────────────────────────────────────────────────
+  //  Estoque handlers 
   function abrirNovoEst() {
     setEstEdit(null);
     setEstForm({ item: "", unidade: "un", quantidade: 0, estoque_minimo: 0, localizacao: "", valor_unitario: "" });
@@ -170,7 +172,7 @@ export default function Suprimentos() {
     if (confirm.tipo === "estoque") loadEstoque();
   }
 
-  // ── Relatório filtrado ────────────────────────────────────────────────────
+  //  Relatório filtrado 
   const movFiltrados = movimentos.filter(m => {
     if (relFiltro.tipo && m.tipo !== relFiltro.tipo) return false;
     if (relFiltro.item && !(m.estoque?.item || "").toLowerCase().includes(relFiltro.item.toLowerCase())) return false;
@@ -182,95 +184,98 @@ export default function Suprimentos() {
   const totalEntradas = movFiltrados.filter(m => m.tipo === "entrada").reduce((s, m) => s + m.quantidade, 0);
   const totalSaidas   = movFiltrados.filter(m => m.tipo === "saida").reduce((s, m) => s + m.quantidade, 0);
 
-  const tabStyle = (k) => ({
-    padding: "8px 18px", borderRadius: 8, cursor: "pointer", fontWeight: 600, fontSize: 14,
-    background: aba === k ? C.red : "transparent",
-    color: aba === k ? "#fff" : C.muted,
-    border: "none",
-  });
-
   const fmt   = (d) => d ? new Date(d + "T12:00:00").toLocaleDateString("pt-BR") : "—";
   const fmtDT = (d) => d ? new Date(d).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" }) : "—";
   const fmtR$ = (v) => v != null ? Number(v).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) : "—";
 
   const selectStyle = { width: "100%", padding: "10px 12px", borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 14, background: C.dark, color: C.text };
 
+  const kpiDefs = [
+    { label: "Pedidos pendentes",    value: pedPendentes,  bg: pedPendentes > 0 ? "#fef5e7" : "var(--surface-2)", ic: pedPendentes > 0 ? C.warning : C.muted },
+    { label: "Em trânsito",          value: pedTransito,   bg: "#eef3f9",  ic: C.steel },
+    { label: "Pedidos críticos",     value: pedUrgentes,   bg: pedUrgentes > 0 ? "#fdf0ef" : "var(--surface-2)", ic: pedUrgentes > 0 ? C.danger : C.muted },
+    { label: "Itens abaixo do mín.", value: abaixoMinimo,  bg: abaixoMinimo > 0 ? "#fdf0ef" : "var(--surface-2)", ic: abaixoMinimo > 0 ? C.danger : C.muted },
+  ];
+
   return (
     <div style={{ padding: "0 0 40px" }}>
-      <div style={{ marginBottom: 22 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 800, color: C.text }}>Almoxarifado</h1>
-        <p style={{ color: C.muted, fontSize: 14 }}>Pedidos de material e controle de estoque</p>
+      <div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 22 }}>
+        <div style={{ width: 4, height: 42, borderRadius: 3, background: "var(--brick)", flexShrink: 0, marginTop: 2 }} />
+        <div>
+          <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 28, fontWeight: 700, color: "var(--ink)", lineHeight: 1.1 }}>Almoxarifado</h1>
+          <p style={{ color: "var(--muted)", fontSize: 13, marginTop: 4 }}>Pedidos de material e controle de estoque</p>
+        </div>
       </div>
 
       {/* KPIs */}
-      <div className="kpi-grid-4" style={{ marginBottom: 24 }}>
-        <div style={kpiStyle(pedPendentes > 0 ? C.warning : C.success)}>
-          <div style={{ fontSize: 26, fontWeight: 900, color: pedPendentes > 0 ? C.warning : C.success }}>{pedPendentes}</div>
-          <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>Pedidos pendentes</div>
-        </div>
-        <div style={kpiStyle("#4a9eff")}>
-          <div style={{ fontSize: 26, fontWeight: 900, color: "#4a9eff" }}>{pedTransito}</div>
-          <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>Em trânsito</div>
-        </div>
-        <div style={kpiStyle(pedUrgentes > 0 ? C.danger : C.success)}>
-          <div style={{ fontSize: 26, fontWeight: 900, color: pedUrgentes > 0 ? C.danger : C.success }}>{pedUrgentes}</div>
-          <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>Pedidos críticos</div>
-        </div>
-        <div style={kpiStyle(abaixoMinimo > 0 ? C.danger : C.success)}>
-          <div style={{ fontSize: 26, fontWeight: 900, color: abaixoMinimo > 0 ? C.danger : C.success }}>{abaixoMinimo}</div>
-          <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>Itens abaixo do mínimo</div>
-        </div>
-      </div>
-
-      {/* Tabs */}
-      <div className="tab-row" style={{ display: "flex", gap: 6, marginBottom: 20, background: C.dark, borderRadius: 10, padding: 4 }}>
-        {[["pedidos","Pedidos"],["estoque","Estoque"],["relatorio","Relatório"]].map(([k,l]) => (
-          <button key={k} style={tabStyle(k)} onClick={() => setAba(k)}>{l}</button>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12, marginBottom: 20 }}>
+        {kpiDefs.map(k => (
+          <div key={k.label} style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 12, padding: "16px 18px" }}>
+            <div style={{ width: 28, height: 28, borderRadius: 8, background: k.bg, display: "grid", placeItems: "center", marginBottom: 10 }}>
+              <svg viewBox="0 0 24 24" fill="none" stroke={k.ic} strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" style={{ width: 15, height: 15 }}>
+                {k.label.includes("trânsito") ? <g><path d="M5 17H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v3m-9 12h10l4-4V11a2 2 0 0 0-2-2H11a2 2 0 0 0-2 2v10z"/></g>
+                  : k.label.includes("pendentes") ? <g><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></g>
+                  : k.label.includes("críticos") ? <g><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></g>
+                  : <g><path d="M12 2l10 6.5v7L12 22 2 15.5v-7L12 2z"/><path d="M2 7.5l10 5.5 10-5.5"/><path d="M12 22V13"/></g>}
+              </svg>
+            </div>
+            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 34, fontWeight: 700, lineHeight: 1, color: k.ic, marginBottom: 3 }}>{k.value}</div>
+            <div style={{ fontSize: 11.5, color: "var(--muted)" }}>{k.label}</div>
+          </div>
         ))}
       </div>
 
-      {/* ── Pedidos ── */}
+      {/* Tabs */}
+      <div style={{ display: "flex", gap: 2, background: "var(--surface-2)", border: "1px solid var(--line)", borderRadius: 9, padding: 3, marginBottom: 18, width: "fit-content" }}>
+        {[["pedidos","Pedidos"],["estoque","Estoque"],["relatorio","Relatório"]].map(([k,l]) => (
+          <button key={k} onClick={() => setAba(k)} style={{ padding: "6px 18px", borderRadius: 7, fontSize: 13, fontWeight: 600, cursor: "pointer", border: "none", fontFamily: "inherit", transition: ".12s", background: aba === k ? "var(--surface)" : "transparent", color: aba === k ? "var(--ink)" : "var(--muted)", boxShadow: aba === k ? "0 1px 3px rgba(0,0,0,.08)" : "none" }}>{l}</button>
+        ))}
+      </div>
+
+      {/*  Pedidos  */}
       {aba === "pedidos" && (
-        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: 20 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-            <h3 style={{ fontWeight: 700 }}>Pedidos de Material</h3>
+        <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 12, overflow: "hidden" }}>
+          <div style={{ padding: "14px 18px", borderBottom: "1px solid var(--line-2)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div style={{ fontWeight: 800, fontSize: 15, color: "var(--ink)" }}>Pedidos de Material</div>
             <div style={{ display: "flex", gap: 8 }}>
-              <Btn variant="ghost" onClick={() => exportarPedidosExcel(pedidos)}>📊 Exportar Excel</Btn>
+              <Btn variant="ghost" onClick={() => exportarPedidosExcel(pedidos)}>Exportar Excel</Btn>
               <Btn onClick={abrirNovoPed}>+ Novo Pedido</Btn>
             </div>
           </div>
-          {pedLoading ? <p style={{ color: C.muted }}>Carregando...</p> : pedidos.length === 0 ? (
-            <p style={{ color: C.muted, textAlign: "center", padding: 32 }}>Nenhum pedido registrado.</p>
+          {pedLoading ? <p style={{ color: "var(--muted)", padding: "24px 18px" }}>Carregando...</p> : pedidos.length === 0 ? (
+            <p style={{ color: "var(--muted)", textAlign: "center", padding: 40 }}>Nenhum pedido registrado.</p>
           ) : (
             <div style={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
+              <table style={{ width: "100%", borderCollapse: "collapse" }}>
                 <thead>
-                  <tr style={{ borderBottom: `2px solid ${C.border}` }}>
-                    {["Item","Qtd","Urgência","Obra","Pedido","Entrega","Status",""].map(h => (
-                      <th key={h} style={{ textAlign: "left", padding: "8px 10px", color: C.muted, fontWeight: 600, fontSize: 12 }}>{h}</th>
+                  <tr>
+                    {["Item","Qtd","Urgência","Obra","Pedido","Entrega","Status","Ações"].map(h => (
+                      <th key={h} style={{ textAlign: "left", padding: "10px 14px", color: "var(--muted)", fontWeight: 800, fontSize: 10.5, letterSpacing: 1, textTransform: "uppercase", borderBottom: "1px solid var(--line)" }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {pedidos.map(p => (
-                    <tr key={p.id} style={{ borderBottom: `1px solid ${C.border}` }}>
-                      <td style={{ padding: "10px 10px", fontWeight: 600 }}>{p.item}</td>
-                      <td style={{ padding: "10px 10px", color: C.muted }}>{p.quantidade} {p.unidade}</td>
-                      <td style={{ padding: "10px 10px" }}>
-                        <span style={{ background: (corUrgencia[p.urgencia] || C.muted) + "20", color: corUrgencia[p.urgencia] || C.muted, borderRadius: 6, padding: "2px 8px", fontSize: 12, fontWeight: 700 }}>{p.urgencia}</span>
+                    <tr key={p.id} style={{ borderBottom: "1px solid var(--line-2)" }} onMouseEnter={e => e.currentTarget.style.background = "var(--surface-2)"} onMouseLeave={e => e.currentTarget.style.background = ""}>
+                      <td style={{ padding: "12px 14px", fontWeight: 700, color: "var(--ink)", fontSize: 13 }}>{p.item}</td>
+                      <td style={{ padding: "12px 14px", color: "var(--ink-2)", fontSize: 13 }}>{p.quantidade} {p.unidade}</td>
+                      <td style={{ padding: "12px 14px" }}>
+                        <StatusPill label={p.urgencia} cor={corUrgencia[p.urgencia] || C.muted} />
                       </td>
-                      <td style={{ padding: "10px 10px", color: C.muted }}>{p.obra?.nome || "—"}</td>
-                      <td style={{ padding: "10px 10px", color: C.muted }}>{fmt(p.data_pedido)}</td>
-                      <td style={{ padding: "10px 10px", color: C.muted }}>{fmt(p.data_entrega)}</td>
-                      <td style={{ padding: "10px 10px" }}>
-                        <span style={{ background: (corStatus[p.status] || C.muted) + "20", color: corStatus[p.status] || C.muted, borderRadius: 6, padding: "2px 8px", fontSize: 12, fontWeight: 700 }}>{p.status}</span>
+                      <td style={{ padding: "12px 14px", color: "var(--muted)", fontSize: 13 }}>{p.obra?.nome || "—"}</td>
+                      <td style={{ padding: "12px 14px", fontFamily: "'Barlow Condensed', sans-serif", fontSize: 13.5 }}>{fmt(p.data_pedido)}</td>
+                      <td style={{ padding: "12px 14px", fontFamily: "'Barlow Condensed', sans-serif", fontSize: 13.5 }}>{fmt(p.data_entrega)}</td>
+                      <td style={{ padding: "12px 14px" }}>
+                        <StatusPill label={p.status} cor={corStatus[p.status] || C.muted} />
                       </td>
-                      <td style={{ padding: "10px 10px", whiteSpace: "nowrap" }}>
-                        {p.status === "Entregue" && (
-                          <Btn variant="ghost" size="sm" style={{ color: C.success }} onClick={() => { setEntradaModal(p); setEntradaEstoqueId(""); loadEstoque(); }}>📦 Dar entrada</Btn>
-                        )}
-                        <Btn variant="ghost" size="sm" onClick={() => abrirEditPed(p)}>Editar</Btn>
-                        <Btn variant="ghost" size="sm" style={{ color: C.danger }} onClick={() => setConfirm({ id: p.id, tipo: "pedido", label: p.item })}>Excluir</Btn>
+                      <td style={{ padding: "12px 14px", whiteSpace: "nowrap" }}>
+                        <div style={{ display: "flex", gap: 6 }}>
+                          {p.status === "Entregue" && (
+                            <Btn variant="ghost" size="sm" style={{ color: C.success }} onClick={() => { setEntradaModal(p); setEntradaEstoqueId(""); loadEstoque(); }}>Dar entrada</Btn>
+                          )}
+                          <Btn variant="ghost" size="sm" onClick={() => abrirEditPed(p)}>Editar</Btn>
+                          <Btn variant="ghost" size="sm" style={{ color: C.danger }} onClick={() => setConfirm({ id: p.id, tipo: "pedido", label: p.item })}>Excluir</Btn>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -281,44 +286,49 @@ export default function Suprimentos() {
         </div>
       )}
 
-      {/* ── Estoque ── */}
+      {/*  Estoque  */}
       {aba === "estoque" && (
-        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: 20 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-            <h3 style={{ fontWeight: 700 }}>Estoque / Almoxarifado</h3>
+        <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 12, overflow: "hidden" }}>
+          <div style={{ padding: "14px 18px", borderBottom: "1px solid var(--line-2)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div style={{ fontWeight: 800, fontSize: 15, color: "var(--ink)" }}>Estoque / Almoxarifado</div>
             <div style={{ display: "flex", gap: 8 }}>
-              <Btn variant="ghost" onClick={() => exportarEstoqueExcel(estoque, movimentos)}>📊 Exportar Excel</Btn>
+              <Btn variant="ghost" onClick={() => exportarEstoqueExcel(estoque, movimentos)}>Exportar Excel</Btn>
               <Btn onClick={abrirNovoEst}>+ Novo Item</Btn>
             </div>
           </div>
-          {estLoading ? <p style={{ color: C.muted }}>Carregando...</p> : estoque.length === 0 ? (
-            <p style={{ color: C.muted, textAlign: "center", padding: 32 }}>Nenhum item cadastrado no estoque.</p>
+          {estLoading ? <p style={{ color: "var(--muted)", padding: "24px 18px" }}>Carregando...</p> : estoque.length === 0 ? (
+            <p style={{ color: "var(--muted)", textAlign: "center", padding: 40 }}>Nenhum item cadastrado no estoque.</p>
           ) : (
             <div style={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
+              <table style={{ width: "100%", borderCollapse: "collapse" }}>
                 <thead>
-                  <tr style={{ borderBottom: `2px solid ${C.border}` }}>
-                    {["Item","Saldo","Mínimo","Localização","Vlr unitário","",""].map(h => (
-                      <th key={h} style={{ textAlign: "left", padding: "8px 10px", color: C.muted, fontWeight: 600, fontSize: 12 }}>{h}</th>
+                  <tr>
+                    {["Item","Saldo","Mínimo","Localização","Vlr unitário","Status","Ações"].map(h => (
+                      <th key={h} style={{ textAlign: "left", padding: "10px 14px", color: "var(--muted)", fontWeight: 800, fontSize: 10.5, letterSpacing: 1, textTransform: "uppercase", borderBottom: "1px solid var(--line)" }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {estoque.map(e => {
                     const abaixo = e.estoque_minimo > 0 && e.quantidade <= e.estoque_minimo;
+                    const statusLabel = abaixo ? "Crítico" : e.estoque_minimo > 0 && e.quantidade <= e.estoque_minimo * 1.5 ? "Atenção" : "Adequado";
+                    const statusCor   = abaixo ? C.danger : C.success;
                     return (
-                      <tr key={e.id} style={{ borderBottom: `1px solid ${C.border}`, background: abaixo ? C.danger + "08" : "transparent" }}>
-                        <td style={{ padding: "10px 10px", fontWeight: 600 }}>{e.item}</td>
-                        <td style={{ padding: "10px 10px", color: abaixo ? C.danger : C.text, fontWeight: abaixo ? 700 : 400 }}>{e.quantidade} {e.unidade}</td>
-                        <td style={{ padding: "10px 10px", color: C.muted }}>{e.estoque_minimo > 0 ? `${e.estoque_minimo} ${e.unidade}` : "—"}</td>
-                        <td style={{ padding: "10px 10px", color: C.muted }}>{e.localizacao || "—"}</td>
-                        <td style={{ padding: "10px 10px", color: C.muted }}>{fmtR$(e.valor_unitario)}</td>
-                        <td style={{ padding: "10px 10px" }}>
-                          <Btn variant="ghost" size="sm" onClick={() => { setMovModal(e); setMovForm({ tipo: "entrada", quantidade: 1, obs: "" }); }}>Movimentar</Btn>
+                      <tr key={e.id} style={{ borderBottom: "1px solid var(--line-2)", background: abaixo ? C.danger + "06" : "" }} onMouseEnter={e2 => e2.currentTarget.style.background = abaixo ? C.danger + "0c" : "var(--surface-2)"} onMouseLeave={e2 => e2.currentTarget.style.background = abaixo ? C.danger + "06" : ""}>
+                        <td style={{ padding: "12px 14px", fontWeight: 700, color: "var(--ink)", fontSize: 13 }}>{e.item}</td>
+                        <td style={{ padding: "12px 14px", fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 16, color: abaixo ? C.danger : "var(--ink)" }}>{e.quantidade} <span style={{ fontSize: 12, fontWeight: 400, color: "var(--muted)" }}>{e.unidade}</span></td>
+                        <td style={{ padding: "12px 14px", color: "var(--muted)", fontSize: 13 }}>{e.estoque_minimo > 0 ? `${e.estoque_minimo} ${e.unidade}` : "—"}</td>
+                        <td style={{ padding: "12px 14px", color: "var(--ink-2)", fontSize: 13 }}>{e.localizacao || "—"}</td>
+                        <td style={{ padding: "12px 14px", color: "var(--muted)", fontSize: 13 }}>{fmtR$(e.valor_unitario)}</td>
+                        <td style={{ padding: "12px 14px" }}>
+                          <StatusPill label={statusLabel} cor={statusCor} />
                         </td>
-                        <td style={{ padding: "10px 10px", whiteSpace: "nowrap" }}>
-                          <Btn variant="ghost" size="sm" onClick={() => abrirEditEst(e)}>Editar</Btn>
-                          <Btn variant="ghost" size="sm" style={{ color: C.danger }} onClick={() => setConfirm({ id: e.id, tipo: "estoque", label: e.item })}>Excluir</Btn>
+                        <td style={{ padding: "12px 14px", whiteSpace: "nowrap" }}>
+                          <div style={{ display: "flex", gap: 6 }}>
+                            <Btn variant="ghost" size="sm" onClick={() => { setMovModal(e); setMovForm({ tipo: "entrada", quantidade: 1, obs: "" }); }}>Movimentar</Btn>
+                            <Btn variant="ghost" size="sm" onClick={() => abrirEditEst(e)}>Editar</Btn>
+                            <Btn variant="ghost" size="sm" style={{ color: C.danger }} onClick={() => setConfirm({ id: e.id, tipo: "estoque", label: e.item })}>Excluir</Btn>
+                          </div>
                         </td>
                       </tr>
                     );
@@ -330,7 +340,7 @@ export default function Suprimentos() {
         </div>
       )}
 
-      {/* ── Relatório de Movimentações ── */}
+      {/*  Relatório de Movimentações  */}
       {aba === "relatorio" && (
         <div>
           {/* Filtros */}
@@ -352,51 +362,45 @@ export default function Suprimentos() {
 
           {/* KPIs do relatório */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 16 }}>
-            <div style={kpiStyle(C.muted)}>
-              <div style={{ fontSize: 22, fontWeight: 900, color: C.text }}>{movFiltrados.length}</div>
-              <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>Movimentações</div>
-            </div>
-            <div style={kpiStyle(C.success)}>
-              <div style={{ fontSize: 22, fontWeight: 900, color: C.success }}>{totalEntradas.toLocaleString("pt-BR")}</div>
-              <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>Total entradas (un)</div>
-            </div>
-            <div style={kpiStyle(C.danger)}>
-              <div style={{ fontSize: 22, fontWeight: 900, color: C.danger }}>{totalSaidas.toLocaleString("pt-BR")}</div>
-              <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>Total saídas (un)</div>
-            </div>
+            {[
+              { label: "Movimentações", value: movFiltrados.length, ic: "var(--muted)" },
+              { label: "Total entradas (un)", value: totalEntradas.toLocaleString("pt-BR"), ic: C.success },
+              { label: "Total saídas (un)", value: totalSaidas.toLocaleString("pt-BR"), ic: C.danger },
+            ].map(k => (
+              <div key={k.label} style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 12, padding: "16px 18px" }}>
+                <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 28, fontWeight: 700, color: k.ic, lineHeight: 1, marginBottom: 4 }}>{k.value}</div>
+                <div style={{ fontSize: 11.5, color: "var(--muted)" }}>{k.label}</div>
+              </div>
+            ))}
           </div>
 
           {/* Tabela */}
-          <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: 20 }}>
-            <h3 style={{ fontWeight: 700, marginBottom: 16 }}>Histórico de Movimentações</h3>
-            {movLoading ? <p style={{ color: C.muted }}>Carregando...</p> : movFiltrados.length === 0 ? (
-              <p style={{ color: C.muted, textAlign: "center", padding: 32 }}>Nenhuma movimentação registrada.</p>
+          <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 12, overflow: "hidden" }}>
+            <div style={{ padding: "14px 18px", borderBottom: "1px solid var(--line-2)", fontWeight: 800, fontSize: 15, color: "var(--ink)" }}>Histórico de Movimentações</div>
+            {movLoading ? <p style={{ color: "var(--muted)", padding: "24px 18px" }}>Carregando...</p> : movFiltrados.length === 0 ? (
+              <p style={{ color: "var(--muted)", textAlign: "center", padding: 40 }}>Nenhuma movimentação registrada.</p>
             ) : (
               <div style={{ overflowX: "auto" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
+                <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <thead>
-                    <tr style={{ borderBottom: `2px solid ${C.border}` }}>
+                    <tr>
                       {["Data/Hora","Item","Tipo","Quantidade","Observação"].map(h => (
-                        <th key={h} style={{ textAlign: "left", padding: "8px 10px", color: C.muted, fontWeight: 600, fontSize: 12 }}>{h}</th>
+                        <th key={h} style={{ textAlign: "left", padding: "10px 14px", color: "var(--muted)", fontWeight: 800, fontSize: 10.5, letterSpacing: 1, textTransform: "uppercase", borderBottom: "1px solid var(--line)" }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {movFiltrados.map(m => (
-                      <tr key={m.id} style={{ borderBottom: `1px solid ${C.border}` }}>
-                        <td style={{ padding: "10px 10px", color: C.muted, whiteSpace: "nowrap" }}>{fmtDT(m.created_at)}</td>
-                        <td style={{ padding: "10px 10px", fontWeight: 600 }}>{m.estoque?.item || "—"}</td>
-                        <td style={{ padding: "10px 10px" }}>
-                          <span style={{
-                            background: (m.tipo === "entrada" ? C.success : C.danger) + "20",
-                            color: m.tipo === "entrada" ? C.success : C.danger,
-                            borderRadius: 6, padding: "2px 10px", fontSize: 12, fontWeight: 700, textTransform: "capitalize"
-                          }}>{m.tipo}</span>
+                      <tr key={m.id} style={{ borderBottom: "1px solid var(--line-2)" }} onMouseEnter={e => e.currentTarget.style.background = "var(--surface-2)"} onMouseLeave={e => e.currentTarget.style.background = ""}>
+                        <td style={{ padding: "12px 14px", color: "var(--muted)", whiteSpace: "nowrap", fontFamily: "'Barlow Condensed', sans-serif", fontSize: 13.5 }}>{fmtDT(m.created_at)}</td>
+                        <td style={{ padding: "12px 14px", fontWeight: 700, color: "var(--ink)", fontSize: 13 }}>{m.estoque?.item || "—"}</td>
+                        <td style={{ padding: "12px 14px" }}>
+                          <StatusPill label={m.tipo === "entrada" ? "Entrada" : "Saída"} cor={m.tipo === "entrada" ? C.success : C.danger} />
                         </td>
-                        <td style={{ padding: "10px 10px", fontWeight: 600, color: m.tipo === "entrada" ? C.success : C.danger }}>
-                          {m.tipo === "entrada" ? "+" : "-"}{m.quantidade} {m.estoque?.unidade || ""}
+                        <td style={{ padding: "12px 14px", fontWeight: 700, color: m.tipo === "entrada" ? C.success : C.danger, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 15 }}>
+                          {m.tipo === "entrada" ? "+" : "−"}{m.quantidade} <span style={{ fontSize: 12, fontWeight: 400, color: "var(--muted)" }}>{m.estoque?.unidade || ""}</span>
                         </td>
-                        <td style={{ padding: "10px 10px", color: C.muted }}>{m.obs || "—"}</td>
+                        <td style={{ padding: "12px 14px", color: "var(--muted)", fontSize: 13 }}>{m.obs || "—"}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -407,7 +411,7 @@ export default function Suprimentos() {
         </div>
       )}
 
-      {/* ── Modal Pedido ── */}
+      {/*  Modal Pedido  */}
       {pedModal && (
         <Modal onClose={() => setPedModal(false)} title={pedEdit ? "Editar Pedido" : "Novo Pedido de Material"}>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -459,7 +463,7 @@ export default function Suprimentos() {
         </Modal>
       )}
 
-      {/* ── Modal Dar Entrada no Estoque ── */}
+      {/*  Modal Dar Entrada no Estoque  */}
       {entradaModal && (
         <Modal onClose={() => setEntradaModal(null)} title="Dar Entrada no Estoque">
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -479,13 +483,13 @@ export default function Suprimentos() {
             <p style={{ fontSize: 12, color: C.muted }}>A entrada será registrada automaticamente no histórico de movimentações.</p>
             <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
               <Btn variant="ghost" onClick={() => setEntradaModal(null)}>Cancelar</Btn>
-              <Btn onClick={darEntrada} disabled={!entradaEstoqueId}>📦 Confirmar entrada</Btn>
+              <Btn onClick={darEntrada} disabled={!entradaEstoqueId}> Confirmar entrada</Btn>
             </div>
           </div>
         </Modal>
       )}
 
-      {/* ── Modal Estoque ── */}
+      {/*  Modal Estoque  */}
       {estModal && (
         <Modal onClose={() => setEstModal(false)} title={estEdit ? "Editar Item" : "Novo Item de Estoque"}>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -512,7 +516,7 @@ export default function Suprimentos() {
         </Modal>
       )}
 
-      {/* ── Modal Movimentação ── */}
+      {/*  Modal Movimentação  */}
       {movModal && (
         <Modal onClose={() => setMovModal(null)} title={`Movimentar: ${movModal.item}`}>
           <p style={{ color: C.muted, marginBottom: 16, fontSize: 14 }}>Saldo atual: <strong>{movModal.quantidade} {movModal.unidade}</strong></p>
@@ -536,7 +540,7 @@ export default function Suprimentos() {
         </Modal>
       )}
 
-      {/* ── Confirm delete ── */}
+      {/*  Confirm delete  */}
       {confirm && (
         <Modal onClose={() => setConfirm(null)} title="Confirmar exclusão">
           <p style={{ marginBottom: 20 }}>Excluir <strong>{confirm.label}</strong>? Esta ação não pode ser desfeita.</p>

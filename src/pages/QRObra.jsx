@@ -40,7 +40,7 @@ function StatusBadge({ status }) {
   return <span style={{ background: cor + "22", color: cor, border: `1px solid ${cor}44`, borderRadius: 10, padding: "3px 10px", fontSize: 11, fontWeight: 700 }}>{status}</span>;
 }
 
-// ── Aba Status ────────────────────────────────────────────────────────────────
+//  Aba Status 
 function AbaStatus({ obra }) {
   const progresso = Number(obra.progresso || 0);
   const prazoFim = obra.prazo_fim ? new Date(obra.prazo_fim + "T00:00") : null;
@@ -73,7 +73,7 @@ function AbaStatus({ obra }) {
           <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: 1, marginBottom: 6 }}>PRAZO DE ENTREGA</div>
           <div style={{ fontSize: 18, fontWeight: 900 }}>{prazoFim.toLocaleDateString("pt-BR", { day: "numeric", month: "long", year: "numeric" })}</div>
           <div style={{ fontSize: 13, fontWeight: 700, marginTop: 4, color: diasRestantes < 0 ? C.red : diasRestantes <= 14 ? C.warning : C.success }}>
-            {diasRestantes < 0 ? `⚠️ ${Math.abs(diasRestantes)} dias de atraso` : diasRestantes === 0 ? "🎯 Entrega hoje!" : `✅ ${diasRestantes} dias restantes`}
+            {diasRestantes < 0 ? ` ${Math.abs(diasRestantes)} dias de atraso` : diasRestantes === 0 ? " Entrega hoje!" : ` ${diasRestantes} dias restantes`}
           </div>
         </div>
       )}
@@ -96,9 +96,9 @@ function AbaStatus({ obra }) {
   );
 }
 
-// ── Aba Projetos ──────────────────────────────────────────────────────────────
+//  Aba Projetos 
 function AbaProjetos({ arquivos, obraId }) {
-  const DISC_ICONE = { "Arquitetônico": "🏠", "Estrutural": "⚙️", "Steel Frame": "🔩", "Elétrico": "⚡", "Hidráulico": "💧", "AVAC": "🌡️", "Fundação": "🏗️" };
+  const DISC_ICONE = { "Arquitetônico": "", "Estrutural": "", "Steel Frame": "", "Elétrico": "", "Hidráulico": "", "AVAC": "", "Fundação": "" };
 
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [cacheStatus, setCacheStatus] = useState({});
@@ -152,7 +152,7 @@ function AbaProjetos({ arquivos, obraId }) {
   if (arquivos.length === 0) {
     return (
       <div style={{ padding: "48px 20px", textAlign: "center", color: C.muted }}>
-        <div style={{ fontSize: 36, marginBottom: 12 }}>📄</div>
+        <div style={{ fontSize: 36, marginBottom: 12 }}></div>
         <div style={{ fontWeight: 700, fontSize: 15 }}>Nenhum projeto disponível</div>
         <div style={{ fontSize: 13, marginTop: 6 }}>Os documentos técnicos aparecerão aqui quando forem publicados.</div>
       </div>
@@ -167,19 +167,19 @@ function AbaProjetos({ arquivos, obraId }) {
     return acc;
   }, {});
 
-  const STATUS_ICON = { caching: "📥", cached: "✅", unavailable: "🌐" };
+  const STATUS_ICON = { caching: "", cached: "", unavailable: "" };
 
   return (
     <div style={{ padding: "16px" }}>
       {!isOnline && (
         <div style={{ background: "#1e293b", color: "#94a3b8", borderRadius: 10, padding: "10px 14px", marginBottom: 14, fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center", gap: 8 }}>
-          <span>📴</span> Modo offline — exibindo arquivos em cache
+          <span></span> Modo offline — exibindo arquivos em cache
         </div>
       )}
       {Object.entries(grupos).map(([disc, arqs]) => (
         <div key={disc} style={{ marginBottom: 16 }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}>
-            <span>{DISC_ICONE[disc] || "📁"}</span> {disc}
+            <span>{DISC_ICONE[disc] || ""}</span> {disc}
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {arqs.map((a) => {
@@ -187,7 +187,7 @@ function AbaProjetos({ arquivos, obraId }) {
               const status = cacheStatus[a.id];
               return (
                 <button key={a.id} onClick={() => abrirPlanta(a)} style={{ display: "flex", alignItems: "center", gap: 12, background: C.surface, borderRadius: 12, padding: "12px 14px", border: `1px solid ${C.border}`, textDecoration: "none", color: C.text, cursor: "pointer", fontFamily: "inherit", textAlign: "left", width: "100%" }}>
-                  <span style={{ fontSize: 24, flexShrink: 0 }}>{isPdf ? "📄" : "🖼️"}</span>
+                  <span style={{ fontSize: 24, flexShrink: 0 }}>{isPdf ? "" : ""}</span>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 13, fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.nome}</div>
                     <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>
@@ -195,7 +195,7 @@ function AbaProjetos({ arquivos, obraId }) {
                       {a.tamanho} · {a.data}
                     </div>
                   </div>
-                  <span style={{ fontSize: 16, flexShrink: 0 }} title={status}>{STATUS_ICON[status] || "🌐"}</span>
+                  <span style={{ fontSize: 16, flexShrink: 0 }} title={status}>{STATUS_ICON[status] || ""}</span>
                 </button>
               );
             })}
@@ -206,12 +206,12 @@ function AbaProjetos({ arquivos, obraId }) {
   );
 }
 
-// ── Aba BIM ───────────────────────────────────────────────────────────────────
+//  Aba BIM 
 function AbaBIM({ modelos }) {
   if (modelos.length === 0) {
     return (
       <div style={{ padding: "48px 20px", textAlign: "center", color: C.muted }}>
-        <div style={{ fontSize: 36, marginBottom: 12 }}>🧊</div>
+        <div style={{ fontSize: 36, marginBottom: 12 }}></div>
         <div style={{ fontWeight: 700, fontSize: 15 }}>Nenhum modelo 3D disponível</div>
         <div style={{ fontSize: 13, marginTop: 6 }}>Os modelos BIM aparecerão aqui quando forem importados.</div>
       </div>
@@ -221,12 +221,12 @@ function AbaBIM({ modelos }) {
   return (
     <div style={{ padding: "16px", display: "flex", flexDirection: "column", gap: 12 }}>
       <div style={{ background: "#1a1a2e", borderRadius: 14, padding: "14px 16px", display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
-        <span style={{ fontSize: 20 }}>💡</span>
+        <span style={{ fontSize: 20 }}></span>
         <div style={{ fontSize: 12, color: "#a5b4fc", lineHeight: 1.5 }}>Para visualização 3D completa, acesse o sistema no computador. Aqui você pode baixar os arquivos IFC.</div>
       </div>
       {modelos.map((m) => (
         <a key={m.id} href={bimUrl(m.storage_path)} target="_blank" rel="noreferrer" style={{ display: "flex", alignItems: "center", gap: 12, background: C.surface, borderRadius: 12, padding: "14px 16px", border: `1px solid ${C.border}`, textDecoration: "none", color: C.text }}>
-          <span style={{ fontSize: 28 }}>🧊</span>
+          <span style={{ fontSize: 28 }}></span>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 14, fontWeight: 700 }}>{m.nome}</div>
             <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>Arquivo IFC · {new Date(m.created_at).toLocaleDateString("pt-BR")}</div>
@@ -238,7 +238,7 @@ function AbaBIM({ modelos }) {
   );
 }
 
-// ── Aba Check-in ──────────────────────────────────────────────────────────────
+//  Aba Check-in 
 function AbaCheckin({ obraId }) {
   const [checkins, setCheckins] = useState([]);
   const [nome,     setNome]     = useState("");
@@ -280,10 +280,10 @@ function AbaCheckin({ obraId }) {
           </select>
         </div>
         {erro && <div style={{ background: C.red + "15", color: C.red, border: `1px solid ${C.red}33`, borderRadius: 8, padding: "10px 14px", fontSize: 13, marginBottom: 12 }}>{erro}</div>}
-        {sucesso && <div style={{ background: "#f0fdf4", color: C.success, borderRadius: 8, padding: "10px 14px", fontSize: 13, fontWeight: 600, marginBottom: 12 }}>✅ Presença registrada!</div>}
+        {sucesso && <div style={{ background: "#f0fdf4", color: C.success, borderRadius: 8, padding: "10px 14px", fontSize: 13, fontWeight: 600, marginBottom: 12 }}> Presença registrada!</div>}
         <button onClick={registrar} disabled={enviando || !nome.trim()}
           style={{ width: "100%", padding: "14px", borderRadius: 12, border: "none", background: !nome.trim() || enviando ? "#ccc" : C.red, color: "#fff", fontSize: 15, fontWeight: 700, cursor: nome.trim() && !enviando ? "pointer" : "not-allowed", fontFamily: "inherit" }}>
-          {enviando ? "Registrando..." : "✅ Registrar Entrada"}
+          {enviando ? "Registrando..." : " Registrar Entrada"}
         </button>
       </div>
 
@@ -507,7 +507,7 @@ function AbaChecklist({ obraId, initialEtapa }) {
                   flexShrink: 0, fontWeight: 700, fontFamily: "inherit"
                 }}
               >
-                {st === "ok" ? "✓" : st === "nao_ok" ? "✗" : "○"}
+                {st === "ok" ? "" : st === "nao_ok" ? "" : ""}
               </button>
               
               <div style={{ flex: 1, fontSize: 12.5, color: st === "nao_ok" ? C.red : C.text }}>
@@ -525,13 +525,13 @@ function AbaChecklist({ obraId, initialEtapa }) {
         })}
       </div>
       <div style={{ fontSize: 11, color: C.muted, textAlign: "center", marginTop: 4 }}>
-        Toque no círculo para alternar: ○ Pendente ➔ ✓ OK ➔ ✗ Não OK
+        Toque no círculo para alternar:  Pendente   OK   Não OK
       </div>
     </div>
   );
 }
 
-// ── Principal ─────────────────────────────────────────────────────────────────
+//  Principal 
 export default function QRObra() {
   const { obraId } = useParams();
   const [dados,   setDados]   = useState(null);
@@ -576,7 +576,7 @@ export default function QRObra() {
   if (erro || !dados) return (
     <div style={{ minHeight: "100vh", background: C.dark, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Inter, system-ui, sans-serif" }}>
       <div style={{ textAlign: "center", padding: 24 }}>
-        <div style={{ fontSize: 48, marginBottom: 12 }}>🏗️</div>
+        <div style={{ fontSize: 48, marginBottom: 12 }}></div>
         <div style={{ fontWeight: 700, fontSize: 18 }}>{erro || "Obra não encontrada"}</div>
         <div style={{ color: C.muted, fontSize: 13, marginTop: 6 }}>Verifique o QR code e tente novamente.</div>
       </div>
@@ -601,11 +601,11 @@ export default function QRObra() {
 
         {/* Tabs */}
         <div style={{ display: "flex", background: "rgba(0,0,0,0.15)", borderRadius: "10px 10px 0 0", overflow: "hidden", overflowX: "auto" }}>
-          <Tab label="📊 Status"   active={tab === "status"}   onClick={() => setTab("status")} />
-          <Tab label="📄 Projetos" active={tab === "projetos"} onClick={() => setTab("projetos")} badge={arquivos.length} />
-          <Tab label="🧊 BIM"      active={tab === "bim"}      onClick={() => setTab("bim")} badge={bim_modelos.length} />
-          <Tab label="✅ Check-in"  active={tab === "checkin"}  onClick={() => setTab("checkin")} />
-          <Tab label="📋 Checklist" active={tab === "checklist"} onClick={() => setTab("checklist")} />
+          <Tab label=" Status"   active={tab === "status"}   onClick={() => setTab("status")} />
+          <Tab label=" Projetos" active={tab === "projetos"} onClick={() => setTab("projetos")} badge={arquivos.length} />
+          <Tab label=" BIM"      active={tab === "bim"}      onClick={() => setTab("bim")} badge={bim_modelos.length} />
+          <Tab label=" Check-in"  active={tab === "checkin"}  onClick={() => setTab("checkin")} />
+          <Tab label=" Checklist" active={tab === "checklist"} onClick={() => setTab("checklist")} />
         </div>
       </div>
 

@@ -21,6 +21,7 @@ import { useUndoStore } from "./store/undoStore";
 import { useHotkeys } from "react-hotkeys-hook";
 import PortalColaborador from "./pages/PortalColaborador";
 import Admin from "./pages/Admin";
+import AdminMobile from "./pages/AdminMobile";
 
 // Auto-reload on chunk fetch failure (stale SW cache after deploy)
 function lazyWithRetry(fn) {
@@ -49,11 +50,13 @@ const Equipe      = lazyWithRetry(() => import("./pages/Equipe"));
 const Cronograma  = lazyWithRetry(() => import("./pages/Cronograma"));
 const Vistorias   = lazyWithRetry(() => import("./pages/Vistorias"));
 const BIM           = lazyWithRetry(() => import("./pages/BIM"));
+const BimSF         = lazyWithRetry(() => import("./pages/BimSF"));
 const Quantitativos  = lazyWithRetry(() => import("./pages/Quantitativos"));
 const Configuracoes  = lazyWithRetry(() => import("./pages/Configuracoes"));
 const Fornecedores   = lazyWithRetry(() => import("./pages/Fornecedores"));
 const Calculadora       = lazyWithRetry(() => import("./pages/Calculadora"));
 const OrcamentoTecnico  = lazyWithRetry(() => import("./pages/OrcamentoTecnico"));
+const OrcamentoSF       = lazyWithRetry(() => import("./pages/OrcamentoSF"));
 const MonitorPrecos     = lazyWithRetry(() => import("./pages/MonitorPrecos"));
 const Equipamentos      = lazyWithRetry(() => import("./pages/Equipamentos"));
 const Checklists        = lazyWithRetry(() => import("./pages/Checklists"));
@@ -70,6 +73,8 @@ const Rentabilidade        = lazyWithRetry(() => import("./pages/Rentabilidade")
 const Ecossistema          = lazyWithRetry(() => import("./pages/Ecossistema"));
 const SST                  = lazyWithRetry(() => import("./pages/SST"));
 const Suprimentos          = lazyWithRetry(() => import("./pages/Suprimentos"));
+const EquipeSF             = lazyWithRetry(() => import("./pages/EquipeSF"));
+const Oportunidades        = lazyWithRetry(() => import("./pages/Oportunidades"));
 
 const PAGES = {
   dashboard:  Dashboard,
@@ -88,11 +93,13 @@ const PAGES = {
   cronograma: Cronograma,
   vistorias:  Vistorias,
   bim:           BIM,
+  bim_sf:        BimSF,
   quantitativos:  Quantitativos,
   configuracoes:  Configuracoes,
   fornecedores:      Fornecedores,
   calculadora:       Calculadora,
   orcamento_tecnico: OrcamentoTecnico,
+  orcamento_sf:      OrcamentoSF,
   monitor_precos: MonitorPrecos,
   equipamentos:   Equipamentos,
   checklists:     Checklists,
@@ -100,6 +107,8 @@ const PAGES = {
   bi:             BI,
   sst:            SST,
   suprimentos:    Suprimentos,
+  equipe_sf:      EquipeSF,
+  oportunidades:  Oportunidades,
 };
 
 function AuthenticatedApp() {
@@ -197,7 +206,7 @@ function GlobalHotkeys() {
     if (!entry) return;
     try {
       await entry.restoreFn();
-      toast.success(`↩️ Desfeito: ${entry.label}`);
+      toast.success(`↩ Desfeito: ${entry.label}`);
     } catch (err) {
       toast.error(`Erro ao desfazer: ${err.message}`);
     }
@@ -229,6 +238,11 @@ export default function App() {
           <Route path="/admin" element={
             <RequireAdmin>
               <Admin />
+            </RequireAdmin>
+          } />
+          <Route path="/admin/mobile" element={
+            <RequireAdmin>
+              <AdminMobile />
             </RequireAdmin>
           } />
           <Route path="/login"                element={<LoginScreen />} />

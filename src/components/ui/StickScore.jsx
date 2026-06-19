@@ -71,8 +71,8 @@ function InsightsPanel({ insights }) {
   const style = {
     positivo: { bg: "#2e9e5b20", border: "#2e9e5b40", color: "#6ee7b7", icon: "↑" },
     negativo:  { bg: "#98191520", border: "#98191540", color: "#fca5a5", icon: "↓" },
-    alerta:    { bg: "#b07a1e20", border: "#b07a1e40", color: "#fcd34d", icon: "⚠" },
-    dica:      { bg: "#3b6ea520", border: "#3b6ea540", color: "#93c5fd", icon: "💡" },
+    alerta:    { bg: "#b07a1e20", border: "#b07a1e40", color: "#fcd34d", icon: "" },
+    dica:      { bg: "#3b6ea520", border: "#3b6ea540", color: "#93c5fd", icon: "" },
   };
   return (
     <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 6 }}>
@@ -150,7 +150,7 @@ export function StickScoreCard({ score, obra }) {
             position: "absolute", inset: 0, display: "flex", flexDirection: "column",
             alignItems: "center", justifyContent: "center", gap: 12, padding: 24,
           }}>
-            <div style={{ fontSize: 28 }}>🔒</div>
+            <div style={{ fontSize: 28 }}></div>
             <div style={{ textAlign: "center" }}>
               <div style={{ fontSize: 13, fontWeight: 800, color: "#fff", marginBottom: 4 }}>StickScore™ exclusivo PRO</div>
               <div style={{ fontSize: 11, color: "rgba(255,255,255,0.55)", lineHeight: 1.5 }}>
@@ -267,7 +267,7 @@ export function StickScoreCard({ score, obra }) {
           fontSize: 11, color: "#fcd34d", lineHeight: 1.5,
           display: "flex", gap: 6,
         }}>
-          <span>⚠</span>
+          <span></span>
           <span>Score limitado a {total} — {penalidade}</span>
         </div>
       )}
@@ -278,7 +278,7 @@ export function StickScoreCard({ score, obra }) {
           background: "#98191520", border: "1px solid #98191540",
           fontSize: 11, color: "#ffb3b0", lineHeight: 1.5,
         }}>
-          ⚠️ StickScore abaixo de 70 — verifique cronograma e financeiro desta obra.
+           StickScore abaixo de 70 — verifique cronograma e financeiro desta obra.
         </div>
       )}
     </div>
@@ -351,7 +351,7 @@ export function StickScoreHero({ obras, financeiroPorObra = {} }) {
             border: "1px solid #981915" + "30", display: "flex", alignItems: "center", gap: 16,
           }}
         >
-          <div style={{ fontSize: 28 }}>🔒</div>
+          <div style={{ fontSize: 28 }}></div>
           <div>
             <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 2, color: "#981915", textTransform: "uppercase" }}>StickScore™</div>
             <div style={{ fontSize: 13, color: "rgba(255,255,255,0.55)" }}>Índice de performance — exclusivo PRO</div>
@@ -455,7 +455,7 @@ function classGlobal(total) {
   return             { nivel: "Crítico",         cor: "#981915" };
 }
 
-// ── StickScore™ Executivo Card ────────────────────────────────────────────────
+//  StickScore™ Executivo Card 
 
 const EXEC_INSIGHTS = {
   rentabilidade: {
@@ -494,7 +494,7 @@ export function StickScoreExecutivoCard({ score }) {
             border: "1px solid #6d3a9e30", display: "flex", alignItems: "center", gap: 16,
           }}
         >
-          <div style={{ fontSize: 28 }}>🔒</div>
+          <div style={{ fontSize: 28 }}></div>
           <div>
             <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 2, color: "#6d3a9e", textTransform: "uppercase" }}>StickScore™ Executivo</div>
             <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)" }}>Rentabilidade, fluxo e carteira — exclusivo PRO</div>
@@ -593,8 +593,8 @@ export function StickScoreExecutivoCard({ score }) {
           {autoInsights.map((ins, i) => {
             const styleMap = {
               positivo: { bg: "#2e9e5b18", border: "#2e9e5b35", color: "#6ee7b7", icon: "↑" },
-              alerta:   { bg: "#b07a1e18", border: "#b07a1e35", color: "#fcd34d", icon: "⚠" },
-              dica:     { bg: "#3b6ea518", border: "#3b6ea535", color: "#93c5fd", icon: "💡" },
+              alerta:   { bg: "#b07a1e18", border: "#b07a1e35", color: "#fcd34d", icon: "" },
+              dica:     { bg: "#3b6ea518", border: "#3b6ea535", color: "#93c5fd", icon: "" },
             };
             const s = styleMap[ins.tipo] || styleMap.dica;
             return (

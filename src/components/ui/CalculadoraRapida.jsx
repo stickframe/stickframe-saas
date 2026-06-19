@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { C } from "../../utils/constants";
 
-// ─── Pricing constants (same as CalculadoraPublica) ──────────────────────────
+//  Pricing constants (same as CalculadoraPublica) 
 const STEEL_FRAME = { "Econômico": 2800, "Padrão": 3500, "Alto Padrão": 5200 };
 const ALVENARIA   = { "Econômico": 2200, "Padrão": 2900, "Alto Padrão": 4200 };
 

@@ -38,7 +38,7 @@ export default function ModalUpgradePro({ onClose }) {
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.55)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
       <div style={{ background: C.surface, borderRadius: 20, padding: "32px 28px", width: "100%", maxWidth: 420, boxShadow: "0 24px 64px rgba(0,0,0,.18)" }}>
         <div style={{ textAlign: "center", marginBottom: 24 }}>
-          <div style={{ fontSize: 36, marginBottom: 8 }}>🚀</div>
+          <div style={{ fontSize: 36, marginBottom: 8 }}></div>
           <div style={{ fontSize: 20, fontWeight: 800, color: C.text }}>Fazer upgrade para Pro</div>
           <div style={{ fontSize: 13, color: C.muted, marginTop: 6 }}>R$ 297/mês · obras ilimitadas · até 10 usuários</div>
         </div>
@@ -47,7 +47,7 @@ export default function ModalUpgradePro({ onClose }) {
         <div style={{ background: C.brickSoft, border: `1px solid ${C.red}33`, borderRadius: 10, padding: "12px 16px", marginBottom: 20 }}>
           {["Obras ilimitadas", "Até 10 usuários", "Relatórios PDF", "CRM de clientes", "Suporte prioritário"].map((b) => (
             <div key={b} style={{ fontSize: 13, color: C.red, fontWeight: 600, display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-              <span>✓</span> {b}
+              <span></span> {b}
             </div>
           ))}
         </div>

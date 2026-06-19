@@ -41,7 +41,7 @@ function LabelF({ children, required }) {
   );
 }
 
-// ─── Passo 1: Upload do logo ──────────────────────────────────────────────────
+//  Passo 1: Upload do logo 
 function StepLogo({ onNext, onSkip }) {
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
@@ -81,7 +81,7 @@ function StepLogo({ onNext, onSkip }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       <div style={{ textAlign: "center" }}>
-        <div style={{ fontSize: 32, marginBottom: 8 }}>🖼️</div>
+        <div style={{ fontSize: 32, marginBottom: 8 }}></div>
         <h2 style={{ margin: "0 0 8px", fontSize: 20, fontWeight: 800, color: C.text }}>
           Adicione o logo da sua empresa
         </h2>
@@ -110,7 +110,7 @@ function StepLogo({ onNext, onSkip }) {
           />
         ) : (
           <div>
-            <div style={{ fontSize: 28, marginBottom: 8 }}>📁</div>
+            <div style={{ fontSize: 28, marginBottom: 8 }}></div>
             <div style={{ fontSize: 13, color: C.muted }}>Clique para selecionar uma imagem</div>
             <div style={{ fontSize: 11, color: C.muted, marginTop: 4 }}>PNG, JPG ou SVG — recomendado fundo transparente</div>
           </div>
@@ -158,7 +158,7 @@ function StepLogo({ onNext, onSkip }) {
   );
 }
 
-// ─── Passo 2: Cadastro de obra ────────────────────────────────────────────────
+//  Passo 2: Cadastro de obra 
 function StepObra({ onNext, onSkip }) {
   const addObra = useAppStore((s) => s.addObra);
   const [nome, setNome] = useState("");
@@ -194,7 +194,7 @@ function StepObra({ onNext, onSkip }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       <div style={{ textAlign: "center" }}>
-        <div style={{ fontSize: 32, marginBottom: 8 }}>🏠</div>
+        <div style={{ fontSize: 32, marginBottom: 8 }}></div>
         <h2 style={{ margin: "0 0 8px", fontSize: 20, fontWeight: 800, color: C.text }}>
           Cadastre sua primeira obra
         </h2>
@@ -264,11 +264,11 @@ function StepObra({ onNext, onSkip }) {
   );
 }
 
-// ─── Passo 3: Conclusão ───────────────────────────────────────────────────────
+//  Passo 3: Conclusão 
 function StepDone({ onComplete }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20, alignItems: "center", textAlign: "center" }}>
-      <div style={{ fontSize: 56 }}>🎉</div>
+      <div style={{ fontSize: 56 }}></div>
       <h2 style={{ margin: 0, fontSize: 22, fontWeight: 900, color: C.text }}>
         Tudo pronto!
       </h2>
@@ -292,7 +292,7 @@ function StepDone({ onComplete }) {
   );
 }
 
-// ─── Componente principal ─────────────────────────────────────────────────────
+//  Componente principal 
 export default function OnboardingWizard({ onComplete }) {
   const [step, setStep] = useState(0);
 

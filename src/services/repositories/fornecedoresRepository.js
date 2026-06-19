@@ -1,6 +1,6 @@
 import { sb, getEmpresaId } from "../supabase";
 
-// ─── Fornecedores ─────────────────────────────────────────────────────────────
+//  Fornecedores 
 export async function listarFornecedores() {
   const { data, error } = await sb.from("fornecedores").select("*").eq("empresa_id", getEmpresaId()).order("nome");
   if (error) throw error;
@@ -24,7 +24,7 @@ export async function deletarFornecedor(id) {
   if (error) throw error;
 }
 
-// ─── Cotações ─────────────────────────────────────────────────────────────────
+//  Cotações 
 export async function listarCotacoes(fornecedorId) {
   const { data, error } = await sb
     .from("cotacoes")

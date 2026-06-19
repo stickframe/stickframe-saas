@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { AlertTriangle } from "../components/ui/Icon";
 import { useToast } from "../hooks/useToast";
 import { C } from "../utils/constants";
 import { fmt } from "../utils/format";
@@ -20,10 +19,10 @@ const TIPOS   = ["Ferramenta", "Máquina", "Veículo", "EPI", "Medição", "Outr
 const STATUS  = ["Disponível", "Em Obra", "Manutenção", "Inativo"];
 
 const STATUS_COR = {
-  "Disponível": "#2e9e5b",
-  "Em Obra":    "#4a9eff",
-  "Manutenção": "#c88a00",
-  "Inativo":    "#888",
+  "Disponível": "#3f7a4b",
+  "Em Obra":    "#3b6ea5",
+  "Manutenção": "#c0892d",
+  "Inativo":    "#8c847a",
 };
 
 const FORM_VAZIO = {
@@ -31,6 +30,29 @@ const FORM_VAZIO = {
   status: "Disponível", obra_id: "", proxima_manutencao: "",
   valor_aquisicao: "", obs: "",
 };
+
+/*  Ícones SVG inline (Lucide)  */
+function Ic({ n, w, c }) {
+  const P = {
+    box:     <g><path d="M12 2l10 6.5v7L12 22 2 15.5v-7L12 2z" /><path d="M2 7.5l10 5.5 10-5.5" /><path d="M12 22V13" /></g>,
+    pkg:     <g><path d="M12 2l10 6.5v7L12 22 2 15.5v-7L12 2z" /><path d="M2 7.5l10 5.5 10-5.5" /><path d="M12 22V13" /></g>,
+    check:   <g><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></g>,
+    truck:   <g><rect x="1" y="3" width="15" height="13" rx="1" /><path d="M16 8h4l3 3v5h-7V8z" /><circle cx="5.5" cy="18.5" r="2.5" /><circle cx="18.5" cy="18.5" r="2.5" /></g>,
+    wrench:  <g><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" /></g>,
+    search:  <g><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></g>,
+    plus:    <path d="M12 5v14M5 12h14" />,
+    edit:    <g><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z" /></g>,
+    trash:   <g><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" /></g>,
+    alert:   <g><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></g>,
+  };
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke={c || "currentColor"} strokeWidth="1.9"
+      strokeLinecap="round" strokeLinejoin="round"
+      style={{ width: w || 15, height: w || 15, flexShrink: 0 }}>
+      {P[n]}
+    </svg>
+  );
+}
 
 function Label({ children, required }) {
   return (
@@ -40,14 +62,26 @@ function Label({ children, required }) {
   );
 }
 
-function StatCard({ label, valor, cor }) {
+/* KPI card neutro — sem bordas coloridas */
+function KpiCard({ icon, iconBg, iconColor, valor, label }) {
   return (
     <div style={{
-      background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10,
-      padding: "14px 18px", minWidth: 110,
+      background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12,
+      padding: "16px 18px",
     }}>
-      <div style={{ fontSize: 22, fontWeight: 700, color: cor || C.text }}>{valor}</div>
-      <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{label}</div>
+      <div style={{
+        width: 28, height: 28, borderRadius: 8, display: "grid", placeItems: "center",
+        marginBottom: 10, background: iconBg,
+      }}>
+        <Ic n={icon} w={16} c={iconColor} />
+      </div>
+      <div className="num" style={{
+        fontFamily: "'Barlow Condensed', sans-serif", fontSize: 34, fontWeight: 700,
+        lineHeight: 1, marginBottom: 3, color: C.text,
+      }}>
+        {valor}
+      </div>
+      <div style={{ fontSize: 11.5, color: C.muted }}>{label}</div>
     </div>
   );
 }
@@ -74,7 +108,7 @@ export default function Equipamentos() {
       const data = await listarEquipamentos();
       setEquip(data);
     } catch (e) {
-      mostrarToast("❌ " + e.message);
+      mostrarToast("Erro: " + e.message);
     } finally {
       setLoading(false);
     }
@@ -150,15 +184,15 @@ export default function Equipamentos() {
       if (modal === "novo") {
         const novo = await adicionarEquipamento(payload);
         setEquip((prev) => [...prev, novo]);
-        mostrarToast("✅ Equipamento cadastrado!");
+        mostrarToast("Equipamento cadastrado!");
       } else {
         const atualizado = await atualizarEquipamento(editId, payload);
         setEquip((prev) => prev.map((e) => e.id === editId ? atualizado : e));
-        mostrarToast("✅ Equipamento atualizado!");
+        mostrarToast("Equipamento atualizado!");
       }
       setModal(null);
     } catch (e) {
-      mostrarToast("❌ " + e.message);
+      mostrarToast("Erro: " + e.message);
     }
   }
 
@@ -167,9 +201,9 @@ export default function Equipamentos() {
       await removerEquipamento(confirm);
       setEquip((prev) => prev.filter((e) => e.id !== confirm));
       setConfirm(null);
-      mostrarToast("🗑️ Equipamento removido.");
+      mostrarToast("Equipamento removido.");
     } catch (e) {
-      mostrarToast("❌ " + e.message);
+      mostrarToast("Erro: " + e.message);
     }
   }
 
@@ -179,60 +213,76 @@ export default function Equipamentos() {
     return `${d}/${m}/${y}`;
   }
 
-  const thSt = { padding: "10px 14px", textAlign: "left", fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: 0.8, borderBottom: `1px solid ${C.border}`, whiteSpace: "nowrap" };
-  const tdSt = { padding: "11px 14px", fontSize: 13, borderBottom: `1px solid ${C.border}`, verticalAlign: "middle" };
+  const thSt = {
+    padding: "10px 14px", textAlign: "left", fontSize: 10.5, fontWeight: 800,
+    color: C.muted, letterSpacing: 1, textTransform: "uppercase",
+    borderBottom: `1px solid ${C.border}`, whiteSpace: "nowrap",
+  };
+  const tdSt = {
+    padding: "12px 14px", fontSize: 13, color: "#57514a",
+    borderBottom: `1px solid #efeae2`, verticalAlign: "middle",
+  };
 
   return (
-    <div style={{ padding: "24px 28px", maxWidth: 1100, margin: "0 auto" }}>
+    <div style={{ padding: 24, maxWidth: 1180, margin: "0 auto" }}>
 
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
-        <div>
-          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700 }}>Equipamentos</h1>
-          <div style={{ fontSize: 13, color: C.muted, marginTop: 2 }}>Controle de ferramentas, máquinas e EPIs</div>
-        </div>
-        <Btn onClick={abrirNovo}>+ Novo Equipamento</Btn>
+      <div style={{ marginBottom: 20 }}>
+        <h1 style={{ margin: 0, fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 28, color: C.text, lineHeight: 1 }}>
+          Equipamentos
+        </h1>
+        <p style={{ fontSize: 13, color: C.muted, marginTop: 4 }}>
+          Controle de ferramentas, máquinas e EPIs
+        </p>
       </div>
 
-      {/* Stats */}
-      <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 20 }}>
-        <StatCard label="Total"      valor={stats.total}       cor={C.text} />
-        <StatCard label="Disponível" valor={stats.disponivel}  cor="#2e9e5b" />
-        <StatCard label="Em Obra"    valor={stats.emObra}      cor="#4a9eff" />
-        <StatCard label="Manutenção" valor={stats.manutencao}  cor="#c88a00" />
-        {alertaManutencao.length > 0 && (
-          <div style={{
-            background: "#fff8e1", border: "1px solid #c88a00", borderRadius: 10,
-            padding: "14px 18px", display: "flex", alignItems: "center", gap: 8,
-          }}>
-            <span><AlertTriangle size={14} /></span>
-            <div>
-              <div style={{ fontSize: 13, fontWeight: 600, color: "#c88a00" }}>
-                {alertaManutencao.length} equipamento{alertaManutencao.length > 1 ? "s" : ""} com manutenção próxima
-              </div>
-              <div style={{ fontSize: 11, color: C.muted }}>nos próximos 7 dias</div>
-            </div>
-          </div>
-        )}
+      {/* KPI strip — cards neutros (sem bordas coloridas) */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 20 }}>
+        <KpiCard icon="pkg"    iconBg={C.surface2} iconColor="#57514a"  valor={stats.total}      label="Total de equipamentos" />
+        <KpiCard icon="check"  iconBg="#e8f3eb"    iconColor={C.success} valor={stats.disponivel} label="Disponíveis" />
+        <KpiCard icon="truck"  iconBg="#eef3f9"    iconColor={C.steel}   valor={stats.emObra}     label="Em obra" />
+        <KpiCard icon="wrench" iconBg="#fef5e7"    iconColor={C.ochre}   valor={stats.manutencao} label="Em manutenção" />
       </div>
+
+      {/* Alerta de manutenção */}
+      {alertaManutencao.length > 0 && (
+        <div style={{
+          background: "#fef5e7", border: `1px solid ${C.ochre}`, borderRadius: 10,
+          padding: "12px 16px", display: "flex", alignItems: "center", gap: 10, marginBottom: 20,
+        }}>
+          <Ic n="alert" w={18} c={C.ochre} />
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: C.ochre }}>
+              {alertaManutencao.length} equipamento{alertaManutencao.length > 1 ? "s" : ""} com manutenção próxima
+            </div>
+            <div style={{ fontSize: 11, color: C.muted }}>nos próximos 7 dias</div>
+          </div>
+        </div>
+      )}
 
       {/* Filtros */}
       <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 16, flexWrap: "wrap" }}>
-        <Input
-          value={busca}
-          onChange={setBusca}
-          placeholder="Buscar equipamento..."
-          style={{ maxWidth: 240 }}
-        />
+        <div style={{ position: "relative", maxWidth: 260, flex: "1 1 220px" }}>
+          <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: C.muted, pointerEvents: "none" }}>
+            <Ic n="search" w={15} />
+          </span>
+          <Input
+            value={busca}
+            onChange={setBusca}
+            placeholder="Buscar equipamento..."
+            style={{ paddingLeft: 32 }}
+          />
+        </div>
         {["Todos", ...STATUS].map((s) => (
           <button
             key={s}
             onClick={() => setFiltro(s)}
             style={{
-              padding: "6px 14px", borderRadius: 20, fontSize: 12, fontWeight: 600,
+              padding: "6px 14px", borderRadius: 8, fontSize: 12.5, fontWeight: 600,
+              fontFamily: "inherit",
               border: `1px solid ${filtro === s ? (STATUS_COR[s] || C.red) : C.border}`,
-              background: filtro === s ? (STATUS_COR[s] || C.red) : "transparent",
-              color: filtro === s ? "#fff" : C.muted, cursor: "pointer",
+              background: filtro === s ? (STATUS_COR[s] || C.red) : C.surface,
+              color: filtro === s ? "#fff" : C.muted, cursor: "pointer", transition: ".12s",
             }}
           >
             {s}
@@ -242,16 +292,31 @@ export default function Equipamentos() {
 
       {/* Tabela */}
       <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12, overflow: "hidden" }}>
+        <div style={{ padding: "14px 18px", borderBottom: `1px solid #efeae2`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ fontWeight: 800, fontSize: 15, color: C.text }}>Equipamentos cadastrados</div>
+          <button
+            onClick={abrirNovo}
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 7, background: C.red,
+              color: "#fff", border: "none", borderRadius: 8, padding: "8px 16px",
+              fontFamily: "inherit", fontSize: 13, fontWeight: 700, cursor: "pointer", transition: ".14s",
+            }}
+            onMouseEnter={(ev) => (ev.currentTarget.style.background = C.redDark)}
+            onMouseLeave={(ev) => (ev.currentTarget.style.background = C.red)}
+          >
+            <Ic n="plus" w={14} c="#fff" /> Novo Equipamento
+          </button>
+        </div>
         {loading ? (
           <div style={{ padding: 40, textAlign: "center", color: C.muted }}>Carregando...</div>
         ) : equipFiltrado.length === 0 ? (
           <div style={{ padding: 40, textAlign: "center", color: C.muted }}>
-            {equip.length === 0 ? "Nenhum equipamento cadastrado. Clique em + Novo Equipamento para começar." : "Nenhum resultado para os filtros selecionados."}
+            {equip.length === 0 ? "Nenhum equipamento cadastrado. Clique em Novo Equipamento para começar." : "Nenhum resultado para os filtros selecionados."}
           </div>
         ) : (
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
-              <tr style={{ background: C.dark }}>
+              <tr>
                 <th style={thSt}>Equipamento</th>
                 <th style={thSt}>Tipo</th>
                 <th style={thSt}>Status</th>
@@ -265,9 +330,9 @@ export default function Equipamentos() {
               {equipFiltrado.map((e) => {
                 const manutAlerta = e.proxima_manutencao && new Date(e.proxima_manutencao) <= em7dias;
                 return (
-                  <tr key={e.id} style={{ background: C.surface }}>
+                  <tr key={e.id}>
                     <td style={tdSt}>
-                      <div style={{ fontWeight: 600 }}>{e.nome}</div>
+                      <div style={{ fontWeight: 700, color: C.text }}>{e.nome}</div>
                       {e.modelo && <div style={{ fontSize: 11, color: C.muted }}>{e.modelo}</div>}
                       {e.numero_serie && <div style={{ fontSize: 11, color: C.muted }}>Nº {e.numero_serie}</div>}
                     </td>
@@ -276,10 +341,10 @@ export default function Equipamentos() {
                     </td>
                     <td style={tdSt}>
                       <span style={{
-                        display: "inline-block", padding: "3px 10px", borderRadius: 12,
-                        fontSize: 11, fontWeight: 700,
-                        background: (STATUS_COR[e.status] || "#888") + "22",
-                        color: STATUS_COR[e.status] || "#888",
+                        display: "inline-block", padding: "3px 9px", borderRadius: 5,
+                        fontSize: 11, fontWeight: 800, letterSpacing: 0.3,
+                        background: (STATUS_COR[e.status] || "#8c847a") + "22",
+                        color: STATUS_COR[e.status] || "#8c847a",
                       }}>
                         {e.status}
                       </span>
@@ -290,21 +355,44 @@ export default function Equipamentos() {
                       </span>
                     </td>
                     <td style={tdSt}>
-                      <span style={{ color: manutAlerta ? "#c88a00" : C.text, fontWeight: manutAlerta ? 700 : 400 }}>
+                      <span style={{
+                        fontFamily: "'Barlow Condensed', sans-serif", fontSize: 13.5,
+                        color: manutAlerta ? C.ochre : C.text, fontWeight: manutAlerta ? 700 : 500,
+                        display: "inline-flex", alignItems: "center", gap: 5,
+                      }}>
                         {fmtData(e.proxima_manutencao)}
-                        {manutAlerta && " ⚠️"}
+                        {manutAlerta && <Ic n="alert" w={13} c={C.ochre} />}
                       </span>
                     </td>
                     <td style={tdSt}>
-                      <span style={{ color: C.muted, fontSize: 13 }}>
+                      <span style={{ fontFamily: "'Barlow Condensed', sans-serif", color: C.muted, fontSize: 13.5 }}>
                         {e.valor_aquisicao ? fmt(e.valor_aquisicao) : "—"}
                       </span>
                     </td>
                     <td style={{ ...tdSt, textAlign: "right" }}>
                       <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
-                        <Btn size="sm" variant="ghost" onClick={() => abrirEditar(e)}>Editar</Btn>
-                        <Btn size="sm" variant="ghost" onClick={() => setConfirm(e.id)}
-                          style={{ color: C.danger }}>Excluir</Btn>
+                        <button
+                          onClick={() => abrirEditar(e)}
+                          style={{
+                            display: "inline-flex", alignItems: "center", gap: 5,
+                            background: C.surface2, color: "#57514a", border: `1px solid ${C.border}`,
+                            borderRadius: 6, padding: "5px 9px", fontFamily: "inherit",
+                            fontSize: 11.5, fontWeight: 600, cursor: "pointer",
+                          }}
+                        >
+                          <Ic n="edit" w={12} /> Editar
+                        </button>
+                        <button
+                          onClick={() => setConfirm(e.id)}
+                          style={{
+                            display: "inline-flex", alignItems: "center", gap: 5,
+                            background: C.surface2, color: C.danger, border: `1px solid ${C.border}`,
+                            borderRadius: 6, padding: "5px 9px", fontFamily: "inherit",
+                            fontSize: 11.5, fontWeight: 600, cursor: "pointer",
+                          }}
+                        >
+                          <Ic n="trash" w={12} c={C.danger} /> Excluir
+                        </button>
                       </div>
                     </td>
                   </tr>

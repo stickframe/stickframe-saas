@@ -21,7 +21,7 @@ function monthLabel(yyyymm) {
   return `${MESES[Number(m) - 1]}/${String(y).slice(2)}`;
 }
 
-// ── Progress bar ──────────────────────────────────────────────────────────────
+//  Progress bar 
 function ProgressBar({ value, color }) {
   const pct = Math.min(Math.max(value || 0, 0), 100);
   const barColor = pct >= 75 ? C.success : pct >= 40 ? C.warning : C.red;
@@ -35,7 +35,7 @@ function ProgressBar({ value, color }) {
   );
 }
 
-// ── KPI Card ─────────────────────────────────────────────────────────────────
+//  KPI Card 
 function KpiCard({ label, value, sub, accent }) {
   return (
     <div style={{
@@ -50,7 +50,7 @@ function KpiCard({ label, value, sub, accent }) {
   );
 }
 
-// ── Section wrapper ───────────────────────────────────────────────────────────
+//  Section wrapper 
 function Section({ title, children }) {
   return (
     <div style={{
@@ -66,7 +66,7 @@ function Section({ title, children }) {
   );
 }
 
-// ── Main component ────────────────────────────────────────────────────────────
+//  Main component 
 export default function DashboardAnalytics() {
   const empresaId = useAppStore((s) => s.empresaId);
   const [obras, setObras] = useState([]);
@@ -111,7 +111,7 @@ export default function DashboardAnalytics() {
 
       setObras(obrasArr);
 
-      // ── KPIs ───────────────────────────────────────────────────────────────
+      //  KPIs 
       const ativas = obrasArr.filter((o) => o.status === "Em andamento");
       const carteira = ativas.reduce((sum, o) => sum + (o.contrato || 0), 0);
 
@@ -128,14 +128,14 @@ export default function DashboardAnalytics() {
         despesaMes,
       });
 
-      // ── Obras por status ──────────────────────────────────────────────────
+      //  Obras por status 
       const STATUS_LIST = ["Planejamento", "Em andamento", "Pausada", "Concluída"];
       setObrasPorStatus(STATUS_LIST.map((s) => ({
         status: s,
         count: obrasArr.filter((o) => o.status === s).length,
       })));
 
-      // ── Monthly receitas vs despesas (last 6 months) ──────────────────────
+      //  Monthly receitas vs despesas (last 6 months) 
       const months = [];
       for (let i = 5; i >= 0; i--) {
         const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
@@ -153,7 +153,7 @@ export default function DashboardAnalytics() {
       });
       setMonthlyData(monthly);
 
-      // ── Top 5 obras por contrato ──────────────────────────────────────────
+      //  Top 5 obras por contrato 
       const sorted = [...obrasArr]
         .filter((o) => o.contrato > 0)
         .sort((a, b) => b.contrato - a.contrato)
@@ -164,7 +164,7 @@ export default function DashboardAnalytics() {
         }));
       setTop5(sorted);
 
-      // ── Alertas de desvio — despesas > 80% do contrato ───────────────────
+      //  Alertas de desvio — despesas > 80% do contrato 
       const { data: allLans } = await sb.from("lancamentos")
         .select("obra_id, tipo, valor")
         .eq("empresa_id", empresaId)
@@ -206,15 +206,15 @@ export default function DashboardAnalytics() {
         <p style={{ color: C.muted, fontSize: 13 }}>Visao consolidada de todos os projetos</p>
       </div>
 
-      {/* ── 1. KPI Row ─────────────────────────────────────────────────────── */}
+      {/*  1. KPI Row  */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14, marginBottom: 20 }}>
         <KpiCard label="Obras Ativas" value={kpis.obrasAtivas} sub="em andamento" accent={C.red} />
-        <KpiCard label="Valor em Carteira" value={fmt(kpis.carteira)} sub="contratos ativos" accent="#4a9eff" />
+        <KpiCard label="Valor em Carteira" value={fmt(kpis.carteira)} sub="contratos ativos" accent="#3b6ea5" />
         <KpiCard label="Receitas do Mes" value={fmt(kpis.receitaMes)} sub="lancadas este mes" accent={C.success} />
         <KpiCard label="Despesas do Mes" value={fmt(kpis.despesaMes)} sub="lancadas este mes" accent={C.danger} />
       </div>
 
-      {/* ── 2. Obras por status ─────────────────────────────────────────────── */}
+      {/*  2. Obras por status  */}
       <Section title="Obras por Status">
         <ResponsiveContainer width="100%" height={220}>
           <BarChart data={obrasPorStatus} margin={{ top: 4, right: 16, left: -10, bottom: 0 }}>
@@ -227,7 +227,7 @@ export default function DashboardAnalytics() {
         </ResponsiveContainer>
       </Section>
 
-      {/* ── 3. Receitas vs Despesas por mes ──────────────────────────────────── */}
+      {/*  3. Receitas vs Despesas por mes  */}
       <Section title="Receitas vs Despesas - Ultimos 6 Meses">
         <ResponsiveContainer width="100%" height={240}>
           <BarChart data={monthlyData} margin={{ top: 4, right: 16, left: -10, bottom: 0 }}>
@@ -245,7 +245,7 @@ export default function DashboardAnalytics() {
         </ResponsiveContainer>
       </Section>
 
-      {/* ── 4. Top 5 obras por valor de contrato ─────────────────────────────── */}
+      {/*  4. Top 5 obras por valor de contrato  */}
       <Section title="Top 5 Obras por Valor de Contrato">
         {top5.length === 0 ? (
           <div style={{ textAlign: "center", padding: "28px 0", color: C.muted, fontSize: 13 }}>Sem dados de contratos</div>
@@ -260,13 +260,13 @@ export default function DashboardAnalytics() {
               <XAxis type="number" tick={{ fontSize: 11, fill: C.muted }} tickFormatter={(v) => `R$${(v / 1000).toFixed(0)}k`} />
               <YAxis type="category" dataKey="nome" width={130} tick={{ fontSize: 11, fill: C.muted }} />
               <Tooltip contentStyle={tooltipStyle} formatter={(v) => fmt(v)} />
-              <Bar dataKey="contrato" name="Contrato" fill="#4a9eff" radius={[0, 4, 4, 0]} />
+              <Bar dataKey="contrato" name="Contrato" fill="#3b6ea5" radius={[0, 4, 4, 0]} />
             </BarChart>
           </ResponsiveContainer>
         )}
       </Section>
 
-      {/* ── 5. Alertas de desvio ──────────────────────────────────────────────── */}
+      {/*  5. Alertas de desvio  */}
       <Section title="Alertas de Desvio Orcamentario">
         {alertas.length === 0 ? (
           <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", background: "#f0fdf4", borderRadius: 10, border: `1px solid ${C.success}33` }}>
@@ -313,7 +313,7 @@ export default function DashboardAnalytics() {
         )}
       </Section>
 
-      {/* ── 6. Progresso geral das obras ativas ──────────────────────────────── */}
+      {/*  6. Progresso geral das obras ativas  */}
       <Section title="Progresso Geral das Obras">
         {obras.filter((o) => o.status === "Em andamento").length === 0 ? (
           <div style={{ textAlign: "center", padding: "28px 0", color: C.muted, fontSize: 13 }}>Nenhuma obra em andamento</div>

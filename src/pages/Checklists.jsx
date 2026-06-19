@@ -123,7 +123,7 @@ export default function Checklists() {
       data.forEach((r) => { map[`${r.etapa}|${r.item}`] = { status: r.status, obs: r.obs || "" }; });
       setItens(map);
     } catch (e) {
-      mostrarToast("❌ " + e.message);
+      mostrarToast(" " + e.message);
     } finally {
       setLoading(false);
     }
@@ -143,7 +143,7 @@ export default function Checklists() {
       const { salvarItemChecklist } = await import("../services/repositories/checklistSfRepository");
       await salvarItemChecklist({ obra_id: obraId, etapa, item, status: proximo, obs: itens[key]?.obs || "" });
     } catch (e) {
-      mostrarToast("❌ " + e.message);
+      mostrarToast(" " + e.message);
       setItens((prev) => ({ ...prev, [key]: { ...(prev[key] || {}), status: atual } }));
     } finally {
       setSaving(null);
@@ -273,7 +273,7 @@ export default function Checklists() {
                     }}
                     title={`Status: ${STATUS_LABEL[st]} — clique para alternar`}
                   >
-                    {st === "ok" ? "✓" : st === "nao_ok" ? "✗" : "○"}
+                    {st === "ok" ? "" : st === "nao_ok" ? "" : ""}
                   </button>
 
                   {/* Descrição */}
@@ -294,7 +294,7 @@ export default function Checklists() {
           </div>
 
           <div style={{ marginTop: 12, fontSize: 12, color: C.muted }}>
-            Clique no círculo para alternar: ○ Pendente → ✓ OK → ✗ Não OK. Salvo automaticamente.
+            Clique no círculo para alternar:  Pendente →  OK →  Não OK. Salvo automaticamente.
           </div>
         </>
       )}

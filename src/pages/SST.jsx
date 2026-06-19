@@ -21,7 +21,7 @@ const TIPOS_INC  = ["Quase-acidente", "Acidente", "Incidente"];
 const STATUS_INC = ["Aberto", "Em andamento", "Fechado"];
 const ITENS_EPI  = ["Capacete","Óculos de proteção","Luvas","Botina","Colete refletivo","Protetor auricular","Máscara PFF2","Cinto de segurança","Uniforme","Outros"];
 
-const corGravidade = { Baixa: C.success, Média: C.warning, Alta: "#e67e22", Crítica: C.danger };
+const corGravidade = { Baixa: C.success, Média: C.warning, Alta: "#c0892d", Crítica: C.danger };
 const corStatus    = { Aberto: C.danger, "Em andamento": C.warning, Fechado: C.success };
 
 function kpiStyle(cor) {
@@ -110,7 +110,7 @@ export default function SST() {
     if (aba === "epis") loadEpis();
   }, [aba, loadDDS, loadInc, loadEpis]);
 
-  // ── KPIs ──────────────────────────────────────────────────────────────────
+  //  KPIs 
   const hoje     = new Date().toISOString().slice(0, 10);
   const mesAtual = hoje.slice(0, 7);
 
@@ -131,7 +131,7 @@ export default function SST() {
     return dias >= 0 && dias <= 30;
   }).length;
 
-  // ── DDS handlers ─────────────────────────────────────────────────────────
+  //  DDS handlers 
   function abrirNovoDDS() { setDdsEdit(null); setDdsForm({ data: hoje, tema: "", facilitador: "", participantes_txt: "", obs: "", obra_id: "" }); setDdsModal(true); }
   function abrirEditDDS(d) { setDdsEdit(d.id); setDdsForm({ ...d, participantes_txt: (d.participantes || []).join(", ") }); setDdsModal(true); }
   async function salvarDDS() {
@@ -145,7 +145,7 @@ export default function SST() {
     setDdsModal(false); loadDDS();
   }
 
-  // ── Incidente handlers ────────────────────────────────────────────────────
+  //  Incidente handlers 
   function abrirNovoInc() { setIncEdit(null); setIncForm({ data: hoje, tipo: "Quase-acidente", gravidade: "Baixa", descricao: "", acao_corretiva: "", status: "Aberto", obra_id: "", colaborador_id: "" }); setIncModal(true); }
   function abrirEditInc(i) { setIncEdit(i.id); setIncForm({ ...i, obra_id: i.obra_id || "", colaborador_id: i.colaborador_id || "" }); setIncModal(true); }
   async function salvarInc() {
@@ -163,7 +163,7 @@ export default function SST() {
     }
   }
 
-  // ── EPI handlers ──────────────────────────────────────────────────────────
+  //  EPI handlers 
   function abrirNovoEpi() { setEpiEdit(null); setEpiForm({ item: "", quantidade: 1, data_entrega: hoje, validade: "", assinado: false, colaborador_id: "", obra_id: "", obs: "" }); setEpiModal(true); }
   function abrirEditEpi(e) { setEpiEdit(e.id); setEpiForm({ ...e, obra_id: e.obra_id || "", colaborador_id: e.colaborador_id || "" }); setEpiModal(true); }
   async function salvarEpi() {
@@ -237,13 +237,13 @@ export default function SST() {
         ))}
       </div>
 
-      {/* ── DDS ── */}
+      {/*  DDS  */}
       {aba === "dds" && (
         <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: 20 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
             <h3 style={{ fontWeight: 700 }}>Diálogos Diários de Segurança</h3>
             <div style={{ display: "flex", gap: 8 }}>
-              <Btn variant="ghost" onClick={() => exportarDdsExcel(dds)}>📊 Excel</Btn>
+              <Btn variant="ghost" onClick={() => exportarDdsExcel(dds)}> Excel</Btn>
               <Btn onClick={abrirNovoDDS}>+ Novo DDS</Btn>
             </div>
           </div>
@@ -267,12 +267,12 @@ export default function SST() {
                     <td style={{ padding: "10px 10px", color: C.muted }}>{d.obra?.nome || "—"}</td>
                     <td style={{ padding: "10px 10px", color: C.muted }}>{(d.participantes || []).length} pessoa(s)</td>
                     <td style={{ padding: "10px 10px" }}>
-                      <Btn variant="ghost" size="sm" onClick={() => abrirVerAss(d)} style={{ color: "#4a9eff" }}>
-                        🖊 Ver ({d.assinaturas_count ?? "—"})
+                      <Btn variant="ghost" size="sm" onClick={() => abrirVerAss(d)} style={{ color: "#3b6ea5" }}>
+                         Ver ({d.assinaturas_count ?? "—"})
                       </Btn>
                     </td>
                     <td style={{ padding: "10px 10px", whiteSpace: "nowrap" }}>
-                      <Btn variant="ghost" size="sm" onClick={() => { setAssDdsModal(d); setAssDdsNome(""); }} style={{ color: C.warning }}>✍ Assinar</Btn>
+                      <Btn variant="ghost" size="sm" onClick={() => { setAssDdsModal(d); setAssDdsNome(""); }} style={{ color: C.warning }}> Assinar</Btn>
                       <Btn variant="ghost" size="sm" onClick={() => abrirEditDDS(d)}>Editar</Btn>
                       <Btn variant="ghost" size="sm" style={{ color: C.danger }} onClick={() => setConfirm({ id: d.id, tipo: "dds", label: d.tema })}>Excluir</Btn>
                     </td>
@@ -284,7 +284,7 @@ export default function SST() {
         </div>
       )}
 
-      {/* ── Incidentes ── */}
+      {/*  Incidentes  */}
       {aba === "incidentes" && (
         <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: 20 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
@@ -327,13 +327,13 @@ export default function SST() {
         </div>
       )}
 
-      {/* ── EPIs ── */}
+      {/*  EPIs  */}
       {aba === "epis" && (
         <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: 20 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
             <h3 style={{ fontWeight: 700 }}>Entrega de EPIs</h3>
             <div style={{ display: "flex", gap: 8 }}>
-              <Btn variant="ghost" onClick={() => exportarEpisExcel(epis)}>📊 Excel</Btn>
+              <Btn variant="ghost" onClick={() => exportarEpisExcel(epis)}> Excel</Btn>
               <Btn onClick={abrirNovoEpi}>+ Registrar Entrega</Btn>
             </div>
           </div>
@@ -360,10 +360,10 @@ export default function SST() {
                       <td style={{ padding: "10px 10px", color: C.muted }}>{fmt(e.data_entrega)}</td>
                       <td style={{ padding: "10px 10px", color: vencCor, fontWeight: venc !== null && venc <= 30 ? 700 : 400 }}>{fmt(e.validade)}</td>
                       <td style={{ padding: "10px 10px" }}>
-                        <span style={{ fontSize: 18 }}>{e.assinado ? "✅" : "⬜"}</span>
+                        <span style={{ fontSize: 18 }}>{e.assinado ? "" : ""}</span>
                       </td>
                       <td style={{ padding: "10px 10px", whiteSpace: "nowrap" }}>
-                        <Btn variant="ghost" size="sm" onClick={() => setAssEpiModal(e)} style={{ color: e.assinado ? C.success : C.warning }}>✍ {e.assinado ? "Ver assinatura" : "Assinar"}</Btn>
+                        <Btn variant="ghost" size="sm" onClick={() => setAssEpiModal(e)} style={{ color: e.assinado ? C.success : C.warning }}> {e.assinado ? "Ver assinatura" : "Assinar"}</Btn>
                         <Btn variant="ghost" size="sm" onClick={() => abrirEditEpi(e)}>Editar</Btn>
                         <Btn variant="ghost" size="sm" style={{ color: C.danger }} onClick={() => setConfirm({ id: e.id, tipo: "epi", label: e.item })}>Excluir</Btn>
                       </td>
@@ -376,7 +376,7 @@ export default function SST() {
         </div>
       )}
 
-      {/* ── Modal DDS ── */}
+      {/*  Modal DDS  */}
       {ddsModal && (
         <Modal onClose={() => setDdsModal(false)} title={ddsEdit ? "Editar DDS" : "Novo DDS"}>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -400,7 +400,7 @@ export default function SST() {
         </Modal>
       )}
 
-      {/* ── Modal Incidente ── */}
+      {/*  Modal Incidente  */}
       {incModal && (
         <Modal onClose={() => setIncModal(false)} title={incEdit ? "Editar Incidente" : "Novo Incidente"}>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -449,7 +449,7 @@ export default function SST() {
         </Modal>
       )}
 
-      {/* ── Modal EPI ── */}
+      {/*  Modal EPI  */}
       {epiModal && (
         <Modal onClose={() => setEpiModal(false)} title={epiEdit ? "Editar EPI" : "Registrar Entrega de EPI"}>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -492,9 +492,9 @@ export default function SST() {
         </Modal>
       )}
 
-      {/* ── Modal Assinatura EPI ── */}
+      {/*  Modal Assinatura EPI  */}
       {assEpiModal && (
-        <Modal onClose={() => setAssEpiModal(null)} title={`✍ Assinatura — ${assEpiModal.item}`}>
+        <Modal onClose={() => setAssEpiModal(null)} title={` Assinatura — ${assEpiModal.item}`}>
           {assEpiModal.assinatura_base64 ? (
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               <div style={{ fontSize: 13, color: C.muted }}>Assinatura registrada:</div>
@@ -514,9 +514,9 @@ export default function SST() {
         </Modal>
       )}
 
-      {/* ── Modal Assinatura DDS ── */}
+      {/*  Modal Assinatura DDS  */}
       {assDdsModal && (
-        <Modal onClose={() => setAssDdsModal(null)} title={`✍ Assinatura DDS — ${assDdsModal.tema}`}>
+        <Modal onClose={() => setAssDdsModal(null)} title={` Assinatura DDS — ${assDdsModal.tema}`}>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             <div>
               <label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: "block", marginBottom: 6 }}>NOME DO PARTICIPANTE *</label>
@@ -543,15 +543,15 @@ export default function SST() {
         </Modal>
       )}
 
-      {/* ── Modal Ver Assinaturas DDS ── */}
+      {/*  Modal Ver Assinaturas DDS  */}
       {verAssModal && (
-        <Modal onClose={() => setVerAssModal(null)} title={`🖊 Assinaturas — ${verAssModal.tema}`}>
+        <Modal onClose={() => setVerAssModal(null)} title={` Assinaturas — ${verAssModal.tema}`}>
           {verAssLoading ? (
             <p style={{ color: C.muted }}>Carregando...</p>
           ) : verAssLista.length === 0 ? (
             <div style={{ textAlign: "center", padding: 32 }}>
               <p style={{ color: C.muted, marginBottom: 16 }}>Nenhuma assinatura registrada ainda.</p>
-              <Btn onClick={() => { setVerAssModal(null); setAssDdsModal(verAssModal); setAssDdsNome(""); }}>✍ Assinar agora</Btn>
+              <Btn onClick={() => { setVerAssModal(null); setAssDdsModal(verAssModal); setAssDdsNome(""); }}> Assinar agora</Btn>
             </div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
@@ -571,14 +571,14 @@ export default function SST() {
               ))}
               <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
                 <Btn variant="ghost" onClick={() => setVerAssModal(null)}>Fechar</Btn>
-                <Btn onClick={() => { setVerAssModal(null); setAssDdsModal(verAssModal); setAssDdsNome(""); }}>✍ + Adicionar assinatura</Btn>
+                <Btn onClick={() => { setVerAssModal(null); setAssDdsModal(verAssModal); setAssDdsNome(""); }}> + Adicionar assinatura</Btn>
               </div>
             </div>
           )}
         </Modal>
       )}
 
-      {/* ── Confirm delete ── */}
+      {/*  Confirm delete  */}
       {confirm && (
         <Modal onClose={() => setConfirm(null)} title="Confirmar exclusão">
           <p style={{ marginBottom: 20 }}>Excluir <strong>{confirm.label}</strong>? Esta ação não pode ser desfeita.</p>

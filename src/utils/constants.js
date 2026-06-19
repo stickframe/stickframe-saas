@@ -38,11 +38,12 @@ export const C = {
   clay: '#b8624a',
 };
 
-// ─── NAV ─────────────────────────────────────────────────────────────────────
+//  NAV 
 export const NAV = [
   { key: "dashboard",         label: "Dashboard",            brand: "StickHub™",        icon: "LayoutDashboard", grupo: null },
   { key: "agenda",            label: "Agenda",               icon: "CalendarDays",      grupo: null },
-  { key: "crm",               label: "CRM / Clientes",       brand: "StickLead™",       icon: "Users",           grupo: "Comercial" },
+  { key: "oportunidades",     label: "Oportunidades",        brand: "StickLead™",       icon: "Zap",             grupo: "Comercial" },
+  { key: "crm",               label: "CRM / Clientes",       icon: "Users",             grupo: "Comercial" },
   { key: "orcamentos",        label: "Orçamentos",           icon: "FileText",          grupo: "Comercial" },
   { key: "obras",             label: "Gestão de Obras",      icon: "Building2",         grupo: "Obras" },
   { key: "cronograma",        label: "Cronograma",           brand: "StickPlan™",       icon: "BarChart2",       grupo: "Obras" },
@@ -53,6 +54,7 @@ export const NAV = [
   { key: "quantitativos",     label: "Quantitativos",        icon: "Hash",              grupo: "Obras" },
   { key: "contratos",         label: "Contratos",            icon: "FileCheck",         grupo: "Obras" },
   { key: "equipe",            label: "Equipe",               brand: "StickTeam™",       icon: "HardHat",         grupo: "Obras" },
+  { key: "equipe_sf",         label: "Equipe SF",            icon: "UsersRound",        grupo: "Obras", badge: "NOVO" },
   { key: "sst",               label: "SST",                  icon: "ShieldAlert",       grupo: "Obras" },
   { key: "financeiro",        label: "Financeiro",           brand: "StickCash™",       icon: "DollarSign",      grupo: "Financeiro" },
   { key: "rentabilidade",     label: "Rentabilidade",        icon: "TrendingUp",        grupo: "Financeiro", badge: "PRO" },
@@ -63,6 +65,7 @@ export const NAV = [
   { key: "equipamentos",      label: "Equipamentos",         icon: "Wrench",            grupo: "Compras" },
   { key: "calculadora",       label: "Calculadora SF",       icon: "Calculator",        grupo: "Engenharia" },
   { key: "orcamento_tecnico", label: "Orçamento Técnico",    icon: "Receipt",           grupo: "Engenharia" },
+  { key: "orcamento_sf",      label: "Orçamento SF",         icon: "Layers",            grupo: "Engenharia", badge: "NOVO" },
   { key: "checklists",        label: "Checklist SF",         icon: "CheckSquare",       grupo: "Engenharia" },
   { key: "bi",                label: "Analytics",            brand: "StickPulse™",      icon: "BarChart2",       grupo: "Gestão", badge: "PRO", perfis: ["diretor"] },
   { key: "inteligencia",      label: "Inteligência Artificial", brand: "StickBrain™",   icon: "Brain",           grupo: "Gestão", badge: "IA",  perfis: ["diretor", "engenheiro"] },
@@ -70,22 +73,22 @@ export const NAV = [
   { key: "configuracoes",     label: "Configurações",        icon: "Settings",          grupo: null },
 ];
 
-// ─── PERFIS ──────────────────────────────────────────────────────────────────
+//  PERFIS 
 export const PERFIS = {
   diretor: {
     label: "Diretor",
     cor: C.red,
-    paginas: ["dashboard","agenda","crm","orcamentos","obras","cronograma","medicoes","diario","vistorias","bim","quantitativos","financeiro","rentabilidade","contratos","historico","fornecedores","monitor_precos","calculadora","orcamento_tecnico","equipamentos","checklists","equipe","sst","suprimentos","inteligencia","bi","ecossistema","configuracoes"],
+    paginas: ["dashboard","agenda","oportunidades","crm","orcamentos","obras","cronograma","medicoes","diario","vistorias","bim","quantitativos","financeiro","rentabilidade","contratos","historico","fornecedores","monitor_precos","calculadora","orcamento_tecnico","orcamento_sf","equipamentos","checklists","equipe","equipe_sf","sst","suprimentos","inteligencia","bi","ecossistema","configuracoes"],
   },
   comercial: {
     label: "Comercial",
     cor: C.warning,
-    paginas: ["dashboard","agenda","crm","orcamentos","configuracoes"],
+    paginas: ["dashboard","agenda","oportunidades","crm","orcamentos","configuracoes"],
   },
   engenheiro: {
     label: "Engenheiro",
     cor: C.steel,
-    paginas: ["dashboard","obras","cronograma","medicoes","diario","vistorias","bim","quantitativos","fornecedores","monitor_precos","calculadora","orcamento_tecnico","equipamentos","checklists","equipe","sst","suprimentos","historico","inteligencia","configuracoes"],
+    paginas: ["dashboard","obras","cronograma","medicoes","diario","vistorias","bim","quantitativos","fornecedores","monitor_precos","calculadora","orcamento_tecnico","orcamento_sf","equipamentos","checklists","equipe","equipe_sf","sst","suprimentos","historico","inteligencia","configuracoes"],
   },
   financeiro: {
     label: "Financeiro",
@@ -94,17 +97,17 @@ export const PERFIS = {
   },
 };
 
-// ─── FASES ───────────────────────────────────────────────────────────────────
+//  FASES 
 export const FASES = [
   "Projeto executivo","Fundação","Estrutura Steel Frame",
   "Fechamentos","Instalações","Acabamento","Entrega"
 ];
 
-// ─── CATEGORIAS ──────────────────────────────────────────────────────────────
+//  CATEGORIAS 
 export const CATEGORIAS_DESPESA = ["Materiais","Mão de obra","Projeto","Transporte","Equipamentos","Administrativo","Outros"];
 export const CATEGORIAS_RECEITA = ["Entrada contrato","Medição 1","Medição 2","Medição 3","Saldo final","Outros"];
 
-// ─── PRECOS POR PADRÃO ───────────────────────────────────────────────────────
+//  PRECOS POR PADRÃO 
 const defaultPrecos = {
   "Econômico":   { label: "Econômico",   m2: 2800 },
   "Padrão":      { label: "Padrão",      m2: 3500 },
@@ -142,7 +145,7 @@ export const PRECOS = new Proxy({}, {
   }
 });
 
-// ─── TIPOS EVENTO ────────────────────────────────────────────────────────────
+//  TIPOS EVENTO 
 export const TIPOS_EVENTO = ["Visita de obra","Reunião com cliente","Vistoria","Entrega de documentos","Medição","Outro"];
 
 export const COR_TIPO_EVENTO = {
@@ -154,6 +157,6 @@ export const COR_TIPO_EVENTO = {
   "Outro":                  C.muted,
 };
 
-// ─── CLIMAS ──────────────────────────────────────────────────────────────────
-export const CLIMAS = ["☀️ Ensolarado","⛅ Nublado","🌧️ Chuvoso","⛈️ Tempestade","🌫️ Neblina"];
+//  CLIMAS 
+export const CLIMAS = [" Ensolarado"," Nublado"," Chuvoso"," Tempestade"," Neblina"];
 export const TURNOS = ["Manhã","Tarde","Integral"];

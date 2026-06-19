@@ -14,7 +14,7 @@ const PESOS = {
 export function calcularStickScore(obra, { financeiro = [], medicoes = [], diario = [], membros = [] } = {}) {
   const scores = {};
 
-  // ── 1. CRONOGRAMA (25%) ───────────────────────────────────────────────────
+  //  1. CRONOGRAMA (25%) 
   let cronScore = 70;
   if (obra.prazo_inicio && obra.prazo_fim) {
     const inicio = new Date(obra.prazo_inicio);
@@ -36,7 +36,7 @@ export function calcularStickScore(obra, { financeiro = [], medicoes = [], diari
   }
   scores.cronograma = clamp(Math.round(cronScore));
 
-  // ── 2. FINANCEIRO (30%) ───────────────────────────────────────────────────
+  //  2. FINANCEIRO (30%) 
   let finScore = 72;
   const receitas  = financeiro.filter(f => f.tipo === "receita").reduce((s, f) => s + (Number(f.valor) || 0), 0);
   const despesas  = financeiro.filter(f => f.tipo === "despesa").reduce((s, f) => s + (Number(f.valor) || 0), 0);
@@ -55,7 +55,7 @@ export function calcularStickScore(obra, { financeiro = [], medicoes = [], diari
   }
   scores.financeiro = clamp(Math.round(finScore));
 
-  // ── 3. COMPRAS / MEDIÇÕES (20%) ───────────────────────────────────────────
+  //  3. COMPRAS / MEDIÇÕES (20%) 
   let compScore = 68;
   if (medicoes.length > 0) {
     const aprovadas = medicoes.filter(m => m.status === "Aprovada").length;
@@ -63,7 +63,7 @@ export function calcularStickScore(obra, { financeiro = [], medicoes = [], diari
   }
   scores.compras = clamp(Math.round(compScore));
 
-  // ── 4. EQUIPE (15%) ───────────────────────────────────────────────────────
+  //  4. EQUIPE (15%) 
   const nMembros = membros.length;
   const equipeScore =
     nMembros >= 6 ? 100 :
@@ -72,7 +72,7 @@ export function calcularStickScore(obra, { financeiro = [], medicoes = [], diari
     nMembros >= 1 ? 55  : 30;
   scores.equipe = clamp(Math.round(equipeScore));
 
-  // ── 5. QUALIDADE / DIÁRIO (10%) ───────────────────────────────────────────
+  //  5. QUALIDADE / DIÁRIO (10%) 
   let qualScore = 68;
   if (diario.length > 0) {
     const hoje = new Date();
@@ -89,7 +89,7 @@ export function calcularStickScore(obra, { financeiro = [], medicoes = [], diari
   }
   scores.qualidade = clamp(Math.round(qualScore));
 
-  // ── TOTAL ponderado ───────────────────────────────────────────────────────
+  //  TOTAL ponderado 
   let total = clamp(Math.round(
     scores.cronograma * PESOS.cronograma +
     scores.financeiro * PESOS.financeiro +
@@ -98,7 +98,7 @@ export function calcularStickScore(obra, { financeiro = [], medicoes = [], diari
     scores.qualidade  * PESOS.qualidade
   ));
 
-  // ── Penalidades críticas (cap por dimensão em colapso) ────────────────────
+  //  Penalidades críticas (cap por dimensão em colapso) 
   // Impede que bons indicadores mascarem um setor crítico.
   const penalidade = aplicarPenalidades(scores);
   total = Math.min(total, penalidade.cap);
@@ -138,7 +138,7 @@ function classificar(total) {
 
 function clamp(v) { return Math.min(100, Math.max(0, v)); }
 
-// ── Histórico de score (localStorage, granularidade mensal) ──────────────────
+//  Histórico de score (localStorage, granularidade mensal) 
 
 export function salvarSnapshotScore(empresaId, obraId, score) {
   if (!empresaId || !obraId) return;
@@ -164,7 +164,7 @@ export function carregarHistoricoScore(empresaId, obraId) {
   } catch (_) { return []; }
 }
 
-// ── Insights automáticos ─────────────────────────────────────────────────────
+//  Insights automáticos 
 
 const DIM_LABEL = {
   cronograma: "cronograma",
@@ -236,7 +236,7 @@ export const STICK_SCORE_DIMENSOES = [
   { key: "qualidade",  label: "Qualidade",   peso: "10%" },
 ];
 
-// ── StickScore™ Executivo ─────────────────────────────────────────────────────
+//  StickScore™ Executivo 
 // Score consolidado da empresa, voltado para donos e diretores.
 // Mede saúde financeira do negócio, não execução de obra individual.
 
@@ -256,7 +256,7 @@ export function calcularStickScoreExecutivo(obras, financeiroPorObra = {}) {
   const todasObras     = obras.filter(o => o.status !== "Planejamento");
   const scores = {};
 
-  // ── 1. RENTABILIDADE (35%) ────────────────────────────────────────────────
+  //  1. RENTABILIDADE (35%) 
   // Margem média ponderada pelo contrato das obras ativas
   let rentScore = 65;
   const obrasComContrato = obrasAtivas.filter(o => o.contrato > 0);
@@ -279,7 +279,7 @@ export function calcularStickScoreExecutivo(obras, financeiroPorObra = {}) {
   }
   scores.rentabilidade = clamp(Math.round(rentScore));
 
-  // ── 2. FLUXO DE CAIXA (30%) ───────────────────────────────────────────────
+  //  2. FLUXO DE CAIXA (30%) 
   // Saldo total (receitas - despesas) vs. volume total de contratos
   let fluxoScore = 65;
   const totalRec  = todasObras.reduce((s, o) => {
@@ -302,7 +302,7 @@ export function calcularStickScoreExecutivo(obras, financeiroPorObra = {}) {
   }
   scores.fluxo = clamp(Math.round(fluxoScore));
 
-  // ── 3. PRAZO DE RECEBIMENTO (20%) ─────────────────────────────────────────
+  //  3. PRAZO DE RECEBIMENTO (20%) 
   // Gap médio entre progresso físico e % recebido do contrato
   // Gap pequeno = cliente pagando no ritmo da obra = score alto
   let recScore = 70;
@@ -323,7 +323,7 @@ export function calcularStickScoreExecutivo(obras, financeiroPorObra = {}) {
   }
   scores.recebimento = clamp(Math.round(recScore));
 
-  // ── 4. CARTEIRA DE OBRAS (15%) ────────────────────────────────────────────
+  //  4. CARTEIRA DE OBRAS (15%) 
   // Volume e diversificação: qtd de obras ativas + valor de carteira
   let carteiraScore = 55;
   const n = obrasAtivas.length;
@@ -335,7 +335,7 @@ export function calcularStickScoreExecutivo(obras, financeiroPorObra = {}) {
   else if (n >= 1)                   carteiraScore = 45;
   scores.carteira = clamp(Math.round(carteiraScore));
 
-  // ── TOTAL ponderado ───────────────────────────────────────────────────────
+  //  TOTAL ponderado 
   const total = clamp(Math.round(
     scores.rentabilidade * 0.35 +
     scores.fluxo         * 0.30 +

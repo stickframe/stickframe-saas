@@ -191,7 +191,7 @@ export default function Certificacoes({ colaboradorId = null, onSaved }) {
           alignItems: "center",
           gap: 10,
         }}>
-          <span>{vencidas.length > 0 ? "🔴" : "🟡"}</span>
+          <span>{vencidas.length > 0 ? "" : ""}</span>
           <span>
             {vencidas.length > 0 && `${vencidas.length} certificação(ões) vencida(s)`}
             {vencidas.length > 0 && vencendo.length > 0 && " · "}
@@ -298,14 +298,14 @@ export default function Certificacoes({ colaboradorId = null, onSaved }) {
                         color: jatem ? C.success : sel ? C.red : C.muted,
                         opacity: jatem ? 0.75 : 1,
                       }}>
-                      {jatem ? "✓ " : ""}{nr}
+                      {jatem ? " " : ""}{nr}
                     </button>
                   );
                 })}
               </div>
               {form.colaborador_id && certs.some(c => c.colaborador_id === form.colaborador_id) && (
                 <div style={{ fontSize: 11, color: C.success, marginBottom: 6, fontWeight: 600 }}>
-                  ✓ Verde = já cadastrada · não é possível duplicar
+                   Verde = já cadastrada · não é possível duplicar
                 </div>
               )}
               {form.nrs.length === 0 && (

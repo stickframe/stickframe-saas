@@ -99,7 +99,7 @@ export default function PropostaOnline() {
 
   if (!orc) return (
     <div style={{ minHeight: "100vh", background: "#1A1A1A", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16, padding: 24 }}>
-      <div style={{ fontSize: 48 }}>🔒</div>
+      <div style={{ fontSize: 48 }}></div>
       <div style={{ fontSize: 18, fontWeight: 700, color: "#f0f0f0" }}>Proposta não encontrada</div>
       <div style={{ fontSize: 13, color: "#888", textAlign: "center" }}>O link pode ter expirado ou ser inválido.</div>
     </div>
@@ -229,11 +229,11 @@ export default function PropostaOnline() {
         <div style={{ background: "#fff", borderRadius: 14, padding: "20px", marginBottom: 14, boxShadow: "0 2px 12px rgba(0,0,0,.06)" }}>
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: "#888", marginBottom: 14 }}>POR QUE STEEL FRAME?</div>
           {[
-            ["⚡", "Obra até 50% mais rápida", "Estrutura a seco sem espera de cura"],
-            ["🌱", "Sustentabilidade", "Materiais recicláveis e menor desperdício"],
-            ["🔇", "Conforto acústico e térmico", "Desempenho superior ao alvenaria"],
-            ["📐", "Precisão milimétrica", "Peças fabricadas em fábrica com controle de qualidade"],
-            ["🏗", "Acompanhamento digital", "Portal do cliente com atualização em tempo real"],
+            ["", "Obra até 50% mais rápida", "Estrutura a seco sem espera de cura"],
+            ["", "Sustentabilidade", "Materiais recicláveis e menor desperdício"],
+            ["", "Conforto acústico e térmico", "Desempenho superior ao alvenaria"],
+            ["", "Precisão milimétrica", "Peças fabricadas em fábrica com controle de qualidade"],
+            ["", "Acompanhamento digital", "Portal do cliente com atualização em tempo real"],
           ].map(([ic, t, d]) => (
             <div key={t} style={{ display: "flex", gap: 14, marginBottom: 14 }}>
               <div style={{ width: 40, height: 40, borderRadius: 10, background: "#981915", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0 }}>{ic}</div>
@@ -276,7 +276,7 @@ export default function PropostaOnline() {
                   <div style={{ border: "1px solid #86efac", borderRadius: 8, overflow: "hidden", background: "#f0fdf4", padding: 8 }}>
                     <canvas ref={canvasRef} width={500} height={150} style={{ width: "100%", height: 150, display: "block" }} />
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 6 }}>
-                      <span style={{ fontSize: 11, color: "#2e9e5b", fontWeight: 700 }}>✅ Assinatura registrada</span>
+                      <span style={{ fontSize: 11, color: "#2e9e5b", fontWeight: 700 }}> Assinatura registrada</span>
                       <button onClick={() => { setAssinaturaDone(false); setCanvasVazio(true); setAssinando(true); }} style={{ fontSize: 11, color: "#888", background: "none", border: "none", cursor: "pointer" }}>Refazer</button>
                     </div>
                   </div>
@@ -298,12 +298,12 @@ export default function PropostaOnline() {
                     <div style={{ display: "flex", gap: 8, marginTop: 8, justifyContent: "flex-end" }}>
                       <button onClick={() => { const c = canvasRef.current; const ctx = c.getContext("2d"); ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, c.width, c.height); setCanvasVazio(true); }} style={{ padding: "6px 14px", borderRadius: 6, border: "1px solid #ddd", background: "#fff", cursor: "pointer", fontSize: 12 }}>Limpar</button>
                       <button onClick={() => { setAssinando(false); setAssinaturaDone(false); }} style={{ padding: "6px 14px", borderRadius: 6, border: "1px solid #ddd", background: "#fff", cursor: "pointer", fontSize: 12 }}>Cancelar</button>
-                      <button disabled={canvasVazio} onClick={() => { setAssinaturaDone(true); setAssinando(false); }} style={{ padding: "6px 14px", borderRadius: 6, border: "none", background: canvasVazio ? "#ccc" : "#981915", color: "#fff", cursor: canvasVazio ? "not-allowed" : "pointer", fontSize: 12, fontWeight: 700 }}>✅ Confirmar</button>
+                      <button disabled={canvasVazio} onClick={() => { setAssinaturaDone(true); setAssinando(false); }} style={{ padding: "6px 14px", borderRadius: 6, border: "none", background: canvasVazio ? "#ccc" : "#981915", color: "#fff", cursor: canvasVazio ? "not-allowed" : "pointer", fontSize: 12, fontWeight: 700 }}> Confirmar</button>
                     </div>
                   </div>
                 ) : (
                   <button onClick={() => setAssinando(true)} style={{ width: "100%", padding: "12px", borderRadius: 8, border: "2px dashed #ddd", background: "#fafafa", cursor: "pointer", fontSize: 13, color: "#888", fontFamily: "inherit" }}>
-                    ✍ Clique aqui para assinar digitalmente
+                     Clique aqui para assinar digitalmente
                   </button>
                 )}
               </div>
@@ -326,7 +326,7 @@ export default function PropostaOnline() {
                   fontFamily: "inherit",
                 }}
               >
-                {enviando ? "Registrando aceite..." : "✅ Aceitar proposta"}
+                {enviando ? "Registrando aceite..." : " Aceitar proposta"}
               </button>
             </>
           )}
@@ -338,7 +338,7 @@ export default function PropostaOnline() {
           <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", marginBottom: 14 }}>Fale com nossa equipe</div>
           <a href={`https://wa.me/${(empresa?.telefone || "").replace(/\D/g, "") || "5511940000000"}`} target="_blank" rel="noreferrer"
             style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#25D366", color: "#fff", borderRadius: 8, padding: "10px 24px", fontSize: 13, fontWeight: 700, textDecoration: "none" }}>
-            💬 WhatsApp
+             WhatsApp
           </a>
         </div>
 
@@ -362,7 +362,7 @@ export default function PropostaOnline() {
           zIndex: 100,
         }}
       >
-        📄 Baixar PDF
+         Baixar PDF
       </button>
     </div>
   );

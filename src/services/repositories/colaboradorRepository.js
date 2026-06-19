@@ -22,7 +22,7 @@ export async function deletarColaborador(id) {
   if (error) throw error;
 }
 
-// ─── Alocações ───────────────────────────────────────────────────────────────
+//  Alocações 
 export async function listarAlocacoes() {
   const { data, error } = await sb.from("alocacoes").select("*").eq("empresa_id", getEmpresaId()).order("created_at", { ascending: false });
   if (error) throw error;
@@ -38,7 +38,7 @@ export async function deletarAlocacao(id) {
   if (error) throw error;
 }
 
-// ─── Horas trabalhadas ────────────────────────────────────────────────────────
+//  Horas trabalhadas 
 export async function listarHoras() {
   const { data, error } = await sb.from("horas_trabalhadas").select("*").eq("empresa_id", getEmpresaId()).order("data", { ascending: false });
   if (error) throw error;

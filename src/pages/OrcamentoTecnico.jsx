@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { BarChart2, CalendarDays, ClipboardList, FileText, HardHat, Link, Save } from "../components/ui/Icon";
+import { CalendarDays, ClipboardList, FileText, Save } from "../components/ui/Icon";
 import { useToast } from "../hooks/useToast";
 import { printHtml } from "../utils/printHtml";
 import { CUB_ESTADOS, PADROES_SF, SISTEMAS_SF } from "../utils/insumosSF";
@@ -15,7 +15,39 @@ const fmtBRL = (v) => v.toLocaleString("pt-BR", { style: "currency", currency: "
 const fmtN   = (v, d = 2) => Number(v).toLocaleString("pt-BR", { minimumFractionDigits: d, maximumFractionDigits: d });
 const parseN = (s) => parseFloat(String(s).replace(",", ".")) || 0;
 
-// ─── style atoms ─────────────────────────────────────────────────────────────
+//  Inline SVG icon set (Lucide-style) 
+const ICON_PATHS = {
+  mappin:   <g><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></g>,
+  hardhat:  <g><path d="M2 18a1 1 0 0 0 1 1h18a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v2z" /><path d="M10 10V5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v5" /><path d="M4 15v-3a8 8 0 0 1 16 0v3" /></g>,
+  pct:      <g><line x1="19" y1="5" x2="5" y2="19" /><circle cx="6.5" cy="6.5" r="2.5" /><circle cx="17.5" cy="17.5" r="2.5" /></g>,
+  sliders:  <g><line x1="4" y1="21" x2="4" y2="14" /><line x1="4" y1="10" x2="4" y2="3" /><line x1="12" y1="21" x2="12" y2="12" /><line x1="12" y1="8" x2="12" y2="3" /><line x1="20" y1="21" x2="20" y2="16" /><line x1="20" y1="12" x2="20" y2="3" /><line x1="1" y1="14" x2="7" y2="14" /><line x1="9" y1="8" x2="15" y2="8" /><line x1="17" y1="16" x2="23" y2="16" /></g>,
+  barchart: <g><line x1="12" y1="20" x2="12" y2="10" /><line x1="18" y1="20" x2="18" y2="4" /><line x1="6" y1="20" x2="6" y2="16" /></g>,
+  print:    <g><path d="M6 9V2h12v7" /><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" /><rect x="6" y="14" width="12" height="8" /></g>,
+  dl:       <g><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></g>,
+  save:     <g><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" /><polyline points="17 21 17 13 7 13 7 21" /><polyline points="7 3 7 8 15 8" /></g>,
+  scale:    <g><path d="M16 16l3-8 3 8c-2 1.5-4 1.5-6 0z" /><path d="M2 16l3-8 3 8c-2 1.5-4 1.5-6 0z" /><path d="M7 8h10" /><path d="M12 2v18" /><path d="M5 22h14" /></g>,
+  bolt:     <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />,
+  bank:     <g><line x1="3" y1="22" x2="21" y2="22" /><line x1="6" y1="18" x2="6" y2="11" /><line x1="10" y1="18" x2="10" y2="11" /><line x1="14" y1="18" x2="14" y2="11" /><line x1="18" y1="18" x2="18" y2="11" /><polygon points="12 2 20 7 4 7 12 2" /></g>,
+  clip:     <g><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" /><rect x="9" y="3" width="6" height="4" rx="1" /></g>,
+  refresh:  <g><polyline points="23 4 23 10 17 10" /><polyline points="1 20 1 14 7 14" /><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" /></g>,
+  edit:     <g><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z" /></g>,
+  link:     <g><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></g>,
+  cal:      <g><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></g>,
+};
+function Ic({ n, w = 15, c }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke={c || "currentColor"} strokeWidth="1.9"
+      strokeLinecap="round" strokeLinejoin="round"
+      style={{ width: w, height: w, flexShrink: 0, verticalAlign: "middle" }}>
+      {ICON_PATHS[n]}
+    </svg>
+  );
+}
+
+// Cores categóricas do handoff para a composição por categoria
+const CAT_CORES = ["#b8624a", "#981915", "#3b6ea5", "#c0892d", "#4f7d57", "#6d557e", "#3b6ea5", "#57514a", "#7d1411"];
+
+//  style atoms 
 const inputSt = {
   width: "100%", padding: "8px 10px", border: `1px solid ${C.border}`,
   borderRadius: 6, fontSize: 13, background: "#fff", boxSizing: "border-box",
@@ -28,17 +60,44 @@ const thSt = {
   background: C.darker, borderBottom: `1px solid ${C.border}`, fontSize: 11,
 };
 const tdSt = { padding: "7px 10px", fontSize: 12, verticalAlign: "middle" };
+const btnPrimary = {
+  display: "flex", alignItems: "center", gap: 7, padding: "9px 16px",
+  background: C.red, color: "#fff", border: "none", borderRadius: 8,
+  fontSize: 12.5, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
+};
+const btnGhost = {
+  display: "flex", alignItems: "center", gap: 7, padding: "9px 14px",
+  background: C.surface, color: C.text, border: `1px solid ${C.border}`, borderRadius: 8,
+  fontSize: 12.5, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
+};
 
-// ─── helpers ─────────────────────────────────────────────────────────────────
-function Card({ title, children }) {
+//  helpers 
+function Card({ title, icon, iconBg, children }) {
   return (
-    <div style={{ background: C.surface, borderRadius: 14, border: `1px solid ${C.border}`, overflow: "hidden" }}>
+    <div style={{ marginBottom: 0 }}>
       {title && (
-        <div style={{ padding: "10px 14px", borderBottom: `1px solid ${C.border}`, fontWeight: 700, fontSize: 13, background: C.darker }}>
-          {title}
+        <div style={{
+          display: "flex", alignItems: "center", gap: 9, padding: "10px 14px",
+          background: C.surface2, border: `1px solid ${C.border}`,
+          borderRadius: "10px 10px 0 0",
+        }}>
+          {icon && (
+            <span style={{
+              width: 24, height: 24, borderRadius: 6, display: "grid", placeItems: "center",
+              background: iconBg || C.steel, flexShrink: 0,
+            }}>
+              <Ic n={icon} w={13} c="#fff" />
+            </span>
+          )}
+          <span style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{title}</span>
         </div>
       )}
-      <div style={{ padding: 14, display: "flex", flexDirection: "column", gap: 10 }}>
+      <div style={{
+        background: C.surface, border: `1px solid ${C.border}`,
+        borderTop: title ? "none" : `1px solid ${C.border}`,
+        borderRadius: title ? "0 0 10px 10px" : 10,
+        padding: 14, display: "flex", flexDirection: "column", gap: 10,
+      }}>
         {children}
       </div>
     </div>
@@ -54,16 +113,55 @@ function Row({ label, children }) {
   );
 }
 
-function SummaryCard({ label, value, sub, color, large }) {
+function SummaryCard({ label, value, sub, color }) {
   return (
     <div style={{
-      background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10,
-      padding: large ? "16px 18px" : "12px 16px",
-      borderTop: `3px solid ${color}`,
+      background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 12,
+      padding: "14px 16px",
     }}>
-      <div style={{ fontSize: 11, color: C.muted, marginBottom: 4 }}>{label}</div>
-      <div style={{ fontSize: large ? 20 : 16, fontWeight: 700, color }}>{value}</div>
-      {sub && <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{sub}</div>}
+      <div style={{ fontSize: 10.5, fontWeight: 800, color: "var(--muted)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 6 }}>{label}</div>
+      <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 26, fontWeight: 700, color: color || "var(--ink)", lineHeight: 1 }}>{value}</div>
+      {sub && <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 5 }}>{sub}</div>}
+    </div>
+  );
+}
+
+//  Composição por categoria (painel de resultados do handoff) 
+function ComposicaoCategoria({ breakdown, totalGeral, incluiMO, totalMO }) {
+  const cats = breakdown.map((s, i) => ({
+    label: s.opcaoLabel ? `${s.label}` : s.label,
+    valor: s.totalMat,
+    cor: CAT_CORES[i % CAT_CORES.length],
+  }));
+  if (incluiMO && totalMO > 0) {
+    cats.push({ label: "Mão de obra", valor: totalMO, cor: C.graphite });
+  }
+  cats.sort((a, b) => b.valor - a.valor);
+  return (
+    <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12, padding: "14px 16px" }}>
+      <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: 1.2, color: C.muted, textTransform: "uppercase", marginBottom: 12 }}>
+        Composição por categoria
+      </div>
+      {cats.map((c) => {
+        const pct = totalGeral > 0 ? Math.round((c.valor / totalGeral) * 100) : 0;
+        return (
+          <div key={c.label} style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 0", borderBottom: `1px solid ${C.border}` }}>
+            <span style={{ width: 8, height: 8, borderRadius: 2, background: c.cor, flexShrink: 0 }} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                <span style={{ fontSize: 13, color: C.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.label}</span>
+                <div style={{ display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
+                  <span style={{ fontSize: 12, color: C.muted }}>{pct}%</span>
+                  <span className="num" style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{fmtBRL(c.valor)}</span>
+                </div>
+              </div>
+              <div style={{ height: 4, background: C.border, borderRadius: 3, overflow: "hidden" }}>
+                <div style={{ height: "100%", width: `${pct}%`, background: c.cor, borderRadius: 3, transition: "width .5s" }} />
+              </div>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -80,7 +178,6 @@ function SistemaRow({ s, aberto, toggle, precosEditados, onPrecoEdit }) {
           transition: "background 0.15s",
         }}
       >
-        <span style={{ fontSize: 15 }}>{s.icon}</span>
         <span style={{ flex: 1, fontWeight: 600, fontSize: 13 }}>
           {s.label}
           {s.opcaoLabel && (
@@ -88,14 +185,14 @@ function SistemaRow({ s, aberto, toggle, precosEditados, onPrecoEdit }) {
           )}
         </span>
         {s.totalMO > 0 && (
-          <span style={{ fontSize: 11, color: "#4a9eff", whiteSpace: "nowrap" }}>
+          <span style={{ fontSize: 11, color: C.steel, whiteSpace: "nowrap" }}>
             MO {fmtBRL(s.totalMO)}
           </span>
         )}
         <span style={{ fontSize: 13, fontWeight: 700, minWidth: 110, textAlign: "right" }}>
           {fmtBRL(total)}
         </span>
-        <span style={{ fontSize: 11, color: C.muted, marginLeft: 6 }}>{aberto ? "▲" : "▼"}</span>
+        <span style={{ fontSize: 11, color: C.muted, marginLeft: 6 }}>{aberto ? "−" : "+"}</span>
       </div>
       {aberto && (
         <div style={{ background: "#f9f9fc" }}>
@@ -105,7 +202,7 @@ function SistemaRow({ s, aberto, toggle, precosEditados, onPrecoEdit }) {
                 <th style={thSt}>Insumo</th>
                 <th style={{ ...thSt, width: 48, textAlign: "center" }}>Un</th>
                 <th style={{ ...thSt, width: 80, textAlign: "right" }}>Qtd</th>
-                <th style={{ ...thSt, width: 110, textAlign: "right" }}>Unit R$ ✏️</th>
+                <th style={{ ...thSt, width: 110, textAlign: "right" }}>Unit R$</th>
                 <th style={{ ...thSt, width: 108, textAlign: "right" }}>Total R$</th>
               </tr>
             </thead>
@@ -119,9 +216,9 @@ function SistemaRow({ s, aberto, toggle, precosEditados, onPrecoEdit }) {
                     <td style={tdSt}>
                       {item.nome}
                       {item.precoVivo && !editado && (
-                        <span style={{ marginLeft: 6, fontSize: 10, background: "#dcfce7", color: "#166534", padding: "1px 5px", borderRadius: 4, fontWeight: 700 }}>🔴 ao vivo</span>
+                        <span style={{ marginLeft: 6, fontSize: 10, background: "#e7f0e8", color: C.success, padding: "1px 5px", borderRadius: 4, fontWeight: 700 }}>ao vivo</span>
                       )}
-                      {editado && <span style={{ marginLeft: 6, fontSize: 10, background: "#fef08a", color: "#713f12", padding: "1px 5px", borderRadius: 4, fontWeight: 700 }}>✏️ ajustado</span>}
+                      {editado && <span style={{ marginLeft: 6, fontSize: 10, background: "#f6efe0", color: C.warning, padding: "1px 5px", borderRadius: 4, fontWeight: 700 }}>ajustado</span>}
                     </td>
                     <td style={{ ...tdSt, textAlign: "center", color: C.muted }}>{item.un}</td>
                     <td style={{ ...tdSt, textAlign: "right" }}>{fmtN(item.qtd)}</td>
@@ -161,14 +258,14 @@ function SistemaRow({ s, aberto, toggle, precosEditados, onPrecoEdit }) {
   );
 }
 
-// ─── main component ───────────────────────────────────────────────────────────
+//  main component 
 const CRM_LEAD_KEY = "sf_crm_lead";
 
 export default function OrcamentoTecnico() {
   const setActivePage  = useAppStore((s) => s.setActivePage);
   const updateCliente  = useAppStore((s) => s.updateCliente);
 
-  // ── Restaura form do localStorage ──────────────────────────────────────────
+  //  Restaura form do localStorage 
   const savedForm = (() => { try { return JSON.parse(localStorage.getItem(LS_KEY) || "{}"); } catch { return {}; } })();
   const { toast, mostrarToast } = useToast();
 
@@ -453,7 +550,7 @@ export default function OrcamentoTecnico() {
       const cor = v.isAtual ? "#981915" : v.diffTotal > 0 ? "#b07a1e" : v.diffTotal < 0 ? "#3f7a4b" : "#374151";
       const diffTxt = v.isAtual ? "versão atual" : v.diffTotal > 0 ? `+${fmtBRL(v.diffTotal)} (+${v.diffPct.toFixed(1)}%)` : `${fmtBRL(v.diffTotal)} (${v.diffPct.toFixed(1)}%)`;
       return `<tr style="border-bottom:1px solid #e5e7eb;background:${v.isAtual ? "#f3e7e5" : "#fff"}">
-        <td style="padding:12px 14px;font-weight:${v.isAtual ? 700 : 400};font-size:13px">${v.isAtual ? "► " : ""}${v.opcaoLabel}</td>
+        <td style="padding:12px 14px;font-weight:${v.isAtual ? 700 : 400};font-size:13px">${v.isAtual ? " " : ""}${v.opcaoLabel}</td>
         <td style="padding:12px 14px;text-align:right;font-size:13px">${fmtBRL(v.totalMat)}</td>
         ${resultado.incluiMO ? `<td style="padding:12px 14px;text-align:right;font-size:13px;color:#2563eb">${fmtBRL(v.totalMO)}</td>` : ""}
         <td style="padding:12px 14px;text-align:right;font-size:13px">${fmtBRL(v.total)}</td>
@@ -664,9 +761,9 @@ export default function OrcamentoTecnico() {
           <div style="font-size:15px;font-weight:700;color:#981915">${fmtBRL(r.totalGeral)}</div>
           <div style="font-size:11px;color:#888">${fmtBRL(r.m2)}/m²</div>
         </div>
-        <div style="border-top:3px solid #2e9e5b;background:#fff;border:1px solid #eee;border-radius:8px;padding:12px 14px">
+        <div style="border-top:3px solid #3f7a4b;background:#fff;border:1px solid #eee;border-radius:8px;padding:12px 14px">
           <div style="font-size:10px;color:#666">PREÇO DE VENDA (BDI ${r.bdi}%)</div>
-          <div style="font-size:15px;font-weight:700;color:#2e9e5b">${fmtBRL(r.precoVenda)}</div>
+          <div style="font-size:15px;font-weight:700;color:#3f7a4b">${fmtBRL(r.precoVenda)}</div>
           <div style="font-size:11px;color:#888">${fmtBRL(r.m2Venda)}/m²</div>
         </div>
       </div>
@@ -975,7 +1072,7 @@ export default function OrcamentoTecnico() {
       </div>
 
       <!-- DESTAQUE DO VALOR -->
-      <div style="background:linear-gradient(135deg,#981915,#c0392b);color:#fff;border-radius:12px;padding:28px 32px;margin-bottom:28px;text-align:center">
+      <div style="background:linear-gradient(135deg,#981915,#a33327);color:#fff;border-radius:12px;padding:28px 32px;margin-bottom:28px;text-align:center">
         <div style="font-size:13px;letter-spacing:2px;opacity:0.85;margin-bottom:8px">INVESTIMENTO TOTAL</div>
         <div style="font-size:42px;font-weight:800;letter-spacing:-1px">${fmtBRL(r.precoVenda)}</div>
         <div style="font-size:14px;opacity:0.85;margin-top:6px">${fmtBRL(r.m2Venda)}/m² · ${r.area} m² · Padrão ${r.padrao}</div>
@@ -1102,20 +1199,23 @@ export default function OrcamentoTecnico() {
 
   return (
     <div style={{ display: "flex", gap: 20, padding: "20px 24px", minHeight: "100vh",
-      background: C.dark, alignItems: "flex-start", flexWrap: "wrap" }}>
+      background: C.bg, alignItems: "flex-start", flexWrap: "wrap" }}>
 
-      {/* ── LEFT: configuração ─────────────────────────────────── */}
-      <div style={{ width: 370, flexShrink: 0, display: "flex", flexDirection: "column", gap: 14 }}>
-        <div>
-          <h2 style={{ margin: 0, fontSize: 19, fontWeight: 700 }}>Orçamento Técnico</h2>
-          <p style={{ margin: "3px 0 0", color: C.muted, fontSize: 12 }}>
-            Composição completa de insumos Steel Frame — preços regionais via CUB
-          </p>
+      {/*  LEFT: configuração  */}
+      <div style={{ width: 400, flexShrink: 0, display: "flex", flexDirection: "column", gap: 14 }}>
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+          <div style={{ width: 4, height: 42, borderRadius: 3, background: "var(--brick)", flexShrink: 0, marginTop: 2 }} />
+          <div>
+            <h2 style={{ margin: 0, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 28, fontWeight: 700, color: "var(--ink)", lineHeight: 1.1 }}>Orçamento Técnico</h2>
+            <p style={{ margin: "4px 0 0", color: "var(--muted)", fontSize: 12.5 }}>
+              Composição completa de insumos Steel Frame — preços regionais via CUB
+            </p>
+          </div>
         </div>
 
         {crmLead && (
-          <div style={{ background: C.red + "15", border: `1px solid ${C.red}44`, borderRadius: 8, padding: "10px 14px", display: "flex", alignItems: "center", gap: 10 }}>
-            <span style={{ fontSize: 18 }}><Link size={11} /></span>
+          <div style={{ background: C.brickSoft, border: `1px solid ${C.red}44`, borderRadius: 8, padding: "10px 14px", display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ color: C.red }}><Ic n="link" w={16} /></span>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 11, color: C.red, fontWeight: 700 }}>VIA CRM</div>
               <div style={{ fontSize: 13, fontWeight: 700 }}>{crmLead.nome}</div>
@@ -1125,7 +1225,7 @@ export default function OrcamentoTecnico() {
         )}
 
         {/* Localização */}
-        <Card title="📍 Localização e CUB">
+        <Card title="Localização e CUB" icon="mappin" iconBg={C.steel}>
           <Row label="Estado">
             <select value={estado} onChange={(e) => setEstado(e.target.value)} style={selectSt}>
               {Object.entries(CUB_ESTADOS).map(([k, v]) => (
@@ -1148,7 +1248,7 @@ export default function OrcamentoTecnico() {
         </Card>
 
         {/* Dados da obra */}
-        <Card title="🏗 Dados da Obra">
+        <Card title="Dados da Obra" icon="hardhat" iconBg={C.ochre}>
           <Row label="Área construída total (m²) *">
             <input type="text" value={area} onChange={(e) => setArea(e.target.value)}
               placeholder="ex: 120" style={inputSt} />
@@ -1187,7 +1287,7 @@ export default function OrcamentoTecnico() {
               {loadingPrecos
                 ? <span style={{ color: C.muted }}> (carregando…)</span>
                 : qtdPrecosVivos > 0
-                  ? <span style={{ color: C.success, fontWeight: 700 }}> ✓ {qtdPrecosVivos} monitorados</span>
+                  ? <span style={{ color: C.success, fontWeight: 700 }}> {qtdPrecosVivos} monitorados</span>
                   : <span style={{ color: C.muted }}> (nenhum monitorado)</span>
               }
             </span>
@@ -1195,7 +1295,7 @@ export default function OrcamentoTecnico() {
         </Card>
 
         {/* BDI */}
-        <Card title="💼 BDI e Preço de Venda">
+        <Card title="BDI e Preço de Venda" icon="pct" iconBg={C.sage}>
           <Row label="BDI — Benefícios e Despesas Indiretas (%)">
             <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
               <input type="number" min="0" max="100" value={bdi}
@@ -1220,7 +1320,7 @@ export default function OrcamentoTecnico() {
         </Card>
 
         {/* Sistemas */}
-        <Card title="⚙️ Sistemas Construtivos">
+        <Card title="Sistemas Construtivos" icon="sliders" iconBg={C.plum}>
           {SISTEMAS_SF.map((s) => (
             <div key={s.id} style={{ paddingBottom: 10, borderBottom: `1px solid ${C.border}` }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
@@ -1234,7 +1334,7 @@ export default function OrcamentoTecnico() {
                     />
                   )}
                   <span style={{ opacity: habilitados[s.id] ? 1 : 0.4 }}>
-                    {s.icon} {s.label}
+                    {s.label}
                   </span>
                 </label>
                 {s.obrigatorio && (
@@ -1266,112 +1366,105 @@ export default function OrcamentoTecnico() {
           onClick={calcular}
           disabled={!area}
           style={{
-            padding: "13px 0", background: C.red, color: "#fff", border: "none",
-            borderRadius: 8, fontSize: 15, fontWeight: 700,
+            padding: "14px 0", background: "var(--brick)", color: "#fff", border: "none",
+            borderRadius: 11, fontSize: 14.5, fontWeight: 700,
             cursor: area ? "pointer" : "not-allowed", opacity: area ? 1 : 0.5,
+            display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
+            fontFamily: "inherit", letterSpacing: .3,
           }}
         >
-          Calcular Orçamento
+          <Ic n="barchart" w={16} c="#fff" /> Calcular Orçamento
         </button>
       </div>
 
-      {/* ── RIGHT: resultado ─────────────────────────────────────── */}
+      {/*  RIGHT: resultado  */}
       <div style={{ flex: 1, minWidth: 0 }}>
         {!resultado ? (
-          <div style={{ textAlign: "center", padding: "80px 24px", color: C.muted,
-            background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", border: `1px solid ${C.border}` }}>
-            <div style={{ fontSize: 52, marginBottom: 16 }}><BarChart2 size={36} /></div>
-            <p style={{ fontSize: 15, margin: 0 }}>Configure os parâmetros ao lado e clique em <strong>Calcular Orçamento</strong></p>
-            <p style={{ fontSize: 12, marginTop: 8 }}>Gera composição detalhada de todos os insumos com preços regionais calibrados por CUB</p>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+            textAlign: "center", padding: "80px 40px",
+            background: "var(--surface)", borderRadius: 16, border: "1px solid var(--line)" }}>
+            <div style={{ width: 56, height: 56, borderRadius: 14, background: "var(--brick-soft)", color: "var(--brick)", display: "grid", placeItems: "center", marginBottom: 18 }}>
+              <Ic n="barchart" w={26} c="var(--brick)" />
+            </div>
+            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 24, color: "var(--ink)", marginBottom: 8 }}>Configure e calcule</div>
+            <p style={{ fontSize: 13.5, margin: 0, maxWidth: 320, lineHeight: 1.6, color: "var(--muted)" }}>
+              Preencha os parâmetros ao lado e clique em <strong style={{ color: "var(--ink)" }}>Calcular Orçamento</strong>.
+              Gera composição detalhada de todos os insumos com preços regionais calibrados por CUB.
+            </p>
           </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            {/* summary cards */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(148px, 1fr))", gap: 10 }}>
-              <SummaryCard label="Total Materiais" value={fmtBRL(resultado.totalMateriais)}
-                sub={fmtBRL(resultado.m2Mat) + "/m²"} color={C.graphite} />
-              {resultado.incluiMO && (
-                <SummaryCard label="Mão de Obra (MO)" value={fmtBRL(resultado.totalMO)}
-                  sub={fmtBRL(resultado.m2MO) + "/m²"} color="#2563eb" />
-              )}
-              <SummaryCard label="Custo Direto" value={fmtBRL(resultado.totalGeral)}
-                sub={fmtBRL(resultado.m2) + "/m²"} color={C.red} large />
-              <SummaryCard label={`Preço de Venda (BDI ${resultado.bdi}%)`}
-                value={fmtBRL(resultado.precoVenda)}
-                sub={fmtBRL(resultado.m2Venda) + "/m²"} color={C.success} large />
-              <SummaryCard
-                label={`${resultado.area} m² · ${resultado.padrao}`}
-                value={`CUB ${resultado.estado}: R$${resultado.cub.toLocaleString("pt-BR")}`}
-                sub={`Fator padrão: ×${resultado.fatorPadrao}`}
-                color="#c88a00"
-              />
+            {/* título do painel de resultados */}
+            <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+              <div style={{ width: 4, height: 36, borderRadius: 3, background: "var(--brick)", flexShrink: 0, marginTop: 2 }} />
+              <div>
+                <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 24, color: "var(--ink)", lineHeight: 1.1, marginBottom: 3 }}>Composição calculada</div>
+                <div style={{ fontSize: 12.5, color: "var(--muted)" }}>
+                  Preços calibrados por CUB · {CUB_ESTADOS[resultado.estado]?.nome} ({resultado.estado}) · {resultado.area} m² · {resultado.padrao} (×{resultado.fatorPadrao})
+                </div>
+              </div>
             </div>
 
+            {/* KPI grid 2×2 */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10 }}>
+              <SummaryCard label="Total Materiais" value={fmtBRL(resultado.totalMateriais)}
+                sub={fmtBRL(resultado.m2Mat) + "/m²"} color={C.text} />
+              {resultado.incluiMO && (
+                <SummaryCard label="Mão de Obra" value={fmtBRL(resultado.totalMO)}
+                  sub={fmtBRL(resultado.m2MO) + "/m²"} color={C.steel} />
+              )}
+              <SummaryCard label="Custo Direto" value={fmtBRL(resultado.totalGeral)}
+                sub={fmtBRL(resultado.m2) + "/m²"} color={C.red} />
+              <SummaryCard label={`Preço de Venda · BDI ${resultado.bdi}%`}
+                value={fmtBRL(resultado.precoVenda)}
+                sub={fmtBRL(resultado.m2Venda) + "/m²"} color={C.success} />
+            </div>
+
+            {/* composição por categoria */}
+            <ComposicaoCategoria
+              breakdown={resultado.breakdown}
+              totalGeral={resultado.totalGeral}
+              incluiMO={resultado.incluiMO}
+              totalMO={resultado.totalMO}
+            />
+
             {/* action buttons */}
-            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-              <button onClick={() => setModalSalvar(true)} style={{
-                padding: "9px 18px", background: C.red, color: "#fff",
-                border: "none", borderRadius: 7, fontSize: 13, fontWeight: 700, cursor: "pointer",
-              }}>
-                <Save size={13} /> Salvar como Orçamento
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
+              <button onClick={() => setModalSalvar(true)} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "9px 15px", background: "var(--brick)", color: "#fff", border: "1px solid var(--brick)", borderRadius: 9, fontSize: 12.5, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+                <Ic n="save" w={13} c="#fff" /> Salvar Orçamento
               </button>
-              <button onClick={exportarPDF} style={{
-                padding: "9px 18px", background: "#2563eb", color: "#fff",
-                border: "none", borderRadius: 7, fontSize: 13, fontWeight: 600, cursor: "pointer",
-              }}>
-                📄 Exportar PDF
+              <button onClick={exportarPropostaCliente} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "9px 15px", background: "var(--surface)", color: "var(--ink-2)", border: "1px solid var(--line)", borderRadius: 9, fontSize: 12.5, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+                <Ic n="clip" w={13} /> Proposta ao Cliente
               </button>
-              <button onClick={exportarExcel} style={{
-                padding: "9px 18px", background: C.success, color: "#fff",
-                border: "none", borderRadius: 7, fontSize: 13, fontWeight: 600, cursor: "pointer",
-              }}>
-                📥 Exportar Excel
+              <button onClick={exportarPDF} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "9px 15px", background: "var(--surface)", color: "var(--ink-2)", border: "1px solid var(--line)", borderRadius: 9, fontSize: 12.5, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+                <Ic n="print" w={13} /> PDF Técnico
               </button>
-              <button onClick={gerarComparativo} style={{
-                padding: "9px 18px", background: "#7c3aed", color: "#fff",
-                border: "none", borderRadius: 7, fontSize: 13, fontWeight: 600, cursor: "pointer",
-              }}>
-                ⚖️ Comparar Padrões
+              <button onClick={exportarExcel} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "9px 15px", background: "var(--surface)", color: "var(--ink-2)", border: "1px solid var(--line)", borderRadius: 9, fontSize: 12.5, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+                <Ic n="dl" w={13} /> Excel
               </button>
-              <button onClick={gerarComparativoVersoes} style={{
-                padding: "9px 18px", background: "#0f766e", color: "#fff",
-                border: "none", borderRadius: 7, fontSize: 13, fontWeight: 600, cursor: "pointer",
-              }}>
-                🔩 Comparar Espessuras
+              <button onClick={gerarComparativo} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "9px 15px", background: "var(--surface)", color: "var(--ink-2)", border: "1px solid var(--line)", borderRadius: 9, fontSize: 12.5, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+                <Ic n="scale" w={13} /> Comparar Padrões
               </button>
-              <button onClick={() => setModalFinanc(true)} style={{
-                padding: "9px 18px", background: "#0891b2", color: "#fff",
-                border: "none", borderRadius: 7, fontSize: 13, fontWeight: 600, cursor: "pointer",
-              }}>
-                🏦 Simular Financiamento
+              <button onClick={gerarComparativoVersoes} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "9px 15px", background: "var(--surface)", color: "var(--ink-2)", border: "1px solid var(--line)", borderRadius: 9, fontSize: 12.5, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+                <Ic n="sliders" w={13} /> Espessuras
               </button>
-              <button onClick={exportarPropostaCliente} style={{
-                padding: "9px 18px", background: "#c88a00", color: "#fff",
-                border: "none", borderRadius: 7, fontSize: 13, fontWeight: 600, cursor: "pointer",
-              }}>
-                <ClipboardList size={13} /> Proposta para Cliente
+              <button onClick={() => setModalFinanc(true)} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "9px 15px", background: "var(--surface)", color: "var(--ink-2)", border: "1px solid var(--line)", borderRadius: 9, fontSize: 12.5, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+                <Ic n="bank" w={13} /> Financiamento
               </button>
               {Object.keys(precosEditados).length > 0 && (
-                <button onClick={() => { setPrecosEditados({}); calcular(); }} style={{
-                  padding: "9px 18px", background: "#f59e0b", color: "#fff",
-                  border: "none", borderRadius: 7, fontSize: 13, cursor: "pointer",
-                }}>
-                  ↺ Limpar ajustes de preço
+                <button onClick={() => { setPrecosEditados({}); calcular(); }} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "9px 15px", background: "var(--surface)", color: "var(--ink-2)", border: "1px solid var(--line)", borderRadius: 9, fontSize: 12.5, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+                  <Ic n="refresh" w={13} /> Limpar ajustes
                 </button>
               )}
-
-              <button onClick={() => setResultado(null)} style={{
-                padding: "9px 18px", background: C.surface, color: C.muted,
-                border: `1px solid ${C.border}`, borderRadius: 7, fontSize: 13, cursor: "pointer",
-              }}>
-                ↺ Recalcular
+              <button onClick={() => setResultado(null)} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "9px 15px", background: "var(--surface)", color: "var(--muted)", border: "1px solid var(--line)", borderRadius: 9, fontSize: 12.5, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+                <Ic n="refresh" w={13} /> Recalcular
               </button>
             </div>
 
             {/* aviso ajuste de preços */}
             {Object.keys(precosEditados).length > 0 && (
               <div style={{ background: "#fefce8", border: "1px solid #eab308", borderRadius: 8, padding: "9px 14px", fontSize: 12, color: "#713f12", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span>✏️ {Object.keys(precosEditados).length} preço(s) ajustado(s) manualmente. Clique em <strong>Calcular Orçamento</strong> para atualizar os totais.</span>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><Ic n="edit" w={13} /> {Object.keys(precosEditados).length} preço(s) ajustado(s) manualmente. Clique em <strong>Calcular Orçamento</strong> para atualizar os totais.</span>
               </div>
             )}
 
@@ -1381,8 +1474,8 @@ export default function OrcamentoTecnico() {
             {comparativo && (
               <div style={{ background: C.surface, borderRadius: 14, border: `1px solid ${C.border}`, overflow: "hidden" }}>
                 <div style={{ padding: "12px 18px", borderBottom: `1px solid ${C.border}`, fontWeight: 700, fontSize: 14, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span>⚖️ Comparativo de Padrões</span>
-                  <button onClick={() => setComparativo(null)} style={{ background: "none", border: "none", color: C.muted, cursor: "pointer", fontSize: 12 }}>✕ fechar</button>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 7 }}><Ic n="scale" w={15} /> Comparativo de Padrões</span>
+                  <button onClick={() => setComparativo(null)} style={{ background: "none", border: "none", color: C.muted, cursor: "pointer", fontSize: 12 }}> fechar</button>
                 </div>
                 <div style={{ overflowX: "auto" }}>
                   <table style={{ width: "100%", borderCollapse: "collapse" }}>
@@ -1401,7 +1494,7 @@ export default function OrcamentoTecnico() {
                       {comparativo.map((c, i) => (
                         <tr key={c.padrao} style={{ background: c.padrao === resultado.padrao ? C.red + "12" : i % 2 ? "#f9f9fc" : "#fff", fontWeight: c.padrao === resultado.padrao ? 700 : 400 }}>
                           <td style={{ ...tdSt }}>
-                            {c.padrao === resultado.padrao && <span style={{ color: C.red, marginRight: 4 }}>►</span>}
+                            {c.padrao === resultado.padrao && <span style={{ color: C.red, marginRight: 4 }}></span>}
                             {c.padrao}
                             <span style={{ marginLeft: 6, fontSize: 10, color: C.muted }}>×{PADROES_SF[c.padrao]?.fator}</span>
                           </td>
@@ -1423,10 +1516,10 @@ export default function OrcamentoTecnico() {
             {comparativoVersoes && (
               <div style={{ background: C.surface, borderRadius: 10, border: `1px solid ${C.border}`, overflow: "hidden" }}>
                 <div style={{ padding: "12px 18px", borderBottom: `1px solid ${C.border}`, fontWeight: 700, fontSize: 14, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span>🔩 Comparativo de Espessuras de Estrutura</span>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 7 }}><Ic n="sliders" w={15} /> Comparativo de Espessuras de Estrutura</span>
                   <div style={{ display: "flex", gap: 8 }}>
                     <button onClick={exportarComparativoPDF} style={{ background: "#0f766e", color: "#fff", border: "none", borderRadius: 5, padding: "4px 12px", fontSize: 12, cursor: "pointer" }}><FileText size={13} /> PDF</button>
-                    <button onClick={() => setComparativoVersoes(null)} style={{ background: "none", border: "none", color: C.muted, cursor: "pointer", fontSize: 12 }}>✕ fechar</button>
+                    <button onClick={() => setComparativoVersoes(null)} style={{ background: "none", border: "none", color: C.muted, cursor: "pointer", fontSize: 12 }}> fechar</button>
                   </div>
                 </div>
                 <div style={{ overflowX: "auto" }}>
@@ -1453,7 +1546,7 @@ export default function OrcamentoTecnico() {
                         return (
                           <tr key={v.opcaoId} style={{ background: v.isAtual ? C.red + "12" : "transparent", fontWeight: v.isAtual ? 700 : 400 }}>
                             <td style={tdSt}>
-                              {v.isAtual && <span style={{ color: C.red, marginRight: 4 }}>►</span>}
+                              {v.isAtual && <span style={{ color: C.red, marginRight: 4 }}></span>}
                               {v.opcaoLabel}
                             </td>
                             <td style={{ ...tdSt, textAlign: "right" }}>{fmtBRL(v.totalMat)}</td>
@@ -1633,7 +1726,7 @@ export default function OrcamentoTecnico() {
         return (
           <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", zIndex: 600, display: "flex", alignItems: "center", justifyContent: "center" }}>
             <div style={{ background: "#fff", borderRadius: 14, width: "min(520px, 95vw)", padding: 28, boxShadow: "0 12px 40px rgba(0,0,0,0.3)", maxHeight: "90vh", overflowY: "auto" }}>
-              <div style={{ fontWeight: 800, fontSize: 18, marginBottom: 4 }}>🏦 Simulador de Financiamento</div>
+              <div style={{ fontWeight: 800, fontSize: 18, marginBottom: 4, display: "flex", alignItems: "center", gap: 8 }}><Ic n="bank" w={18} /> Simulador de Financiamento</div>
               <div style={{ fontSize: 12, color: "#666", marginBottom: 20 }}>Preço de venda: <strong>{fmtBRL(resultado.precoVenda)}</strong></div>
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 20 }}>
@@ -1684,8 +1777,8 @@ export default function OrcamentoTecnico() {
                   </div>
                 </div>
                 {/* SAC */}
-                <div style={{ border: "2px solid #2e9e5b", borderRadius: 10, padding: 16 }}>
-                  <div style={{ fontWeight: 700, fontSize: 13, color: "#2e9e5b", marginBottom: 10 }}>Sistema SAC (parcela decrescente)</div>
+                <div style={{ border: "2px solid #3f7a4b", borderRadius: 10, padding: 16 }}>
+                  <div style={{ fontWeight: 700, fontSize: 13, color: "#3f7a4b", marginBottom: 10 }}>Sistema SAC (parcela decrescente)</div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 13 }}>
                     <div style={{ display: "flex", justifyContent: "space-between" }}>
                       <span style={{ color: "#666" }}>Entrada</span><strong>{fmtBRL(fin.entrada)}</strong>
@@ -1694,8 +1787,8 @@ export default function OrcamentoTecnico() {
                       <span style={{ color: "#666" }}>Financiado</span><strong>{fmtBRL(fin.financiado)}</strong>
                     </div>
                     <div style={{ display: "flex", justifyContent: "space-between", fontSize: 15, borderTop: "1px solid #eee", paddingTop: 8, marginTop: 4 }}>
-                      <span style={{ color: "#2e9e5b", fontWeight: 700 }}>1ª parcela</span>
-                      <strong style={{ color: "#2e9e5b", fontSize: 16 }}>{fmtBRL(fin.primeiroSAC)}</strong>
+                      <span style={{ color: "#3f7a4b", fontWeight: 700 }}>1ª parcela</span>
+                      <strong style={{ color: "#3f7a4b", fontSize: 16 }}>{fmtBRL(fin.primeiroSAC)}</strong>
                     </div>
                     <div style={{ display: "flex", justifyContent: "space-between" }}>
                       <span style={{ color: "#666" }}>Última parcela</span><strong>{fmtBRL(fin.ultimoSAC)}</strong>
@@ -1711,7 +1804,7 @@ export default function OrcamentoTecnico() {
               </div>
 
               <div style={{ marginTop: 16, background: "#f0fdf4", border: "1px solid #86efac", borderRadius: 8, padding: "10px 14px", fontSize: 12, color: "#166534" }}>
-                💡 O SAC gera juros totais {fmtBRL(fin.jurosPrice - fin.jurosSAC)} menores que o Price, mas a primeira parcela é maior.
+O SAC gera juros totais {fmtBRL(fin.jurosPrice - fin.jurosSAC)} menores que o Price, mas a primeira parcela é maior.
               </div>
 
               <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 20 }}>

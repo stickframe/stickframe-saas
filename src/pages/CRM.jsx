@@ -16,20 +16,21 @@ import Select from "../components/ui/Select";
 import Badge from "../components/ui/Badge";
 import Modal from "../components/ui/Modal";
 
-// ─── Status e Origens ────────────────────────────────────────────────────────
+//  Status e Origens 
 const STATUS_OPTS = ["Lead", "Em negociação", "Proposta enviada", "Fechado", "Em execução"];
 const ORIGEM_OPTS = ["Indicação", "Instagram", "Google", "Site", "Outros"];
 
-const STATUS_COR = {
-  "Lead":             "#4a9eff",
-  "Em negociação":    "#c88a00",
-  "Proposta enviada": "#981915",
-  "Fechado":          "#2e9e5b",
-  "Em execução":      "#2e9e5b",
-};
-function statusColor(s) { return STATUS_COR[s] || C.muted; }
+const ETAPAS = [
+  { id: "Lead",             label: "Lead",           cor: "#8c847a", bg: "#f4f1ec" },
+  { id: "Em negociação",    label: "Em negociação",  cor: "#3b6ea5", bg: "#e8f2fb" },
+  { id: "Proposta enviada", label: "Proposta",       cor: "#c0892d", bg: "#fef5e7" },
+  { id: "Fechado",          label: "Fechado",        cor: "#6d557e", bg: "#f3eef8" },
+  { id: "Em execução",      label: "Em execução",    cor: "#981915", bg: "#f3e7e5" },
+];
+function etapaInfo(s) { return ETAPAS.find((e) => e.id === s) || { cor: "#8c847a", bg: "#f4f1ec", label: s }; }
+function statusColor(s) { return etapaInfo(s).cor; }
 
-// ─── Score de lead ────────────────────────────────────────────────────────────
+//  Score de lead 
 function calcularScore(c) {
   const hoje = new Date().toISOString().split("T")[0];
   let pts = 0;
@@ -75,21 +76,21 @@ function calcularScore(c) {
   pts += cPts; breakdown.push({ label: "Contato", pts: cPts, max: 10 });
 
   const score = Math.min(pts, 100);
-  if (score >= 70) return { score, label: "🔥 Quente", cor: "#c0392b", bg: "#fdecea", breakdown };
-  if (score >= 40) return { score, label: "🟡 Morno",  cor: "#c88a00", bg: "#fff8e1", breakdown };
-  return               { score, label: "❄️ Frio",   cor: "#4a9eff", bg: "#e8f4ff", breakdown };
+  if (score >= 70) return { score, label: " Quente", cor: "#a33327", bg: "#fdecea", breakdown };
+  if (score >= 40) return { score, label: " Morno",  cor: "#c0892d", bg: "#fff8e1", breakdown };
+  return               { score, label: " Frio",   cor: "#3b6ea5", bg: "#e8f4ff", breakdown };
 }
 
-// ─── Templates WhatsApp ───────────────────────────────────────────────────────
+//  Templates WhatsApp 
 const WA_TEMPLATES = [
-  { id: "primeiro_contato", label: "1º Contato", icon: "👋",
-    msg: (c) => `Olá ${c.nome}! 👋\n\nVi que você tem interesse em construção em *Steel Frame*.\n\nSomos a *Stick Frame Sistemas Construtivos* — especialistas em sistemas estruturais metálicos. Podemos conversar sobre seu projeto?\n\nStick Frame · Santo André/SP` },
-  { id: "follow_up", label: "Follow-up", icon: "🔁",
-    msg: (c) => `Olá ${c.nome}! 👋\n\nPassando para dar continuidade ao nosso contato sobre seu projeto de construção.\n\nTem alguma dúvida ou posso ajudar com mais informações?\n\nStick Frame · Santo André/SP` },
-  { id: "proposta", label: "Proposta", icon: "📋",
-    msg: (c) => `Olá ${c.nome}! 👋\n\nEnviamos a proposta comercial do seu projeto. Já teve chance de analisar?\n\nEstou à disposição para esclarecer qualquer dúvida sobre valores, prazo ou sistema construtivo.\n\nStick Frame · Santo André/SP` },
-  { id: "fechamento", label: "Fechamento", icon: "🤝",
-    msg: (c) => `Olá ${c.nome}! 👋\n\nGostaria de dar um retorno sobre nossa proposta — podemos agendar uma conversa rápida para fechar os detalhes do seu projeto?\n\nStick Frame · Santo André/SP` },
+  { id: "primeiro_contato", label: "1º Contato", icon: "",
+    msg: (c) => `Olá ${c.nome}! \n\nVi que você tem interesse em construção em *Steel Frame*.\n\nSomos a *Stick Frame Sistemas Construtivos* — especialistas em sistemas estruturais metálicos. Podemos conversar sobre seu projeto?\n\nStick Frame · Santo André/SP` },
+  { id: "follow_up", label: "Follow-up", icon: "",
+    msg: (c) => `Olá ${c.nome}! \n\nPassando para dar continuidade ao nosso contato sobre seu projeto de construção.\n\nTem alguma dúvida ou posso ajudar com mais informações?\n\nStick Frame · Santo André/SP` },
+  { id: "proposta", label: "Proposta", icon: "",
+    msg: (c) => `Olá ${c.nome}! \n\nEnviamos a proposta comercial do seu projeto. Já teve chance de analisar?\n\nEstou à disposição para esclarecer qualquer dúvida sobre valores, prazo ou sistema construtivo.\n\nStick Frame · Santo André/SP` },
+  { id: "fechamento", label: "Fechamento", icon: "",
+    msg: (c) => `Olá ${c.nome}! \n\nGostaria de dar um retorno sobre nossa proposta — podemos agendar uma conversa rápida para fechar os detalhes do seu projeto?\n\nStick Frame · Santo André/SP` },
 ];
 
 // Mensagem padrão por etapa do funil
@@ -103,7 +104,7 @@ const WA_POR_STATUS = {
   "Perdido":           WA_TEMPLATES[1],
 };
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+//  Helpers 
 function fmtTel(v) {
   const d = v.replace(/\D/g, "").slice(0, 11);
   if (d.length <= 2)  return d;
@@ -122,7 +123,7 @@ function parseMoeda(v) {
 }
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-// ─── Label auxiliar ──────────────────────────────────────────────────────────
+//  Label auxiliar 
 function Label({ children, required }) {
   return (
     <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 6 }}>
@@ -131,7 +132,7 @@ function Label({ children, required }) {
   );
 }
 
-// ─── Textarea ────────────────────────────────────────────────────────────────
+//  Textarea 
 function Textarea({ value, onChange, placeholder, rows = 3 }) {
   return (
     <textarea
@@ -150,7 +151,7 @@ function Textarea({ value, onChange, placeholder, rows = 3 }) {
   );
 }
 
-// ─── Seção do formulário ─────────────────────────────────────────────────────
+//  Seção do formulário 
 function Secao({ titulo }) {
   return (
     <div style={{
@@ -163,7 +164,7 @@ function Secao({ titulo }) {
   );
 }
 
-// ─── Formulário (fora do componente para não re-montar a cada render) ─────────
+//  Formulário (fora do componente para não re-montar a cada render) 
 const FormCliente = memo(function FormCliente({ form, setForm, onSave, onCancel, onDelete, btnLabel, disabled }) {
   const [erros, setErros] = useState({});
   const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
@@ -323,7 +324,7 @@ const FormCliente = memo(function FormCliente({ form, setForm, onSave, onCancel,
   );
 });
 
-// ─── CRM principal ───────────────────────────────────────────────────────────
+//  CRM principal 
 const FILTERS_VAZIO = { status: "", origem: "", valorMin: "", valorMax: "", busca: "" };
 
 const FORM_VAZIO = {
@@ -437,7 +438,9 @@ export default function CRM() {
       if (c.proximo_contato && !isConvertido && c.proximo_contato <= hojeStr) followUpsPendentes++;
     });
     const taxa = total === 0 ? 0 : Math.round((convertidos / total) * 100);
-    return { total, convertidos, taxa, porOrigem, followUpsPendentes };
+    const totalVgv = clientes.reduce((s, c) => s + (c.valor || 0), 0);
+    const emAberto = clientes.filter((c) => c.status !== "Fechado" && c.status !== "Em execução").length;
+    return { total, convertidos, taxa, porOrigem, followUpsPendentes, totalVgv, emAberto };
   }, [clientes, hojeStr]);
 
   function abrirNovo() {
@@ -446,6 +449,7 @@ export default function CRM() {
   }
 
   function abrirEditar(c) {
+    setSel(c.id);
     setForm({
       nome:            c.nome || "",
       cidade:          c.cidade || "",
@@ -476,9 +480,9 @@ export default function CRM() {
         valor:    form.valor || 0,
       });
       setModal(false);
-      mostrarToast("✅ Cliente cadastrado com sucesso!");
+      mostrarToast(" Cliente cadastrado com sucesso!");
     } catch (e) {
-      mostrarToast("❌ " + e.message);
+      mostrarToast(" " + e.message);
     } finally {
       setIsSaving(false);
     }
@@ -498,9 +502,9 @@ export default function CRM() {
         responsavel:     form.responsavel || null,
       });
       setModal(false);
-      mostrarToast("✅ Cliente atualizado!");
+      mostrarToast(" Cliente atualizado!");
     } catch (e) {
-      mostrarToast("❌ " + e.message);
+      mostrarToast(" " + e.message);
     } finally {
       setIsSaving(false);
     }
@@ -510,7 +514,7 @@ export default function CRM() {
     deleteCliente(sel);
     setSel(null);
     setConfirm(false);
-    mostrarToast("🗑 Cliente removido.");
+    mostrarToast(" Cliente removido.");
   }
 
   async function criarSequenciaFollowUp(c) {
@@ -547,9 +551,9 @@ export default function CRM() {
       const d3 = new Date(hoje);
       d3.setDate(d3.getDate() + 3);
       await updateCliente(c.id, { proximo_contato: d3.toISOString().split("T")[0], follow_seq_ativa: true });
-      mostrarToast("✅ Sequência D+3, D+7, D+15 criada na agenda!");
+      mostrarToast(" Sequência D+3, D+7, D+15 criada na agenda!");
     } catch (e) {
-      mostrarToast("❌ Erro ao criar sequência: " + e.message);
+      mostrarToast(" Erro ao criar sequência: " + e.message);
     } finally {
       setSeqLoading(false);
     }
@@ -598,7 +602,7 @@ export default function CRM() {
       const data = await importClientes(csvPreview);
       setCsvModal(false);
       setCsvPreview([]);
-      mostrarToast(`✅ ${data.length} clientes importados!`);
+      mostrarToast(` ${data.length} clientes importados!`);
     } catch (e) {
       setCsvErro("Erro ao importar: " + e.message);
     }
@@ -694,7 +698,7 @@ export default function CRM() {
                   gap: 8, padding: "28px 20px", border: `2px dashed ${C.border}`, borderRadius: 10,
                   cursor: "pointer", color: C.muted, fontSize: 13,
                 }}>
-                  <span style={{ fontSize: 28 }}>📂</span>
+                  <span style={{ fontSize: 28 }}></span>
                   Clique para selecionar o arquivo CSV
                   <input type="file" accept=".csv,text/csv" style={{ display: "none" }} onChange={(e) => handleCSVFile(e.target.files[0])} />
                 </label>
@@ -743,8 +747,8 @@ export default function CRM() {
           <p style={{ color: C.muted, fontSize: 13, marginTop: 4 }}>Gerencie seu funil de vendas e contatos</p>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
-          <Btn variant="ghost" onClick={() => { setCsvPreview([]); setCsvErro(""); setCsvModal(true); }}>⬆ Importar CSV</Btn>
-          <Btn variant="ghost" onClick={() => setAiImportModal(true)}>🤖 Importar por IA</Btn>
+          <Btn variant="ghost" onClick={() => { setCsvPreview([]); setCsvErro(""); setCsvModal(true); }}> Importar CSV</Btn>
+          <Btn variant="ghost" onClick={() => setAiImportModal(true)}> Importar por IA</Btn>
           <Btn onClick={abrirNovo}>+ Nova oportunidade</Btn>
         </div>
       </div>
@@ -831,37 +835,19 @@ export default function CRM() {
         }}
       />
 
-      {/* Dashboard de Métricas */}
-      <div style={{ display: "flex", gap: 16, marginBottom: 20, flexWrap: "wrap" }}>
-        <div style={{ flex: "1 1 200px", background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", border: `1px solid ${C.border}`, padding: 16 }}>
-          <div style={{ fontSize: 11, color: C.muted, fontWeight: 700, letterSpacing: 1 }}>TAXA DE CONVERSÃO</div>
-          <div style={{ fontSize: 26, fontWeight: 800, color: stats.taxa > 20 ? C.green : C.text, marginTop: 4 }}>{stats.taxa}%</div>
-          <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>{stats.convertidos} convertidos de {stats.total} leads</div>
-        </div>
-
-        <div style={{ flex: "2 1 300px", background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, padding: 16 }}>
-          <div style={{ fontSize: 11, color: C.muted, fontWeight: 700, letterSpacing: 1 }}>CONVERSÃO POR ORIGEM</div>
-          <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
-            {Object.entries(stats.porOrigem).length === 0 ? (
-              <span style={{ fontSize: 12, color: C.muted }}>Nenhum dado</span>
-            ) : (
-              Object.entries(stats.porOrigem).map(([orig, dados]) => (
-                <div key={orig} style={{ background: C.darker, padding: "6px 10px", borderRadius: 6, fontSize: 12 }}>
-                  <span style={{ color: C.muted, marginRight: 6 }}>{orig}</span>
-                  <strong style={{ color: C.text }}>{Math.round((dados.convertidos / dados.total) * 100)}%</strong>
-                </div>
-              ))
-            )}
+      {/* KPIs */}
+      <div style={{ display: "flex", gap: 14, marginBottom: 20, flexWrap: "wrap" }}>
+        {[
+          { l: "VGV DO PIPELINE",      v: fmt(stats.totalVgv),           sub: `${stats.total} lead(s) cadastrados`,                                                                   cor: "#4f7d57" },
+          { l: "LEADS EM ABERTO",      v: stats.emAberto,                 sub: `de ${stats.total} total`,                                                                              cor: "#3b6ea5" },
+          { l: "FOLLOW-UPS PENDENTES", v: stats.followUpsPendentes,       sub: stats.followUpsPendentes === 1 ? "contato atrasado" : "contatos atrasados",                            cor: stats.followUpsPendentes > 0 ? "var(--neg,#a33327)" : "var(--muted,#8c847a)" },
+        ].map(({ l, v, sub, cor }) => (
+          <div key={l} style={{ flex: "1 1 200px", background: "var(--surface,#fff)", borderRadius: 14, border: "1px solid var(--line,#e7e1d8)", padding: "16px 20px" }}>
+            <div style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: 1.1, color: "var(--muted,#8c847a)", textTransform: "uppercase", marginBottom: 6 }}>{l}</div>
+            <div style={{ fontSize: 28, fontWeight: 700, color: cor, lineHeight: 1, fontFamily: "'Barlow Condensed',sans-serif" }}>{v}</div>
+            <div style={{ fontSize: 12, color: "var(--muted,#8c847a)", marginTop: 4 }}>{sub}</div>
           </div>
-        </div>
-
-        <div style={{ flex: "1 1 200px", background: stats.followUpsPendentes > 0 ? C.danger + "11" : C.surface, borderRadius: 12, border: `1px solid ${stats.followUpsPendentes > 0 ? C.danger + "44" : C.border}`, padding: 16 }}>
-          <div style={{ fontSize: 11, color: stats.followUpsPendentes > 0 ? C.danger : C.muted, fontWeight: 700, letterSpacing: 1 }}>FOLLOW-UPS PENDENTES</div>
-          <div style={{ fontSize: 26, fontWeight: 800, color: stats.followUpsPendentes > 0 ? C.danger : C.text, marginTop: 4 }}>{stats.followUpsPendentes}</div>
-          <div style={{ fontSize: 12, color: stats.followUpsPendentes > 0 ? C.danger : C.muted, marginTop: 2 }}>
-            {stats.followUpsPendentes === 1 ? "contato atrasado ou p/ hoje" : "contatos atrasados ou p/ hoje"}
-          </div>
-        </div>
+        ))}
       </div>
 
       {/* Toggle View */}
@@ -889,7 +875,7 @@ export default function CRM() {
               boxShadow: view === "list" ? "0 2px 8px #0004" : "none",
               transition: "all 0.2s"
             }}>
-            ☰ Lista
+             Lista
           </button>
         </div>
       </div>
@@ -903,37 +889,40 @@ export default function CRM() {
             <div style={{ display: "flex", gap: 12, overflowX: "auto", paddingBottom: 16 }}>
               {STATUS_OPTS.map(status => {
                 const clientesColuna = clientesFiltrados.filter(c => c.status === status);
+                const etapa = etapaInfo(status);
+                const vgvCol = clientesColuna.reduce((s, c) => s + (c.valor || 0), 0);
                 return (
-                  <div 
+                  <div
                     key={status}
                     onDragOver={e => e.preventDefault()}
                     onDrop={e => {
                       const id = e.dataTransfer.getData("text/plain");
                       if (id) {
                         updateCliente(id, { status });
-                        mostrarToast(`✅ Movido para ${status}`);
+                        mostrarToast(` Movido para ${status}`);
                         if (status === "Em execução") {
                           const c = clientes.find((x) => x.id === id);
                           if (c) setCriarObraModal(c);
                         }
                       }
                     }}
-                    style={{ 
-                      width: 220, flexShrink: 0, background: C.surface, borderRadius: 14, border: `1px solid ${C.border}`,
+                    style={{
+                      width: 230, flexShrink: 0, background: "var(--surface,#fff)", borderRadius: 14, border: `1px solid ${etapa.cor}22`,
                       display: "flex", flexDirection: "column"
                     }}
                   >
-                    <div style={{ padding: "12px 16px", borderBottom: `1px solid ${C.border}`, display: "flex", justifyContent: "space-between", alignItems: "center", background: C.darker, borderTopLeftRadius: 10, borderTopRightRadius: 10 }}>
-                      <div style={{ fontSize: 12, fontWeight: 700, display: "flex", alignItems: "center", gap: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>
-                        <div style={{ width: 10, height: 10, borderRadius: 5, background: statusColor(status) }} />
-                        {status}
+                    <div style={{ padding: "10px 14px", background: etapa.bg, borderTopLeftRadius: 10, borderTopRightRadius: 10, borderBottom: `1px solid ${etapa.cor}22`, display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                      <div>
+                        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: 1, textTransform: "uppercase", color: etapa.cor }}>{etapa.label}</div>
+                        {vgvCol > 0 && <div style={{ fontSize: 12, fontWeight: 700, color: etapa.cor, marginTop: 2, fontFamily: "'Barlow Condensed',sans-serif" }}>{fmt(vgvCol)}</div>}
                       </div>
-                      <Badge label={clientesColuna.length.toString()} color={C.muted} />
+                      <span style={{ fontSize: 16, fontWeight: 800, fontFamily: "'Barlow Condensed',sans-serif", color: etapa.cor }}>{clientesColuna.length}</span>
                     </div>
-                    
+
                     <div style={{ padding: 12, display: "flex", flexDirection: "column", gap: 10, overflowY: "auto", minHeight: 120, maxHeight: "calc(100vh - 320px)" }}>
                       {clientesColuna.map(c => {
                         const atrasado = c.proximo_contato && c.proximo_contato <= hojeStr && status !== "Fechado" && status !== "Em execução";
+                        const cEtapa = etapaInfo(c.status);
                         return (
                           <div
                             key={c.id}
@@ -941,11 +930,13 @@ export default function CRM() {
                             onDragStart={e => { e.dataTransfer.setData("text/plain", c.id); setDragging(true); }}
                             onDragEnd={() => setDragging(false)}
                             onClick={() => abrirEditar(c)}
-                            style={{ 
-                              background: C.surface, borderRadius: 8, padding: 14, cursor: "grab", 
-                              border: atrasado ? `1px solid ${C.danger}` : `1px solid ${C.border}`,
-                              boxShadow: sel === c.id ? `0 0 0 2px ${C.red}` : "0 2px 4px #0001",
-                              transition: "all 0.2s",
+                            onMouseEnter={e => { e.currentTarget.style.boxShadow = "0 8px 24px rgba(0,0,0,0.12)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
+                            onMouseLeave={e => { e.currentTarget.style.boxShadow = sel === c.id ? `0 0 0 2px ${cEtapa.cor}` : "0 2px 4px #0001"; e.currentTarget.style.transform = ""; }}
+                            style={{
+                              background: "var(--surface,#fff)", borderRadius: 10, padding: 14, cursor: "grab",
+                              border: atrasado ? `1px solid ${C.danger}` : sel === c.id ? `1.5px solid ${cEtapa.cor}` : `1px solid ${cEtapa.cor}33`,
+                              boxShadow: sel === c.id ? `0 0 0 2px ${cEtapa.cor}44` : "0 2px 4px #0001",
+                              transition: "box-shadow .14s, transform .14s",
                               position: "relative"
                             }}
                           >
@@ -960,8 +951,8 @@ export default function CRM() {
                             {c.valor > 0 && <div style={{ fontSize: 12, color: C.success, fontWeight: 700 }}>{fmt(c.valor)}</div>}
                             
                             <div style={{ fontSize: 11, color: C.muted, marginTop: 10, display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 8, borderTop: `1px dashed ${C.border}` }}>
-                              <span style={{ background: C.darker, padding: "2px 6px", borderRadius: 4 }}>{c.origem || "Indicação"}</span>
-                              {atrasado && <span style={{ color: C.danger, fontWeight: 700, fontSize: 10, background: C.danger+"22", padding: "2px 6px", borderRadius: 4 }}>⚠️ FOLLOW-UP</span>}
+                              <span style={{ background: cEtapa.bg, color: cEtapa.cor, padding: "2px 7px", borderRadius: 4, fontSize: 10, fontWeight: 700 }}>{c.origem || "Indicação"}</span>
+                              {atrasado && <span style={{ color: C.danger, fontWeight: 700, fontSize: 10, background: C.danger+"22", padding: "2px 6px", borderRadius: 4 }}> FOLLOW-UP</span>}
                             </div>
                             {(c.origem === "Calculadora" || c.origem?.startsWith("Kit-")) && (() => {
                               const kitId = c.origem?.startsWith("Kit-")
@@ -985,7 +976,7 @@ export default function CRM() {
                                   onMouseEnter={e => e.currentTarget.style.background = "#98191520"}
                                   onMouseLeave={e => e.currentTarget.style.background = "#98191510"}
                                 >
-                                  🔧 Simular kit
+                                   Simular kit
                                 </button>
                               );
                             })()}
@@ -998,14 +989,14 @@ export default function CRM() {
                                 }}
                                 style={{
                                   marginTop: 8, width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-                                  padding: "6px 0", borderRadius: 7, border: "1px solid #25D36633",
-                                  background: "#25D36610", color: "#25D366", fontSize: 11, fontWeight: 700,
+                                  padding: "6px 0", borderRadius: 7, border: "1px solid #3f7a4b33",
+                                  background: "#3f7a4b10", color: "#3f7a4b", fontSize: 11, fontWeight: 700,
                                   cursor: "pointer", transition: "background 0.15s",
                                 }}
-                                onMouseEnter={e => e.currentTarget.style.background = "#25D36622"}
-                                onMouseLeave={e => e.currentTarget.style.background = "#25D36610"}
+                                onMouseEnter={e => e.currentTarget.style.background = "#3f7a4b22"}
+                                onMouseLeave={e => e.currentTarget.style.background = "#3f7a4b10"}
                               >
-                                💬 Contatar
+                                 Contatar
                               </button>
                             )}
                           </div>
@@ -1049,7 +1040,7 @@ export default function CRM() {
             <div style={{ background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", border: `1px solid ${C.border}`, overflow: "hidden" }}>
               {clientesFiltrados.length === 0 ? (
                 <div style={{ padding: 48, textAlign: "center", color: C.muted }}>
-                  <div style={{ fontSize: 32, marginBottom: 12 }}>◈</div>
+                  <div style={{ fontSize: 32, marginBottom: 12 }}></div>
                   <div style={{ fontSize: 14, fontWeight: 600 }}>{clientes.length === 0 ? "Nenhum cliente ainda" : "Nenhum resultado para os filtros"}</div>
                   <div style={{ fontSize: 12, marginTop: 4 }}>{clientes.length === 0 ? 'Clique em "+ Nova oportunidade" para começar' : "Tente ajustar ou limpar os filtros"}</div>
                 </div>
@@ -1114,7 +1105,7 @@ export default function CRM() {
         {criarObraModal && (
           <div style={{ position: "fixed", inset: 0, background: "#000a", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center" }}>
             <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 14, padding: 28, width: 420, maxWidth: "95vw" }}>
-              <div style={{ fontSize: 18, fontWeight: 800, marginBottom: 6 }}>🏗️ Criar obra?</div>
+              <div style={{ fontSize: 18, fontWeight: 800, marginBottom: 6 }}> Criar obra?</div>
               <div style={{ fontSize: 13, color: C.muted, marginBottom: 20, lineHeight: 1.6 }}>
                 <strong>{criarObraModal.nome}</strong> foi movido para <strong>Em execução</strong>.<br />
                 Deseja criar uma obra automaticamente para este cliente?
@@ -1134,7 +1125,7 @@ export default function CRM() {
                     contrato: c.valor || 0,
                   });
                   setCriarObraModal(null);
-                  mostrarToast("🏗️ Obra criada com sucesso!");
+                  mostrarToast(" Obra criada com sucesso!");
                 }}>
                   Sim, criar obra
                 </Btn>
@@ -1188,10 +1179,10 @@ export default function CRM() {
                   <div key={b.label} style={{ marginBottom: 10 }}>
                     <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, marginBottom: 3 }}>
                       <span style={{ color: C.muted }}>{b.label}</span>
-                      <span style={{ fontWeight: 700, color: b.pts === b.max ? "#2e9e5b" : C.text }}>{b.pts}/{b.max}</span>
+                      <span style={{ fontWeight: 700, color: b.pts === b.max ? "#3f7a4b" : C.text }}>{b.pts}/{b.max}</span>
                     </div>
                     <div style={{ height: 5, background: C.dark, borderRadius: 3, overflow: "hidden" }}>
-                      <div style={{ height: 5, width: `${(b.pts / b.max) * 100}%`, background: b.pts === b.max ? "#2e9e5b" : s.cor, borderRadius: 3 }} />
+                      <div style={{ height: 5, width: `${(b.pts / b.max) * 100}%`, background: b.pts === b.max ? "#3f7a4b" : s.cor, borderRadius: 3 }} />
                     </div>
                   </div>
                 ))}
@@ -1259,12 +1250,12 @@ export default function CRM() {
               disabled={seqLoading}
               style={{
                 marginTop: 14, width: "100%", padding: "9px 0",
-                background: "#4a9eff22", border: "1px solid #4a9eff44",
-                borderRadius: 6, color: "#4a9eff", fontSize: 12,
+                background: "#3b6ea522", border: "1px solid #3b6ea544",
+                borderRadius: 6, color: "#3b6ea5", fontSize: 12,
                 fontWeight: 700, cursor: seqLoading ? "wait" : "pointer", fontFamily: "inherit",
               }}
             >
-              {seqLoading ? "Criando..." : "📅 Sequência D+3 / D+7 / D+15"}
+              {seqLoading ? "Criando..." : " Sequência D+3 / D+7 / D+15"}
             </button>
 
             <button
@@ -1276,7 +1267,7 @@ export default function CRM() {
                 fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
               }}
             >
-              🔩 Gerar Orçamento Técnico
+               Gerar Orçamento Técnico
             </button>
 
             <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
@@ -1288,7 +1279,7 @@ export default function CRM() {
                   borderRadius: 6, color: C.danger, fontSize: 12,
                   fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
                 }}>
-                  🗑 Deletar
+                   Deletar
                 </button>
               )}
             </div>
@@ -1298,12 +1289,12 @@ export default function CRM() {
                 onClick={() => setWaModal(cliente)}
                 style={{
                   marginTop: 8, width: "100%", padding: "9px 0",
-                  background: "#25D36622", border: "1px solid #25D36644",
-                  borderRadius: 6, color: "#25D366", fontSize: 12,
+                  background: "#3f7a4b22", border: "1px solid #3f7a4b44",
+                  borderRadius: 6, color: "#3f7a4b", fontSize: 12,
                   fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
                 }}
               >
-                📲 Enviar WhatsApp
+                 Enviar WhatsApp
               </button>
             )}
           </div>

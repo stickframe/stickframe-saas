@@ -15,7 +15,7 @@ const PRIORIDADES = ["Alta","Média","Baixa"];
 const STATUS_COR = { "Aberto": "#c0392b", "Em andamento": "#b97a00", "Resolvido": "#2e9e5b", "Descartado": C.muted };
 const PRIO_COR   = { "Alta": "#c0392b", "Média": "#b97a00", "Baixa": "#2e9e5b" };
 
-// ─── Exportar PDF de apontamentos ────────────────────────────────────────────
+//  Exportar PDF de apontamentos 
 function exportarRelatorioApontamentos(apts, obraNome) {
   const hoje = new Date().toLocaleDateString("pt-BR");
   const total = apts.length;
@@ -33,7 +33,7 @@ function exportarRelatorioApontamentos(apts, obraNome) {
         <td style="padding:10px 8px;font-size:11px"><span style="background:${corStatus}18;color:${corStatus};border-radius:4px;padding:2px 8px;font-weight:700">${a.status}</span></td>
         <td style="padding:10px 8px;font-size:11px"><span style="background:${corPrio}18;color:${corPrio};border-radius:4px;padding:2px 8px;font-weight:700">${a.prioridade}</span></td>
         <td style="padding:10px 8px;font-size:11px;color:#888">${a.tipo}</td>
-        <td style="padding:10px 8px;font-size:11px;color:#4a9eff">${a.disciplina}</td>
+        <td style="padding:10px 8px;font-size:11px;color:var(--steel)">${a.disciplina}</td>
         <td style="padding:10px 8px;font-size:11px">${a.responsavel || "—"}</td>
         <td style="padding:10px 8px;font-size:11px;color:#888">${a.prazo ? new Date(a.prazo + "T00:00").toLocaleDateString("pt-BR") : "—"}</td>
       </tr>`;
@@ -85,7 +85,7 @@ function exportarRelatorioApontamentos(apts, obraNome) {
   printHtml(html, `bim-apontamentos-${obraNome.replace(/\s+/g, "-").toLowerCase()}`);
 }
 
-// ─── Viewer DAE (Collada) ─────────────────────────────────────────────────────
+//  Viewer DAE (Collada) 
 function DAEViewer({ url }) {
   const containerRef = useRef(null);
   const [status, setStatus] = useState("loading");
@@ -199,7 +199,7 @@ function DAEViewer({ url }) {
           )}
           {status === "error" && (
             <div style={{ textAlign: "center", padding: 20 }}>
-              <div style={{ fontSize: 36, marginBottom: 10 }}>⚠️</div>
+              <div style={{ fontSize: 36, marginBottom: 10 }}></div>
               <div style={{ fontSize: 13, color: "#c0392b", marginBottom: 6 }}>Erro ao carregar modelo</div>
               <div style={{ fontSize: 11, color: "#888", maxWidth: 300, lineHeight: 1.5 }}>{msg}</div>
             </div>
@@ -210,7 +210,7 @@ function DAEViewer({ url }) {
   );
 }
 
-// ─── Smart Viewer (IFC ou DAE) ────────────────────────────────────────────────
+//  Smart Viewer (IFC ou DAE) 
 function ModelViewer({ url, onElementClick, highlightElementId }) {
   if (!url) return null;
   const ext = url.split("?")[0].split(".").pop().toLowerCase();
@@ -218,7 +218,7 @@ function ModelViewer({ url, onElementClick, highlightElementId }) {
   return <IFCViewer url={url} onElementClick={onElementClick} highlightElementId={highlightElementId} />;
 }
 
-// ─── Viewer IFC ───────────────────────────────────────────────────────────────
+//  Viewer IFC 
 function IFCViewer({ url, onElementClick, highlightElementId }) {
   const containerRef = useRef(null);
   const viewerRef    = useRef(null);
@@ -363,9 +363,9 @@ function IFCViewer({ url, onElementClick, highlightElementId }) {
         }}>
           {[
             { icon: "⊙", label: "Ajustar", view: "fit" },
-            { icon: "⬆", label: "Topo",   view: "top" },
-            { icon: "▣",  label: "Frente", view: "front" },
-            { icon: "◧",  label: "Lateral",view: "side" },
+            { icon: "", label: "Topo",   view: "top" },
+            { icon: "",  label: "Frente", view: "front" },
+            { icon: "",  label: "Lateral",view: "side" },
           ].map(({ icon, label, view }) => (
             <button key={view} onClick={() => setCameraView(view)} title={label} style={{
               width: 32, height: 32, borderRadius: 6, border: "1px solid #ffffff22",
@@ -405,7 +405,7 @@ function IFCViewer({ url, onElementClick, highlightElementId }) {
   );
 }
 
-// ─── Modal de apontamento ─────────────────────────────────────────────────────
+//  Modal de apontamento 
 function ModalApontamento({ modelos, elementoSelecionado, onSave, onClose }) {
   const [form, setForm] = useState({
     titulo: elementoSelecionado ? `Elemento #${elementoSelecionado.expressId}` : "",
@@ -420,14 +420,14 @@ function ModalApontamento({ modelos, elementoSelecionado, onSave, onClose }) {
       <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 14, width: "100%", maxWidth: 520, maxHeight: "90vh", overflowY: "auto" }}>
         <div style={{ padding: "20px 24px", borderBottom: `1px solid ${C.border}`, display: "flex", justifyContent: "space-between" }}>
           <div style={{ fontSize: 15, fontWeight: 800 }}>
-            {elementoSelecionado ? "📌 Apontamento no elemento" : "Novo Apontamento"}
+            {elementoSelecionado ? " Apontamento no elemento" : "Novo Apontamento"}
           </div>
           <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 20, color: C.muted }}>×</button>
         </div>
 
         {elementoSelecionado && (
-          <div style={{ margin: "14px 24px 0", background: "#4a9eff18", border: "1px solid #4a9eff33", borderRadius: 8, padding: "10px 14px", fontSize: 12, color: "#4a9eff" }}>
-            🧊 Elemento selecionado no modelo · Express ID: <strong>{elementoSelecionado.expressId}</strong>
+          <div style={{ margin: "14px 24px 0", background: "#3b6ea518", border: "1px solid #3b6ea533", borderRadius: 8, padding: "10px 14px", fontSize: 12, color: "var(--steel)" }}>
+             Elemento selecionado no modelo · Express ID: <strong>{elementoSelecionado.expressId}</strong>
           </div>
         )}
 
@@ -481,7 +481,7 @@ function ModalApontamento({ modelos, elementoSelecionado, onSave, onClose }) {
   );
 }
 
-// ─── Modal upload IFC / DAE ───────────────────────────────────────────────────
+//  Modal upload IFC / DAE 
 function ModalUpload({ onSave, onClose }) {
   const [file, setFile]   = useState(null);
   const [nome, setNome]   = useState("");
@@ -524,7 +524,7 @@ function ModalUpload({ onSave, onClose }) {
               <div>
                 <div style={{ fontSize: 13, fontWeight: 700 }}>Clique ou arraste o arquivo</div>
                 <div style={{ fontSize: 11, color: C.muted, marginTop: 4 }}>
-                  <span style={{ background: "#4a9eff22", color: "#4a9eff", borderRadius: 4, padding: "2px 8px", marginRight: 6 }}>.IFC</span>
+                  <span style={{ background: "#3b6ea522", color: "var(--steel)", borderRadius: 4, padding: "2px 8px", marginRight: 6 }}>.IFC</span>
                   <span style={{ background: "#2e9e5b22", color: "#2e9e5b", borderRadius: 4, padding: "2px 8px" }}>.DAE</span>
                 </div>
                 <div style={{ fontSize: 10, color: C.muted, marginTop: 6 }}>Tamanho máximo: 100 MB</div>
@@ -533,7 +533,7 @@ function ModalUpload({ onSave, onClose }) {
           </label>
           {isDAE && (
             <div style={{ background: "#2e9e5b18", border: "1px solid #2e9e5b33", borderRadius: 8, padding: "10px 14px", fontSize: 11, color: "#2e9e5b" }}>
-              ✓ Collada DAE · Visualização via Three.js — compatível com Blender, SketchUp e Revit exportados
+               Collada DAE · Visualização via Three.js — compatível com Blender, SketchUp e Revit exportados
             </div>
           )}
           <Field label="Nome do modelo *">
@@ -553,7 +553,7 @@ function ModalUpload({ onSave, onClose }) {
         <div style={{ padding: "16px 24px", borderTop: `1px solid ${C.border}`, display: "flex", gap: 10, justifyContent: "flex-end" }}>
           <button onClick={onClose} style={btnGhost}>Cancelar</button>
           <button onClick={async () => { setSaving(true); await onSave(file, { nome, disciplina: disc, versao }); }} disabled={!file || !nome.trim() || saving} style={{ ...btnPrimary, opacity: (!file || !nome.trim() || saving) ? .4 : 1 }}>
-            {saving ? "Enviando..." : "⬆ Enviar modelo"}
+            {saving ? "Enviando..." : " Enviar modelo"}
           </button>
         </div>
       </div>
@@ -561,7 +561,7 @@ function ModalUpload({ onSave, onClose }) {
   );
 }
 
-// ─── Helpers de estilo ────────────────────────────────────────────────────────
+//  Helpers de estilo 
 const inp        = { width: "100%", padding: "9px 12px", borderRadius: 7, border: `1px solid ${C.border}`, background: C.surface, color: C.text, fontSize: 13, fontFamily: "inherit", outline: "none", boxSizing: "border-box" };
 const btnPrimary = { padding: "9px 20px", borderRadius: 6, border: "none", background: C.red, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" };
 const btnGhost   = { padding: "9px 18px", borderRadius: 6, border: `1px solid ${C.border}`, background: "transparent", color: C.muted, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" };
@@ -575,10 +575,10 @@ function Field({ label, children }) {
   );
 }
 
-// ─── Página BIM ───────────────────────────────────────────────────────────────
-// ─── Kits para o preview 3D ───────────────────────────────────────────────────
+//  Página BIM 
+//  Kits para o preview 3D 
 const KITS_3D = [
-  { id: "studio",    nome: "Studio 42m²",         area: 42,  larg: 7,  comp: 6,  pavs: 1, quartos: 1, cor: "#4a9eff" },
+  { id: "studio",    nome: "Studio 42m²",         area: 42,  larg: 7,  comp: 6,  pavs: 1, quartos: 1, cor: "#3b6ea5" },
   { id: "vila",      nome: "Vila 78m²",            area: 78,  larg: 9,  comp: 8.5,pavs: 1, quartos: 2, cor: "#2e9e5b" },
   { id: "casa120",   nome: "Casa Serena 120m²",    area: 120, larg: 12, comp: 10, pavs: 1, quartos: 3, cor: "#981915" },
   { id: "sobrado",   nome: "Sobrado 160m²",        area: 160, larg: 10, comp: 8,  pavs: 2, quartos: 3, cor: "#8b5cf6" },
@@ -782,13 +782,13 @@ function KitPreview3D() {
 
       {/* info bar */}
       <div style={{ padding: "10px 16px", borderTop: "1px solid #1a1a2e", display: "flex", gap: 24, alignItems: "center", flexWrap: "wrap" }}>
-        <span style={{ fontSize: 11, color: "#444" }}>🖱 Arrastar: orbitar · Scroll: zoom · Shift+drag: pan</span>
+        <span style={{ fontSize: 11, color: "#444" }}> Arrastar: orbitar · Scroll: zoom · Shift+drag: pan</span>
         {kitSel && (
           <div style={{ display: "flex", gap: 16, marginLeft: "auto" }}>
             {[
-              { icon: "📐", val: `${kitSel.area} m²` },
-              { icon: "🏠", val: `${kitSel.pavs} pav.` },
-              { icon: "🛏", val: `${kitSel.quartos} qts` },
+              { icon: "", val: `${kitSel.area} m²` },
+              { icon: "", val: `${kitSel.pavs} pav.` },
+              { icon: "", val: `${kitSel.quartos} qts` },
             ].map(({ icon, val }) => (
               <div key={val} style={{ display: "flex", alignItems: "center", gap: 4 }}>
                 <span style={{ fontSize: 12 }}>{icon}</span>
@@ -906,10 +906,10 @@ export default function BIM() {
           try {
             await addBimModelo(obraId, file, meta);
             setModalUpload(false);
-            mostrarToast("✅ Modelo IFC enviado!");
+            mostrarToast(" Modelo IFC enviado!");
           } catch (e) {
             setModalUpload(false);
-            mostrarToast("❌ Erro ao enviar: " + (e?.message || e));
+            mostrarToast(" Erro ao enviar: " + (e?.message || e));
           }
         }} />
       )}
@@ -922,25 +922,28 @@ export default function BIM() {
             await addBimApontamento(obraId, form);
             setModalApt(false);
             setElementoSelecionado(null);
-            mostrarToast("✅ Apontamento registrado!");
+            mostrarToast(" Apontamento registrado!");
           }}
         />
       )}
 
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-        <div>
-          <h2 style={{ fontSize: 22, fontWeight: 800 }}>BIM</h2>
-          <p style={{ color: C.muted, fontSize: 13, marginTop: 4 }}>Modelos IFC · Visualização 3D · Apontamentos</p>
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+          <div style={{ width: 4, height: 42, borderRadius: 3, background: "var(--brick)", flexShrink: 0, marginTop: 2 }} />
+          <div>
+            <div style={{ fontFamily: "var(--cond)", fontWeight: 700, fontSize: 28, color: "var(--ink)", lineHeight: 1 }}>BIM</div>
+            <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4 }}>Modelos IFC · Visualização 3D · Apontamentos</div>
+          </div>
         </div>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
           {todosApt.length > 0 && (
             <button onClick={() => exportarRelatorioApontamentos(todosApt, obraAtual?.nome || "Obra")} style={btnGhost}>
-              📄 Exportar relatório
+               Exportar relatório
             </button>
           )}
           <button onClick={() => { setElementoSelecionado(null); setModalApt(true); }} style={btnGhost}>+ Apontamento</button>
-          <button onClick={() => setModalUpload(true)} style={btnPrimary}>⬆ Importar modelo</button>
+          <button onClick={() => setModalUpload(true)} style={btnPrimary}> Importar modelo</button>
         </div>
       </div>
 
@@ -961,14 +964,15 @@ export default function BIM() {
       {/* KPIs */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 20 }}>
         {[
-          ["Modelos 3D",    modelos.length,  "#4a9eff"],
-          ["Apontamentos",  stats.total,     C.muted],
-          ["Alta prioridade", stats.alta,    "#c0392b"],
-          ["Resolvidos",    stats.resolvidos,"#2e9e5b"],
+          ["Modelos 3D",    modelos.length,  "var(--steel)"],
+          ["Apontamentos",  stats.total,     "var(--muted)"],
+          ["Alta prioridade", stats.alta,    "var(--neg)"],
+          ["Resolvidos",    stats.resolvidos,"var(--pos)"],
         ].map(([l, v, cor]) => (
-          <div key={l} style={{ background: C.surface, borderRadius: 14, border: `1px solid ${C.border}`, padding: "14px 18px" }}>
-            <div style={{ fontSize: 24, fontWeight: 800, color: cor }}>{v}</div>
-            <div style={{ fontSize: 11, color: C.muted, marginTop: 3 }}>{l}</div>
+          <div key={l} style={{ background: "var(--surface)", borderRadius: 12, border: "1px solid var(--line)", padding: "16px 18px" }}>
+            <div style={{ height: 3, width: 28, borderRadius: 2, background: cor, marginBottom: 12 }} />
+            <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 1.2, color: "var(--muted)", textTransform: "uppercase", marginBottom: 6 }}>{l}</div>
+            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 32, fontWeight: 700, color: cor === "var(--muted)" ? "var(--ink)" : cor, lineHeight: 1 }}>{v}</div>
           </div>
         ))}
       </div>
@@ -976,11 +980,11 @@ export default function BIM() {
       {/* Abas */}
       <div style={{ display: "flex", borderBottom: `1px solid ${C.border}`, marginBottom: 0 }}>
         {[
-          ["modelos",      "🧊 Modelos"],
-          ["revisoes",     "🔄 Revisões"],
-          ["apontamentos", "📌 Apontamentos"],
-          ["viewer",       "🖥 Viewer 3D"],
-          ["preview",      "🏠 Preview Kit"],
+          ["modelos",      " Modelos"],
+          ["revisoes",     " Revisões"],
+          ["apontamentos", " Apontamentos"],
+          ["viewer",       " Viewer 3D"],
+          ["preview",      " Preview Kit"],
         ].map(([k, l]) => (
           <button key={k} onClick={() => setAba(k)} style={{
             padding: "10px 20px", background: "transparent", border: "none",
@@ -1000,13 +1004,13 @@ export default function BIM() {
               <div style={{ fontSize: 36, marginBottom: 12 }}><Box size={36} /></div>
               <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 6 }}>Nenhum modelo importado</div>
               <div style={{ fontSize: 13, color: C.muted, marginBottom: 24 }}>Importe arquivos .IFC ou .DAE para visualizar em 3D.</div>
-              <button onClick={() => setModalUpload(true)} style={btnPrimary}>⬆ Importar primeiro modelo</button>
+              <button onClick={() => setModalUpload(true)} style={btnPrimary}> Importar primeiro modelo</button>
             </div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {modelos.map((m) => (
                 <div key={m.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 18px", background: C.darker, borderRadius: 10, border: `1px solid ${C.border}` }}>
-                  <div style={{ width: 42, height: 42, borderRadius: 8, background: "#4a9eff20", border: "2px solid #4a9eff44", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}><Box size={36} /></div>
+                  <div style={{ width: 42, height: 42, borderRadius: 8, background: "#3b6ea520", border: "2px solid #3b6ea544", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}><Box size={36} /></div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 13, fontWeight: 700 }}>{m.nome}</div>
                     <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>
@@ -1014,10 +1018,10 @@ export default function BIM() {
                     </div>
                   </div>
                   <div style={{ display: "flex", gap: 8 }}>
-                    <button onClick={() => abrirModelo(m)} style={{ padding: "7px 16px", borderRadius: 6, border: "1px solid #4a9eff44", background: "#4a9eff18", color: "#4a9eff", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
-                      🖥 Visualizar 3D
+                    <button onClick={() => abrirModelo(m)} style={{ padding: "7px 16px", borderRadius: 6, border: "1px solid #3b6ea544", background: "#3b6ea518", color: "var(--steel)", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+                       Visualizar 3D
                     </button>
-                    <button onClick={async () => { await deleteBimModelo(obraId, m.id, m.storage_path); mostrarToast("🗑 Modelo removido."); }} style={{ padding: "7px 10px", borderRadius: 6, border: `1px solid ${C.danger}44`, background: C.danger + "18", color: C.danger, fontSize: 11, cursor: "pointer", fontFamily: "inherit" }}><Trash2 size={13} /></button>
+                    <button onClick={async () => { await deleteBimModelo(obraId, m.id, m.storage_path); mostrarToast(" Modelo removido."); }} style={{ padding: "7px 10px", borderRadius: 6, border: `1px solid ${C.danger}44`, background: C.danger + "18", color: C.danger, fontSize: 11, cursor: "pointer", fontFamily: "inherit" }}><Trash2 size={13} /></button>
                   </div>
                 </div>
               ))}
@@ -1031,7 +1035,7 @@ export default function BIM() {
         <div style={{ background: C.surface, borderRadius: "0 0 12px 12px", border: `1px solid ${C.border}`, borderTop: "none", padding: 22 }}>
           {modelos.length === 0 ? (
             <div style={{ textAlign: "center", padding: "40px 0" }}>
-              <div style={{ fontSize: 36, marginBottom: 12 }}>🔄</div>
+              <div style={{ fontSize: 36, marginBottom: 12 }}></div>
               <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 6 }}>Nenhum modelo para comparar</div>
               <div style={{ fontSize: 13, color: C.muted }}>Importe modelos com o mesmo nome base para ver o histórico de revisões.</div>
             </div>
@@ -1056,7 +1060,7 @@ export default function BIM() {
                           display: "flex", alignItems: "center", justifyContent: "center",
                           fontSize: 10, fontWeight: 800, color: i === 0 ? "#fff" : C.muted, flexShrink: 0,
                         }}>
-                          {i === 0 ? "✓" : `R${revs.length - i}`}
+                          {i === 0 ? "" : `R${revs.length - i}`}
                         </div>
                         <div style={{ flex: 1 }}>
                           <div style={{ fontSize: 12, fontWeight: i === 0 ? 700 : 400, color: i === 0 ? C.text : C.muted }}>
@@ -1066,8 +1070,8 @@ export default function BIM() {
                             {m.disciplina} · {m.tamanho} · {new Date(m.created_at).toLocaleDateString("pt-BR")}
                           </div>
                         </div>
-                        <button onClick={() => abrirModelo(m)} style={{ padding: "5px 12px", borderRadius: 5, border: "1px solid #4a9eff44", background: "#4a9eff18", color: "#4a9eff", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
-                          🖥 Abrir
+                        <button onClick={() => abrirModelo(m)} style={{ padding: "5px 12px", borderRadius: 5, border: "1px solid #3b6ea544", background: "#3b6ea518", color: "var(--steel)", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+                           Abrir
                         </button>
                       </div>
                     ))}
@@ -1094,7 +1098,7 @@ export default function BIM() {
             ))}
             <span style={{ fontSize: 10, fontWeight: 700, color: C.muted, letterSpacing: .5, marginLeft: 12, marginRight: 4 }}>DISC.</span>
             {["Todas", ...DISCIPLINAS_BIM].map((d) => (
-              <button key={d} onClick={() => setFiltroDisciplina(d)} style={{ padding: "3px 10px", borderRadius: 5, fontSize: 11, fontWeight: filtroDisciplina === d ? 700 : 400, border: `1px solid ${filtroDisciplina === d ? "#4a9eff" : C.border}`, background: filtroDisciplina === d ? "#4a9eff18" : "transparent", color: filtroDisciplina === d ? "#4a9eff" : C.muted, cursor: "pointer", fontFamily: "inherit" }}>{d}</button>
+              <button key={d} onClick={() => setFiltroDisciplina(d)} style={{ padding: "3px 10px", borderRadius: 5, fontSize: 11, fontWeight: filtroDisciplina === d ? 700 : 400, border: `1px solid ${filtroDisciplina === d ? "var(--steel)" : C.border}`, background: filtroDisciplina === d ? "#3b6ea518" : "transparent", color: filtroDisciplina === d ? "var(--steel)" : C.muted, cursor: "pointer", fontFamily: "inherit" }}>{d}</button>
             ))}
             {todosApt.length > 0 && (
               <button onClick={() => exportarRelatorioApontamentos(apts, obraAtual?.nome || "Obra")} style={{ marginLeft: "auto", padding: "4px 12px", borderRadius: 5, border: `1px solid ${C.border}`, background: "transparent", color: C.muted, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
@@ -1105,7 +1109,7 @@ export default function BIM() {
 
           {apts.length === 0 ? (
             <div style={{ textAlign: "center", padding: "40px 0" }}>
-              <div style={{ fontSize: 36, marginBottom: 12 }}>📌</div>
+              <div style={{ fontSize: 36, marginBottom: 12 }}></div>
               <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 6 }}>Nenhum apontamento</div>
               <div style={{ fontSize: 13, color: C.muted, marginBottom: 24 }}>Registre clashes, inconsistências e pendências dos modelos.</div>
               <button onClick={() => setModalApt(true)} style={btnPrimary}>+ Criar apontamento</button>
@@ -1124,7 +1128,7 @@ export default function BIM() {
                         <span style={{ background: scorCor + "18", color: scorCor, border: `1px solid ${scorCor}33`, borderRadius: 4, padding: "1px 8px", fontSize: 10, fontWeight: 700 }}>{a.status}</span>
                         <span style={{ background: prioCor + "18", color: prioCor, borderRadius: 4, padding: "1px 8px", fontSize: 10, fontWeight: 700 }}>{a.prioridade}</span>
                         <span style={{ background: "#41414122", color: C.muted, borderRadius: 4, padding: "1px 8px", fontSize: 10 }}>{a.tipo}</span>
-                        <span style={{ background: "#4a9eff18", color: "#4a9eff", borderRadius: 4, padding: "1px 8px", fontSize: 10 }}>{a.disciplina}</span>
+                        <span style={{ background: "#3b6ea518", color: "var(--steel)", borderRadius: 4, padding: "1px 8px", fontSize: 10 }}>{a.disciplina}</span>
                       </div>
                       {a.descricao && <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.5, marginBottom: 4 }}>{a.descricao}</div>}
                       <div style={{ fontSize: 11, color: C.muted }}>
@@ -1135,12 +1139,12 @@ export default function BIM() {
                     </div>
                     <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
                       {a.status !== "Resolvido" && (
-                        <button onClick={() => updateBimApontamento(obraId, a.id, { status: "Resolvido" })} style={{ padding: "5px 10px", borderRadius: 5, border: "1px solid #2e9e5b44", background: "#2e9e5b18", color: "#2e9e5b", fontSize: 10, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>✓ Resolver</button>
+                        <button onClick={() => updateBimApontamento(obraId, a.id, { status: "Resolvido" })} style={{ padding: "5px 10px", borderRadius: 5, border: "1px solid #2e9e5b44", background: "#2e9e5b18", color: "#2e9e5b", fontSize: 10, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}> Resolver</button>
                       )}
                       {a.status !== "Em andamento" && a.status !== "Resolvido" && (
                         <button onClick={() => updateBimApontamento(obraId, a.id, { status: "Em andamento" })} style={{ padding: "5px 10px", borderRadius: 5, border: "1px solid #b97a0044", background: "#b97a0018", color: "#b97a00", fontSize: 10, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>→ Iniciar</button>
                       )}
-                      <button onClick={async () => { await deleteBimApontamento(obraId, a.id); mostrarToast("🗑 Apontamento removido."); }} style={{ padding: "5px 8px", borderRadius: 5, border: `1px solid ${C.danger}44`, background: C.danger + "18", color: C.danger, fontSize: 10, cursor: "pointer", fontFamily: "inherit" }}><Trash2 size={13} /></button>
+                      <button onClick={async () => { await deleteBimApontamento(obraId, a.id); mostrarToast(" Apontamento removido."); }} style={{ padding: "5px 8px", borderRadius: 5, border: `1px solid ${C.danger}44`, background: C.danger + "18", color: C.danger, fontSize: 10, cursor: "pointer", fontFamily: "inherit" }}><Trash2 size={13} /></button>
                     </div>
                   </div>
                 );
@@ -1159,7 +1163,7 @@ export default function BIM() {
             <div style={{ height: urlElementId ? 560 : 600 }}>
               {urlElementId && (
                 <div style={{ background: "#981915", padding: "10px 16px", display: "flex", alignItems: "center", gap: 10 }}>
-                  <span style={{ fontSize: 18 }}>📍</span>
+                  <span style={{ fontSize: 18 }}></span>
                   <div>
                     <div style={{ color: "#fff", fontSize: 13, fontWeight: 800 }}>Localização do Painel — Element ID #{urlElementId}</div>
                     <div style={{ color: "rgba(255,255,255,0.75)", fontSize: 11 }}>Elemento destacado em vermelho · restante em transparência</div>
@@ -1170,13 +1174,13 @@ export default function BIM() {
                 <ModelViewer url={modeloUrl} onElementClick={handleElementClick} highlightElementId={urlElementId} />
               </div>
               <div style={{ padding: "8px 14px", background: "#111", fontSize: 11, color: "#555", borderTop: "1px solid #222", display: "flex", gap: 20 }}>
-                <span>🖱 Arrastar: orbitar · Scroll: zoom · Shift+arrastar: pan</span>
+                <span> Arrastar: orbitar · Scroll: zoom · Shift+arrastar: pan</span>
                 <span>· Clique em elemento para criar apontamento</span>
               </div>
             </div>
           ) : (
             <div style={{ height: 400, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 14 }}>
-              <div style={{ fontSize: 36 }}>🖥</div>
+              <div style={{ fontSize: 36 }}></div>
               <div style={{ fontSize: 14, fontWeight: 700, color: "#555" }}>Nenhum modelo aberto</div>
               <div style={{ fontSize: 12, color: "#444", marginBottom: 8 }}>Vá para "Modelos" e clique em "Visualizar 3D"</div>
               <button onClick={() => setAba("modelos")} style={{ ...btnPrimary, fontSize: 12 }}><Box size={13} /> Ver modelos</button>

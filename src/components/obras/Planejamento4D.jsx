@@ -117,7 +117,7 @@ export default function Planejamento4D({ faseAtual = "Projeto executivo" }) {
         return { mesh, line };
       };
 
-      // ─── FASE 0: PROJETO EXECUTIVO (Gabarito / Footprint) ───
+      //  FASE 0: PROJETO EXECUTIVO (Gabarito / Footprint) 
       if (faseSel >= 0) {
         // Linhas pontilhadas do contorno da obra no chão
         const footprintGeo = new THREE.BoxGeometry(W, 0.02, D);
@@ -141,7 +141,7 @@ export default function Planejamento4D({ faseAtual = "Projeto executivo" }) {
         });
       }
 
-      // ─── FASE 1: FUNDAÇÃO (Laje Radier Concrete) ───
+      //  FASE 1: FUNDAÇÃO (Laje Radier Concrete) 
       if (faseSel >= 1) {
         const radierGeo = new THREE.BoxGeometry(W + 0.4, 0.25, D + 0.4);
         const radierMat = new THREE.MeshStandardMaterial({ 
@@ -151,7 +151,7 @@ export default function Planejamento4D({ faseAtual = "Projeto executivo" }) {
         addMesh(radierGeo, radierMat, 0, 0.125, 0);
       }
 
-      // ─── FASE 2: ESTRUTURA STEEL FRAME (Guias e Montantes de Aço) ───
+      //  FASE 2: ESTRUTURA STEEL FRAME (Guias e Montantes de Aço) 
       if (faseSel >= 2) {
         // Material do aço galvanizado (azul brilhante / prata metálico)
         const steelMat = new THREE.MeshStandardMaterial({
@@ -197,7 +197,7 @@ export default function Planejamento4D({ faseAtual = "Projeto executivo" }) {
         addMesh(trackVGeo, steelMat, W/2, 0.23 + H, 0);
       }
 
-      // ─── FASE 3: FECHAMENTOS (Drywall / OSB Opaque Walls) ───
+      //  FASE 3: FECHAMENTOS (Drywall / OSB Opaque Walls) 
       if (faseSel >= 3) {
         const wallMat = new THREE.MeshStandardMaterial({
           color: 0xe2e8f0, // drywall/OSB cinza claro
@@ -222,7 +222,7 @@ export default function Planejamento4D({ faseAtual = "Projeto executivo" }) {
         addMesh(frontWallRightGeo, wallMat, W * 0.3, 0.25 + H/2, D/2);
       }
 
-      // ─── FASE 4: INSTALAÇÕES & ESQUADRIAS (Pipes + Windows/Doors) ───
+      //  FASE 4: INSTALAÇÕES & ESQUADRIAS (Pipes + Windows/Doors) 
       if (faseSel >= 4) {
         // Tubulações hidráulicas visíveis (Cilindros Vermelho = Água Quente, Azul = Água Fria)
         const pipeBMat = new THREE.MeshBasicMaterial({ color: 0x3b82f6 }); // azul
@@ -266,7 +266,7 @@ export default function Planejamento4D({ faseAtual = "Projeto executivo" }) {
         addMesh(doorGeo, doorMat, 1.2, 0.25 + 1.05, D/2);
       }
 
-      // ─── FASE 5: ACABAMENTO (Roof + Finished Exterior) ───
+      //  FASE 5: ACABAMENTO (Roof + Finished Exterior) 
       if (faseSel >= 5) {
         // Telhado de duas águas (Extruded triangular prism)
         const roofMat = new THREE.MeshStandardMaterial({ 
@@ -301,7 +301,7 @@ export default function Planejamento4D({ faseAtual = "Projeto executivo" }) {
         addMesh(new THREE.BoxGeometry(W * 0.4 + 0.02, H, wt + 0.02), extWallMat, W * 0.3, 0.25 + H/2, D/2);
       }
 
-      // ─── FASE 6: ENTREGA (Light inside + Paisagismo) ───
+      //  FASE 6: ENTREGA (Light inside + Paisagismo) 
       if (faseSel >= 6) {
         // Gramado de paisagismo
         const grassGeo = new THREE.PlaneGeometry(W + 10, D + 8);
@@ -448,7 +448,7 @@ export default function Planejamento4D({ faseAtual = "Projeto executivo" }) {
             onClick={() => setIsPlaying(!isPlaying)}
             style={{ padding: "6px 14px", fontSize: 11, display: "flex", alignItems: "center", gap: 6 }}
           >
-            <span>{isPlaying ? "⏸ Pausar" : "▶ Play 4D"}</span>
+            <span>{isPlaying ? "⏸ Pausar" : " Play 4D"}</span>
           </Btn>
           <Btn 
             variant="ghost" 

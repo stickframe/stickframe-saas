@@ -13,7 +13,7 @@ export function useNotificacoes() {
   const queryClient = useQueryClient();
   const queryKey = ["notificacoes", user?.uid];
 
-  // ── Busca com cache automático ───────────────────────────────────────────
+  //  Busca com cache automático 
   const { data: notificacoes = [] } = useQuery({
     queryKey,
     queryFn: () => listarNotificacoes(user.uid),
@@ -21,7 +21,7 @@ export function useNotificacoes() {
     staleTime: 1000 * 60 * 2, // 2 min — revalida em background
   });
 
-  // ── Marcar uma como lida (optimistic update) ─────────────────────────────
+  //  Marcar uma como lida (optimistic update) 
   const { mutate: marcar } = useMutation({
     mutationFn: (id) => marcarLida(id),
     onMutate: async (id) => {
@@ -37,7 +37,7 @@ export function useNotificacoes() {
     },
   });
 
-  // ── Marcar todas como lidas (optimistic update) ───────────────────────────
+  //  Marcar todas como lidas (optimistic update) 
   const { mutate: marcarTodas } = useMutation({
     mutationFn: () => marcarTodasLidas(user?.uid),
     onMutate: async () => {
@@ -53,7 +53,7 @@ export function useNotificacoes() {
     },
   });
 
-  // ── Realtime: injeta nova notificação direto no cache ────────────────────
+  //  Realtime: injeta nova notificação direto no cache 
   useEffect(() => {
     if (!user?.uid) return;
 

@@ -15,7 +15,7 @@ import Modal from "../components/ui/Modal";
 import { ImportCSV } from "../components/ui/ImportCSV";
 import { sb, getEmpresaId } from "../services/supabase";
 
-// ─── Fluxo de Caixa Dinâmico ─────────────────────────────────────────────────
+//  Fluxo de Caixa Dinâmico 
 function FluxoCaixa({ lancamentos }) {
   const hoje = new Date();
   hoje.setHours(0, 0, 0, 0);
@@ -69,10 +69,10 @@ function FluxoCaixa({ lancamentos }) {
 
       {negativo.length > 0 && (
         <div style={{ background: "#fff5f5", border: "1px solid #fca5a5", borderRadius: 12, padding: "14px 18px" }}>
-          <div style={{ fontWeight: 700, color: "#991b1b", fontSize: 13, marginBottom: 6 }}>⚠️ Atenção: saldo projetado negativo em {negativo.length} dia(s)</div>
+          <div style={{ fontWeight: 700, color: "#981915", fontSize: 13, marginBottom: 6 }}> Atenção: saldo projetado negativo em {negativo.length} dia(s)</div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
             {negativo.slice(0, 5).map((d) => (
-              <span key={d.iso} style={{ background: "#fee2e2", color: "#991b1b", borderRadius: 6, padding: "3px 10px", fontSize: 12, fontWeight: 600 }}>
+              <span key={d.iso} style={{ background: "#fee2e2", color: "#981915", borderRadius: 6, padding: "3px 10px", fontSize: 12, fontWeight: 600 }}>
                 {d.d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })} · {fmt(d.saldo)}
               </span>
             ))}
@@ -111,7 +111,7 @@ function FluxoCaixa({ lancamentos }) {
             })}
             {/* Linha de saldo acumulado */}
             <polyline
-              fill="none" stroke="#4a9eff" strokeWidth={1.5} opacity={0.8}
+              fill="none" stroke="#3b6ea5" strokeWidth={1.5} opacity={0.8}
               points={dias.map((d, i) => {
                 const x = i * 18 + 10;
                 const y = 130 - (d.saldo / maxAbs) * 90;
@@ -125,7 +125,7 @@ function FluxoCaixa({ lancamentos }) {
             <text x={15} y={168} fontSize={9} fill={C.muted}>Entradas</text>
             <rect x={60} y={160} width={8} height={8} fill={C.red} rx={1} />
             <text x={71} y={168} fontSize={9} fill={C.muted}>Saídas</text>
-            <line x1={116} y1={164} x2={128} y2={164} stroke="#4a9eff" strokeWidth={2} />
+            <line x1={116} y1={164} x2={128} y2={164} stroke="#3b6ea5" strokeWidth={2} />
             <text x={131} y={168} fontSize={9} fill={C.muted}>Saldo acum.</text>
           </svg>
         </div>
@@ -161,7 +161,7 @@ function FluxoCaixa({ lancamentos }) {
   );
 }
 
-// ─── Mini gráfico ─────────────────────────────────────────────────────────────
+//  Mini gráfico 
 function BarChart({ data, height = 100 }) {
   const max = Math.max(...data.map((d) => d.value), 1);
   return (
@@ -185,7 +185,7 @@ function BarChart({ data, height = 100 }) {
   );
 }
 
-// ─── Label ───────────────────────────────────────────────────────────────────
+//  Label 
 function Label({ children }) {
   return (
     <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 6 }}>
@@ -194,7 +194,7 @@ function Label({ children }) {
   );
 }
 
-// ─── Formulário de lançamento (fora do componente) ───────────────────────────
+//  Formulário de lançamento (fora do componente) 
 function FormLancamento({ tipo, form, setForm, onSave, onCancel }) {
   const categorias = tipo === "receita" ? CATEGORIAS_RECEITA : CATEGORIAS_DESPESA;
   const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
@@ -256,14 +256,14 @@ function FormLancamento({ tipo, form, setForm, onSave, onCancel }) {
       }}>
         <Btn variant="ghost" onClick={onCancel}>Cancelar</Btn>
         <Btn disabled={!ok} onClick={onSave}>
-          {tipo === "receita" ? "✅ Registrar receita" : "⬇️ Registrar despesa"}
+          {tipo === "receita" ? " Registrar receita" : " Registrar despesa"}
         </Btn>
       </div>
     </div>
   );
 }
 
-// ─── Financeiro ───────────────────────────────────────────────────────────────
+//  Financeiro 
 const FORM_VAZIO = { categoria: "Materiais", valor: "", data: "", descricao: "", data_vencimento: "" };
 
 function FolhaPagamento({ folhaMes, setFolhaMes, folhaDados, folhaLoading, folhaPagos, setFolhaPagos, colaboradores, C, addLancamento }) {
@@ -320,7 +320,7 @@ function FolhaPagamento({ folhaMes, setFolhaMes, folhaDados, folhaLoading, folha
         table{width:100%;border-collapse:collapse;margin-top:16px;font-size:13px}
         th{background:#f0f0f3;padding:8px 12px;text-align:left;font-size:11px;color:#6b7280}
         td{padding:8px 12px;border-bottom:1px solid #e4e4ea}
-        .total{font-size:18px;font-weight:800;color:#2e9e5b;margin-top:24px}
+        .total{font-size:18px;font-weight:800;color:#3f7a4b;margin-top:24px}
         @media print{button{display:none}}
       </style></head><body>
       <div class="logo">STICK<span>FRAME</span></div>
@@ -337,7 +337,7 @@ function FolhaPagamento({ folhaMes, setFolhaMes, folhaDados, folhaLoading, folha
       </table>
       <div class="total">Valor a pagar: R$ ${valor.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
       <div style="margin-top:40px;font-size:11px;color:#6b7280">Gerado em ${new Date().toLocaleDateString("pt-BR")} · StickFrame</div>
-      <br><button onclick="window.print()">🖨️ Imprimir</button>
+      <br><button onclick="window.print()"> Imprimir</button>
     </body></html>`);
     w.document.close();
   }
@@ -398,7 +398,7 @@ function FolhaPagamento({ folhaMes, setFolhaMes, folhaDados, folhaLoading, folha
                     <td style={{ padding: "10px 14px", fontWeight: 700, color: C.success }}>{valor ? `R$ ${valor.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})}` : "—"}</td>
                     <td style={{ padding: "10px 14px" }}>
                       {pago
-                        ? <span style={{ background: C.success+"22", color: C.success, padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700 }}>✅ Pago</span>
+                        ? <span style={{ background: C.success+"22", color: C.success, padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700 }}> Pago</span>
                         : <span style={{ background: C.warning+"22", color: C.warning, padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700 }}>Pendente</span>}
                     </td>
                     <td style={{ padding: "10px 14px" }}>
@@ -409,7 +409,7 @@ function FolhaPagamento({ folhaMes, setFolhaMes, folhaDados, folhaLoading, folha
                         {col?.tipo_contrato === "Empreiteiro" && !pago && (
                           <span style={{ fontSize: 11, color: C.muted }}>Via medição</span>
                         )}
-                        <button onClick={() => imprimirHolerite(c)} style={{ padding: "5px 10px", borderRadius: 7, border: `1px solid ${C.border}`, background: "transparent", color: C.muted, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>🖨️ Holerite</button>
+                        <button onClick={() => imprimirHolerite(c)} style={{ padding: "5px 10px", borderRadius: 7, border: `1px solid ${C.border}`, background: "transparent", color: C.muted, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}> Holerite</button>
                       </div>
                     </td>
                   </tr>
@@ -443,7 +443,7 @@ export default function Financeiro() {
   const [orcForm,     setOrcForm]     = useState({});    // { [categoria]: valor }
   const [showImportFinanceiro, setShowImportFinanceiro] = useState(false);
 
-  // ── Folha de Pagamento ──────────────────────────────────────────────────────
+  //  Folha de Pagamento 
   const [folhaMes, setFolhaMes] = useState(() => {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
@@ -503,7 +503,7 @@ export default function Financeiro() {
         <td>${l.tipo === "receita" ? "Receita" : "Despesa"}</td>
         <td>${l.categoria || "—"}</td>
         <td>${l.descricao || "—"}</td>
-        <td style="text-align:right;color:${l.tipo === "receita" ? "#2e9e5b" : "#c0392b"};font-weight:700">
+        <td style="text-align:right;color:${l.tipo === "receita" ? "#3f7a4b" : "#a33327"};font-weight:700">
           ${l.tipo === "receita" ? "+" : "-"}R$ ${(l.valor || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
         </td>
       </tr>`).join("");
@@ -535,9 +535,9 @@ export default function Financeiro() {
       </div>
     </div>
     <div class="kpis">
-      <div class="kpi"><div class="label">RECEITAS</div><div class="value" style="color:#2e9e5b">R$ ${rec.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})}</div></div>
-      <div class="kpi"><div class="label">DESPESAS</div><div class="value" style="color:#c0392b">R$ ${dep.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})}</div></div>
-      <div class="kpi"><div class="label">SALDO</div><div class="value" style="color:${rec-dep>=0?"#2e9e5b":"#c0392b"}">R$ ${(rec-dep).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})}</div></div>
+      <div class="kpi"><div class="label">RECEITAS</div><div class="value" style="color:#3f7a4b">R$ ${rec.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})}</div></div>
+      <div class="kpi"><div class="label">DESPESAS</div><div class="value" style="color:#a33327">R$ ${dep.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})}</div></div>
+      <div class="kpi"><div class="label">SALDO</div><div class="value" style="color:${rec-dep>=0?"#3f7a4b":"#a33327"}">R$ ${(rec-dep).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})}</div></div>
     </div>
     <table><thead><tr><th>DATA</th><th>TIPO</th><th>CATEGORIA</th><th>DESCRIÇÃO</th><th style="text-align:right">VALOR</th></tr></thead>
     <tbody>${rows || '<tr><td colspan="5" style="text-align:center;color:#6b7280;padding:24px">Nenhum lançamento</td></tr>'}</tbody></table>
@@ -565,10 +565,10 @@ export default function Financeiro() {
     addLancamento(obraId, { ...form, tipo: modal, valor });
     setModal(null);
     setForm(FORM_VAZIO);
-    mostrarToast(modal === "receita" ? "✅ Receita registrada!" : "✅ Despesa registrada!");
+    mostrarToast(modal === "receita" ? " Receita registrada!" : " Despesa registrada!");
   }
 
-  // ── Dados da obra selecionada ───────────────────────────────────────────────
+  //  Dados da obra selecionada 
   const obra = obras.find((o) => o.id === obraId) || null;
   const fin  = (obraId && financeiro[obraId]) || { contrato: 0, lancamentos: [] };
 
@@ -605,7 +605,7 @@ export default function Financeiro() {
     };
   }, [fin.lancamentos, fin.contrato, obra?.orcamento_categorias]);
 
-  // ── Orçamento por categoria ────────────────────────────────────────────────
+  //  Orçamento por categoria 
   const orcCats = obra?.orcamento_categorias || {};
   const temOrcCats = Object.values(orcCats).some((v) => Number(v) > 0);
 
@@ -614,7 +614,7 @@ export default function Financeiro() {
     Object.entries(orcForm).forEach(([k, v]) => { parsed[k] = Number(v) || 0; });
     await updateObra(obraId, { orcamento_categorias: parsed });
     setEditOrc(false);
-    mostrarToast("✅ Orçamento por categoria salvo!");
+    mostrarToast(" Orçamento por categoria salvo!");
   }
 
   function abrirEditOrc() {
@@ -624,11 +624,11 @@ export default function Financeiro() {
     setEditOrc(true);
   }
 
-  // ── Empty state: sem obras ──────────────────────────────────────────────────
+  //  Empty state: sem obras 
   if (obras.length === 0) {
     return (
       <div style={{ textAlign: "center", padding: "80px 0" }}>
-        <div style={{ fontSize: 40, marginBottom: 16 }}>◉</div>
+        <div style={{ fontSize: 40, marginBottom: 16 }}></div>
         <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Nenhuma obra cadastrada</div>
         <div style={{ fontSize: 13, color: C.muted }}>
           Cadastre uma obra em <strong>Gestão de Obras</strong> para começar a registrar lançamentos financeiros.
@@ -654,7 +654,7 @@ export default function Financeiro() {
       {/* Modal */}
       {modal && (
         <Modal
-          title={modal === "receita" ? "📈 Nova receita" : "📉 Nova despesa"}
+          title={modal === "receita" ? " Nova receita" : " Nova despesa"}
           onClose={() => setModal(null)}
         >
           <FormLancamento
@@ -701,32 +701,25 @@ export default function Financeiro() {
             <h2 style={{ fontSize: 22, fontWeight: 800 }}>Financeiro</h2>
             <p style={{ color: C.muted, fontSize: 13, marginTop: 4 }}>Receitas, despesas e margem por obra</p>
           </div>
-          <div style={{ display: "flex", gap: 10 }}>
-            <button onClick={() => exportarFinanceiroExcel(obras, financeiro)} style={{
-              padding: "8px 16px", background: "#2e9e5b22",
-              border: "1px solid #2e9e5b44", borderRadius: 8,
-              color: "#2e9e5b", fontSize: 12, fontWeight: 700,
+          <div style={{ display: "flex", gap: 8 }}>
+            <button onClick={() => abrirModal("receita")} style={{
+              display: "inline-flex", alignItems: "center", gap: 7, padding: "9px 15px",
+              background: "#eaf3ec", border: "1px solid #b8dfc0", borderRadius: 9,
+              color: "var(--pos,#3f7a4b)", fontSize: 12.5, fontWeight: 600,
               cursor: "pointer", fontFamily: "inherit",
-            }}><BarChart2 size={13} /> Exportar Excel</button>
-            <button onClick={exportarRelatorio} style={{
-              padding: "8px 16px", background: "#4a9eff22",
-              border: "1px solid #4a9eff44", borderRadius: 8,
-              color: "#4a9eff", fontSize: 12, fontWeight: 700,
-              cursor: "pointer", fontFamily: "inherit",
-            }}>📄 Exportar PDF</button>
-            <button onClick={() => setShowImportFinanceiro(true)} style={{
-              padding: "8px 16px", background: "#8b5cf622",
-              border: "1px solid #8b5cf644", borderRadius: 8,
-              color: "#8b5cf6", fontSize: 12, fontWeight: 700,
-              cursor: "pointer", fontFamily: "inherit",
-            }}>⬆️ Importar CSV</button>
-            <Btn
-              onClick={() => abrirModal("receita")}
-              style={{ background: C.success + "22", border: `1px solid ${C.success}44`, color: C.success }}
-            >
+            }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M17 7h4v4"/></svg>
               + Receita
-            </Btn>
-            <Btn onClick={() => abrirModal("despesa")}>+ Despesa</Btn>
+            </button>
+            <button onClick={() => abrirModal("despesa")} style={{
+              display: "inline-flex", alignItems: "center", gap: 7, padding: "9px 15px",
+              background: "#fef2f1", border: "1px solid #f5c9c7", borderRadius: 9,
+              color: "var(--neg,#a33327)", fontSize: 12.5, fontWeight: 600,
+              cursor: "pointer", fontFamily: "inherit",
+            }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M3 7l6 6 4-4 8 8"/><path d="M17 17h4v-4"/></svg>
+              + Despesa
+            </button>
           </div>
         </div>
 
@@ -770,13 +763,15 @@ export default function Financeiro() {
         )}
 
         {/* Tabs */}
-        <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
-          {[["lancamentos", "📊 Análise"], ["fluxo", "📅 Fluxo de Caixa"], ["dre", "📊 DRE"], ["fluxo-mensal", "💸 Fluxo Mensal"], ["folha", "💰 Folha"]].map(([k, label]) => (
+        <div style={{ display: "flex", gap: 4, background: "var(--surface-2,#faf8f4)", border: "1px solid var(--line,#e7e1d8)", borderRadius: 11, padding: 4, width: "max-content", marginBottom: 20, flexWrap: "wrap" }}>
+          {[["lancamentos", "Análise"], ["fluxo", "Fluxo de Caixa"], ["dre", "DRE"], ["fluxo-mensal", "Fluxo Mensal"], ["folha", "Folha"]].map(([k, label]) => (
             <button key={k} onClick={() => setFinTab(k)} style={{
-              padding: "7px 16px", borderRadius: 8, border: `1px solid ${finTab === k ? C.red : C.border}`,
-              background: finTab === k ? C.red + "18" : "transparent",
-              color: finTab === k ? C.text : C.muted, fontSize: 12, fontWeight: finTab === k ? 700 : 400,
-              cursor: "pointer", fontFamily: "inherit",
+              padding: "8px 16px", border: "none", borderRadius: 8,
+              background: finTab === k ? "var(--surface,#fff)" : "none",
+              color: finTab === k ? "var(--brick,#981915)" : "var(--muted,#8c847a)",
+              fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
+              boxShadow: finTab === k ? "0 2px 8px rgba(0,0,0,0.08)" : "none",
+              transition: ".12s", whiteSpace: "nowrap",
             }}>{label}</button>
           ))}
         </div>
@@ -800,19 +795,19 @@ export default function Financeiro() {
         {/* KPIs */}
         <div className="kpi-grid-5" style={{ marginBottom: 18 }}>
           {[
-            { label: "Contrato",    value: fmt(fin.contrato),  color: C.border,                           sub: "valor total" },
-            { label: "Recebido",    value: fmt(receitas),      color: C.success,                          sub: `${fmtPct(pctRec)} do contrato` },
-            { label: "A receber",   value: fmt(aReceber),      color: C.warning,                          sub: "saldo em aberto" },
-            { label: "Despesas",    value: fmt(despesas),      color: C.red,                              sub: `${fin.lancamentos.filter(l => l.tipo === "despesa").length} lançamentos` },
-            { label: "Margem real", value: fmtPct(margem * 100), color: margem > 0 ? C.success : C.danger, sub: saldo >= 0 ? `saldo +${fmt(saldo)}` : `saldo ${fmt(saldo)}` },
+            { label: "CONTRATO",    value: fmt(fin.contrato),    color: "var(--muted,#8c847a)",              sub: "valor total" },
+            { label: "RECEBIDO",    value: fmt(receitas),        color: "var(--pos,#3f7a4b)",                sub: `${fmtPct(pctRec)} do contrato` },
+            { label: "A RECEBER",   value: fmt(aReceber),        color: "var(--warn,#b07a1e)",               sub: "saldo em aberto" },
+            { label: "DESPESAS",    value: fmt(despesas),        color: "var(--neg,#a33327)",                sub: `${fin.lancamentos.filter(l => l.tipo === "despesa").length} lançamentos` },
+            { label: "MARGEM REAL", value: fmtPct(margem * 100), color: margem > 0 ? "var(--pos,#3f7a4b)" : "var(--neg,#a33327)", sub: saldo >= 0 ? `saldo +${fmt(saldo)}` : `saldo ${fmt(saldo)}` },
           ].map((k, i) => (
             <div key={i} style={{
-              background: C.surface, borderRadius: 14, padding: "16px 18px",
-              border: `1px solid ${C.border}`, borderTop: `3px solid ${k.color}`,
+              background: "var(--surface,#fff)", borderRadius: 14, padding: "16px 20px",
+              border: "1px solid var(--line,#e7e1d8)",
             }}>
-              <div style={{ fontSize: 10, color: C.muted, letterSpacing: 1, marginBottom: 8 }}>{k.label.toUpperCase()}</div>
-              <div style={{ fontSize: 18, fontWeight: 800, color: k.color === C.border ? C.text : k.color }}>{k.value}</div>
-              <div style={{ fontSize: 10, color: C.muted, marginTop: 4 }}>{k.sub}</div>
+              <div style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: 1.1, color: "var(--muted,#8c847a)", marginBottom: 6 }}>{k.label}</div>
+              <div style={{ fontSize: 24, fontWeight: 700, color: k.color, lineHeight: 1, fontFamily: "'Barlow Condensed',sans-serif" }}>{k.value}</div>
+              <div style={{ fontSize: 11, color: "var(--muted,#8c847a)", marginTop: 4 }}>{k.sub}</div>
             </div>
           ))}
         </div>
@@ -827,7 +822,7 @@ export default function Financeiro() {
             <div style={{
               height: 10,
               width: `${Math.min(pctRec * 100, 100)}%`,
-              background: `linear-gradient(90deg,${C.success},#1a7a40)`,
+              background: `linear-gradient(90deg,${C.success},#3f7a4b)`,
               borderRadius: 5, transition: "width .5s",
             }} />
           </div>
@@ -850,7 +845,7 @@ export default function Financeiro() {
                   <span style={{ fontWeight: 700, color: C.red }}>{obra?.progresso || 0}%</span>
                 </div>
                 <div style={{ height: 10, background: C.dark, borderRadius: 5, overflow: "hidden" }}>
-                  <div style={{ height: 10, width: `${Math.min(obra?.progresso || 0, 100)}%`, background: `linear-gradient(90deg,${C.red},#6e1210)`, borderRadius: 5, transition: "width .5s" }} />
+                  <div style={{ height: 10, width: `${Math.min(obra?.progresso || 0, 100)}%`, background: `linear-gradient(90deg,${C.red},#7d1411)`, borderRadius: 5, transition: "width .5s" }} />
                 </div>
               </div>
               <div>
@@ -865,8 +860,8 @@ export default function Financeiro() {
                     height: 10,
                     width: `${fin.contrato > 0 ? Math.min((despesas / fin.contrato) * 100, 100) : 0}%`,
                     background: fin.contrato > 0 && despesas / fin.contrato > (obra?.progresso || 0) / 100 + 0.05
-                      ? `linear-gradient(90deg,${C.danger},#8b0000)`
-                      : `linear-gradient(90deg,${C.success},#1a7a40)`,
+                      ? `linear-gradient(90deg,${C.danger},#7d1411)`
+                      : `linear-gradient(90deg,${C.success},#3f7a4b)`,
                     borderRadius: 5, transition: "width .5s",
                   }} />
                 </div>
@@ -939,8 +934,8 @@ export default function Financeiro() {
                   fontSize: 12, color: desvio > 0 ? C.danger : C.success, fontWeight: 600,
                 }}>
                   {desvio > 0
-                    ? `⚠ Custo ${pctDesvio.toFixed(1)}% acima do previsto para o progresso atual (${obra?.progresso || 0}% físico). Revise os lançamentos de despesa.`
-                    : `✓ Custo ${Math.abs(pctDesvio).toFixed(1)}% abaixo do previsto — obra dentro do orçamento.`
+                    ? ` Custo ${pctDesvio.toFixed(1)}% acima do previsto para o progresso atual (${obra?.progresso || 0}% físico). Revise os lançamentos de despesa.`
+                    : ` Custo ${Math.abs(pctDesvio).toFixed(1)}% abaixo do previsto — obra dentro do orçamento.`
                   }
                 </div>
               );
@@ -999,7 +994,7 @@ export default function Financeiro() {
 
             {desvioCategoria.length === 0 ? (
               <div style={{ textAlign: "center", padding: "32px 0" }}>
-                <div style={{ fontSize: 28, opacity: .4, marginBottom: 8 }}>◉</div>
+                <div style={{ fontSize: 28, opacity: .4, marginBottom: 8 }}></div>
                 <div style={{ fontSize: 12, color: C.muted }}>Nenhuma despesa lançada</div>
               </div>
             ) : (
@@ -1033,8 +1028,8 @@ export default function Financeiro() {
                       {!semOrc && (
                         <div style={{ fontSize: 10, color: cor, textAlign: "right" }}>
                           {acima
-                            ? `⚠ +${fmt(desvio)} (${pct?.toFixed(0)}% acima)`
-                            : `✓ ${fmt(Math.abs(desvio))} dentro do previsto`}
+                            ? ` +${fmt(desvio)} (${pct?.toFixed(0)}% acima)`
+                            : ` ${fmt(Math.abs(desvio))} dentro do previsto`}
                         </div>
                       )}
                     </div>
@@ -1059,7 +1054,7 @@ export default function Financeiro() {
             <div style={{ maxHeight: 380, overflowY: "auto" }}>
               {fin.lancamentos.length === 0 ? (
                 <div style={{ padding: "40px 0", textAlign: "center" }}>
-                  <div style={{ fontSize: 28, opacity: .4, marginBottom: 8 }}>◎</div>
+                  <div style={{ fontSize: 28, opacity: .4, marginBottom: 8 }}></div>
                   <div style={{ fontSize: 13, color: C.muted }}>Nenhum lançamento registrado</div>
                   <div style={{ fontSize: 11, color: C.muted, marginTop: 4 }}>Use "+ Receita" ou "+ Despesa" para começar</div>
                 </div>
@@ -1144,7 +1139,7 @@ export default function Financeiro() {
               table{width:100%;border-collapse:collapse;margin-top:16px;font-size:13px}
               th{background:#f0f0f3;padding:8px 12px;text-align:left;font-size:11px;color:#6b7280}
               td{padding:8px 12px;border-bottom:1px solid #e4e4ea}
-              .total{font-size:18px;font-weight:800;color:#2e9e5b;margin-top:24px}
+              .total{font-size:18px;font-weight:800;color:#3f7a4b;margin-top:24px}
               @media print{button{display:none}}
             </style></head><body>
             <div class="logo">STICK<span>FRAME</span></div>
@@ -1161,7 +1156,7 @@ export default function Financeiro() {
             </table>
             <div class="total">Valor a pagar: R$ ${valor.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
             <div style="margin-top:40px;font-size:11px;color:#6b7280">Gerado em ${new Date().toLocaleDateString("pt-BR")} · StickFrame</div>
-            <br><button onclick="window.print()">🖨️ Imprimir</button>
+            <br><button onclick="window.print()"> Imprimir</button>
           </body></html>`);
           w.document.close();
         }
@@ -1237,7 +1232,7 @@ export default function Financeiro() {
                           </td>
                           <td style={{ padding: "10px 14px" }}>
                             {pago
-                              ? <span style={{ background: C.success+"22", color: C.success, padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700 }}>✅ Pago</span>
+                              ? <span style={{ background: C.success+"22", color: C.success, padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700 }}> Pago</span>
                               : <span style={{ background: C.warning+"22", color: C.warning, padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700 }}>Pendente</span>
                             }
                           </td>
@@ -1254,7 +1249,7 @@ export default function Financeiro() {
                                 padding: "5px 10px", borderRadius: 7, border: `1px solid ${C.border}`,
                                 background: "transparent", color: C.muted, fontSize: 11,
                                 fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
-                              }}>🖨️ Holerite</button>
+                              }}> Holerite</button>
                             </div>
                           </td>
                         </tr>

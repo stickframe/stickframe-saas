@@ -56,7 +56,7 @@ export default function ConcorrenciaPublica() {
   if (erro) return (
     <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: ST.bg, fontFamily: "Inter, sans-serif" }}>
       <div style={{ textAlign: "center" }}>
-        <div style={{ fontSize: 40, marginBottom: 12 }}>⚠️</div>
+        <div style={{ fontSize: 40, marginBottom: 12 }}></div>
         <div style={{ fontSize: 16, fontWeight: 700 }}>{erro}</div>
       </div>
     </div>
@@ -86,8 +86,8 @@ export default function ConcorrenciaPublica() {
           <div style={{ fontSize: 20, fontWeight: 900, marginBottom: 6 }}>{concorrencia.titulo}</div>
           {concorrencia.descricao && <div style={{ fontSize: 13, color: ST.muted, marginBottom: 10, lineHeight: 1.6 }}>{concorrencia.descricao}</div>}
           <div style={{ display: "flex", gap: 20, fontSize: 12, color: ST.muted }}>
-            <span>👤 {participante.nome_fornecedor}</span>
-            {prazo && <span>📅 Prazo: <strong style={{ color: new Date() > prazo ? "#c0392b" : ST.text }}>{prazo.toLocaleDateString("pt-BR")}</strong></span>}
+            <span> {participante.nome_fornecedor}</span>
+            {prazo && <span> Prazo: <strong style={{ color: new Date() > prazo ? "#c0392b" : ST.text }}>{prazo.toLocaleDateString("pt-BR")}</strong></span>}
             <span style={{ marginLeft: "auto", fontSize: 11, fontWeight: 700, padding: "2px 10px", borderRadius: 10, background: encerrada ? "#eee" : ST.success + "22", color: encerrada ? ST.muted : ST.success }}>{concorrencia.status}</span>
           </div>
         </div>
@@ -95,7 +95,7 @@ export default function ConcorrenciaPublica() {
         {/* Estado: já enviado ou encerrado */}
         {(enviado || encerrada) ? (
           <div style={{ background: enviado ? ST.success + "12" : "#f5f5f5", border: `1px solid ${enviado ? ST.success + "44" : ST.border}`, borderRadius: 14, padding: "32px 24px", textAlign: "center" }}>
-            <div style={{ fontSize: 40, marginBottom: 12 }}>{enviado ? "✅" : "🔒"}</div>
+            <div style={{ fontSize: 40, marginBottom: 12 }}>{enviado ? "" : ""}</div>
             <div style={{ fontSize: 18, fontWeight: 800, marginBottom: 6 }}>{enviado ? "Proposta enviada com sucesso!" : "Concorrência encerrada"}</div>
             <div style={{ fontSize: 13, color: ST.muted }}>
               {enviado ? "Obrigado! Sua proposta foi recebida e será analisada." : "Este processo de cotação já foi encerrado."}
@@ -203,7 +203,7 @@ export default function ConcorrenciaPublica() {
                   transition: "background .15s",
                 }}
               >
-                {enviando ? "Enviando proposta..." : "📤 Enviar proposta"}
+                {enviando ? "Enviando proposta..." : " Enviar proposta"}
               </button>
               <div style={{ fontSize: 11, color: ST.muted, textAlign: "center", marginTop: 8 }}>
                 Você pode renviar antes do prazo — a última proposta substitui a anterior.

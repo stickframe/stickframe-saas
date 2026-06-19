@@ -59,7 +59,7 @@ export default function DashboardComercial() {
 
   const [filtroFunil, setFiltroFunil] = useState(null);
 
-  // ── Cálculos ───────────────────────────────────────────────────────────────
+  //  Cálculos 
   const hoje = new Date();
   hoje.setHours(0, 0, 0, 0);
 
@@ -91,7 +91,7 @@ export default function DashboardComercial() {
     proxData.setDate(proxData.getDate() + 7);
     const proxISO = proxData.toISOString().slice(0, 10);
     await updateCliente(cliente.id, { proximo_contato: proxISO });
-    mostrarToast(`✅ Feito! Próximo contato com ${cliente.nome.split(" ")[0]} reagendado para ${proxData.toLocaleDateString("pt-BR")}`);
+    mostrarToast(` Feito! Próximo contato com ${cliente.nome.split(" ")[0]} reagendado para ${proxData.toLocaleDateString("pt-BR")}`);
   }
 
   const saudacao = () => {
@@ -115,7 +115,7 @@ export default function DashboardComercial() {
       {/* Header */}
       <div style={{ marginBottom: 24 }}>
         <h2 style={{ fontSize: 22, fontWeight: 800 }}>
-          {saudacao()}, {user?.nome?.split(" ")[0] || "Comercial"} 👋
+          {saudacao()}, {user?.nome?.split(" ")[0] || "Comercial"} 
         </h2>
         <p style={{ color: C.muted, fontSize: 13, marginTop: 4 }}>
           {new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" })}
@@ -131,7 +131,7 @@ export default function DashboardComercial() {
               borderRadius: 10, padding: "12px 16px",
               display: "flex", alignItems: "center", gap: 12,
             }}>
-              <span style={{ fontSize: 18 }}>📞</span>
+              <span style={{ fontSize: 18 }}></span>
               <div>
                 <div style={{ fontSize: 13, fontWeight: 700, color: C.warning }}>
                   {followups.length} follow-up{followups.length > 1 ? "s" : ""} pendente{followups.length > 1 ? "s" : ""}
@@ -164,10 +164,10 @@ export default function DashboardComercial() {
 
       {/* KPIs */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 12, marginBottom: 24 }}>
-        <KpiCard label="Meu pipeline"   value={fmt(valorPipeline)} sub={`${pipeline.length} leads ativos`}           accent={C.red}     icon="💰" />
-        <KpiCard label="Leads totais"   value={String(clientes.length)} sub={`${clientes.filter(c => c.status === "Fechado").length} fechados`} accent="#4a9eff" icon="◈" />
+        <KpiCard label="Meu pipeline"   value={fmt(valorPipeline)} sub={`${pipeline.length} leads ativos`}           accent={C.red}     icon="" />
+        <KpiCard label="Leads totais"   value={String(clientes.length)} sub={`${clientes.filter(c => c.status === "Fechado").length} fechados`} accent="#4a9eff" icon="" />
         <KpiCard label="Tx. conversão"  value={`${taxaConv}%`}          sub="leads → fechados"                         accent={C.success}  icon="%" />
-        <KpiCard label="Orçamentos"     value={String(orcamentos.filter(o => o.status !== "Recusado").length)} sub="em aberto" accent={C.warning} icon="◻" />
+        <KpiCard label="Orçamentos"     value={String(orcamentos.filter(o => o.status !== "Recusado").length)} sub="em aberto" accent={C.warning} icon="" />
       </div>
 
       {/* Funil Kanban */}
@@ -210,7 +210,7 @@ export default function DashboardComercial() {
             <button onClick={() => setFiltroFunil(null)} style={{
               background: "none", border: "none", cursor: "pointer",
               fontSize: 11, color: C.muted, fontFamily: "inherit",
-            }}>✕ Limpar filtro</button>
+            }}> Limpar filtro</button>
           )}
         </div>
 
@@ -275,7 +275,7 @@ export default function DashboardComercial() {
                           borderRadius: 6, color: "#25D366", fontSize: 11, fontWeight: 700,
                           cursor: "pointer", fontFamily: "inherit",
                         }}
-                      >📲</button>
+                      ></button>
                     )}
                     {c.proximo_contato && new Date(c.proximo_contato + "T00:00") <= hoje && (
                       <button
@@ -285,7 +285,7 @@ export default function DashboardComercial() {
                           borderRadius: 6, color: C.success, fontSize: 11, fontWeight: 700,
                           cursor: "pointer", fontFamily: "inherit",
                         }}
-                      >✓ Feito</button>
+                      > Feito</button>
                     )}
                   </div>
                 </div>

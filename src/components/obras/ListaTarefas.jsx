@@ -88,10 +88,10 @@ export default function ListaTarefas({ obraId }) {
     const novas = tarefas.filter((t) => t.id !== editId);
     salvarTarefas(novas);
     setModal(false);
-    mostrarToast("🗑 Tarefa removida.");
+    mostrarToast(" Tarefa removida.");
   }
 
-  // ── Drag & Drop Handlers ──────────────────────────────────────────────────
+  //  Drag & Drop Handlers 
   const handleDragStart = (e, id) => {
     e.dataTransfer.setData("text/plain", id);
     setDraggingId(id);
@@ -186,7 +186,7 @@ export default function ListaTarefas({ obraId }) {
                         <span style={{ fontSize: 10, fontWeight: 700, color: corPrio, background: corPrio + "15", padding: "2px 6px", borderRadius: 4 }}>
                           {t.prioridade}
                         </span>
-                        {isAtrasado && <span style={{ fontSize: 10, fontWeight: 700, color: C.danger }}>⚠️ Atrasado</span>}
+                        {isAtrasado && <span style={{ fontSize: 10, fontWeight: 700, color: C.danger }}> Atrasado</span>}
                       </div>
                       <div style={{ fontSize: 14, fontWeight: 700, color: C.text, marginBottom: 8, lineHeight: 1.3 }}>
                         {t.titulo}

@@ -63,11 +63,11 @@ export default function FormAiImport({ onClose, mostrarToast, addCliente, addOrc
 
   async function analisarTexto() {
     if (!text.trim()) {
-      mostrarToast("⚠️ Digite ou cole o texto do e-mail.");
+      mostrarToast(" Digite ou cole o texto do e-mail.");
       return;
     }
     if (!hasApiKey || !openaiConfig) {
-      mostrarToast("❌ Configuração da OpenAI não encontrada.");
+      mostrarToast(" Configuração da OpenAI não encontrada.");
       return;
     }
 
@@ -129,10 +129,10 @@ Texto para analisar:
       });
 
       setStep(2);
-      mostrarToast("✅ Dados analisados e extraídos!");
+      mostrarToast(" Dados analisados e extraídos!");
     } catch (err) {
       console.error(err);
-      mostrarToast(`❌ Erro no processamento por IA: ${err.message || err}`);
+      mostrarToast(` Erro no processamento por IA: ${err.message || err}`);
     } finally {
       setLoading(false);
     }
@@ -140,7 +140,7 @@ Texto para analisar:
 
   async function handleSalvar() {
     if (!form.nome.trim()) {
-      mostrarToast("⚠️ O nome do cliente é obrigatório.");
+      mostrarToast(" O nome do cliente é obrigatório.");
       return;
     }
 
@@ -182,11 +182,11 @@ Texto para analisar:
         criado: new Date().toLocaleDateString("pt-BR"),
       });
 
-      mostrarToast("🎉 Cliente cadastrado e Orçamento gerado com sucesso!");
+      mostrarToast(" Cliente cadastrado e Orçamento gerado com sucesso!");
       onClose();
     } catch (err) {
       console.error(err);
-      mostrarToast(`❌ Erro ao salvar dados: ${err.message || err}`);
+      mostrarToast(` Erro ao salvar dados: ${err.message || err}`);
     } finally {
       setSaving(false);
     }
@@ -213,7 +213,7 @@ Texto para analisar:
           fontSize: 13,
           lineHeight: 1.5,
         }}>
-          ⚠️ <strong>Chave da OpenAI ausente:</strong> configure sua API Key em <strong>Configurações do Sistema</strong> (aba <em>Sistema</em>) para ativar o cadastro por IA.
+           <strong>Chave da OpenAI ausente:</strong> configure sua API Key em <strong>Configurações do Sistema</strong> (aba <em>Sistema</em>) para ativar o cadastro por IA.
         </div>
       )}
 
@@ -250,7 +250,7 @@ Texto para analisar:
               onClick={analisarTexto}
               disabled={!hasApiKey || loading || !text.trim()}
             >
-              {loading ? "🤖 Analisando proposta…" : "🤖 Analisar com IA"}
+              {loading ? " Analisando proposta…" : " Analisar com IA"}
             </Btn>
           </div>
         </>
@@ -356,7 +356,7 @@ Texto para analisar:
           <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", borderTop: `1px solid ${C.border}`, paddingTop: 12 }}>
             <Btn variant="ghost" onClick={() => setStep(1)} disabled={saving}>← Voltar</Btn>
             <Btn onClick={handleSalvar} disabled={saving}>
-              {saving ? "Gravando no CRM…" : "💾 Confirmar e Cadastrar"}
+              {saving ? "Gravando no CRM…" : " Confirmar e Cadastrar"}
             </Btn>
           </div>
         </>

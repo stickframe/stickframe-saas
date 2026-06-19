@@ -1,6 +1,6 @@
 import { sb, getEmpresaId } from "../supabase";
 
-// ── Pedidos ───────────────────────────────────────────────────────────────────
+//  Pedidos 
 export async function listarPedidos(filters = {}) {
   let q = sb.from("suprimentos_pedidos")
     .select("*, obra:obras(nome)")
@@ -31,7 +31,7 @@ export async function deletarPedido(id) {
   if (error) throw error;
 }
 
-// ── Estoque ───────────────────────────────────────────────────────────────────
+//  Estoque 
 export async function listarEstoque() {
   const { data, error } = await sb.from("suprimentos_estoque")
     .select("*")
@@ -59,7 +59,7 @@ export async function deletarItemEstoque(id) {
   if (error) throw error;
 }
 
-// ── Movimentos ────────────────────────────────────────────────────────────────
+//  Movimentos 
 export async function registrarMovimento(d) {
   const { data, error } = await sb.from("suprimentos_movimentos")
     .insert({ ...d, empresa_id: getEmpresaId() }).select().single();
