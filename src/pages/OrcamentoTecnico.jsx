@@ -195,7 +195,7 @@ function SistemaRow({ s, aberto, toggle, precosEditados, onPrecoEdit }) {
         <span style={{ fontSize: 11, color: C.muted, marginLeft: 6 }}>{aberto ? "−" : "+"}</span>
       </div>
       {aberto && (
-        <div style={{ background: "#f9f9fc" }}>
+        <div style={{ background: C.surface2 }}>
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr>
@@ -212,11 +212,11 @@ function SistemaRow({ s, aberto, toggle, precosEditados, onPrecoEdit }) {
                 const editado = precosEditados?.[key];
                 const precoExib = editado ?? item.precoUsado ?? item.preco;
                 return (
-                  <tr key={i} style={{ borderBottom: `1px solid ${C.border}`, background: editado ? "#fefce8" : item.precoVivo ? "#f0fdf4" : i % 2 ? "#f4f4f8" : "#fff" }}>
+                  <tr key={i} style={{ borderBottom: `1px solid ${C.border}`, background: editado ? C.brickSoft : item.precoVivo ? "#e8f3eb" : i % 2 ? C.surface2 : C.surface }}>
                     <td style={tdSt}>
                       {item.nome}
                       {item.precoVivo && !editado && (
-                        <span style={{ marginLeft: 6, fontSize: 10, background: "#e7f0e8", color: C.success, padding: "1px 5px", borderRadius: 4, fontWeight: 700 }}>ao vivo</span>
+                        <span style={{ marginLeft: 6, fontSize: 10, background: "#e8f3eb", color: C.success, padding: "1px 5px", borderRadius: 4, fontWeight: 700 }}>ao vivo</span>
                       )}
                       {editado && <span style={{ marginLeft: 6, fontSize: 10, background: "#f6efe0", color: C.warning, padding: "1px 5px", borderRadius: 4, fontWeight: 700 }}>ajustado</span>}
                     </td>
@@ -230,7 +230,7 @@ function SistemaRow({ s, aberto, toggle, precosEditados, onPrecoEdit }) {
                         value={editado ?? (item.precoUsado ?? item.preco)}
                         onChange={(e) => onPrecoEdit?.(key, parseFloat(e.target.value) || 0)}
                         onClick={(e) => e.stopPropagation()}
-                        style={{ width: 80, padding: "3px 6px", border: `1px solid ${editado ? "#eab308" : C.border}`, borderRadius: 4, fontSize: 12, textAlign: "right", background: editado ? "#fefce8" : "#fff" }}
+                        style={{ width: 80, padding: "3px 6px", border: `1px solid ${editado ? C.ochre : C.border}`, borderRadius: 4, fontSize: 12, textAlign: "right", background: editado ? C.brickSoft : C.surface }}
                       />
                       {item.precoVivo && item.preco !== item.precoUsado && !editado && (
                         <div style={{ fontSize: 10, color: C.muted, textDecoration: "line-through" }}>{fmtN(item.preco)}</div>
@@ -241,9 +241,9 @@ function SistemaRow({ s, aberto, toggle, precosEditados, onPrecoEdit }) {
                 );
               })}
               {s.totalMO > 0 && (
-                <tr style={{ background: "#dbeafe" }}>
-                  <td style={{ ...tdSt, fontStyle: "italic", color: "#1d4ed8" }} colSpan={4}>Mão de obra (fração CUB regional)</td>
-                  <td style={{ ...tdSt, textAlign: "right", fontWeight: 700, color: "#1d4ed8" }}>{fmtN(s.totalMO)}</td>
+                <tr style={{ background: "#eef3f9" }}>
+                  <td style={{ ...tdSt, fontStyle: "italic", color: C.steel }} colSpan={4}>Mão de obra (fração CUB regional)</td>
+                  <td style={{ ...tdSt, textAlign: "right", fontWeight: 700, color: C.steel }}>{fmtN(s.totalMO)}</td>
                 </tr>
               )}
               <tr style={{ background: C.darker, fontWeight: 700 }}>
@@ -677,7 +677,7 @@ export default function OrcamentoTecnico() {
           <td style="padding:6px 10px;text-align:right;border-bottom:1px solid #eee;font-size:12px">${fmtN(it.precoUsado ?? it.preco)}</td>
           <td style="padding:6px 10px;text-align:right;border-bottom:1px solid #eee;font-size:12px;font-weight:600">${fmtN(it.total)}</td>
         </tr>`).join("")}
-      ${s.totalMO > 0 ? `<tr style="background:#dbeafe"><td style="padding:6px 10px 6px 22px;font-style:italic;color:#1d4ed8;font-size:12px" colspan="4">Mão de obra (CUB-based)</td><td style="padding:6px 10px;text-align:right;font-weight:700;color:#1d4ed8;font-size:12px">${fmtBRL(s.totalMO)}</td></tr>` : ""}
+      ${s.totalMO > 0 ? `<tr style="background:#eef3f9"><td style="padding:6px 10px 6px 22px;font-style:italic;color:#3b6ea5;font-size:12px" colspan="4">Mão de obra (CUB-based)</td><td style="padding:6px 10px;text-align:right;font-weight:700;color:#3b6ea5;font-size:12px">${fmtBRL(s.totalMO)}</td></tr>` : ""}
     `).join("");
 
     const cronoRows = r.cronograma.length ? `
