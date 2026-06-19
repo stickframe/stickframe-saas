@@ -433,7 +433,7 @@ export default function Sidebar({ open, onClose }) {
         {bottomNav.map(item => {
           if (item.key === "__menu__") {
             return (
-              <button key="menu" onClick={onClose === undefined ? undefined : () => { /* handled by parent */ }}
+              <button key="menu"
                 style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, padding: "10px 0", background: "none", border: "none", color: "#9aa0a8", cursor: "pointer", fontFamily: "inherit" }}
                 onClick={() => { if (typeof onClose === "function") onClose(); else document.dispatchEvent(new CustomEvent("sf:open-menu")); }}
               >
