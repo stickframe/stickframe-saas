@@ -6,7 +6,7 @@ export function useTrial() {
   // durante o trial (acesso liberado), então o banner usa planoReal.
   const planoReal = useAppStore((s) => s.planoReal ?? s.user?.plano);
 
-  if (!trialEndsAt || planoReal === "pro") return { isTrial: false, isExpired: false, daysLeft: null };
+  if (!trialEndsAt || planoReal === "pro" || planoReal === "enterprise") return { isTrial: false, isExpired: false, daysLeft: null };
 
   const now = new Date();
   const end = new Date(trialEndsAt);
