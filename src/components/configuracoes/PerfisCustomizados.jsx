@@ -10,6 +10,7 @@ import {
   deletarPerfilCustomizado,
 } from "../../services/repositories/perfisRepository";
 import useAppStore from "../../store/useAppStore";
+import { useToast } from "../../hooks/useToast";
 
 const CORES_PRESET = ["#6b7280", "#981915", "#3f7a4b", "#3b6ea5", "#c88a00", "#8b5cf6"];
 
@@ -26,6 +27,7 @@ function LabelF({ children, required }) {
 export default function PerfisCustomizados() {
   const user = useAppStore((s) => s.user);
   const setPerfisCustomizados = useAppStore((s) => s.setPerfisCustomizados);
+  const { mostrarToast } = useToast();
 
   const [perfis, setPerfis] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -82,15 +84,17 @@ export default function PerfisCustomizados() {
         const novos = perfis.map((p) => (p.id === editando ? atualizado : p));
         setPerfis(novos);
         setPerfisCustomizados(novos);
+        mostrarToast(" Perfil atualizado!");
       } else {
         const criado = await criarPerfilCustomizado(payload);
         const novos = [...perfis, criado];
         setPerfis(novos);
         setPerfisCustomizados(novos);
+        mostrarToast(" Perfil criado!");
       }
       fecharModal();
     } catch (e) {
-      alert("Erro ao salvar perfil: " + e.message);
+      mostrarToast("❌ Erro ao salvar perfil: " + e.message);
     } finally {
       setSalvando(false);
     }
@@ -102,8 +106,9 @@ export default function PerfisCustomizados() {
       const novos = perfis.filter((p) => p.id !== id);
       setPerfis(novos);
       setPerfisCustomizados(novos);
+      mostrarToast(" Perfil removido.");
     } catch (e) {
-      alert("Erro ao excluir: " + e.message);
+      mostrarToast("❌ Erro ao excluir: " + e.message);
     } finally {
       setConfirmDelete(null);
     }

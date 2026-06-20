@@ -5,9 +5,11 @@ import { C } from "../../utils/constants";
 import { printHtml } from "../../utils/printHtml";
 import Btn from "./Btn";
 import Modal from "./Modal";
+import { useToast } from "../../hooks/useToast";
 
 export default function FormAiMemorial({ orcamento, onClose }) {
   const empresaId = useAppStore((s) => s.empresaId);
+  const { mostrarToast } = useToast();
   const [openaiConfig, setOpenaiConfig] = useState(null);
   const [loadingConfig, setLoadingConfig] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -109,7 +111,7 @@ Escreva o texto em português, com termos formais e de engenharia civil, com alt
       setMemorialText(cleanMarkdown);
     } catch (err) {
       console.error(err);
-      alert(`Erro no processamento por IA: ${err.message || err}`);
+      mostrarToast(`❌ Erro no processamento por IA: ${err.message || err}`);
     } finally {
       setLoading(false);
     }
@@ -117,7 +119,7 @@ Escreva o texto em português, com termos formais e de engenharia civil, com alt
 
   function copiarParaTransferencia() {
     navigator.clipboard.writeText(memorialText);
-    alert(" Memorial copiado para a área de transferência!");
+    mostrarToast(" Memorial copiado para a área de transferência!");
   }
 
   function imprimirPdf() {
