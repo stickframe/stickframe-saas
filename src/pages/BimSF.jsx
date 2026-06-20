@@ -6,6 +6,7 @@ import {
 } from "../services/repositories/bimRepository";
 import StickViewBIM from "../components/bim/StickViewBIM";
 import { useToast } from "../components/ui/Toast";
+import { criarOrcamento } from "../services/repositories/orcamentoRepository";
 
 const PATHS = {
   cube3d:  <><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></>,
@@ -538,7 +539,27 @@ export default function BimSF() {
         ))}
       </div>
 
-      {tab === "stickview"    && <TabStickView obraId={obraId} user={usuario} onAddToOrcamento={(item) => toast.success(`✓ ${item.nome} adicionado ao orçamento`)} />}
+      {tab === "stickview"    && <TabStickView obraId={obraId} user={usuario} onAddToOrcamento={async (lista, total) => {
+        try {
+          const ref = `BIM-${new Date().getFullYear()}-${String(Date.now()).slice(-4)}`;
+          await criarOrcamento({
+            ref,
+            cliente: obraAtual?.cliente || "—",
+            valor: Math.round((total || 0) * 100) / 100,
+            status: "Em elaboração",
+            criado: new Date().toLocaleDateString("pt-BR"),
+            validade_dias: 30,
+            origem: "bim_stickview",
+            composicao_tecnica: lista.map(i => ({
+              sistema: i.categoria,
+              itens: [{ nome: i.nome, un: i.unidade, qtd: i.quantidade, preco: i.precoUnit, total: i.preco }],
+            })),
+          });
+          toast.success(`✓ Orçamento ${ref} criado com ${lista.length} ${lista.length === 1 ? "item" : "itens"} — R$ ${total?.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`);
+        } catch (e) {
+          toast.error?.(`Erro ao criar orçamento: ${e.message}`);
+        }
+      }} />}
       {tab === "modelos"      && <TabModelos obraId={obraId} empresaId={empresaId} modelos={modelos} carregarModelos={carregarModelos} deletando={deletando} setDeletando={setDeletando} />}
       {tab === "revisoes"     && <TabRevisoes />}
       {tab === "apontamentos" && <TabApontamentos obraId={obraId} modelos={modelos} apontamentos={apontamentos} carregarApontamentos={carregarApontamentos} />}

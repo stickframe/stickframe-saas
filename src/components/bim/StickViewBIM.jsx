@@ -433,7 +433,7 @@ function ElementPanel({ el, user, onClose, onStatusChange, onQtdChange, onAddToO
 
       <div style={{padding:"10px 15px",borderTop:"1px solid rgba(255,255,255,.07)",display:"flex",flexDirection:"column",gap:6,flexShrink:0}}>
         {produto && (
-          <button onClick={() => onAddToOrcamento({ produtoId:produto.id,nome:produto.nome,categoria:produto.categoria||el.grupo,preco:produto.preco*el.qtdTotal,precoUnit:produto.preco,unidade:produto.un||el.un,quantidade:el.qtdTotal })}
+          <button onClick={() => onAddToOrcamento?.([{ produtoId:produto.id,nome:produto.nome,categoria:produto.categoria||el.grupo,preco:produto.preco*el.qtdTotal,precoUnit:produto.preco,unidade:produto.un||el.un,quantidade:el.qtdTotal }], produto.preco*el.qtdTotal)}
             style={{display:"flex",alignItems:"center",justifyContent:"center",gap:7,background:"#981915",color:"#fff",border:"none",borderRadius:8,padding:"10px",fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer",width:"100%"}}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" style={{width:14,height:14}}><path d="M12 5v14M5 12h14"/></svg>
             Adicionar ao Orçamento
@@ -460,10 +460,16 @@ function GerarOrcamentoModal({ getEl, onConfirm, onClose }) {
   function toggle(id) { setSel(prev => { const n=new Set(prev); n.has(id)?n.delete(id):n.add(id); return n; }); }
 
   function confirm() {
-    for (const { el, produto } of items.filter(i => sel.has(i.el.id))) {
-      if (!produto) continue;
-      onConfirm({ produtoId:produto.id,nome:produto.nome,categoria:produto.categoria||el.grupo,preco:produto.preco*el.qtdTotal,precoUnit:produto.preco,unidade:produto.un||el.un,quantidade:el.qtdTotal });
-    }
+    const lista = items
+      .filter(i => sel.has(i.el.id) && i.produto)
+      .map(({ el, produto }) => ({
+        produtoId: produto.id, nome: produto.nome,
+        categoria: produto.categoria || el.grupo,
+        precoUnit: produto.preco, quantidade: el.qtdTotal || el.qtdBase,
+        preco: produto.preco * (el.qtdTotal || el.qtdBase),
+        unidade: produto.un || el.un,
+      }));
+    if (lista.length) onConfirm(lista, total);
     onClose();
   }
 
@@ -667,9 +673,9 @@ export default function StickViewBIM({ obraId, user, onAddToOrcamento }) {
     e.target.value = "";
   }
 
-  function handleAdd(item) {
-    onAddToOrcamento?.(item);
-    setAdded(item.nome);
+  function handleAdd(lista, total) {
+    onAddToOrcamento?.(lista, total);
+    setAdded(`${lista.length} itens`);
     setTimeout(() => setAdded(null), 2500);
   }
 
