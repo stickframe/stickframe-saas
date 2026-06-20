@@ -1202,7 +1202,7 @@ export default function OrcamentoTecnico() {
       background: C.bg, alignItems: "flex-start", flexWrap: "wrap" }}>
 
       {/*  LEFT: configuração  */}
-      <div style={{ width: 400, flexShrink: 0, display: "flex", flexDirection: "column", gap: 14, position: "sticky", top: 16, maxHeight: "calc(100vh - 32px)", overflowY: "auto" }}>
+      <div style={{ width: 400, flexShrink: 0, display: "flex", flexDirection: "column", gap: 14 }}>
         <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
           <div style={{ width: 4, height: 42, borderRadius: 3, background: "var(--brick)", flexShrink: 0, marginTop: 2 }} />
           <div>
@@ -1374,7 +1374,7 @@ export default function OrcamentoTecnico() {
                 )}
               </div>
               {habilitados[s.id] && s.opcoes && (
-                s.opcoes.length <= 3 ? (
+                s.opcoes.length <= 2 ? (
                   <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 2 }}>
                     {s.opcoes.map((o) => (
                       <button
