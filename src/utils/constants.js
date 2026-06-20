@@ -67,6 +67,7 @@ export const NAV = [
   { key: "orcamento_tecnico", label: "Orçamento Técnico",    icon: "Receipt",           grupo: "Engenharia" },
   { key: "orcamento_sf",      label: "Orçamento SF",         icon: "Layers",            grupo: "Engenharia", badge: "NOVO" },
   { key: "checklists",        label: "Checklist SF",         icon: "CheckSquare",       grupo: "Engenharia" },
+  { key: "insumos",           label: "Banco de Insumos",     icon: "Database",          grupo: "Engenharia", badge: "NOVO" },
   { key: "bi",                label: "Analytics",            brand: "StickPulse™",      icon: "BarChart2",       grupo: "Gestão", badge: "PRO", perfis: ["diretor"] },
   { key: "inteligencia",      label: "Inteligência Artificial", brand: "StickBrain™",   icon: "Brain",           grupo: "Gestão", badge: "IA",  perfis: ["diretor", "engenheiro"] },
   { key: "ecossistema",       label: "Ecossistema Stick™",   icon: "Layers",            grupo: "Gestão" },
@@ -78,7 +79,7 @@ export const PERFIS = {
   diretor: {
     label: "Diretor",
     cor: C.red,
-    paginas: ["dashboard","agenda","oportunidades","crm","orcamentos","obras","cronograma","medicoes","diario","vistorias","bim","quantitativos","financeiro","rentabilidade","contratos","historico","fornecedores","monitor_precos","calculadora","orcamento_tecnico","orcamento_sf","equipamentos","checklists","equipe","equipe_sf","sst","suprimentos","inteligencia","bi","ecossistema","configuracoes"],
+    paginas: ["dashboard","agenda","oportunidades","crm","orcamentos","obras","cronograma","medicoes","diario","vistorias","bim","quantitativos","financeiro","rentabilidade","contratos","historico","fornecedores","monitor_precos","calculadora","orcamento_tecnico","orcamento_sf","equipamentos","checklists","insumos","equipe","equipe_sf","sst","suprimentos","inteligencia","bi","ecossistema","configuracoes"],
   },
   comercial: {
     label: "Comercial",
