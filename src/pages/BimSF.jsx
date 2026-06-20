@@ -373,23 +373,23 @@ function TabRevisoes() {
   );
 }
 
-function TabStickView({ onAddToOrcamento }) {
+function TabStickView({ obraId, onAddToOrcamento }) {
   return (
     <div>
-      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
         <div style={{
           display: "inline-flex", alignItems: "center", gap: 7,
           background: "var(--brick-soft, #f3e7e5)", border: "1.5px solid var(--brick)",
           borderRadius: 8, padding: "5px 12px",
           fontSize: 12, fontWeight: 800, color: "var(--brick)", letterSpacing: 0.3,
         }}>
-          StickView™ — BIM Inteligente
+          StickView™ — Gêmeo Digital
         </div>
-        <span style={{ fontSize: 12.5, color: "var(--muted)" }}>
-          Clique nos elementos 3D para ver dados de produto, status de compra e adicionar ao orçamento
+        <span style={{ fontSize: 12, color: "var(--muted)" }}>
+          Clique nos elementos para atualizar execução · Importe um IFC real para atualizar quantidades · Gere orçamento completo pelo modelo
         </span>
       </div>
-      <StickViewBIM onAddToOrcamento={onAddToOrcamento} />
+      <StickViewBIM obraId={obraId} onAddToOrcamento={onAddToOrcamento} />
     </div>
   );
 }
@@ -538,7 +538,7 @@ export default function BimSF() {
         ))}
       </div>
 
-      {tab === "stickview"    && <TabStickView onAddToOrcamento={(item) => toast.success(`✓ ${item.nome} adicionado ao orçamento`)} />}
+      {tab === "stickview"    && <TabStickView obraId={obraId} onAddToOrcamento={(item) => toast.success(`✓ ${item.nome} adicionado ao orçamento`)} />}
       {tab === "modelos"      && <TabModelos obraId={obraId} empresaId={empresaId} modelos={modelos} carregarModelos={carregarModelos} deletando={deletando} setDeletando={setDeletando} />}
       {tab === "revisoes"     && <TabRevisoes />}
       {tab === "apontamentos" && <TabApontamentos obraId={obraId} modelos={modelos} apontamentos={apontamentos} carregarApontamentos={carregarApontamentos} />}
