@@ -2,12 +2,15 @@ import { useState, useEffect } from "react";
 import { CalendarDays, ClipboardList, FileText, Save } from "../components/ui/Icon";
 import { useToast } from "../hooks/useToast";
 import { printHtml } from "../utils/printHtml";
-import { CUB_ESTADOS, PADROES_SF, SISTEMAS_SF } from "../utils/insumosSF";
+import { CUB_ESTADOS, PADROES_SF, SISTEMAS_SF, CATALOGO_PRODUTOS } from "../utils/insumosSF";
 import { C } from "../utils/constants";
 import { LOGO_STICKFRAME } from "../utils/cdn";
 import useAppStore from "../store/useAppStore";
 import { listarPrecosVivos } from "../services/repositories/precosRepository";
 import { criarOrcamento } from "../services/repositories/orcamentoRepository";
+import CatalogoPicker from "../components/orcamento/CatalogoPicker";
+
+const _catalogoMap = Object.fromEntries(CATALOGO_PRODUTOS.map(p => [p.id, p]));
 
 const LS_KEY = "sf_orcamento_tecnico_v1";
 
@@ -526,6 +529,8 @@ export default function OrcamentoTecnico() {
   };
 
   const [comparativoVersoes, setComparativoVersoes] = useState(null);
+  const [itensAdicionais, setItensAdicionais]       = useState([]);
+  const [showCatalogo, setShowCatalogo]             = useState(false);
 
   const gerarComparativoVersoes = () => {
     const estSistema = SISTEMAS_SF.find((s) => s.id === "estrutura");
@@ -1404,6 +1409,78 @@ export default function OrcamentoTecnico() {
           ))}
         </Card>
 
+        {/* Itens Adicionais do Catálogo */}
+        <Card title="Itens Adicionais" icon="clip" iconBg={C.ochre}>
+          <div style={{ fontSize: 11, color: C.muted, marginBottom: 8 }}>
+            Adicione produtos do catálogo ou itens manuais que não fazem parte dos sistemas calculados.
+          </div>
+          {itensAdicionais.map((item, i) => {
+            const precoAtual = item.produtoId ? _catalogoMap[item.produtoId]?.preco : null;
+            const variacaoPreco = precoAtual != null && item.precoUnit != null && Math.abs(precoAtual - item.precoUnit) > 0.01
+              ? precoAtual - item.precoUnit : null;
+            return (
+              <div key={i} style={{ marginBottom: 6 }}>
+                {item.produtoId ? (
+                  <div style={{ display: "flex", gap: 7, alignItems: "center", background: "rgba(152,25,21,0.04)", border: "1px solid rgba(152,25,21,0.18)", borderRadius: 8, padding: "7px 9px" }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 11, fontWeight: 600, color: C.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.nome}</div>
+                      <div style={{ fontSize: 10, color: C.muted, display: "flex", gap: 6, alignItems: "center", marginTop: 2, flexWrap: "wrap" }}>
+                        <span>{item.unidade} · {fmtBRL(item.precoUnit)}/un</span>
+                        {variacaoPreco !== null && (
+                          <span title={`Preço atual no catálogo: ${fmtBRL(precoAtual)}/un`} style={{ background: variacaoPreco > 0 ? "rgba(176,122,30,0.15)" : "rgba(63,122,75,0.15)", color: variacaoPreco > 0 ? "#b07a1e" : "#3f7a4b", padding: "1px 5px", borderRadius: 6, fontWeight: 700, cursor: "help" }}>
+                            {variacaoPreco > 0 ? "↑" : "↓"} {fmtBRL(precoAtual)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <input type="number" min={1} value={item.quantidade || 1}
+                      onChange={(e) => {
+                        const qtd = Math.max(1, Number(e.target.value) || 1);
+                        setItensAdicionais(arr => arr.map((it, j) => j === i ? { ...it, quantidade: qtd, preco: it.precoUnit * qtd } : it));
+                      }}
+                      style={{ width: 46, padding: "4px 6px", borderRadius: 6, border: `1px solid ${C.border}`, fontSize: 12, textAlign: "center", fontFamily: "inherit" }}
+                    />
+                    <span style={{ fontSize: 12, fontWeight: 700, color: C.steel, minWidth: 68, textAlign: "right" }}>{fmtBRL(item.preco)}</span>
+                    <button onClick={() => setItensAdicionais(arr => arr.filter((_, j) => j !== i))} style={{ background: "none", border: "none", color: C.danger, cursor: "pointer", fontSize: 18, lineHeight: 1, padding: "0 3px" }}>×</button>
+                  </div>
+                ) : (
+                  <div style={{ display: "flex", gap: 7, alignItems: "center" }}>
+                    <input value={item.nome} placeholder="Descrição"
+                      onChange={(e) => setItensAdicionais(arr => arr.map((it, j) => j === i ? { ...it, nome: e.target.value } : it))}
+                      style={{ flex: 2, ...inputSt }} />
+                    <input value={item.preco} placeholder="R$" type="number"
+                      onChange={(e) => setItensAdicionais(arr => arr.map((it, j) => j === i ? { ...it, preco: e.target.value } : it))}
+                      style={{ flex: 1, ...inputSt }} />
+                    <button onClick={() => setItensAdicionais(arr => arr.filter((_, j) => j !== i))} style={{ background: "none", border: "none", color: C.danger, cursor: "pointer", fontSize: 18, lineHeight: 1, padding: "0 3px" }}>×</button>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+          {itensAdicionais.length > 0 && (
+            <div style={{ fontSize: 12, fontWeight: 700, color: C.text, textAlign: "right", padding: "4px 0", borderTop: `1px solid ${C.border}`, marginTop: 4 }}>
+              Subtotal: {fmtBRL(itensAdicionais.reduce((s, it) => s + Number(it.preco || 0), 0))}
+            </div>
+          )}
+          <div style={{ display: "flex", gap: 7, flexWrap: "wrap", marginTop: 4 }}>
+            <button
+              onClick={() => setItensAdicionais(arr => [...arr, { nome: "", preco: "" }])}
+              style={{ fontSize: 11, color: C.steel, background: "none", border: `1px dashed ${C.steel}`, borderRadius: 6, padding: "5px 12px", cursor: "pointer", fontFamily: "inherit" }}
+            >+ Manual</button>
+            <button
+              onClick={() => setShowCatalogo(true)}
+              style={{ fontSize: 11, color: C.red, background: "none", border: `1px dashed ${C.red}`, borderRadius: 6, padding: "5px 12px", cursor: "pointer", fontFamily: "inherit" }}
+            >📦 Do Catálogo</button>
+          </div>
+        </Card>
+
+        {showCatalogo && (
+          <CatalogoPicker
+            onAdd={(item) => setItensAdicionais(arr => [...arr, item])}
+            onClose={() => setShowCatalogo(false)}
+          />
+        )}
+
         <div style={{ position: "sticky", bottom: 0, background: "var(--bg)", paddingTop: 12, paddingBottom: 16, marginTop: 4, boxShadow: "0 -4px 16px rgba(40,30,20,0.10)" }}>
           <button
             onClick={calcular}
@@ -1475,6 +1552,30 @@ export default function OrcamentoTecnico() {
                 value={fmtBRL(resultado.precoVenda)}
                 sub={fmtBRL(resultado.m2Venda) + "/m²"} color={C.success} />
             </div>
+
+            {/* Itens adicionais no resultado */}
+            {itensAdicionais.length > 0 && (() => {
+              const totalAd = itensAdicionais.reduce((s, it) => s + Number(it.preco || 0), 0);
+              return (
+                <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 10, padding: "12px 16px" }}>
+                  <div style={{ fontSize: 10.5, fontWeight: 800, color: "var(--muted)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>
+                    Itens adicionais
+                    <span style={{ fontSize: 11, fontWeight: 700, color: C.ochre, marginLeft: 10 }}>{fmtBRL(totalAd)}</span>
+                  </div>
+                  {itensAdicionais.map((it, i) => (
+                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 0", borderBottom: "1px solid var(--line)", fontSize: 12 }}>
+                      <span style={{ flex: 1, color: "var(--ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{it.nome || "—"}</span>
+                      {it.quantidade > 1 && <span style={{ fontSize: 10, color: "var(--muted)" }}>×{it.quantidade}</span>}
+                      <span style={{ fontWeight: 700, minWidth: 90, textAlign: "right", fontFamily: "'Barlow Condensed', sans-serif", fontSize: 14 }}>{fmtBRL(Number(it.preco || 0))}</span>
+                    </div>
+                  ))}
+                  <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8, fontSize: 13, fontWeight: 700 }}>
+                    <span>Total com adicionais</span>
+                    <span style={{ color: C.success }}>{fmtBRL(resultado.precoVenda + totalAd)}</span>
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* lista compacta de grupos */}
             <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 10, padding: "12px 16px" }}>
