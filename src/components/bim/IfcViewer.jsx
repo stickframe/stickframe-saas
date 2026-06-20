@@ -23,6 +23,7 @@ export default function IfcViewer({ file, onLoad, onError }) {
     world.scene.setup();          // ambient + directional lights
     world.scene.three.background = null;
     world.renderer.three.setClearColor(0x0f0e12, 1);
+    world.renderer.showLogo = false;
 
     components.init();            // starts render loop
 
@@ -59,11 +60,15 @@ export default function IfcViewer({ file, onLoad, onError }) {
         }
         if (cancelled) return;
 
-        // Setup IFC loader with local WASM
+        // Setup IFC loader with local WASM and increased memory for large files
         const ifcLoader = components.get(OBC.IfcLoader);
         await ifcLoader.setup({
           wasm: { path: "/", absolute: true },
           autoSetWasm: false,
+          webIfc: {
+            MEMORY_LIMIT: 2147483648, // 2GB
+            TAPE_SIZE: 67108864,      // 64MB tape
+          },
         });
         if (cancelled) return;
 
