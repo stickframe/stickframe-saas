@@ -373,7 +373,7 @@ function TabRevisoes() {
   );
 }
 
-function TabStickView({ obraId, onAddToOrcamento }) {
+function TabStickView({ obraId, user, onAddToOrcamento }) {
   return (
     <div>
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
@@ -389,7 +389,7 @@ function TabStickView({ obraId, onAddToOrcamento }) {
           Clique nos elementos para atualizar execução · Importe um IFC real para atualizar quantidades · Gere orçamento completo pelo modelo
         </span>
       </div>
-      <StickViewBIM obraId={obraId} onAddToOrcamento={onAddToOrcamento} />
+      <StickViewBIM obraId={obraId} user={user} onAddToOrcamento={onAddToOrcamento} />
     </div>
   );
 }
@@ -538,7 +538,7 @@ export default function BimSF() {
         ))}
       </div>
 
-      {tab === "stickview"    && <TabStickView obraId={obraId} onAddToOrcamento={(item) => toast.success(`✓ ${item.nome} adicionado ao orçamento`)} />}
+      {tab === "stickview"    && <TabStickView obraId={obraId} user={usuario} onAddToOrcamento={(item) => toast.success(`✓ ${item.nome} adicionado ao orçamento`)} />}
       {tab === "modelos"      && <TabModelos obraId={obraId} empresaId={empresaId} modelos={modelos} carregarModelos={carregarModelos} deletando={deletando} setDeletando={setDeletando} />}
       {tab === "revisoes"     && <TabRevisoes />}
       {tab === "apontamentos" && <TabApontamentos obraId={obraId} modelos={modelos} apontamentos={apontamentos} carregarApontamentos={carregarApontamentos} />}

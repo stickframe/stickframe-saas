@@ -13,6 +13,8 @@ import { useObraPermission, useObrasVisiveis } from "../hooks/useObraPermission"
 import { gerarSingleRdoPDF } from "../services/pdfService";
 import { sb } from "../services/supabase";
 import { storageUrl } from "../utils/cdn";
+import { BIM_ELEMENTOS_BASE } from "../components/bim/StickViewBIM";
+import { upsertBimElementosBatch } from "../services/repositories/bimElementosRepository";
 
 const MESES = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
 
@@ -65,10 +67,22 @@ function Textarea({ value, onChange, placeholder, rows = 4 }) {
 }
 
 //  Formulário de registro
-function FormDiario({ form, setForm, onSave, onCancel, fotosFiles, setFotosFiles }) {
+const STATUS_BIM_OPTS = [
+  { value: "concluido",  label: "✅ Concluído" },
+  { value: "montando",   label: "🔵 Em montagem" },
+  { value: "fabricando", label: "🟡 Em fabricação" },
+  { value: "problema",   label: "🔴 Problema" },
+];
+
+function FormDiario({ form, setForm, onSave, onCancel, fotosFiles, setFotosFiles, bimEls, setBimEls, bimStatus, setBimStatus }) {
   const set      = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
   const ok       = form.data && form.responsavel && form.atividades;
   const fileRef  = useRef(null);
+  const [bimOpen, setBimOpen] = useState(false);
+
+  function toggleBimEl(id) {
+    setBimEls((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
+  }
 
   function handleFotosPick(e) {
     const files = Array.from(e.target.files || []);
@@ -191,6 +205,60 @@ function FormDiario({ form, setForm, onSave, onCancel, fotosFiles, setFotosFiles
         >
           📷 Adicionar fotos
         </button>
+      </div>
+
+      {/* Atualizar BIM */}
+      <div style={{ border: `1px solid ${C.border}`, borderRadius: 8 }}>
+        <button
+          type="button"
+          onClick={() => setBimOpen((v) => !v)}
+          style={{
+            width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
+            padding: "10px 14px", background: "none", border: "none", cursor: "pointer",
+            fontFamily: "inherit", fontSize: 12, fontWeight: 700, color: C.muted, letterSpacing: 0.8,
+          }}
+        >
+          <span>🏗 ATUALIZAR GÊMEO DIGITAL (BIM)</span>
+          <span style={{ fontSize: 14 }}>{bimOpen ? "▲" : "▼"}</span>
+        </button>
+        {bimOpen && (
+          <div style={{ padding: "0 14px 14px", display: "flex", flexDirection: "column", gap: 10 }}>
+            <div style={{ fontSize: 12, color: C.muted }}>
+              Marque os elementos executados hoje para atualizar o StickView™:
+            </div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+              {BIM_ELEMENTOS_BASE.map((el) => {
+                const sel = bimEls.includes(el.id);
+                return (
+                  <button
+                    key={el.id}
+                    type="button"
+                    onClick={() => toggleBimEl(el.id)}
+                    style={{
+                      padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600,
+                      border: `1.5px solid ${sel ? "#3f7a4b" : C.border}`,
+                      background: sel ? "#e8f5eb" : "transparent",
+                      color: sel ? "#3f7a4b" : C.muted,
+                      cursor: "pointer", fontFamily: "inherit",
+                    }}
+                  >
+                    {sel ? "✓ " : ""}{el.label}
+                  </button>
+                );
+              })}
+            </div>
+            {bimEls.length > 0 && (
+              <div>
+                <Label>Status dos elementos selecionados</Label>
+                <Select
+                  value={bimStatus}
+                  onChange={setBimStatus}
+                  options={STATUS_BIM_OPTS}
+                />
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Ações */}
@@ -344,6 +412,8 @@ export default function DiarioObra() {
   const [form,        setForm]        = useState(FORM_VAZIO);
   const [fotosFiles,  setFotosFiles]  = useState([]);
   const [uploading,   setUploading]   = useState(false);
+  const [bimEls,      setBimEls]      = useState([]);
+  const [bimStatus,   setBimStatus]   = useState("concluido");
   const { toast, mostrarToast } = useToast();
   const [online,      setOnline]      = useState(navigator.onLine);
   const [pendentes,   setPendentes]   = useState(0);
@@ -411,9 +481,20 @@ export default function DiarioObra() {
     }
 
     addDiario(obraId, { ...form, fotos: fotosUrls });
+
+    if (bimEls.length > 0) {
+      upsertBimElementosBatch(obraId, bimEls.map((id) => ({
+        elementoId: id,
+        status: bimStatus,
+        updated_by: form.responsavel,
+      }))).catch(() => {});
+    }
+
     setModal(false);
     setForm(FORM_VAZIO);
     setFotosFiles([]);
+    setBimEls([]);
+    setBimStatus("concluido");
     mostrarToast(fotosUrls.length > 0 ? ` Registro salvo com ${fotosUrls.length} foto(s)!` : " Registro salvo no diário!");
   }
 
@@ -454,6 +535,8 @@ export default function DiarioObra() {
             form={form} setForm={setForm}
             onSave={salvar} onCancel={() => setModal(false)}
             fotosFiles={fotosFiles} setFotosFiles={setFotosFiles}
+            bimEls={bimEls} setBimEls={setBimEls}
+            bimStatus={bimStatus} setBimStatus={setBimStatus}
           />
           {uploading && (
             <div style={{ textAlign: "center", padding: 12, fontSize: 13, color: C.muted }}>
