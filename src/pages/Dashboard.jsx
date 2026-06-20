@@ -10,6 +10,7 @@ import { useToast } from "../hooks/useToast";
 import { emailAlertaInadimplencia } from "../services/emailService";
 import { printHtml } from "../utils/printHtml";
 import SmartAlerts from "../components/ui/SmartAlerts";
+import AtencaoHoje from "../components/ui/AtencaoHoje";
 import DashboardKPIs from "../components/Dashboard/DashboardKPIs";
 import ComplianceNR from "../components/Dashboard/ComplianceNR";
 import CalculadoraRapida from "../components/ui/CalculadoraRapida";
@@ -402,7 +403,22 @@ function DashboardDiretor() {
   const [precosMon, setPrecosMon] = useState([]);
   useEffect(() => { listarMonitorados().then(setPrecosMon).catch(() => {}); }, []);
 
-  //  Financeiro 
+  const [kpiOp, setKpiOp] = useState({});
+  useEffect(() => {
+    const empId = getEmpresaId();
+    if (!empId) return;
+    Promise.all([
+      sb.from("suprimentos_pedidos").select("id, status, urgencia").eq("empresa_id", empId).eq("urgencia", "Crítico").neq("status", "Entregue").neq("status", "Cancelado"),
+      sb.from("suprimentos_estoque").select("id, quantidade, estoque_minimo").eq("empresa_id", empId).gt("estoque_minimo", 0),
+    ]).then(([peds, est]) => {
+      setKpiOp({
+        pedCriticos: (peds.data || []).length,
+        estoqueAbaixo: (est.data || []).filter(e => e.quantidade <= e.estoque_minimo).length,
+      });
+    }).catch(() => {});
+  }, []);
+
+  //  Financeiro
   const allLancamentos = Object.values(financeiro).flatMap((f) => f.lancamentos || []);
   const totalRec  = allLancamentos.filter((l) => l.tipo === "receita").reduce((a, l) => a + (l.valor || 0), 0);
   const totalDesp = allLancamentos.filter((l) => l.tipo === "despesa").reduce((a, l) => a + (l.valor || 0), 0);
@@ -630,6 +646,9 @@ function DashboardDiretor() {
 
       {/* Smart Alerts */}
       <div data-no-print="true"><SmartAlerts onNavigate={setActivePage} /></div>
+
+      {/* Atenção Hoje */}
+      <AtencaoHoje obras={obras} financeiro={financeiro} medicoes={medicoes} kpis={kpiOp} setActivePage={setActivePage} />
 
       {/* StickScore */}
       {(() => {
