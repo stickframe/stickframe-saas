@@ -91,7 +91,7 @@ export default function Sidebar({ open, onClose }) {
   const clientes      = useAppStore((s) => s.clientes);
   const [confirm, setConfirm] = useState(false);
   const [upgradeModal, setUpgradeModal] = useState(null);
-  const plano = useAppStore((s) => s.plano);
+  const plano = useAppStore((s) => s.user?.plano);
 
   const perfisCustomizados = useAppStore((s) => s.perfisCustomizados);
   const perfilCustom = !PERFIS[user?.perfil]
