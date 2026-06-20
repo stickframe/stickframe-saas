@@ -2,12 +2,15 @@ import { useState, useEffect } from "react";
 import { CalendarDays, ClipboardList, FileText, Save } from "../components/ui/Icon";
 import { useToast } from "../hooks/useToast";
 import { printHtml } from "../utils/printHtml";
-import { CUB_ESTADOS, PADROES_SF, SISTEMAS_SF } from "../utils/insumosSF";
+import { CUB_ESTADOS, PADROES_SF, SISTEMAS_SF, CATALOGO_PRODUTOS } from "../utils/insumosSF";
 import { C } from "../utils/constants";
 import { LOGO_STICKFRAME } from "../utils/cdn";
 import useAppStore from "../store/useAppStore";
 import { listarPrecosVivos } from "../services/repositories/precosRepository";
 import { criarOrcamento } from "../services/repositories/orcamentoRepository";
+import CatalogoPicker from "../components/orcamento/CatalogoPicker";
+
+const _catalogoMap = Object.fromEntries(CATALOGO_PRODUTOS.map(p => [p.id, p]));
 
 const LS_KEY = "sf_orcamento_tecnico_v1";
 
@@ -526,6 +529,8 @@ export default function OrcamentoTecnico() {
   };
 
   const [comparativoVersoes, setComparativoVersoes] = useState(null);
+  const [itensAdicionais, setItensAdicionais]       = useState([]);
+  const [showCatalogo, setShowCatalogo]             = useState(false);
 
   const gerarComparativoVersoes = () => {
     const estSistema = SISTEMAS_SF.find((s) => s.id === "estrutura");
@@ -780,13 +785,30 @@ export default function OrcamentoTecnico() {
         </tr></thead>
         <tbody>${sistemasRows}</tbody>
         <tfoot>
+          ${itensAdicionais.length > 0 ? `
+          <tr style="background:#f4f1ec;font-weight:700">
+            <td colspan="4" style="padding:8px 14px;font-size:12px">Itens adicionais</td>
+            <td style="padding:8px 14px;text-align:right;font-size:12px"></td>
+          </tr>
+          ${itensAdicionais.map(it => `
+          <tr style="background:#faf8f5">
+            <td style="padding:6px 14px 6px 22px;font-size:12px">${it.nome || "—"}</td>
+            <td style="padding:6px 10px;text-align:center;font-size:12px;color:#666">${it.unidade || "vb"}</td>
+            <td style="padding:6px 10px;text-align:right;font-size:12px">${it.quantidade || 1}</td>
+            <td style="padding:6px 10px;text-align:right;font-size:12px">${fmtBRL(Number(it.precoUnit || it.preco || 0))}</td>
+            <td style="padding:6px 10px;text-align:right;font-size:12px;font-weight:600">${fmtBRL(Number(it.preco || 0))}</td>
+          </tr>`).join("")}
+          <tr style="background:#e8e4dc;font-weight:700">
+            <td colspan="4" style="padding:8px 14px;font-size:12px">Subtotal itens adicionais</td>
+            <td style="padding:8px 14px;text-align:right;font-size:12px">${fmtBRL(itensAdicionais.reduce((s,it) => s + Number(it.preco||0), 0))}</td>
+          </tr>` : ""}
           <tr style="background:#1a1a2e;color:#fff;font-weight:700">
             <td colspan="4" style="padding:10px 14px">TOTAL GERAL (custo direto)</td>
             <td style="padding:10px 14px;text-align:right">${fmtBRL(r.totalGeral)}</td>
           </tr>
           <tr style="background:#981915;color:#fff;font-weight:700">
-            <td colspan="4" style="padding:10px 14px">PREÇO DE VENDA — BDI ${r.bdi}%</td>
-            <td style="padding:10px 14px;text-align:right">${fmtBRL(r.precoVenda)}</td>
+            <td colspan="4" style="padding:10px 14px">PREÇO DE VENDA — BDI ${r.bdi}%${itensAdicionais.length > 0 ? " + itens adicionais" : ""}</td>
+            <td style="padding:10px 14px;text-align:right">${fmtBRL(r.precoVenda + itensAdicionais.reduce((s,it) => s + Number(it.preco||0), 0))}</td>
           </tr>
         </tfoot>
       </table>
@@ -831,7 +853,9 @@ export default function OrcamentoTecnico() {
     const numProposta  = `${new Date().getFullYear()}/${String(Date.now()).slice(-4).padStart(4,"0")}`;
     const cliente      = formSalvar.cliente || "—";
     const prazo        = r.prazoMeses ? `${r.prazoMeses} meses` : "A definir";
-    const sinal        = r.precoVenda * 0.10;
+    const totalAdicionais = itensAdicionais.reduce((s, it) => s + Number(it.preco || 0), 0);
+    const totalFinal   = r.precoVenda + totalAdicionais;
+    const sinal        = totalFinal * 0.10;
 
     // Escopo — monta linha por sistema habilitado
     const escopoRows = r.breakdown.map((s, i) => `
@@ -845,8 +869,8 @@ export default function OrcamentoTecnico() {
       </tr>`).join("");
 
     // Composição do valor
-    const totalUnid = r.precoVenda;
-    const m2 = r.m2Venda;
+    const totalUnid = totalFinal;
+    const m2 = totalFinal / r.area;
 
     // Condições de pagamento
     const pgtoRows = `
@@ -857,12 +881,12 @@ export default function OrcamentoTecnico() {
       </tr>
       <tr style="border-bottom:1px solid #e5e7eb">
         <td style="padding:12px 14px;font-weight:700;font-size:13px">Saldo</td>
-        <td style="padding:12px 14px;font-weight:700;color:#981915;font-size:13px">${fmtBRL(r.precoVenda - sinal)}</td>
+        <td style="padding:12px 14px;font-weight:700;color:#981915;font-size:13px">${fmtBRL(totalFinal - sinal)}</td>
         <td style="padding:12px 14px;font-size:13px;color:#374151">Conforme medi&ccedil;&otilde;es das etapas de evolu&ccedil;&atilde;o de obra</td>
       </tr>
       <tr style="background:#981915">
         <td style="padding:12px 14px;font-weight:700;color:#fff;font-size:13px">Total do Contrato</td>
-        <td style="padding:12px 14px;font-weight:700;color:#fff;font-size:14px">${fmtBRL(r.precoVenda)}</td>
+        <td style="padding:12px 14px;font-weight:700;color:#fff;font-size:14px">${fmtBRL(totalFinal)}</td>
         <td style="padding:12px 14px;color:#fecaca;font-size:12px">Sinal de ${fmtBRL(sinal)} + saldo conforme medi&ccedil;&otilde;es</td>
       </tr>`;
 
@@ -938,13 +962,24 @@ export default function OrcamentoTecnico() {
             </td>
             <td style="padding:14px;text-align:right;font-size:13px">${r.area}</td>
             <td style="padding:14px;text-align:right;font-size:13px">m&sup2;</td>
-            <td style="padding:14px;text-align:right;font-size:13px">${fmtBRL(m2)}</td>
-            <td style="padding:14px;text-align:right;font-size:14px;font-weight:800;color:#981915">${fmtBRL(totalUnid)}</td>
+            <td style="padding:14px;text-align:right;font-size:13px">${fmtBRL(r.m2Venda)}</td>
+            <td style="padding:14px;text-align:right;font-size:14px;font-weight:800;color:#981915">${fmtBRL(r.precoVenda)}</td>
           </tr>
+          ${itensAdicionais.length > 0 ? itensAdicionais.map(it => `
+          <tr style="border-bottom:1px solid #e5e7eb">
+            <td style="padding:12px 14px;font-size:13px">
+              <div style="font-weight:600">${it.nome || "Item adicional"}</div>
+              ${it.categoria ? `<div style="font-size:11px;color:#6b7280;margin-top:2px">${it.categoria}</div>` : ""}
+            </td>
+            <td style="padding:12px 14px;text-align:right;font-size:13px">${it.quantidade || 1}</td>
+            <td style="padding:12px 14px;text-align:right;font-size:13px">${it.unidade || "vb"}</td>
+            <td style="padding:12px 14px;text-align:right;font-size:13px">${fmtBRL(Number(it.precoUnit || it.preco || 0))}</td>
+            <td style="padding:12px 14px;text-align:right;font-size:14px;font-weight:800;color:#981915">${fmtBRL(Number(it.preco || 0))}</td>
+          </tr>`).join("") : ""}
         </tbody>
       </table>
       <div style="text-align:right;font-size:13px;color:#374151;margin-bottom:32px">
-        <strong>Valor total do contrato: ${fmtBRL(totalUnid)}</strong>
+        <strong>Valor total do contrato: ${fmtBRL(totalFinal)}</strong>
       </div>
 
       <!-- CONDIÇÕES DE PAGAMENTO (página 2) -->
@@ -1213,6 +1248,23 @@ export default function OrcamentoTecnico() {
           </div>
         </div>
 
+        {/* Summary bar */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, fontSize: 12 }}>
+          <span style={{ flex: 1, color: "var(--muted)", fontWeight: 500 }}>
+            {area ? `Residencial · ${area} m²` : "Configure a obra"}
+          </span>
+          <span style={{ color: "var(--muted)", fontSize: 11 }}>
+            {SISTEMAS_SF.filter(s => s.obrigatorio && habilitados[s.id]).length}/{SISTEMAS_SF.filter(s => s.obrigatorio).length} obrigatórios
+          </span>
+          <button
+            onClick={calcular}
+            disabled={!area}
+            style={{ padding: "4px 12px", background: "var(--brick)", color: "#fff", border: "none", borderRadius: 6, fontSize: 11.5, fontWeight: 700, cursor: area ? "pointer" : "not-allowed", opacity: area ? 1 : 0.5, fontFamily: "inherit" }}
+          >
+            Calcular
+          </button>
+        </div>
+
         {crmLead && (
           <div style={{ background: C.brickSoft, border: `1px solid ${C.red}44`, borderRadius: 8, padding: "10px 14px", display: "flex", alignItems: "center", gap: 10 }}>
             <span style={{ color: C.red }}><Ic n="link" w={16} /></span>
@@ -1343,15 +1395,40 @@ export default function OrcamentoTecnico() {
                 )}
               </div>
               {habilitados[s.id] && s.opcoes && (
-                <select
-                  value={selecoes[s.id]}
-                  onChange={(e) => setSelecoes((p) => ({ ...p, [s.id]: e.target.value }))}
-                  style={{ ...selectSt, fontSize: 12 }}
-                >
-                  {s.opcoes.map((o) => (
-                    <option key={o.id} value={o.id}>{o.label}</option>
-                  ))}
-                </select>
+                s.opcoes.length <= 2 ? (
+                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 2 }}>
+                    {s.opcoes.map((o) => (
+                      <button
+                        key={o.id}
+                        onClick={() => setSelecoes((p) => ({ ...p, [s.id]: o.id }))}
+                        style={{
+                          border: `1px solid ${selecoes[s.id] === o.id ? "var(--brick)" : "var(--line)"}`,
+                          borderRadius: 8,
+                          padding: "8px 14px",
+                          fontSize: 13,
+                          background: selecoes[s.id] === o.id ? "var(--brick)" : "transparent",
+                          color: selecoes[s.id] === o.id ? "#fff" : "var(--ink)",
+                          cursor: "pointer",
+                          fontFamily: "inherit",
+                          fontWeight: selecoes[s.id] === o.id ? 700 : 400,
+                          transition: "all 0.15s",
+                        }}
+                      >
+                        {o.label}
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <select
+                    value={selecoes[s.id]}
+                    onChange={(e) => setSelecoes((p) => ({ ...p, [s.id]: e.target.value }))}
+                    style={{ ...selectSt, fontSize: 12 }}
+                  >
+                    {s.opcoes.map((o) => (
+                      <option key={o.id} value={o.id}>{o.label}</option>
+                    ))}
+                  </select>
+                )
               )}
               {habilitados[s.id] && s.opcoes && (
                 <p style={{ margin: "4px 0 0", fontSize: 11, color: C.muted, lineHeight: 1.4 }}>
@@ -1362,19 +1439,93 @@ export default function OrcamentoTecnico() {
           ))}
         </Card>
 
-        <button
-          onClick={calcular}
-          disabled={!area}
-          style={{
-            padding: "14px 0", background: "var(--brick)", color: "#fff", border: "none",
-            borderRadius: 11, fontSize: 14.5, fontWeight: 700,
-            cursor: area ? "pointer" : "not-allowed", opacity: area ? 1 : 0.5,
-            display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
-            fontFamily: "inherit", letterSpacing: .3,
-          }}
-        >
-          <Ic n="barchart" w={16} c="#fff" /> Calcular Orçamento
-        </button>
+        {/* Itens Adicionais do Catálogo */}
+        <Card title="Itens Adicionais" icon="clip" iconBg={C.ochre}>
+          <div style={{ fontSize: 11, color: C.muted, marginBottom: 8 }}>
+            Adicione produtos do catálogo ou itens manuais que não fazem parte dos sistemas calculados.
+          </div>
+          {itensAdicionais.map((item, i) => {
+            const precoAtual = item.produtoId ? _catalogoMap[item.produtoId]?.preco : null;
+            const variacaoPreco = precoAtual != null && item.precoUnit != null && Math.abs(precoAtual - item.precoUnit) > 0.01
+              ? precoAtual - item.precoUnit : null;
+            return (
+              <div key={i} style={{ marginBottom: 6 }}>
+                {item.produtoId ? (
+                  <div style={{ display: "flex", gap: 7, alignItems: "center", background: "rgba(152,25,21,0.04)", border: "1px solid rgba(152,25,21,0.18)", borderRadius: 8, padding: "7px 9px" }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 11, fontWeight: 600, color: C.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.nome}</div>
+                      <div style={{ fontSize: 10, color: C.muted, display: "flex", gap: 6, alignItems: "center", marginTop: 2, flexWrap: "wrap" }}>
+                        <span>{item.unidade} · {fmtBRL(item.precoUnit)}/un</span>
+                        {variacaoPreco !== null && (
+                          <span title={`Preço atual no catálogo: ${fmtBRL(precoAtual)}/un`} style={{ background: variacaoPreco > 0 ? "rgba(176,122,30,0.15)" : "rgba(63,122,75,0.15)", color: variacaoPreco > 0 ? "#b07a1e" : "#3f7a4b", padding: "1px 5px", borderRadius: 6, fontWeight: 700, cursor: "help" }}>
+                            {variacaoPreco > 0 ? "↑" : "↓"} {fmtBRL(precoAtual)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <input type="number" min={1} value={item.quantidade || 1}
+                      onChange={(e) => {
+                        const qtd = Math.max(1, Number(e.target.value) || 1);
+                        setItensAdicionais(arr => arr.map((it, j) => j === i ? { ...it, quantidade: qtd, preco: it.precoUnit * qtd } : it));
+                      }}
+                      style={{ width: 46, padding: "4px 6px", borderRadius: 6, border: `1px solid ${C.border}`, fontSize: 12, textAlign: "center", fontFamily: "inherit" }}
+                    />
+                    <span style={{ fontSize: 12, fontWeight: 700, color: C.steel, minWidth: 68, textAlign: "right" }}>{fmtBRL(item.preco)}</span>
+                    <button onClick={() => setItensAdicionais(arr => arr.filter((_, j) => j !== i))} style={{ background: "none", border: "none", color: C.danger, cursor: "pointer", fontSize: 18, lineHeight: 1, padding: "0 3px" }}>×</button>
+                  </div>
+                ) : (
+                  <div style={{ display: "flex", gap: 7, alignItems: "center" }}>
+                    <input value={item.nome} placeholder="Descrição"
+                      onChange={(e) => setItensAdicionais(arr => arr.map((it, j) => j === i ? { ...it, nome: e.target.value } : it))}
+                      style={{ flex: 2, ...inputSt }} />
+                    <input value={item.preco} placeholder="R$" type="number"
+                      onChange={(e) => setItensAdicionais(arr => arr.map((it, j) => j === i ? { ...it, preco: e.target.value } : it))}
+                      style={{ flex: 1, ...inputSt }} />
+                    <button onClick={() => setItensAdicionais(arr => arr.filter((_, j) => j !== i))} style={{ background: "none", border: "none", color: C.danger, cursor: "pointer", fontSize: 18, lineHeight: 1, padding: "0 3px" }}>×</button>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+          {itensAdicionais.length > 0 && (
+            <div style={{ fontSize: 12, fontWeight: 700, color: C.text, textAlign: "right", padding: "4px 0", borderTop: `1px solid ${C.border}`, marginTop: 4 }}>
+              Subtotal: {fmtBRL(itensAdicionais.reduce((s, it) => s + Number(it.preco || 0), 0))}
+            </div>
+          )}
+          <div style={{ display: "flex", gap: 7, flexWrap: "wrap", marginTop: 4 }}>
+            <button
+              onClick={() => setItensAdicionais(arr => [...arr, { nome: "", preco: "" }])}
+              style={{ fontSize: 11, color: C.steel, background: "none", border: `1px dashed ${C.steel}`, borderRadius: 6, padding: "5px 12px", cursor: "pointer", fontFamily: "inherit" }}
+            >+ Manual</button>
+            <button
+              onClick={() => setShowCatalogo(true)}
+              style={{ fontSize: 11, color: C.red, background: "none", border: `1px dashed ${C.red}`, borderRadius: 6, padding: "5px 12px", cursor: "pointer", fontFamily: "inherit" }}
+            >📦 Do Catálogo</button>
+          </div>
+        </Card>
+
+        {showCatalogo && (
+          <CatalogoPicker
+            onAdd={(item) => setItensAdicionais(arr => [...arr, item])}
+            onClose={() => setShowCatalogo(false)}
+          />
+        )}
+
+        <div style={{ position: "sticky", bottom: 0, background: "var(--bg)", paddingTop: 12, paddingBottom: 16, marginTop: 4, boxShadow: "0 -4px 16px rgba(40,30,20,0.10)" }}>
+          <button
+            onClick={calcular}
+            disabled={!area}
+            style={{
+              padding: "14px 0", background: "var(--brick)", color: "#fff", border: "none",
+              borderRadius: 11, fontSize: 14.5, fontWeight: 700,
+              cursor: area ? "pointer" : "not-allowed", opacity: area ? 1 : 0.5,
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
+              fontFamily: "inherit", letterSpacing: .3, width: "100%",
+            }}
+          >
+            <Ic n="barchart" w={16} c="#fff" /> Calcular Orçamento
+          </button>
+        </div>
       </div>
 
       {/*  RIGHT: resultado  */}
@@ -1391,6 +1542,18 @@ export default function OrcamentoTecnico() {
               Preencha os parâmetros ao lado e clique em <strong style={{ color: "var(--ink)" }}>Calcular Orçamento</strong>.
               Gera composição detalhada de todos os insumos com preços regionais calibrados por CUB.
             </p>
+            <button
+              onClick={calcular}
+              disabled={!area}
+              style={{
+                marginTop: 20, padding: "11px 28px", background: "var(--brick)", color: "#fff",
+                border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700,
+                cursor: area ? "pointer" : "not-allowed", opacity: area ? 1 : 0.5,
+                fontFamily: "inherit", display: "flex", alignItems: "center", gap: 8,
+              }}
+            >
+              <Ic n="barchart" w={16} c="#fff" /> Calcular Orçamento
+            </button>
           </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -1420,6 +1583,46 @@ export default function OrcamentoTecnico() {
                 sub={fmtBRL(resultado.m2Venda) + "/m²"} color={C.success} />
             </div>
 
+            {/* Itens adicionais no resultado */}
+            {itensAdicionais.length > 0 && (() => {
+              const totalAd = itensAdicionais.reduce((s, it) => s + Number(it.preco || 0), 0);
+              return (
+                <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 10, padding: "12px 16px" }}>
+                  <div style={{ fontSize: 10.5, fontWeight: 800, color: "var(--muted)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>
+                    Itens adicionais
+                    <span style={{ fontSize: 11, fontWeight: 700, color: C.ochre, marginLeft: 10 }}>{fmtBRL(totalAd)}</span>
+                  </div>
+                  {itensAdicionais.map((it, i) => (
+                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 0", borderBottom: "1px solid var(--line)", fontSize: 12 }}>
+                      <span style={{ flex: 1, color: "var(--ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{it.nome || "—"}</span>
+                      {it.quantidade > 1 && <span style={{ fontSize: 10, color: "var(--muted)" }}>×{it.quantidade}</span>}
+                      <span style={{ fontWeight: 700, minWidth: 90, textAlign: "right", fontFamily: "'Barlow Condensed', sans-serif", fontSize: 14 }}>{fmtBRL(Number(it.preco || 0))}</span>
+                    </div>
+                  ))}
+                  <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8, fontSize: 13, fontWeight: 700 }}>
+                    <span>Total com adicionais</span>
+                    <span style={{ color: C.success }}>{fmtBRL(resultado.precoVenda + totalAd)}</span>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* lista compacta de grupos */}
+            <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 10, padding: "12px 16px" }}>
+              <div style={{ fontSize: 10.5, fontWeight: 800, color: "var(--muted)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Resumo por sistema</div>
+              {resultado.breakdown.map((s) => {
+                const total = s.totalMat + s.totalMO;
+                const pct = resultado.totalGeral > 0 ? ((total / resultado.totalGeral) * 100).toFixed(0) : 0;
+                return (
+                  <div key={s.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 0", borderBottom: "1px solid var(--line)", fontSize: 12 }}>
+                    <span style={{ flex: 1, color: "var(--ink)" }}>{s.label}{s.opcaoLabel ? ` — ${s.opcaoLabel}` : ""}</span>
+                    <span style={{ color: "var(--muted)", fontSize: 11, minWidth: 32, textAlign: "right" }}>{pct}%</span>
+                    <span style={{ fontWeight: 700, minWidth: 110, textAlign: "right", fontFamily: "'Barlow Condensed', sans-serif", fontSize: 14 }}>{fmtBRL(total)}</span>
+                  </div>
+                );
+              })}
+            </div>
+
             {/* composição por categoria */}
             <ComposicaoCategoria
               breakdown={resultado.breakdown}
@@ -1428,36 +1631,39 @@ export default function OrcamentoTecnico() {
               totalMO={resultado.totalMO}
             />
 
-            {/* action buttons */}
+            {/* action buttons — primários em destaque */}
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+              <button onClick={exportarExcel} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "10px 18px", background: "var(--surface)", color: "var(--ink)", border: "1px solid var(--line)", borderRadius: 9, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+                <Ic n="dl" w={14} /> Exportar Excel
+              </button>
+              <button onClick={exportarPDF} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "10px 18px", background: "var(--surface)", color: "var(--ink)", border: "1px solid var(--line)", borderRadius: 9, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+                <Ic n="print" w={14} /> Imprimir
+              </button>
+              <button onClick={exportarPropostaCliente} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "10px 18px", background: "var(--brick)", color: "#fff", border: "1px solid var(--brick)", borderRadius: 9, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+                <Ic n="clip" w={14} c="#fff" /> Virar proposta
+              </button>
+            </div>
+            {/* ações secundárias */}
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
-              <button onClick={() => setModalSalvar(true)} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "9px 15px", background: "var(--brick)", color: "#fff", border: "1px solid var(--brick)", borderRadius: 9, fontSize: 12.5, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
-                <Ic n="save" w={13} c="#fff" /> Salvar Orçamento
+              <button onClick={() => setModalSalvar(true)} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "7px 13px", background: "var(--surface)", color: "var(--ink-2)", border: "1px solid var(--line)", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+                <Ic n="save" w={12} /> Salvar
               </button>
-              <button onClick={exportarPropostaCliente} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "9px 15px", background: "var(--surface)", color: "var(--ink-2)", border: "1px solid var(--line)", borderRadius: 9, fontSize: 12.5, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
-                <Ic n="clip" w={13} /> Proposta ao Cliente
+              <button onClick={gerarComparativo} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "7px 13px", background: "var(--surface)", color: "var(--ink-2)", border: "1px solid var(--line)", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+                <Ic n="scale" w={12} /> Comparar Padrões
               </button>
-              <button onClick={exportarPDF} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "9px 15px", background: "var(--surface)", color: "var(--ink-2)", border: "1px solid var(--line)", borderRadius: 9, fontSize: 12.5, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
-                <Ic n="print" w={13} /> PDF Técnico
+              <button onClick={gerarComparativoVersoes} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "7px 13px", background: "var(--surface)", color: "var(--ink-2)", border: "1px solid var(--line)", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+                <Ic n="sliders" w={12} /> Espessuras
               </button>
-              <button onClick={exportarExcel} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "9px 15px", background: "var(--surface)", color: "var(--ink-2)", border: "1px solid var(--line)", borderRadius: 9, fontSize: 12.5, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
-                <Ic n="dl" w={13} /> Excel
-              </button>
-              <button onClick={gerarComparativo} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "9px 15px", background: "var(--surface)", color: "var(--ink-2)", border: "1px solid var(--line)", borderRadius: 9, fontSize: 12.5, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
-                <Ic n="scale" w={13} /> Comparar Padrões
-              </button>
-              <button onClick={gerarComparativoVersoes} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "9px 15px", background: "var(--surface)", color: "var(--ink-2)", border: "1px solid var(--line)", borderRadius: 9, fontSize: 12.5, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
-                <Ic n="sliders" w={13} /> Espessuras
-              </button>
-              <button onClick={() => setModalFinanc(true)} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "9px 15px", background: "var(--surface)", color: "var(--ink-2)", border: "1px solid var(--line)", borderRadius: 9, fontSize: 12.5, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
-                <Ic n="bank" w={13} /> Financiamento
+              <button onClick={() => setModalFinanc(true)} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "7px 13px", background: "var(--surface)", color: "var(--ink-2)", border: "1px solid var(--line)", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+                <Ic n="bank" w={12} /> Financiamento
               </button>
               {Object.keys(precosEditados).length > 0 && (
-                <button onClick={() => { setPrecosEditados({}); calcular(); }} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "9px 15px", background: "var(--surface)", color: "var(--ink-2)", border: "1px solid var(--line)", borderRadius: 9, fontSize: 12.5, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
-                  <Ic n="refresh" w={13} /> Limpar ajustes
+                <button onClick={() => { setPrecosEditados({}); calcular(); }} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "7px 13px", background: "var(--surface)", color: "var(--ink-2)", border: "1px solid var(--line)", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+                  <Ic n="refresh" w={12} /> Limpar ajustes
                 </button>
               )}
-              <button onClick={() => setResultado(null)} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "9px 15px", background: "var(--surface)", color: "var(--muted)", border: "1px solid var(--line)", borderRadius: 9, fontSize: 12.5, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
-                <Ic n="refresh" w={13} /> Recalcular
+              <button onClick={() => setResultado(null)} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "7px 13px", background: "var(--surface)", color: "var(--muted)", border: "1px solid var(--line)", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+                <Ic n="refresh" w={12} /> Recalcular
               </button>
             </div>
 

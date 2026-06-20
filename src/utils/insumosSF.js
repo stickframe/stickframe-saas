@@ -1,4 +1,4 @@
-//  CUB R1-N (Residencial 1 pavimento, Padrão Normal) 
+//  CUB R1-N (Residencial 1 pavimento, Padrão Normal)
 // Valores de referência — atualizar mensalmente via SINDUSCON-UF
 export const CUB_ESTADOS = {
   AC: { nome: "Acre",                cub: 1950 },
@@ -37,80 +37,75 @@ export const PADROES_SF = {
   "Luxo":        { fator: 1.50, desc: "Materiais de alto luxo, totalmente personalizado" },
 };
 
-//  Estrutura de cada item 
-// { nome, un, base (por m²), preco (unit ref R$), grupo (Orçamentos), categoria, desc? }
-// base: aplica fator de padrão se flagged; fixo se ehFundacao ou ehFixo
-
-//  SISTEMAS 
-// Cada sistema: { id, label, icon, obrigatorio, mao_obra_cub, opcoes[] | itens[] }
-// mao_obra_cub: fração do CUB/m² aplicada à mão de obra deste sistema
+// Preços ref. mercado nacional Jun/2026 — SP como base
+// Fontes: SINDUSCON-SP, PINI, cotações diretas distribuidores SF
 
 export const SISTEMAS_SF = [
 
-  //  1. FUNDAÇÃO 
+  //  1. FUNDAÇÃO
   {
-    id: "fundacao", label: "Fundação", icon: "", obrigatorio: true,
-    mao_obra_cub: 0.05, // calibrado: SP R$1.000/m² total MO / CUB 2340
+    id: "fundacao", label: "Fundação", icon: "", obrigatorio: false,
+    mao_obra_cub: 0.05,
     opcoes: [
       {
         id: "radier_simples", label: "Radier Simples",
         desc: "Laje de concreto armado sobre o solo — padrão Steel Frame residencial",
         itens: [
-          { nome: "Concreto C-25 usinado", un: "m³", base: 0.10, preco: 430, grupo: "Fundação", categoria: "Fundação", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Ferragem CA-50 ⌀6,3mm", un: "kg", base: 6.00, preco: 6.80, grupo: "Fundação", categoria: "Fundação", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Tela soldada Q-92 (3×2m)", un: "pç", base: 0.17, preco: 72, grupo: "Fundação", categoria: "Fundação", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Forma lateral (tábua 3ª via)", un: "m", base: 0.40, preco: 9, grupo: "Fundação", categoria: "Fundação", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Manta impermeabilizante (laje/solo)", un: "m²", base: 1.05, preco: 20, grupo: "Fundação", categoria: "Fundação", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Brita ¾\" (regularização)",          un: "m³", base: 0.05, preco: 130,  grupo: "Fundação", categoria: "Fundação" },
-          { nome: "Areia média lavada", un: "m³", base: 0.03, preco: 95, grupo: "Fundação", categoria: "Fundação", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Arame recozido nº 18", un: "kg", base: 0.20, preco: 13, grupo: "Fundação", categoria: "Fundação", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
+          { nome: "Concreto C-25 usinado",              un: "m³", base: 0.10, preco: 540,  grupo: "Fundação", categoria: "Fundação" },
+          { nome: "Ferragem CA-50 ⌀6,3mm",              un: "kg", base: 6.00, preco: 8.50, grupo: "Fundação", categoria: "Fundação" },
+          { nome: "Tela soldada Q-92 (3×2m)",           un: "pç", base: 0.17, preco: 92,   grupo: "Fundação", categoria: "Fundação" },
+          { nome: "Forma lateral (tábua 3ª via)",        un: "m",  base: 0.40, preco: 12,   grupo: "Fundação", categoria: "Fundação" },
+          { nome: "Manta impermeabilizante (laje/solo)", un: "m²", base: 1.05, preco: 28,   grupo: "Fundação", categoria: "Fundação" },
+          { nome: "Brita ¾\" (regularização)",          un: "m³", base: 0.05, preco: 165,  grupo: "Fundação", categoria: "Fundação" },
+          { nome: "Areia média lavada",                  un: "m³", base: 0.03, preco: 115,  grupo: "Fundação", categoria: "Fundação" },
+          { nome: "Arame recozido nº 18",                un: "kg", base: 0.20, preco: 16,   grupo: "Fundação", categoria: "Fundação" },
         ],
       },
       {
         id: "radier_vigado", label: "Radier Vigado",
         desc: "Com vigas de bordo e nervuras — maior rigidez em solos moles ou recalques",
         itens: [
-          { nome: "Concreto C-25 usinado", un: "m³", base: 0.15, preco: 430, grupo: "Fundação", categoria: "Fundação", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Ferragem CA-50 ⌀10mm (vigas)", un: "kg", base: 9.50, preco: 7.20, grupo: "Fundação", categoria: "Fundação", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Tela soldada Q-92 (3×2m)", un: "pç", base: 0.17, preco: 72, grupo: "Fundação", categoria: "Fundação", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Forma lateral (tábua 3ª via)", un: "m", base: 0.60, preco: 9, grupo: "Fundação", categoria: "Fundação", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Forma vigas (compensado 12mm)", un: "m²", base: 0.20, preco: 45, grupo: "Fundação", categoria: "Fundação", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Manta impermeabilizante (laje/solo)", un: "m²", base: 1.05, preco: 20, grupo: "Fundação", categoria: "Fundação", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Brita ¾\"",                          un: "m³", base: 0.08, preco: 130,  grupo: "Fundação", categoria: "Fundação" },
-          { nome: "Areia média lavada", un: "m³", base: 0.05, preco: 95, grupo: "Fundação", categoria: "Fundação", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Arame recozido nº 18", un: "kg", base: 0.30, preco: 13, grupo: "Fundação", categoria: "Fundação", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
+          { nome: "Concreto C-25 usinado",              un: "m³", base: 0.15, preco: 540,  grupo: "Fundação", categoria: "Fundação" },
+          { nome: "Ferragem CA-50 ⌀10mm (vigas)",       un: "kg", base: 9.50, preco: 9.00, grupo: "Fundação", categoria: "Fundação" },
+          { nome: "Tela soldada Q-92 (3×2m)",           un: "pç", base: 0.17, preco: 92,   grupo: "Fundação", categoria: "Fundação" },
+          { nome: "Forma lateral (tábua 3ª via)",        un: "m",  base: 0.60, preco: 12,   grupo: "Fundação", categoria: "Fundação" },
+          { nome: "Forma vigas (compensado 12mm)",       un: "m²", base: 0.20, preco: 62,   grupo: "Fundação", categoria: "Fundação" },
+          { nome: "Manta impermeabilizante (laje/solo)", un: "m²", base: 1.05, preco: 28,   grupo: "Fundação", categoria: "Fundação" },
+          { nome: "Brita ¾\"",                          un: "m³", base: 0.08, preco: 165,  grupo: "Fundação", categoria: "Fundação" },
+          { nome: "Areia média lavada",                  un: "m³", base: 0.05, preco: 115,  grupo: "Fundação", categoria: "Fundação" },
+          { nome: "Arame recozido nº 18",                un: "kg", base: 0.30, preco: 16,   grupo: "Fundação", categoria: "Fundação" },
         ],
       },
       {
         id: "baldrame", label: "Baldrame + Enchimento",
         desc: "Viga de concreto perimetral com enchimento de blocos — terrenos inclinados",
         itens: [
-          { nome: "Concreto C-25 usinado (baldrame)", un: "m³", base: 0.09, preco: 430, grupo: "Fundação", categoria: "Fundação", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Ferragem CA-50 ⌀12,5mm", un: "kg", base: 5.50, preco: 7.20, grupo: "Fundação", categoria: "Fundação", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Bloco de concreto 14×19×39cm", un: "un", base: 8, preco: 5.00, grupo: "Fundação", categoria: "Fundação", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Argamassa de assentamento (sc 20kg)", un: "sc", base: 0.40, preco: 83.14, grupo: "Fundação", categoria: "Fundação", desc: "• Massa pronta tratamento de juntas em chapas drywall. • Disponível em baldes de 25 kg. • Validade: 1 ANO (da data de fabricação). • Aspecto: pasta branca consistente. • Tratamento de juntas em sistemas de paredes, tetos e revestimentos em drywall. • Aplicação manual ou mecânica com o uso de fita para juntas. • Acabamento superficial fino sobre chapas de drywall. • Preenchimento de irregularidades nas chapas. • Arremate sobre parafusos. • Acabamento com cantoneiras de reforço. • Empilhamento de baldes com 30 kg = 3 Baldes | 15 kg = 4 Baldes | 5 kg =6 Baldes • Manter o produto em local seco, coberto e livre de intempéries.", codigo: "24307", marca: "SMART", url: "https://www.espacosmart.com.br/smart-massa-para-junta-de-drywall-25kg/p", espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Forma baldrame (tábua 3ª via)", un: "m", base: 0.60, preco: 9, grupo: "Fundação", categoria: "Fundação", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Manta impermeabilizante (laje/solo)", un: "m²", base: 1.05, preco: 20, grupo: "Fundação", categoria: "Fundação", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Arame recozido nº 18", un: "kg", base: 0.20, preco: 13, grupo: "Fundação", categoria: "Fundação", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
+          { nome: "Concreto C-25 usinado (baldrame)",   un: "m³", base: 0.09, preco: 540,  grupo: "Fundação", categoria: "Fundação" },
+          { nome: "Ferragem CA-50 ⌀12,5mm",             un: "kg", base: 5.50, preco: 9.00, grupo: "Fundação", categoria: "Fundação" },
+          { nome: "Bloco de concreto 14×19×39cm",       un: "un", base: 8,    preco: 6.50, grupo: "Fundação", categoria: "Fundação" },
+          { nome: "Argamassa de assentamento (sc 20kg)", un: "sc", base: 0.40, preco: 38,   grupo: "Fundação", categoria: "Fundação" },
+          { nome: "Forma baldrame (tábua 3ª via)",       un: "m",  base: 0.60, preco: 12,   grupo: "Fundação", categoria: "Fundação" },
+          { nome: "Manta impermeabilizante (laje/solo)", un: "m²", base: 1.05, preco: 28,   grupo: "Fundação", categoria: "Fundação" },
+          { nome: "Arame recozido nº 18",                un: "kg", base: 0.20, preco: 16,   grupo: "Fundação", categoria: "Fundação" },
         ],
       },
       {
         id: "sapatas", label: "Sapatas Isoladas + Baldrame",
         desc: "Sapatas de concreto sob pilares + viga de baldrame — cargas concentradas",
         itens: [
-          { nome: "Concreto C-25 usinado (sapatas)", un: "m³", base: 0.12, preco: 430, grupo: "Fundação", categoria: "Fundação", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Concreto C-25 usinado (baldrame)", un: "m³", base: 0.06, preco: 430, grupo: "Fundação", categoria: "Fundação", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Ferragem CA-50 ⌀10mm", un: "kg", base: 8.00, preco: 7.20, grupo: "Fundação", categoria: "Fundação", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Forma sapatas (madeira)", un: "m²", base: 0.30, preco: 42, grupo: "Fundação", categoria: "Fundação", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Forma baldrame (tábua)", un: "m", base: 0.50, preco: 9, grupo: "Fundação", categoria: "Fundação", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Manta impermeabilizante (laje/solo)", un: "m²", base: 1.05, preco: 20, grupo: "Fundação", categoria: "Fundação", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Arame recozido nº 18", un: "kg", base: 0.25, preco: 13, grupo: "Fundação", categoria: "Fundação", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
+          { nome: "Concreto C-25 usinado (sapatas)",    un: "m³", base: 0.12, preco: 540,  grupo: "Fundação", categoria: "Fundação" },
+          { nome: "Concreto C-25 usinado (baldrame)",   un: "m³", base: 0.06, preco: 540,  grupo: "Fundação", categoria: "Fundação" },
+          { nome: "Ferragem CA-50 ⌀10mm",               un: "kg", base: 8.00, preco: 9.00, grupo: "Fundação", categoria: "Fundação" },
+          { nome: "Forma sapatas (madeira)",             un: "m²", base: 0.30, preco: 55,   grupo: "Fundação", categoria: "Fundação" },
+          { nome: "Forma baldrame (tábua)",              un: "m",  base: 0.50, preco: 12,   grupo: "Fundação", categoria: "Fundação" },
+          { nome: "Manta impermeabilizante (laje/solo)", un: "m²", base: 1.05, preco: 28,   grupo: "Fundação", categoria: "Fundação" },
+          { nome: "Arame recozido nº 18",                un: "kg", base: 0.25, preco: 16,   grupo: "Fundação", categoria: "Fundação" },
         ],
       },
     ],
   },
 
-  //  2. ESTRUTURA STEEL FRAME 
+  //  2. ESTRUTURA STEEL FRAME
   {
     id: "estrutura", label: "Estrutura Steel Frame", icon: "", obrigatorio: true,
     mao_obra_cub: 0.08,
@@ -120,13 +115,13 @@ export const SISTEMAS_SF = [
         desc: "Estrutura leve — partições internas, mezaninos, paredes divisórias",
         aplicaFatorPadrao: true,
         itens: [
-          { nome: "Montante C 90×40×15×0,90mm", un: "pç", base: 1.50, preco: 123.98, grupo: "Estrutura", categoria: "Estrutura de Aço", desc: "Largura: 90mm Espessura: 0,95mm Comprimento: 6000mm Galvanização: 275g/m² Resistência / Limite de escoamento: 230 MPA", codigo: "297", marca: "SMART", url: "https://www.espacosmart.com.br/montante-light-steel-frame-com-furo-90-x-0-95-x-6000mm-le-230mpa---z275g-m-/p", espessura: "0,95mm", comprimento: "6000mm", dimensoes: "L: 90mm" },
-          { nome: "Guia U 92×40×0,90mm", un: "m", base: 1.10, preco: 56.98, grupo: "Estrutura", categoria: "Estrutura de Aço", desc: "Largura: 90mm Espessura: 0,95mm Comprimento: 3000mm Galvanização: 275g/m² Resistência/ Limite de escoamento: 230 MPA", codigo: "1402", marca: "SMART", url: "https://www.espacosmart.com.br/guia-light-steel-frame-90-x-0-95-x-3000mm-le-230mpa---z275g-m-/p", espessura: "0,95mm", comprimento: "3000mm", dimensoes: "L: 90mm" },
-          { nome: "Montante C 90×40×15×0,90mm (verga)", un: "pç", base: 0.30, preco: 123.98, grupo: "Estrutura", categoria: "Estrutura de Aço", desc: "Largura: 90mm Espessura: 0,95mm Comprimento: 6000mm Galvanização: 275g/m² Resistência / Limite de escoamento: 230 MPA", codigo: "297", marca: "SMART", url: "https://www.espacosmart.com.br/montante-light-steel-frame-com-furo-90-x-0-95-x-6000mm-le-230mpa---z275g-m-/p", espessura: "0,95mm", comprimento: "6000mm", dimensoes: "L: 90mm" },
-          { nome: "Chapa de reforço (steel plate 90mm)", un: "pç", base: 0.20, preco: 9, grupo: "Estrutura", categoria: "Estrutura de Aço", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Prego helicóptero — track fix", un: "kg", base: 0.25, preco: 24, grupo: "Estrutura", categoria: "Estrutura de Aço", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Fita de vedação de guia (EPDM 50mm)", un: "m", base: 1.20, preco: 18.6, grupo: "Estrutura", categoria: "Estrutura de Aço", desc: "Largura: 48mm Espessura: 0,5mm Comprimento: 3000mm Galvanização: 275g/m²", codigo: "135", marca: "SMART", url: "https://www.espacosmart.com.br/guia-para-drywall-48-x-05-x-3000mm---z275g-m²/p", espessura: "3000mm", comprimento: "3000mm", dimensoes: null },
-          { nome: "OSB 11,1mm (1,22×2,44m) — contraventamento", un: "chp", base: 0.38, preco: 163.74, grupo: "Estrutura", categoria: "Estrutura de Aço", desc: "Espessura: 11,1mm Altura: 2400mm Largura: 1200mm Peso por painel: 20,4 Kg Rendimento: 2,88 m²", codigo: "45", marca: "LP", url: "https://www.espacosmart.com.br/placa-osb-home-plus-mdi-11-1-x-1200-x-2400mm-2-88m-/p", espessura: "2400mm", comprimento: "2400mm", dimensoes: "L: 1200mm | A: 2400mm" },
+          { nome: "Montante C 90×40×15×0,90mm",         un: "pç", base: 1.50, preco: 21,   grupo: "Estrutura", categoria: "Estrutura de Aço" },
+          { nome: "Guia U 92×40×0,90mm",                un: "m",  base: 1.10, preco: 19,   grupo: "Estrutura", categoria: "Estrutura de Aço" },
+          { nome: "Montante C 90×40×15×0,90mm (verga)", un: "pç", base: 0.30, preco: 21,   grupo: "Estrutura", categoria: "Estrutura de Aço" },
+          { nome: "Chapa de reforço (steel plate 90mm)", un: "pç", base: 0.20, preco: 12,   grupo: "Estrutura", categoria: "Estrutura de Aço" },
+          { nome: "Prego helicóptero — track fix",       un: "kg", base: 0.25, preco: 32,   grupo: "Estrutura", categoria: "Estrutura de Aço" },
+          { nome: "Fita de vedação de guia (EPDM 50mm)", un: "m",  base: 1.20, preco: 5.20, grupo: "Estrutura", categoria: "Estrutura de Aço" },
+          { nome: "OSB 11,1mm (1,22×2,44m) — contraventamento", un: "chp", base: 0.38, preco: 163.74, grupo: "Estrutura", categoria: "Estrutura de Aço" },
         ],
       },
       {
@@ -134,13 +129,13 @@ export const SISTEMAS_SF = [
         desc: "Residencial até 2 pav. — padrão mais comum no Brasil",
         aplicaFatorPadrao: true,
         itens: [
-          { nome: "Montante C 90×40×15×1,25mm", un: "pç", base: 1.50, preco: 123.98, grupo: "Estrutura", categoria: "Estrutura de Aço", desc: "Largura: 90mm Espessura: 0,95mm Comprimento: 6000mm Galvanização: 275g/m² Resistência / Limite de escoamento: 230 MPA", codigo: "297", marca: "SMART", url: "https://www.espacosmart.com.br/montante-light-steel-frame-com-furo-90-x-0-95-x-6000mm-le-230mpa---z275g-m-/p", espessura: "0,95mm", comprimento: "6000mm", dimensoes: "L: 90mm" },
-          { nome: "Guia U 92×40×1,25mm", un: "m", base: 1.10, preco: 56.98, grupo: "Estrutura", categoria: "Estrutura de Aço", desc: "Largura: 90mm Espessura: 0,95mm Comprimento: 3000mm Galvanização: 275g/m² Resistência/ Limite de escoamento: 230 MPA", codigo: "1402", marca: "SMART", url: "https://www.espacosmart.com.br/guia-light-steel-frame-90-x-0-95-x-3000mm-le-230mpa---z275g-m-/p", espessura: "0,95mm", comprimento: "3000mm", dimensoes: "L: 90mm" },
-          { nome: "Montante C 90×40×15×1,25mm (verga)", un: "pç", base: 0.30, preco: 123.98, grupo: "Estrutura", categoria: "Estrutura de Aço", desc: "Largura: 90mm Espessura: 0,95mm Comprimento: 6000mm Galvanização: 275g/m² Resistência / Limite de escoamento: 230 MPA", codigo: "297", marca: "SMART", url: "https://www.espacosmart.com.br/montante-light-steel-frame-com-furo-90-x-0-95-x-6000mm-le-230mpa---z275g-m-/p", espessura: "0,95mm", comprimento: "6000mm", dimensoes: "L: 90mm" },
-          { nome: "Chapa de reforço (steel plate 90mm)", un: "pç", base: 0.20, preco: 9, grupo: "Estrutura", categoria: "Estrutura de Aço", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Prego helicóptero — track fix", un: "kg", base: 0.25, preco: 24, grupo: "Estrutura", categoria: "Estrutura de Aço", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Fita de vedação de guia (EPDM 50mm)", un: "m", base: 1.20, preco: 18.6, grupo: "Estrutura", categoria: "Estrutura de Aço", desc: "Largura: 48mm Espessura: 0,5mm Comprimento: 3000mm Galvanização: 275g/m²", codigo: "135", marca: "SMART", url: "https://www.espacosmart.com.br/guia-para-drywall-48-x-05-x-3000mm---z275g-m²/p", espessura: "3000mm", comprimento: "3000mm", dimensoes: null },
-          { nome: "OSB 11,1mm (1,22×2,44m) — contraventamento", un: "chp", base: 0.38, preco: 163.74, grupo: "Estrutura", categoria: "Estrutura de Aço", desc: "Espessura: 11,1mm Altura: 2400mm Largura: 1200mm Peso por painel: 20,4 Kg Rendimento: 2,88 m²", codigo: "45", marca: "LP", url: "https://www.espacosmart.com.br/placa-osb-home-plus-mdi-11-1-x-1200-x-2400mm-2-88m-/p", espessura: "2400mm", comprimento: "2400mm", dimensoes: "L: 1200mm | A: 2400mm" },
+          { nome: "Montante C 90×40×15×1,25mm",         un: "pç", base: 1.50, preco: 27,   grupo: "Estrutura", categoria: "Estrutura de Aço" },
+          { nome: "Guia U 92×40×1,25mm",                un: "m",  base: 1.10, preco: 21,   grupo: "Estrutura", categoria: "Estrutura de Aço" },
+          { nome: "Montante C 90×40×15×1,25mm (verga)", un: "pç", base: 0.30, preco: 27,   grupo: "Estrutura", categoria: "Estrutura de Aço" },
+          { nome: "Chapa de reforço (steel plate 90mm)", un: "pç", base: 0.20, preco: 12,   grupo: "Estrutura", categoria: "Estrutura de Aço" },
+          { nome: "Prego helicóptero — track fix",       un: "kg", base: 0.25, preco: 32,   grupo: "Estrutura", categoria: "Estrutura de Aço" },
+          { nome: "Fita de vedação de guia (EPDM 50mm)", un: "m",  base: 1.20, preco: 5.20, grupo: "Estrutura", categoria: "Estrutura de Aço" },
+          { nome: "OSB 11,1mm (1,22×2,44m) — contraventamento", un: "chp", base: 0.38, preco: 163.74, grupo: "Estrutura", categoria: "Estrutura de Aço" },
         ],
       },
       {
@@ -148,13 +143,13 @@ export const SISTEMAS_SF = [
         desc: "Residencial reforçado — ventos fortes, litoral, 2+ pav.",
         aplicaFatorPadrao: true,
         itens: [
-          { nome: "Montante C 90×40×15×1,50mm", un: "pç", base: 1.50, preco: 123.98, grupo: "Estrutura", categoria: "Estrutura de Aço", desc: "Largura: 90mm Espessura: 0,95mm Comprimento: 6000mm Galvanização: 275g/m² Resistência / Limite de escoamento: 230 MPA", codigo: "297", marca: "SMART", url: "https://www.espacosmart.com.br/montante-light-steel-frame-com-furo-90-x-0-95-x-6000mm-le-230mpa---z275g-m-/p", espessura: "0,95mm", comprimento: "6000mm", dimensoes: "L: 90mm" },
-          { nome: "Guia U 92×40×1,50mm", un: "m", base: 1.10, preco: 56.98, grupo: "Estrutura", categoria: "Estrutura de Aço", desc: "Largura: 90mm Espessura: 0,95mm Comprimento: 3000mm Galvanização: 275g/m² Resistência/ Limite de escoamento: 230 MPA", codigo: "1402", marca: "SMART", url: "https://www.espacosmart.com.br/guia-light-steel-frame-90-x-0-95-x-3000mm-le-230mpa---z275g-m-/p", espessura: "0,95mm", comprimento: "3000mm", dimensoes: "L: 90mm" },
-          { nome: "Montante C 90×40×15×1,50mm (verga)", un: "pç", base: 0.30, preco: 123.98, grupo: "Estrutura", categoria: "Estrutura de Aço", desc: "Largura: 90mm Espessura: 0,95mm Comprimento: 6000mm Galvanização: 275g/m² Resistência / Limite de escoamento: 230 MPA", codigo: "297", marca: "SMART", url: "https://www.espacosmart.com.br/montante-light-steel-frame-com-furo-90-x-0-95-x-6000mm-le-230mpa---z275g-m-/p", espessura: "0,95mm", comprimento: "6000mm", dimensoes: "L: 90mm" },
-          { nome: "Chapa de reforço (steel plate 90mm)", un: "pç", base: 0.25, preco: 11, grupo: "Estrutura", categoria: "Estrutura de Aço", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Prego helicóptero — track fix", un: "kg", base: 0.28, preco: 24, grupo: "Estrutura", categoria: "Estrutura de Aço", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Fita de vedação de guia (EPDM 50mm)", un: "m", base: 1.20, preco: 18.6, grupo: "Estrutura", categoria: "Estrutura de Aço", desc: "Largura: 48mm Espessura: 0,5mm Comprimento: 3000mm Galvanização: 275g/m²", codigo: "135", marca: "SMART", url: "https://www.espacosmart.com.br/guia-para-drywall-48-x-05-x-3000mm---z275g-m²/p", espessura: "3000mm", comprimento: "3000mm", dimensoes: null },
-          { nome: "OSB 11,1mm (1,22×2,44m) — contraventamento", un: "chp", base: 0.38, preco: 163.74, grupo: "Estrutura", categoria: "Estrutura de Aço", desc: "Espessura: 11,1mm Altura: 2400mm Largura: 1200mm Peso por painel: 20,4 Kg Rendimento: 2,88 m²", codigo: "45", marca: "LP", url: "https://www.espacosmart.com.br/placa-osb-home-plus-mdi-11-1-x-1200-x-2400mm-2-88m-/p", espessura: "2400mm", comprimento: "2400mm", dimensoes: "L: 1200mm | A: 2400mm" },
+          { nome: "Montante C 90×40×15×1,50mm",         un: "pç", base: 1.50, preco: 33,   grupo: "Estrutura", categoria: "Estrutura de Aço" },
+          { nome: "Guia U 92×40×1,50mm",                un: "m",  base: 1.10, preco: 24,   grupo: "Estrutura", categoria: "Estrutura de Aço" },
+          { nome: "Montante C 90×40×15×1,50mm (verga)", un: "pç", base: 0.30, preco: 33,   grupo: "Estrutura", categoria: "Estrutura de Aço" },
+          { nome: "Chapa de reforço (steel plate 90mm)", un: "pç", base: 0.25, preco: 14,   grupo: "Estrutura", categoria: "Estrutura de Aço" },
+          { nome: "Prego helicóptero — track fix",       un: "kg", base: 0.28, preco: 32,   grupo: "Estrutura", categoria: "Estrutura de Aço" },
+          { nome: "Fita de vedação de guia (EPDM 50mm)", un: "m",  base: 1.20, preco: 5.20, grupo: "Estrutura", categoria: "Estrutura de Aço" },
+          { nome: "OSB 11,1mm (1,22×2,44m) — contraventamento", un: "chp", base: 0.38, preco: 163.74, grupo: "Estrutura", categoria: "Estrutura de Aço" },
         ],
       },
       {
@@ -162,13 +157,13 @@ export const SISTEMAS_SF = [
         desc: "Sobrado / pé-direito duplo — maior altura de parede",
         aplicaFatorPadrao: true,
         itens: [
-          { nome: "Montante C 150×40×15×1,25mm", un: "pç", base: 1.40, preco: 169.9, grupo: "Estrutura", categoria: "Estrutura de Aço", desc: "Largura: 140mm Espessura: 0,95mm Comprimento: 6000mm Galvanização: 275g/m² Resistência / Limite de escoamento: 230 MPA", codigo: "296", marca: "SMART", url: "https://www.espacosmart.com.br/montante-light-steel-frame-com-furo-140-x-0-95-x-6000mm-le-230mpa---z275g-m²/p", espessura: "0,95mm", comprimento: "6000mm", dimensoes: "L: 140mm" },
-          { nome: "Guia U 152×40×1,25mm", un: "m", base: 1.10, preco: 160.71, grupo: "Estrutura", categoria: "Estrutura de Aço", desc: "Largura: 140mm Espessura: 0,95mm Comprimento: 6000mm Galvanização: 275g/m² Resistência/ Limite de escoamento: 230 MPA", codigo: "724", marca: "SMART", url: "https://www.espacosmart.com.br/guia-light-steel-frame-140-x-0-95-x-6000mm-le-230mpa---z275g-m²/p", espessura: "6000mm", comprimento: "6000mm", dimensoes: "L: 140mm" },
-          { nome: "Montante C 150×40×15×1,25mm (verga)", un: "pç", base: 0.25, preco: 169.9, grupo: "Estrutura", categoria: "Estrutura de Aço", desc: "Largura: 140mm Espessura: 0,95mm Comprimento: 6000mm Galvanização: 275g/m² Resistência / Limite de escoamento: 230 MPA", codigo: "296", marca: "SMART", url: "https://www.espacosmart.com.br/montante-light-steel-frame-com-furo-140-x-0-95-x-6000mm-le-230mpa---z275g-m²/p", espessura: "0,95mm", comprimento: "6000mm", dimensoes: "L: 140mm" },
-          { nome: "Chapa de reforço (steel plate 150mm)", un: "pç", base: 0.25, preco: 14, grupo: "Estrutura", categoria: "Estrutura de Aço", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Prego helicóptero — track fix", un: "kg", base: 0.30, preco: 24, grupo: "Estrutura", categoria: "Estrutura de Aço", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Fita de vedação de guia (EPDM 75mm)", un: "m", base: 1.20, preco: 18.6, grupo: "Estrutura", categoria: "Estrutura de Aço", desc: "Largura: 48mm Espessura: 0,5mm Comprimento: 3000mm Galvanização: 275g/m²", codigo: "135", marca: "SMART", url: "https://www.espacosmart.com.br/guia-para-drywall-48-x-05-x-3000mm---z275g-m²/p", espessura: "3000mm", comprimento: "3000mm", dimensoes: null },
-          { nome: "OSB 11,1mm (1,22×2,44m) — contraventamento", un: "chp", base: 0.40, preco: 163.74, grupo: "Estrutura", categoria: "Estrutura de Aço", desc: "Espessura: 11,1mm Altura: 2400mm Largura: 1200mm Peso por painel: 20,4 Kg Rendimento: 2,88 m²", codigo: "45", marca: "LP", url: "https://www.espacosmart.com.br/placa-osb-home-plus-mdi-11-1-x-1200-x-2400mm-2-88m-/p", espessura: "2400mm", comprimento: "2400mm", dimensoes: "L: 1200mm | A: 2400mm" },
+          { nome: "Montante C 150×40×15×1,25mm",        un: "pç", base: 1.40, preco: 28,   grupo: "Estrutura", categoria: "Estrutura de Aço" },
+          { nome: "Guia U 152×40×1,25mm",               un: "m",  base: 1.10, preco: 27,   grupo: "Estrutura", categoria: "Estrutura de Aço" },
+          { nome: "Montante C 150×40×15×1,25mm (verga)", un: "pç", base: 0.25, preco: 28,  grupo: "Estrutura", categoria: "Estrutura de Aço" },
+          { nome: "Chapa de reforço (steel plate 150mm)", un: "pç", base: 0.25, preco: 18,  grupo: "Estrutura", categoria: "Estrutura de Aço" },
+          { nome: "Prego helicóptero — track fix",       un: "kg", base: 0.30, preco: 32,   grupo: "Estrutura", categoria: "Estrutura de Aço" },
+          { nome: "Fita de vedação de guia (EPDM 75mm)", un: "m",  base: 1.20, preco: 7.20, grupo: "Estrutura", categoria: "Estrutura de Aço" },
+          { nome: "OSB 11,1mm (1,22×2,44m) — contraventamento", un: "chp", base: 0.40, preco: 163.74, grupo: "Estrutura", categoria: "Estrutura de Aço" },
         ],
       },
       {
@@ -176,19 +171,19 @@ export const SISTEMAS_SF = [
         desc: "Comercial / industrial / pé-direito alto — máxima rigidez",
         aplicaFatorPadrao: true,
         itens: [
-          { nome: "Montante C 200×65×15×1,50mm", un: "pç", base: 1.30, preco: 204.17, grupo: "Estrutura", categoria: "Estrutura de Aço", desc: "Largura: 200mm Espessura: 0,95mm Comprimento: 6000mm Galvanização: 275g/m² Resistência / Limite de escoamento: 230 MPA", codigo: "588", marca: "SMART", url: "https://www.espacosmart.com.br/montante-light-steel-frame-com-furo-200-x-0-95-x-6000mm-le-230mpa---z275g-m²-/p", espessura: "0,95mm", comprimento: "6000mm", dimensoes: "L: 200mm" },
-          { nome: "Guia U 202×65×1,50mm", un: "m", base: 1.10, preco: 188.62, grupo: "Estrutura", categoria: "Estrutura de Aço", desc: "Largura: 200mm Espessura: 0,95mm Comprimento: 6000mm Galvanização: 275g/m² Resistência / Limite de escoamento: 230 MPA", codigo: "1069", marca: "SMART", url: "https://www.espacosmart.com.br/guia-light-steel-frame--200-x-0-95-x-6000mm-le-230mpa---z275g-m²/p", espessura: "6000mm", comprimento: "6000mm", dimensoes: null },
-          { nome: "Montante C 200×65×15×1,50mm (verga)", un: "pç", base: 0.20, preco: 204.17, grupo: "Estrutura", categoria: "Estrutura de Aço", desc: "Largura: 200mm Espessura: 0,95mm Comprimento: 6000mm Galvanização: 275g/m² Resistência / Limite de escoamento: 230 MPA", codigo: "588", marca: "SMART", url: "https://www.espacosmart.com.br/montante-light-steel-frame-com-furo-200-x-0-95-x-6000mm-le-230mpa---z275g-m²-/p", espessura: "0,95mm", comprimento: "6000mm", dimensoes: "L: 200mm" },
-          { nome: "Chapa de reforço (steel plate 200mm)", un: "pç", base: 0.30, preco: 22, grupo: "Estrutura", categoria: "Estrutura de Aço", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Prego helicóptero — track fix", un: "kg", base: 0.35, preco: 24, grupo: "Estrutura", categoria: "Estrutura de Aço", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Fita de vedação de guia (EPDM 100mm)", un: "m", base: 1.20, preco: 18.6, grupo: "Estrutura", categoria: "Estrutura de Aço", desc: "Largura: 48mm Espessura: 0,5mm Comprimento: 3000mm Galvanização: 275g/m²", codigo: "135", marca: "SMART", url: "https://www.espacosmart.com.br/guia-para-drywall-48-x-05-x-3000mm---z275g-m²/p", espessura: "3000mm", comprimento: "3000mm", dimensoes: null },
-          { nome: "OSB 15mm (1,22×2,44m) — contraventamento", un: "chp", base: 0.40, preco: 244.89, grupo: "Estrutura", categoria: "Estrutura de Aço", desc: "Espessura: 15,1mm Altura: 2400mm Largura: 1200mm Peso por painel: 27,8 Kg Rendimento: 2,88 m²", codigo: "1193", marca: "LP", url: "https://www.espacosmart.com.br/placa-osb-home-plus-mdi-15-1-x-1200-x--2400mm-2-88m²/p", espessura: "15,1mm", comprimento: "2400mm", dimensoes: "L: 1200mm" },
+          { nome: "Montante C 200×65×15×1,50mm",        un: "pç", base: 1.30, preco: 34,   grupo: "Estrutura", categoria: "Estrutura de Aço" },
+          { nome: "Guia U 202×65×1,50mm",               un: "m",  base: 1.10, preco: 31,   grupo: "Estrutura", categoria: "Estrutura de Aço" },
+          { nome: "Montante C 200×65×15×1,50mm (verga)", un: "pç", base: 0.20, preco: 34,  grupo: "Estrutura", categoria: "Estrutura de Aço" },
+          { nome: "Chapa de reforço (steel plate 200mm)", un: "pç", base: 0.30, preco: 28,  grupo: "Estrutura", categoria: "Estrutura de Aço" },
+          { nome: "Prego helicóptero — track fix",       un: "kg", base: 0.35, preco: 32,   grupo: "Estrutura", categoria: "Estrutura de Aço" },
+          { nome: "Fita de vedação de guia (EPDM 100mm)", un: "m", base: 1.20, preco: 9.80, grupo: "Estrutura", categoria: "Estrutura de Aço" },
+          { nome: "OSB 15mm (1,22×2,44m) — contraventamento", un: "chp", base: 0.40, preco: 244.89, grupo: "Estrutura", categoria: "Estrutura de Aço" },
         ],
       },
     ],
   },
 
-  //  3. FECHAMENTO EXTERNO 
+  //  3. FECHAMENTO EXTERNO
   {
     id: "fechamento_externo", label: "Fechamento Externo", icon: "", obrigatorio: true,
     mao_obra_cub: 0.04,
@@ -198,13 +193,13 @@ export const SISTEMAS_SF = [
         desc: "Solução mais comum no Brasil — boa resistência ao fogo e umidade",
         aplicaFatorPadrao: true,
         itens: [
-          { nome: "Placa cimentícia 10mm (1,20×2,40m)", un: "chp", base: 0.38, preco: 24.5, grupo: "Vedação externa", categoria: "Fechamento", desc: "Acabamento: ORGANO METÁLICO Bitola: 4,5 MM Comprimento: 32 MM Tamanho da Chave: CHAVE Nº 2 Peso: 0,239 KG Padrão Embalagem: 1 CENTO Substrato: CIMENTÍCIA PESADA Embalagem: Pacote Origem: NACIONAL Teste de Resistência Salt Spray: 1.000 HORAS Unidade de Venda: CENTOS Sistema da Rosca: AUTOPERFURANTE HI-LO Tipo de Geometria: DENTADA Forma da Rosca: INTEIRA Modelo: ROSCA SOBERBA Tipo da Cabeça: CHATA Tipo de Ponta: AGULHA Tipo de Fenda: PHILLIPS Material: AÇO BAIXO CARBONO Norma Mecânica: PADRÃO", codigo: "3603", marca: "CISER", url: "https://www.espacosmart.com.br/parafuso-para-placa-cimenticia---osb---perfil-drywall-4-2-x-32mm-pa-rusper-pacote-com-100-unidades/p", espessura: "32mm", comprimento: "32 MM", dimensoes: null },
-          { nome: "Perfil de juntas galvanizado 10mm", un: "m", base: 0.80, preco: 4.50, grupo: "Vedação externa", categoria: "Fechamento", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Fita autoadesiva impermeável 75mm", un: "m", base: 1.20, preco: 20.48, grupo: "Vedação externa", categoria: "Fechamento", desc: "Reforce e garanta um acabamento impecável com a Fita Telada para Drywall. Compre agora e tenha resultados profissionais!", codigo: "23850", marca: "Nantong Gaopeng", url: "https://www.espacosmart.com.br/smart-fita-telada-p-drywall-48x900mm/p", espessura: "900mm", comprimento: null, dimensoes: "48x900" },
-          { nome: "Tela de fibra de vidro (junta)", un: "m²", base: 0.15, preco: 9, grupo: "Vedação externa", categoria: "Fechamento", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Argamassa colante AC-II (sc 20kg)", un: "sc", base: 0.15, preco: 83.14, grupo: "Vedação externa", categoria: "Fechamento", desc: "• Massa pronta tratamento de juntas em chapas drywall. • Disponível em baldes de 25 kg. • Validade: 1 ANO (da data de fabricação). • Aspecto: pasta branca consistente. • Tratamento de juntas em sistemas de paredes, tetos e revestimentos em drywall. • Aplicação manual ou mecânica com o uso de fita para juntas. • Acabamento superficial fino sobre chapas de drywall. • Preenchimento de irregularidades nas chapas. • Arremate sobre parafusos. • Acabamento com cantoneiras de reforço. • Empilhamento de baldes com 30 kg = 3 Baldes | 15 kg = 4 Baldes | 5 kg =6 Baldes • Manter o produto em local seco, coberto e livre de intempéries.", codigo: "24307", marca: "SMART", url: "https://www.espacosmart.com.br/smart-massa-para-junta-de-drywall-25kg/p", espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Primer acrílico selador", un: "L", base: 0.30, preco: 22, grupo: "Vedação externa", categoria: "Fechamento", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Textura acrílica (galão 18L)", un: "gl", base: 0.05, preco: 280, grupo: "Vedação externa", categoria: "Fechamento", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
+          { nome: "Placa cimentícia 10mm (1,20×2,40m)",  un: "chp", base: 0.38, preco: 185.91,   grupo: "Vedação externa", categoria: "Fechamento" },
+          { nome: "Perfil de juntas galvanizado 10mm",   un: "m",   base: 0.80, preco: 6.50, grupo: "Vedação externa", categoria: "Fechamento" },
+          { nome: "Fita autoadesiva impermeável 75mm",   un: "m",   base: 1.20, preco: 7.50, grupo: "Vedação externa", categoria: "Fechamento" },
+          { nome: "Tela de fibra de vidro (junta)",      un: "m²",  base: 0.15, preco: 12,   grupo: "Vedação externa", categoria: "Fechamento" },
+          { nome: "Argamassa colante AC-II (sc 20kg)",   un: "sc",  base: 0.15, preco: 42,   grupo: "Vedação externa", categoria: "Fechamento" },
+          { nome: "Primer acrílico selador",             un: "L",   base: 0.30, preco: 28,   grupo: "Vedação externa", categoria: "Fechamento" },
+          { nome: "Textura acrílica (galão 18L)",        un: "gl",  base: 0.05, preco: 340,  grupo: "Vedação externa", categoria: "Fechamento" },
         ],
       },
       {
@@ -212,13 +207,13 @@ export const SISTEMAS_SF = [
         desc: "Alta resistência — indicada para zonas de impacto e litoral",
         aplicaFatorPadrao: true,
         itens: [
-          { nome: "Placa cimentícia 12mm (1,20×2,40m)", un: "chp", base: 0.38, preco: 120.62, grupo: "Vedação externa", categoria: "Fechamento", desc: "Espessura: 6 mm Comprimento: 2400 mm Largura: 1200 mm Peso da placa: 24,4 kg Clique AQUI para baixar a ficha técnica completa Vantagens e benefícios da placa cimentícia: - Resiste a umidade, impacto e ao fogo - Livre de micro organismos - Flexibilidade - Ótimo isolamento térmico e acústico", codigo: "26", marca: "BRASILIT", url: "https://www.espacosmart.com.br/placa-cimenticia-6-x-1200-x-2400mm/p", espessura: "6 mm", comprimento: "2400 mm", dimensoes: null },
-          { nome: "Perfil de juntas galvanizado 12mm", un: "m", base: 0.80, preco: 5.50, grupo: "Vedação externa", categoria: "Fechamento", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Fita autoadesiva impermeável 75mm", un: "m", base: 1.20, preco: 20.48, grupo: "Vedação externa", categoria: "Fechamento", desc: "Reforce e garanta um acabamento impecável com a Fita Telada para Drywall. Compre agora e tenha resultados profissionais!", codigo: "23850", marca: "Nantong Gaopeng", url: "https://www.espacosmart.com.br/smart-fita-telada-p-drywall-48x900mm/p", espessura: "900mm", comprimento: null, dimensoes: "48x900" },
-          { nome: "Tela de fibra de vidro (junta)", un: "m²", base: 0.15, preco: 9, grupo: "Vedação externa", categoria: "Fechamento", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Argamassa colante AC-II (sc 20kg)", un: "sc", base: 0.15, preco: 83.14, grupo: "Vedação externa", categoria: "Fechamento", desc: "• Massa pronta tratamento de juntas em chapas drywall. • Disponível em baldes de 25 kg. • Validade: 1 ANO (da data de fabricação). • Aspecto: pasta branca consistente. • Tratamento de juntas em sistemas de paredes, tetos e revestimentos em drywall. • Aplicação manual ou mecânica com o uso de fita para juntas. • Acabamento superficial fino sobre chapas de drywall. • Preenchimento de irregularidades nas chapas. • Arremate sobre parafusos. • Acabamento com cantoneiras de reforço. • Empilhamento de baldes com 30 kg = 3 Baldes | 15 kg = 4 Baldes | 5 kg =6 Baldes • Manter o produto em local seco, coberto e livre de intempéries.", codigo: "24307", marca: "SMART", url: "https://www.espacosmart.com.br/smart-massa-para-junta-de-drywall-25kg/p", espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Primer acrílico selador", un: "L", base: 0.30, preco: 22, grupo: "Vedação externa", categoria: "Fechamento", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Textura acrílica (galão 18L)", un: "gl", base: 0.05, preco: 280, grupo: "Vedação externa", categoria: "Fechamento", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
+          { nome: "Placa cimentícia 12mm (1,20×2,40m)",  un: "chp", base: 0.38, preco: 210,   grupo: "Vedação externa", categoria: "Fechamento" },
+          { nome: "Perfil de juntas galvanizado 12mm",   un: "m",   base: 0.80, preco: 7.50, grupo: "Vedação externa", categoria: "Fechamento" },
+          { nome: "Fita autoadesiva impermeável 75mm",   un: "m",   base: 1.20, preco: 7.50, grupo: "Vedação externa", categoria: "Fechamento" },
+          { nome: "Tela de fibra de vidro (junta)",      un: "m²",  base: 0.15, preco: 12,   grupo: "Vedação externa", categoria: "Fechamento" },
+          { nome: "Argamassa colante AC-II (sc 20kg)",   un: "sc",  base: 0.15, preco: 42,   grupo: "Vedação externa", categoria: "Fechamento" },
+          { nome: "Primer acrílico selador",             un: "L",   base: 0.30, preco: 28,   grupo: "Vedação externa", categoria: "Fechamento" },
+          { nome: "Textura acrílica (galão 18L)",        un: "gl",  base: 0.05, preco: 340,  grupo: "Vedação externa", categoria: "Fechamento" },
         ],
       },
       {
@@ -226,13 +221,13 @@ export const SISTEMAS_SF = [
         desc: "EPS + argamassa base + tela + textura — excelente desempenho térmico",
         aplicaFatorPadrao: true,
         itens: [
-          { nome: "Placa EPS 30mm (1,00×0,50m)", un: "m²", base: 1.10, preco: 32, grupo: "Vedação externa", categoria: "Fechamento", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Argamassa base EIFS (sc 25kg)", un: "sc", base: 0.18, preco: 83.14, grupo: "Vedação externa", categoria: "Fechamento", desc: "• Massa pronta tratamento de juntas em chapas drywall. • Disponível em baldes de 25 kg. • Validade: 1 ANO (da data de fabricação). • Aspecto: pasta branca consistente. • Tratamento de juntas em sistemas de paredes, tetos e revestimentos em drywall. • Aplicação manual ou mecânica com o uso de fita para juntas. • Acabamento superficial fino sobre chapas de drywall. • Preenchimento de irregularidades nas chapas. • Arremate sobre parafusos. • Acabamento com cantoneiras de reforço. • Empilhamento de baldes com 30 kg = 3 Baldes | 15 kg = 4 Baldes | 5 kg =6 Baldes • Manter o produto em local seco, coberto e livre de intempéries.", codigo: "24307", marca: "SMART", url: "https://www.espacosmart.com.br/smart-massa-para-junta-de-drywall-25kg/p", espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Tela de fibra de vidro 165g/m²", un: "m²", base: 1.15, preco: 12, grupo: "Vedação externa", categoria: "Fechamento", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Bucha e parafuso fixação EPS", un: "un", base: 6, preco: 24.64, grupo: "Vedação externa", categoria: "Fechamento", desc: "Acabamento: ORGANO METÁLICO Bitola: 4,8 MM Comprimento: 19 MM Tamanho da Chave: CHAVE Nº 2 Peso: 0,237 KG Padrão Embalagem: 1 CENTO Origem: NACIONAL Teste de Resistência Salt Spray: 2.000 HORAS Unidade de Venda: CENTOS Sistema da Rosca : AUTOATARRAXANTE Forma da Rosca: INTEIRA Modelo: STEEL FRAME Tipo da Cabeça: FLANGEADA Tipo de Ponta: BROCA Tipo de Fenda: PHILLIPS Material: AÇO BAIXO CARBONO Norma Mecânica: ISO 10666", codigo: "3595", marca: "CISER", url: "https://www.espacosmart.com.br/parafuso-para-perfil-de-light-steel-frame-4-8-x-19mm-flangeado-pb-pacote-com-100-unidades/p", espessura: "19mm", comprimento: "19 MM", dimensoes: null },
-          { nome: "Perfil de arranque em L", un: "m", base: 0.40, preco: 18, grupo: "Vedação externa", categoria: "Fechamento", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Primer EIFS", un: "L", base: 0.25, preco: 24, grupo: "Vedação externa", categoria: "Fechamento", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Acabamento decorativo EIFS (sc 25kg)", un: "sc", base: 0.10, preco: 85, grupo: "Vedação externa", categoria: "Fechamento", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
+          { nome: "Placa EPS 30mm (1,00×0,50m)",        un: "m²",  base: 1.10, preco: 42,   grupo: "Vedação externa", categoria: "Fechamento" },
+          { nome: "Argamassa base EIFS (sc 25kg)",       un: "sc",  base: 0.18, preco: 85,   grupo: "Vedação externa", categoria: "Fechamento" },
+          { nome: "Tela de fibra de vidro 165g/m²",      un: "m²",  base: 1.15, preco: 15,   grupo: "Vedação externa", categoria: "Fechamento" },
+          { nome: "Bucha e parafuso fixação EPS",        un: "un",  base: 6,    preco: 1.60, grupo: "Vedação externa", categoria: "Fechamento" },
+          { nome: "Perfil de arranque em L",             un: "m",   base: 0.40, preco: 22,   grupo: "Vedação externa", categoria: "Fechamento" },
+          { nome: "Primer EIFS",                         un: "L",   base: 0.25, preco: 30,   grupo: "Vedação externa", categoria: "Fechamento" },
+          { nome: "Acabamento decorativo EIFS (sc 25kg)", un: "sc",  base: 0.10, preco: 105,  grupo: "Vedação externa", categoria: "Fechamento" },
         ],
       },
       {
@@ -240,12 +235,12 @@ export const SISTEMAS_SF = [
         desc: "Acabamento premium — fachadas modernas, alta durabilidade",
         aplicaFatorPadrao: true,
         itens: [
-          { nome: "Painel ACM 4mm (m²)", un: "m²", base: 1.10, preco: 155, grupo: "Vedação externa", categoria: "Fechamento", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Perfil de alumínio subframe (m)", un: "m", base: 0.90, preco: 38, grupo: "Vedação externa", categoria: "Fechamento", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Fixador oculto ACM", un: "un", base: 5, preco: 2.80, grupo: "Vedação externa", categoria: "Fechamento", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Selante MS polímero (cartuchos)", un: "ct", base: 0.12, preco: 38, grupo: "Vedação externa", categoria: "Fechamento", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Fita butílica 25mm", un: "m", base: 1.20, preco: 20.48, grupo: "Vedação externa", categoria: "Fechamento", desc: "Reforce e garanta um acabamento impecável com a Fita Telada para Drywall. Compre agora e tenha resultados profissionais!", codigo: "23850", marca: "Nantong Gaopeng", url: "https://www.espacosmart.com.br/smart-fita-telada-p-drywall-48x900mm/p", espessura: "900mm", comprimento: null, dimensoes: "48x900" },
-          { nome: "Parafuso cabeça chata inox", un: "un", base: 8, preco: 24.64, grupo: "Vedação externa", categoria: "Fechamento", desc: "Acabamento: ORGANO METÁLICO Bitola: 4,8 MM Comprimento: 19 MM Tamanho da Chave: CHAVE Nº 2 Peso: 0,237 KG Padrão Embalagem: 1 CENTO Origem: NACIONAL Teste de Resistência Salt Spray: 2.000 HORAS Unidade de Venda: CENTOS Sistema da Rosca : AUTOATARRAXANTE Forma da Rosca: INTEIRA Modelo: STEEL FRAME Tipo da Cabeça: FLANGEADA Tipo de Ponta: BROCA Tipo de Fenda: PHILLIPS Material: AÇO BAIXO CARBONO Norma Mecânica: ISO 10666", codigo: "3595", marca: "CISER", url: "https://www.espacosmart.com.br/parafuso-para-perfil-de-light-steel-frame-4-8-x-19mm-flangeado-pb-pacote-com-100-unidades/p", espessura: "19mm", comprimento: "19 MM", dimensoes: null },
+          { nome: "Painel ACM 4mm (m²)",                un: "m²",  base: 1.10, preco: 195,  grupo: "Vedação externa", categoria: "Fechamento" },
+          { nome: "Perfil de alumínio subframe (m)",    un: "m",   base: 0.90, preco: 48,   grupo: "Vedação externa", categoria: "Fechamento" },
+          { nome: "Fixador oculto ACM",                 un: "un",  base: 5,    preco: 3.60, grupo: "Vedação externa", categoria: "Fechamento" },
+          { nome: "Selante MS polímero (cartuchos)",    un: "ct",  base: 0.12, preco: 48,   grupo: "Vedação externa", categoria: "Fechamento" },
+          { nome: "Fita butílica 25mm",                 un: "m",   base: 1.20, preco: 5.50, grupo: "Vedação externa", categoria: "Fechamento" },
+          { nome: "Parafuso cabeça chata inox",         un: "un",  base: 8,    preco: 1.10, grupo: "Vedação externa", categoria: "Fechamento" },
         ],
       },
       {
@@ -253,17 +248,17 @@ export const SISTEMAS_SF = [
         desc: "Prático, leve, sem manutenção — americano instalado sobre OSB",
         aplicaFatorPadrao: true,
         itens: [
-          { nome: "Siding vinílico (caixa 3,66m²)", un: "cx", base: 0.30, preco: 83.91, grupo: "Vedação externa", categoria: "Fechamento", desc: "Tipo de Material: PVC Composição do Material: Policloreto de Vinila Extrusado Comprimento: 3800 mm Espessura: 1 mm Tipo de Instalação: Parafusos", codigo: "12016", marca: "DVP", url: "https://www.espacosmart.com.br/smart-perfil-siding-arremate-branco-3800mm/p", espessura: "3800mm", comprimento: "3800mm", dimensoes: null },
-          { nome: "Trim de acabamento vinílico", un: "m", base: 0.35, preco: 28, grupo: "Vedação externa", categoria: "Fechamento", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Membrana WRB (vento/chuva) 1,5m", un: "m²", base: 1.10, preco: 8.50, grupo: "Vedação externa", categoria: "Fechamento", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Prego galvanizado (fachada)", un: "kg", base: 0.12, preco: 1373.36, grupo: "Vedação externa", categoria: "Fechamento", desc: "Fixe telhas shingle com conjunto de 7200 peças. Resistente e seguro para sua obra. Clique e compre online na Loja Espaço Smart!", codigo: "9181", marca: "IKO", url: "https://www.espacosmart.com.br/prego-eletrosoldado-shingle-25mm-galvanizado-c--7200-pcs-iko/p", espessura: "25mm", comprimento: null, dimensoes: null },
-          { nome: "Fita autoadesiva impermeável 75mm", un: "m", base: 0.80, preco: 20.48, grupo: "Vedação externa", categoria: "Fechamento", desc: "Reforce e garanta um acabamento impecável com a Fita Telada para Drywall. Compre agora e tenha resultados profissionais!", codigo: "23850", marca: "Nantong Gaopeng", url: "https://www.espacosmart.com.br/smart-fita-telada-p-drywall-48x900mm/p", espessura: "900mm", comprimento: null, dimensoes: "48x900" },
+          { nome: "Siding vinílico (caixa 3,66m²)",     un: "cx",  base: 0.30, preco: 220,  grupo: "Vedação externa", categoria: "Fechamento" },
+          { nome: "Trim de acabamento vinílico",         un: "m",   base: 0.35, preco: 35,   grupo: "Vedação externa", categoria: "Fechamento" },
+          { nome: "Membrana WRB (vento/chuva) 1,5m",   un: "m²",  base: 1.10, preco: 11,   grupo: "Vedação externa", categoria: "Fechamento" },
+          { nome: "Prego galvanizado (fachada)",         un: "kg",  base: 0.12, preco: 28,   grupo: "Vedação externa", categoria: "Fechamento" },
+          { nome: "Fita autoadesiva impermeável 75mm",  un: "m",   base: 0.80, preco: 7.50, grupo: "Vedação externa", categoria: "Fechamento" },
         ],
       },
     ],
   },
 
-  //  4. FECHAMENTO INTERNO 
+  //  4. FECHAMENTO INTERNO
   {
     id: "fechamento_interno", label: "Fechamento Interno", icon: "", obrigatorio: true,
     mao_obra_cub: 0.03,
@@ -273,10 +268,10 @@ export const SISTEMAS_SF = [
         desc: "Standard — ambientes secos, sala, quartos, corredores",
         aplicaFatorPadrao: true,
         itens: [
-          { nome: "Placa gesso BA 12,5mm (1,20×2,40m)", un: "chp", base: 0.85, preco: 41.1, grupo: "Vedação interna", categoria: "Fechamento", desc: "Espessura: 12,5 Largura: 1200 mm Comprimento: 1800 mm Peso (m²): 8.2 Resistência mínima à ruptura na flexão (N): Longitudinal 550 Resistência mínima à ruptura na flexão (N): Transversal 210 Dureza superficial pelo diâmetro (mm): 20 Clique AQUI para baixar a ficha técnica completa Vantagens e benefícios da placa de gesso Drywall Standard - Sistema leve e limpo - Instalação rápida - Ótimo desepenho acústico - Flexibilidade", codigo: "20", marca: "PLACO", url: "https://www.espacosmart.com.br/placa-de-gesso-drywall-st-12-5-x-1200-x-1800mm/p", espessura: "12,5", comprimento: "1800 mm", dimensoes: "L: 1200 mm" },
-          { nome: "Massa para juntas pronta (balde 25kg)", un: "bd", base: 0.04, preco: 83.14, grupo: "Vedação interna", categoria: "Fechamento", desc: "• Massa pronta tratamento de juntas em chapas drywall. • Disponível em baldes de 25 kg. • Validade: 1 ANO (da data de fabricação). • Aspecto: pasta branca consistente. • Tratamento de juntas em sistemas de paredes, tetos e revestimentos em drywall. • Aplicação manual ou mecânica com o uso de fita para juntas. • Acabamento superficial fino sobre chapas de drywall. • Preenchimento de irregularidades nas chapas. • Arremate sobre parafusos. • Acabamento com cantoneiras de reforço. • Empilhamento de baldes com 30 kg = 3 Baldes | 15 kg = 4 Baldes | 5 kg =6 Baldes • Manter o produto em local seco, coberto e livre de intempéries.", codigo: "24307", marca: "SMART", url: "https://www.espacosmart.com.br/smart-massa-para-junta-de-drywall-25kg/p", espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Fita de juntas 50mm (rolo 90m)", un: "rl", base: 0.02, preco: 20.48, grupo: "Vedação interna", categoria: "Fechamento", desc: "Reforce e garanta um acabamento impecável com a Fita Telada para Drywall. Compre agora e tenha resultados profissionais!", codigo: "23850", marca: "Nantong Gaopeng", url: "https://www.espacosmart.com.br/smart-fita-telada-p-drywall-48x900mm/p", espessura: "900mm", comprimento: null, dimensoes: "48x900" },
-          { nome: "Cantoneira metálica 31×31mm", un: "m", base: 0.25, preco: 7.67, grupo: "Vedação interna", categoria: "Fechamento", desc: "Largura: 23mm Altura: 23mm Comprimento: 3000mm Espessura: 0,48mm", codigo: "114", marca: "SMART", url: "https://www.espacosmart.com.br/cantoneira-para-drywall-metalica-perfurada-3000mm-z120/p", espessura: "3000mm", comprimento: "3000mm", dimensoes: null },
+          { nome: "Placa gesso BA 12,5mm (1,20×2,40m)", un: "chp", base: 0.85, preco: 90.78,   grupo: "Vedação interna", categoria: "Fechamento" },
+          { nome: "Massa para juntas pronta (balde 25kg)", un: "bd", base: 0.04, preco: 85,  grupo: "Vedação interna", categoria: "Fechamento" },
+          { nome: "Fita de juntas 50mm (rolo 90m)",      un: "rl",  base: 0.02, preco: 58,   grupo: "Vedação interna", categoria: "Fechamento" },
+          { nome: "Cantoneira metálica 31×31mm",         un: "m",   base: 0.25, preco: 5.50, grupo: "Vedação interna", categoria: "Fechamento" },
         ],
       },
       {
@@ -284,10 +279,10 @@ export const SISTEMAS_SF = [
         desc: "Resistente à umidade — banheiros, lavabo, cozinha",
         aplicaFatorPadrao: true,
         itens: [
-          { nome: "Placa gesso RU 12,5mm (1,20×2,40m)", un: "chp", base: 0.85, preco: 24.5, grupo: "Vedação interna", categoria: "Fechamento", desc: "Acabamento: ORGANO METÁLICO Bitola: 4,5 MM Comprimento: 32 MM Tamanho da Chave: CHAVE Nº 2 Peso: 0,239 KG Padrão Embalagem: 1 CENTO Substrato: CIMENTÍCIA PESADA Embalagem: Pacote Origem: NACIONAL Teste de Resistência Salt Spray: 1.000 HORAS Unidade de Venda: CENTOS Sistema da Rosca: AUTOPERFURANTE HI-LO Tipo de Geometria: DENTADA Forma da Rosca: INTEIRA Modelo: ROSCA SOBERBA Tipo da Cabeça: CHATA Tipo de Ponta: AGULHA Tipo de Fenda: PHILLIPS Material: AÇO BAIXO CARBONO Norma Mecânica: PADRÃO", codigo: "3603", marca: "CISER", url: "https://www.espacosmart.com.br/parafuso-para-placa-cimenticia---osb---perfil-drywall-4-2-x-32mm-pa-rusper-pacote-com-100-unidades/p", espessura: "32mm", comprimento: "32 MM", dimensoes: null },
-          { nome: "Massa para juntas pronta (balde 25kg)", un: "bd", base: 0.04, preco: 83.14, grupo: "Vedação interna", categoria: "Fechamento", desc: "• Massa pronta tratamento de juntas em chapas drywall. • Disponível em baldes de 25 kg. • Validade: 1 ANO (da data de fabricação). • Aspecto: pasta branca consistente. • Tratamento de juntas em sistemas de paredes, tetos e revestimentos em drywall. • Aplicação manual ou mecânica com o uso de fita para juntas. • Acabamento superficial fino sobre chapas de drywall. • Preenchimento de irregularidades nas chapas. • Arremate sobre parafusos. • Acabamento com cantoneiras de reforço. • Empilhamento de baldes com 30 kg = 3 Baldes | 15 kg = 4 Baldes | 5 kg =6 Baldes • Manter o produto em local seco, coberto e livre de intempéries.", codigo: "24307", marca: "SMART", url: "https://www.espacosmart.com.br/smart-massa-para-junta-de-drywall-25kg/p", espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Fita de juntas 50mm (rolo 90m)", un: "rl", base: 0.02, preco: 20.48, grupo: "Vedação interna", categoria: "Fechamento", desc: "Reforce e garanta um acabamento impecável com a Fita Telada para Drywall. Compre agora e tenha resultados profissionais!", codigo: "23850", marca: "Nantong Gaopeng", url: "https://www.espacosmart.com.br/smart-fita-telada-p-drywall-48x900mm/p", espessura: "900mm", comprimento: null, dimensoes: "48x900" },
-          { nome: "Cantoneira metálica 31×31mm", un: "m", base: 0.25, preco: 7.67, grupo: "Vedação interna", categoria: "Fechamento", desc: "Largura: 23mm Altura: 23mm Comprimento: 3000mm Espessura: 0,48mm", codigo: "114", marca: "SMART", url: "https://www.espacosmart.com.br/cantoneira-para-drywall-metalica-perfurada-3000mm-z120/p", espessura: "3000mm", comprimento: "3000mm", dimensoes: null },
+          { nome: "Placa gesso RU 12,5mm (1,20×2,40m)", un: "chp", base: 0.85, preco: 113.61,   grupo: "Vedação interna", categoria: "Fechamento" },
+          { nome: "Massa para juntas pronta (balde 25kg)", un: "bd", base: 0.04, preco: 85,  grupo: "Vedação interna", categoria: "Fechamento" },
+          { nome: "Fita de juntas 50mm (rolo 90m)",      un: "rl",  base: 0.02, preco: 58,   grupo: "Vedação interna", categoria: "Fechamento" },
+          { nome: "Cantoneira metálica 31×31mm",         un: "m",   base: 0.25, preco: 5.50, grupo: "Vedação interna", categoria: "Fechamento" },
         ],
       },
       {
@@ -295,10 +290,10 @@ export const SISTEMAS_SF = [
         desc: "Resistente ao fogo — escadas, corredores, áreas técnicas",
         aplicaFatorPadrao: true,
         itens: [
-          { nome: "Placa gesso RF 12,5mm (1,20×2,40m)", un: "chp", base: 0.85, preco: 13.5, grupo: "Vedação interna", categoria: "Fechamento", desc: "Altura: 1,8cm Largura: 4,6cm Comprimento: 300cm Aplicação: Forros em Drywall; Zincagem: 120g/m² Espessura: 0,48 mm", codigo: "138", marca: "SMART", url: "https://www.espacosmart.com.br/perfil-para-forro-de-drywall-canaleta-f530-3m/p", espessura: "0,48 mm", comprimento: "300cm", dimensoes: "A: 1,8cm" },
-          { nome: "Massa para juntas pronta (balde 25kg)", un: "bd", base: 0.04, preco: 83.14, grupo: "Vedação interna", categoria: "Fechamento", desc: "• Massa pronta tratamento de juntas em chapas drywall. • Disponível em baldes de 25 kg. • Validade: 1 ANO (da data de fabricação). • Aspecto: pasta branca consistente. • Tratamento de juntas em sistemas de paredes, tetos e revestimentos em drywall. • Aplicação manual ou mecânica com o uso de fita para juntas. • Acabamento superficial fino sobre chapas de drywall. • Preenchimento de irregularidades nas chapas. • Arremate sobre parafusos. • Acabamento com cantoneiras de reforço. • Empilhamento de baldes com 30 kg = 3 Baldes | 15 kg = 4 Baldes | 5 kg =6 Baldes • Manter o produto em local seco, coberto e livre de intempéries.", codigo: "24307", marca: "SMART", url: "https://www.espacosmart.com.br/smart-massa-para-junta-de-drywall-25kg/p", espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Fita de juntas 50mm (rolo 90m)", un: "rl", base: 0.02, preco: 20.48, grupo: "Vedação interna", categoria: "Fechamento", desc: "Reforce e garanta um acabamento impecável com a Fita Telada para Drywall. Compre agora e tenha resultados profissionais!", codigo: "23850", marca: "Nantong Gaopeng", url: "https://www.espacosmart.com.br/smart-fita-telada-p-drywall-48x900mm/p", espessura: "900mm", comprimento: null, dimensoes: "48x900" },
-          { nome: "Cantoneira metálica 31×31mm", un: "m", base: 0.25, preco: 7.67, grupo: "Vedação interna", categoria: "Fechamento", desc: "Largura: 23mm Altura: 23mm Comprimento: 3000mm Espessura: 0,48mm", codigo: "114", marca: "SMART", url: "https://www.espacosmart.com.br/cantoneira-para-drywall-metalica-perfurada-3000mm-z120/p", espessura: "3000mm", comprimento: "3000mm", dimensoes: null },
+          { nome: "Placa gesso RF 12,5mm (1,20×2,40m)", un: "chp", base: 0.85, preco: 96.45,   grupo: "Vedação interna", categoria: "Fechamento" },
+          { nome: "Massa para juntas pronta (balde 25kg)", un: "bd", base: 0.04, preco: 85,  grupo: "Vedação interna", categoria: "Fechamento" },
+          { nome: "Fita de juntas 50mm (rolo 90m)",      un: "rl",  base: 0.02, preco: 58,   grupo: "Vedação interna", categoria: "Fechamento" },
+          { nome: "Cantoneira metálica 31×31mm",         un: "m",   base: 0.25, preco: 5.50, grupo: "Vedação interna", categoria: "Fechamento" },
         ],
       },
       {
@@ -306,18 +301,18 @@ export const SISTEMAS_SF = [
         desc: "BA 12,5mm + BA 15mm + manta — isolamento acústico superior (hotéis, studios)",
         aplicaFatorPadrao: true,
         itens: [
-          { nome: "Placa gesso BA 12,5mm (1,20×2,40m)", un: "chp", base: 0.85, preco: 41.1, grupo: "Vedação interna", categoria: "Fechamento", desc: "Espessura: 12,5 Largura: 1200 mm Comprimento: 1800 mm Peso (m²): 8.2 Resistência mínima à ruptura na flexão (N): Longitudinal 550 Resistência mínima à ruptura na flexão (N): Transversal 210 Dureza superficial pelo diâmetro (mm): 20 Clique AQUI para baixar a ficha técnica completa Vantagens e benefícios da placa de gesso Drywall Standard - Sistema leve e limpo - Instalação rápida - Ótimo desepenho acústico - Flexibilidade", codigo: "20", marca: "PLACO", url: "https://www.espacosmart.com.br/placa-de-gesso-drywall-st-12-5-x-1200-x-1800mm/p", espessura: "12,5", comprimento: "1800 mm", dimensoes: "L: 1200 mm" },
-          { nome: "Placa gesso BA 15mm (1,20×2,40m)", un: "chp", base: 0.85, preco: 41.1, grupo: "Vedação interna", categoria: "Fechamento", desc: "Espessura: 12,5 Largura: 1200 mm Comprimento: 1800 mm Peso (m²): 8.2 Resistência mínima à ruptura na flexão (N): Longitudinal 550 Resistência mínima à ruptura na flexão (N): Transversal 210 Dureza superficial pelo diâmetro (mm): 20 Clique AQUI para baixar a ficha técnica completa Vantagens e benefícios da placa de gesso Drywall Standard - Sistema leve e limpo - Instalação rápida - Ótimo desepenho acústico - Flexibilidade", codigo: "20", marca: "PLACO", url: "https://www.espacosmart.com.br/placa-de-gesso-drywall-st-12-5-x-1200-x-1800mm/p", espessura: "12,5", comprimento: "1800 mm", dimensoes: "L: 1200 mm" },
-          { nome: "Manta acústica 25mm (m²)", un: "m²", base: 1.00, preco: 32, grupo: "Vedação interna", categoria: "Fechamento", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Massa para juntas pronta (balde 25kg)", un: "bd", base: 0.06, preco: 83.14, grupo: "Vedação interna", categoria: "Fechamento", desc: "• Massa pronta tratamento de juntas em chapas drywall. • Disponível em baldes de 25 kg. • Validade: 1 ANO (da data de fabricação). • Aspecto: pasta branca consistente. • Tratamento de juntas em sistemas de paredes, tetos e revestimentos em drywall. • Aplicação manual ou mecânica com o uso de fita para juntas. • Acabamento superficial fino sobre chapas de drywall. • Preenchimento de irregularidades nas chapas. • Arremate sobre parafusos. • Acabamento com cantoneiras de reforço. • Empilhamento de baldes com 30 kg = 3 Baldes | 15 kg = 4 Baldes | 5 kg =6 Baldes • Manter o produto em local seco, coberto e livre de intempéries.", codigo: "24307", marca: "SMART", url: "https://www.espacosmart.com.br/smart-massa-para-junta-de-drywall-25kg/p", espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Fita de juntas 50mm (rolo 90m)", un: "rl", base: 0.03, preco: 20.48, grupo: "Vedação interna", categoria: "Fechamento", desc: "Reforce e garanta um acabamento impecável com a Fita Telada para Drywall. Compre agora e tenha resultados profissionais!", codigo: "23850", marca: "Nantong Gaopeng", url: "https://www.espacosmart.com.br/smart-fita-telada-p-drywall-48x900mm/p", espessura: "900mm", comprimento: null, dimensoes: "48x900" },
-          { nome: "Cantoneira metálica 31×31mm", un: "m", base: 0.25, preco: 7.67, grupo: "Vedação interna", categoria: "Fechamento", desc: "Largura: 23mm Altura: 23mm Comprimento: 3000mm Espessura: 0,48mm", codigo: "114", marca: "SMART", url: "https://www.espacosmart.com.br/cantoneira-para-drywall-metalica-perfurada-3000mm-z120/p", espessura: "3000mm", comprimento: "3000mm", dimensoes: null },
+          { nome: "Placa gesso BA 12,5mm (1,20×2,40m)", un: "chp", base: 0.85, preco: 90.78,   grupo: "Vedação interna", categoria: "Fechamento" },
+          { nome: "Placa gesso BA 15mm (1,20×2,40m)",   un: "chp", base: 0.85, preco: 93.72,   grupo: "Vedação interna", categoria: "Fechamento" },
+          { nome: "Manta acústica 25mm (m²)",           un: "m²",  base: 1.00, preco: 42,   grupo: "Vedação interna", categoria: "Fechamento" },
+          { nome: "Massa para juntas pronta (balde 25kg)", un: "bd", base: 0.06, preco: 85,  grupo: "Vedação interna", categoria: "Fechamento" },
+          { nome: "Fita de juntas 50mm (rolo 90m)",      un: "rl",  base: 0.03, preco: 58,   grupo: "Vedação interna", categoria: "Fechamento" },
+          { nome: "Cantoneira metálica 31×31mm",         un: "m",   base: 0.25, preco: 5.50, grupo: "Vedação interna", categoria: "Fechamento" },
         ],
       },
     ],
   },
 
-  //  5. ISOLAMENTO TÉRMICO / ACÚSTICO 
+  //  5. ISOLAMENTO TÉRMICO / ACÚSTICO
   {
     id: "isolamento", label: "Isolamento", icon: "", obrigatorio: true,
     mao_obra_cub: 0.01,
@@ -326,42 +321,42 @@ export const SISTEMAS_SF = [
         id: "la_vidro_50", label: "Lã de Vidro 50mm",
         desc: "Isolamento térmico básico — residencial padrão",
         itens: [
-          { nome: "Lã de vidro 50mm (rolo m²)", un: "m²", base: 1.10, preco: 54.34, grupo: "Isolamento", categoria: "Isolamento", desc: "Especificações Técnicas: Dimensões: 1250x625mm Espessura: 15mm Composição: Lã de vidro com revestimento vinílico branco Peso: 0,90 kg/m² Densidade: 60 kg/m³ Refletância luminosa: 80% Carga viva máxima: 50 N | Capacidade mínima: 160 N Classe acústica: D (coeficiente αw 0,50) Embalagem 24 placas por caixa Cobertura por caixa: 18,75 m", codigo: "21651", marca: "ISOVER", url: "https://www.espacosmart.com.br/forro-de-la-de-vidro-ecophon-mineralis-1250x625x15mm/p", espessura: "15mm", comprimento: null, dimensoes: "1250x625x15" },
-          { nome: "Manta EPDM vedação de juntas", un: "m", base: 1.10, preco: 5.80, grupo: "Isolamento", categoria: "Isolamento", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Fita adesiva dupla face 50mm", un: "m", base: 0.60, preco: 20.48, grupo: "Isolamento", categoria: "Isolamento", desc: "Reforce e garanta um acabamento impecável com a Fita Telada para Drywall. Compre agora e tenha resultados profissionais!", codigo: "23850", marca: "Nantong Gaopeng", url: "https://www.espacosmart.com.br/smart-fita-telada-p-drywall-48x900mm/p", espessura: "900mm", comprimento: null, dimensoes: "48x900" },
+          { nome: "Lã de vidro 50mm (rolo m²)",         un: "m²",  base: 1.10, preco: 22,   grupo: "Isolamento", categoria: "Isolamento" },
+          { nome: "Manta EPDM vedação de juntas",        un: "m",   base: 1.10, preco: 7.50, grupo: "Isolamento", categoria: "Isolamento" },
+          { nome: "Fita adesiva dupla face 50mm",        un: "m",   base: 0.60, preco: 3.80, grupo: "Isolamento", categoria: "Isolamento" },
         ],
       },
       {
         id: "la_vidro_75", label: "Lã de Vidro 75mm",
         desc: "Maior conforto térmico e acústico — regiões de clima extremo",
         itens: [
-          { nome: "Lã de vidro 75mm (rolo m²)", un: "m²", base: 1.10, preco: 24, grupo: "Isolamento", categoria: "Isolamento", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Manta EPDM vedação de juntas", un: "m", base: 1.10, preco: 5.80, grupo: "Isolamento", categoria: "Isolamento", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Fita adesiva dupla face 50mm", un: "m", base: 0.60, preco: 20.48, grupo: "Isolamento", categoria: "Isolamento", desc: "Reforce e garanta um acabamento impecável com a Fita Telada para Drywall. Compre agora e tenha resultados profissionais!", codigo: "23850", marca: "Nantong Gaopeng", url: "https://www.espacosmart.com.br/smart-fita-telada-p-drywall-48x900mm/p", espessura: "900mm", comprimento: null, dimensoes: "48x900" },
+          { nome: "Lã de vidro 75mm (rolo m²)",         un: "m²",  base: 1.10, preco: 32,   grupo: "Isolamento", categoria: "Isolamento" },
+          { nome: "Manta EPDM vedação de juntas",        un: "m",   base: 1.10, preco: 7.50, grupo: "Isolamento", categoria: "Isolamento" },
+          { nome: "Fita adesiva dupla face 50mm",        un: "m",   base: 0.60, preco: 3.80, grupo: "Isolamento", categoria: "Isolamento" },
         ],
       },
       {
         id: "la_rocha_50", label: "Lã de Rocha 50mm (RF)",
         desc: "Resistente ao fogo + isolamento — exigência AVCB em sobrados",
         itens: [
-          { nome: "Lã de rocha 50mm (m²)", un: "m²", base: 1.10, preco: 186.96, grupo: "Isolamento", categoria: "Isolamento", desc: "Dimensões da peça: 51 X 600 X 1350 mm Quantidade: 8 unidades", codigo: "969", marca: "GESLA", url: "https://www.espacosmart.com.br/la-de-rocha-51-x-600-x-1350mm-pacote--com-8-unidades/p", espessura: "1350mm", comprimento: "1350mm", dimensoes: null },
-          { nome: "Manta EPDM vedação de juntas", un: "m", base: 1.10, preco: 5.80, grupo: "Isolamento", categoria: "Isolamento", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Fita adesiva dupla face 50mm", un: "m", base: 0.60, preco: 20.48, grupo: "Isolamento", categoria: "Isolamento", desc: "Reforce e garanta um acabamento impecável com a Fita Telada para Drywall. Compre agora e tenha resultados profissionais!", codigo: "23850", marca: "Nantong Gaopeng", url: "https://www.espacosmart.com.br/smart-fita-telada-p-drywall-48x900mm/p", espessura: "900mm", comprimento: null, dimensoes: "48x900" },
+          { nome: "Lã de rocha 50mm (m²)",              un: "m²",  base: 1.10, preco: 40,   grupo: "Isolamento", categoria: "Isolamento" },
+          { nome: "Manta EPDM vedação de juntas",        un: "m",   base: 1.10, preco: 7.50, grupo: "Isolamento", categoria: "Isolamento" },
+          { nome: "Fita adesiva dupla face 50mm",        un: "m",   base: 0.60, preco: 3.80, grupo: "Isolamento", categoria: "Isolamento" },
         ],
       },
       {
         id: "la_rocha_75", label: "Lã de Rocha 75mm (RF superior)",
         desc: "Máxima resistência ao fogo + acústica — comercial, industrial",
         itens: [
-          { nome: "Lã de rocha 75mm (m²)", un: "m²", base: 1.10, preco: 40, grupo: "Isolamento", categoria: "Isolamento", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Manta EPDM vedação de juntas", un: "m", base: 1.10, preco: 5.80, grupo: "Isolamento", categoria: "Isolamento", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Fita adesiva dupla face 50mm", un: "m", base: 0.60, preco: 20.48, grupo: "Isolamento", categoria: "Isolamento", desc: "Reforce e garanta um acabamento impecável com a Fita Telada para Drywall. Compre agora e tenha resultados profissionais!", codigo: "23850", marca: "Nantong Gaopeng", url: "https://www.espacosmart.com.br/smart-fita-telada-p-drywall-48x900mm/p", espessura: "900mm", comprimento: null, dimensoes: "48x900" },
+          { nome: "Lã de rocha 75mm (m²)",              un: "m²",  base: 1.10, preco: 55,   grupo: "Isolamento", categoria: "Isolamento" },
+          { nome: "Manta EPDM vedação de juntas",        un: "m",   base: 1.10, preco: 7.50, grupo: "Isolamento", categoria: "Isolamento" },
+          { nome: "Fita adesiva dupla face 50mm",        un: "m",   base: 0.60, preco: 3.80, grupo: "Isolamento", categoria: "Isolamento" },
         ],
       },
     ],
   },
 
-  //  6. COBERTURA 
+  //  6. COBERTURA
   {
     id: "cobertura", label: "Cobertura", icon: "", obrigatorio: true,
     mao_obra_cub: 0.04,
@@ -371,38 +366,38 @@ export const SISTEMAS_SF = [
         desc: "Mais usado em SF residencial no Brasil — leve, durável, 20+ anos",
         aplicaFatorPadrao: true,
         itens: [
-          { nome: "Telha shingle asfáltico (m²)", un: "m²", base: 1.20, preco: 377.36, grupo: "Cobertura", categoria: "Cobertura", desc: "Dimensões: 349mm X 1038mm Exposição: 149mm Rendimento: 3,1 m² por pacote Garantia: de até 30 Anos - se aplicado de acordo com as especificações do manual de instalação - leia certificado de garantia AQUI Espessura da lâmina: 5mm de espessura - No telhado após sobreposição da telha fica aproximadamente 10mm de espessura Resiste a ventos de até 125 KM/H Cada pacote de telha pesa 33,2 kg", codigo: "8871", marca: "IKO", url: "https://www.espacosmart.com.br/telha-smart-shingle-laminada-petroleohavard-31-m-/p", espessura: "da lâmina:", comprimento: "3,1 m", dimensoes: null },
-          { nome: "OSB 11,1mm (base telhado)", un: "chp", base: 0.40, preco: 163.74, grupo: "Cobertura", categoria: "Cobertura", desc: "Espessura: 11,1mm Altura: 2400mm Largura: 1200mm Peso por painel: 20,4 Kg Rendimento: 2,88 m²", codigo: "45", marca: "LP", url: "https://www.espacosmart.com.br/placa-osb-home-plus-mdi-11-1-x-1200-x-2400mm-2-88m-/p", espessura: "2400mm", comprimento: "2400mm", dimensoes: "L: 1200mm | A: 2400mm" },
-          { nome: "Manta subcobertura aluminizada", un: "m²", base: 1.25, preco: 14, grupo: "Cobertura", categoria: "Cobertura", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Cumeeira shingle (m)", un: "m", base: 0.20, preco: 377.36, grupo: "Cobertura", categoria: "Cobertura", desc: "Dimensões: 349mm X 1038mm Exposição: 149mm Rendimento: 3,1 m² por pacote Garantia: de até 30 Anos - se aplicado de acordo com as especificações do manual de instalação - leia certificado de garantia AQUI Espessura da lâmina: 5mm de espessura - No telhado após sobreposição da telha fica aproximadamente 10mm de espessura Resiste a ventos de até 125 KM/H Cada pacote de telha pesa 33,2 kg", codigo: "8871", marca: "IKO", url: "https://www.espacosmart.com.br/telha-smart-shingle-laminada-petroleohavard-31-m-/p", espessura: "da lâmina:", comprimento: "3,1 m", dimensoes: null },
-          { nome: "Calha galvanizada 25cm (m)", un: "m", base: 0.25, preco: 38, grupo: "Cobertura", categoria: "Cobertura", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Rufo galvanizado (m)", un: "m", base: 0.30, preco: 22, grupo: "Cobertura", categoria: "Cobertura", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Prego helicóptero (fixação OSB)", un: "kg", base: 0.15, preco: 24, grupo: "Cobertura", categoria: "Cobertura", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
+          { nome: "Telha shingle asfáltico (m²)",       un: "m²",  base: 1.20, preco: 122,   grupo: "Cobertura", categoria: "Cobertura" },
+          { nome: "OSB 11,1mm (base telhado)",          un: "chp", base: 0.40, preco: 163.74,   grupo: "Cobertura", categoria: "Cobertura" },
+          { nome: "Manta subcobertura aluminizada",      un: "m²",  base: 1.25, preco: 18,   grupo: "Cobertura", categoria: "Cobertura" },
+          { nome: "Cumeeira shingle (m)",               un: "m",   base: 0.20, preco: 42,   grupo: "Cobertura", categoria: "Cobertura" },
+          { nome: "Calha galvanizada 25cm (m)",         un: "m",   base: 0.25, preco: 52,   grupo: "Cobertura", categoria: "Cobertura" },
+          { nome: "Rufo galvanizado (m)",               un: "m",   base: 0.30, preco: 28,   grupo: "Cobertura", categoria: "Cobertura" },
+          { nome: "Prego helicóptero (fixação OSB)",    un: "kg",  base: 0.15, preco: 32,   grupo: "Cobertura", categoria: "Cobertura" },
         ],
       },
       {
         id: "metalica_trap", label: "Telha Metálica Trapezoidal",
         desc: "Rápida, econômica — galpões, garagens, coberturas simples",
         itens: [
-          { nome: "Telha metálica trapezoidal 0,5mm", un: "m²", base: 1.15, preco: 48, grupo: "Cobertura", categoria: "Cobertura", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Manta subcobertura aluminizada", un: "m²", base: 1.20, preco: 14, grupo: "Cobertura", categoria: "Cobertura", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Cumeeira metálica", un: "m", base: 0.20, preco: 58, grupo: "Cobertura", categoria: "Cobertura", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Calha galvanizada 25cm", un: "m", base: 0.25, preco: 38, grupo: "Cobertura", categoria: "Cobertura", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Rufo metálico (m)", un: "m", base: 0.30, preco: 35, grupo: "Cobertura", categoria: "Cobertura", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Parafuso autoperfurante (cx 100pç)", un: "cx", base: 0.05, preco: 24.64, grupo: "Cobertura", categoria: "Cobertura", desc: "Acabamento: ORGANO METÁLICO Bitola: 4,8 MM Comprimento: 19 MM Tamanho da Chave: CHAVE Nº 2 Peso: 0,237 KG Padrão Embalagem: 1 CENTO Origem: NACIONAL Teste de Resistência Salt Spray: 2.000 HORAS Unidade de Venda: CENTOS Sistema da Rosca : AUTOATARRAXANTE Forma da Rosca: INTEIRA Modelo: STEEL FRAME Tipo da Cabeça: FLANGEADA Tipo de Ponta: BROCA Tipo de Fenda: PHILLIPS Material: AÇO BAIXO CARBONO Norma Mecânica: ISO 10666", codigo: "3595", marca: "CISER", url: "https://www.espacosmart.com.br/parafuso-para-perfil-de-light-steel-frame-4-8-x-19mm-flangeado-pb-pacote-com-100-unidades/p", espessura: "19mm", comprimento: "19 MM", dimensoes: null },
+          { nome: "Telha metálica trapezoidal 0,5mm",   un: "m²",  base: 1.15, preco: 68,   grupo: "Cobertura", categoria: "Cobertura" },
+          { nome: "Manta subcobertura aluminizada",      un: "m²",  base: 1.20, preco: 18,   grupo: "Cobertura", categoria: "Cobertura" },
+          { nome: "Cumeeira metálica",                  un: "m",   base: 0.20, preco: 75,   grupo: "Cobertura", categoria: "Cobertura" },
+          { nome: "Calha galvanizada 25cm",             un: "m",   base: 0.25, preco: 52,   grupo: "Cobertura", categoria: "Cobertura" },
+          { nome: "Rufo metálico (m)",                  un: "m",   base: 0.30, preco: 45,   grupo: "Cobertura", categoria: "Cobertura" },
+          { nome: "Parafuso autoperfurante (cx 100pç)", un: "cx",  base: 0.05, preco: 62,   grupo: "Cobertura", categoria: "Cobertura" },
         ],
       },
       {
         id: "ceramica", label: "Telha Cerâmica",
         desc: "Tradicional — menor índice pluviométrico, maior carga estrutural",
         itens: [
-          { nome: "Telha cerâmica colonial", un: "un", base: 28, preco: 1.90, grupo: "Cobertura", categoria: "Cobertura", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Cumeeira cerâmica", un: "un", base: 2.40, preco: 5.20, grupo: "Cobertura", categoria: "Cobertura", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Argamassa de assentamento (sc 20kg)", un: "sc", base: 0.06, preco: 83.14, grupo: "Cobertura", categoria: "Cobertura", desc: "• Massa pronta tratamento de juntas em chapas drywall. • Disponível em baldes de 25 kg. • Validade: 1 ANO (da data de fabricação). • Aspecto: pasta branca consistente. • Tratamento de juntas em sistemas de paredes, tetos e revestimentos em drywall. • Aplicação manual ou mecânica com o uso de fita para juntas. • Acabamento superficial fino sobre chapas de drywall. • Preenchimento de irregularidades nas chapas. • Arremate sobre parafusos. • Acabamento com cantoneiras de reforço. • Empilhamento de baldes com 30 kg = 3 Baldes | 15 kg = 4 Baldes | 5 kg =6 Baldes • Manter o produto em local seco, coberto e livre de intempéries.", codigo: "24307", marca: "SMART", url: "https://www.espacosmart.com.br/smart-massa-para-junta-de-drywall-25kg/p", espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Manta subcobertura aluminizada", un: "m²", base: 1.20, preco: 14, grupo: "Cobertura", categoria: "Cobertura", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Ripa de madeira 25×50mm", un: "m", base: 2.50, preco: 4.20, grupo: "Cobertura", categoria: "Cobertura", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Calha galvanizada 25cm", un: "m", base: 0.25, preco: 38, grupo: "Cobertura", categoria: "Cobertura", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Rufo galvanizado", un: "m", base: 0.30, preco: 22, grupo: "Cobertura", categoria: "Cobertura", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
+          { nome: "Telha cerâmica colonial",            un: "un",  base: 28,   preco: 2.50, grupo: "Cobertura", categoria: "Cobertura" },
+          { nome: "Cumeeira cerâmica",                  un: "un",  base: 2.40, preco: 6.80, grupo: "Cobertura", categoria: "Cobertura" },
+          { nome: "Argamassa de assentamento (sc 20kg)", un: "sc",  base: 0.06, preco: 38,   grupo: "Cobertura", categoria: "Cobertura" },
+          { nome: "Manta subcobertura aluminizada",      un: "m²",  base: 1.20, preco: 18,   grupo: "Cobertura", categoria: "Cobertura" },
+          { nome: "Ripa de madeira 25×50mm",            un: "m",   base: 2.50, preco: 5.20, grupo: "Cobertura", categoria: "Cobertura" },
+          { nome: "Calha galvanizada 25cm",             un: "m",   base: 0.25, preco: 52,   grupo: "Cobertura", categoria: "Cobertura" },
+          { nome: "Rufo galvanizado",                   un: "m",   base: 0.30, preco: 28,   grupo: "Cobertura", categoria: "Cobertura" },
         ],
       },
       {
@@ -410,126 +405,125 @@ export const SISTEMAS_SF = [
         desc: "Conforto térmico máximo — clima quente, telhado embutido",
         aplicaFatorPadrao: true,
         itens: [
-          { nome: "Telha sanduíche PIR 50mm (m²)", un: "m²", base: 1.15, preco: 130, grupo: "Cobertura", categoria: "Cobertura", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Cumeeira sanduíche", un: "m", base: 0.20, preco: 90, grupo: "Cobertura", categoria: "Cobertura", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Calha galvanizada 25cm", un: "m", base: 0.25, preco: 38, grupo: "Cobertura", categoria: "Cobertura", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Rufo metálico", un: "m", base: 0.30, preco: 35, grupo: "Cobertura", categoria: "Cobertura", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Parafuso autoperfurante (cx 100pç)", un: "cx", base: 0.05, preco: 24.64, grupo: "Cobertura", categoria: "Cobertura", desc: "Acabamento: ORGANO METÁLICO Bitola: 4,8 MM Comprimento: 19 MM Tamanho da Chave: CHAVE Nº 2 Peso: 0,237 KG Padrão Embalagem: 1 CENTO Origem: NACIONAL Teste de Resistência Salt Spray: 2.000 HORAS Unidade de Venda: CENTOS Sistema da Rosca : AUTOATARRAXANTE Forma da Rosca: INTEIRA Modelo: STEEL FRAME Tipo da Cabeça: FLANGEADA Tipo de Ponta: BROCA Tipo de Fenda: PHILLIPS Material: AÇO BAIXO CARBONO Norma Mecânica: ISO 10666", codigo: "3595", marca: "CISER", url: "https://www.espacosmart.com.br/parafuso-para-perfil-de-light-steel-frame-4-8-x-19mm-flangeado-pb-pacote-com-100-unidades/p", espessura: "19mm", comprimento: "19 MM", dimensoes: null },
-          { nome: "Selante PU (cartucho)", un: "ct", base: 0.10, preco: 28, grupo: "Cobertura", categoria: "Cobertura", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
+          { nome: "Telha sanduíche PIR 50mm (m²)",     un: "m²",  base: 1.15, preco: 165,  grupo: "Cobertura", categoria: "Cobertura" },
+          { nome: "Cumeeira sanduíche",                 un: "m",   base: 0.20, preco: 115,  grupo: "Cobertura", categoria: "Cobertura" },
+          { nome: "Calha galvanizada 25cm",             un: "m",   base: 0.25, preco: 52,   grupo: "Cobertura", categoria: "Cobertura" },
+          { nome: "Rufo metálico",                      un: "m",   base: 0.30, preco: 45,   grupo: "Cobertura", categoria: "Cobertura" },
+          { nome: "Parafuso autoperfurante (cx 100pç)", un: "cx",  base: 0.05, preco: 62,   grupo: "Cobertura", categoria: "Cobertura" },
+          { nome: "Selante PU (cartucho)",              un: "ct",  base: 0.10, preco: 38,   grupo: "Cobertura", categoria: "Cobertura" },
         ],
       },
     ],
   },
 
-  //  7. ESTRUTURA DE COBERTURA (sempre inclusa) 
+  //  7. ESTRUTURA DE COBERTURA
   {
     id: "estrutura_cobertura", label: "Estrutura de Telhado", icon: "", obrigatorio: true,
     mao_obra_cub: 0.02,
     itens: [
-      { nome: "Caibro C 90×40×15×1,25mm (m)", un: "m", base: 0.80, preco: 15, grupo: "Cobertura", categoria: "Cobertura", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-      { nome: "Terça C 150×40×15×1,25mm (m)", un: "m", base: 0.40, preco: 24, grupo: "Cobertura", categoria: "Cobertura", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-      { nome: "Cumeeira (perfil metálico U)", un: "m", base: 0.15, preco: 22, grupo: "Cobertura", categoria: "Cobertura", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-      { nome: "Parafuso TEX 6,3×32mm (cx 500pç)", un: "cx", base: 0.10, preco: 24.5, grupo: "Cobertura", categoria: "Cobertura", desc: "Acabamento: ORGANO METÁLICO Bitola: 4,5 MM Comprimento: 32 MM Tamanho da Chave: CHAVE Nº 2 Peso: 0,239 KG Padrão Embalagem: 1 CENTO Substrato: CIMENTÍCIA PESADA Embalagem: Pacote Origem: NACIONAL Teste de Resistência Salt Spray: 1.000 HORAS Unidade de Venda: CENTOS Sistema da Rosca: AUTOPERFURANTE HI-LO Tipo de Geometria: DENTADA Forma da Rosca: INTEIRA Modelo: ROSCA SOBERBA Tipo da Cabeça: CHATA Tipo de Ponta: AGULHA Tipo de Fenda: PHILLIPS Material: AÇO BAIXO CARBONO Norma Mecânica: PADRÃO", codigo: "3603", marca: "CISER", url: "https://www.espacosmart.com.br/parafuso-para-placa-cimenticia---osb---perfil-drywall-4-2-x-32mm-pa-rusper-pacote-com-100-unidades/p", espessura: "32mm", comprimento: "32 MM", dimensoes: null },
-      { nome: "Conector L galvanizado (rótula)", un: "un", base: 2.00, preco: 3.80, grupo: "Cobertura", categoria: "Cobertura", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
+      { nome: "Caibro C 90×40×15×1,25mm (m)",        un: "m",  base: 0.80, preco: 20,   grupo: "Cobertura", categoria: "Cobertura" },
+      { nome: "Terça C 150×40×15×1,25mm (m)",        un: "m",  base: 0.40, preco: 32,   grupo: "Cobertura", categoria: "Cobertura" },
+      { nome: "Cumeeira (perfil metálico U)",         un: "m",  base: 0.15, preco: 28,   grupo: "Cobertura", categoria: "Cobertura" },
+      { nome: "Parafuso TEX 6,3×32mm (cx 500pç)",    un: "cx", base: 0.10, preco: 88,   grupo: "Cobertura", categoria: "Cobertura" },
+      { nome: "Conector L galvanizado (rótula)",      un: "un", base: 2.00, preco: 5.50, grupo: "Cobertura", categoria: "Cobertura" },
     ],
   },
 
-  //  8. FIXAÇÃO GERAL (sempre inclusa) 
+  //  8. FIXAÇÃO GERAL
   {
     id: "fixacao", label: "Fixação Geral", icon: "", obrigatorio: true,
-    mao_obra_cub: 0.00, // incluso no custo de montagem estrutural
+    mao_obra_cub: 0.00,
     itens: [
-      { nome: "Parafuso TEX 4,2×16mm flangeado (cx 500pç)", un: "cx", base: 0.40, preco: 24.64, grupo: "Fixação", categoria: "Fixação", desc: "Acabamento: ORGANO METÁLICO Bitola: 4,8 MM Comprimento: 19 MM Tamanho da Chave: CHAVE Nº 2 Peso: 0,237 KG Padrão Embalagem: 1 CENTO Origem: NACIONAL Teste de Resistência Salt Spray: 2.000 HORAS Unidade de Venda: CENTOS Sistema da Rosca : AUTOATARRAXANTE Forma da Rosca: INTEIRA Modelo: STEEL FRAME Tipo da Cabeça: FLANGEADA Tipo de Ponta: BROCA Tipo de Fenda: PHILLIPS Material: AÇO BAIXO CARBONO Norma Mecânica: ISO 10666", codigo: "3595", marca: "CISER", url: "https://www.espacosmart.com.br/parafuso-para-perfil-de-light-steel-frame-4-8-x-19mm-flangeado-pb-pacote-com-100-unidades/p", espessura: "19mm", comprimento: "19 MM", dimensoes: null },
-      { nome: "Parafuso TEX 4,2×25mm (cx 500pç)", un: "cx", base: 0.30, preco: 12.06, grupo: "Fixação", categoria: "Fixação", desc: "Acabamento: FOSFATIZADO Bitola: 3,5 MM Comprimento: 25 MM Tamanho da Chave: CHAVE Nº 2 Peso: 0,160 KG Padrão Embalagem: 1 CENTOS Origem: NACIONAL Unidade de Venda: CENTO Sistema da Rosca: AUTOATARRAXANTE Forma da Rosca: INTEIRA Modelo: DRYWALL Tipo da Cabeça: TROMBETA Tipo de Ponta: BROCA Tipo de Fenda: PHILLIPS Material: AÇO BAIXO CARBONO Norma Mecânica: ISO 10666", codigo: "3589", marca: "CISER", url: "https://www.espacosmart.com.br/parafuso-para-drywall---light-steel-frame-3-5-x-25mm-trombeta-pb-pacote-com-100-unidades/p", espessura: "25mm", comprimento: "25 MM", dimensoes: null },
-      { nome: "Parafuso TEX 4,2×38mm (cx 500pç)", un: "cx", base: 0.80, preco: 66.89, grupo: "Fixação", categoria: "Fixação", desc: "Modelo: 5,50 X 38,10 Medida: 5,5x38,10 PONTA: Ponta 3 Chave: 5/16 Capacidade perfuração: 2,30-5,30 Revestimento: Zincado Embalagem: Pacote com 100 Unidades Matéria Pirma: SAE 1022", codigo: "9246", marca: "BULLFOR", url: "https://www.espacosmart.com.br/parafuso-light-steel-frame-5-5-x-38mm-sextavado-om-c-arruela-pacote-com-100-unidades/p", espessura: "38mm", comprimento: null, dimensoes: null },
-      { nome: "Parafuso TEX 6,3×19mm (cx 500pç)", un: "cx", base: 0.16, preco: 24.64, grupo: "Fixação", categoria: "Fixação", desc: "Acabamento: ORGANO METÁLICO Bitola: 4,8 MM Comprimento: 19 MM Tamanho da Chave: CHAVE Nº 2 Peso: 0,237 KG Padrão Embalagem: 1 CENTO Origem: NACIONAL Teste de Resistência Salt Spray: 2.000 HORAS Unidade de Venda: CENTOS Sistema da Rosca : AUTOATARRAXANTE Forma da Rosca: INTEIRA Modelo: STEEL FRAME Tipo da Cabeça: FLANGEADA Tipo de Ponta: BROCA Tipo de Fenda: PHILLIPS Material: AÇO BAIXO CARBONO Norma Mecânica: ISO 10666", codigo: "3595", marca: "CISER", url: "https://www.espacosmart.com.br/parafuso-para-perfil-de-light-steel-frame-4-8-x-19mm-flangeado-pb-pacote-com-100-unidades/p", espessura: "19mm", comprimento: "19 MM", dimensoes: null },
-      { nome: "Parafuso TEX 6,3×32mm (cx 500pç)", un: "cx", base: 0.20, preco: 24.5, grupo: "Fixação", categoria: "Fixação", desc: "Acabamento: ORGANO METÁLICO Bitola: 4,5 MM Comprimento: 32 MM Tamanho da Chave: CHAVE Nº 2 Peso: 0,239 KG Padrão Embalagem: 1 CENTO Substrato: CIMENTÍCIA PESADA Embalagem: Pacote Origem: NACIONAL Teste de Resistência Salt Spray: 1.000 HORAS Unidade de Venda: CENTOS Sistema da Rosca: AUTOPERFURANTE HI-LO Tipo de Geometria: DENTADA Forma da Rosca: INTEIRA Modelo: ROSCA SOBERBA Tipo da Cabeça: CHATA Tipo de Ponta: AGULHA Tipo de Fenda: PHILLIPS Material: AÇO BAIXO CARBONO Norma Mecânica: PADRÃO", codigo: "3603", marca: "CISER", url: "https://www.espacosmart.com.br/parafuso-para-placa-cimenticia---osb---perfil-drywall-4-2-x-32mm-pa-rusper-pacote-com-100-unidades/p", espessura: "32mm", comprimento: "32 MM", dimensoes: null },
-      { nome: "Rebite pop 4,8×12mm (cx 1000pç)", un: "cx", base: 0.08, preco: 42, grupo: "Fixação", categoria: "Fixação", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-      { nome: "Fita de juntas 50mm (rolo 100m)", un: "rl", base: 1.00, preco: 20.48, grupo: "Fixação", categoria: "Fixação", desc: "Reforce e garanta um acabamento impecável com a Fita Telada para Drywall. Compre agora e tenha resultados profissionais!", codigo: "23850", marca: "Nantong Gaopeng", url: "https://www.espacosmart.com.br/smart-fita-telada-p-drywall-48x900mm/p", espessura: "900mm", comprimento: null, dimensoes: "48x900" },
-      { nome: "Massa para juntas pronta (balde 25kg)", un: "bd", base: 0.04, preco: 83.14, grupo: "Fixação", categoria: "Fixação", desc: "• Massa pronta tratamento de juntas em chapas drywall. • Disponível em baldes de 25 kg. • Validade: 1 ANO (da data de fabricação). • Aspecto: pasta branca consistente. • Tratamento de juntas em sistemas de paredes, tetos e revestimentos em drywall. • Aplicação manual ou mecânica com o uso de fita para juntas. • Acabamento superficial fino sobre chapas de drywall. • Preenchimento de irregularidades nas chapas. • Arremate sobre parafusos. • Acabamento com cantoneiras de reforço. • Empilhamento de baldes com 30 kg = 3 Baldes | 15 kg = 4 Baldes | 5 kg =6 Baldes • Manter o produto em local seco, coberto e livre de intempéries.", codigo: "24307", marca: "SMART", url: "https://www.espacosmart.com.br/smart-massa-para-junta-de-drywall-25kg/p", espessura: null, comprimento: null, dimensoes: null },
-      { nome: "Cantoneira metálica proteção 25×25mm", un: "m", base: 0.30, preco: 4.80, grupo: "Fixação", categoria: "Fixação", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-      { nome: "Silicone neutro (cartucho 280ml)", un: "ct", base: 0.15, preco: 18, grupo: "Fixação", categoria: "Fixação", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
+      { nome: "Parafuso TEX 4,2×16mm flangeado (cx 500pç)", un: "cx", base: 0.40, preco: 68,   grupo: "Fixação", categoria: "Fixação" },
+      { nome: "Parafuso TEX 4,2×25mm (cx 500pç)",           un: "cx", base: 0.30, preco: 68,   grupo: "Fixação", categoria: "Fixação" },
+      { nome: "Parafuso TEX 4,2×38mm (cx 500pç)",           un: "cx", base: 0.80, preco: 72,   grupo: "Fixação", categoria: "Fixação" },
+      { nome: "Parafuso TEX 6,3×19mm (cx 500pç)",           un: "cx", base: 0.16, preco: 80,   grupo: "Fixação", categoria: "Fixação" },
+      { nome: "Parafuso TEX 6,3×32mm (cx 500pç)",           un: "cx", base: 0.20, preco: 88,   grupo: "Fixação", categoria: "Fixação" },
+      { nome: "Rebite pop 4,8×12mm (cx 1000pç)",            un: "cx", base: 0.08, preco: 58,   grupo: "Fixação", categoria: "Fixação" },
+      { nome: "Fita de juntas 50mm (rolo 100m)",             un: "rl", base: 1.00, preco: 42,   grupo: "Fixação", categoria: "Fixação" },
+      { nome: "Massa para juntas pronta (balde 25kg)",        un: "bd", base: 0.04, preco: 85,   grupo: "Fixação", categoria: "Fixação" },
+      { nome: "Cantoneira metálica proteção 25×25mm",         un: "m",  base: 0.30, preco: 6.20, grupo: "Fixação", categoria: "Fixação" },
+      { nome: "Silicone neutro (cartucho 280ml)",             un: "ct", base: 0.15, preco: 24,   grupo: "Fixação", categoria: "Fixação" },
     ],
   },
 
-  //  9. IMPERMEABILIZAÇÃO 
+  //  9. IMPERMEABILIZAÇÃO
   {
     id: "impermeabilizacao", label: "Impermeabilização", icon: "", obrigatorio: false,
     mao_obra_cub: 0.01,
-    // Calculado sobre área molhada (parâmetro separado)
     usaAreaMolhada: true,
     itens: [
-      { nome: "Impermeabilizante flex bicomponente (18L)", un: "gl", base: 0.08, preco: 220, grupo: "Impermeabilização", categoria: "Isolamento", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-      { nome: "Manta asfáltica autoadesiva 3mm", un: "m²", base: 1.15, preco: 25, grupo: "Impermeabilização", categoria: "Isolamento", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-      { nome: "Primer betuminoso (5L)", un: "gl", base: 0.06, preco: 78, grupo: "Impermeabilização", categoria: "Isolamento", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-      { nome: "Fita de reforço de juntas 10cm", un: "m", base: 1.20, preco: 20.48, grupo: "Impermeabilização", categoria: "Isolamento", desc: "Reforce e garanta um acabamento impecável com a Fita Telada para Drywall. Compre agora e tenha resultados profissionais!", codigo: "23850", marca: "Nantong Gaopeng", url: "https://www.espacosmart.com.br/smart-fita-telada-p-drywall-48x900mm/p", espessura: "900mm", comprimento: null, dimensoes: "48x900" },
-      { nome: "Argamassa polimérica impermeável (sc 18kg)", un: "sc", base: 0.06, preco: 83.14, grupo: "Impermeabilização", categoria: "Isolamento", desc: "• Massa pronta tratamento de juntas em chapas drywall. • Disponível em baldes de 25 kg. • Validade: 1 ANO (da data de fabricação). • Aspecto: pasta branca consistente. • Tratamento de juntas em sistemas de paredes, tetos e revestimentos em drywall. • Aplicação manual ou mecânica com o uso de fita para juntas. • Acabamento superficial fino sobre chapas de drywall. • Preenchimento de irregularidades nas chapas. • Arremate sobre parafusos. • Acabamento com cantoneiras de reforço. • Empilhamento de baldes com 30 kg = 3 Baldes | 15 kg = 4 Baldes | 5 kg =6 Baldes • Manter o produto em local seco, coberto e livre de intempéries.", codigo: "24307", marca: "SMART", url: "https://www.espacosmart.com.br/smart-massa-para-junta-de-drywall-25kg/p", espessura: null, comprimento: null, dimensoes: null },
+      { nome: "Impermeabilizante flex bicomponente (18L)", un: "gl", base: 0.08, preco: 285, grupo: "Impermeabilização", categoria: "Isolamento" },
+      { nome: "Manta asfáltica autoadesiva 3mm",          un: "m²", base: 1.15, preco: 32,  grupo: "Impermeabilização", categoria: "Isolamento" },
+      { nome: "Primer betuminoso (5L)",                    un: "gl", base: 0.06, preco: 98,  grupo: "Impermeabilização", categoria: "Isolamento" },
+      { nome: "Fita de reforço de juntas 10cm",            un: "m",  base: 1.20, preco: 11,  grupo: "Impermeabilização", categoria: "Isolamento" },
+      { nome: "Argamassa polimérica impermeável (sc 18kg)", un: "sc", base: 0.06, preco: 88,  grupo: "Impermeabilização", categoria: "Isolamento" },
     ],
   },
 
-  //  10. INSTALAÇÃO ELÉTRICA 
+  //  10. INSTALAÇÃO ELÉTRICA
   {
     id: "eletrica", label: "Instalação Elétrica", icon: "", obrigatorio: false,
     mao_obra_cub: 0.04,
     itens: [
-      { nome: "Eletroduto corrugado flexível 3/4\" (m)",  un: "m",  base: 1.80, preco: 2.80, grupo: "Instalações", categoria: "Instalação Elétrica" },
-      { nome: "Eletroduto corrugado flexível 1\" (m)",    un: "m",  base: 0.40, preco: 4.20, grupo: "Instalações", categoria: "Instalação Elétrica" },
-      { nome: "Caixa de embutir 4×2\"",                  un: "un", base: 0.35, preco: 2.50, grupo: "Instalações", categoria: "Instalação Elétrica" },
-      { nome: "Caixa de embutir 4×4\"",                  un: "un", base: 0.08, preco: 4.20, grupo: "Instalações", categoria: "Instalação Elétrica" },
-      { nome: "Cabo flexível 1,5mm² (m)", un: "m", base: 2.50, preco: 3.40, grupo: "Instalações", categoria: "Instalação Elétrica", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-      { nome: "Cabo flexível 2,5mm² (m)", un: "m", base: 4.00, preco: 5.20, grupo: "Instalações", categoria: "Instalação Elétrica", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-      { nome: "Cabo flexível 4mm² (m)", un: "m", base: 0.60, preco: 9.50, grupo: "Instalações", categoria: "Instalação Elétrica", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-      { nome: "Cabo flexível 6mm² (m)", un: "m", base: 0.20, preco: 14, grupo: "Instalações", categoria: "Instalação Elétrica", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-      { nome: "Disjuntor unipolar 10A/16A", un: "un", base: 0.12, preco: 14, grupo: "Instalações", categoria: "Instalação Elétrica", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-      { nome: "Disjuntor bipolar 20A", un: "un", base: 0.03, preco: 38, grupo: "Instalações", categoria: "Instalação Elétrica", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-      { nome: "Disjuntor bipolar 30A (chuveiro)", un: "un", base: 0.02, preco: 42, grupo: "Instalações", categoria: "Instalação Elétrica", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-      { nome: "Quadro distribuição 24 disjuntores", un: "un", base: 0.01, preco: 420, grupo: "Instalações", categoria: "Instalação Elétrica", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-      { nome: "Interruptor simples 10A", un: "un", base: 0.12, preco: 22, grupo: "Instalações", categoria: "Instalação Elétrica", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-      { nome: "Tomada 2P+T 10A", un: "un", base: 0.35, preco: 26, grupo: "Instalações", categoria: "Instalação Elétrica", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-      { nome: "Tomada 2P+T 20A (chuveiro/AC)", un: "un", base: 0.05, preco: 38, grupo: "Instalações", categoria: "Instalação Elétrica", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-      { nome: "Espelho cego / acabamento", un: "un", base: 0.08, preco: 8.50, grupo: "Instalações", categoria: "Instalação Elétrica", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
+      { nome: "Eletroduto corrugado flexível 3/4\" (m)",  un: "m",  base: 1.80, preco: 3.80, grupo: "Instalações", categoria: "Instalação Elétrica" },
+      { nome: "Eletroduto corrugado flexível 1\" (m)",    un: "m",  base: 0.40, preco: 5.80, grupo: "Instalações", categoria: "Instalação Elétrica" },
+      { nome: "Caixa de embutir 4×2\"",                  un: "un", base: 0.35, preco: 3.20, grupo: "Instalações", categoria: "Instalação Elétrica" },
+      { nome: "Caixa de embutir 4×4\"",                  un: "un", base: 0.08, preco: 5.80, grupo: "Instalações", categoria: "Instalação Elétrica" },
+      { nome: "Cabo flexível 1,5mm² (m)",                un: "m",  base: 2.50, preco: 4.80, grupo: "Instalações", categoria: "Instalação Elétrica" },
+      { nome: "Cabo flexível 2,5mm² (m)",                un: "m",  base: 4.00, preco: 7.50, grupo: "Instalações", categoria: "Instalação Elétrica" },
+      { nome: "Cabo flexível 4mm² (m)",                  un: "m",  base: 0.60, preco: 13,   grupo: "Instalações", categoria: "Instalação Elétrica" },
+      { nome: "Cabo flexível 6mm² (m)",                  un: "m",  base: 0.20, preco: 19,   grupo: "Instalações", categoria: "Instalação Elétrica" },
+      { nome: "Disjuntor unipolar 10A/16A",              un: "un", base: 0.12, preco: 18,   grupo: "Instalações", categoria: "Instalação Elétrica" },
+      { nome: "Disjuntor bipolar 20A",                   un: "un", base: 0.03, preco: 52,   grupo: "Instalações", categoria: "Instalação Elétrica" },
+      { nome: "Disjuntor bipolar 30A (chuveiro)",        un: "un", base: 0.02, preco: 58,   grupo: "Instalações", categoria: "Instalação Elétrica" },
+      { nome: "Quadro distribuição 24 disjuntores",      un: "un", base: 0.01, preco: 580,  grupo: "Instalações", categoria: "Instalação Elétrica" },
+      { nome: "Interruptor simples 10A",                 un: "un", base: 0.12, preco: 28,   grupo: "Instalações", categoria: "Instalação Elétrica" },
+      { nome: "Tomada 2P+T 10A",                        un: "un", base: 0.35, preco: 32,   grupo: "Instalações", categoria: "Instalação Elétrica" },
+      { nome: "Tomada 2P+T 20A (chuveiro/AC)",           un: "un", base: 0.05, preco: 48,   grupo: "Instalações", categoria: "Instalação Elétrica" },
+      { nome: "Espelho cego / acabamento",               un: "un", base: 0.08, preco: 11,   grupo: "Instalações", categoria: "Instalação Elétrica" },
     ],
   },
 
-  //  11. INSTALAÇÃO HIDRÁULICA 
+  //  11. INSTALAÇÃO HIDRÁULICA
   {
     id: "hidraulica", label: "Instalação Hidráulica", icon: "", obrigatorio: false,
     mao_obra_cub: 0.04,
     itens: [
-      { nome: "Tubo PPR 20mm PN20 (barra 3m)", un: "m", base: 1.00, preco: 9.50, grupo: "Instalações", categoria: "Instalação Hidráulica", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-      { nome: "Tubo PPR 25mm PN20 (barra 3m)", un: "m", base: 0.35, preco: 13, grupo: "Instalações", categoria: "Instalação Hidráulica", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-      { nome: "Tubo PPR 32mm PN20 (barra 3m)", un: "m", base: 0.15, preco: 20, grupo: "Instalações", categoria: "Instalação Hidráulica", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-      { nome: "Conexões PPR (joelhos, tês, reduções)", un: "un", base: 2.00, preco: 5.50, grupo: "Instalações", categoria: "Instalação Hidráulica", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-      { nome: "Tubo PVC esgoto 40mm (barra 6m)", un: "m", base: 0.40, preco: 9.20, grupo: "Instalações", categoria: "Instalação Hidráulica", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-      { nome: "Tubo PVC esgoto 50mm (barra 6m)", un: "m", base: 0.30, preco: 13, grupo: "Instalações", categoria: "Instalação Hidráulica", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-      { nome: "Tubo PVC esgoto 100mm (barra 6m)", un: "m", base: 0.30, preco: 24, grupo: "Instalações", categoria: "Instalação Hidráulica", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-      { nome: "Conexões PVC esgoto (joelhos, tês)", un: "un", base: 1.20, preco: 8.50, grupo: "Instalações", categoria: "Instalação Hidráulica", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-      { nome: "Caixa sifonada 100×100mm", un: "un", base: 0.05, preco: 22, grupo: "Instalações", categoria: "Instalação Hidráulica", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-      { nome: "Ralo seco 100mm", un: "un", base: 0.04, preco: 16, grupo: "Instalações", categoria: "Instalação Hidráulica", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-      { nome: "Caixa d'água 1000L (fibra)", un: "un", base: 0.01, preco: 620, grupo: "Instalações", categoria: "Instalação Hidráulica", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-      { nome: "Registro de gaveta 3/4\"",                un: "un", base: 0.06, preco: 42,   grupo: "Instalações", categoria: "Instalação Hidráulica" },
-      { nome: "Válvula de pé com crivo 3/4\"",           un: "un", base: 0.01, preco: 55,   grupo: "Instalações", categoria: "Instalação Hidráulica" },
-      { nome: "Caixa de inspeção PVC 30×30cm", un: "un", base: 0.04, preco: 32, grupo: "Instalações", categoria: "Instalação Hidráulica", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-      { nome: "Fossa séptica 1000L", un: "un", base: 0.01, preco: 980, grupo: "Instalações", categoria: "Instalação Hidráulica", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
+      { nome: "Tubo PPR 20mm PN20 (barra 3m)",           un: "m",  base: 1.00, preco: 12.50, grupo: "Instalações", categoria: "Instalação Hidráulica" },
+      { nome: "Tubo PPR 25mm PN20 (barra 3m)",           un: "m",  base: 0.35, preco: 17,    grupo: "Instalações", categoria: "Instalação Hidráulica" },
+      { nome: "Tubo PPR 32mm PN20 (barra 3m)",           un: "m",  base: 0.15, preco: 26,    grupo: "Instalações", categoria: "Instalação Hidráulica" },
+      { nome: "Conexões PPR (joelhos, tês, reduções)",   un: "un", base: 2.00, preco: 7.50,  grupo: "Instalações", categoria: "Instalação Hidráulica" },
+      { nome: "Tubo PVC esgoto 40mm (barra 6m)",         un: "m",  base: 0.40, preco: 12,    grupo: "Instalações", categoria: "Instalação Hidráulica" },
+      { nome: "Tubo PVC esgoto 50mm (barra 6m)",         un: "m",  base: 0.30, preco: 17,    grupo: "Instalações", categoria: "Instalação Hidráulica" },
+      { nome: "Tubo PVC esgoto 100mm (barra 6m)",        un: "m",  base: 0.30, preco: 32,    grupo: "Instalações", categoria: "Instalação Hidráulica" },
+      { nome: "Conexões PVC esgoto (joelhos, tês)",      un: "un", base: 1.20, preco: 11,    grupo: "Instalações", categoria: "Instalação Hidráulica" },
+      { nome: "Caixa sifonada 100×100mm",                un: "un", base: 0.05, preco: 28,    grupo: "Instalações", categoria: "Instalação Hidráulica" },
+      { nome: "Ralo seco 100mm",                         un: "un", base: 0.04, preco: 22,    grupo: "Instalações", categoria: "Instalação Hidráulica" },
+      { nome: "Caixa d'água 1000L (fibra)",              un: "un", base: 0.01, preco: 820,   grupo: "Instalações", categoria: "Instalação Hidráulica" },
+      { nome: "Registro de gaveta 3/4\"",                un: "un", base: 0.06, preco: 58,    grupo: "Instalações", categoria: "Instalação Hidráulica" },
+      { nome: "Válvula de pé com crivo 3/4\"",           un: "un", base: 0.01, preco: 72,    grupo: "Instalações", categoria: "Instalação Hidráulica" },
+      { nome: "Caixa de inspeção PVC 30×30cm",           un: "un", base: 0.04, preco: 42,    grupo: "Instalações", categoria: "Instalação Hidráulica" },
+      { nome: "Fossa séptica 1000L",                     un: "un", base: 0.01, preco: 1280,  grupo: "Instalações", categoria: "Instalação Hidráulica" },
     ],
   },
 
-  //  12. INSTALAÇÃO DE GÁS 
+  //  12. INSTALAÇÃO DE GÁS
   {
     id: "gas", label: "Instalação de Gás", icon: "", obrigatorio: false,
     mao_obra_cub: 0.02,
     itens: [
-      { nome: "Tubo de cobre 1/2\" (m)",                un: "m",  base: 0.50, preco: 22,   grupo: "Instalações", categoria: "Instalação Gás" },
-      { nome: "Tubo de cobre 3/4\" (m)",                un: "m",  base: 0.20, preco: 35,   grupo: "Instalações", categoria: "Instalação Gás" },
-      { nome: "Conexão de cobre (joelhos, tês, uniões)", un: "un", base: 1.00, preco: 9, grupo: "Instalações", categoria: "Instalação Gás", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-      { nome: "Regulador de pressão 1 estágio", un: "un", base: 0.01, preco: 95, grupo: "Instalações", categoria: "Instalação Gás", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-      { nome: "Válvula de corte 1/2\"",                 un: "un", base: 0.03, preco: 55,   grupo: "Instalações", categoria: "Instalação Gás" },
-      { nome: "Medidor de gás (relógio) 1m³/h", un: "un", base: 0.01, preco: 280, grupo: "Instalações", categoria: "Instalação Gás", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-      { nome: "Selante específico gás (pasta de grafite)", un: "tp", base: 0.02, preco: 18, grupo: "Instalações", categoria: "Instalação Gás", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
+      { nome: "Tubo de cobre 1/2\" (m)",                un: "m",  base: 0.50, preco: 28,   grupo: "Instalações", categoria: "Instalação Gás" },
+      { nome: "Tubo de cobre 3/4\" (m)",                un: "m",  base: 0.20, preco: 45,   grupo: "Instalações", categoria: "Instalação Gás" },
+      { nome: "Conexão de cobre (joelhos, tês, uniões)", un: "un", base: 1.00, preco: 12,   grupo: "Instalações", categoria: "Instalação Gás" },
+      { nome: "Regulador de pressão 1 estágio",          un: "un", base: 0.01, preco: 125,  grupo: "Instalações", categoria: "Instalação Gás" },
+      { nome: "Válvula de corte 1/2\"",                 un: "un", base: 0.03, preco: 72,   grupo: "Instalações", categoria: "Instalação Gás" },
+      { nome: "Medidor de gás (relógio) 1m³/h",         un: "un", base: 0.01, preco: 365,  grupo: "Instalações", categoria: "Instalação Gás" },
+      { nome: "Selante específico gás (pasta de grafite)", un: "tp", base: 0.02, preco: 24,   grupo: "Instalações", categoria: "Instalação Gás" },
     ],
   },
 
-  //  13. ESQUADRIAS 
+  //  13. ESQUADRIAS
   {
     id: "esquadrias", label: "Esquadrias", icon: "", obrigatorio: false,
     mao_obra_cub: 0.02,
@@ -539,14 +533,14 @@ export const SISTEMAS_SF = [
         desc: "Alumínio anodizado fosco — janelas e portas externas",
         aplicaFatorPadrao: true,
         itens: [
-          { nome: "Janela alumínio 1,20×1,20m (2 folhas)", un: "un", base: 0.05, preco: 620, grupo: "Esquadrias", categoria: "Esquadrias", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Janela alumínio 0,60×0,60m (banheiro)", un: "un", base: 0.03, preco: 280, grupo: "Esquadrias", categoria: "Esquadrias", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Porta externa alumínio 0,90×2,10m", un: "un", base: 0.02, preco: 920, grupo: "Esquadrias", categoria: "Esquadrias", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Porta interna madeira 0,80×2,10m", un: "un", base: 0.10, preco: 420, grupo: "Esquadrias", categoria: "Esquadrias", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Marco + guarnição madeira (jg)", un: "jg", base: 0.12, preco: 240, grupo: "Esquadrias", categoria: "Esquadrias", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Soleira de granito 15cm (m)", un: "m", base: 0.15, preco: 70, grupo: "Esquadrias", categoria: "Esquadrias", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Peitoril de granito 25cm (m)", un: "m", base: 0.12, preco: 90, grupo: "Esquadrias", categoria: "Esquadrias", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Selante neutro (cartucho)", un: "ct", base: 0.10, preco: 22, grupo: "Esquadrias", categoria: "Esquadrias", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
+          { nome: "Janela alumínio 1,20×1,20m (2 folhas)", un: "un", base: 0.05, preco: 780,  grupo: "Esquadrias", categoria: "Esquadrias" },
+          { nome: "Janela alumínio 0,60×0,60m (banheiro)", un: "un", base: 0.03, preco: 360,  grupo: "Esquadrias", categoria: "Esquadrias" },
+          { nome: "Porta externa alumínio 0,90×2,10m",     un: "un", base: 0.02, preco: 1180, grupo: "Esquadrias", categoria: "Esquadrias" },
+          { nome: "Porta interna madeira 0,80×2,10m",      un: "un", base: 0.10, preco: 540,  grupo: "Esquadrias", categoria: "Esquadrias" },
+          { nome: "Marco + guarnição madeira (jg)",        un: "jg", base: 0.12, preco: 310,  grupo: "Esquadrias", categoria: "Esquadrias" },
+          { nome: "Soleira de granito 15cm (m)",           un: "m",  base: 0.15, preco: 92,   grupo: "Esquadrias", categoria: "Esquadrias" },
+          { nome: "Peitoril de granito 25cm (m)",          un: "m",  base: 0.12, preco: 118,  grupo: "Esquadrias", categoria: "Esquadrias" },
+          { nome: "Selante neutro (cartucho)",             un: "ct", base: 0.10, preco: 28,   grupo: "Esquadrias", categoria: "Esquadrias" },
         ],
       },
       {
@@ -554,13 +548,13 @@ export const SISTEMAS_SF = [
         desc: "PVC multicâmara — excelente isolamento, sem manutenção",
         aplicaFatorPadrao: true,
         itens: [
-          { nome: "Janela PVC 1,20×1,20m (oscilo-batente)", un: "un", base: 0.05, preco: 980, grupo: "Esquadrias", categoria: "Esquadrias", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Janela PVC 0,60×0,60m (banheiro)", un: "un", base: 0.03, preco: 420, grupo: "Esquadrias", categoria: "Esquadrias", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Porta PVC externa 0,90×2,10m", un: "un", base: 0.02, preco: 1350, grupo: "Esquadrias", categoria: "Esquadrias", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Porta interna PVC 0,80×2,10m", un: "un", base: 0.10, preco: 680, grupo: "Esquadrias", categoria: "Esquadrias", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Soleira de granito 15cm (m)", un: "m", base: 0.15, preco: 70, grupo: "Esquadrias", categoria: "Esquadrias", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Peitoril de granito 25cm (m)", un: "m", base: 0.12, preco: 90, grupo: "Esquadrias", categoria: "Esquadrias", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Selante neutro (cartucho)", un: "ct", base: 0.10, preco: 22, grupo: "Esquadrias", categoria: "Esquadrias", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
+          { nome: "Janela PVC 1,20×1,20m (oscilo-batente)", un: "un", base: 0.05, preco: 1250, grupo: "Esquadrias", categoria: "Esquadrias" },
+          { nome: "Janela PVC 0,60×0,60m (banheiro)",       un: "un", base: 0.03, preco: 540,  grupo: "Esquadrias", categoria: "Esquadrias" },
+          { nome: "Porta PVC externa 0,90×2,10m",           un: "un", base: 0.02, preco: 1720, grupo: "Esquadrias", categoria: "Esquadrias" },
+          { nome: "Porta interna PVC 0,80×2,10m",           un: "un", base: 0.10, preco: 870,  grupo: "Esquadrias", categoria: "Esquadrias" },
+          { nome: "Soleira de granito 15cm (m)",             un: "m",  base: 0.15, preco: 92,   grupo: "Esquadrias", categoria: "Esquadrias" },
+          { nome: "Peitoril de granito 25cm (m)",            un: "m",  base: 0.12, preco: 118,  grupo: "Esquadrias", categoria: "Esquadrias" },
+          { nome: "Selante neutro (cartucho)",               un: "ct", base: 0.10, preco: 28,   grupo: "Esquadrias", categoria: "Esquadrias" },
         ],
       },
       {
@@ -568,19 +562,19 @@ export const SISTEMAS_SF = [
         desc: "Madeira de lei tratada — visual rústico, exige manutenção periódica",
         aplicaFatorPadrao: true,
         itens: [
-          { nome: "Janela madeira maciça 1,20×1,20m", un: "un", base: 0.05, preco: 820, grupo: "Esquadrias", categoria: "Esquadrias", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Janela madeira maciça 0,60×0,60m", un: "un", base: 0.03, preco: 380, grupo: "Esquadrias", categoria: "Esquadrias", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Porta externa madeira maciça 0,90×2,10m", un: "un", base: 0.02, preco: 1200, grupo: "Esquadrias", categoria: "Esquadrias", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Porta interna madeira 0,80×2,10m", un: "un", base: 0.10, preco: 480, grupo: "Esquadrias", categoria: "Esquadrias", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Marco + guarnição madeira maciça (jg)", un: "jg", base: 0.12, preco: 320, grupo: "Esquadrias", categoria: "Esquadrias", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Soleira de granito 15cm (m)", un: "m", base: 0.15, preco: 70, grupo: "Esquadrias", categoria: "Esquadrias", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Verniz marítimo (L)", un: "L", base: 0.10, preco: 58, grupo: "Esquadrias", categoria: "Esquadrias", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
+          { nome: "Janela madeira maciça 1,20×1,20m",      un: "un", base: 0.05, preco: 1050, grupo: "Esquadrias", categoria: "Esquadrias" },
+          { nome: "Janela madeira maciça 0,60×0,60m",      un: "un", base: 0.03, preco: 480,  grupo: "Esquadrias", categoria: "Esquadrias" },
+          { nome: "Porta externa madeira maciça 0,90×2,10m", un: "un", base: 0.02, preco: 1540, grupo: "Esquadrias", categoria: "Esquadrias" },
+          { nome: "Porta interna madeira 0,80×2,10m",       un: "un", base: 0.10, preco: 620,  grupo: "Esquadrias", categoria: "Esquadrias" },
+          { nome: "Marco + guarnição madeira maciça (jg)",  un: "jg", base: 0.12, preco: 415,  grupo: "Esquadrias", categoria: "Esquadrias" },
+          { nome: "Soleira de granito 15cm (m)",            un: "m",  base: 0.15, preco: 92,   grupo: "Esquadrias", categoria: "Esquadrias" },
+          { nome: "Verniz marítimo (L)",                    un: "L",  base: 0.10, preco: 75,   grupo: "Esquadrias", categoria: "Esquadrias" },
         ],
       },
     ],
   },
 
-  //  14. REVESTIMENTOS 
+  //  14. REVESTIMENTOS
   {
     id: "revestimentos", label: "Revestimentos e Acabamentos", icon: "", obrigatorio: false,
     mao_obra_cub: 0.05,
@@ -589,12 +583,12 @@ export const SISTEMAS_SF = [
         id: "rev_basico", label: "Básico — Cerâmica + Tinta PVA",
         desc: "Cerâmica 45×45 + tinta PVA interna + textura externa simples",
         itens: [
-          { nome: "Cerâmica 45×45cm (m²)", un: "m²", base: 0.40, preco: 38, grupo: "Revestimentos", categoria: "Revestimentos", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Argamassa colante AC-I (sc 20kg)", un: "sc", base: 0.12, preco: 83.14, grupo: "Revestimentos", categoria: "Revestimentos", desc: "• Massa pronta tratamento de juntas em chapas drywall. • Disponível em baldes de 25 kg. • Validade: 1 ANO (da data de fabricação). • Aspecto: pasta branca consistente. • Tratamento de juntas em sistemas de paredes, tetos e revestimentos em drywall. • Aplicação manual ou mecânica com o uso de fita para juntas. • Acabamento superficial fino sobre chapas de drywall. • Preenchimento de irregularidades nas chapas. • Arremate sobre parafusos. • Acabamento com cantoneiras de reforço. • Empilhamento de baldes com 30 kg = 3 Baldes | 15 kg = 4 Baldes | 5 kg =6 Baldes • Manter o produto em local seco, coberto e livre de intempéries.", codigo: "24307", marca: "SMART", url: "https://www.espacosmart.com.br/smart-massa-para-junta-de-drywall-25kg/p", espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Rejunte cinza (kg)", un: "kg", base: 0.08, preco: 9, grupo: "Revestimentos", categoria: "Revestimentos", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Massa corrida PVA (balde 25kg)", un: "bd", base: 0.04, preco: 83.14, grupo: "Revestimentos", categoria: "Revestimentos", desc: "• Massa pronta tratamento de juntas em chapas drywall. • Disponível em baldes de 25 kg. • Validade: 1 ANO (da data de fabricação). • Aspecto: pasta branca consistente. • Tratamento de juntas em sistemas de paredes, tetos e revestimentos em drywall. • Aplicação manual ou mecânica com o uso de fita para juntas. • Acabamento superficial fino sobre chapas de drywall. • Preenchimento de irregularidades nas chapas. • Arremate sobre parafusos. • Acabamento com cantoneiras de reforço. • Empilhamento de baldes com 30 kg = 3 Baldes | 15 kg = 4 Baldes | 5 kg =6 Baldes • Manter o produto em local seco, coberto e livre de intempéries.", codigo: "24307", marca: "SMART", url: "https://www.espacosmart.com.br/smart-massa-para-junta-de-drywall-25kg/p", espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Tinta látex PVA interna (18L)", un: "gl", base: 0.02, preco: 165, grupo: "Revestimentos", categoria: "Revestimentos", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Textura acrílica simples (galão 18L)", un: "gl", base: 0.03, preco: 220, grupo: "Revestimentos", categoria: "Revestimentos", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
+          { nome: "Cerâmica 45×45cm (m²)",              un: "m²",  base: 0.40, preco: 52,   grupo: "Revestimentos", categoria: "Revestimentos" },
+          { nome: "Argamassa colante AC-I (sc 20kg)",   un: "sc",  base: 0.12, preco: 36,   grupo: "Revestimentos", categoria: "Revestimentos" },
+          { nome: "Rejunte cinza (kg)",                  un: "kg",  base: 0.08, preco: 12,   grupo: "Revestimentos", categoria: "Revestimentos" },
+          { nome: "Massa corrida PVA (balde 25kg)",      un: "bd",  base: 0.04, preco: 95,   grupo: "Revestimentos", categoria: "Revestimentos" },
+          { nome: "Tinta látex PVA interna (18L)",       un: "gl",  base: 0.02, preco: 215,  grupo: "Revestimentos", categoria: "Revestimentos" },
+          { nome: "Textura acrílica simples (galão 18L)", un: "gl",  base: 0.03, preco: 280,  grupo: "Revestimentos", categoria: "Revestimentos" },
         ],
       },
       {
@@ -602,13 +596,13 @@ export const SISTEMAS_SF = [
         desc: "Porcelanato 60×60 polido + tinta acrílica + gesso liso interno",
         aplicaFatorPadrao: true,
         itens: [
-          { nome: "Porcelanato 60×60cm polido (m²)", un: "m²", base: 0.42, preco: 58, grupo: "Revestimentos", categoria: "Revestimentos", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Argamassa colante AC-II (sc 20kg)", un: "sc", base: 0.14, preco: 83.14, grupo: "Revestimentos", categoria: "Revestimentos", desc: "• Massa pronta tratamento de juntas em chapas drywall. • Disponível em baldes de 25 kg. • Validade: 1 ANO (da data de fabricação). • Aspecto: pasta branca consistente. • Tratamento de juntas em sistemas de paredes, tetos e revestimentos em drywall. • Aplicação manual ou mecânica com o uso de fita para juntas. • Acabamento superficial fino sobre chapas de drywall. • Preenchimento de irregularidades nas chapas. • Arremate sobre parafusos. • Acabamento com cantoneiras de reforço. • Empilhamento de baldes com 30 kg = 3 Baldes | 15 kg = 4 Baldes | 5 kg =6 Baldes • Manter o produto em local seco, coberto e livre de intempéries.", codigo: "24307", marca: "SMART", url: "https://www.espacosmart.com.br/smart-massa-para-junta-de-drywall-25kg/p", espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Rejunte porcelanato (kg)", un: "kg", base: 0.05, preco: 15, grupo: "Revestimentos", categoria: "Revestimentos", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Gesso liso (sc 40kg)", un: "sc", base: 0.08, preco: 45, grupo: "Revestimentos", categoria: "Revestimentos", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Tinta acrílica semibrilho interna (18L)", un: "gl", base: 0.02, preco: 250, grupo: "Revestimentos", categoria: "Revestimentos", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Textura acrílica premium (galão 18L)", un: "gl", base: 0.03, preco: 320, grupo: "Revestimentos", categoria: "Revestimentos", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Selador acrílico (galão 18L)", un: "gl", base: 0.01, preco: 185, grupo: "Revestimentos", categoria: "Revestimentos", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
+          { nome: "Porcelanato 60×60cm polido (m²)",    un: "m²",  base: 0.42, preco: 78,   grupo: "Revestimentos", categoria: "Revestimentos" },
+          { nome: "Argamassa colante AC-II (sc 20kg)",  un: "sc",  base: 0.14, preco: 42,   grupo: "Revestimentos", categoria: "Revestimentos" },
+          { nome: "Rejunte porcelanato (kg)",            un: "kg",  base: 0.05, preco: 20,   grupo: "Revestimentos", categoria: "Revestimentos" },
+          { nome: "Gesso liso (sc 40kg)",               un: "sc",  base: 0.08, preco: 58,   grupo: "Revestimentos", categoria: "Revestimentos" },
+          { nome: "Tinta acrílica semibrilho interna (18L)", un: "gl", base: 0.02, preco: 320, grupo: "Revestimentos", categoria: "Revestimentos" },
+          { nome: "Textura acrílica premium (galão 18L)", un: "gl",  base: 0.03, preco: 420,  grupo: "Revestimentos", categoria: "Revestimentos" },
+          { nome: "Selador acrílico (galão 18L)",        un: "gl",  base: 0.01, preco: 245,  grupo: "Revestimentos", categoria: "Revestimentos" },
         ],
       },
       {
@@ -616,36 +610,34 @@ export const SISTEMAS_SF = [
         desc: "Porcelanato 90×90 retificado + Marmorino + tinta premium",
         aplicaFatorPadrao: true,
         itens: [
-          { nome: "Porcelanato 90×90cm retificado (m²)", un: "m²", base: 0.44, preco: 110, grupo: "Revestimentos", categoria: "Revestimentos", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Argamassa colante AC-III (sc 20kg)", un: "sc", base: 0.16, preco: 83.14, grupo: "Revestimentos", categoria: "Revestimentos", desc: "• Massa pronta tratamento de juntas em chapas drywall. • Disponível em baldes de 25 kg. • Validade: 1 ANO (da data de fabricação). • Aspecto: pasta branca consistente. • Tratamento de juntas em sistemas de paredes, tetos e revestimentos em drywall. • Aplicação manual ou mecânica com o uso de fita para juntas. • Acabamento superficial fino sobre chapas de drywall. • Preenchimento de irregularidades nas chapas. • Arremate sobre parafusos. • Acabamento com cantoneiras de reforço. • Empilhamento de baldes com 30 kg = 3 Baldes | 15 kg = 4 Baldes | 5 kg =6 Baldes • Manter o produto em local seco, coberto e livre de intempéries.", codigo: "24307", marca: "SMART", url: "https://www.espacosmart.com.br/smart-massa-para-junta-de-drywall-25kg/p", espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Rejunte especial (kg)", un: "kg", base: 0.04, preco: 28, grupo: "Revestimentos", categoria: "Revestimentos", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Marmorino / estuco veneziano (m²)", un: "m²", base: 0.30, preco: 85, grupo: "Revestimentos", categoria: "Revestimentos", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Tinta premium acetinada (18L)", un: "gl", base: 0.02, preco: 380, grupo: "Revestimentos", categoria: "Revestimentos", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Textura premium (galão 18L)", un: "gl", base: 0.03, preco: 420, grupo: "Revestimentos", categoria: "Revestimentos", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-          { nome: "Verniz (galão 18L)", un: "gl", base: 0.01, preco: 280, grupo: "Revestimentos", categoria: "Revestimentos", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
+          { nome: "Porcelanato 90×90cm retificado (m²)", un: "m²",  base: 0.44, preco: 145,  grupo: "Revestimentos", categoria: "Revestimentos" },
+          { nome: "Argamassa colante AC-III (sc 20kg)", un: "sc",  base: 0.16, preco: 62,   grupo: "Revestimentos", categoria: "Revestimentos" },
+          { nome: "Rejunte especial (kg)",               un: "kg",  base: 0.04, preco: 36,   grupo: "Revestimentos", categoria: "Revestimentos" },
+          { nome: "Marmorino / estuco veneziano (m²)",  un: "m²",  base: 0.30, preco: 110,  grupo: "Revestimentos", categoria: "Revestimentos" },
+          { nome: "Tinta premium acetinada (18L)",       un: "gl",  base: 0.02, preco: 490,  grupo: "Revestimentos", categoria: "Revestimentos" },
+          { nome: "Textura premium (galão 18L)",         un: "gl",  base: 0.03, preco: 545,  grupo: "Revestimentos", categoria: "Revestimentos" },
+          { nome: "Verniz (galão 18L)",                  un: "gl",  base: 0.01, preco: 365,  grupo: "Revestimentos", categoria: "Revestimentos" },
         ],
       },
     ],
   },
 
-  //  15. LAJE SECA (piso do sobrado) 
+  //  15. LAJE SECA (piso do sobrado)
   {
     id: "laje_seca", label: "Laje Seca (piso do sobrado)", icon: "", obrigatorio: false,
     mao_obra_cub: 0.03,
     itens: [
-      { nome: "OSB 18mm — base estrutural (1,22×2,44m)", un: "chp", base: 0.36, preco: 261.17, grupo: "Laje Seca", categoria: "Estrutura de Aço", desc: "Espessura: 18,3mm Altura: 2400mm Largura: 1200mm Peso por painel: 33,7 Kg Rendimento: 2,88 m²", codigo: "53", marca: "LP", url: "https://www.espacosmart.com.br/placa-osb-home-plus-mdi-18-3-x-1200-x-2400mm-2-88m²/p", espessura: "2400mm", comprimento: "2400mm", dimensoes: "L: 1200mm" },
-      { nome: "Viga I de madeira LVL (m)", un: "m", base: 0.50, preco: 65, grupo: "Laje Seca", categoria: "Estrutura de Aço", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-      { nome: "Perfil J (portabandeja) galvanizado", un: "m", base: 1.10, preco: 12, grupo: "Laje Seca", categoria: "Estrutura de Aço", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-      { nome: "Piso laminado 8mm (m²)", un: "m²", base: 1.05, preco: 38, grupo: "Laje Seca", categoria: "Revestimentos", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-      { nome: "Manta acústica subpiso 3mm", un: "m²", base: 1.05, preco: 8.50, grupo: "Laje Seca", categoria: "Revestimentos", codigo: null, marca: null, url: null, espessura: null, comprimento: null, dimensoes: null },
-      { nome: "Parafuso TEX 4,2×38mm (cx 500pç)", un: "cx", base: 0.20, preco: 66.89, grupo: "Laje Seca", categoria: "Fixação", desc: "Modelo: 5,50 X 38,10 Medida: 5,5x38,10 PONTA: Ponta 3 Chave: 5/16 Capacidade perfuração: 2,30-5,30 Revestimento: Zincado Embalagem: Pacote com 100 Unidades Matéria Pirma: SAE 1022", codigo: "9246", marca: "BULLFOR", url: "https://www.espacosmart.com.br/parafuso-light-steel-frame-5-5-x-38mm-sextavado-om-c-arruela-pacote-com-100-unidades/p", espessura: "38mm", comprimento: null, dimensoes: null },
+      { nome: "OSB 18mm — base estrutural (1,22×2,44m)", un: "chp", base: 0.36, preco: 261.17,  grupo: "Laje Seca", categoria: "Estrutura de Aço" },
+      { nome: "Viga I de madeira LVL (m)",              un: "m",   base: 0.50, preco: 82,   grupo: "Laje Seca", categoria: "Estrutura de Aço" },
+      { nome: "Perfil J (portabandeja) galvanizado",    un: "m",   base: 1.10, preco: 16,   grupo: "Laje Seca", categoria: "Estrutura de Aço" },
+      { nome: "Piso laminado 8mm (m²)",                 un: "m²",  base: 1.05, preco: 52,   grupo: "Laje Seca", categoria: "Revestimentos" },
+      { nome: "Manta acústica subpiso 3mm",             un: "m²",  base: 1.05, preco: 12,   grupo: "Laje Seca", categoria: "Revestimentos" },
+      { nome: "Parafuso TEX 4,2×38mm (cx 500pç)",      un: "cx",  base: 0.20, preco: 72,   grupo: "Laje Seca", categoria: "Fixação" },
     ],
   },
 ];
 
-// CATALOGO DE PRODUTOS COMPLETO ESPACO SMART
-
-// CATALOGO DE PRODUTOS COMPLETO ESPACO SMART
+// Catálogo completo Espaço Smart — 236 produtos extraídos Jun/2026
 export const CATALOGO_PRODUTOS = [
   {
     "id": "379",
