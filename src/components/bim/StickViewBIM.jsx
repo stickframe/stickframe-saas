@@ -163,8 +163,10 @@ function get3DColor(id, statusMap, selected) {
 
 // ── Cena Three.js (procedural) ──────────────────────────────────────────────
 async function buildThreeScene(container, onElementClick) {
-  const THREE = (await import("three")).default;
-  const { OrbitControls } = await import("three/addons/controls/OrbitControls.js");
+  const threeModule = await import("three");
+  const THREE = threeModule.default ?? threeModule;
+  const orbitModule = await import("three/addons/controls/OrbitControls.js");
+  const OrbitControls = orbitModule.OrbitControls ?? orbitModule.default?.OrbitControls;
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x0f0e12);
@@ -644,7 +646,10 @@ export default function StickViewBIM({ obraId, user, onAddToOrcamento }) {
         if (canceled) { engine.dispose(); return; }
         engineRef.current = engine;
         setReady(true);
-      }).catch(console.error);
+      }).catch(err => {
+        console.error("StickViewBIM Three.js error:", err);
+        if (!canceled) setReady(true); // show UI even if 3D fails
+      });
     }
 
     // Try immediately, then observe for when container gets painted width
