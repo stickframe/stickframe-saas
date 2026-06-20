@@ -785,13 +785,30 @@ export default function OrcamentoTecnico() {
         </tr></thead>
         <tbody>${sistemasRows}</tbody>
         <tfoot>
+          ${itensAdicionais.length > 0 ? `
+          <tr style="background:#f4f1ec;font-weight:700">
+            <td colspan="4" style="padding:8px 14px;font-size:12px">Itens adicionais</td>
+            <td style="padding:8px 14px;text-align:right;font-size:12px"></td>
+          </tr>
+          ${itensAdicionais.map(it => `
+          <tr style="background:#faf8f5">
+            <td style="padding:6px 14px 6px 22px;font-size:12px">${it.nome || "—"}</td>
+            <td style="padding:6px 10px;text-align:center;font-size:12px;color:#666">${it.unidade || "vb"}</td>
+            <td style="padding:6px 10px;text-align:right;font-size:12px">${it.quantidade || 1}</td>
+            <td style="padding:6px 10px;text-align:right;font-size:12px">${fmtBRL(Number(it.precoUnit || it.preco || 0))}</td>
+            <td style="padding:6px 10px;text-align:right;font-size:12px;font-weight:600">${fmtBRL(Number(it.preco || 0))}</td>
+          </tr>`).join("")}
+          <tr style="background:#e8e4dc;font-weight:700">
+            <td colspan="4" style="padding:8px 14px;font-size:12px">Subtotal itens adicionais</td>
+            <td style="padding:8px 14px;text-align:right;font-size:12px">${fmtBRL(itensAdicionais.reduce((s,it) => s + Number(it.preco||0), 0))}</td>
+          </tr>` : ""}
           <tr style="background:#1a1a2e;color:#fff;font-weight:700">
             <td colspan="4" style="padding:10px 14px">TOTAL GERAL (custo direto)</td>
             <td style="padding:10px 14px;text-align:right">${fmtBRL(r.totalGeral)}</td>
           </tr>
           <tr style="background:#981915;color:#fff;font-weight:700">
-            <td colspan="4" style="padding:10px 14px">PREÇO DE VENDA — BDI ${r.bdi}%</td>
-            <td style="padding:10px 14px;text-align:right">${fmtBRL(r.precoVenda)}</td>
+            <td colspan="4" style="padding:10px 14px">PREÇO DE VENDA — BDI ${r.bdi}%${itensAdicionais.length > 0 ? " + itens adicionais" : ""}</td>
+            <td style="padding:10px 14px;text-align:right">${fmtBRL(r.precoVenda + itensAdicionais.reduce((s,it) => s + Number(it.preco||0), 0))}</td>
           </tr>
         </tfoot>
       </table>
@@ -836,7 +853,9 @@ export default function OrcamentoTecnico() {
     const numProposta  = `${new Date().getFullYear()}/${String(Date.now()).slice(-4).padStart(4,"0")}`;
     const cliente      = formSalvar.cliente || "—";
     const prazo        = r.prazoMeses ? `${r.prazoMeses} meses` : "A definir";
-    const sinal        = r.precoVenda * 0.10;
+    const totalAdicionais = itensAdicionais.reduce((s, it) => s + Number(it.preco || 0), 0);
+    const totalFinal   = r.precoVenda + totalAdicionais;
+    const sinal        = totalFinal * 0.10;
 
     // Escopo — monta linha por sistema habilitado
     const escopoRows = r.breakdown.map((s, i) => `
@@ -850,8 +869,8 @@ export default function OrcamentoTecnico() {
       </tr>`).join("");
 
     // Composição do valor
-    const totalUnid = r.precoVenda;
-    const m2 = r.m2Venda;
+    const totalUnid = totalFinal;
+    const m2 = totalFinal / r.area;
 
     // Condições de pagamento
     const pgtoRows = `
@@ -862,12 +881,12 @@ export default function OrcamentoTecnico() {
       </tr>
       <tr style="border-bottom:1px solid #e5e7eb">
         <td style="padding:12px 14px;font-weight:700;font-size:13px">Saldo</td>
-        <td style="padding:12px 14px;font-weight:700;color:#981915;font-size:13px">${fmtBRL(r.precoVenda - sinal)}</td>
+        <td style="padding:12px 14px;font-weight:700;color:#981915;font-size:13px">${fmtBRL(totalFinal - sinal)}</td>
         <td style="padding:12px 14px;font-size:13px;color:#374151">Conforme medi&ccedil;&otilde;es das etapas de evolu&ccedil;&atilde;o de obra</td>
       </tr>
       <tr style="background:#981915">
         <td style="padding:12px 14px;font-weight:700;color:#fff;font-size:13px">Total do Contrato</td>
-        <td style="padding:12px 14px;font-weight:700;color:#fff;font-size:14px">${fmtBRL(r.precoVenda)}</td>
+        <td style="padding:12px 14px;font-weight:700;color:#fff;font-size:14px">${fmtBRL(totalFinal)}</td>
         <td style="padding:12px 14px;color:#fecaca;font-size:12px">Sinal de ${fmtBRL(sinal)} + saldo conforme medi&ccedil;&otilde;es</td>
       </tr>`;
 
@@ -943,13 +962,24 @@ export default function OrcamentoTecnico() {
             </td>
             <td style="padding:14px;text-align:right;font-size:13px">${r.area}</td>
             <td style="padding:14px;text-align:right;font-size:13px">m&sup2;</td>
-            <td style="padding:14px;text-align:right;font-size:13px">${fmtBRL(m2)}</td>
-            <td style="padding:14px;text-align:right;font-size:14px;font-weight:800;color:#981915">${fmtBRL(totalUnid)}</td>
+            <td style="padding:14px;text-align:right;font-size:13px">${fmtBRL(r.m2Venda)}</td>
+            <td style="padding:14px;text-align:right;font-size:14px;font-weight:800;color:#981915">${fmtBRL(r.precoVenda)}</td>
           </tr>
+          ${itensAdicionais.length > 0 ? itensAdicionais.map(it => `
+          <tr style="border-bottom:1px solid #e5e7eb">
+            <td style="padding:12px 14px;font-size:13px">
+              <div style="font-weight:600">${it.nome || "Item adicional"}</div>
+              ${it.categoria ? `<div style="font-size:11px;color:#6b7280;margin-top:2px">${it.categoria}</div>` : ""}
+            </td>
+            <td style="padding:12px 14px;text-align:right;font-size:13px">${it.quantidade || 1}</td>
+            <td style="padding:12px 14px;text-align:right;font-size:13px">${it.unidade || "vb"}</td>
+            <td style="padding:12px 14px;text-align:right;font-size:13px">${fmtBRL(Number(it.precoUnit || it.preco || 0))}</td>
+            <td style="padding:12px 14px;text-align:right;font-size:14px;font-weight:800;color:#981915">${fmtBRL(Number(it.preco || 0))}</td>
+          </tr>`).join("") : ""}
         </tbody>
       </table>
       <div style="text-align:right;font-size:13px;color:#374151;margin-bottom:32px">
-        <strong>Valor total do contrato: ${fmtBRL(totalUnid)}</strong>
+        <strong>Valor total do contrato: ${fmtBRL(totalFinal)}</strong>
       </div>
 
       <!-- CONDIÇÕES DE PAGAMENTO (página 2) -->
