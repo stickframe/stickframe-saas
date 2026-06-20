@@ -626,14 +626,32 @@ export default function StickViewBIM({ obraId, user, onAddToOrcamento }) {
   useEffect(() => {
     if (!mountRef.current) return;
     let canceled = false;
-    buildThreeScene(mountRef.current, tipo => {
-      if (!canceled) setSelected(prev => prev===tipo?null:tipo);
-    }).then(engine => {
-      if (canceled) { engine.dispose(); return; }
-      engineRef.current = engine;
-      setReady(true);
-    }).catch(console.error);
-    return () => { canceled=true; engineRef.current?.dispose(); engineRef.current=null; };
+
+    function launch() {
+      if (canceled || engineRef.current) return;
+      const { width } = mountRef.current.getBoundingClientRect();
+      if (!width) return; // still zero, observer will retry
+
+      buildThreeScene(mountRef.current, tipo => {
+        if (!canceled) setSelected(prev => prev===tipo?null:tipo);
+      }).then(engine => {
+        if (canceled) { engine.dispose(); return; }
+        engineRef.current = engine;
+        setReady(true);
+      }).catch(console.error);
+    }
+
+    // Try immediately, then observe for when container gets painted width
+    launch();
+    const ro = new ResizeObserver(launch);
+    ro.observe(mountRef.current);
+
+    return () => {
+      canceled = true;
+      ro.disconnect();
+      engineRef.current?.dispose();
+      engineRef.current = null;
+    };
   }, []);
 
   useEffect(() => { if (ready) updateColors(selected, statusMap); }, [selected, statusMap, ready, updateColors]);
