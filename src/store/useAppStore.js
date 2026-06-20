@@ -14,10 +14,18 @@ import { createBimSlice }          from "./slices/bimSlice";
 import { createFornecedoresSlice } from "./slices/fornecedoresSlice";
 import { createGarantiaSlice }     from "./slices/garantiaSlice";
 
-//  ESTADO BASE (loading + loaded + activePage) 
+//  ESTADO BASE (loading + loaded + activePage)
+function getInitialPage() {
+  const hash = window.location.hash.replace("#", "").trim();
+  return hash || "dashboard";
+}
+
 const createBaseSlice = (set) => ({
-  activePage: "dashboard",
-  setActivePage: (page) => set({ activePage: page }),
+  activePage: getInitialPage(),
+  setActivePage: (page) => {
+    window.location.hash = page;
+    set({ activePage: page });
+  },
 
   darkMode: false,
   toggleDarkMode: () => set((s) => ({ darkMode: !s.darkMode })),

@@ -44,6 +44,16 @@ export default function AppLayout({ children }) {
     }
   }, [empresaId, userId]);
 
+  // Sync browser back/forward with activePage
+  useEffect(() => {
+    const onHash = () => {
+      const page = window.location.hash.replace("#", "").trim();
+      if (page) setActivePage(page);
+    };
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, [setActivePage]);
+
   // Pré-carrega clientes para o badge de follow-up do perfil comercial
   useEffect(() => {
     if (perfil === "comercial" && empresaId) loadClientes();
