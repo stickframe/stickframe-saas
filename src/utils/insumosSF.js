@@ -49,7 +49,7 @@ export const SISTEMAS_SF = [
 
   //  1. FUNDAÇÃO 
   {
-    id: "fundacao", label: "Fundação", icon: "", obrigatorio: true,
+    id: "fundacao", label: "Fundação", icon: "", obrigatorio: false,
     mao_obra_cub: 0.05, // calibrado: SP R$1.000/m² total MO / CUB 2340
     opcoes: [
       {
