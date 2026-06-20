@@ -8,6 +8,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { CATALOGO_PRODUTOS } from "../../utils/insumosSF";
 import { fmt } from "../../utils/format";
+import IfcViewer from "./IfcViewer";
 import {
   listarBimElementos,
   upsertBimElemento,
@@ -602,6 +603,7 @@ export default function StickViewBIM({ obraId, user, onAddToOrcamento }) {
   const [added,     setAdded]     = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [ifcLabel,  setIfcLabel]  = useState(null);
+  const [ifcFile,   setIfcFile]   = useState(null); // File object for real IFC render
 
   const { loading, getEl, setStatus, setQtdComprada, applyIFCQtd } = useExecStatus(obraId);
 
@@ -669,9 +671,11 @@ export default function StickViewBIM({ obraId, user, onAddToOrcamento }) {
     const file = e.target.files[0];
     if (!file) return;
     try {
-      const counts = parseIFCText(await file.text());
+      const text = await file.text();
+      const counts = parseIFCText(text);
       await applyIFCQtd(counts);
       setIfcLabel(file.name);
+      setIfcFile(file);
     } catch(err) { console.error("IFC error", err); }
     e.target.value = "";
   }
@@ -715,18 +719,28 @@ export default function StickViewBIM({ obraId, user, onAddToOrcamento }) {
           </button>
         </div>
 
-        {/* Canvas 3D */}
+        {/* Canvas 3D — IFC real quando arquivo carregado, procedural como fallback */}
         <div style={{position:"relative",height:460}}>
-          <div ref={mountRef} style={{width:"100%",height:"100%"}}/>
-          {!ready && (
-            <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",background:"#0f0e12",gap:10}}>
-              <div style={{width:40,height:40,borderRadius:10,background:"rgba(152,25,21,.1)",border:"1px solid rgba(152,25,21,.2)",display:"grid",placeItems:"center"}}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="#981915" strokeWidth="1.8" style={{width:22,height:22}}><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
-              </div>
-              <span style={{fontSize:11.5,color:"rgba(255,255,255,.3)"}}>Carregando modelo 3D…</span>
-            </div>
+          {ifcFile ? (
+            <IfcViewer
+              file={ifcFile}
+              onLoad={(count) => console.log(`IFC loaded: ${count} elements`)}
+              onError={(err) => console.error("IFC viewer error:", err)}
+            />
+          ) : (
+            <>
+              <div ref={mountRef} style={{width:"100%",height:"100%"}}/>
+              {!ready && (
+                <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",background:"#0f0e12",gap:10}}>
+                  <div style={{width:40,height:40,borderRadius:10,background:"rgba(152,25,21,.1)",border:"1px solid rgba(152,25,21,.2)",display:"grid",placeItems:"center"}}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#981915" strokeWidth="1.8" style={{width:22,height:22}}><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                  </div>
+                  <span style={{fontSize:11.5,color:"rgba(255,255,255,.3)"}}>Carregando modelo 3D…</span>
+                </div>
+              )}
+            </>
           )}
-          {ready && !selected && (
+          {ready && !selected && !ifcFile && (
             <div style={{position:"absolute",bottom:12,left:"50%",transform:"translateX(-50%)",background:"rgba(10,9,14,.85)",backdropFilter:"blur(8px)",border:"1px solid rgba(255,255,255,.07)",borderRadius:20,padding:"5px 14px",fontSize:11,color:"rgba(255,255,255,.35)",whiteSpace:"nowrap"}}>
               Clique num elemento • Arraste para rotacionar • Scroll para zoom
             </div>
@@ -736,7 +750,7 @@ export default function StickViewBIM({ obraId, user, onAddToOrcamento }) {
               ✓ Adicionado ao orçamento
             </div>
           )}
-          {selected && currentEl && (
+          {!ifcFile && selected && currentEl && (
             <ElementPanel
               el={currentEl} user={user}
               onClose={() => setSelected(null)}
