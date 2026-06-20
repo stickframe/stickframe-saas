@@ -4,7 +4,7 @@ import { Building2 } from "lucide-react";
 import { sb } from "../services/supabase";
 import { LOGO_STICKFRAME } from "../utils/cdn";
 
-const C = { red: "#981915", border: "#e5e7eb", muted: "#6b7280", success: "#2e9e5b", text: "#1a1a1a", dark: "#f5f5f7" };
+const C = { red: "#981915", border: "#e5e7eb", muted: "#6b7280", success: "#3f7a4b", text: "#1a1a1a", dark: "#f5f5f7" };
 
 export default function PontoColaborador() {
   const { token } = useParams();

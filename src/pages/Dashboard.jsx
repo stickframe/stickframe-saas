@@ -623,9 +623,9 @@ function DashboardDiretor() {
               try {
                 const { error } = await sb.functions.invoke("relatorio-mensal");
                 if (error) throw error;
-                alert("Relatório enviado por email com sucesso!");
+                toastMsg("Relatório enviado por email com sucesso!");
               } catch (e) {
-                alert("Erro ao enviar relatório: " + (e?.message || String(e)));
+                toastMsg("Erro ao enviar relatório: " + (e?.message || String(e)));
               }
             }}
             style={{ display: "inline-flex", alignItems: "center", gap: 7, fontFamily: "inherit", fontWeight: 600, fontSize: 12.5, padding: "9px 15px", borderRadius: 9, cursor: "pointer", border: "none", background: "#981915", color: "#fff" }}

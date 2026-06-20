@@ -46,18 +46,18 @@ function gerarRelatorioDRE({ financeiro, obras, contratos, mesAtual }) {
 
   const f = (v) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
   const linhasDRE = Object.entries(catDesp).sort((a, b) => b[1] - a[1])
-    .map(([cat, val]) => `<tr><td style="padding:6px 10px;border-bottom:1px solid #eee">${cat}</td><td style="padding:6px 10px;border-bottom:1px solid #eee;text-align:right;color:#c0392b">(${f(val)})</td></tr>`)
+    .map(([cat, val]) => `<tr><td style="padding:6px 10px;border-bottom:1px solid #eee">${cat}</td><td style="padding:6px 10px;border-bottom:1px solid #eee;text-align:right;color:#a33327">(${f(val)})</td></tr>`)
     .join("");
 
   const obrasLinhas = obras.map((o) => {
     const fin  = financeiro[o.id] || { lancamentos: [] };
     const rec  = fin.lancamentos.filter((l) => l.tipo === "receita").reduce((s, l) => s + (l.valor || 0), 0);
     const desp = fin.lancamentos.filter((l) => l.tipo === "despesa").reduce((s, l) => s + (l.valor || 0), 0);
-    return `<tr><td style="padding:6px 10px;border-bottom:1px solid #eee">${o.nome?.split("—")[0]?.trim()}</td><td style="padding:6px 10px;border-bottom:1px solid #eee;text-align:right;color:#2e9e5b">${f(rec)}</td><td style="padding:6px 10px;border-bottom:1px solid #eee;text-align:right;color:#c0392b">(${f(desp)})</td><td style="padding:6px 10px;border-bottom:1px solid #eee;text-align:right;font-weight:700;color:${rec-desp>=0?"#2e9e5b":"#c0392b"}">${f(rec-desp)}</td></tr>`;
+    return `<tr><td style="padding:6px 10px;border-bottom:1px solid #eee">${o.nome?.split("—")[0]?.trim()}</td><td style="padding:6px 10px;border-bottom:1px solid #eee;text-align:right;color:#3f7a4b">${f(rec)}</td><td style="padding:6px 10px;border-bottom:1px solid #eee;text-align:right;color:#a33327">(${f(desp)})</td><td style="padding:6px 10px;border-bottom:1px solid #eee;text-align:right;font-weight:700;color:${rec-desp>=0?"#3f7a4b":"#a33327"}">${f(rec-desp)}</td></tr>`;
   }).join("");
 
   const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Relatório Financeiro</title>
-  <style>body{font-family:Arial,sans-serif;padding:40px;color:#1a1a1a}h1{color:#981915;font-size:22px}h2{font-size:15px;margin-top:28px;border-bottom:2px solid #981915;padding-bottom:6px}table{width:100%;border-collapse:collapse;font-size:13px}.total{font-weight:700;background:#f5f5f5}.pos{color:#2e9e5b}.neg{color:#c0392b}@media print{body{padding:20px}}</style>
+  <style>body{font-family:Arial,sans-serif;padding:40px;color:#1a1a1a}h1{color:#981915;font-size:22px}h2{font-size:15px;margin-top:28px;border-bottom:2px solid #981915;padding-bottom:6px}table{width:100%;border-collapse:collapse;font-size:13px}.total{font-weight:700;background:#f5f5f5}.pos{color:#3f7a4b}.neg{color:#a33327}@media print{body{padding:20px}}</style>
   </head><body>
   <h1>Relatório Financeiro — DRE</h1>
   <p style="color:#6b7280;font-size:12px">Gerado em ${new Date().toLocaleDateString("pt-BR")} · Competência: ${mesAtual.slice(5,7)}/${mesAtual.slice(0,4)}</p>
@@ -67,7 +67,7 @@ function gerarRelatorioDRE({ financeiro, obras, contratos, mesAtual }) {
   <tr class="total"><td style="padding:8px 10px;font-weight:800">Resultado do mês</td><td style="padding:8px 10px;text-align:right;font-weight:800" class="${recMes-despMes>=0?"pos":"neg"}">${f(recMes-despMes)}</td></tr></table>
   <h2>DRE Acumulado — Despesas por Categoria</h2>
   <table><tr style="background:#f5f5f5;font-weight:700"><td style="padding:8px 10px">Categoria</td><td style="padding:8px 10px;text-align:right">Valor</td></tr>
-  <tr><td style="padding:6px 10px;border-bottom:1px solid #eee"><strong>Total Receitas</strong></td><td style="padding:6px 10px;border-bottom:1px solid #eee;text-align:right;color:#2e9e5b;font-weight:700">${f(totalRec)}</td></tr>
+  <tr><td style="padding:6px 10px;border-bottom:1px solid #eee"><strong>Total Receitas</strong></td><td style="padding:6px 10px;border-bottom:1px solid #eee;text-align:right;color:#3f7a4b;font-weight:700">${f(totalRec)}</td></tr>
   ${linhasDRE}
   <tr style="background:#f5f5f5;font-weight:800"><td style="padding:8px 10px">Resultado Líquido</td><td style="padding:8px 10px;text-align:right;font-weight:800" class="${saldo>=0?"pos":"neg"}">${f(saldo)}</td></tr></table>
   <h2>Por Obra</h2>

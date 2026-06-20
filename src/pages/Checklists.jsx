@@ -74,12 +74,12 @@ const CHECKLIST_ITEMS = {
 
 const STATUS_ITEM = ["pendente", "ok", "nao_ok"];
 const STATUS_LABEL = { pendente: "Pendente", ok: "OK", nao_ok: "Não OK" };
-const STATUS_COR   = { pendente: C.muted, ok: "#2e9e5b", nao_ok: C.danger };
+const STATUS_COR   = { pendente: C.muted, ok: "#3f7a4b", nao_ok: C.danger };
 const STATUS_BG    = { pendente: C.dark, ok: "#e8f7ef", nao_ok: "#fdecea" };
 
 function ProgressBar({ valor, total }) {
   const pct = total === 0 ? 0 : Math.round((valor / total) * 100);
-  const cor  = pct === 100 ? "#2e9e5b" : pct >= 50 ? "#c88a00" : C.red;
+  const cor  = pct === 100 ? "#3f7a4b" : pct >= 50 ? "#c88a00" : C.red;
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
       <div style={{ flex: 1, height: 6, background: C.darker, borderRadius: 3, overflow: "hidden" }}>
@@ -206,7 +206,7 @@ export default function Checklists() {
             {FASES.map((f) => {
               const p = progressoEtapa(f);
               const ativa = etapa === f;
-              const cor   = p.ok === p.total && p.total > 0 ? "#2e9e5b" : p.ok > 0 ? "#c88a00" : C.muted;
+              const cor   = p.ok === p.total && p.total > 0 ? "#3f7a4b" : p.ok > 0 ? "#c88a00" : C.muted;
               return (
                 <button
                   key={f}

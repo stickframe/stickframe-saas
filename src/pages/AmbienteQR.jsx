@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import { sb } from "../services/supabase";
 import { LOGO_STICKFRAME } from "../utils/cdn";
 
-const C = { red: "#981915", border: "#e5e7eb", muted: "#6b7280", success: "#2e9e5b", text: "#1a1a1a", dark: "#f5f5f7" };
+const C = { red: "#981915", border: "#e5e7eb", muted: "#6b7280", success: "#3f7a4b", text: "#1a1a1a", dark: "#f5f5f7" };
 const CATEGORIAS = ["Hidráulica","Elétrica","Acabamento","Estrutural","Esquadrias","Marcenaria","Pintura","Outro"];
 
 export default function AmbienteQR() {

@@ -541,7 +541,7 @@ export default function Configuracoes() {
             <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4 }}>Empresa · Perfil · Usuários</div>
           </div>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, background: empresa.plano === "pro" ? "#e6f9f0" : "#f0f4ff", border: `1px solid ${empresa.plano === "pro" ? "#2e9e5b" : "#4a7af8"}`, borderRadius: 10, padding: "10px 16px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, background: empresa.plano === "pro" ? "#e6f9f0" : "#f0f4ff", border: `1px solid ${empresa.plano === "pro" ? "#3f7a4b" : "#4a7af8"}`, borderRadius: 10, padding: "10px 16px" }}>
           <div>
             <div style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, color: empresa.plano === "pro" ? "#1a6b40" : "#2c4a9e" }}>
               Plano {empresa.plano === "pro" ? "Pro " : "Free"}
@@ -819,7 +819,7 @@ export default function Configuracoes() {
                       const forca = senhaForm.nova.length >= 8 && /[A-Z]/.test(senhaForm.nova) && /[0-9]/.test(senhaForm.nova) ? 4
                         : senhaForm.nova.length >= 8 ? 3
                         : senhaForm.nova.length >= 6 ? 2 : 1;
-                      const cor = forca >= 4 ? C.success : forca >= 3 ? "#4a9eff" : forca >= 2 ? C.warning : C.danger;
+                      const cor = forca >= 4 ? C.success : forca >= 3 ? "#3b6ea5" : forca >= 2 ? C.warning : C.danger;
                       return <div key={i} style={{ flex: 1, height: 4, borderRadius: 2, background: i <= forca ? cor : C.border, transition: "background .2s" }} />;
                     })}
                   </div>

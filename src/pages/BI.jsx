@@ -507,7 +507,7 @@ export default function BI() {
                 <Legend />
                 <Line
                   type="monotone" dataKey="margem" name="Margem %"
-                  stroke="#2e9e5b" strokeWidth={2} dot={{ r: 4 }}
+                  stroke="#3f7a4b" strokeWidth={2} dot={{ r: 4 }}
                   connectNulls={false}
                 />
               </LineChart>

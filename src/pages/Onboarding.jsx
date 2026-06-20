@@ -253,8 +253,8 @@ export default function Onboarding({ onComplete }) {
         {/*  Step 1: Primeiro cliente  */}
         {step === 1 && (
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            <div style={{ background: "#4a9eff10", border: "1px solid #4a9eff33", borderRadius: 10, padding: "12px 16px", marginBottom: 4 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: "#4a9eff", marginBottom: 2 }}> Primeiro cliente</div>
+            <div style={{ background: "#3b6ea510", border: "1px solid #3b6ea533", borderRadius: 10, padding: "12px 16px", marginBottom: 4 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#3b6ea5", marginBottom: 2 }}> Primeiro cliente</div>
               <div style={{ fontSize: 12, color: C.muted }}>Cadastre o primeiro cliente ou lead para começar a usar o CRM.</div>
             </div>
 

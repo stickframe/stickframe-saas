@@ -12,7 +12,7 @@ const PRIORIDADES = ["Baixa", "Média", "Alta"];
 const COR_PRIO = { Alta: C.danger, Média: C.warning, Baixa: C.success };
 const COR_COLUNA = {
   "A Fazer": C.muted,
-  "Em Andamento": "#4a9eff",
+  "Em Andamento": "#3b6ea5",
   "Impedimento": C.danger,
   "Concluído": C.success,
 };

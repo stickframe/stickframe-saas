@@ -3,8 +3,8 @@ import { gerarAlertas } from "../../services/smartNotifications";
 import useAppStore from "../../store/useAppStore";
 
 const URGENCIA_COLOR = {
-  alta:  { bg: "#fde8e8", text: "#8b1515", border: "#c0392b" },
-  media: { bg: "#fff8e1", text: "#7a5400", border: "#b97a00" },
+  alta:  { bg: "#fde8e8", text: "#8b1515", border: "#a33327" },
+  media: { bg: "#fff8e1", text: "#7a5400", border: "#b07a1e" },
   baixa: { bg: "#f0f4ff", text: "#2c4a9e", border: "#4a7af8" },
 };
 

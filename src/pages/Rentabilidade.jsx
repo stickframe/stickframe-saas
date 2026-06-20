@@ -41,8 +41,8 @@ function ObraCard({ obra, fins }) {
   const margemReal = receita > 0 ? ((lucroReal / receita) * 100) : null;
   const desvioCusto = custoPrev > 0 ? (((custoReal - custoPrev) / custoPrev) * 100) : null;
 
-  const margemCor = margemReal == null ? C.muted : margemReal >= 20 ? "#2e9e5b" : margemReal >= 10 ? "#b07a1e" : "#981915";
-  const desvioCor = desvioCusto == null ? C.muted : desvioCusto <= 0 ? "#2e9e5b" : desvioCusto <= 10 ? "#b07a1e" : "#981915";
+  const margemCor = margemReal == null ? C.muted : margemReal >= 20 ? "#3f7a4b" : margemReal >= 10 ? "#b07a1e" : "#981915";
+  const desvioCor = desvioCusto == null ? C.muted : desvioCusto <= 0 ? "#3f7a4b" : desvioCusto <= 10 ? "#b07a1e" : "#981915";
 
   const score = calcularStickScore(obra, { financeiro: fins });
   const maxVal = Math.max(custoPrev, custoReal, receita, 1);
@@ -70,7 +70,7 @@ function ObraCard({ obra, fins }) {
       {/* Barras comparativas */}
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         {[
-          { label: "Receita Contratada", value: receita, color: "#2e9e5b" },
+          { label: "Receita Contratada", value: receita, color: "#3f7a4b" },
           { label: "Custo Previsto (Orç.)", value: custoPrev, color: "#3b6ea5" },
           { label: "Custo Real", value: custoReal, color: custoReal > custoPrev && custoPrev > 0 ? "#981915" : "#b07a1e" },
         ].map(({ label, value, color }) => (
@@ -176,14 +176,14 @@ export default function Rentabilidade() {
 
       {/* KPIs globais */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12, marginBottom: 24 }}>
-        <KpiCard label="Receita Total" value={fmt(totalReceita)} icon="" color="#2e9e5b" />
+        <KpiCard label="Receita Total" value={fmt(totalReceita)} icon="" color="#3f7a4b" />
         <KpiCard label="Custo Total" value={fmt(totalCusto)} icon="" color={C.text} />
-        <KpiCard label="Lucro Total" value={fmt(totalLucro)} icon="" color={totalLucro >= 0 ? "#2e9e5b" : "#981915"} />
+        <KpiCard label="Lucro Total" value={fmt(totalLucro)} icon="" color={totalLucro >= 0 ? "#3f7a4b" : "#981915"} />
         <KpiCard
           label="Margem Geral"
           value={margemGeral.toFixed(1) + "%"}
           icon=""
-          color={margemGeral >= 20 ? "#2e9e5b" : margemGeral >= 10 ? "#b07a1e" : "#981915"}
+          color={margemGeral >= 20 ? "#3f7a4b" : margemGeral >= 10 ? "#b07a1e" : "#981915"}
           sub={`${obrasComDados.length} obra${obrasComDados.length !== 1 ? "s" : ""}`}
         />
       </div>
@@ -196,7 +196,7 @@ export default function Rentabilidade() {
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {obrasComDados.slice(0, 5).map((o, i) => {
-              const margemCor = o.margem == null ? C.muted : o.margem >= 20 ? "#2e9e5b" : o.margem >= 10 ? "#b07a1e" : "#981915";
+              const margemCor = o.margem == null ? C.muted : o.margem >= 20 ? "#3f7a4b" : o.margem >= 10 ? "#b07a1e" : "#981915";
               return (
                 <div key={o.id} style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   <div style={{

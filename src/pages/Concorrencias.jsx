@@ -249,7 +249,7 @@ export default function Concorrencias() {
                 <Badge status={resultado.concorrencia.status} />
                 {resultado.concorrencia.status === "Aberta" && (
                   <>
-                    <button onClick={() => setAddPartModal(true)} style={{ padding: "6px 12px", background: "#4a9eff22", border: "1px solid #4a9eff44", borderRadius: 7, fontSize: 12, fontWeight: 700, color: "#4a9eff", cursor: "pointer", fontFamily: "inherit" }}>+ Fornecedor</button>
+                    <button onClick={() => setAddPartModal(true)} style={{ padding: "6px 12px", background: "#3b6ea522", border: "1px solid #3b6ea544", borderRadius: 7, fontSize: 12, fontWeight: 700, color: "#3b6ea5", cursor: "pointer", fontFamily: "inherit" }}>+ Fornecedor</button>
                     <button onClick={() => encerrar(resultado.concorrencia)} style={{ padding: "6px 12px", background: C.danger + "15", border: `1px solid ${C.danger}33`, borderRadius: 7, fontSize: 12, fontWeight: 700, color: C.danger, cursor: "pointer", fontFamily: "inherit" }}>Encerrar</button>
                   </>
                 )}
@@ -287,7 +287,7 @@ export default function Concorrencias() {
                         <button onClick={() => { navigator.clipboard?.writeText(link); mostrarToast("Link copiado!"); }} style={{ padding: "5px 10px", background: C.dark, border: `1px solid ${C.border}`, borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}></button>
                         {p.telefone && (
                           <button onClick={() => enviarWhatsApp(p.telefone, `Olá ${p.nome_fornecedor.split(" ")[0]}! Você foi convidado para participar do nosso processo de cotação "${resultado.concorrencia.titulo}". Acesse o link para enviar sua proposta: ${link}`)}
-                            style={{ padding: "5px 10px", background: "#25D36622", border: "1px solid #25D36644", borderRadius: 6, fontSize: 11, fontWeight: 700, color: "#25D366", cursor: "pointer", fontFamily: "inherit" }}> WA</button>
+                            style={{ padding: "5px 10px", background: "#3f7a4b22", border: "1px solid #3f7a4b44", borderRadius: 6, fontSize: 11, fontWeight: 700, color: "#3f7a4b", cursor: "pointer", fontFamily: "inherit" }}> WA</button>
                         )}
                       </div>
                     </div>

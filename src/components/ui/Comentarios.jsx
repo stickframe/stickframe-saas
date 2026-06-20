@@ -7,7 +7,7 @@ import {
   deletarComentario,
 } from "../../services/repositories/comentariosRepository";
 
-const AVATAR_COLORS = ["#981915", "#2e9e5b", "#4a7af8", "#b97a00", "#7c3aed", "#0891b2"];
+const AVATAR_COLORS = ["#981915", "#3f7a4b", "#4a7af8", "#b07a1e", "#7c3aed", "#0891b2"];
 
 function avatarColor(id) {
   if (!id) return AVATAR_COLORS[0];

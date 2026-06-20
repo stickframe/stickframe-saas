@@ -12,8 +12,8 @@ const DISCIPLINAS_BIM = ["Arquitetônico","Estrutural","Hidrossanitário","Elét
 const TIPOS_APT = ["Clash","Inconsistência","Pendência","Melhoria","Outro"];
 const STATUS_APT = ["Aberto","Em andamento","Resolvido","Descartado"];
 const PRIORIDADES = ["Alta","Média","Baixa"];
-const STATUS_COR = { "Aberto": "#c0392b", "Em andamento": "#b97a00", "Resolvido": "#2e9e5b", "Descartado": C.muted };
-const PRIO_COR   = { "Alta": "#c0392b", "Média": "#b97a00", "Baixa": "#2e9e5b" };
+const STATUS_COR = { "Aberto": "#a33327", "Em andamento": "#b07a1e", "Resolvido": "#3f7a4b", "Descartado": C.muted };
+const PRIO_COR   = { "Alta": "#a33327", "Média": "#b07a1e", "Baixa": "#3f7a4b" };
 
 //  Exportar PDF de apontamentos 
 function exportarRelatorioApontamentos(apts, obraNome) {
@@ -63,7 +63,7 @@ function exportarRelatorioApontamentos(apts, obraNome) {
   </div>
   <div class="body">
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px">
-      ${[["Total",total,"#888"],["Abertos",abertos,"#c0392b"],["Em andamento",emAndamento,"#b97a00"],["Resolvidos",resolvidos,"#2e9e5b"]].map(([l,v,c])=>`
+      ${[["Total",total,"#888"],["Abertos",abertos,"#a33327"],["Em andamento",emAndamento,"#b07a1e"],["Resolvidos",resolvidos,"#3f7a4b"]].map(([l,v,c])=>`
         <div style="border:1px solid #e8e8e8;border-top:3px solid ${c};border-radius:8px;padding:12px 16px">
           <div style="font-size:22px;font-weight:800;color:${c}">${v}</div>
           <div style="font-size:10px;color:#888;margin-top:2px;text-transform:uppercase;letter-spacing:.5px">${l}</div>
@@ -200,7 +200,7 @@ function DAEViewer({ url }) {
           {status === "error" && (
             <div style={{ textAlign: "center", padding: 20 }}>
               <div style={{ fontSize: 36, marginBottom: 10 }}></div>
-              <div style={{ fontSize: 13, color: "#c0392b", marginBottom: 6 }}>Erro ao carregar modelo</div>
+              <div style={{ fontSize: 13, color: "#a33327", marginBottom: 6 }}>Erro ao carregar modelo</div>
               <div style={{ fontSize: 11, color: "#888", maxWidth: 300, lineHeight: 1.5 }}>{msg}</div>
             </div>
           )}
@@ -395,7 +395,7 @@ function IFCViewer({ url, onElementClick, highlightElementId }) {
           {status === "error" && (
             <div style={{ textAlign: "center", padding: 20 }}>
               <div style={{ fontSize: 36, marginBottom: 10 }}><AlertTriangle size={14} /></div>
-              <div style={{ fontSize: 13, color: "#c0392b", marginBottom: 6 }}>Erro ao carregar modelo</div>
+              <div style={{ fontSize: 13, color: "#a33327", marginBottom: 6 }}>Erro ao carregar modelo</div>
               <div style={{ fontSize: 11, color: "#888", maxWidth: 300, lineHeight: 1.5 }}>{msg}</div>
             </div>
           )}
@@ -525,14 +525,14 @@ function ModalUpload({ onSave, onClose }) {
                 <div style={{ fontSize: 13, fontWeight: 700 }}>Clique ou arraste o arquivo</div>
                 <div style={{ fontSize: 11, color: C.muted, marginTop: 4 }}>
                   <span style={{ background: "#3b6ea522", color: "var(--steel)", borderRadius: 4, padding: "2px 8px", marginRight: 6 }}>.IFC</span>
-                  <span style={{ background: "#2e9e5b22", color: "#2e9e5b", borderRadius: 4, padding: "2px 8px" }}>.DAE</span>
+                  <span style={{ background: "#3f7a4b22", color: "#3f7a4b", borderRadius: 4, padding: "2px 8px" }}>.DAE</span>
                 </div>
                 <div style={{ fontSize: 10, color: C.muted, marginTop: 6 }}>Tamanho máximo: 100 MB</div>
               </div>
             )}
           </label>
           {isDAE && (
-            <div style={{ background: "#2e9e5b18", border: "1px solid #2e9e5b33", borderRadius: 8, padding: "10px 14px", fontSize: 11, color: "#2e9e5b" }}>
+            <div style={{ background: "#3f7a4b18", border: "1px solid #3f7a4b33", borderRadius: 8, padding: "10px 14px", fontSize: 11, color: "#3f7a4b" }}>
                Collada DAE · Visualização via Three.js — compatível com Blender, SketchUp e Revit exportados
             </div>
           )}
@@ -579,11 +579,11 @@ function Field({ label, children }) {
 //  Kits para o preview 3D 
 const KITS_3D = [
   { id: "studio",    nome: "Studio 42m²",         area: 42,  larg: 7,  comp: 6,  pavs: 1, quartos: 1, cor: "#3b6ea5" },
-  { id: "vila",      nome: "Vila 78m²",            area: 78,  larg: 9,  comp: 8.5,pavs: 1, quartos: 2, cor: "#2e9e5b" },
+  { id: "vila",      nome: "Vila 78m²",            area: 78,  larg: 9,  comp: 8.5,pavs: 1, quartos: 2, cor: "#3f7a4b" },
   { id: "casa120",   nome: "Casa Serena 120m²",    area: 120, larg: 12, comp: 10, pavs: 1, quartos: 3, cor: "#981915" },
   { id: "sobrado",   nome: "Sobrado 160m²",        area: 160, larg: 10, comp: 8,  pavs: 2, quartos: 3, cor: "#8b5cf6" },
   { id: "alto200",   nome: "Residência Alto 200m²",area: 200, larg: 14, comp: 14, pavs: 1, quartos: 4, cor: "#e07020" },
-  { id: "vigo273",   nome: "Casa Vigo 273m²",      area: 273, larg: 16, comp: 17, pavs: 2, quartos: 4, cor: "#c0392b" },
+  { id: "vigo273",   nome: "Casa Vigo 273m²",      area: 273, larg: 16, comp: 17, pavs: 2, quartos: 4, cor: "#a33327" },
 ];
 
 function KitPreview3D() {
@@ -1139,10 +1139,10 @@ export default function BIM() {
                     </div>
                     <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
                       {a.status !== "Resolvido" && (
-                        <button onClick={() => updateBimApontamento(obraId, a.id, { status: "Resolvido" })} style={{ padding: "5px 10px", borderRadius: 5, border: "1px solid #2e9e5b44", background: "#2e9e5b18", color: "#2e9e5b", fontSize: 10, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}> Resolver</button>
+                        <button onClick={() => updateBimApontamento(obraId, a.id, { status: "Resolvido" })} style={{ padding: "5px 10px", borderRadius: 5, border: "1px solid #3f7a4b44", background: "#3f7a4b18", color: "#3f7a4b", fontSize: 10, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}> Resolver</button>
                       )}
                       {a.status !== "Em andamento" && a.status !== "Resolvido" && (
-                        <button onClick={() => updateBimApontamento(obraId, a.id, { status: "Em andamento" })} style={{ padding: "5px 10px", borderRadius: 5, border: "1px solid #b97a0044", background: "#b97a0018", color: "#b97a00", fontSize: 10, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>→ Iniciar</button>
+                        <button onClick={() => updateBimApontamento(obraId, a.id, { status: "Em andamento" })} style={{ padding: "5px 10px", borderRadius: 5, border: "1px solid #b07a1e44", background: "#b07a1e18", color: "#b07a1e", fontSize: 10, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>→ Iniciar</button>
                       )}
                       <button onClick={async () => { await deleteBimApontamento(obraId, a.id); mostrarToast(" Apontamento removido."); }} style={{ padding: "5px 8px", borderRadius: 5, border: `1px solid ${C.danger}44`, background: C.danger + "18", color: C.danger, fontSize: 10, cursor: "pointer", fontFamily: "inherit" }}><Trash2 size={13} /></button>
                     </div>

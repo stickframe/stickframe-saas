@@ -69,7 +69,7 @@ export function ArquivoVersoes({ arquivoId, arquivoNome, obraId, onClose }) {
               {versoes.map((v, i) => (
                 <tr key={v.id} style={{ borderBottom:"1px solid var(--border)", background: i === versoes.length-1 ? "var(--bg-hover)" : "transparent" }}>
                   <td style={{ padding:"8px" }}>
-                    <span style={{ background:"#3b82f6", color:"#fff", borderRadius:4, padding:"2px 8px", fontSize:12, fontWeight:700 }}>{v.revisao || "Rev A"}</span>
+                    <span style={{ background:"#3b6ea5", color:"#fff", borderRadius:4, padding:"2px 8px", fontSize:12, fontWeight:700 }}>{v.revisao || "Rev A"}</span>
                     {i === versoes.length-1 && <span style={{ marginLeft:6, fontSize:11, color:"var(--text-muted)" }}>atual</span>}
                   </td>
                   <td style={{ padding:"8px", fontSize:13 }}>{v.nome}</td>
@@ -78,7 +78,7 @@ export function ArquivoVersoes({ arquivoId, arquivoNome, obraId, onClose }) {
                   <td style={{ padding:"8px", fontSize:13, color:"var(--text-muted)" }}>{v.notas_revisao || "—"}</td>
                   <td style={{ padding:"8px" }}>
                     <a href={downloadUrl(v.storage_path)} target="_blank" rel="noreferrer"
-                      style={{ fontSize:12, color:"#3b82f6" }}> Download</a>
+                      style={{ fontSize:12, color:"#3b6ea5" }}> Download</a>
                   </td>
                 </tr>
               ))}
@@ -98,7 +98,7 @@ export function ArquivoVersoes({ arquivoId, arquivoNome, obraId, onClose }) {
           <button
             onClick={handleUpload}
             disabled={!novoArquivo || uploading}
-            style={{ padding:"8px 20px", background:"#3b82f6", color:"#fff", border:"none", borderRadius:8, cursor:"pointer", opacity: (!novoArquivo || uploading) ? 0.5 : 1 }}
+            style={{ padding:"8px 20px", background:"#3b6ea5", color:"#fff", border:"none", borderRadius:8, cursor:"pointer", opacity: (!novoArquivo || uploading) ? 0.5 : 1 }}
           >
             {uploading ? "Enviando..." : "Publicar nova revisão"}
           </button>

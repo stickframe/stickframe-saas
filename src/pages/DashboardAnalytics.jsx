@@ -302,7 +302,7 @@ export default function DashboardAnalytics() {
                   <div style={{ textAlign: "center", minWidth: 60 }}>
                     <span style={{
                       fontSize: 15, fontWeight: 900,
-                      color: isCritical ? C.danger : "#b97a00",
+                      color: isCritical ? C.danger : "#b07a1e",
                       display: "block",
                     }}>{pct}%</span>
                     <span style={{ fontSize: 10, color: C.muted }}>consumido</span>

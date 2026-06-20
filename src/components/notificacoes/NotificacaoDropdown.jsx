@@ -132,7 +132,7 @@ function useAlertas() {
       if (diffDias < 0)
         alertas.push({ categoria: "prazo", tipo: "erro",   cor: C.danger,  icon: "", titulo: "Obra atrasada",  texto: `${nome} — prazo encerrado há ${Math.abs(diffDias)} dia(s)` });
       else if (diffDias <= 14)
-        alertas.push({ categoria: "prazo", tipo: "erro",   cor: "#c0392b", icon: "", titulo: "Prazo urgente",  texto: `${nome} — vence em ${diffDias} dia(s)` });
+        alertas.push({ categoria: "prazo", tipo: "erro",   cor: "#a33327", icon: "", titulo: "Prazo urgente",  texto: `${nome} — vence em ${diffDias} dia(s)` });
       else if (diffDias <= 45)
         alertas.push({ categoria: "prazo", tipo: "alerta", cor: C.warning, icon: "⏰", titulo: "Prazo próximo",  texto: `${nome} — vence em ${diffDias} dias` });
     });
@@ -144,7 +144,7 @@ function useAlertas() {
       (lista || []).filter((m) => m.status === "Pendente").forEach((m) => {
         const criado  = new Date(m.created_at || m.data || hoje);
         const diasPend = Math.ceil((hoje - criado) / 86400000);
-        alertas.push({ categoria: "medicao", tipo: "alerta", cor: "#4a9eff", icon: "", titulo: "Medição pendente", texto: `${nomeObra} — ${m.descricao || m.fase || "Medição"} (${diasPend > 0 ? `${diasPend}d pendente` : "hoje"})` });
+        alertas.push({ categoria: "medicao", tipo: "alerta", cor: "#3b6ea5", icon: "", titulo: "Medição pendente", texto: `${nomeObra} — ${m.descricao || m.fase || "Medição"} (${diasPend > 0 ? `${diasPend}d pendente` : "hoje"})` });
       });
     });
 
@@ -192,7 +192,7 @@ function useAlertas() {
     // 7. Novos leads da calculadora pública
     preOrcs.forEach((p) => {
       alertas.push({
-        categoria: "lead", tipo: "info", cor: "#25D366", icon: "",
+        categoria: "lead", tipo: "info", cor: "#3f7a4b", icon: "",
         titulo: "Novo lead recebido",
         texto: `${p.nome} preencheu a calculadora — aguardando análise`,
       });
@@ -202,7 +202,7 @@ function useAlertas() {
     orcAceitos.forEach((o) => {
       const quando = o.aceite_data ? new Date(o.aceite_data).toLocaleDateString("pt-BR") : "—";
       alertas.push({
-        categoria: "orcamento", tipo: "sucesso", cor: "#2e9e5b", icon: "",
+        categoria: "orcamento", tipo: "sucesso", cor: "#3f7a4b", icon: "",
         titulo: "Proposta aceita!",
         texto: `${o.cliente} assinou a proposta ${o.ref || ""} em ${quando}`,
       });
@@ -212,7 +212,7 @@ function useAlertas() {
     msgsPendentes.forEach((m) => {
       const obra = obras.find((o) => o.id === m.obra_id);
       alertas.push({
-        categoria: "chat", tipo: "info", cor: "#4a9eff", icon: "",
+        categoria: "chat", tipo: "info", cor: "#3b6ea5", icon: "",
         titulo: "Mensagem do cliente",
         texto: `${m.nome || "Cliente"} — ${obra?.nome?.split("—")[0]?.trim() || "Obra"}: "${m.mensagem?.slice(0, 60)}${m.mensagem?.length > 60 ? "…" : ""}"`,
       });
@@ -412,7 +412,7 @@ export default function NotificacaoDropdown() {
                 }}>
                   {a.label}
                   {a.count > 0 && (
-                    <span style={{ background: a.key === "alertas" ? C.danger : "#4a9eff", color: "#fff", borderRadius: 10, padding: "1px 6px", fontSize: 10, fontWeight: 800 }}>
+                    <span style={{ background: a.key === "alertas" ? C.danger : "#3b6ea5", color: "#fff", borderRadius: 10, padding: "1px 6px", fontSize: 10, fontWeight: 800 }}>
                       {a.count}
                     </span>
                   )}

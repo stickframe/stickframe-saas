@@ -202,7 +202,7 @@ export default function ContratoOnline() {
           {jaAssinado ? (
             <div style={{ textAlign: "center" }}>
               <div style={{ fontSize: 40, marginBottom: 10 }}><CheckCircle size={14} /></div>
-              <div style={{ fontSize: 17, fontWeight: 800, color: "#2e9e5b", marginBottom: 6 }}>Contrato assinado!</div>
+              <div style={{ fontSize: 17, fontWeight: 800, color: "#3f7a4b", marginBottom: 6 }}>Contrato assinado!</div>
               <div style={{ fontSize: 13, color: "#555", marginBottom: 4 }}>
                 Assinatura digital de <strong>{c.assinatura_nome || aceite.nome}</strong>
               </div>
@@ -272,7 +272,7 @@ export default function ContratoOnline() {
             <a
               href={`https://wa.me/55${emp.telefone.replace(/\D/g, "")}?text=Olá! Tenho dúvidas sobre o contrato ${c.ref}`}
               target="_blank" rel="noreferrer"
-              style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#25D366", color: "#fff", borderRadius: 8, padding: "10px 24px", fontSize: 13, fontWeight: 700, textDecoration: "none" }}
+              style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#3f7a4b", color: "#fff", borderRadius: 8, padding: "10px 24px", fontSize: 13, fontWeight: 700, textDecoration: "none" }}
             >
                WhatsApp
             </a>

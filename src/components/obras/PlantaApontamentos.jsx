@@ -10,7 +10,7 @@ import {
 import useAppStore from "../../store/useAppStore";
 
 const COR_STATUS = { Aberto: "#ef4444", "Em andamento": "#f59e0b", Resolvido: "#22c55e" };
-const COR_PRIORIDADE = { Baixa: "#6b7280", Media: "#3b82f6", Alta: "#f97316", Critica: "#ef4444" };
+const COR_PRIORIDADE = { Baixa: "#6b7280", Media: "#3b6ea5", Alta: "#f97316", Critica: "#ef4444" };
 
 function Pin({ numero, x, y, status, prioridade, onClick }) {
   return (
@@ -110,7 +110,7 @@ function ApontamentoModal({ ap, obraId, onClose, onSave }) {
         <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
           <button onClick={onClose} style={{ padding: "8px 16px", borderRadius: 8, border: "1px solid var(--border)", background: "none", cursor: "pointer" }}>Cancelar</button>
           <button onClick={salvar} disabled={saving || !form.titulo.trim()}
-            style={{ padding: "8px 20px", borderRadius: 8, border: "none", background: "#3b82f6", color: "#fff", cursor: "pointer", fontWeight: 700, opacity: saving ? 0.6 : 1 }}>
+            style={{ padding: "8px 20px", borderRadius: 8, border: "none", background: "#3b6ea5", color: "#fff", cursor: "pointer", fontWeight: 700, opacity: saving ? 0.6 : 1 }}>
             {saving ? "Salvando..." : "Salvar"}
           </button>
         </div>
@@ -176,7 +176,7 @@ export function PlantaApontamentos({ arquivo, obraId, onClose }) {
         </div>
         <button
           onClick={() => setModoAdicionar(m => !m)}
-          style={{ padding: "6px 14px", borderRadius: 8, border: "none", background: modoAdicionar ? "#f59e0b" : "#3b82f6", color: "#fff", cursor: "pointer", fontWeight: 700 }}>
+          style={{ padding: "6px 14px", borderRadius: 8, border: "none", background: modoAdicionar ? "#f59e0b" : "#3b6ea5", color: "#fff", cursor: "pointer", fontWeight: 700 }}>
           {modoAdicionar ? " Clique na planta..." : " Adicionar apontamento"}
         </button>
       </div>

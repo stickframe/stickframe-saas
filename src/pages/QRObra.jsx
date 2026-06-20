@@ -7,15 +7,15 @@ import { cachePlanta, getPlantaOffline, getPlantasDaObra } from "../services/off
 
 const C = {
   red: "#981915", border: "#e5e7eb", muted: "#6b7280",
-  success: "#2e9e5b", warning: "#b97a00", text: "#1a1a1a",
+  success: "#3f7a4b", warning: "#b07a1e", text: "#1a1a1a",
   dark: "#f5f5f7", surface: "#ffffff",
 };
 
 const FASE_COR = {
-  "Projeto executivo": "#4a9eff", "Fundação": "#b97a00",
+  "Projeto executivo": "#3b6ea5", "Fundação": "#b07a1e",
   "Estrutura Steel Frame": "#981915", "Fechamentos": "#7c3aed",
   "Instalações": "#0891b2", "Cobertura": "#059669",
-  "Acabamento": "#ea580c", "Entrega": "#2e9e5b",
+  "Acabamento": "#ea580c", "Entrega": "#3f7a4b",
 };
 
 const FUNCOES = ["Montador Steel Frame","Eletricista","Encanador","Pedreiro","Carpinteiro","Pintor","Ajudante","Outro"];
@@ -145,7 +145,7 @@ function AbaProjetos({ arquivos, obraId }) {
     } else {
       const blobUrl = await getPlantaOffline(arquivo.id);
       if (blobUrl) window.open(blobUrl, "_blank");
-      else alert("Esta planta não está disponível offline. Conecte-se uma vez para baixar.");
+      else console.warn("Planta não disponível offline");
     }
   }
 
@@ -191,7 +191,7 @@ function AbaProjetos({ arquivos, obraId }) {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 13, fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.nome}</div>
                     <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>
-                      {a.revisao && <span style={{ background: "#4a9eff18", color: "#4a9eff", borderRadius: 4, padding: "1px 6px", fontWeight: 700, marginRight: 6 }}>{a.revisao}</span>}
+                      {a.revisao && <span style={{ background: "#3b6ea518", color: "#3b6ea5", borderRadius: 4, padding: "1px 6px", fontWeight: 700, marginRight: 6 }}>{a.revisao}</span>}
                       {a.tamanho} · {a.data}
                     </div>
                   </div>
@@ -389,7 +389,7 @@ const FASES = [
 ];
 
 const STATUS_LABEL = { pendente: "Pendente", ok: "OK", nao_ok: "Não OK" };
-const STATUS_COR   = { pendente: C.muted, ok: "#2e9e5b", nao_ok: C.red };
+const STATUS_COR   = { pendente: C.muted, ok: "#3f7a4b", nao_ok: C.red };
 const STATUS_BG    = { pendente: C.dark, ok: "#e8f7ef", nao_ok: "#fdecea" };
 
 function AbaChecklist({ obraId, initialEtapa }) {
@@ -442,7 +442,7 @@ function AbaChecklist({ obraId, initialEtapa }) {
       if (error) throw error;
     } catch (e) {
       console.error(e);
-      alert("Erro ao salvar: " + e.message);
+      console.error("Erro ao salvar:", e.message);
       setItens((prev) => ({ ...prev, [key]: { ...(prev[key] || {}), status: atual } }));
     } finally {
       setSaving(null);

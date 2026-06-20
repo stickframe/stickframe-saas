@@ -19,7 +19,7 @@ import Modal from "../components/ui/Modal";
 
 const ESPECIALIDADES = ["Montador","Ajudante","Fundação","Elétrica","Hidráulica","Acabamento","Projeto","Administração","Outro"];
 const STATUS_OPTS    = ["Ativo","Férias","Afastado","Inativo"];
-const STATUS_COR     = { Ativo: "#2e9e5b", Férias: "#4a9eff", Afastado: "#c88a00", Inativo: C.muted };
+const STATUS_COR     = { Ativo: "#3f7a4b", Férias: "#3b6ea5", Afastado: "#c88a00", Inativo: C.muted };
 const FUNCOES        = ["Montador","Mestre de obra","Pedreiro","Eletricista","Encanador","Pintor","Acabamento","Coordenador","Outro"];
 const UNIDADES       = ["m²","m","un","kg","hr","vb"];
 
@@ -1183,12 +1183,12 @@ export default function Equipe() {
                       <div key={r.id} style={{ marginBottom: 10 }}>
                         <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 4 }}>
                           <span style={{ fontWeight: 600 }}>{r.nome}</span>
-                          <span style={{ fontWeight: 700, color: "#4a9eff" }}>{r.totalHoras.toFixed(1)} h</span>
+                          <span style={{ fontWeight: 700, color: "#3b6ea5" }}>{r.totalHoras.toFixed(1)} h</span>
                         </div>
                         <div style={{ height: 10, borderRadius: 6, background: C.darker, overflow: "hidden" }}>
                           <div style={{
                             height: "100%", borderRadius: 6,
-                            background: "linear-gradient(90deg, #4a9eff, #2563eb)",
+                            background: "linear-gradient(90deg, #3b6ea5, #2563eb)",
                             width: `${(r.totalHoras / maxH) * 100}%`,
                             transition: "width .4s ease",
                           }} />
@@ -1212,7 +1212,7 @@ export default function Equipe() {
                       {relDados.map((r, i) => (
                         <tr key={r.id} style={{ borderTop: i > 0 ? `1px solid ${C.border}` : "none" }}>
                           <td style={{ padding: "12px 16px", fontWeight: 700 }}>{r.nome}</td>
-                          <td style={{ padding: "12px 16px", fontWeight: 800, color: "#4a9eff" }}>{r.totalHoras.toFixed(1)} h</td>
+                          <td style={{ padding: "12px 16px", fontWeight: 800, color: "#3b6ea5" }}>{r.totalHoras.toFixed(1)} h</td>
                           <td style={{ padding: "12px 16px", color: C.muted }}>{r.diasCount}</td>
                           <td style={{ padding: "12px 16px", color: C.muted }}>{r.mediaDiaria.toFixed(1)} h/dia</td>
                           <td style={{ padding: "12px 16px", color: C.muted, fontSize: 12 }}>{r.obrasNomes || "—"}</td>

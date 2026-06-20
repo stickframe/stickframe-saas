@@ -943,8 +943,9 @@ export default function CRM() {
                             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
                               <div style={{ fontSize: 14, fontWeight: 700, paddingRight: 8, flex: 1 }}>{c.nome}</div>
                               {(() => { const s = calcularScore(c); return (
-                                <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 8, background: s.bg, color: s.cor, whiteSpace: "nowrap" }}>
-                                  {s.label}
+                                <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 8, background: s.bg, color: s.cor, whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 4 }}>
+                                  <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 13, lineHeight: 1 }}>{s.score}</span>
+                                  <span>{s.label}</span>
                                 </span>
                               ); })()}
                             </div>
@@ -1082,8 +1083,9 @@ export default function CRM() {
                             <td style={{ padding: "12px 15px", fontSize: 13, fontWeight: 600 }}>{c.valor ? fmt(c.valor) : "—"}</td>
                             <td style={{ padding: "12px 15px" }}>
                               {(() => { const s = calcularScore(c); return (
-                                <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 8px", borderRadius: 10, background: s.bg, color: s.cor }}>
-                                  {s.label}
+                                <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 8px", borderRadius: 10, background: s.bg, color: s.cor, display: "inline-flex", alignItems: "center", gap: 4 }}>
+                                  <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 14, lineHeight: 1 }}>{s.score}</span>
+                                  <span>{s.label}</span>
                                 </span>
                               ); })()}
                             </td>

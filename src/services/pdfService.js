@@ -124,7 +124,7 @@ export function gerarRelatorioFinanceiro(obras, financeiro) {
   const totSaldo = totRec - totDesp;
   const totMarg  = totRec > 0 ? (totSaldo / totRec) * 100 : 0;
   const totCont  = obrasData.reduce((a, o) => a + o.contrato, 0);
-  const cor = (v) => (v >= 0 ? "#2e9e5b" : "#c0392b");
+  const cor = (v) => (v >= 0 ? "#3f7a4b" : "#a33327");
 
   const html = `<html><head><style>${BASE_HEADER}
     .kpi-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:20px;}
@@ -137,8 +137,8 @@ export function gerarRelatorioFinanceiro(obras, financeiro) {
     td.r{text-align:right;font-weight:700;}
     tr:nth-child(even) td{background:#f9f9f9;}
     .total-row td{background:#981915!important;color:#fff;font-weight:800;}
-    .subtotal-row td{background:#2e9e5b!important;color:#fff;font-weight:800;}
-    .subtotal-row.neg td{background:#c0392b!important;}
+    .subtotal-row td{background:#3f7a4b!important;color:#fff;font-weight:800;}
+    .subtotal-row.neg td{background:#a33327!important;}
     .footer{margin-top:32px;padding-top:12px;border-top:1px solid #eee;display:flex;justify-content:space-between;font-size:9px;color:#aaa;}
   </style></head><body>
   ${logoHTML(`RELATÓRIO FINANCEIRO — ${mes.toUpperCase()} ${ano}`, `Emitido em ${data}`)}
@@ -146,7 +146,7 @@ export function gerarRelatorioFinanceiro(obras, financeiro) {
     <h2>Consolidado Geral</h2>
     <div class="kpi-grid">
       <div class="kpi"><div class="kpi-label">Contratos</div><div class="kpi-val">${fmt(totCont)}</div></div>
-      <div class="kpi"><div class="kpi-label">Receitas</div><div class="kpi-val" style="color:#2e9e5b">${fmt(totRec)}</div></div>
+      <div class="kpi"><div class="kpi-label">Receitas</div><div class="kpi-val" style="color:#3f7a4b">${fmt(totRec)}</div></div>
       <div class="kpi"><div class="kpi-label">Despesas</div><div class="kpi-val" style="color:#981915">${fmt(totDesp)}</div></div>
       <div class="kpi"><div class="kpi-label">Saldo</div><div class="kpi-val" style="color:${cor(totSaldo)}">${fmt(totSaldo)}</div></div>
       <div class="kpi"><div class="kpi-label">Margem</div><div class="kpi-val" style="color:${cor(totMarg)}">${totMarg.toFixed(1)}%</div></div>
@@ -159,7 +159,7 @@ export function gerarRelatorioFinanceiro(obras, financeiro) {
     </tr></thead><tbody>
     ${obrasData.map((o) => `<tr>
       <td>${o.nome.split("—")[0].trim()}</td><td style="color:#888">${o.cliente}</td><td style="color:#888">${o.fase}</td>
-      <td class="r" style="color:#2e9e5b">${fmt(o.rec)}</td>
+      <td class="r" style="color:#3f7a4b">${fmt(o.rec)}</td>
       <td class="r" style="color:#981915">${fmt(o.desp)}</td>
       <td class="r" style="color:${cor(o.saldo)}">${fmt(o.saldo)}</td>
       <td class="r" style="color:${cor(o.marg)}">${o.marg.toFixed(1)}%</td>
@@ -322,11 +322,11 @@ export function gerarRelatorioObra(obra, arquivos = [], branding = null) {
     .fase-row{display:flex;align-items:center;gap:12px;padding:7px 0;border-bottom:1px solid #f4f4f4;}
     .fase-row:last-child{border:none;}
     .fase-dot{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;}
-    .fase-dot.done{background:#2e9e5b;color:#fff;}
+    .fase-dot.done{background:#3f7a4b;color:#fff;}
     .fase-dot.current{background:${corPrimaria};color:#fff;}
     .fase-dot.pending{background:#f0f0f0;color:#bbb;}
     .fase-nome{font-size:12px;}
-    .fase-nome.done{color:#2e9e5b;} .fase-nome.current{font-weight:700;color:${corPrimaria};} .fase-nome.pending{color:#bbb;}
+    .fase-nome.done{color:#3f7a4b;} .fase-nome.current{font-weight:700;color:${corPrimaria};} .fase-nome.pending{color:#bbb;}
     .fase-atual-badge{margin-left:auto;background:${corPrimaria};color:#fff;border-radius:10px;padding:2px 10px;font-size:9px;font-weight:700;}
     .arq-row{display:flex;align-items:center;gap:12px;padding:8px 14px;border-bottom:1px solid #f5f5f5;font-size:11px;}
     .footer{margin-top:36px;padding-top:12px;border-top:1px solid #eee;display:flex;justify-content:space-between;font-size:9px;color:#aaa;}
@@ -389,7 +389,7 @@ export function gerarPortalCliente(obra, registros, financeiro) {
     .card{background:#f9f9f9;border:1px solid #eee;border-radius:12px;padding:16px;margin-bottom:12px;}
     .prog-pct{font-size:30px;font-weight:800;color:#981915;}
     .fase-row{display:flex;align-items:center;gap:10px;padding:6px 0;}
-    .fase-dot.done{color:#2e9e5b;} .fase-dot.current{color:#981915;font-weight:700;}
+    .fase-dot.done{color:#3f7a4b;} .fase-dot.current{color:#981915;font-weight:700;}
   </style></head><body>
   <div class="hero">
     <div class="hero-nome">${obra.nome}</div>

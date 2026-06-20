@@ -209,7 +209,7 @@ export default function Sidebar({ open, onClose }) {
             if (n.key === "crm" && followupsVencidos > 0)
               badges.push(<span key="fu" style={{ background: "#981915", color: "#fff", borderRadius: 100, fontSize: 9, fontWeight: 700, padding: "1px 6px" }}>{followupsVencidos}</span>);
             if (n.key === "orcamentos" && preOrcCount > 0)
-              badges.push(<span key="orc" style={{ background: "#2e9e5b", color: "#fff", borderRadius: 100, fontSize: 9, fontWeight: 700, padding: "1px 6px" }}>{preOrcCount}</span>);
+              badges.push(<span key="orc" style={{ background: "#3f7a4b", color: "#fff", borderRadius: 100, fontSize: 9, fontWeight: 700, padding: "1px 6px" }}>{preOrcCount}</span>);
             return (
               <button key={n.key} onClick={() => {
                 if (isLocked) { setUpgradeModal(n.label); return; }

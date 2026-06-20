@@ -86,7 +86,7 @@ export default function IndicePrecos() {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 20 }}>
         {[
           { label: "Total de cotações",    value: todas.length,                                     cor: C.red    },
-          { label: "Com valor registrado",  value: todas.filter((c) => c.valor).length,             cor: "#4a9eff" },
+          { label: "Com valor registrado",  value: todas.filter((c) => c.valor).length,             cor: "#3b6ea5" },
           { label: "Aprovadas",            value: todas.filter((c) => c.status === "Aprovada").length, cor: C.success },
         ].map((k) => (
           <div key={k.label} style={{ background: "#fff", border: `1px solid ${C.border}`, borderRadius: 10, padding: "16px 18px" }}>

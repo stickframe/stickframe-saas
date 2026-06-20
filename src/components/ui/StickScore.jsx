@@ -69,7 +69,7 @@ function HistoryChart({ historico, cor }) {
 function InsightsPanel({ insights }) {
   if (!insights || insights.length === 0) return null;
   const style = {
-    positivo: { bg: "#2e9e5b20", border: "#2e9e5b40", color: "#6ee7b7", icon: "↑" },
+    positivo: { bg: "#3f7a4b20", border: "#3f7a4b40", color: "#6ee7b7", icon: "↑" },
     negativo:  { bg: "#98191520", border: "#98191540", color: "#fca5a5", icon: "↓" },
     alerta:    { bg: "#b07a1e20", border: "#b07a1e40", color: "#fcd34d", icon: "" },
     dica:      { bg: "#3b6ea520", border: "#3b6ea540", color: "#93c5fd", icon: "" },
@@ -230,7 +230,7 @@ export function StickScoreCard({ score, obra }) {
         {STICK_SCORE_DIMENSOES.map(({ key, label, peso }) => {
           const val = scores[key] ?? 0;
           const barCor =
-            val >= 90 ? "#2e9e5b" :
+            val >= 90 ? "#3f7a4b" :
             val >= 75 ? "#3b6ea5" :
             val >= 60 ? "#b07a1e" : "#981915";
           return (
@@ -449,7 +449,7 @@ function calcularStickScoreLocal(obra, fins) {
 
 function classGlobal(total) {
   if (total >= 90) return { nivel: "Elite",     cor: "#059669" };
-  if (total >= 80) return { nivel: "Excelente", cor: "#2e9e5b" };
+  if (total >= 80) return { nivel: "Excelente", cor: "#3f7a4b" };
   if (total >= 70) return { nivel: "Bom",       cor: "#3b6ea5" };
   if (total >= 60) return { nivel: "Atenção",   cor: "#b07a1e" };
   return             { nivel: "Crítico",         cor: "#981915" };
@@ -563,7 +563,7 @@ export function StickScoreExecutivoCard({ score }) {
           const val = scores[key] ?? 0;
           const barCor =
             val >= 85 ? "#059669" :
-            val >= 70 ? "#2e9e5b" :
+            val >= 70 ? "#3f7a4b" :
             val >= 55 ? "#3b6ea5" :
             val >= 40 ? "#b07a1e" : "#981915";
           return (
@@ -592,7 +592,7 @@ export function StickScoreExecutivoCard({ score }) {
         <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 6 }}>
           {autoInsights.map((ins, i) => {
             const styleMap = {
-              positivo: { bg: "#2e9e5b18", border: "#2e9e5b35", color: "#6ee7b7", icon: "↑" },
+              positivo: { bg: "#3f7a4b18", border: "#3f7a4b35", color: "#6ee7b7", icon: "↑" },
               alerta:   { bg: "#b07a1e18", border: "#b07a1e35", color: "#fcd34d", icon: "" },
               dica:     { bg: "#3b6ea518", border: "#3b6ea535", color: "#93c5fd", icon: "" },
             };

@@ -10,9 +10,9 @@ import { enviarWhatsApp } from "../services/whatsappService";
 const FUNIL = ["Lead", "Em negociação", "Proposta enviada", "Fechado"];
 const FUNIL_COR = {
   "Lead":             "#6b7280",
-  "Em negociação":    "#4a9eff",
-  "Proposta enviada": "#b97a00",
-  "Fechado":          "#2e9e5b",
+  "Em negociação":    "#3b6ea5",
+  "Proposta enviada": "#b07a1e",
+  "Fechado":          "#3f7a4b",
 };
 
 function KpiCard({ label, value, sub, accent, icon }) {
@@ -166,7 +166,7 @@ export default function DashboardComercial() {
       {/* KPIs */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 12, marginBottom: 24 }}>
         <KpiCard label="Meu pipeline"   value={fmt(valorPipeline)} sub={`${pipeline.length} leads ativos`}           accent={C.red}     icon="" />
-        <KpiCard label="Leads totais"   value={String(clientes.length)} sub={`${clientes.filter(c => c.status === "Fechado").length} fechados`} accent="#4a9eff" icon="" />
+        <KpiCard label="Leads totais"   value={String(clientes.length)} sub={`${clientes.filter(c => c.status === "Fechado").length} fechados`} accent="#3b6ea5" icon="" />
         <KpiCard label="Tx. conversão"  value={`${taxaConv}%`}          sub="leads → fechados"                         accent={C.success}  icon="%" />
         <KpiCard label="Orçamentos"     value={String(orcamentos.filter(o => o.status !== "Recusado").length)} sub="em aberto" accent={C.warning} icon="" />
       </div>
@@ -272,8 +272,8 @@ export default function DashboardComercial() {
                       <button
                         onClick={() => enviarWhatsApp(c.contato, `Olá ${c.nome.split(" ")[0]}! Tudo bem?`)}
                         style={{
-                          padding: "5px 10px", background: "#25D36622", border: "1px solid #25D36644",
-                          borderRadius: 6, color: "#25D366", fontSize: 11, fontWeight: 700,
+                          padding: "5px 10px", background: "#3f7a4b22", border: "1px solid #3f7a4b44",
+                          borderRadius: 6, color: "#3f7a4b", fontSize: 11, fontWeight: 700,
                           cursor: "pointer", fontFamily: "inherit",
                         }}
                       ></button>

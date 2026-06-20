@@ -89,7 +89,7 @@ export default function AppLayout({ children }) {
                 onClick={() => setActivePage("obras")}
                 title="Ir para Gestão de Obras"
               >
-                <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#2e9e5b", flexShrink: 0, boxShadow: "0 0 6px #2e9e5b" }} />
+                <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#3f7a4b", flexShrink: 0, boxShadow: "0 0 6px #3f7a4b" }} />
                 <div style={{ minWidth: 0 }}>
                   <div style={{ fontSize: 12, fontWeight: 700, color: C.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 180 }}>
                     {obraAtiva.nome}

@@ -296,7 +296,7 @@ export function gerarRelatorioStickScore(obra, score, historico = []) {
   // Barras das dimensões
   const dimBars = STICK_SCORE_DIMENSOES.map(({ key, label, peso }) => {
     const val = scores[key] ?? 0;
-    const barCor = val >= 85 ? "#059669" : val >= 70 ? "#2e9e5b" : val >= 55 ? "#3b6ea5" : val >= 40 ? "#b07a1e" : "#981915";
+    const barCor = val >= 85 ? "#059669" : val >= 70 ? "#3f7a4b" : val >= 55 ? "#3b6ea5" : val >= 40 ? "#b07a1e" : "#981915";
     return `
       <div style="margin-bottom:12px">
         <div style="display:flex;justify-content:space-between;margin-bottom:5px">
@@ -312,7 +312,7 @@ export function gerarRelatorioStickScore(obra, score, historico = []) {
   // Insights automáticos
   const insights = gerarInsights(score, historico);
   const insightStyle = {
-    positivo: { bg: "#2e9e5b20", border: "#2e9e5b40", color: "#6ee7b7", icon: "↑" },
+    positivo: { bg: "#3f7a4b20", border: "#3f7a4b40", color: "#6ee7b7", icon: "↑" },
     negativo: { bg: "#98191520", border: "#98191540", color: "#fca5a5", icon: "↓" },
     alerta:   { bg: "#b07a1e20", border: "#b07a1e40", color: "#fcd34d", icon: "" },
     dica:     { bg: "#3b6ea520", border: "#3b6ea540", color: "#93c5fd", icon: "" },

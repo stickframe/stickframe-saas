@@ -11,7 +11,7 @@ import {
 } from "../../services/repositories/perfisRepository";
 import useAppStore from "../../store/useAppStore";
 
-const CORES_PRESET = ["#6b7280", "#981915", "#2e9e5b", "#4a9eff", "#c88a00", "#8b5cf6"];
+const CORES_PRESET = ["#6b7280", "#981915", "#3f7a4b", "#3b6ea5", "#c88a00", "#8b5cf6"];
 
 const FORM_VAZIO = { nome: "", cor: "#6b7280", paginas: [] };
 

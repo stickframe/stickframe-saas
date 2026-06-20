@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { listarNCRs, criarNCR, atualizarNCR, fecharNCR } from "../../services/repositories/naoConformidadeRepository";
 import { C } from "../../utils/constants";
 
-const COR_G = { Baixa: C.muted, Media: "#4a9eff", Alta: "#e67e22", Critica: C.danger };
-const COR_S = { Aberta: C.danger, "Em análise": C.warning, "Em correção": "#e67e22", Verificando: "#4a9eff", Fechada: C.success };
+const COR_G = { Baixa: C.muted, Media: "#3b6ea5", Alta: "#e67e22", Critica: C.danger };
+const COR_S = { Aberta: C.danger, "Em análise": C.warning, "Em correção": "#e67e22", Verificando: "#3b6ea5", Fechada: C.success };
 const DISCIPLINAS = ["Civil", "Elétrico", "Hidráulico", "Estrutural", "Acabamento", "Outro"];
 const SUGESTOES_NCR = [
   // Estrutura / perfis

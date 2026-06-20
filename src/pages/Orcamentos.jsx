@@ -21,9 +21,9 @@ import FormAiMemorial from "../components/ui/FormAiMemorial";
 const STATUS_OPTS = ["Aguardando resposta", "Em revisão", "Aprovado", "Recusado"];
 const STATUS_COR  = {
   "Aguardando resposta": "#c88a00",
-  "Em revisão":          "#4a9eff",
-  "Aprovado":            "#2e9e5b",
-  "Recusado":            "#c0392b",
+  "Em revisão":          "#3b6ea5",
+  "Aprovado":            "#3f7a4b",
+  "Recusado":            "#a33327",
 };
 const statusColor = (s) => STATUS_COR[s] || C.muted;
 
@@ -1353,7 +1353,7 @@ export default function Orcamentos() {
               </div>
             )}
 
-            <div style={{ background: "#4a9eff11", border: "1px solid #4a9eff33", borderRadius: 8, padding: "10px 14px", fontSize: 12, color: "#4a9eff" }}>
+            <div style={{ background: "#3b6ea511", border: "1px solid #3b6ea533", borderRadius: 8, padding: "10px 14px", fontSize: 12, color: "#3b6ea5" }}>
                O valor do contrato ({fmt(converterOrc.valor)}) será preenchido automaticamente no financeiro da obra.
             </div>
 
@@ -1398,10 +1398,10 @@ export default function Orcamentos() {
 
         {/* Pré-orçamentos da calculadora */}
         {preOrcamentos.length > 0 && (
-          <div style={{ background: "#2e9e5b11", border: "1px solid #2e9e5b44", borderRadius: 12, padding: "16px 20px", marginBottom: 20 }}>
+          <div style={{ background: "#3f7a4b11", border: "1px solid #3f7a4b44", borderRadius: 12, padding: "16px 20px", marginBottom: 20 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
               <div>
-                <div style={{ fontSize: 14, fontWeight: 800, color: "#2e9e5b" }}><Bell size={13} /> {preOrcamentos.length} pré-orçamento(s) novo(s)</div>
+                <div style={{ fontSize: 14, fontWeight: 800, color: "#3f7a4b" }}><Bell size={13} /> {preOrcamentos.length} pré-orçamento(s) novo(s)</div>
                 <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>Leads da calculadora aguardando sua análise</div>
               </div>
             </div>
@@ -1424,7 +1424,7 @@ export default function Orcamentos() {
                     <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>
                       {p.area}m² · {p.padrao} · {p.pavimentos || "—"} · {p.cidade || "—"}
                     </div>
-                    <div style={{ fontSize: 11, color: "#2e9e5b", marginTop: 2, fontWeight: 700 }}>
+                    <div style={{ fontSize: 11, color: "#3f7a4b", marginTop: 2, fontWeight: 700 }}>
                       R$ {Number(p.valor_min).toLocaleString("pt-BR")} – R$ {Number(p.valor_max).toLocaleString("pt-BR")}
                     </div>
                     <div style={{ fontSize: 10, color: C.muted, marginTop: 2 }}>
@@ -1458,7 +1458,7 @@ export default function Orcamentos() {
                       });
                       setPreOrcAtivo(p.id);
                       setModal("novo");
-                    }} style={{ background: "#2e9e5b22", border: "1px solid #2e9e5b44", borderRadius: 6, color: "#2e9e5b", fontSize: 11, fontWeight: 700, padding: "6px 12px", cursor: "pointer", fontFamily: "inherit" }}>
+                    }} style={{ background: "#3f7a4b22", border: "1px solid #3f7a4b44", borderRadius: 6, color: "#3f7a4b", fontSize: 11, fontWeight: 700, padding: "6px 12px", cursor: "pointer", fontFamily: "inherit" }}>
                        Criar Orçamento
                     </button>
                     <div style={{ display: "flex", gap: 6 }}>
@@ -1472,7 +1472,7 @@ export default function Orcamentos() {
                         const num = (p.contato || "").replace(/\D/g, "");
                         const msg = `Olá ${p.nome}! \n\nRecebi sua simulação de Steel Frame${kitNome ? ` — ${kitNome}` : ` (${p.area}m² · ${p.padrao})`}.\n\nVou preparar uma proposta detalhada para você. Posso entrar em contato agora?\n\nStick Frame · Santo André/SP`;
                         window.open(`https://wa.me/${num.startsWith("55") ? num : "55" + num}?text=${encodeURIComponent(msg)}`, "_blank");
-                      }} style={{ background: "#25D36622", border: "1px solid #25D36644", borderRadius: 6, color: "#25D366", fontSize: 11, fontWeight: 700, padding: "5px 10px", cursor: "pointer", fontFamily: "inherit", flex: 1 }}>
+                      }} style={{ background: "#3f7a4b22", border: "1px solid #3f7a4b44", borderRadius: 6, color: "#3f7a4b", fontSize: 11, fontWeight: 700, padding: "5px 10px", cursor: "pointer", fontFamily: "inherit", flex: 1 }}>
                         <Smartphone size={13} />
                       </button>
                     </div>
@@ -1792,14 +1792,14 @@ export default function Orcamentos() {
                     <td style={{ padding: "10px 12px", fontWeight: 600, color: C.muted, fontSize: 12 }}>{label}</td>
                     <td style={{
                       padding: "10px 12px", fontWeight: highlight === "a" ? 800 : 400,
-                      color: highlight === "a" ? "#2e9e5b" : undefined,
-                      background: highlight === "a" ? "#2e9e5b0a" : "#2563eb06",
-                    }}>{vA}{highlight === "a" && <span style={{ marginLeft: 6, fontSize: 11, color: "#2e9e5b" }}></span>}</td>
+                      color: highlight === "a" ? "#3f7a4b" : undefined,
+                      background: highlight === "a" ? "#3f7a4b0a" : "#2563eb06",
+                    }}>{vA}{highlight === "a" && <span style={{ marginLeft: 6, fontSize: 11, color: "#3f7a4b" }}></span>}</td>
                     <td style={{
                       padding: "10px 12px", fontWeight: highlight === "b" ? 800 : 400,
-                      color: highlight === "b" ? "#2e9e5b" : undefined,
-                      background: highlight === "b" ? "#2e9e5b0a" : "#7c3aed06",
-                    }}>{vB}{highlight === "b" && <span style={{ marginLeft: 6, fontSize: 11, color: "#2e9e5b" }}></span>}</td>
+                      color: highlight === "b" ? "#3f7a4b" : undefined,
+                      background: highlight === "b" ? "#3f7a4b0a" : "#7c3aed06",
+                    }}>{vB}{highlight === "b" && <span style={{ marginLeft: 6, fontSize: 11, color: "#3f7a4b" }}></span>}</td>
                   </tr>
                 ))}
               </tbody>

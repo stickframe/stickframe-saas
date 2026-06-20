@@ -6,21 +6,21 @@ import { useModuleLoad } from "../hooks/useModuleLoad";
 import { limparHistorico } from "../services/repositories/historicoRepository";
 
 const TIPO_CONFIG = {
-  cliente:    { cor: "#2e9e5b", icone: "", label: "Cliente"    },
+  cliente:    { cor: "#3f7a4b", icone: "", label: "Cliente"    },
   orcamento:  { cor: "#981915", icone: "", label: "Orçamento"  },
   contrato:   { cor: "#c88a00", icone: "", label: "Contrato"   },
-  financeiro: { cor: "#4a9eff", icone: "", label: "Financeiro" },
+  financeiro: { cor: "#3b6ea5", icone: "", label: "Financeiro" },
   obra:       { cor: "#414141", icone: "", label: "Obra"       },
 };
 
 const ACAO_CONFIG = {
-  criado:   { cor: "#2e9e5b", label: "Criado"   },
+  criado:   { cor: "#3f7a4b", label: "Criado"   },
   editado:  { cor: "#c88a00", label: "Editado"  },
-  deletado: { cor: "#c0392b", label: "Deletado" },
-  receita:  { cor: "#2e9e5b", label: "Receita"  },
+  deletado: { cor: "#a33327", label: "Deletado" },
+  receita:  { cor: "#3f7a4b", label: "Receita"  },
   despesa:  { cor: "#981915", label: "Despesa"  },
-  fase:     { cor: "#4a9eff", label: "Fase"     },
-  aprovado: { cor: "#2e9e5b", label: "Aprovado" },
+  fase:     { cor: "#3b6ea5", label: "Fase"     },
+  aprovado: { cor: "#3f7a4b", label: "Aprovado" },
 };
 
 // Tipos visíveis por perfil — diretor vê tudo
@@ -140,9 +140,9 @@ export default function Historico() {
                 {h.detalhes?.campos?.map((c, j) => (
                   <div key={j} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 11, marginTop: 4 }}>
                     <span style={{ color: C.muted, minWidth: 90 }}>{c.campo}</span>
-                    <span style={{ background: "#f5e6e6", color: "#c0392b", borderRadius: 4, padding: "1px 8px", fontFamily: "monospace", maxWidth: 150, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.de}</span>
+                    <span style={{ background: "#f5e6e6", color: "#a33327", borderRadius: 4, padding: "1px 8px", fontFamily: "monospace", maxWidth: 150, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.de}</span>
                     <span style={{ color: C.muted }}>→</span>
-                    <span style={{ background: "#e6f5ec", color: "#2e9e5b", borderRadius: 4, padding: "1px 8px", fontFamily: "monospace", maxWidth: 150, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.para}</span>
+                    <span style={{ background: "#e6f5ec", color: "#3f7a4b", borderRadius: 4, padding: "1px 8px", fontFamily: "monospace", maxWidth: 150, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.para}</span>
                   </div>
                 ))}
               </div>

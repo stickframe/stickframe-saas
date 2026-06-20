@@ -170,7 +170,7 @@ export function PdfViewer({ arquivo, obraId, onClose }) {
         <span style={{ color: "#fff", fontWeight: 700, marginRight: 8 }}>{arquivo.nome}</span>
         {TOOLS.map(t => (
           <button key={t.id} onClick={() => { setTool(t.id); if (["rect","circle","text","arrow"].includes(t.id)) setTimeout(addShape, 100); }}
-            style={{ padding: "4px 10px", borderRadius: 6, border: "none", cursor: "pointer", background: tool === t.id ? "#3b82f6" : "#374151", color: "#fff", fontSize: 12 }}>
+            style={{ padding: "4px 10px", borderRadius: 6, border: "none", cursor: "pointer", background: tool === t.id ? "#3b6ea5" : "#374151", color: "#fff", fontSize: 12 }}>
             {t.label}
           </button>
         ))}

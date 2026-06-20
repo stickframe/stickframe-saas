@@ -55,7 +55,7 @@ export async function emailMedicaoAprovada({ obraEmail, obraNome, numMedicao, va
     html: templateBase(
       `Medição ${numMedicao} aprovada`,
       `<p style="color:#444;line-height:1.6;">A <strong>Medição ${numMedicao}</strong> da obra <strong>${obraNome}</strong> foi aprovada.</p>
-       ${valorFmt ? `<div style="background:#f0fff4;border:1px solid #2e9e5b;border-radius:8px;padding:16px;margin:16px 0;"><div style="font-size:12px;color:#2e9e5b;margin-bottom:4px;">VALOR APROVADO</div><div style="font-size:22px;font-weight:800;color:#2e9e5b;">${valorFmt}</div></div>` : ""}
+       ${valorFmt ? `<div style="background:#f0fff4;border:1px solid #3f7a4b;border-radius:8px;padding:16px;margin:16px 0;"><div style="font-size:12px;color:#3f7a4b;margin-bottom:4px;">VALOR APROVADO</div><div style="font-size:22px;font-weight:800;color:#3f7a4b;">${valorFmt}</div></div>` : ""}
        <p style="color:#444;line-height:1.6;">Entre em contato conosco para mais informações.</p>`
     ),
   });
@@ -126,13 +126,13 @@ export async function emailAlertaInadimplencia({ email, lancamentos }) {
     `<tr>
       <td>${l.descricao || "—"}</td>
       <td>${l.data_vencimento ? new Date(l.data_vencimento + "T00:00").toLocaleDateString("pt-BR") : "—"}</td>
-      <td style="color:#c0392b;font-weight:700">R$ ${Number(l.valor).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</td>
+      <td style="color:#a33327;font-weight:700">R$ ${Number(l.valor).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</td>
       <td>${l.obra || "—"}</td>
     </tr>`
   ).join("");
 
   const corpo = `
-    <p style="font-size:15px;margin-bottom:20px">Os seguintes lançamentos estão <strong style="color:#c0392b">vencidos e em aberto</strong>:</p>
+    <p style="font-size:15px;margin-bottom:20px">Os seguintes lançamentos estão <strong style="color:#a33327">vencidos e em aberto</strong>:</p>
     <table style="width:100%;border-collapse:collapse;font-size:13px">
       <thead><tr style="background:#f5f5f5">
         <th style="padding:8px;text-align:left">Descrição</th>

@@ -5,7 +5,7 @@ import { LOGO_STICKFRAME } from "../utils/cdn";
 
 const ST = {
   bg: "#f8f8f8", card: "#fff", red: "#981915", border: "#e5e7eb",
-  muted: "#888", success: "#2e9e5b", text: "#1a1a1a",
+  muted: "#888", success: "#3f7a4b", text: "#1a1a1a",
 };
 
 export default function ConcorrenciaPublica() {
@@ -42,7 +42,7 @@ export default function ConcorrenciaPublica() {
       observacao: precos[it.id]?.obs || null,
     }));
     const { error } = await sb.rpc("concorrencia_enviar_proposta", { p_token: token, p_propostas: payload });
-    if (error) { alert("Erro ao enviar: " + error.message); setEnviando(false); return; }
+    if (error) { setErro("Erro ao enviar: " + error.message); setEnviando(false); return; }
     setEnviado(true);
     setEnviando(false);
   }
@@ -87,7 +87,7 @@ export default function ConcorrenciaPublica() {
           {concorrencia.descricao && <div style={{ fontSize: 13, color: ST.muted, marginBottom: 10, lineHeight: 1.6 }}>{concorrencia.descricao}</div>}
           <div style={{ display: "flex", gap: 20, fontSize: 12, color: ST.muted }}>
             <span> {participante.nome_fornecedor}</span>
-            {prazo && <span> Prazo: <strong style={{ color: new Date() > prazo ? "#c0392b" : ST.text }}>{prazo.toLocaleDateString("pt-BR")}</strong></span>}
+            {prazo && <span> Prazo: <strong style={{ color: new Date() > prazo ? "#a33327" : ST.text }}>{prazo.toLocaleDateString("pt-BR")}</strong></span>}
             <span style={{ marginLeft: "auto", fontSize: 11, fontWeight: 700, padding: "2px 10px", borderRadius: 10, background: encerrada ? "#eee" : ST.success + "22", color: encerrada ? ST.muted : ST.success }}>{concorrencia.status}</span>
           </div>
         </div>

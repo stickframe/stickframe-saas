@@ -130,7 +130,7 @@ function aplicarPenalidades(scores) {
 
 function classificar(total) {
   if (total >= 90) return { nivel: "Elite",     cor: "#059669" };
-  if (total >= 80) return { nivel: "Excelente", cor: "#2e9e5b" };
+  if (total >= 80) return { nivel: "Excelente", cor: "#3f7a4b" };
   if (total >= 70) return { nivel: "Bom",       cor: "#3b6ea5" };
   if (total >= 60) return { nivel: "Atenção",   cor: "#b07a1e" };
   return             { nivel: "Crítico",         cor: "#981915" };

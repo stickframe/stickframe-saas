@@ -8,7 +8,7 @@ const COR_STATUS = {
   "Fechado": "#6b7280",
 };
 const COR_URGENCIA = {
-  "Normal": "#3b82f6",
+  "Normal": "#3b6ea5",
   "Alta": "#f97316",
   "Crítica": "#ef4444",
 };
@@ -154,7 +154,7 @@ export default function RFIs({ obraId, userPerfil }) {
                 <div style={{ marginLeft: "auto", display: "flex", gap: 6 }}>
                   {podeResponder && r.status !== "Fechado" && r.status !== "Respondido" && (
                     <button onClick={() => { setResponderModal(r); setResposta(""); }}
-                      style={{ fontSize: 11, padding: "2px 10px", background: "#3b82f6", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer" }}>
+                      style={{ fontSize: 11, padding: "2px 10px", background: "#3b6ea5", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer" }}>
                        Responder
                     </button>
                   )}

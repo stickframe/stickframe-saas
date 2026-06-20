@@ -65,10 +65,10 @@ function CadastrosChart({ empresas }) {
           <g key={d.key}>
             <rect
               x={i * bw + 2} y={H - h} width={bw - 4} height={Math.max(h, 2)}
-              rx={2} fill={d.count > 0 ? "#2e9e5b" : C.border}
+              rx={2} fill={d.count > 0 ? "#3f7a4b" : C.border}
             />
             {d.count > 0 && (
-              <text x={i * bw + bw / 2} y={H - h - 5} textAnchor="middle" fontSize="9" fill="#2e9e5b" fontWeight="700">{d.count}</text>
+              <text x={i * bw + bw / 2} y={H - h - 5} textAnchor="middle" fontSize="9" fill="#3f7a4b" fontWeight="700">{d.count}</text>
             )}
             {i % 5 === 0 && (
               <text x={i * bw + bw / 2} y={H + 13} textAnchor="middle" fontSize="8" fill={C.muted}>{d.label}</text>
@@ -133,7 +133,7 @@ export default function Admin() {
   const { empresas = [], totals = {}, crescimento = {}, funil = {}, origens = {}, asaas = null, proStats = {} } = data || {};
 
   const ESTADO_BADGE = {
-    pago:         { label: "Paga ",        bg: "#2e9e5b18", color: "#2e9e5b" },
+    pago:         { label: "Paga ",        bg: "#3f7a4b18", color: "#3f7a4b" },
     trial:        { label: "Trial ⏳",       bg: "#f59e0b18", color: "#b45309" },
     inadimplente: { label: "Vencida ",     bg: "#dc262618", color: "#dc2626" },
     aguardando:   { label: "Aguardando",     bg: "#3b6ea518", color: "#3b6ea5" },
@@ -176,7 +176,7 @@ export default function Admin() {
 
       {/* Topo CEO */}
       <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginBottom: 8 }}>
-        <StatCard big accent="#2e9e5b" label="MRR" value={fmtBRL(asaas?.mrr)} color="#2e9e5b" />
+        <StatCard big accent="#3f7a4b" label="MRR" value={fmtBRL(asaas?.mrr)} color="#3f7a4b" />
         <StatCard big accent={C.red} label="Empresas" value={totals.total ?? 0} />
         <StatCard big accent="#3b6ea5" label="Conversão Free → Pro" value={`${crescimento.conversao ?? 0}%`} />
         <StatCard big accent="#b45309" label="Inadimplentes" value={asaas?.inadimplentes ?? 0} color={(asaas?.inadimplentes ?? 0) > 0 ? C.danger : C.text} />
@@ -185,14 +185,14 @@ export default function Admin() {
       {/*  Crescimento */}
       {sectionTitle(" Crescimento")}
       <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginBottom: 8 }}>
-        <StatCard accent="#2e9e5b" label="Cadastros hoje" value={crescimento.hoje ?? 0} />
-        <StatCard accent="#2e9e5b" label="Últimos 7 dias" value={crescimento.semana ?? 0} />
-        <StatCard accent="#2e9e5b" label="Últimos 30 dias" value={crescimento.mes ?? 0} />
-        <StatCard accent="#2e9e5b" label="Free" value={totals.free ?? 0} color={C.muted} />
-        <StatCard accent="#2e9e5b" label="PRO pagos" value={proStats.pagos ?? 0} color="#2e9e5b" />
-        <StatCard accent="#2e9e5b" label="PRO em trial" value={proStats.trial ?? 0} color="#b45309" />
-        <StatCard accent="#2e9e5b" label="PRO inadimplentes" value={proStats.inadimplentes ?? 0} color={(proStats.inadimplentes ?? 0) > 0 ? C.danger : C.muted} />
-        <StatCard accent="#2e9e5b" label="Trials free ativos" value={crescimento.trials_ativos ?? 0} />
+        <StatCard accent="#3f7a4b" label="Cadastros hoje" value={crescimento.hoje ?? 0} />
+        <StatCard accent="#3f7a4b" label="Últimos 7 dias" value={crescimento.semana ?? 0} />
+        <StatCard accent="#3f7a4b" label="Últimos 30 dias" value={crescimento.mes ?? 0} />
+        <StatCard accent="#3f7a4b" label="Free" value={totals.free ?? 0} color={C.muted} />
+        <StatCard accent="#3f7a4b" label="PRO pagos" value={proStats.pagos ?? 0} color="#3f7a4b" />
+        <StatCard accent="#3f7a4b" label="PRO em trial" value={proStats.trial ?? 0} color="#b45309" />
+        <StatCard accent="#3f7a4b" label="PRO inadimplentes" value={proStats.inadimplentes ?? 0} color={(proStats.inadimplentes ?? 0) > 0 ? C.danger : C.muted} />
+        <StatCard accent="#3f7a4b" label="Trials free ativos" value={crescimento.trials_ativos ?? 0} />
       </div>
 
       {/* Gráfico de evolução */}
@@ -206,7 +206,7 @@ export default function Admin() {
         <>
           {sectionTitle(" Receita · Asaas")}
           <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginBottom: 8 }}>
-            <StatCard accent="#3b6ea5" label="MRR" value={fmtBRL(asaas.mrr)} color="#2e9e5b" />
+            <StatCard accent="#3b6ea5" label="MRR" value={fmtBRL(asaas.mrr)} color="#3f7a4b" />
             <StatCard accent="#3b6ea5" label="ARR projetado" value={fmtBRL(asaas.arr)} />
             <StatCard accent="#3b6ea5" label="Assinaturas ativas" value={asaas.pagantes} />
           </div>
@@ -356,7 +356,7 @@ export default function Admin() {
                   <td style={{ padding: "12px 16px", whiteSpace: "nowrap" }}>
                     {(() => {
                       const h = e.health ?? 0;
-                      const [emoji, bg, col] = h >= 80 ? ["", "#2e9e5b18", "#2e9e5b"] : h >= 50 ? ["", "#b07a1e18", "#b45309"] : ["", "#dc262618", "#dc2626"];
+                      const [emoji, bg, col] = h >= 80 ? ["", "#3f7a4b18", "#3f7a4b"] : h >= 50 ? ["", "#b07a1e18", "#b45309"] : ["", "#dc262618", "#dc2626"];
                       return (
                         <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 8px", borderRadius: 10, background: bg, color: col, fontWeight: 700, fontSize: 12 }}>
                           {emoji} {h}

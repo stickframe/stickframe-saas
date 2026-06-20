@@ -20,6 +20,7 @@ export default function PortalOnline() {
   const [docUploading, setDocUploading] = useState(false);
   const [sigNome,    setSigNome] = useState("");
   const [sigEnv,     setSigEnv] = useState(false);
+  const [sigErro,    setSigErro] = useState("");
   const canvasRef = useRef(null);
   const isDrawing = useRef(false);
   const [fotoAberta, setFotoAberta] = useState(null);
@@ -196,12 +197,12 @@ export default function PortalOnline() {
             const done = i < faseIdx, curr = i === faseIdx;
             return (
               <div key={f} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: i < FASES.length - 1 ? "1px solid #f5f5f5" : "none" }}>
-                <div style={{ width: 22, height: 22, borderRadius: "50%", background: done ? "#2e9e5b" : curr ? "#981915" : "#f0f0f0", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 700, color: done || curr ? "#fff" : "#bbb", flexShrink: 0 }}>
+                <div style={{ width: 22, height: 22, borderRadius: "50%", background: done ? "#3f7a4b" : curr ? "#981915" : "#f0f0f0", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 700, color: done || curr ? "#fff" : "#bbb", flexShrink: 0 }}>
                   {done ? "" : i + 1}
                 </div>
-                <div style={{ fontSize: 13, color: done ? "#2e9e5b" : curr ? "#1a1a1a" : "#bbb", fontWeight: curr ? 700 : 400, flex: 1 }}>{f}</div>
+                <div style={{ fontSize: 13, color: done ? "#3f7a4b" : curr ? "#1a1a1a" : "#bbb", fontWeight: curr ? 700 : 400, flex: 1 }}>{f}</div>
                 {curr && <span style={{ background: "#981915", color: "#fff", borderRadius: 10, padding: "2px 10px", fontSize: 9, fontWeight: 700 }}>EM ANDAMENTO</span>}
-                {done && <span style={{ fontSize: 10, color: "#2e9e5b" }}></span>}
+                {done && <span style={{ fontSize: 10, color: "#3f7a4b" }}></span>}
               </div>
             );
           })}
@@ -212,12 +213,12 @@ export default function PortalOnline() {
           <Card title="Resumo Financeiro">
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 14 }}>
               <FinItem label="Contrato total" value={fmt(financeiro.contrato)} />
-              <FinItem label="Pago"           value={fmt(rec)}               color="#2e9e5b" />
-              <FinItem label="A receber"      value={fmt(aReceber)}          color={aReceber > 0 ? "#b97a00" : "#2e9e5b"} />
+              <FinItem label="Pago"           value={fmt(rec)}               color="#3f7a4b" />
+              <FinItem label="A receber"      value={fmt(aReceber)}          color={aReceber > 0 ? "#b07a1e" : "#3f7a4b"} />
             </div>
-            <Bar val={pctPago} color="linear-gradient(90deg,#2e9e5b,#1a7a40)" />
+            <Bar val={pctPago} color="linear-gradient(90deg,#3f7a4b,#1a7a40)" />
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: "#888", marginTop: 6 }}>
-              <span style={{ color: "#2e9e5b", fontWeight: 700 }}>{pctPago}% pago</span>
+              <span style={{ color: "#3f7a4b", fontWeight: 700 }}>{pctPago}% pago</span>
               <span>{100 - pctPago}% restante</span>
             </div>
           </Card>
@@ -227,8 +228,8 @@ export default function PortalOnline() {
         {medicoes.length > 0 && (
           <Card title="Medições">
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 14 }}>
-              <FinItem label="Aprovadas" value={`${medAprovadas.length} · ${fmt(totalMedAprov)}`} color="#2e9e5b" />
-              <FinItem label="Pendentes" value={`${medPendentes.length}`} color={medPendentes.length > 0 ? "#b97a00" : "#888"} />
+              <FinItem label="Aprovadas" value={`${medAprovadas.length} · ${fmt(totalMedAprov)}`} color="#3f7a4b" />
+              <FinItem label="Pendentes" value={`${medPendentes.length}`} color={medPendentes.length > 0 ? "#b07a1e" : "#888"} />
             </div>
 
             {medicoes.map((m) => (
@@ -238,16 +239,16 @@ export default function PortalOnline() {
                   {m.descricao && <div style={{ fontSize: 10, color: "#888", marginTop: 1 }}>{m.descricao}</div>}
                 </div>
                 <div style={{ textAlign: "right" }}>
-                  <div style={{ fontSize: 13, fontWeight: 800, color: m.status === "Aprovada" ? "#2e9e5b" : "#b97a00" }}>{fmt(m.valor)}</div>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: m.status === "Aprovada" ? "#3f7a4b" : "#b07a1e" }}>{fmt(m.valor)}</div>
                   {m.status === "Aprovada" ? (
-                    <div style={{ fontSize: 9, fontWeight: 700, color: "#2e9e5b", marginTop: 2 }}> Aprovada</div>
+                    <div style={{ fontSize: 9, fontWeight: 700, color: "#3f7a4b", marginTop: 2 }}> Aprovada</div>
                   ) : (
                     <button
                       onClick={async () => {
                         const { error } = await sb.rpc("portal_aprovar_medicao", { p_token: token, p_medicao_id: m.id });
                         if (!error) setMedicoes((prev) => prev.map((x) => x.id === m.id ? { ...x, status: "Aprovada" } : x));
                       }}
-                      style={{ marginTop: 4, background: "#2e9e5b", color: "#fff", border: "none", borderRadius: 6, padding: "4px 12px", fontSize: 10, fontWeight: 700, cursor: "pointer" }}
+                      style={{ marginTop: 4, background: "#3f7a4b", color: "#fff", border: "none", borderRadius: 6, padding: "4px 12px", fontSize: 10, fontWeight: 700, cursor: "pointer" }}
                     >
                       Aprovar 
                     </button>
@@ -258,10 +259,10 @@ export default function PortalOnline() {
 
             {proxMedicao && (
               <div style={{ marginTop: 12, background: "#fffbf0", border: "1px solid #f0d080", borderRadius: 8, padding: "10px 14px" }}>
-                <div style={{ fontSize: 10, fontWeight: 700, color: "#b97a00", marginBottom: 4 }}>PRÓXIMA MEDIÇÃO PENDENTE</div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: "#b07a1e", marginBottom: 4 }}>PRÓXIMA MEDIÇÃO PENDENTE</div>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <span style={{ fontSize: 12, color: "#555" }}>Medição {proxMedicao.numero}</span>
-                  <span style={{ fontSize: 15, fontWeight: 800, color: "#b97a00" }}>{fmt(proxMedicao.valor)}</span>
+                  <span style={{ fontSize: 15, fontWeight: 800, color: "#b07a1e" }}>{fmt(proxMedicao.valor)}</span>
                 </div>
               </div>
             )}
@@ -278,16 +279,16 @@ export default function PortalOnline() {
               </div>
               <div style={{ textAlign: "right" }}>
                 {obra.status === "Concluída" ? (
-                  <div style={{ background: "#2e9e5b", color: "#fff", borderRadius: 10, padding: "6px 16px", fontSize: 12, fontWeight: 700 }}> Entregue</div>
+                  <div style={{ background: "#3f7a4b", color: "#fff", borderRadius: 10, padding: "6px 16px", fontSize: 12, fontWeight: 700 }}> Entregue</div>
                 ) : atrasada ? (
                   <div style={{ background: "#fff0f0", border: "1px solid #f5c6c6", borderRadius: 10, padding: "6px 16px" }}>
-                    <div style={{ fontSize: 9, color: "#c0392b", fontWeight: 700, marginBottom: 2 }}>ATRASO</div>
-                    <div style={{ fontSize: 18, fontWeight: 900, color: "#c0392b" }}>{Math.abs(diasRestantes)}d</div>
+                    <div style={{ fontSize: 9, color: "#a33327", fontWeight: 700, marginBottom: 2 }}>ATRASO</div>
+                    <div style={{ fontSize: 18, fontWeight: 900, color: "#a33327" }}>{Math.abs(diasRestantes)}d</div>
                   </div>
                 ) : (
                   <div style={{ background: "#f0f8f0", border: "1px solid #a8d5b0", borderRadius: 10, padding: "6px 16px" }}>
-                    <div style={{ fontSize: 9, color: "#2e9e5b", fontWeight: 700, marginBottom: 2 }}>RESTAM</div>
-                    <div style={{ fontSize: 18, fontWeight: 900, color: "#2e9e5b" }}>{diasRestantes}d</div>
+                    <div style={{ fontSize: 9, color: "#3f7a4b", fontWeight: 700, marginBottom: 2 }}>RESTAM</div>
+                    <div style={{ fontSize: 18, fontWeight: 900, color: "#3f7a4b" }}>{diasRestantes}d</div>
                   </div>
                 )}
               </div>
@@ -374,9 +375,9 @@ export default function PortalOnline() {
                   {pct !== null && (
                     <div style={{ marginBottom: 6 }}>
                       <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: "#888", marginBottom: 3 }}>
-                        <span>Conformidade</span><span style={{ fontWeight: 700, color: aprovada ? "#2e9e5b" : "#b97a00" }}>{pct}%</span>
+                        <span>Conformidade</span><span style={{ fontWeight: 700, color: aprovada ? "#3f7a4b" : "#b07a1e" }}>{pct}%</span>
                       </div>
-                      <Bar val={pct} color={aprovada ? "linear-gradient(90deg,#2e9e5b,#1a7a40)" : "linear-gradient(90deg,#f59e0b,#d97706)"} />
+                      <Bar val={pct} color={aprovada ? "linear-gradient(90deg,#3f7a4b,#1a7a40)" : "linear-gradient(90deg,#f59e0b,#d97706)"} />
                     </div>
                   )}
                   {v.observacoes && (
@@ -487,14 +488,14 @@ export default function PortalOnline() {
                   const ts = Date.now();
                   const path = `portal/${token}/${ts}-${file.name}`;
                   const { error: upErr } = await sb.storage.from("arquivos").upload(path, file);
-                  if (upErr) { alert("Erro no upload: " + upErr.message); return; }
+                  if (upErr) { console.error("Erro no upload:", upErr.message); return; }
                   const formatSize = file.size > 1024 * 1024
                     ? `${(file.size / (1024 * 1024)).toFixed(1)} MB`
                     : `${(file.size / 1024).toFixed(0)} KB`;
                   const { error: rpcErr } = await sb.rpc("portal_registrar_documento", {
                     p_token: token, p_nome: file.name, p_storage_path: path, p_tamanho: formatSize,
                   });
-                  if (rpcErr) { alert("Erro ao registrar: " + rpcErr.message); return; }
+                  if (rpcErr) { console.error("Erro ao registrar:", rpcErr.message); return; }
                   setDocumentos((prev) => [...prev, { nome: file.name, storage_path: path, tamanho: formatSize, created_at: new Date().toISOString() }]);
                   e.target.value = "";
                 } finally {
@@ -558,7 +559,7 @@ export default function PortalOnline() {
               <div>
                 <div style={{ fontSize: 11, fontWeight: 700, color: "#888", letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Meus chamados</div>
                 {chamados.map((ch, i) => {
-                  const ST_COR = { "Aberto": "#4a9eff", "Em andamento": "#b97a00", "Resolvido": "#2e9e5b", "Cancelado": "#aaa" };
+                  const ST_COR = { "Aberto": "#3b6ea5", "Em andamento": "#b07a1e", "Resolvido": "#3f7a4b", "Cancelado": "#aaa" };
                   return (
                     <div key={ch.id || i} style={{ borderBottom: i < chamados.length - 1 ? "1px solid #f0f0f0" : "none", padding: "10px 0" }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
@@ -566,7 +567,7 @@ export default function PortalOnline() {
                         <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 10, background: (ST_COR[ch.status] || "#aaa") + "22", color: ST_COR[ch.status] || "#aaa", flexShrink: 0, marginLeft: 8 }}>{ch.status}</span>
                       </div>
                       <div style={{ fontSize: 11, color: "#888", marginTop: 3 }}>{ch.categoria} · {new Date(ch.created_at).toLocaleDateString("pt-BR")}</div>
-                      {ch.resolucao && <div style={{ fontSize: 11, color: "#2e9e5b", marginTop: 4, fontStyle: "italic" }}> {ch.resolucao}</div>}
+                      {ch.resolucao && <div style={{ fontSize: 11, color: "#3f7a4b", marginTop: 4, fontStyle: "italic" }}> {ch.resolucao}</div>}
                     </div>
                   );
                 })}
@@ -644,19 +645,20 @@ export default function PortalOnline() {
                 // Check if canvas is blank
                 const blank = document.createElement("canvas");
                 blank.width = canvas.width; blank.height = canvas.height;
-                if (dataUrl === blank.toDataURL("image/png")) { alert("Por favor, desenhe sua assinatura."); return; }
+                if (dataUrl === blank.toDataURL("image/png")) { setSigErro("Por favor, desenhe sua assinatura."); return; }
+                setSigErro("");
                 setSigEnv(true);
                 try {
                   const res = await fetch(dataUrl);
                   const blob = await res.blob();
                   const path = `assinaturas/${token}.png`;
                   const { error: upErr } = await sb.storage.from("arquivos").upload(path, blob, { upsert: true, contentType: "image/png" });
-                  if (upErr) { alert("Erro no upload: " + upErr.message); return; }
+                  if (upErr) { setSigErro("Erro no upload: " + upErr.message); return; }
                   const assinaturaUrl = storageUrl(path);
                   const { error: rpcErr } = await sb.rpc("portal_assinar", {
                     p_token: token, p_nome: sigNome.trim(), p_assinatura_url: assinaturaUrl,
                   });
-                  if (rpcErr) { alert("Erro ao assinar: " + rpcErr.message); return; }
+                  if (rpcErr) { setSigErro("Erro ao assinar: " + rpcErr.message); return; }
                   setObra((prev) => ({ ...prev, assinatura_data: new Date().toISOString(), assinatura_nome: sigNome.trim() }));
                 } finally {
                   setSigEnv(false);
@@ -665,6 +667,7 @@ export default function PortalOnline() {
                 {sigEnv ? "Assinando..." : " Assinar"}
               </button>
             </div>
+            {sigErro && <div style={{ marginTop: 8, fontSize: 12, color: "#a33327", fontWeight: 600 }}>{sigErro}</div>}
           </Card>
         )}
         {obra.assinatura_data && (
@@ -691,7 +694,7 @@ export default function PortalOnline() {
             <a
               href={`https://wa.me/55${empresa.telefone.replace(/\D/g, "")}?text=${encodeURIComponent(`Olá! Tenho dúvidas sobre a obra: ${obra.nome}`)}`}
               target="_blank" rel="noreferrer"
-              style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#25D366", color: "#fff", borderRadius: 8, padding: "10px 24px", fontSize: 13, fontWeight: 700, textDecoration: "none" }}
+              style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#3f7a4b", color: "#fff", borderRadius: 8, padding: "10px 24px", fontSize: 13, fontWeight: 700, textDecoration: "none" }}
             >
               <span style={{ fontSize: 16 }}></span> WhatsApp
             </a>

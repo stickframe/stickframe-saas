@@ -250,7 +250,7 @@ export default function PropostaOnline() {
           {jaAceito ? (
             <div style={{ textAlign: "center" }}>
               <div style={{ fontSize: 36, marginBottom: 10 }}><CheckCircle size={14} /></div>
-              <div style={{ fontSize: 16, fontWeight: 800, color: "#2e9e5b", marginBottom: 6 }}>Proposta aceita!</div>
+              <div style={{ fontSize: 16, fontWeight: 800, color: "#3f7a4b", marginBottom: 6 }}>Proposta aceita!</div>
               <div style={{ fontSize: 13, color: "#555" }}>
                 Aceite registrado por <strong>{orc.aceite_nome || aceite.nome}</strong>
               </div>
@@ -276,7 +276,7 @@ export default function PropostaOnline() {
                   <div style={{ border: "1px solid #86efac", borderRadius: 8, overflow: "hidden", background: "#f0fdf4", padding: 8 }}>
                     <canvas ref={canvasRef} width={500} height={150} style={{ width: "100%", height: 150, display: "block" }} />
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 6 }}>
-                      <span style={{ fontSize: 11, color: "#2e9e5b", fontWeight: 700 }}> Assinatura registrada</span>
+                      <span style={{ fontSize: 11, color: "#3f7a4b", fontWeight: 700 }}> Assinatura registrada</span>
                       <button onClick={() => { setAssinaturaDone(false); setCanvasVazio(true); setAssinando(true); }} style={{ fontSize: 11, color: "#888", background: "none", border: "none", cursor: "pointer" }}>Refazer</button>
                     </div>
                   </div>
@@ -337,7 +337,7 @@ export default function PropostaOnline() {
           <div style={{ fontSize: 11, color: "#555", letterSpacing: 1, marginBottom: 8 }}>DÚVIDAS SOBRE A PROPOSTA?</div>
           <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", marginBottom: 14 }}>Fale com nossa equipe</div>
           <a href={`https://wa.me/${(empresa?.telefone || "").replace(/\D/g, "") || "5511940000000"}`} target="_blank" rel="noreferrer"
-            style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#25D366", color: "#fff", borderRadius: 8, padding: "10px 24px", fontSize: 13, fontWeight: 700, textDecoration: "none" }}>
+            style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#3f7a4b", color: "#fff", borderRadius: 8, padding: "10px 24px", fontSize: 13, fontWeight: 700, textDecoration: "none" }}>
              WhatsApp
           </a>
         </div>

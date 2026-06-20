@@ -119,7 +119,7 @@ export function ConfigSFTab() {
           </button>
         ))}
         {saved && (
-          <span style={{ marginLeft: 12, fontSize: 12, color: '#2e9e5b', fontWeight: 700, alignSelf: 'center' }}>
+          <span style={{ marginLeft: 12, fontSize: 12, color: '#3f7a4b', fontWeight: 700, alignSelf: 'center' }}>
             Salvo 
           </span>
         )}

@@ -18,7 +18,7 @@ function Card({ label, value, color, sub }) {
 }
 
 function Pill({ h }) {
-  const [emoji, bg, col] = h >= 80 ? ["", "#2e9e5b18", "#2e9e5b"] : h >= 50 ? ["", "#b07a1e18", "#b45309"] : ["", "#dc262618", "#dc2626"];
+  const [emoji, bg, col] = h >= 80 ? ["", "#3f7a4b18", "#3f7a4b"] : h >= 50 ? ["", "#b07a1e18", "#b45309"] : ["", "#dc262618", "#dc2626"];
   return (
     <span style={{ display: "inline-flex", alignItems: "center", gap: 3, padding: "2px 8px", borderRadius: 8, background: bg, color: col, fontWeight: 700, fontSize: 12 }}>
       {emoji} {h}
@@ -113,9 +113,9 @@ export default function AdminMobile() {
 
       {/* Cards principais 2×2 */}
       <div style={{ padding: "20px 16px 0", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-        <Card label="MRR" value={fmtBRL(asaas?.mrr)} color="#2e9e5b" />
+        <Card label="MRR" value={fmtBRL(asaas?.mrr)} color="#3f7a4b" />
         <Card label="Empresas" value={totals.total ?? 0} />
-        <Card label="PRO pagos" value={proStats.pagos ?? 0} color="#2e9e5b" />
+        <Card label="PRO pagos" value={proStats.pagos ?? 0} color="#3f7a4b" />
         <Card
           label="Inadimplentes"
           value={asaas?.inadimplentes ?? 0}
@@ -153,7 +153,7 @@ export default function AdminMobile() {
       {/* Cadastros recentes */}
       <div style={{ margin: "16px 16px 0", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
         <div style={{ background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 12, padding: "12px 14px" }}>
-          <div style={{ fontSize: 20, fontWeight: 800, color: "#2e9e5b" }}>{crescimento.hoje ?? 0}</div>
+          <div style={{ fontSize: 20, fontWeight: 800, color: "#3f7a4b" }}>{crescimento.hoje ?? 0}</div>
           <div style={{ fontSize: 11, color: "rgba(255,255,255,.3)", marginTop: 4 }}>Hoje</div>
         </div>
         <div style={{ background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 12, padding: "12px 14px" }}>
@@ -210,7 +210,7 @@ export default function AdminMobile() {
       <div style={{ margin: "16px 16px 0", background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 14, padding: "14px 16px" }}>
         <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,.3)", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 10 }}>Assinaturas PRO</div>
         {[
-          ["Pagos", proStats.pagos ?? 0, "#2e9e5b"],
+          ["Pagos", proStats.pagos ?? 0, "#3f7a4b"],
           ["Trial", proStats.trial ?? 0, "#b45309"],
           ["Inadimplentes", proStats.inadimplentes ?? 0, (proStats.inadimplentes ?? 0) > 0 ? "#dc2626" : "rgba(255,255,255,.3)"],
           ["Aguardando", proStats.aguardando ?? 0, "rgba(255,255,255,.4)"],

@@ -21,9 +21,9 @@ const FVS_TEMPLATES = {
 
 const TIPOS = ["FVS","Vistoria de Qualidade","Inspeção de Segurança","Recebimento de Material","Outro"];
 const RESULTADOS = ["Em análise","Aprovado","Aprovado com ressalvas","Reprovado"];
-const RES_COR = { "Aprovado": "#2e9e5b", "Aprovado com ressalvas": "#b97a00", "Reprovado": "#c0392b", "Em análise": "#4a9eff" };
+const RES_COR = { "Aprovado": "#3f7a4b", "Aprovado com ressalvas": "#b07a1e", "Reprovado": "#a33327", "Em análise": "#3b6ea5" };
 const ITEM_RES = ["Conforme","Não Conforme","N/A"];
-const ITEM_COR = { "Conforme": "#2e9e5b", "Não Conforme": "#c0392b", "N/A": "#888" };
+const ITEM_COR = { "Conforme": "#3f7a4b", "Não Conforme": "#a33327", "N/A": "#888" };
 
 function Chip({ label, cor, active, onClick }) {
   return (
@@ -136,7 +136,7 @@ function ModalVistoria({ obra, onSave, onClose }) {
           {step === 2 && (
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
               {nc > 0 && (
-                <div style={{ background: "#fff5f5", border: "1px solid #f5c6c6", borderRadius: 8, padding: "8px 14px", fontSize: 12, color: "#c0392b", fontWeight: 700, marginBottom: 8 }}>
+                <div style={{ background: "#fff5f5", border: "1px solid #f5c6c6", borderRadius: 8, padding: "8px 14px", fontSize: 12, color: "#a33327", fontWeight: 700, marginBottom: 8 }}>
                    {nc} item(ns) Não Conforme(s) detectado(s)
                 </div>
               )}
@@ -225,16 +225,16 @@ function ModalVer({ v, onClose }) {
             <div style={{ marginBottom: 16 }}>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 5 }}>
                 <span style={{ color: C.muted }}>Conformidade</span>
-                <span style={{ fontWeight: 800, color: pct >= 80 ? "#2e9e5b" : pct >= 60 ? "#b97a00" : "#c0392b" }}>{pct}%</span>
+                <span style={{ fontWeight: 800, color: pct >= 80 ? "#3f7a4b" : pct >= 60 ? "#b07a1e" : "#a33327" }}>{pct}%</span>
               </div>
               <div style={{ height: 8, background: C.darker, borderRadius: 4, overflow: "hidden" }}>
-                <div style={{ height: 8, width: `${pct}%`, background: pct >= 80 ? "#2e9e5b" : pct >= 60 ? "#b97a00" : "#c0392b", borderRadius: 4 }} />
+                <div style={{ height: 8, width: `${pct}%`, background: pct >= 80 ? "#3f7a4b" : pct >= 60 ? "#b07a1e" : "#a33327", borderRadius: 4 }} />
               </div>
             </div>
           )}
           {nc.length > 0 && (
             <div style={{ background: "#fff5f5", border: "1px solid #f5c6c6", borderRadius: 8, padding: "10px 14px", marginBottom: 14 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: "#c0392b", marginBottom: 6 }}>NÃO CONFORMIDADES ({nc.length})</div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "#a33327", marginBottom: 6 }}>NÃO CONFORMIDADES ({nc.length})</div>
               {nc.map((it, i) => (
                 <div key={i} style={{ fontSize: 12, marginBottom: 4 }}>• {it.desc}{it.obs ? ` — ${it.obs}` : ""}</div>
               ))}
@@ -351,8 +351,8 @@ export default function Vistorias() {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 20 }}>
         {[
           ["Total de vistorias", stats.total, C.muted],
-          ["Aprovadas",          stats.aprovados, "#2e9e5b"],
-          ["Reprovadas",         stats.nc, "#c0392b"],
+          ["Aprovadas",          stats.aprovados, "#3f7a4b"],
+          ["Reprovadas",         stats.nc, "#a33327"],
         ].map(([l, v, cor]) => (
           <div key={l} style={{ background: C.surface, borderRadius: 14, border: `1px solid ${C.border}`, padding: "14px 18px" }}>
             <div style={{ fontSize: 22, fontWeight: 800, color: cor }}>{v}</div>
@@ -395,7 +395,7 @@ export default function Vistorias() {
                   <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 4, flexWrap: "wrap" }}>
                     <span style={{ fontSize: 13, fontWeight: 700 }}>{v.tipo} — {v.servico}</span>
                     <span style={{ background: cor + "18", color: cor, border: `1px solid ${cor}33`, borderRadius: 4, padding: "1px 8px", fontSize: 10, fontWeight: 700 }}>{v.resultado}</span>
-                    {ncCount > 0 && <span style={{ background: "#fff0f0", color: "#c0392b", border: "1px solid #f5c6c6", borderRadius: 4, padding: "1px 8px", fontSize: 10, fontWeight: 700 }}>{ncCount} NC</span>}
+                    {ncCount > 0 && <span style={{ background: "#fff0f0", color: "#a33327", border: "1px solid #f5c6c6", borderRadius: 4, padding: "1px 8px", fontSize: 10, fontWeight: 700 }}>{ncCount} NC</span>}
                   </div>
                   <div style={{ fontSize: 11, color: C.muted }}>
                     {v.fase} · {v.data} · <strong style={{ color: C.text }}>{v.responsavel}</strong>
@@ -403,7 +403,7 @@ export default function Vistorias() {
                   {pct !== null && (
                     <div style={{ marginTop: 6, display: "flex", alignItems: "center", gap: 8 }}>
                       <div style={{ flex: 1, height: 4, background: C.darker, borderRadius: 2, overflow: "hidden", maxWidth: 120 }}>
-                        <div style={{ height: 4, width: `${pct}%`, background: pct >= 80 ? "#2e9e5b" : pct >= 60 ? "#b97a00" : "#c0392b", borderRadius: 2 }} />
+                        <div style={{ height: 4, width: `${pct}%`, background: pct >= 80 ? "#3f7a4b" : pct >= 60 ? "#b07a1e" : "#a33327", borderRadius: 2 }} />
                       </div>
                       <span style={{ fontSize: 10, color: C.muted, fontWeight: 700 }}>{pct}% conforme</span>
                     </div>

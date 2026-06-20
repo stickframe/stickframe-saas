@@ -37,7 +37,7 @@ const ICONE_TIPO  = { pdf: "", imagem: "", outro: "" };
 const CATS        = ["Projeto", "Foto", "Documento", "Outro"];
 const DISCIPLINAS = ["Arquitetônico","Estrutural","Steel Frame","Elétrico","Hidráulico","AVAC","Fundação","Administrativo","Outro"];
 const STATUS_DOC  = ["Ativo","Em revisão","Aprovado","Obsoleto"];
-const STATUS_DOC_COR = { "Ativo": "#4a9eff", "Em revisão": "#b97a00", "Aprovado": "#2e9e5b", "Obsoleto": C.muted };
+const STATUS_DOC_COR = { "Ativo": "#3b6ea5", "Em revisão": "#b07a1e", "Aprovado": "#3f7a4b", "Obsoleto": C.muted };
 const STATUS_OBRA = ["Planejamento", "Em andamento", "Pausada", "Concluída"];
 
 const CHECKLIST_FASES = {
@@ -288,7 +288,7 @@ function DiarioAba({ obraId, obra, diario, addDiario }) {
 //  Galeria por Ambiente 
 const AMBIENTES = ["Sala", "Quarto", "Banheiro", "Cozinha", "Estrutura", "Fachada", "Cobertura", "Fundação", "Outro"];
 const STATUS_FOTO = ["Em andamento", "Concluído", "Com problema"];
-const STATUS_FOTO_COR = { "Concluído": "#2e9e5b", "Em andamento": "#b97a00", "Com problema": "#c0392b" };
+const STATUS_FOTO_COR = { "Concluído": "#3f7a4b", "Em andamento": "#b07a1e", "Com problema": "#a33327" };
 
 function GaleriaAmbiente({ obraId }) {
   const storageKey = `fotos_ambientes_${obraId}`;
@@ -432,7 +432,7 @@ const FORM_VAZIO = {
 //  helpers para chat 
 function chatAvatarColor(nome) {
   if (!nome) return "#981915";
-  const colors = ["#981915", "#2e9e5b", "#4a7af8", "#b97a00", "#7c3aed", "#0891b2"];
+  const colors = ["#981915", "#3f7a4b", "#4a7af8", "#b07a1e", "#7c3aed", "#0891b2"];
   let h = 0;
   for (let i = 0; i < nome.length; i++) h = (h * 31 + nome.charCodeAt(i)) >>> 0;
   return colors[h % colors.length];
@@ -1089,7 +1089,7 @@ export default function GestaoObras() {
     const fasesHtml = `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:8px">
       ${FASES.map((f, i) => {
         const done = i < faseIdx, curr = i === faseIdx;
-        const bg = done ? "#2e9e5b" : curr ? "#981915" : "#e5e7eb";
+        const bg = done ? "#3f7a4b" : curr ? "#981915" : "#e5e7eb";
         const tc = done || curr ? "#fff" : "#9ca3af";
         return `<div style="background:${bg};border-radius:8px;padding:8px 10px;text-align:center">
           <div style="font-size:9px;font-weight:700;color:${tc};letter-spacing:.5px">${done ? " " : curr ? " " : ""}${f}</div>
@@ -1112,7 +1112,7 @@ export default function GestaoObras() {
             <td>${m.numero || "—"}</td>
             <td>${m.descricao || "—"}</td>
             <td>${fmtR(m.valor)}</td>
-            <td><span style="color:${m.status === "Aprovada" ? "#2e9e5b" : "#b97a00"};font-weight:700">${m.status}</span></td>
+            <td><span style="color:${m.status === "Aprovada" ? "#3f7a4b" : "#b07a1e"};font-weight:700">${m.status}</span></td>
           </tr>`).join("")}
         </tbody></table>`;
 
@@ -1124,7 +1124,7 @@ export default function GestaoObras() {
             <td>${l.data || "—"}</td>
             <td>${l.descricao || "—"}</td>
             <td>${l.categoria || "—"}</td>
-            <td style="color:${l.tipo === "receita" ? "#2e9e5b" : "#c0392b"};font-weight:600">${l.tipo === "receita" ? "+" : "−"}${fmtR(l.valor)}</td>
+            <td style="color:${l.tipo === "receita" ? "#3f7a4b" : "#a33327"};font-weight:600">${l.tipo === "receita" ? "+" : "−"}${fmtR(l.valor)}</td>
           </tr>`).join("")}
         </tbody></table>`;
 
@@ -1133,7 +1133,7 @@ export default function GestaoObras() {
       ? "<p style='color:#9ca3af;font-size:13px;padding:12px 0'>Nenhuma vistoria registrada.</p>"
       : `<table><thead><tr><th>Tipo</th><th>Fase</th><th>Data</th><th>Responsável</th><th>Resultado</th><th>Conformidade</th></tr></thead><tbody>
           ${vists.map((v) => {
-            const cor = v.resultado === "Aprovado" ? "#2e9e5b" : v.resultado === "Reprovado" ? "#c0392b" : "#b97a00";
+            const cor = v.resultado === "Aprovado" ? "#3f7a4b" : v.resultado === "Reprovado" ? "#a33327" : "#b07a1e";
             return `<tr>
               <td>${v.tipo || "—"}</td>
               <td>${v.fase || "—"}</td>
@@ -1210,7 +1210,7 @@ export default function GestaoObras() {
       </div>
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">
         ${[
-          ["PROGRESSO", `${progresso}%`, progresso >= 80 ? "#2e9e5b" : "#981915"],
+          ["PROGRESSO", `${progresso}%`, progresso >= 80 ? "#3f7a4b" : "#981915"],
           ["CONTRATO", fmtR(obra.contrato), "#fff"],
           ["MEDIÇÕES", String(meds.length), "#fff"],
           ["VISTORIAS", String(vists.length), "#fff"],
@@ -1228,9 +1228,9 @@ export default function GestaoObras() {
       <h2> Resumo Executivo</h2>
       <div class="kpi-grid">
         ${kpi("VALOR DO CONTRATO", fmtR(obra.contrato))}
-        ${kpi("RECEITAS", fmtR(receitas), "#2e9e5b")}
-        ${kpi("DESPESAS", fmtR(despesas), "#c0392b")}
-        ${kpi("RESULTADO", fmtR(resultado), resultado >= 0 ? "#2e9e5b" : "#c0392b")}
+        ${kpi("RECEITAS", fmtR(receitas), "#3f7a4b")}
+        ${kpi("DESPESAS", fmtR(despesas), "#a33327")}
+        ${kpi("RESULTADO", fmtR(resultado), resultado >= 0 ? "#3f7a4b" : "#a33327")}
       </div>
       <div style="margin-top:10px">
         <div style="font-size:11px;color:#6b7280;margin-bottom:4px">Progresso físico — ${progresso}%</div>
@@ -1317,7 +1317,7 @@ export default function GestaoObras() {
         <div style="display:flex;gap:12px;margin-top:10px;flex-wrap:wrap">
           <div style="flex:1;min-width:120px;background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:12px;text-align:center">
             <div style="font-size:11px;color:#555;margin-bottom:4px">Receitas</div>
-            <div style="font-size:16px;font-weight:800;color:#2e9e5b">${fmtR(receitas)}</div>
+            <div style="font-size:16px;font-weight:800;color:#3f7a4b">${fmtR(receitas)}</div>
           </div>
           <div style="flex:1;min-width:120px;background:#fff5f5;border:1px solid #fca5a5;border-radius:8px;padding:12px;text-align:center">
             <div style="font-size:11px;color:#555;margin-bottom:4px">Despesas</div>
@@ -1325,7 +1325,7 @@ export default function GestaoObras() {
           </div>
           <div style="flex:1;min-width:120px;background:${saldo>=0?"#f0fdf4":"#fff5f5"};border:1px solid ${saldo>=0?"#86efac":"#fca5a5"};border-radius:8px;padding:12px;text-align:center">
             <div style="font-size:11px;color:#555;margin-bottom:4px">Saldo</div>
-            <div style="font-size:16px;font-weight:800;color:${saldo>=0?"#2e9e5b":"#e63329"}">${fmtR(saldo)}</div>
+            <div style="font-size:16px;font-weight:800;color:${saldo>=0?"#3f7a4b":"#e63329"}">${fmtR(saldo)}</div>
           </div>
         </div>
       </section>` : "";
@@ -1500,9 +1500,9 @@ export default function GestaoObras() {
         </div>
         <div style={{ display: "flex", gap: 8 }}>
           <button onClick={() => exportarObrasExcel(obras)} style={{
-            padding: "8px 14px", background: "#2e9e5b22",
-            border: "1px solid #2e9e5b44", borderRadius: 8,
-            color: "#2e9e5b", fontSize: 12, fontWeight: 700,
+            padding: "8px 14px", background: "#3f7a4b22",
+            border: "1px solid #3f7a4b44", borderRadius: 8,
+            color: "#3f7a4b", fontSize: 12, fontWeight: 700,
             cursor: "pointer", fontFamily: "inherit",
           }}><BarChart2 size={13} /> Exportar Excel</button>
           <Btn onClick={abrirNova}>+ Nova obra</Btn>
@@ -1526,7 +1526,7 @@ export default function GestaoObras() {
               { label: "OBRAS ATIVAS",    value: ativas.length,        sub: `${concluidas.length} concluída(s)`,    color: "#981915" },
               { label: "VGV TOTAL",       value: fmtC(valorTotal),     sub: "valor dos contratos ativos",           color: "#4f7d57" },
               { label: "PROGRESSO MÉDIO", value: `${progMedio}%`,      sub: "das obras em andamento",               color: "#3b6ea5" },
-              { label: "CUSTO LANÇADO",   value: fmtC(totalDespesas),  sub: "despesas registradas",                 color: "#b97a00" },
+              { label: "CUSTO LANÇADO",   value: fmtC(totalDespesas),  sub: "despesas registradas",                 color: "#b07a1e" },
             ].map((m) => (
               <div key={m.label} style={{ background: "var(--surface,#fff)", border: "1px solid var(--line,#e7e1d8)", borderRadius: 14, padding: "16px 20px" }}>
                 <div style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: 1.1, color: "var(--muted,#8c847a)", textTransform: "uppercase", marginBottom: 6 }}>{m.label}</div>
@@ -1583,15 +1583,15 @@ export default function GestaoObras() {
               </div>
             )}
             {emRisco.length > 0 && (
-              <div style={{ flex: 1, background: "#b97a0018", border: `1px solid #b97a0044`, borderRadius: 10, padding: 16 }}>
-                <div style={{ fontSize: 12, fontWeight: 800, color: "#b97a00", display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{ flex: 1, background: "#b07a1e18", border: `1px solid #b07a1e44`, borderRadius: 10, padding: 16 }}>
+                <div style={{ fontSize: 12, fontWeight: 800, color: "#b07a1e", display: "flex", alignItems: "center", gap: 8 }}>
                   <span style={{ fontSize: 18 }}>⏱</span> CRONOGRAMA EM RISCO ({emRisco.length})
                 </div>
                 <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 6 }}>
                   {emRisco.map(o => (
                     <div key={o.id} onClick={() => setObraId(o.id)} style={{ display: "flex", justifyContent: "space-between", fontSize: 13, cursor: "pointer", padding: "4px 8px", borderRadius: 6, background: C.surface, border: `1px solid ${C.border}` }}>
                       <span style={{ fontWeight: 600 }}>{o.nome.split("—")[0].trim()}</span>
-                      <span style={{ color: "#b97a00", fontWeight: 700 }}>Prazo: {new Date(o.prazo_fim + "T00:00").toLocaleDateString("pt-BR")}</span>
+                      <span style={{ color: "#b07a1e", fontWeight: 700 }}>Prazo: {new Date(o.prazo_fim + "T00:00").toLocaleDateString("pt-BR")}</span>
                     </div>
                   ))}
                 </div>
@@ -1834,11 +1834,11 @@ export default function GestaoObras() {
                       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(130px,1fr))", gap: 10, marginBottom: 24 }}>
                         {[
                           { label: "Valor contratado", value: fmtC(contrato), color: C.text },
-                          { label: "Receitas lançadas", value: fmtC(receitas), color: "#2e9e5b" },
+                          { label: "Receitas lançadas", value: fmtC(receitas), color: "#3f7a4b" },
                           { label: "Despesas lançadas", value: fmtC(despesas), color: C.danger },
-                          { label: "Saldo", value: fmtC(saldo), color: saldo >= 0 ? "#2e9e5b" : C.danger },
-                          ...(margem !== null ? [{ label: "Margem estimada", value: `${margem.toFixed(1)}%`, color: margem > 20 ? "#2e9e5b" : margem > 0 ? "#b97a00" : C.danger }] : []),
-                          ...(medAprov > 0 ? [{ label: "Medições aprovadas", value: fmtC(medAprov), color: "#4a9eff" }] : []),
+                          { label: "Saldo", value: fmtC(saldo), color: saldo >= 0 ? "#3f7a4b" : C.danger },
+                          ...(margem !== null ? [{ label: "Margem estimada", value: `${margem.toFixed(1)}%`, color: margem > 20 ? "#3f7a4b" : margem > 0 ? "#b07a1e" : C.danger }] : []),
+                          ...(medAprov > 0 ? [{ label: "Medições aprovadas", value: fmtC(medAprov), color: "#3b6ea5" }] : []),
                         ].map((k) => (
                           <div key={k.label} style={{ background: C.darker, borderRadius: 8, padding: "12px 14px", borderTop: `3px solid ${k.color}` }}>
                             <div style={{ fontSize: 11, color: C.muted, marginBottom: 4 }}>{k.label}</div>
@@ -1852,15 +1852,15 @@ export default function GestaoObras() {
                         const retencao = contrato * (Number(obra.retencao_pct) / 100);
                         const retLiberada = obra.status === "Concluída";
                         return (
-                          <div style={{ background: retLiberada ? "#2e9e5b11" : "#b97a0011", border: `1px solid ${retLiberada ? "#2e9e5b44" : "#b97a0044"}`, borderRadius: 8, padding: "12px 16px", marginBottom: 20 }}>
+                          <div style={{ background: retLiberada ? "#3f7a4b11" : "#b07a1e11", border: `1px solid ${retLiberada ? "#3f7a4b44" : "#b07a1e44"}`, borderRadius: 8, padding: "12px 16px", marginBottom: 20 }}>
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                               <div>
-                                <div style={{ fontSize: 11, fontWeight: 700, color: retLiberada ? "#2e9e5b" : "#b97a00", letterSpacing: 1, marginBottom: 3 }}>
+                                <div style={{ fontSize: 11, fontWeight: 700, color: retLiberada ? "#3f7a4b" : "#b07a1e", letterSpacing: 1, marginBottom: 3 }}>
                                   {retLiberada ? " RETENÇÃO LIBERADA" : " RETENÇÃO DE GARANTIA"}
                                 </div>
                                 <div style={{ fontSize: 12, color: C.muted }}>{obra.retencao_pct}% do contrato · {retLiberada ? "Obra concluída" : "Liberado na entrega"}</div>
                               </div>
-                              <div style={{ fontSize: 20, fontWeight: 900, color: retLiberada ? "#2e9e5b" : "#b97a00" }}>{fmtC(retencao)}</div>
+                              <div style={{ fontSize: 20, fontWeight: 900, color: retLiberada ? "#3f7a4b" : "#b07a1e" }}>{fmtC(retencao)}</div>
                             </div>
                           </div>
                         );
@@ -1874,7 +1874,7 @@ export default function GestaoObras() {
                             <span style={{ fontWeight: 700, color: executado > 100 ? C.danger : C.text }}>{executado.toFixed(1)}% do contrato</span>
                           </div>
                           <div style={{ height: 10, background: C.dark, borderRadius: 6, overflow: "hidden" }}>
-                            <div style={{ height: 10, width: `${Math.min(executado, 100)}%`, background: executado > 90 ? C.danger : executado > 70 ? "#b97a00" : "#2e9e5b", borderRadius: 6, transition: "width .5s" }} />
+                            <div style={{ height: 10, width: `${Math.min(executado, 100)}%`, background: executado > 90 ? C.danger : executado > 70 ? "#b07a1e" : "#3f7a4b", borderRadius: 6, transition: "width .5s" }} />
                           </div>
                         </div>
                       )}
@@ -1891,7 +1891,7 @@ export default function GestaoObras() {
                       ) : (
                         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                           {[...lans].sort((a, b) => (b.data || "").localeCompare(a.data || "")).map((l) => (
-                            <div key={l.id} style={{ display: "grid", gridTemplateColumns: "auto 1fr auto auto", gap: 10, alignItems: "center", padding: "9px 12px", background: C.darker, borderRadius: 8, borderLeft: `3px solid ${l.tipo === "receita" ? "#2e9e5b" : C.danger}` }}>
+                            <div key={l.id} style={{ display: "grid", gridTemplateColumns: "auto 1fr auto auto", gap: 10, alignItems: "center", padding: "9px 12px", background: C.darker, borderRadius: 8, borderLeft: `3px solid ${l.tipo === "receita" ? "#3f7a4b" : C.danger}` }}>
                               <span style={{ fontSize: 18 }}>{l.tipo === "receita" ? "" : ""}</span>
                               <div>
                                 <div style={{ fontSize: 12, fontWeight: 600 }}>{l.descricao || "—"}</div>
@@ -1904,10 +1904,10 @@ export default function GestaoObras() {
                                   )}
                                 </div>
                               </div>
-                              <span style={{ fontSize: 13, fontWeight: 700, color: l.tipo === "receita" ? "#2e9e5b" : C.danger }}>
+                              <span style={{ fontSize: 13, fontWeight: 700, color: l.tipo === "receita" ? "#3f7a4b" : C.danger }}>
                                 {l.tipo === "receita" ? "+" : "−"}{fmtC(l.valor)}
                               </span>
-                              <span style={{ fontSize: 10, padding: "2px 6px", borderRadius: 4, background: l.status === "Pago" || l.status === "Recebido" ? "#2e9e5b22" : "#b97a0022", color: l.status === "Pago" || l.status === "Recebido" ? "#2e9e5b" : "#b97a00" }}>
+                              <span style={{ fontSize: 10, padding: "2px 6px", borderRadius: 4, background: l.status === "Pago" || l.status === "Recebido" ? "#3f7a4b22" : "#b07a1e22", color: l.status === "Pago" || l.status === "Recebido" ? "#3f7a4b" : "#b07a1e" }}>
                                 {l.status || "—"}
                               </span>
                             </div>
@@ -1969,7 +1969,7 @@ export default function GestaoObras() {
                                 const despH = (r.desp / maxVal) * (chartH - 20);
                                 return (
                                   <g key={r.key}>
-                                    <rect x={x} y={chartH - recH} width={barW} height={recH} fill="#2e9e5b" rx="2" opacity="0.85" />
+                                    <rect x={x} y={chartH - recH} width={barW} height={recH} fill="#3f7a4b" rx="2" opacity="0.85" />
                                     <rect x={x + barW + 2} y={chartH - despH} width={barW} height={despH} fill={C.red} rx="2" opacity="0.85" />
                                     <text x={x + barW} y={chartH + 14} textAnchor="middle" fontSize="8" fill={C.muted}>{r.label}</text>
                                   </g>
@@ -1979,7 +1979,7 @@ export default function GestaoObras() {
                             </svg>
                           </div>
                           <div style={{ display: "flex", gap: 16, fontSize: 11, marginBottom: 16 }}>
-                            <span><span style={{ display: "inline-block", width: 10, height: 10, background: "#2e9e5b", borderRadius: 2, marginRight: 4 }} />Receita</span>
+                            <span><span style={{ display: "inline-block", width: 10, height: 10, background: "#3f7a4b", borderRadius: 2, marginRight: 4 }} />Receita</span>
                             <span><span style={{ display: "inline-block", width: 10, height: 10, background: C.red, borderRadius: 2, marginRight: 4 }} />Despesa</span>
                           </div>
 
@@ -1999,10 +1999,10 @@ export default function GestaoObras() {
                                   return (
                                     <tr key={r.key} style={{ borderBottom: `1px solid ${C.border}`, background: i % 2 ? C.darker : "transparent" }}>
                                       <td style={{ padding: "8px 12px", fontWeight: 600 }}>{r.label}</td>
-                                      <td style={{ padding: "8px 12px", textAlign: "right", color: "#2e9e5b" }}>{fmtC(r.rec)}</td>
+                                      <td style={{ padding: "8px 12px", textAlign: "right", color: "#3f7a4b" }}>{fmtC(r.rec)}</td>
                                       <td style={{ padding: "8px 12px", textAlign: "right", color: C.danger }}>{fmtC(r.desp)}</td>
-                                      <td style={{ padding: "8px 12px", textAlign: "right", fontWeight: 700, color: res >= 0 ? "#2e9e5b" : C.danger }}>{fmtC(res)}</td>
-                                      <td style={{ padding: "8px 12px", textAlign: "right", fontWeight: 700, color: r.saldo >= 0 ? "#2e9e5b" : C.danger }}>{fmtC(r.saldo)}</td>
+                                      <td style={{ padding: "8px 12px", textAlign: "right", fontWeight: 700, color: res >= 0 ? "#3f7a4b" : C.danger }}>{fmtC(res)}</td>
+                                      <td style={{ padding: "8px 12px", textAlign: "right", fontWeight: 700, color: r.saldo >= 0 ? "#3f7a4b" : C.danger }}>{fmtC(r.saldo)}</td>
                                     </tr>
                                   );
                                 })}
@@ -2059,10 +2059,10 @@ export default function GestaoObras() {
                                 <div style={{ height: 20, background: C.dark, borderRadius: 4, overflow: "hidden", position: "relative" }}>
                                   <div style={{
                                     position: "absolute", left: `${pctStart}%`, width: `${pctWidth}%`, height: "100%",
-                                    background: done ? "#2e9e5b33" : curr ? "#98191533" : C.darker,
-                                    border: `1px solid ${done ? "#2e9e5b" : curr ? C.red : C.border}`, borderRadius: 4,
+                                    background: done ? "#3f7a4b33" : curr ? "#98191533" : C.darker,
+                                    border: `1px solid ${done ? "#3f7a4b" : curr ? C.red : C.border}`, borderRadius: 4,
                                   }}>
-                                    <div style={{ height: "100%", width: `${phasePct}%`, background: done ? "#2e9e5b" : C.red, borderRadius: "4px 0 0 4px" }} />
+                                    <div style={{ height: "100%", width: `${phasePct}%`, background: done ? "#3f7a4b" : C.red, borderRadius: "4px 0 0 4px" }} />
                                   </div>
                                 </div>
                               </div>
@@ -2212,7 +2212,7 @@ export default function GestaoObras() {
                               <div style={{ fontSize: 13, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", textDecoration: desatualizado ? "line-through" : "none", color: desatualizado ? C.muted : C.text }}>{a.nome}</div>
                               <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{a.tamanho} · {a.data}{a.revisao ? ` · ${a.revisao}` : ""}</div>
                               <div style={{ display: "flex", gap: 6, marginTop: 6, flexWrap: "wrap" }}>
-                                {a.disciplina && <span style={{ background: "#4a9eff18", color: "#4a9eff", border: "1px solid #4a9eff33", borderRadius: 4, padding: "1px 7px", fontSize: 10, fontWeight: 700 }}>{a.disciplina}</span>}
+                                {a.disciplina && <span style={{ background: "#3b6ea518", color: "#3b6ea5", border: "1px solid #3b6ea533", borderRadius: 4, padding: "1px 7px", fontSize: 10, fontWeight: 700 }}>{a.disciplina}</span>}
                                 {a.fase && <span style={{ background: "#98191518", color: "#981915", border: "1px solid #98191533", borderRadius: 4, padding: "1px 7px", fontSize: 10, fontWeight: 700 }}>{a.fase}</span>}
                                 {a.status_doc && <span style={{ background: (STATUS_DOC_COR[a.status_doc] || C.muted) + "18", color: STATUS_DOC_COR[a.status_doc] || C.muted, border: `1px solid ${(STATUS_DOC_COR[a.status_doc] || C.muted)}33`, borderRadius: 4, padding: "1px 7px", fontSize: 10, fontWeight: 700 }}>{a.status_doc}</span>}
                                 {jaCiente && !desatualizado && <span style={{ background: C.success + "18", color: C.success, border: `1px solid ${C.success}33`, borderRadius: 4, padding: "1px 7px", fontSize: 10, fontWeight: 700 }}> Ciente</span>}
@@ -2222,11 +2222,11 @@ export default function GestaoObras() {
                               {precisaCiencia && (
                                 <button onClick={async () => { await marcarCiente(obraId, a.id, userId); mostrarToast(" Ciência registrada!"); }} style={{ background: C.success + "22", border: `1px solid ${C.success}44`, borderRadius: 6, color: C.success, fontSize: 11, fontWeight: 700, cursor: "pointer", padding: "4px 10px", fontFamily: "inherit", whiteSpace: "nowrap" }}> Ciente</button>
                               )}
-                              <button onClick={() => setVerVersoes(a)} style={{ background: "#b97a0022", border: "1px solid #b97a0044", borderRadius: 6, color: "#b97a00", fontSize: 11, fontWeight: 700, cursor: "pointer", padding: "4px 10px", fontFamily: "inherit", whiteSpace: "nowrap" }}> Versões</button>
+                              <button onClick={() => setVerVersoes(a)} style={{ background: "#b07a1e22", border: "1px solid #b07a1e44", borderRadius: 6, color: "#b07a1e", fontSize: 11, fontWeight: 700, cursor: "pointer", padding: "4px 10px", fontFamily: "inherit", whiteSpace: "nowrap" }}> Versões</button>
                               {a.url && (
-                                <a href={a.url} target="_blank" rel="noreferrer" style={{ background: "#4a9eff22", border: "1px solid #4a9eff44", borderRadius: 6, color: "#4a9eff", fontSize: 11, fontWeight: 700, padding: "4px 10px", textDecoration: "none", textAlign: "center" }}>↓</a>
+                                <a href={a.url} target="_blank" rel="noreferrer" style={{ background: "#3b6ea522", border: "1px solid #3b6ea544", borderRadius: 6, color: "#3b6ea5", fontSize: 11, fontWeight: 700, padding: "4px 10px", textDecoration: "none", textAlign: "center" }}>↓</a>
                               )}
-                              <button onClick={() => setVersaoModal({ id: a.id, nome: a.nome })} style={{ background: "#4a9eff22", border: "1px solid #4a9eff44", borderRadius: 6, color: "#4a9eff", fontSize: 11, fontWeight: 700, cursor: "pointer", padding: "4px 10px", fontFamily: "inherit", whiteSpace: "nowrap" }}> Versões</button>
+                              <button onClick={() => setVersaoModal({ id: a.id, nome: a.nome })} style={{ background: "#3b6ea522", border: "1px solid #3b6ea544", borderRadius: 6, color: "#3b6ea5", fontSize: 11, fontWeight: 700, cursor: "pointer", padding: "4px 10px", fontFamily: "inherit", whiteSpace: "nowrap" }}> Versões</button>
                               <button onClick={() => setApontamentoModal(a)} style={{fontSize:11, padding:"2px 8px", background:"#f59e0b", color:"#fff", border:"none", borderRadius:4, cursor:"pointer", marginLeft:4}}> Apontamentos</button>
                               <button onClick={() => setPdfViewer(a)} style={{ fontSize: 11, padding: "4px 10px", background: "#6366f1", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap" }}> Anotar</button>
                               <button onClick={() => deleteArquivo(obraId, a.id, a.path)} style={{ background: C.danger + "22", border: `1px solid ${C.danger}44`, borderRadius: 6, color: C.danger, fontSize: 11, fontWeight: 700, cursor: "pointer", padding: "4px 10px", fontFamily: "inherit" }}><Trash2 size={13} /></button>
@@ -2275,7 +2275,7 @@ export default function GestaoObras() {
                     ) : histObra.length === 0 ? (
                       <div style={{ textAlign: "center", padding: "32px 0", color: C.muted, fontSize: 13 }}>Nenhuma alteração registrada nesta obra.</div>
                     ) : histObra.map((h, i) => {
-                      const ACAO_COR = { criado: "#2e9e5b", editado: "#b97a00", deletado: "#c0392b", fase: "#4a9eff" };
+                      const ACAO_COR = { criado: "#3f7a4b", editado: "#b07a1e", deletado: "#a33327", fase: "#3b6ea5" };
                       const cor = ACAO_COR[h.acao] || C.muted;
                       return (
                         <div key={h.id} style={{ display: "flex", gap: 14, paddingBottom: 16, marginBottom: 16, borderBottom: i < histObra.length - 1 ? `1px solid ${C.border}` : "none" }}>
@@ -2290,9 +2290,9 @@ export default function GestaoObras() {
                             {h.detalhes?.campos?.map((c, j) => (
                               <div key={j} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 11, marginTop: 4 }}>
                                 <span style={{ color: C.muted, minWidth: 80 }}>{c.campo}</span>
-                                <span style={{ background: "#f5e6e6", color: "#c0392b", borderRadius: 4, padding: "1px 8px", fontFamily: "monospace", maxWidth: 120, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.de}</span>
+                                <span style={{ background: "#f5e6e6", color: "#a33327", borderRadius: 4, padding: "1px 8px", fontFamily: "monospace", maxWidth: 120, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.de}</span>
                                 <span style={{ color: C.muted }}>→</span>
-                                <span style={{ background: "#e6f5ec", color: "#2e9e5b", borderRadius: 4, padding: "1px 8px", fontFamily: "monospace", maxWidth: 120, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.para}</span>
+                                <span style={{ background: "#e6f5ec", color: "#3f7a4b", borderRadius: 4, padding: "1px 8px", fontFamily: "monospace", maxWidth: 120, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.para}</span>
                               </div>
                             ))}
                           </div>
@@ -2413,7 +2413,7 @@ export default function GestaoObras() {
                                 <div style={{ fontWeight: 700, fontSize: 14 }}>{p.codigo}</div>
                                 {p.descricao && <div style={{ fontSize: 12, color: C.muted }}>{p.descricao}</div>}
                                 {p.local_instalacao && <div style={{ fontSize: 11, color: C.muted }}> {p.local_instalacao}</div>}
-                                {p.ifc_element_id && <div style={{ fontSize: 11, color: "#4a9eff" }}> IFC #{p.ifc_element_id}</div>}
+                                {p.ifc_element_id && <div style={{ fontSize: 11, color: "#3b6ea5" }}> IFC #{p.ifc_element_id}</div>}
                                 {p.montado_por && <div style={{ fontSize: 11, color: C.success, marginTop: 3 }}> {p.montado_por} · {p.montado_em ? new Date(p.montado_em).toLocaleDateString("pt-BR") : ""}</div>}
                               </div>
                               <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 8, background: (p.status === "Montado" ? C.success : C.warning) + "20", color: p.status === "Montado" ? C.success : C.warning, flexShrink: 0 }}>{p.status}</span>
@@ -2459,7 +2459,7 @@ export default function GestaoObras() {
                 {abaAtiva === "garantia" && (() => {
                   const CATS_CHAMADO = ["Elétrica","Hidráulica","Estrutural","Acabamento / Gesso","Esquadrias","Cobertura","Outro"];
                   const PRIORIDADE_COR = { "Alta": C.danger, "Média": C.warning, "Baixa": C.success };
-                  const STATUS_CHAMADO_COR = { "Aberto": "#4a9eff", "Em andamento": C.warning, "Resolvido": C.success, "Cancelado": C.muted };
+                  const STATUS_CHAMADO_COR = { "Aberto": "#3b6ea5", "Em andamento": C.warning, "Resolvido": C.success, "Cancelado": C.muted };
                   const listaChamados = chamados[obraId] || [];
                   const abertos = listaChamados.filter((c) => c.status === "Aberto" || c.status === "Em andamento");
                   const custoTotal = listaChamados.filter((c) => c.status === "Resolvido").reduce((a, c) => a + (Number(c.custo_reparo) || 0), 0);
@@ -2484,7 +2484,7 @@ export default function GestaoObras() {
                       {/* KPIs */}
                       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 20 }}>
                         {[
-                          { label: "Chamados abertos", value: abertos.length, cor: abertos.length > 0 ? "#4a9eff" : C.success },
+                          { label: "Chamados abertos", value: abertos.length, cor: abertos.length > 0 ? "#3b6ea5" : C.success },
                           { label: "Total de chamados", value: listaChamados.length, cor: C.muted },
                           { label: "Custo de garantia", value: `R$ ${custoTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`, cor: custoTotal > 0 ? C.danger : C.success },
                         ].map((kpi) => (
@@ -2734,8 +2734,8 @@ export default function GestaoObras() {
                     <Btn variant="ghost" size="sm" fullWidth onClick={abrirEditar} disabled={!podeEditar()}> Editar obra</Btn>
                     <button onClick={gerarDossie} style={{
                       width: "100%", padding: "8px 0",
-                      background: "#2e9e5b22", border: "1px solid #2e9e5b44",
-                      borderRadius: 6, color: "#2e9e5b", fontSize: 12, fontWeight: 700,
+                      background: "#3f7a4b22", border: "1px solid #3f7a4b44",
+                      borderRadius: 6, color: "#3f7a4b", fontSize: 12, fontWeight: 700,
                       cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
                     }}> Dossiê</button>
                     <button onClick={() => { setRelPdfWaLink(null); setRelPdfModal(true); }} style={{
@@ -2747,18 +2747,18 @@ export default function GestaoObras() {
                     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                       <button onClick={copiarLinkPortal} style={{
                         width: "100%", padding: "8px 0",
-                        background: "#4a9eff22", border: "1px solid #4a9eff44",
-                        borderRadius: 6, color: "#4a9eff", fontSize: 12, fontWeight: 700,
+                        background: "#3b6ea522", border: "1px solid #3b6ea544",
+                        borderRadius: 6, color: "#3b6ea5", fontSize: 12, fontWeight: 700,
                         cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
                       }}>
                         {obra.token_portal ? " Link do portal" : " Gerar link"}
                       </button>
                       {obra.token_portal && (
                         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                          <div style={{ fontSize: 10, color: "#4a9eff", background: "#4a9eff11", borderRadius: 4, padding: "3px 8px", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          <div style={{ fontSize: 10, color: "#3b6ea5", background: "#3b6ea511", borderRadius: 4, padding: "3px 8px", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                             /portal/{obra.token_portal}
                           </div>
-                          <button onClick={gerarTokenPortal} title="Gerar novo token" style={{ background: "none", border: "none", cursor: "pointer", color: "#4a9eff66", fontSize: 12, padding: 2 }}>↺</button>
+                          <button onClick={gerarTokenPortal} title="Gerar novo token" style={{ background: "none", border: "none", cursor: "pointer", color: "#3b6ea566", fontSize: 12, padding: 2 }}>↺</button>
                         </div>
                       )}
                       <button onClick={async () => {
@@ -2884,8 +2884,8 @@ export default function GestaoObras() {
                 }}>
                   <div style={{
                     width: 20, height: 20, borderRadius: 4, flexShrink: 0,
-                    border: `2px solid ${checklistMarcados[i] ? "#2e9e5b" : C.border}`,
-                    background: checklistMarcados[i] ? "#2e9e5b" : "transparent",
+                    border: `2px solid ${checklistMarcados[i] ? "#3f7a4b" : C.border}`,
+                    background: checklistMarcados[i] ? "#3f7a4b" : "transparent",
                     display: "flex", alignItems: "center", justifyContent: "center",
                   }}>
                     {checklistMarcados[i] && <span style={{ color: "#fff", fontSize: 12, fontWeight: 700 }}></span>}
@@ -3263,7 +3263,7 @@ export default function GestaoObras() {
             />
             <div style={{ display: "flex", gap: 10 }}>
               <button onClick={() => setRelMensalModal(false)} style={{ flex: 1, padding: "9px 0", background: C.darker, border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}>Cancelar</button>
-              <button onClick={() => gerarRelatorioMensal(relMensalMes)} style={{ flex: 1, padding: "9px 0", background: "#4a9eff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 700, color: "#fff", cursor: "pointer", fontFamily: "inherit" }}> Gerar PDF</button>
+              <button onClick={() => gerarRelatorioMensal(relMensalMes)} style={{ flex: 1, padding: "9px 0", background: "#3b6ea5", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 700, color: "#fff", cursor: "pointer", fontFamily: "inherit" }}> Gerar PDF</button>
             </div>
           </div>
         </div>

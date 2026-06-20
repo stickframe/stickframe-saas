@@ -13,7 +13,7 @@ function getInitials(nome) {
   return (nome || "?").split(" ").slice(0, 2).map((w) => w[0]).join("").toUpperCase();
 }
 
-const COLORS = ["#981915","#2e9e5b","#4a7af8","#b97a00","#7c3aed","#0891b2"];
+const COLORS = ["#981915","#3f7a4b","#4a7af8","#b07a1e","#7c3aed","#0891b2"];
 function colorFor(id) { return COLORS[id?.charCodeAt(0) % COLORS.length] || COLORS[0]; }
 
 export default function PresenceAvatars() {
@@ -36,7 +36,7 @@ export default function PresenceAvatars() {
             background: colorFor(u.id), color: "#fff",
             fontSize: 11, fontWeight: 700,
             display: "flex", alignItems: "center", justifyContent: "center",
-            border: "2px solid #2e9e5b",
+            border: "2px solid #3f7a4b",
             cursor: "default",
           }}
         >
