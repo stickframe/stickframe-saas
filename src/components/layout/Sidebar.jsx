@@ -5,6 +5,9 @@ import useAppStore from "../../store/useAppStore";
 import { sb, getEmpresaId } from "../../services/supabase";
 import { LOGO_STICKFRAME } from "../../utils/cdn";
 import { playNotificationSound } from "../../utils/audio";
+import ModalUpgradePro from "../ui/ModalUpgradePro";
+
+const ENTERPRISE_PAGES = new Set(["bim_sf", "bim", "bi", "dashboard_analytics", "inteligencia", "ecossistema"]);
 
 function NavIcon({ name, size = 16, color }) {
   const Icon = LucideIcons[name];
@@ -96,6 +99,8 @@ export default function Sidebar({ open, onClose }) {
   const logout        = useAppStore((s) => s.logout);
   const clientes      = useAppStore((s) => s.clientes);
   const [confirm, setConfirm] = useState(false);
+  const [upgradeModal, setUpgradeModal] = useState(null);
+  const plano = useAppStore((s) => s.plano);
 
   const perfisCustomizados = useAppStore((s) => s.perfisCustomizados);
   const perfilCustom = !PERFIS[user?.perfil]
@@ -199,28 +204,38 @@ export default function Sidebar({ open, onClose }) {
           }}>{GRUPO_LABEL[grupo]}</div>
           {list.map(n => {
             const isActive = active === n.key;
+            const isLocked = ENTERPRISE_PAGES.has(n.key) && plano !== "enterprise";
             const badges = [];
             if (n.key === "crm" && followupsVencidos > 0)
               badges.push(<span key="fu" style={{ background: "#981915", color: "#fff", borderRadius: 100, fontSize: 9, fontWeight: 700, padding: "1px 6px" }}>{followupsVencidos}</span>);
             if (n.key === "orcamentos" && preOrcCount > 0)
               badges.push(<span key="orc" style={{ background: "#2e9e5b", color: "#fff", borderRadius: 100, fontSize: 9, fontWeight: 700, padding: "1px 6px" }}>{preOrcCount}</span>);
             return (
-              <button key={n.key} onClick={() => { setActivePage(n.key); onClose?.(); }}
+              <button key={n.key} onClick={() => {
+                if (isLocked) { setUpgradeModal(n.label); return; }
+                setActivePage(n.key); onClose?.();
+              }}
                 style={{
                   display: "flex", alignItems: "center", gap: 9, width: "100%",
-                  padding: pad, background: isActive ? "rgba(152,25,21,0.18)" : "transparent",
-                  border: "none", borderLeft: isActive ? "3px solid #981915" : "3px solid transparent",
-                  cursor: "pointer", color: isActive ? "#ffffff" : "#9aa0a8",
-                  fontSize, fontWeight: isActive ? 700 : 500,
+                  padding: pad,
+                  background: isActive && !isLocked ? "rgba(152,25,21,0.18)" : "transparent",
+                  border: "none",
+                  borderLeft: isActive && !isLocked ? "3px solid #981915" : "3px solid transparent",
+                  cursor: "pointer",
+                  color: isLocked ? "#4a5060" : isActive ? "#ffffff" : "#9aa0a8",
+                  fontSize, fontWeight: isActive && !isLocked ? 700 : 500,
                   textAlign: "left", transition: "all .12s", fontFamily: "inherit",
+                  opacity: isLocked ? 0.75 : 1,
                 }}
-                onMouseEnter={e => { if (!isActive) { e.currentTarget.style.background="#1e2127"; e.currentTarget.style.color="#fff"; }}}
-                onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background="transparent"; e.currentTarget.style.color="#9aa0a8"; }}}
+                onMouseEnter={e => { if (!isActive && !isLocked) { e.currentTarget.style.background="#1e2127"; e.currentTarget.style.color="#fff"; }}}
+                onMouseLeave={e => { if (!isActive && !isLocked) { e.currentTarget.style.background="transparent"; e.currentTarget.style.color="#9aa0a8"; }}}
               >
-                <NavIcon name={n.icon} size={iconSz} color={isActive ? "#fff" : "#9aa0a8"} />
+                <NavIcon name={n.icon} size={iconSz} color={isLocked ? "#4a5060" : isActive ? "#fff" : "#9aa0a8"} />
                 <span style={{ flex: 1 }}>{n.label}</span>
                 {badges}
-                {n.badge && <NavBadge badge={n.badge} />}
+                {isLocked ? (
+                  <span style={{ fontSize: 9, fontWeight: 800, padding: "2px 5px", borderRadius: 4, background: "#3b6ea522", color: "#3b6ea5", letterSpacing: 0.5 }}>Enterprise</span>
+                ) : n.badge ? <NavBadge badge={n.badge} /> : null}
               </button>
             );
           })}
@@ -421,6 +436,8 @@ export default function Sidebar({ open, onClose }) {
           </button>
         </div>
       </aside>
+
+      {upgradeModal && <ModalUpgradePro featureNome={upgradeModal} onClose={() => setUpgradeModal(null)} />}
 
       {/* Mobile bottom nav bar */}
       <nav className="mobile-bottom-nav" style={{

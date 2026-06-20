@@ -1,91 +1,122 @@
 import { useState } from "react";
 import { sb } from "../../services/supabase";
-import { C } from "../../utils/constants";
 
-export default function ModalUpgradePro({ onClose }) {
-  const [nome,      setNome]      = useState("");
-  const [email,     setEmail]     = useState("");
-  const [cpfCnpj,   setCpfCnpj]   = useState("");
-  const [loading,   setLoading]   = useState(false);
-  const [erro,      setErro]      = useState("");
+const PLANOS = [
+  {
+    id: "starter",
+    nome: "Starter",
+    preco: "Grátis",
+    sub: "14 dias de trial",
+    cor: "#57514a",
+    recursos: ["CRM básico (até 20 leads)", "Calculadora de orçamento", "Dashboard resumido", "1 usuário"],
+    nao: ["Gestão de obras", "Financeiro", "BIM", "Analytics", "SST"],
+  },
+  {
+    id: "pro",
+    nome: "Pro",
+    preco: "R$ 297",
+    sub: "/mês · até 10 usuários",
+    cor: "#981915",
+    destaque: true,
+    recursos: ["Tudo do Starter", "Gestão de obras ilimitada", "Financeiro & DRE", "CRM completo", "SST & Checklists", "Suprimentos", "Diário de obra", "Relatórios PDF", "Suporte prioritário"],
+    nao: ["BIM / IFC 3D", "Analytics avançado", "Webhooks & API"],
+  },
+  {
+    id: "enterprise",
+    nome: "Enterprise",
+    preco: "R$ 597",
+    sub: "/mês · usuários ilimitados",
+    cor: "#3b6ea5",
+    recursos: ["Tudo do Pro", "BIM / Viewer IFC 3D", "Analytics avançado", "Integrações & Webhooks", "Multi-empresa", "Gerente de conta", "SLA 99,9%"],
+    nao: [],
+  },
+];
 
-  async function handleUpgrade(e) {
-    e.preventDefault();
-    setErro(""); setLoading(true);
+export default function ModalUpgradePro({ onClose, featureNome }) {
+  const [planSel, setPlanSel] = useState("pro");
+  const [loading, setLoading] = useState(false);
+
+  async function handleUpgrade(planId) {
+    if (planId === "starter") { onClose?.(); return; }
+    setLoading(true);
     try {
-      const { data, error } = await sb.functions.invoke("upgrade-pro", {
-        body: { nome, email, cpfCnpj: cpfCnpj || undefined },
-      });
+      const { data, error } = await sb.functions.invoke("upgrade-pro", { body: { plano: planId } });
       if (error) throw error;
-      if (data?.error) throw new Error(data.error);
       if (data?.link) window.open(data.link, "_blank");
       onClose?.();
     } catch (err) {
-      setErro(err.message || "Erro ao gerar cobrança. Tente novamente.");
-    } finally {
-      setLoading(false);
-    }
+      console.error(err);
+    } finally { setLoading(false); }
   }
 
-  const inp = {
-    width: "100%", padding: "10px 12px", fontSize: 14,
-    border: `1px solid ${C.border}`, borderRadius: 8,
-    fontFamily: "inherit", outline: "none", boxSizing: "border-box",
-    background: C.darker, color: C.text,
-  };
-
   return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.55)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
-      <div style={{ background: C.surface, borderRadius: 20, padding: "32px 28px", width: "100%", maxWidth: 420, boxShadow: "0 24px 64px rgba(0,0,0,.18)" }}>
-        <div style={{ textAlign: "center", marginBottom: 24 }}>
-          <div style={{ fontSize: 36, marginBottom: 8 }}></div>
-          <div style={{ fontSize: 20, fontWeight: 800, color: C.text }}>Fazer upgrade para Pro</div>
-          <div style={{ fontSize: 13, color: C.muted, marginTop: 6 }}>R$ 297/mês · obras ilimitadas · até 10 usuários</div>
+    <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.65)", zIndex:1000, display:"flex", alignItems:"center", justifyContent:"center", padding:16, backdropFilter:"blur(4px)" }}>
+      <div style={{ background:"#fff", borderRadius:20, width:"100%", maxWidth:640, maxHeight:"90vh", overflowY:"auto", boxShadow:"0 32px 80px rgba(0,0,0,.28)", position:"relative" }}>
+        {/* Header */}
+        <div style={{ padding:"28px 28px 0", textAlign:"center" }}>
+          <button onClick={onClose} style={{ position:"absolute", top:16, right:16, background:"none", border:"none", cursor:"pointer", fontSize:20, color:"#8c847a" }}>×</button>
+          {featureNome && (
+            <div style={{ display:"inline-block", background:"#f3e7e5", color:"#981915", borderRadius:8, padding:"4px 12px", fontSize:12, fontWeight:700, marginBottom:12 }}>
+              🔒 {featureNome} — recurso premium
+            </div>
+          )}
+          <h2 style={{ fontSize:22, fontWeight:800, color:"#26231f", margin:"0 0 6px" }}>Escolha seu plano</h2>
+          <p style={{ fontSize:13, color:"#8c847a", margin:0 }}>Sem contrato de fidelidade · Cancele quando quiser</p>
         </div>
 
-        {/* Benefícios resumidos */}
-        <div style={{ background: C.brickSoft, border: `1px solid ${C.red}33`, borderRadius: 10, padding: "12px 16px", marginBottom: 20 }}>
-          {["Obras ilimitadas", "Até 10 usuários", "Relatórios PDF", "CRM de clientes", "Suporte prioritário"].map((b) => (
-            <div key={b} style={{ fontSize: 13, color: C.red, fontWeight: 600, display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-              <span></span> {b}
+        {/* Plans grid */}
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:12, padding:"24px 24px 0" }}>
+          {PLANOS.map(p => (
+            <div key={p.id} onClick={() => setPlanSel(p.id)} style={{
+              border: `2px solid ${planSel === p.id ? p.cor : "#e7e1d8"}`,
+              borderRadius:14, padding:20, cursor:"pointer", position:"relative",
+              background: planSel === p.id ? p.cor + "06" : "#fff",
+              transition:"all .15s",
+            }}>
+              {p.destaque && (
+                <div style={{ position:"absolute", top:-11, left:"50%", transform:"translateX(-50%)", background:p.cor, color:"#fff", borderRadius:99, fontSize:10, fontWeight:800, padding:"3px 12px", whiteSpace:"nowrap" }}>
+                  Mais popular
+                </div>
+              )}
+              <div style={{ fontSize:16, fontWeight:800, color:"#26231f", marginBottom:4 }}>{p.nome}</div>
+              <div style={{ fontSize:22, fontWeight:900, color:p.cor, lineHeight:1 }}>{p.preco}</div>
+              <div style={{ fontSize:11, color:"#8c847a", marginBottom:14 }}>{p.sub}</div>
+              <div style={{ display:"flex", flexDirection:"column", gap:5 }}>
+                {p.recursos.map(r => (
+                  <div key={r} style={{ display:"flex", gap:7, alignItems:"flex-start", fontSize:12, color:"#57514a" }}>
+                    <span style={{ color:"#3f7a4b", fontWeight:700, flexShrink:0 }}>✓</span>{r}
+                  </div>
+                ))}
+                {p.nao.map(r => (
+                  <div key={r} style={{ display:"flex", gap:7, alignItems:"flex-start", fontSize:12, color:"#c0b8b0" }}>
+                    <span style={{ flexShrink:0 }}>—</span>{r}
+                  </div>
+                ))}
+              </div>
             </div>
           ))}
         </div>
 
-        {erro && (
-          <div style={{ background: C.danger + "15", border: `1px solid ${C.danger}44`, borderRadius: 8, padding: "10px 14px", fontSize: 13, color: C.danger, marginBottom: 14 }}>
-            {erro}
+        {/* CTA */}
+        <div style={{ padding:"20px 24px 28px" }}>
+          {PLANOS.map(p => planSel !== p.id ? null : (
+            <button key={p.id} onClick={() => handleUpgrade(p.id)} disabled={loading} style={{
+              width:"100%", padding:"14px 0", background: p.id === "starter" ? "#f4f1ec" : p.cor,
+              color: p.id === "starter" ? "#57514a" : "#fff",
+              border:"none", borderRadius:10, fontSize:15, fontWeight:800,
+              cursor:"pointer", fontFamily:"inherit",
+            }}>
+              {loading ? "Aguarde…" : p.id === "starter" ? "Continuar no Starter" : `Assinar ${p.nome} →`}
+            </button>
+          ))}
+          <div style={{ textAlign:"center", marginTop:14, display:"flex", justifyContent:"center", gap:20 }}>
+            {["🔒 Pagamento seguro", "✓ Sem fidelidade", "🇧🇷 Suporte em PT-BR"].map(t => (
+              <span key={t} style={{ fontSize:11, color:"#8c847a" }}>{t}</span>
+            ))}
           </div>
-        )}
-
-        <form onSubmit={handleUpgrade}>
-          <div style={{ marginBottom: 12 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 5 }}>NOME COMPLETO *</div>
-            <input style={inp} value={nome} onChange={(e) => setNome(e.target.value)} placeholder="João Silva" required />
-          </div>
-          <div style={{ marginBottom: 12 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 5 }}>E-MAIL *</div>
-            <input style={inp} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="joao@empresa.com.br" required />
-          </div>
-          <div style={{ marginBottom: 20 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 5 }}>CPF / CNPJ (opcional)</div>
-            <input style={inp} value={cpfCnpj} onChange={(e) => setCpfCnpj(e.target.value)} placeholder="000.000.000-00 ou 00.000.000/0001-00" />
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading || !nome || !email}
-            style={{ width: "100%", padding: "14px 0", background: loading ? "#94a3b8" : C.red, color: "#fff", border: "none", borderRadius: 10, fontSize: 15, fontWeight: 800, fontFamily: "inherit", cursor: loading ? "not-allowed" : "pointer", marginBottom: 10 }}
-          >
-            {loading ? "Gerando link de pagamento…" : "Gerar link de pagamento →"}
+          <button onClick={onClose} style={{ display:"block", margin:"12px auto 0", background:"none", border:"none", color:"#8c847a", fontSize:12, cursor:"pointer", fontFamily:"inherit" }}>
+            Fechar
           </button>
-          <button type="button" onClick={onClose} style={{ width: "100%", padding: "10px 0", background: "transparent", color: C.muted, border: "none", fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}>
-            Cancelar
-          </button>
-        </form>
-
-        <div style={{ fontSize: 11, color: C.muted, textAlign: "center", marginTop: 12 }}>
-          Você será redirecionado para o link de pagamento seguro (PIX, boleto ou cartão).
         </div>
       </div>
     </div>
