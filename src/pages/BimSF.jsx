@@ -4,6 +4,8 @@ import {
   listarModelos, criarModelo, deletarModelo, uploadIFC,
   listarApontamentos, criarApontamento, atualizarApontamento, deletarApontamento,
 } from "../services/repositories/bimRepository";
+import StickViewBIM from "../components/bim/StickViewBIM";
+import { useToast } from "../components/ui/Toast";
 
 const PATHS = {
   cube3d:  <><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></>,
@@ -371,47 +373,23 @@ function TabRevisoes() {
   );
 }
 
-function TabViewer() {
-  const tools = [
-    { ic: "layers", l: "Plantas por pavimento", s: "Separar modelo por andar" },
-    { ic: "tag",    l: "Elementos marcados",     s: "Apontamentos no modelo" },
-    { ic: "eye",    l: "Visibilidade",           s: "Ocultar camadas por tipo" },
-  ];
+function TabStickView({ onAddToOrcamento }) {
   return (
     <div>
-      <div style={{
-        background: "var(--graphite, #2b2b2e)", borderRadius: 14, height: 420,
-        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-        gap: 14, position: "relative", overflow: "hidden",
-      }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
         <div style={{
-          position: "absolute", inset: 0,
-          backgroundImage: "linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px)",
-          backgroundSize: "40px 40px",
-        }} />
-        <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
-          <div style={{ width: 56, height: 56, borderRadius: 14, background: "rgba(255,255,255,.07)", border: "1px solid rgba(255,255,255,.12)", display: "grid", placeItems: "center" }}>
-            <Ic n="cube3d" w={28} c="rgba(255,255,255,.4)" />
-          </div>
-          <div style={{ fontWeight: 700, fontSize: 18, color: "rgba(255,255,255,.6)", letterSpacing: 0.5 }}>Viewer 3D</div>
-          <div style={{ fontSize: 12, color: "rgba(255,255,255,.35)", textAlign: "center", maxWidth: 300, lineHeight: 1.6 }}>
-            Importe um modelo .IFC ou .DAE para visualizar a estrutura em 3D e vincular apontamentos.
-          </div>
+          display: "inline-flex", alignItems: "center", gap: 7,
+          background: "var(--brick-soft, #f3e7e5)", border: "1.5px solid var(--brick)",
+          borderRadius: 8, padding: "5px 12px",
+          fontSize: 12, fontWeight: 800, color: "var(--brick)", letterSpacing: 0.3,
+        }}>
+          StickView™ — BIM Inteligente
         </div>
+        <span style={{ fontSize: 12.5, color: "var(--muted)" }}>
+          Clique nos elementos 3D para ver dados de produto, status de compra e adicionar ao orçamento
+        </span>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 10, marginTop: 14 }}>
-        {tools.map((t) => (
-          <div key={t.l} style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 10, padding: "14px 16px", display: "flex", gap: 12, alignItems: "center" }}>
-            <div style={{ width: 32, height: 32, borderRadius: 8, background: "var(--surface-2)", display: "grid", placeItems: "center", flexShrink: 0 }}>
-              <Ic n={t.ic} w={15} c="var(--steel, #3b6ea5)" />
-            </div>
-            <div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: "var(--ink)" }}>{t.l}</div>
-              <div style={{ fontSize: 11.5, color: "var(--muted)" }}>{t.s}</div>
-            </div>
-          </div>
-        ))}
-      </div>
+      <StickViewBIM onAddToOrcamento={onAddToOrcamento} />
     </div>
   );
 }
@@ -444,15 +422,16 @@ function TabPreviewKit() {
 }
 
 const TABS = [
-  { id: "modelos",      l: "Modelos",      icon: "cube3d"   },
+  { id: "stickview",    l: "StickView™",   icon: "cube3d"   },
+  { id: "modelos",      l: "Modelos",      icon: "file"     },
   { id: "revisoes",     l: "Revisões",     icon: "refresh"  },
   { id: "apontamentos", l: "Apontamentos", icon: "pin"      },
-  { id: "viewer",       l: "Viewer 3D",    icon: "eye"      },
   { id: "preview",      l: "Preview Kit",  icon: "home"     },
 ];
 
 export default function BimSF() {
-  const [tab, setTab] = useState("modelos");
+  const [tab, setTab] = useState("stickview");
+  const toast = useToast();
   const obras    = useAppStore((s) => s.obras);
   const usuario  = useAppStore((s) => s.usuario);
   const obraAtual = obras[0];
@@ -559,10 +538,10 @@ export default function BimSF() {
         ))}
       </div>
 
+      {tab === "stickview"    && <TabStickView onAddToOrcamento={(item) => toast.success(`✓ ${item.nome} adicionado ao orçamento`)} />}
       {tab === "modelos"      && <TabModelos obraId={obraId} empresaId={empresaId} modelos={modelos} carregarModelos={carregarModelos} deletando={deletando} setDeletando={setDeletando} />}
       {tab === "revisoes"     && <TabRevisoes />}
       {tab === "apontamentos" && <TabApontamentos obraId={obraId} modelos={modelos} apontamentos={apontamentos} carregarApontamentos={carregarApontamentos} />}
-      {tab === "viewer"       && <TabViewer />}
       {tab === "preview"      && <TabPreviewKit />}
     </div>
   );
