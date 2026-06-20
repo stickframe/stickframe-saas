@@ -358,7 +358,7 @@ export default function LandingPage() {
               <a href="#comparativo">Comparativo</a>
               <a href="#precos">Preços</a>
               <a href="/login">Entrar</a>
-              <a href="#demo" className="btn btn-white" style={{ padding: "9px 20px", fontSize: 14 }}>Solicitar demonstração</a>
+              <a href="#demo" className="btn btn-outline-w" style={{ padding: "9px 20px", fontSize: 14 }}>Solicitar demonstração</a>
             </div>
             <button className="lp-burger" aria-label="Menu" onClick={() => setMenuOpen(true)}>
               <Ic.Menu />
