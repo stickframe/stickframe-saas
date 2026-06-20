@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import useAppStore from "../store/useAppStore";
+import { useModuleLoad } from "../hooks/useModuleLoad";
 import {
   listarModelos, criarModelo, deletarModelo, uploadIFC,
   listarApontamentos, criarApontamento, atualizarApontamento, deletarApontamento,
@@ -365,11 +366,11 @@ function TabApontamentos({ obraId, modelos, apontamentos, carregarApontamentos }
   );
 }
 
-function TabRevisoes() {
+function TabRevisoes({ onGoToModelos }) {
   return (
     <EmptyBox icon="refresh" title="Nenhuma revisão registrada"
       sub="Revisões de projeto aparecem aqui após a importação do primeiro modelo IFC.">
-      <BtnGhost><Ic n="upload" w={14} /> Importar modelo</BtnGhost>
+      <BtnGhost onClick={onGoToModelos}><Ic n="upload" w={14} /> Importar modelo</BtnGhost>
     </EmptyBox>
   );
 }
@@ -431,13 +432,15 @@ const TABS = [
 ];
 
 export default function BimSF() {
+  useModuleLoad("obras");
   const [tab, setTab] = useState("stickview");
   const toast = useToast();
-  const obras    = useAppStore((s) => s.obras);
-  const usuario  = useAppStore((s) => s.usuario);
+  const obras     = useAppStore((s) => s.obras);
+  const user      = useAppStore((s) => s.user);
+  const empresaId = useAppStore((s) => s.empresaId);
   const obraAtual = obras[0];
-  const obraId   = obraAtual?.id;
-  const empresaId = usuario?.empresa_id;
+  const obraId    = obraAtual?.id;
+  const usuario   = user;
 
   const [modelos, setModelos]         = useState([]);
   const [apontamentos, setApontamentos] = useState([]);
@@ -561,7 +564,7 @@ export default function BimSF() {
         }
       }} />}
       {tab === "modelos"      && <TabModelos obraId={obraId} empresaId={empresaId} modelos={modelos} carregarModelos={carregarModelos} deletando={deletando} setDeletando={setDeletando} />}
-      {tab === "revisoes"     && <TabRevisoes />}
+      {tab === "revisoes"     && <TabRevisoes onGoToModelos={() => setTab("modelos")} />}
       {tab === "apontamentos" && <TabApontamentos obraId={obraId} modelos={modelos} apontamentos={apontamentos} carregarApontamentos={carregarApontamentos} />}
       {tab === "preview"      && <TabPreviewKit />}
     </div>
