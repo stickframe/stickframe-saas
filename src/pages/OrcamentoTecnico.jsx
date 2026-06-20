@@ -1213,6 +1213,20 @@ export default function OrcamentoTecnico() {
           </div>
         </div>
 
+        <button
+          onClick={calcular}
+          disabled={!area}
+          style={{
+            padding: "13px 0", background: "var(--brick)", color: "#fff", border: "none",
+            borderRadius: 11, fontSize: 14.5, fontWeight: 700,
+            cursor: area ? "pointer" : "not-allowed", opacity: area ? 1 : 0.5,
+            display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
+            fontFamily: "inherit", letterSpacing: .3, width: "100%",
+          }}
+        >
+          <Ic n="barchart" w={16} c="#fff" /> Calcular Orçamento
+        </button>
+
         {crmLead && (
           <div style={{ background: C.brickSoft, border: `1px solid ${C.red}44`, borderRadius: 8, padding: "10px 14px", display: "flex", alignItems: "center", gap: 10 }}>
             <span style={{ color: C.red }}><Ic n="link" w={16} /></span>
