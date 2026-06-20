@@ -1202,7 +1202,7 @@ export default function OrcamentoTecnico() {
       background: C.bg, alignItems: "flex-start", flexWrap: "wrap" }}>
 
       {/*  LEFT: configuração  */}
-      <div style={{ width: 400, flexShrink: 0, display: "flex", flexDirection: "column", gap: 14 }}>
+      <div style={{ width: 400, flexShrink: 0, display: "flex", flexDirection: "column", gap: 14, position: "sticky", top: 16, maxHeight: "calc(100vh - 32px)", overflowY: "auto" }}>
         <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
           <div style={{ width: 4, height: 42, borderRadius: 3, background: "var(--brick)", flexShrink: 0, marginTop: 2 }} />
           <div>
