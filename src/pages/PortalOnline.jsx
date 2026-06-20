@@ -47,7 +47,15 @@ export default function PortalOnline() {
         setDiario(data.diario || []);
         setMedicoes(data.medicoes || []);
         setOutras(data.outras_obras || []);
-        setFotos(data.fotos || []);
+        // Merge RPC fotos with photos stored in diario.fotos
+        const diarioFotos = (data.diario || [])
+          .flatMap((r) => (r.fotos || []).map((f) => ({
+            ...f,
+            fase: r.fase || "Geral",
+            data: r.data,
+            responsavel: r.responsavel,
+          })));
+        setFotos([...(data.fotos || []), ...diarioFotos]);
         setVistorias(data.vistorias || []);
         setEmpresa(data.empresa || null);
         setMensagens(data.mensagens || []);

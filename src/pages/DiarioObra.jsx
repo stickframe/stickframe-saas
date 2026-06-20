@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { ClipboardList, Save } from "../components/ui/Icon";
 import { useToast } from "../hooks/useToast";
 import { C, CLIMAS, TURNOS } from "../utils/constants";
@@ -11,6 +11,8 @@ import Select from "../components/ui/Select";
 import Modal from "../components/ui/Modal";
 import { useObraPermission, useObrasVisiveis } from "../hooks/useObraPermission";
 import { gerarSingleRdoPDF } from "../services/pdfService";
+import { sb } from "../services/supabase";
+import { storageUrl } from "../utils/cdn";
 
 const MESES = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
 
@@ -62,10 +64,21 @@ function Textarea({ value, onChange, placeholder, rows = 4 }) {
   );
 }
 
-//  Formulário de registro 
-function FormDiario({ form, setForm, onSave, onCancel }) {
-  const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
-  const ok  = form.data && form.responsavel && form.atividades;
+//  Formulário de registro
+function FormDiario({ form, setForm, onSave, onCancel, fotosFiles, setFotosFiles }) {
+  const set      = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
+  const ok       = form.data && form.responsavel && form.atividades;
+  const fileRef  = useRef(null);
+
+  function handleFotosPick(e) {
+    const files = Array.from(e.target.files || []);
+    setFotosFiles((prev) => [...prev, ...files]);
+    e.target.value = "";
+  }
+
+  function removerFoto(idx) {
+    setFotosFiles((prev) => prev.filter((_, i) => i !== idx));
+  }
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -133,6 +146,51 @@ function FormDiario({ form, setForm, onSave, onCancel }) {
           placeholder="Problemas, paralisações, visitas, acidentes..."
           rows={3}
         />
+      </div>
+
+      {/* Fotos do dia */}
+      <div>
+        <Label>Fotos do dia</Label>
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/*"
+          multiple
+          onChange={handleFotosPick}
+          style={{ display: "none" }}
+        />
+        {fotosFiles.length > 0 && (
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 10 }}>
+            {fotosFiles.map((f, i) => (
+              <div key={i} style={{ position: "relative", width: 72, height: 72 }}>
+                <img
+                  src={URL.createObjectURL(f)}
+                  alt={f.name}
+                  style={{ width: 72, height: 72, objectFit: "cover", borderRadius: 8, border: `1px solid ${C.border}` }}
+                />
+                <button
+                  onClick={() => removerFoto(i)}
+                  style={{
+                    position: "absolute", top: -6, right: -6, width: 18, height: 18,
+                    borderRadius: "50%", background: C.danger, border: "none",
+                    color: "#fff", fontSize: 11, cursor: "pointer", lineHeight: 1,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                  }}
+                >×</button>
+              </div>
+            ))}
+          </div>
+        )}
+        <button
+          onClick={() => fileRef.current?.click()}
+          style={{
+            fontSize: 12, color: C.steel, background: "none",
+            border: `1px dashed ${C.steel}`, borderRadius: 6,
+            padding: "8px 16px", cursor: "pointer", fontFamily: "inherit",
+          }}
+        >
+          📷 Adicionar fotos
+        </button>
       </div>
 
       {/* Ações */}
@@ -216,6 +274,24 @@ function ModalDetalhes({ reg, obra, onClose }) {
           </div>
         )}
 
+        {/* Fotos */}
+        {reg.fotos?.length > 0 && (
+          <div>
+            <div style={{ fontSize: 11, color: C.muted, marginBottom: 8 }}>FOTOS DO DIA ({reg.fotos.length})</div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+              {reg.fotos.map((f, i) => (
+                <a key={i} href={f.url} target="_blank" rel="noreferrer">
+                  <img
+                    src={f.url}
+                    alt={f.nome || `Foto ${i + 1}`}
+                    style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 8, border: `1px solid ${C.border}`, cursor: "pointer" }}
+                  />
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Rodapé e Ações */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: `1px solid ${C.border}`, paddingTop: 14, marginTop: 10 }}>
           <button
@@ -250,6 +326,7 @@ const FORM_VAZIO = {
   materiais: "",
   equipamentos: "",
   ocorrencias: "",
+  fotos: [],
 };
 
 export default function DiarioObra() {
@@ -260,14 +337,16 @@ export default function DiarioObra() {
   const diario    = useAppStore((s) => s.diario);
   const addDiario = useAppStore((s) => s.addDiario);
 
-  const [obraId,    setObraId]    = useState(null);
+  const [obraId,      setObraId]      = useState(null);
   const { podeEditar } = useObraPermission(obraId);
-  const [modal,     setModal]     = useState(false);
-  const [verReg,    setVerReg]    = useState(null);
-  const [form,      setForm]      = useState(FORM_VAZIO);
+  const [modal,       setModal]       = useState(false);
+  const [verReg,      setVerReg]      = useState(null);
+  const [form,        setForm]        = useState(FORM_VAZIO);
+  const [fotosFiles,  setFotosFiles]  = useState([]);
+  const [uploading,   setUploading]   = useState(false);
   const { toast, mostrarToast } = useToast();
-  const [online,    setOnline]    = useState(navigator.onLine);
-  const [pendentes, setPendentes] = useState(0);
+  const [online,      setOnline]      = useState(navigator.onLine);
+  const [pendentes,   setPendentes]   = useState(0);
 
   // Inicializa obraId quando obras carregarem (sem sobrescrever seleção manual)
   useEffect(() => {
@@ -304,22 +383,38 @@ export default function DiarioObra() {
 
   function abrirNovoRegistro() {
     setForm({ ...FORM_VAZIO, data: new Date().toISOString().slice(0, 10) });
+    setFotosFiles([]);
     setModal(true);
   }
 
   async function salvar() {
     if (!online) {
-      await salvarDiarioOffline(obraId, form);
+      await salvarDiarioOffline(obraId, { ...form, fotos: [] });
       setPendentes((n) => n + 1);
       setModal(false);
       setForm(FORM_VAZIO);
+      setFotosFiles([]);
       mostrarToast(" Sem internet — salvo localmente. Será sincronizado ao reconectar.");
       return;
     }
-    addDiario(obraId, form);
+
+    // Upload fotos para o bucket arquivos/diario/{obraId}/
+    let fotosUrls = [];
+    if (fotosFiles.length > 0) {
+      setUploading(true);
+      for (const file of fotosFiles) {
+        const path = `diario/${obraId}/${Date.now()}-${file.name.replace(/\s+/g, "_")}`;
+        const { error } = await sb.storage.from("arquivos").upload(path, file, { upsert: false });
+        if (!error) fotosUrls.push({ url: storageUrl(path), nome: file.name });
+      }
+      setUploading(false);
+    }
+
+    addDiario(obraId, { ...form, fotos: fotosUrls });
     setModal(false);
     setForm(FORM_VAZIO);
-    mostrarToast(" Registro salvo no diário!");
+    setFotosFiles([]);
+    mostrarToast(fotosUrls.length > 0 ? ` Registro salvo com ${fotosUrls.length} foto(s)!` : " Registro salvo no diário!");
   }
 
   const obra      = obras.find((o) => o.id === obraId) || null;
@@ -355,7 +450,16 @@ export default function DiarioObra() {
       {/* Modal novo registro */}
       {modal && (
         <Modal title=" Novo registro de diário" onClose={() => setModal(false)}>
-          <FormDiario form={form} setForm={setForm} onSave={salvar} onCancel={() => setModal(false)} />
+          <FormDiario
+            form={form} setForm={setForm}
+            onSave={salvar} onCancel={() => setModal(false)}
+            fotosFiles={fotosFiles} setFotosFiles={setFotosFiles}
+          />
+          {uploading && (
+            <div style={{ textAlign: "center", padding: 12, fontSize: 13, color: C.muted }}>
+              Fazendo upload das fotos...
+            </div>
+          )}
         </Modal>
       )}
 
@@ -395,10 +499,16 @@ export default function DiarioObra() {
 
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 22, flexWrap: "wrap", gap: 12 }}>
           <div>
-            <h2 style={{ fontSize: 22, fontWeight: 800 }}>Diário de Obra</h2>
-            <p style={{ color: C.muted, fontSize: 13, marginTop: 4 }}>Registro diário de atividades e ocorrências</p>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+              <div style={{ height: 3, width: 28, borderRadius: 2, background: C.red }} />
+              <h2 style={{ fontSize: 22, fontWeight: 800, margin: 0 }}>
+                StickField™
+                <span style={{ fontSize: 13, fontWeight: 500, color: C.muted, marginLeft: 8 }}>Diário de Obra</span>
+              </h2>
+            </div>
+            <p style={{ color: C.muted, fontSize: 13, marginTop: 2 }}>Registro diário de atividades, equipe e fotos da obra</p>
           </div>
-          {podeEditar() && <Btn onClick={abrirNovoRegistro}>+ Novo registro</Btn>}
+          {podeEditar() && <Btn onClick={abrirNovoRegistro}>📷 + Novo registro</Btn>}
         </div>
 
         {/* Seletor de obra */}

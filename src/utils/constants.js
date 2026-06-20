@@ -48,7 +48,7 @@ export const NAV = [
   { key: "obras",             label: "Gestão de Obras",      icon: "Building2",         grupo: "Obras" },
   { key: "cronograma",        label: "Cronograma",           brand: "StickPlan™",       icon: "BarChart2",       grupo: "Obras" },
   { key: "medicoes",          label: "Medições de Obra",     icon: "Ruler",             grupo: "Obras" },
-  { key: "diario",            label: "Diário de Obra",       icon: "BookOpen",          grupo: "Obras" },
+  { key: "diario",            label: "Diário de Obra",       brand: "StickField™",      icon: "BookOpen",          grupo: "Obras" },
   { key: "vistorias",         label: "Qualidade / FVS",      brand: "StickInspect™",    icon: "ClipboardCheck",  grupo: "Obras" },
   { key: "bim",               label: "BIM",                  icon: "Box",               grupo: "Obras" },
   { key: "quantitativos",     label: "Quantitativos",        icon: "Hash",              grupo: "Obras" },
