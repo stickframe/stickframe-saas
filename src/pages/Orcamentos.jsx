@@ -18,6 +18,9 @@ import Badge from "../components/ui/Badge";
 import Modal from "../components/ui/Modal";
 import FormAiMemorial from "../components/ui/FormAiMemorial";
 import CatalogoPicker from "../components/orcamento/CatalogoPicker";
+import { CATALOGO_PRODUTOS } from "../utils/insumosSF";
+
+const _catalogoMap = Object.fromEntries(CATALOGO_PRODUTOS.map(p => [p.id, p]));
 
 //  Status 
 const STATUS_OPTS = ["Aguardando resposta", "Em revisão", "Aprovado", "Recusado"];
@@ -345,84 +348,147 @@ function FormOrc({ form, setForm, clientes, onSave, onCancel, onDelete, btnLabel
         </div>
       </div>
 
-      {/* Opcionais */}
-      <div>
-        <Label>Itens do Orçamento</Label>
-        <div style={{ fontSize: 11, color: C.muted, marginBottom: 10 }}>Adicione itens manualmente ou selecione do catálogo de produtos. O cliente poderá aceitar ou rejeitar cada item na proposta.</div>
-        {(form.opcionais || []).map((op, i) => (
-          <div key={i} style={{ marginBottom: 8 }}>
-            {op.produtoId ? (
-              /* Item do catálogo */
-              <div style={{ display: "flex", gap: 8, alignItems: "center", background: "rgba(152,25,21,0.04)", border: `1px solid rgba(152,25,21,0.15)`, borderRadius: 8, padding: "8px 10px" }}>
-                <div style={{ flex: 2, minWidth: 0 }}>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: C.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{op.nome}</div>
-                  <div style={{ fontSize: 10, color: C.muted, marginTop: 2 }}>{op.unidade} · {fmt(op.precoUnit)}/un</div>
+      {/* Itens do Orçamento */}
+      {(() => {
+        const itens = form.opcionais || [];
+
+        // Subtotais por categoria (só itens do catálogo com categoria)
+        const subtotaisCat = {};
+        let totalManuais = 0;
+        itens.forEach(op => {
+          if (op.produtoId && op.categoria) {
+            subtotaisCat[op.categoria] = (subtotaisCat[op.categoria] || 0) + Number(op.preco || 0);
+          } else {
+            totalManuais += Number(op.preco || 0);
+          }
+        });
+        const totalItens = itens.reduce((s, op) => s + Number(op.preco || 0), 0);
+        const temItens = itens.length > 0;
+
+        return (
+          <div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
+              <Label>Itens do Orçamento</Label>
+              {temItens && (
+                <span style={{ fontSize: 12, fontWeight: 700, color: C.steel }}>
+                  Total: {fmt(totalItens)}
+                </span>
+              )}
+            </div>
+            <div style={{ fontSize: 11, color: C.muted, marginBottom: 10 }}>
+              Adicione itens manualmente ou selecione do catálogo. O cliente poderá aceitar ou rejeitar cada item na proposta.
+            </div>
+
+            {itens.map((op, i) => {
+              const precoAtual = op.produtoId ? _catalogoMap[op.produtoId]?.preco : null;
+              const variacaoPreco = precoAtual != null && op.precoUnit != null && Math.abs(precoAtual - op.precoUnit) > 0.01
+                ? precoAtual - op.precoUnit : null;
+
+              return (
+                <div key={i} style={{ marginBottom: 8 }}>
+                  {op.produtoId ? (
+                    <div style={{
+                      display: "flex", gap: 8, alignItems: "center",
+                      background: "rgba(152,25,21,0.05)", border: "1px solid rgba(152,25,21,0.2)",
+                      borderRadius: 9, padding: "8px 10px",
+                    }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: C.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {op.nome}
+                        </div>
+                        <div style={{ fontSize: 10, color: C.muted, marginTop: 2, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                          <span>{op.unidade} · {fmt(op.precoUnit)}/un</span>
+                          {op.categoria && <span style={{ background: "rgba(152,25,21,0.1)", padding: "1px 6px", borderRadius: 8, color: "#981915", fontWeight: 600 }}>{op.categoria}</span>}
+                          {variacaoPreco !== null && (
+                            <span title={`Preço atual no catálogo: ${fmt(precoAtual)}/un`} style={{
+                              background: variacaoPreco > 0 ? "rgba(176,122,30,0.15)" : "rgba(63,122,75,0.15)",
+                              color: variacaoPreco > 0 ? "#b07a1e" : "#3f7a4b",
+                              padding: "1px 6px", borderRadius: 8, fontWeight: 700, cursor: "help",
+                            }}>
+                              {variacaoPreco > 0 ? "↑" : "↓"} Preço {variacaoPreco > 0 ? "subiu" : "baixou"} para {fmt(precoAtual)}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <input
+                        type="number" min={1} value={op.quantidade || 1}
+                        onChange={(e) => {
+                          const arr = [...(form.opcionais || [])];
+                          const qtd = Math.max(1, Number(e.target.value) || 1);
+                          arr[i] = { ...arr[i], quantidade: qtd, preco: arr[i].precoUnit * qtd };
+                          setForm((f) => ({ ...f, opcionais: arr }));
+                        }}
+                        style={{ width: 52, padding: "5px 7px", borderRadius: 7, border: `1px solid ${C.border}`, fontSize: 12, fontFamily: "inherit", outline: "none", textAlign: "center" }}
+                      />
+                      <div style={{ fontSize: 13, fontWeight: 700, color: C.steel, minWidth: 72, textAlign: "right" }}>{fmt(op.preco)}</div>
+                      <button
+                        onClick={() => setForm((f) => ({ ...f, opcionais: f.opcionais.filter((_, j) => j !== i) }))}
+                        style={{ background: "none", border: "none", color: C.danger, cursor: "pointer", fontSize: 20, lineHeight: 1, padding: "0 4px" }}
+                      >×</button>
+                    </div>
+                  ) : (
+                    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                      <input
+                        value={op.nome}
+                        onChange={(e) => {
+                          const arr = [...(form.opcionais || [])];
+                          arr[i] = { ...arr[i], nome: e.target.value };
+                          setForm((f) => ({ ...f, opcionais: arr }));
+                        }}
+                        placeholder="Descrição do serviço"
+                        style={{ flex: 2, padding: "8px 12px", borderRadius: 7, border: `1px solid ${C.border}`, fontSize: 13, fontFamily: "inherit", outline: "none" }}
+                      />
+                      <input
+                        value={op.preco}
+                        onChange={(e) => {
+                          const arr = [...(form.opcionais || [])];
+                          arr[i] = { ...arr[i], preco: e.target.value };
+                          setForm((f) => ({ ...f, opcionais: arr }));
+                        }}
+                        placeholder="Valor (R$)"
+                        type="number"
+                        style={{ flex: 1, padding: "8px 12px", borderRadius: 7, border: `1px solid ${C.border}`, fontSize: 13, fontFamily: "inherit", outline: "none" }}
+                      />
+                      <button
+                        onClick={() => setForm((f) => ({ ...f, opcionais: f.opcionais.filter((_, j) => j !== i) }))}
+                        style={{ background: "none", border: "none", color: C.danger, cursor: "pointer", fontSize: 20, lineHeight: 1, padding: "0 4px" }}
+                      >×</button>
+                    </div>
+                  )}
                 </div>
-                <input
-                  type="number"
-                  min={1}
-                  value={op.quantidade || 1}
-                  onChange={(e) => {
-                    const arr = [...(form.opcionais || [])];
-                    const qtd = Math.max(1, Number(e.target.value) || 1);
-                    arr[i] = { ...arr[i], quantidade: qtd, preco: arr[i].precoUnit * qtd };
-                    setForm((f) => ({ ...f, opcionais: arr }));
-                  }}
-                  style={{ width: 56, padding: "6px 8px", borderRadius: 7, border: `1px solid ${C.border}`, fontSize: 13, fontFamily: "inherit", outline: "none", textAlign: "center" }}
-                />
-                <div style={{ fontSize: 13, fontWeight: 700, color: C.steel, minWidth: 72, textAlign: "right" }}>{fmt(op.preco)}</div>
-                <button
-                  onClick={() => setForm((f) => ({ ...f, opcionais: f.opcionais.filter((_, j) => j !== i) }))}
-                  style={{ background: "none", border: "none", color: C.danger, cursor: "pointer", fontSize: 20, lineHeight: 1, padding: "0 4px" }}
-                >×</button>
-              </div>
-            ) : (
-              /* Item manual */
-              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                <input
-                  value={op.nome}
-                  onChange={(e) => {
-                    const arr = [...(form.opcionais || [])];
-                    arr[i] = { ...arr[i], nome: e.target.value };
-                    setForm((f) => ({ ...f, opcionais: arr }));
-                  }}
-                  placeholder="Descrição do serviço"
-                  style={{ flex: 2, padding: "8px 12px", borderRadius: 7, border: `1px solid ${C.border}`, fontSize: 13, fontFamily: "inherit", outline: "none" }}
-                />
-                <input
-                  value={op.preco}
-                  onChange={(e) => {
-                    const arr = [...(form.opcionais || [])];
-                    arr[i] = { ...arr[i], preco: e.target.value };
-                    setForm((f) => ({ ...f, opcionais: arr }));
-                  }}
-                  placeholder="Valor (R$)"
-                  type="number"
-                  style={{ flex: 1, padding: "8px 12px", borderRadius: 7, border: `1px solid ${C.border}`, fontSize: 13, fontFamily: "inherit", outline: "none" }}
-                />
-                <button
-                  onClick={() => setForm((f) => ({ ...f, opcionais: f.opcionais.filter((_, j) => j !== i) }))}
-                  style={{ background: "none", border: "none", color: C.danger, cursor: "pointer", fontSize: 20, lineHeight: 1, padding: "0 4px" }}
-                >×</button>
+              );
+            })}
+
+            {/* Subtotais por categoria */}
+            {Object.keys(subtotaisCat).length > 1 && (
+              <div style={{ marginBottom: 12, padding: "10px 12px", background: "rgba(0,0,0,0.03)", borderRadius: 8, border: `1px solid ${C.border}` }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>Subtotais por categoria</div>
+                {Object.entries(subtotaisCat).map(([cat, val]) => (
+                  <div key={cat} style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: C.muted, marginBottom: 3 }}>
+                    <span>{cat}</span><span style={{ fontWeight: 600 }}>{fmt(val)}</span>
+                  </div>
+                ))}
+                {totalManuais > 0 && (
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: C.muted, marginBottom: 3 }}>
+                    <span>Itens manuais</span><span style={{ fontWeight: 600 }}>{fmt(totalManuais)}</span>
+                  </div>
+                )}
               </div>
             )}
+
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <button
+                onClick={() => setForm((f) => ({ ...f, opcionais: [...(f.opcionais || []), { nome: "", preco: "" }] }))}
+                style={{ fontSize: 12, color: C.steel, background: "none", border: `1px dashed ${C.steel}`, borderRadius: 6, padding: "6px 14px", cursor: "pointer", fontFamily: "inherit" }}
+              >+ Manual</button>
+              <button
+                onClick={() => setShowCatalogo(true)}
+                style={{ fontSize: 12, color: "#981915", background: "none", border: "1px dashed #981915", borderRadius: 6, padding: "6px 14px", cursor: "pointer", fontFamily: "inherit" }}
+              >📦 Do Catálogo</button>
+            </div>
           </div>
-        ))}
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <button
-            onClick={() => setForm((f) => ({ ...f, opcionais: [...(f.opcionais || []), { nome: "", preco: "" }] }))}
-            style={{ fontSize: 12, color: C.steel, background: "none", border: `1px dashed ${C.steel}`, borderRadius: 6, padding: "6px 14px", cursor: "pointer", fontFamily: "inherit" }}
-          >
-            + Manual
-          </button>
-          <button
-            onClick={() => setShowCatalogo(true)}
-            style={{ fontSize: 12, color: "#981915", background: "none", border: "1px dashed #981915", borderRadius: 6, padding: "6px 14px", cursor: "pointer", fontFamily: "inherit" }}
-          >
-            📦 Do Catálogo
-          </button>
-        </div>
-      </div>
+        );
+      })()}
 
       {showCatalogo && (
         <CatalogoPicker
