@@ -1213,6 +1213,23 @@ export default function OrcamentoTecnico() {
           </div>
         </div>
 
+        {/* Summary bar */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, fontSize: 12 }}>
+          <span style={{ flex: 1, color: "var(--muted)", fontWeight: 500 }}>
+            {area ? `Residencial · ${area} m²` : "Configure a obra"}
+          </span>
+          <span style={{ color: "var(--muted)", fontSize: 11 }}>
+            {SISTEMAS_SF.filter(s => s.obrigatorio && habilitados[s.id]).length}/{SISTEMAS_SF.filter(s => s.obrigatorio).length} obrigatórios
+          </span>
+          <button
+            onClick={calcular}
+            disabled={!area}
+            style={{ padding: "4px 12px", background: "var(--brick)", color: "#fff", border: "none", borderRadius: 6, fontSize: 11.5, fontWeight: 700, cursor: area ? "pointer" : "not-allowed", opacity: area ? 1 : 0.5, fontFamily: "inherit" }}
+          >
+            Calcular
+          </button>
+        </div>
+
         <button
           onClick={calcular}
           disabled={!area}
@@ -1357,15 +1374,40 @@ export default function OrcamentoTecnico() {
                 )}
               </div>
               {habilitados[s.id] && s.opcoes && (
-                <select
-                  value={selecoes[s.id]}
-                  onChange={(e) => setSelecoes((p) => ({ ...p, [s.id]: e.target.value }))}
-                  style={{ ...selectSt, fontSize: 12 }}
-                >
-                  {s.opcoes.map((o) => (
-                    <option key={o.id} value={o.id}>{o.label}</option>
-                  ))}
-                </select>
+                s.opcoes.length <= 3 ? (
+                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 2 }}>
+                    {s.opcoes.map((o) => (
+                      <button
+                        key={o.id}
+                        onClick={() => setSelecoes((p) => ({ ...p, [s.id]: o.id }))}
+                        style={{
+                          border: `1px solid ${selecoes[s.id] === o.id ? "var(--brick)" : "var(--line)"}`,
+                          borderRadius: 8,
+                          padding: "8px 14px",
+                          fontSize: 13,
+                          background: selecoes[s.id] === o.id ? "var(--brick)" : "transparent",
+                          color: selecoes[s.id] === o.id ? "#fff" : "var(--ink)",
+                          cursor: "pointer",
+                          fontFamily: "inherit",
+                          fontWeight: selecoes[s.id] === o.id ? 700 : 400,
+                          transition: "all 0.15s",
+                        }}
+                      >
+                        {o.label}
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <select
+                    value={selecoes[s.id]}
+                    onChange={(e) => setSelecoes((p) => ({ ...p, [s.id]: e.target.value }))}
+                    style={{ ...selectSt, fontSize: 12 }}
+                  >
+                    {s.opcoes.map((o) => (
+                      <option key={o.id} value={o.id}>{o.label}</option>
+                    ))}
+                  </select>
+                )
               )}
               {habilitados[s.id] && s.opcoes && (
                 <p style={{ margin: "4px 0 0", fontSize: 11, color: C.muted, lineHeight: 1.4 }}>
@@ -1376,19 +1418,21 @@ export default function OrcamentoTecnico() {
           ))}
         </Card>
 
-        <button
-          onClick={calcular}
-          disabled={!area}
-          style={{
-            padding: "14px 0", background: "var(--brick)", color: "#fff", border: "none",
-            borderRadius: 11, fontSize: 14.5, fontWeight: 700,
-            cursor: area ? "pointer" : "not-allowed", opacity: area ? 1 : 0.5,
-            display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
-            fontFamily: "inherit", letterSpacing: .3,
-          }}
-        >
-          <Ic n="barchart" w={16} c="#fff" /> Calcular Orçamento
-        </button>
+        <div style={{ position: "sticky", bottom: 0, background: "var(--bg)", paddingTop: 10, paddingBottom: 10, marginTop: 4 }}>
+          <button
+            onClick={calcular}
+            disabled={!area}
+            style={{
+              padding: "14px 0", background: "var(--brick)", color: "#fff", border: "none",
+              borderRadius: 11, fontSize: 14.5, fontWeight: 700,
+              cursor: area ? "pointer" : "not-allowed", opacity: area ? 1 : 0.5,
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
+              fontFamily: "inherit", letterSpacing: .3, width: "100%",
+            }}
+          >
+            <Ic n="barchart" w={16} c="#fff" /> Calcular Orçamento
+          </button>
+        </div>
       </div>
 
       {/*  RIGHT: resultado  */}
@@ -1405,6 +1449,18 @@ export default function OrcamentoTecnico() {
               Preencha os parâmetros ao lado e clique em <strong style={{ color: "var(--ink)" }}>Calcular Orçamento</strong>.
               Gera composição detalhada de todos os insumos com preços regionais calibrados por CUB.
             </p>
+            <button
+              onClick={calcular}
+              disabled={!area}
+              style={{
+                marginTop: 20, padding: "11px 28px", background: "var(--brick)", color: "#fff",
+                border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700,
+                cursor: area ? "pointer" : "not-allowed", opacity: area ? 1 : 0.5,
+                fontFamily: "inherit", display: "flex", alignItems: "center", gap: 8,
+              }}
+            >
+              <Ic n="barchart" w={16} c="#fff" /> Calcular Orçamento
+            </button>
           </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -1434,6 +1490,22 @@ export default function OrcamentoTecnico() {
                 sub={fmtBRL(resultado.m2Venda) + "/m²"} color={C.success} />
             </div>
 
+            {/* lista compacta de grupos */}
+            <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 10, padding: "12px 16px" }}>
+              <div style={{ fontSize: 10.5, fontWeight: 800, color: "var(--muted)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Resumo por sistema</div>
+              {resultado.breakdown.map((s) => {
+                const total = s.totalMat + s.totalMO;
+                const pct = resultado.totalGeral > 0 ? ((total / resultado.totalGeral) * 100).toFixed(0) : 0;
+                return (
+                  <div key={s.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 0", borderBottom: "1px solid var(--line)", fontSize: 12 }}>
+                    <span style={{ flex: 1, color: "var(--ink)" }}>{s.label}{s.opcaoLabel ? ` — ${s.opcaoLabel}` : ""}</span>
+                    <span style={{ color: "var(--muted)", fontSize: 11, minWidth: 32, textAlign: "right" }}>{pct}%</span>
+                    <span style={{ fontWeight: 700, minWidth: 110, textAlign: "right", fontFamily: "'Barlow Condensed', sans-serif", fontSize: 14 }}>{fmtBRL(total)}</span>
+                  </div>
+                );
+              })}
+            </div>
+
             {/* composição por categoria */}
             <ComposicaoCategoria
               breakdown={resultado.breakdown}
@@ -1442,36 +1514,39 @@ export default function OrcamentoTecnico() {
               totalMO={resultado.totalMO}
             />
 
-            {/* action buttons */}
+            {/* action buttons — primários em destaque */}
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+              <button onClick={exportarExcel} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "10px 18px", background: "var(--surface)", color: "var(--ink)", border: "1px solid var(--line)", borderRadius: 9, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+                <Ic n="dl" w={14} /> Exportar Excel
+              </button>
+              <button onClick={exportarPDF} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "10px 18px", background: "var(--surface)", color: "var(--ink)", border: "1px solid var(--line)", borderRadius: 9, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+                <Ic n="print" w={14} /> Imprimir
+              </button>
+              <button onClick={exportarPropostaCliente} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "10px 18px", background: "var(--brick)", color: "#fff", border: "1px solid var(--brick)", borderRadius: 9, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+                <Ic n="clip" w={14} c="#fff" /> Virar proposta
+              </button>
+            </div>
+            {/* ações secundárias */}
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
-              <button onClick={() => setModalSalvar(true)} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "9px 15px", background: "var(--brick)", color: "#fff", border: "1px solid var(--brick)", borderRadius: 9, fontSize: 12.5, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
-                <Ic n="save" w={13} c="#fff" /> Salvar Orçamento
+              <button onClick={() => setModalSalvar(true)} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "7px 13px", background: "var(--surface)", color: "var(--ink-2)", border: "1px solid var(--line)", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+                <Ic n="save" w={12} /> Salvar
               </button>
-              <button onClick={exportarPropostaCliente} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "9px 15px", background: "var(--surface)", color: "var(--ink-2)", border: "1px solid var(--line)", borderRadius: 9, fontSize: 12.5, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
-                <Ic n="clip" w={13} /> Proposta ao Cliente
+              <button onClick={gerarComparativo} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "7px 13px", background: "var(--surface)", color: "var(--ink-2)", border: "1px solid var(--line)", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+                <Ic n="scale" w={12} /> Comparar Padrões
               </button>
-              <button onClick={exportarPDF} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "9px 15px", background: "var(--surface)", color: "var(--ink-2)", border: "1px solid var(--line)", borderRadius: 9, fontSize: 12.5, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
-                <Ic n="print" w={13} /> PDF Técnico
+              <button onClick={gerarComparativoVersoes} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "7px 13px", background: "var(--surface)", color: "var(--ink-2)", border: "1px solid var(--line)", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+                <Ic n="sliders" w={12} /> Espessuras
               </button>
-              <button onClick={exportarExcel} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "9px 15px", background: "var(--surface)", color: "var(--ink-2)", border: "1px solid var(--line)", borderRadius: 9, fontSize: 12.5, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
-                <Ic n="dl" w={13} /> Excel
-              </button>
-              <button onClick={gerarComparativo} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "9px 15px", background: "var(--surface)", color: "var(--ink-2)", border: "1px solid var(--line)", borderRadius: 9, fontSize: 12.5, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
-                <Ic n="scale" w={13} /> Comparar Padrões
-              </button>
-              <button onClick={gerarComparativoVersoes} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "9px 15px", background: "var(--surface)", color: "var(--ink-2)", border: "1px solid var(--line)", borderRadius: 9, fontSize: 12.5, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
-                <Ic n="sliders" w={13} /> Espessuras
-              </button>
-              <button onClick={() => setModalFinanc(true)} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "9px 15px", background: "var(--surface)", color: "var(--ink-2)", border: "1px solid var(--line)", borderRadius: 9, fontSize: 12.5, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
-                <Ic n="bank" w={13} /> Financiamento
+              <button onClick={() => setModalFinanc(true)} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "7px 13px", background: "var(--surface)", color: "var(--ink-2)", border: "1px solid var(--line)", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+                <Ic n="bank" w={12} /> Financiamento
               </button>
               {Object.keys(precosEditados).length > 0 && (
-                <button onClick={() => { setPrecosEditados({}); calcular(); }} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "9px 15px", background: "var(--surface)", color: "var(--ink-2)", border: "1px solid var(--line)", borderRadius: 9, fontSize: 12.5, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
-                  <Ic n="refresh" w={13} /> Limpar ajustes
+                <button onClick={() => { setPrecosEditados({}); calcular(); }} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "7px 13px", background: "var(--surface)", color: "var(--ink-2)", border: "1px solid var(--line)", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+                  <Ic n="refresh" w={12} /> Limpar ajustes
                 </button>
               )}
-              <button onClick={() => setResultado(null)} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "9px 15px", background: "var(--surface)", color: "var(--muted)", border: "1px solid var(--line)", borderRadius: 9, fontSize: 12.5, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
-                <Ic n="refresh" w={13} /> Recalcular
+              <button onClick={() => setResultado(null)} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "7px 13px", background: "var(--surface)", color: "var(--muted)", border: "1px solid var(--line)", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+                <Ic n="refresh" w={12} /> Recalcular
               </button>
             </div>
 
