@@ -33,64 +33,55 @@ function NavBadge({ badge }) {
   );
 }
 
-// Grupos de navegação em ordem
-const GRUPOS_ORDEM = [null, "Comercial", "Obras", "Financeiro", "Compras", "Engenharia", "Gestão", "__config__"];
-const GRUPO_LABEL = {
-  "Comercial":   "Comercial",
-  "Obras":       "Obras",
-  "Financeiro":  "Financeiro",
-  "Compras":     "Compras",
-  "Engenharia":  "Engenharia",
-  "Gestão":      "Gestão",
+const PAGE_TO_GROUP = {
+  dashboard: "visao_geral",
+  agenda: "visao_geral",
+
+  obras: "obras",
+  cronograma: "obras",
+  medicoes: "obras",
+  diario: "obras",
+  vistorias: "obras",
+  bim: "obras",
+  quantitativos: "obras",
+  contratos: "obras",
+  equipe: "obras",
+  equipe_sf: "obras",
+  sst: "obras",
+  calculadora: "obras",
+  orcamento_tecnico: "obras",
+  orcamento_sf: "obras",
+  checklists: "obras",
+
+  financeiro: "financeiro",
+  rentabilidade: "financeiro",
+  historico: "financeiro",
+
+  fornecedores: "suprimentos",
+  suprimentos: "suprimentos",
+  monitor_precos: "suprimentos",
+  equipamentos: "suprimentos",
+
+  crm: "relacionamento",
+  oportunidades: "relacionamento",
+  orcamentos: "relacionamento",
+
+  bi: "inteligencia",
+  inteligencia: "inteligencia",
+
+  ecossistema: "gestao",
+  configuracoes: "gestao",
 };
 
-function buildGroupedNav(navFiltro) {
-  // Separa configuracoes e agrupa o resto
-  const config   = navFiltro.filter(n => n.key === "configuracoes");
-  const rest     = navFiltro.filter(n => n.key !== "configuracoes");
-  const groups   = {};
-  rest.forEach(n => {
-    const g = n.grupo || "__top__";
-    if (!groups[g]) groups[g] = [];
-    groups[g].push(n);
-  });
-  return { groups, config };
-}
-
-function NavButton({ n, isActive, onClick, badges }) {
-  return (
-    <button
-      key={n.key}
-      onClick={onClick}
-      style={{
-        display: "flex", alignItems: "center", gap: 9, width: "100%",
-        padding: n.brand ? "6px 18px" : "8px 18px",
-        background: isActive ? "rgba(152,25,21,0.18)" : "transparent",
-        border: "none",
-        borderLeft: isActive ? "3px solid #981915" : "3px solid transparent",
-        cursor: "pointer",
-        color: isActive ? "#ffffff" : "#9aa0a8",
-        fontSize: 12.5, fontWeight: isActive ? 700 : 500,
-        textAlign: "left", transition: "all .12s",
-        fontFamily: "inherit",
-      }}
-      onMouseEnter={e => { if (!isActive) { e.currentTarget.style.background = "#1e2127"; e.currentTarget.style.color = "#ffffff"; } }}
-      onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#9aa0a8"; } }}
-    >
-      <NavIcon name={n.icon} size={14} color={isActive ? "#ffffff" : "#9aa0a8"} />
-      <span style={{ flex: 1, display: "flex", flexDirection: "column", gap: 1 }}>
-        <span>{n.label}</span>
-        {n.brand && (
-          <span style={{ fontSize: 9, fontWeight: 700, color: isActive ? "rgba(255,255,255,0.45)" : "#4a5060", letterSpacing: 0.3 }}>
-            {n.brand}
-          </span>
-        )}
-      </span>
-      {badges}
-      {n.badge && <NavBadge badge={n.badge} />}
-    </button>
-  );
-}
+const GRUPOS = [
+  { key: "visao_geral",    label: "Visão Geral",        icon: "Home" },
+  { key: "obras",          label: "Obras & Engenharia", icon: "Building2" },
+  { key: "financeiro",     label: "Financeiro",         icon: "DollarSign" },
+  { key: "suprimentos",    label: "Suprimentos",        icon: "ShoppingCart" },
+  { key: "relacionamento", label: "Relacionamento",     icon: "Users" },
+  { key: "inteligencia",   label: "Inteligência",       icon: "Brain" },
+  { key: "gestao",         label: "Gestão",             icon: "Settings" }
+];
 
 export default function Sidebar({ open, onClose }) {
   const user          = useAppStore((s) => s.user);
@@ -118,7 +109,26 @@ export default function Sidebar({ open, onClose }) {
         n.brand?.toLowerCase().includes(busca.toLowerCase())
       )
     : navFiltro;
-  const { groups: groupsFiltrado, config: configFiltrado } = buildGroupedNav(navFiltrado);
+
+  const [expandedGroups, setExpandedGroups] = useState(() => {
+    const activeGrp = PAGE_TO_GROUP[active] || "visao_geral";
+    return {
+      visao_geral: activeGrp === "visao_geral",
+      obras: activeGrp === "obras",
+      financeiro: activeGrp === "financeiro",
+      suprimentos: activeGrp === "suprimentos",
+      relacionamento: activeGrp === "relacionamento",
+      inteligencia: activeGrp === "inteligencia",
+      gestao: activeGrp === "gestao",
+    };
+  });
+
+  useEffect(() => {
+    const activeGrp = PAGE_TO_GROUP[active];
+    if (activeGrp) {
+      setExpandedGroups(prev => ({ ...prev, [activeGrp]: true }));
+    }
+  }, [active]);
 
   const [preOrcCount, setPreOrcCount] = useState(0);
   useEffect(() => {
@@ -159,116 +169,149 @@ export default function Sidebar({ open, onClose }) {
     ? clientes.filter((c) => c.proximo_contato && c.proximo_contato <= hoje && c.status !== "Fechado").length
     : 0;
 
-  const { groups, config } = buildGroupedNav(navFiltro);
+  function renderNavGroups(mobile = false, overrideNav) {
+    const listToRender = overrideNav || navFiltro;
+    const pad = mobile ? "10px 18px 10px 24px" : "6px 18px 6px 24px";
+    const iconSz = mobile ? 15 : 13;
+    const fontSize = mobile ? 13.5 : 12;
+    const isSearchActive = busca.trim() !== "";
 
-  function renderNavGroups(mobile = false, overrideGroups, overrideConfig) {
-    const grps = overrideGroups || groups;
-    const cfg  = overrideConfig  || config;
-    const pad = mobile ? "12px 18px" : "8px 18px";
-    const iconSz = mobile ? 16 : 14;
-    const fontSize = mobile ? 14 : 12.5;
-    const items = [];
+    return GRUPOS.map(grp => {
+      const itemsInGroup = listToRender.filter(n => PAGE_TO_GROUP[n.key] === grp.key);
+      if (itemsInGroup.length === 0) return null;
 
-    // Top items (null group: dashboard, agenda)
-    (grps["__top__"] || []).forEach(n => {
-      const isActive = active === n.key;
-      items.push(
-        <button key={n.key} onClick={() => { setActivePage(n.key); onClose?.(); }}
-          style={{
-            display: "flex", alignItems: "center", gap: 9, width: "100%",
-            padding: pad, background: isActive ? "rgba(152,25,21,0.18)" : "transparent",
-            border: "none", borderLeft: isActive ? "3px solid #981915" : "3px solid transparent",
-            cursor: "pointer", color: isActive ? "#ffffff" : "#9aa0a8",
-            fontSize, fontWeight: isActive ? 700 : 500,
-            textAlign: "left", transition: "all .12s", fontFamily: "inherit",
-          }}
-          onMouseEnter={e => { if (!isActive) { e.currentTarget.style.background="#1e2127"; e.currentTarget.style.color="#fff"; }}}
-          onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background="transparent"; e.currentTarget.style.color="#9aa0a8"; }}}
-        >
-          <NavIcon name={n.icon} size={iconSz} color={isActive ? "#fff" : "#9aa0a8"} />
-          <span style={{ flex: 1 }}>{n.label}</span>
-        </button>
-      );
-    });
+      const isExpanded = isSearchActive || expandedGroups[grp.key];
 
-    // Grouped items
-    ["Comercial","Obras","Financeiro","Compras","Engenharia","Gestão"].forEach(grupo => {
-      const list = grps[grupo];
-      if (!list || !list.length) return;
-      items.push(
-        <div key={`grp-${grupo}`}>
-          <div style={{
-            padding: "10px 18px 4px", fontSize: 9, fontWeight: 800,
-            color: "#4a5060", letterSpacing: 1.5, textTransform: "uppercase",
-            marginTop: 4,
-          }}>{GRUPO_LABEL[grupo]}</div>
-          {list.map(n => {
-            const isActive = active === n.key;
-            const isLocked = ENTERPRISE_PAGES.has(n.key) && plano !== "enterprise";
-            const badges = [];
-            if (n.key === "crm" && followupsVencidos > 0)
-              badges.push(<span key="fu" style={{ background: "#981915", color: "#fff", borderRadius: 100, fontSize: 9, fontWeight: 700, padding: "1px 6px" }}>{followupsVencidos}</span>);
-            if (n.key === "orcamentos" && preOrcCount > 0)
-              badges.push(<span key="orc" style={{ background: "#3f7a4b", color: "#fff", borderRadius: 100, fontSize: 9, fontWeight: 700, padding: "1px 6px" }}>{preOrcCount}</span>);
-            return (
-              <button key={n.key} onClick={() => {
-                if (isLocked) { setUpgradeModal(n.label); return; }
-                setActivePage(n.key); onClose?.();
-              }}
-                style={{
-                  display: "flex", alignItems: "center", gap: 9, width: "100%",
-                  padding: pad,
-                  background: isActive && !isLocked ? "rgba(152,25,21,0.18)" : "transparent",
-                  border: "none",
-                  borderLeft: isActive && !isLocked ? "3px solid #981915" : "3px solid transparent",
-                  cursor: "pointer",
-                  color: isLocked ? "#4a5060" : isActive ? "#ffffff" : "#9aa0a8",
-                  fontSize, fontWeight: isActive && !isLocked ? 700 : 500,
-                  textAlign: "left", transition: "all .12s", fontFamily: "inherit",
-                  opacity: isLocked ? 0.75 : 1,
-                }}
-                onMouseEnter={e => { if (!isActive && !isLocked) { e.currentTarget.style.background="#1e2127"; e.currentTarget.style.color="#fff"; }}}
-                onMouseLeave={e => { if (!isActive && !isLocked) { e.currentTarget.style.background="transparent"; e.currentTarget.style.color="#9aa0a8"; }}}
-              >
-                <NavIcon name={n.icon} size={iconSz} color={isLocked ? "#4a5060" : isActive ? "#fff" : "#9aa0a8"} />
-                <span style={{ flex: 1 }}>{n.label}</span>
-                {badges}
-                {isLocked ? (
-                  <span style={{ fontSize: 9, fontWeight: 800, padding: "2px 5px", borderRadius: 4, background: "#3b6ea522", color: "#3b6ea5", letterSpacing: 0.5 }}>Enterprise</span>
-                ) : n.badge ? <NavBadge badge={n.badge} /> : null}
-              </button>
-            );
-          })}
+      return (
+        <div key={grp.key} style={{ marginBottom: 4 }}>
+          {/* Group Header */}
+          <button
+            onClick={() => {
+              if (!isSearchActive) {
+                setExpandedGroups(prev => ({ ...prev, [grp.key]: !prev[grp.key] }));
+              }
+            }}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 9,
+              width: "100%",
+              padding: mobile ? "12px 18px" : "8px 18px",
+              background: "transparent",
+              border: "none",
+              cursor: isSearchActive ? "default" : "pointer",
+              color: "#ffffff",
+              fontSize: mobile ? 14 : 12.5,
+              fontWeight: 600,
+              textAlign: "left",
+              fontFamily: "inherit",
+              marginTop: 4,
+              userSelect: "none",
+              transition: "background .12s",
+            }}
+            onMouseEnter={e => { if (!isSearchActive) e.currentTarget.style.background = "#1e2127"; }}
+            onMouseLeave={e => { if (!isSearchActive) e.currentTarget.style.background = "transparent"; }}
+          >
+            <NavIcon name={grp.icon} size={mobile ? 16 : 14} color="#9aa0a8" />
+            <span style={{ flex: 1 }}>{grp.label}</span>
+            {!isSearchActive && (
+              <span style={{
+                display: "flex",
+                alignItems: "center",
+                transition: "transform 0.2s",
+                transform: isExpanded ? "rotate(0deg)" : "rotate(-90deg)",
+                color: "#4a5060"
+              }}>
+                <LucideIcons.ChevronDown size={14} />
+              </span>
+            )}
+          </button>
+
+          {/* Group Items */}
+          {isExpanded && (
+            <div style={{
+              display: "flex",
+              flexDirection: "column",
+              borderLeft: "1px solid #25282e",
+              marginLeft: mobile ? "26px" : "24px",
+              paddingLeft: "4px",
+              marginTop: "2px",
+              marginBottom: "4px"
+            }}>
+              {itemsInGroup.map(n => {
+                const isActive = active === n.key;
+                const isLocked = ENTERPRISE_PAGES.has(n.key) && plano !== "enterprise";
+                const badges = [];
+                if (n.key === "crm" && followupsVencidos > 0) {
+                  badges.push(
+                    <span key="fu" style={{ background: "#981915", color: "#fff", borderRadius: 100, fontSize: 8.5, fontWeight: 700, padding: "1px 5px", marginLeft: 4 }}>
+                      {followupsVencidos}
+                    </span>
+                  );
+                }
+                if (n.key === "orcamentos" && preOrcCount > 0) {
+                  badges.push(
+                    <span key="orc" style={{ background: "#3f7a4b", color: "#fff", borderRadius: 100, fontSize: 8.5, fontWeight: 700, padding: "1px 5px", marginLeft: 4 }}>
+                      {preOrcCount}
+                    </span>
+                  );
+                }
+
+                return (
+                  <button
+                    key={n.key}
+                    onClick={() => {
+                      if (isLocked) { setUpgradeModal(n.label); return; }
+                      setActivePage(n.key);
+                      onClose?.();
+                    }}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      width: "100%",
+                      padding: pad,
+                      background: isActive && !isLocked ? "rgba(152,25,21,0.14)" : "transparent",
+                      border: "none",
+                      borderRadius: 6,
+                      cursor: "pointer",
+                      color: isLocked ? "#4a5060" : isActive ? "#ffffff" : "#9aa0a8",
+                      fontSize,
+                      fontWeight: isActive && !isLocked ? 600 : 500,
+                      textAlign: "left",
+                      transition: "all .12s",
+                      fontFamily: "inherit",
+                      opacity: isLocked ? 0.75 : 1,
+                      margin: "1px 0"
+                    }}
+                    onMouseEnter={e => { if (!isActive && !isLocked) { e.currentTarget.style.background = "#1e2127"; e.currentTarget.style.color = "#fff"; } }}
+                    onMouseLeave={e => { if (!isActive && !isLocked) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#9aa0a8"; } }}
+                  >
+                    <NavIcon name={n.icon} size={iconSz} color={isLocked ? "#4a5060" : isActive ? "#fff" : "#9aa0a8"} />
+                    <span style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+                      <span>{n.label}</span>
+                      {n.brand && (
+                        <span style={{ fontSize: 8.5, fontWeight: 600, color: isActive ? "rgba(255,255,255,0.45)" : "#4a5060", letterSpacing: 0.2 }}>
+                          {n.brand}
+                        </span>
+                      )}
+                    </span>
+                    {badges}
+                    {isLocked ? (
+                      <span style={{ fontSize: 8, fontWeight: 800, padding: "2px 4px", borderRadius: 4, background: "#3b6ea522", color: "#3b6ea5", letterSpacing: 0.3 }}>
+                        Enterprise
+                      </span>
+                    ) : n.badge ? (
+                      <NavBadge badge={n.badge} />
+                    ) : null}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
       );
     });
-
-    // Configurações (always last)
-    if (cfg.length) {
-      items.push(<div key="div-cfg" style={{ margin: "8px 0", borderTop: "1px solid #25282e" }} />);
-      cfg.forEach(n => {
-        const isActive = active === n.key;
-        items.push(
-          <button key={n.key} onClick={() => { setActivePage(n.key); onClose?.(); }}
-            style={{
-              display: "flex", alignItems: "center", gap: 9, width: "100%",
-              padding: pad, background: isActive ? "rgba(152,25,21,0.18)" : "transparent",
-              border: "none", borderLeft: isActive ? "3px solid #981915" : "3px solid transparent",
-              cursor: "pointer", color: isActive ? "#ffffff" : "#9aa0a8",
-              fontSize, fontWeight: isActive ? 700 : 500,
-              textAlign: "left", transition: "all .12s", fontFamily: "inherit",
-            }}
-            onMouseEnter={e => { if (!isActive) { e.currentTarget.style.background="#1e2127"; e.currentTarget.style.color="#fff"; }}}
-            onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background="transparent"; e.currentTarget.style.color="#9aa0a8"; }}}
-          >
-            <NavIcon name={n.icon} size={iconSz} color={isActive ? "#fff" : "#9aa0a8"} />
-            <span style={{ flex: 1 }}>{n.label}</span>
-          </button>
-        );
-      });
-    }
-
-    return items;
   }
 
   const sidebarStyle = {
@@ -356,9 +399,7 @@ export default function Sidebar({ open, onClose }) {
 
         {/* Nav */}
         <nav style={{ flex: 1, padding: "10px 0", overflowY: "auto" }}>
-          {busca.trim()
-            ? renderNavGroups(false, groupsFiltrado, configFiltrado)
-            : renderNavGroups(false)}
+          {renderNavGroups(false, navFiltrado)}
         </nav>
 
         {/* User */}
@@ -417,9 +458,7 @@ export default function Sidebar({ open, onClose }) {
           </div>
         </div>
         <nav style={{ flex: 1, padding: "10px 0", overflowY: "auto" }}>
-          {busca.trim()
-            ? renderNavGroups(true, groupsFiltrado, configFiltrado)
-            : renderNavGroups(true)}
+          {renderNavGroups(true, navFiltrado)}
         </nav>
         <div style={{ padding: "16px 16px calc(16px + env(safe-area-inset-bottom))", borderTop: "1px solid #25282e" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 10px", background: "rgba(255,255,255,0.04)", borderRadius: 10, marginBottom: 12 }}>
