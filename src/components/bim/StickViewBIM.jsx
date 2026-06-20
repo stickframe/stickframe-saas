@@ -4,6 +4,8 @@
  * Persistência real no Supabase (obra_bim_elementos).
  */
 import { useEffect, useRef, useState, useMemo, useCallback } from "react";
+import * as THREE from "three";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { CATALOGO_PRODUTOS } from "../../utils/insumosSF";
 import { fmt } from "../../utils/format";
 import {
@@ -162,11 +164,7 @@ function get3DColor(id, statusMap, selected) {
 }
 
 // ── Cena Three.js (procedural) ──────────────────────────────────────────────
-async function buildThreeScene(container, onElementClick) {
-  const threeModule = await import("three");
-  const THREE = threeModule.default ?? threeModule;
-  const orbitModule = await import("three/addons/controls/OrbitControls.js");
-  const OrbitControls = orbitModule.OrbitControls ?? orbitModule.default?.OrbitControls;
+function buildThreeScene(container, onElementClick) {
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x0f0e12);
@@ -635,24 +633,24 @@ export default function StickViewBIM({ obraId, user, onAddToOrcamento }) {
     if (!mountRef.current) return;
     let canceled = false;
 
+    let launched = false;
     function launch() {
-      if (canceled || engineRef.current) return;
+      if (canceled || launched) return;
       const { width } = mountRef.current.getBoundingClientRect();
-      if (!width) return; // still zero, observer will retry
-
-      buildThreeScene(mountRef.current, tipo => {
-        if (!canceled) setSelected(prev => prev===tipo?null:tipo);
-      }).then(engine => {
-        if (canceled) { engine.dispose(); return; }
-        engineRef.current = engine;
-        setReady(true);
-      }).catch(err => {
+      if (!width) return;
+      launched = true;
+      try {
+        const engine = buildThreeScene(mountRef.current, tipo => {
+          if (!canceled) setSelected(prev => prev===tipo?null:tipo);
+        });
+        if (!canceled) { engineRef.current = engine; setReady(true); }
+        else engine.dispose();
+      } catch(err) {
         console.error("StickViewBIM Three.js error:", err);
-        if (!canceled) setReady(true); // show UI even if 3D fails
-      });
+        if (!canceled) setReady(true);
+      }
     }
 
-    // Try immediately, then observe for when container gets painted width
     launch();
     const ro = new ResizeObserver(launch);
     ro.observe(mountRef.current);
