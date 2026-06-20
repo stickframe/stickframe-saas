@@ -1230,20 +1230,6 @@ export default function OrcamentoTecnico() {
           </button>
         </div>
 
-        <button
-          onClick={calcular}
-          disabled={!area}
-          style={{
-            padding: "13px 0", background: "var(--brick)", color: "#fff", border: "none",
-            borderRadius: 11, fontSize: 14.5, fontWeight: 700,
-            cursor: area ? "pointer" : "not-allowed", opacity: area ? 1 : 0.5,
-            display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
-            fontFamily: "inherit", letterSpacing: .3, width: "100%",
-          }}
-        >
-          <Ic n="barchart" w={16} c="#fff" /> Calcular Orçamento
-        </button>
-
         {crmLead && (
           <div style={{ background: C.brickSoft, border: `1px solid ${C.red}44`, borderRadius: 8, padding: "10px 14px", display: "flex", alignItems: "center", gap: 10 }}>
             <span style={{ color: C.red }}><Ic n="link" w={16} /></span>
@@ -1418,7 +1404,7 @@ export default function OrcamentoTecnico() {
           ))}
         </Card>
 
-        <div style={{ position: "sticky", bottom: 0, background: "var(--bg)", paddingTop: 10, paddingBottom: 10, marginTop: 4 }}>
+        <div style={{ position: "sticky", bottom: 0, background: "var(--bg)", paddingTop: 12, paddingBottom: 16, marginTop: 4, boxShadow: "0 -4px 16px rgba(40,30,20,0.10)" }}>
           <button
             onClick={calcular}
             disabled={!area}
