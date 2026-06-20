@@ -20,6 +20,7 @@ export default function PropostaOnline() {
   const [aceiteFeito, setAceiteFeito] = useState(false);
   const [assinando, setAssinando] = useState(false);
   const [assinaturaDone, setAssinaturaDone] = useState(false);
+  const [opcionaisSel, setOpcionaisSel] = useState([]);
   const canvasRef = useRef(null);
   const [desenhando, setDesenhando] = useState(false);
   const [canvasVazio, setCanvasVazio] = useState(true);
@@ -68,6 +69,7 @@ export default function PropostaOnline() {
         aceite_data: new Date().toISOString(),
         aceite_assinatura: getAssinaturaBase64(),
         status: "Aprovado",
+        opcionais_selecionados: opcionaisSel.map((i) => orc.opcionais?.[i]).filter(Boolean),
       }).eq("proposta_token", token);
       setAceiteFeito(true);
 
@@ -244,6 +246,39 @@ export default function PropostaOnline() {
             </div>
           ))}
         </div>
+
+        {/* Opcionais */}
+        {orc.opcionais?.length > 0 && !jaAceito && (
+          <div style={{ background: "#fff", borderRadius: 14, padding: "20px", marginBottom: 14, boxShadow: "0 2px 12px rgba(0,0,0,.06)" }}>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: "#888", marginBottom: 6 }}>SERVIÇOS OPCIONAIS</div>
+            <div style={{ fontSize: 12, color: "#888", marginBottom: 14 }}>Selecione os serviços adicionais que deseja incluir na proposta:</div>
+            {orc.opcionais.map((op, i) => (
+              <label key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 0", borderBottom: "1px solid #f5f5f5", cursor: "pointer", gap: 12 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <input
+                    type="checkbox"
+                    checked={opcionaisSel.includes(i)}
+                    onChange={() => setOpcionaisSel((prev) => prev.includes(i) ? prev.filter((x) => x !== i) : [...prev, i])}
+                    style={{ width: 16, height: 16, accentColor: "#981915", flexShrink: 0 }}
+                  />
+                  <span style={{ fontSize: 13, fontWeight: 600 }}>{op.nome}</span>
+                </div>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "#3f7a4b", whiteSpace: "nowrap" }}>
+                  +{Number(op.preco).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                </span>
+              </label>
+            ))}
+            {opcionaisSel.length > 0 && (
+              <div style={{ marginTop: 14, padding: "12px 14px", background: "#f0fdf4", borderRadius: 8, display: "flex", justifyContent: "space-between", fontWeight: 800, fontSize: 14, color: "#3f7a4b" }}>
+                <span>Total com opcionais selecionados</span>
+                <span>
+                  {(valorTotal + opcionaisSel.reduce((sum, i) => sum + Number(orc.opcionais[i]?.preco || 0), 0))
+                    .toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                </span>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Aceite digital */}
         <div style={{ background: jaAceito ? "#f0fdf4" : "#fff", borderRadius: 14, padding: "24px", marginBottom: 14, boxShadow: "0 2px 12px rgba(0,0,0,.06)", border: jaAceito ? "1px solid #86efac" : "1px solid #f0f0f0" }}>

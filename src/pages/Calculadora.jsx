@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { BarChart2, ClipboardList } from "../components/ui/Icon";
+import FluxoOrcamentoStepper from "../components/ui/FluxoOrcamentoStepper";
 import { C } from "../utils/constants";
 import useAppStore from "../store/useAppStore";
 import { sb } from "../services/supabase";
@@ -1086,6 +1087,8 @@ export default function Calculadora() {
 
   return (
     <div style={{ maxWidth: 960, margin: "0 auto", padding: "0 0 40px" }}>
+
+      <FluxoOrcamentoStepper step={0} onGo={() => {}} />
 
       {/*  PAGE HEAD  */}
       <div style={{ marginBottom: 28 }}>

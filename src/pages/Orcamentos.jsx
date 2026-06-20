@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Bell, ClipboardList, FileText, Pencil, Smartphone, Trash2, Zap } from "../components/ui/Icon";
+import FluxoOrcamentoStepper from "../components/ui/FluxoOrcamentoStepper";
 import { sb, getEmpresaId } from "../services/supabase";
 import { LOGO_STICKFRAME } from "../utils/cdn";
 import { useToast } from "../hooks/useToast";
@@ -340,6 +341,47 @@ function FormOrc({ form, setForm, clientes, onSave, onCancel, onDelete, btnLabel
         <div style={{ fontSize: 11, color: C.muted, marginTop: 10 }}>
           {form.unidades > 1 ? `${form.unidades} × ` : ""}{form.area} m² × {fmt(calc.valor_m2)}/m²
         </div>
+      </div>
+
+      {/* Opcionais */}
+      <div>
+        <Label>Serviços Opcionais</Label>
+        <div style={{ fontSize: 11, color: C.muted, marginBottom: 10 }}>O cliente poderá selecionar ou rejeitar cada item na proposta online.</div>
+        {(form.opcionais || []).map((op, i) => (
+          <div key={i} style={{ display: "flex", gap: 8, marginBottom: 8, alignItems: "center" }}>
+            <input
+              value={op.nome}
+              onChange={(e) => {
+                const arr = [...(form.opcionais || [])];
+                arr[i] = { ...arr[i], nome: e.target.value };
+                setForm((f) => ({ ...f, opcionais: arr }));
+              }}
+              placeholder="Descrição do serviço"
+              style={{ flex: 2, padding: "8px 12px", borderRadius: 7, border: `1px solid ${C.border}`, fontSize: 13, fontFamily: "inherit", outline: "none" }}
+            />
+            <input
+              value={op.preco}
+              onChange={(e) => {
+                const arr = [...(form.opcionais || [])];
+                arr[i] = { ...arr[i], preco: e.target.value };
+                setForm((f) => ({ ...f, opcionais: arr }));
+              }}
+              placeholder="Valor (R$)"
+              type="number"
+              style={{ flex: 1, padding: "8px 12px", borderRadius: 7, border: `1px solid ${C.border}`, fontSize: 13, fontFamily: "inherit", outline: "none" }}
+            />
+            <button
+              onClick={() => setForm((f) => ({ ...f, opcionais: f.opcionais.filter((_, j) => j !== i) }))}
+              style={{ background: "none", border: "none", color: C.danger, cursor: "pointer", fontSize: 20, lineHeight: 1, padding: "0 4px" }}
+            >×</button>
+          </div>
+        ))}
+        <button
+          onClick={() => setForm((f) => ({ ...f, opcionais: [...(f.opcionais || []), { nome: "", preco: "" }] }))}
+          style={{ fontSize: 12, color: C.steel, background: "none", border: `1px dashed ${C.steel}`, borderRadius: 6, padding: "6px 14px", cursor: "pointer", fontFamily: "inherit" }}
+        >
+          + Adicionar opcional
+        </button>
       </div>
 
       {/* Ações */}
@@ -870,6 +912,7 @@ const FORM_VAZIO = {
   status:     "Aguardando resposta",
   desconto:   0,
   valor_m2_custom: 3500,
+  opcionais:  [],
 };
 
 export default function Orcamentos() {
@@ -1367,6 +1410,8 @@ export default function Orcamentos() {
 
       {/* Layout */}
       <div>
+        <FluxoOrcamentoStepper step={1} onGo={(i) => { if (i === 0) setActivePage("calculadora"); }} />
+
         {/* Header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
           <div>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import Sidebar from "./Sidebar";
+import StickAssist from "../ui/StickAssist";
 import NotificacaoDropdown from "../notificacoes/NotificacaoDropdown";
 import PresenceAvatars from "./PresenceAvatars";
 import CommandPalette from "../ui/CommandPalette";
@@ -171,6 +172,7 @@ export default function AppLayout({ children }) {
       </div>
       <CommandPalette onNavigate={setActivePage} />
       <PWAInstallBanner />
+      <StickAssist />
     </div>
   );
 }
