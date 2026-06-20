@@ -121,7 +121,7 @@ function ModalApontamento({ modelos, onSalvar, onClose }) {
     if (!form.descricao.trim()) return;
     setSaving(true);
     try { await onSalvar(form); onClose(); }
-    catch (e) { alert(e.message); setSaving(false); }
+    catch (e) { console.error(e); setSaving(false); }
   }
 
   const F = (k) => (e) => setForm((p) => ({ ...p, [k]: e.target.value }));
@@ -199,7 +199,7 @@ function TabModelos({ obraId, empresaId, modelos, carregarModelos, deletando, se
       const { path, publicUrl } = await uploadIFC(obraId, empresaId, file);
       await criarModelo({ obra_id: obraId, nome: file.name, tipo: ext, storage_path: path, url: publicUrl });
       await carregarModelos();
-    } catch (e) { alert(e.message); }
+    } catch (err) { console.error(err); }
     finally { setUploading(false); e.target.value = ""; }
   }
 
@@ -207,7 +207,7 @@ function TabModelos({ obraId, empresaId, modelos, carregarModelos, deletando, se
     if (!confirm(`Excluir modelo "${m.nome}"?`)) return;
     setDeletando(m.id);
     try { await deletarModelo(m.id, m.storage_path); await carregarModelos(); }
-    catch (e) { alert(e.message); }
+    catch (err) { console.error(err); }
     finally { setDeletando(null); }
   }
 
@@ -286,7 +286,7 @@ function TabApontamentos({ obraId, modelos, apontamentos, carregarApontamentos }
     const next = apt.status === "resolvido" ? "aberto" : "resolvido";
     setAtualizando(apt.id);
     try { await atualizarApontamento(apt.id, { status: next }); await carregarApontamentos(); }
-    catch (e) { alert(e.message); }
+    catch (err) { console.error(err); }
     finally { setAtualizando(null); }
   }
 
@@ -294,7 +294,7 @@ function TabApontamentos({ obraId, modelos, apontamentos, carregarApontamentos }
     if (!confirm("Excluir apontamento?")) return;
     setAtualizando(apt.id);
     try { await deletarApontamento(apt.id); await carregarApontamentos(); }
-    catch (e) { alert(e.message); }
+    catch (err) { console.error(err); }
     finally { setAtualizando(null); }
   }
 

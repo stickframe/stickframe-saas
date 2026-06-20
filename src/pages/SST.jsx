@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import useAppStore from "../store/useAppStore";
 import { useModuleLoad } from "../hooks/useModuleLoad";
+import { useToast } from "../hooks/useToast";
 import Btn from "../components/ui/Btn";
 import Badge from "../components/ui/Badge";
 import Modal from "../components/ui/Modal";
@@ -31,6 +32,7 @@ function kpiStyle(cor) {
 export default function SST() {
   const { perfil } = useAppStore();
   useModuleLoad("sst");
+  const { toast, mostrarToast } = useToast();
 
   const [aba, setAba] = useState("dds");
   const [obras, setObras] = useState([]);
@@ -159,7 +161,7 @@ export default function SST() {
       if (incEdit) await atualizarIncidente(incEdit, payload); else await criarIncidente(payload);
       setIncModal(false); loadInc();
     } catch (e) {
-      alert("Erro ao salvar incidente: " + (e.message || e));
+      mostrarToast("Erro ao salvar incidente: " + (e.message || e));
     }
   }
 
@@ -200,6 +202,11 @@ export default function SST() {
 
   return (
     <div style={{ padding: "0 0 40px" }}>
+      {toast && (
+        <div style={{ position: "fixed", bottom: 28, right: 28, zIndex: 999, background: "#26231f", border: "1px solid #57514a", borderRadius: 10, padding: "12px 20px", fontSize: 13, fontWeight: 600, color: "#fff", boxShadow: "0 8px 32px #0006" }}>
+          {toast}
+        </div>
+      )}
       {/* Header */}
       <div style={{ marginBottom: 22 }}>
         <h1 style={{ fontSize: 22, fontWeight: 800, color: C.text }}>SST</h1>

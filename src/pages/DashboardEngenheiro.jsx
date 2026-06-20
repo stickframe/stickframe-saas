@@ -7,12 +7,13 @@ import { useModuleLoad } from "../hooks/useModuleLoad";
 function KpiCard({ label, value, sub, accent }) {
   return (
     <div style={{
-      background: "#fff", borderRadius: 16, padding: "16px 18px",
-      border: `1px solid ${C.border}`, borderTop: `3px solid ${accent}`,
+      background: "var(--surface, #fff)", borderRadius: 16, padding: "18px 18px",
+      border: `1px solid ${C.border}`,
     }}>
+      <div style={{ height: 3, width: 28, borderRadius: 2, marginBottom: 12, background: accent }} />
       <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1, color: C.muted, textTransform: "uppercase", marginBottom: 8 }}>{label}</div>
-      <div style={{ fontSize: 22, fontWeight: 900 }}>{value}</div>
-      {sub && <div style={{ fontSize: 11, color: C.muted, marginTop: 3 }}>{sub}</div>}
+      <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 28, fontWeight: 700, lineHeight: 1 }}>{value}</div>
+      {sub && <div style={{ fontSize: 11, color: C.muted, marginTop: 6 }}>{sub}</div>}
     </div>
   );
 }

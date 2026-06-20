@@ -49,7 +49,7 @@ const ContratoOnline  = lazyWithRetry(() => import("./pages/ContratoOnline"));
 const Equipe      = lazyWithRetry(() => import("./pages/Equipe"));
 const Cronograma  = lazyWithRetry(() => import("./pages/Cronograma"));
 const Vistorias   = lazyWithRetry(() => import("./pages/Vistorias"));
-const BIM           = lazyWithRetry(() => import("./pages/BIM"));
+const BIM           = lazyWithRetry(() => import("./pages/BimSF")); // legacy route → BimSF
 const BimSF         = lazyWithRetry(() => import("./pages/BimSF"));
 const Quantitativos  = lazyWithRetry(() => import("./pages/Quantitativos"));
 const Configuracoes  = lazyWithRetry(() => import("./pages/Configuracoes"));
