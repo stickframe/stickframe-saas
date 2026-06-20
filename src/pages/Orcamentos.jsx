@@ -17,6 +17,7 @@ import Select from "../components/ui/Select";
 import Badge from "../components/ui/Badge";
 import Modal from "../components/ui/Modal";
 import FormAiMemorial from "../components/ui/FormAiMemorial";
+import CatalogoPicker from "../components/orcamento/CatalogoPicker";
 
 //  Status 
 const STATUS_OPTS = ["Aguardando resposta", "Em revisão", "Aprovado", "Recusado"];
@@ -89,6 +90,7 @@ function Label({ children, required }) {
 
 //  Formulário (fora do componente) 
 function FormOrc({ form, setForm, clientes, onSave, onCancel, onDelete, btnLabel, addCliente }) {
+  const [showCatalogo, setShowCatalogo] = useState(false);
   const set  = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
   const calc = calcOrcamento({
     area: form.area,
@@ -345,44 +347,91 @@ function FormOrc({ form, setForm, clientes, onSave, onCancel, onDelete, btnLabel
 
       {/* Opcionais */}
       <div>
-        <Label>Serviços Opcionais</Label>
-        <div style={{ fontSize: 11, color: C.muted, marginBottom: 10 }}>O cliente poderá selecionar ou rejeitar cada item na proposta online.</div>
+        <Label>Itens do Orçamento</Label>
+        <div style={{ fontSize: 11, color: C.muted, marginBottom: 10 }}>Adicione itens manualmente ou selecione do catálogo de produtos. O cliente poderá aceitar ou rejeitar cada item na proposta.</div>
         {(form.opcionais || []).map((op, i) => (
-          <div key={i} style={{ display: "flex", gap: 8, marginBottom: 8, alignItems: "center" }}>
-            <input
-              value={op.nome}
-              onChange={(e) => {
-                const arr = [...(form.opcionais || [])];
-                arr[i] = { ...arr[i], nome: e.target.value };
-                setForm((f) => ({ ...f, opcionais: arr }));
-              }}
-              placeholder="Descrição do serviço"
-              style={{ flex: 2, padding: "8px 12px", borderRadius: 7, border: `1px solid ${C.border}`, fontSize: 13, fontFamily: "inherit", outline: "none" }}
-            />
-            <input
-              value={op.preco}
-              onChange={(e) => {
-                const arr = [...(form.opcionais || [])];
-                arr[i] = { ...arr[i], preco: e.target.value };
-                setForm((f) => ({ ...f, opcionais: arr }));
-              }}
-              placeholder="Valor (R$)"
-              type="number"
-              style={{ flex: 1, padding: "8px 12px", borderRadius: 7, border: `1px solid ${C.border}`, fontSize: 13, fontFamily: "inherit", outline: "none" }}
-            />
-            <button
-              onClick={() => setForm((f) => ({ ...f, opcionais: f.opcionais.filter((_, j) => j !== i) }))}
-              style={{ background: "none", border: "none", color: C.danger, cursor: "pointer", fontSize: 20, lineHeight: 1, padding: "0 4px" }}
-            >×</button>
+          <div key={i} style={{ marginBottom: 8 }}>
+            {op.produtoId ? (
+              /* Item do catálogo */
+              <div style={{ display: "flex", gap: 8, alignItems: "center", background: "rgba(152,25,21,0.04)", border: `1px solid rgba(152,25,21,0.15)`, borderRadius: 8, padding: "8px 10px" }}>
+                <div style={{ flex: 2, minWidth: 0 }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: C.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{op.nome}</div>
+                  <div style={{ fontSize: 10, color: C.muted, marginTop: 2 }}>{op.unidade} · {fmt(op.precoUnit)}/un</div>
+                </div>
+                <input
+                  type="number"
+                  min={1}
+                  value={op.quantidade || 1}
+                  onChange={(e) => {
+                    const arr = [...(form.opcionais || [])];
+                    const qtd = Math.max(1, Number(e.target.value) || 1);
+                    arr[i] = { ...arr[i], quantidade: qtd, preco: arr[i].precoUnit * qtd };
+                    setForm((f) => ({ ...f, opcionais: arr }));
+                  }}
+                  style={{ width: 56, padding: "6px 8px", borderRadius: 7, border: `1px solid ${C.border}`, fontSize: 13, fontFamily: "inherit", outline: "none", textAlign: "center" }}
+                />
+                <div style={{ fontSize: 13, fontWeight: 700, color: C.steel, minWidth: 72, textAlign: "right" }}>{fmt(op.preco)}</div>
+                <button
+                  onClick={() => setForm((f) => ({ ...f, opcionais: f.opcionais.filter((_, j) => j !== i) }))}
+                  style={{ background: "none", border: "none", color: C.danger, cursor: "pointer", fontSize: 20, lineHeight: 1, padding: "0 4px" }}
+                >×</button>
+              </div>
+            ) : (
+              /* Item manual */
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <input
+                  value={op.nome}
+                  onChange={(e) => {
+                    const arr = [...(form.opcionais || [])];
+                    arr[i] = { ...arr[i], nome: e.target.value };
+                    setForm((f) => ({ ...f, opcionais: arr }));
+                  }}
+                  placeholder="Descrição do serviço"
+                  style={{ flex: 2, padding: "8px 12px", borderRadius: 7, border: `1px solid ${C.border}`, fontSize: 13, fontFamily: "inherit", outline: "none" }}
+                />
+                <input
+                  value={op.preco}
+                  onChange={(e) => {
+                    const arr = [...(form.opcionais || [])];
+                    arr[i] = { ...arr[i], preco: e.target.value };
+                    setForm((f) => ({ ...f, opcionais: arr }));
+                  }}
+                  placeholder="Valor (R$)"
+                  type="number"
+                  style={{ flex: 1, padding: "8px 12px", borderRadius: 7, border: `1px solid ${C.border}`, fontSize: 13, fontFamily: "inherit", outline: "none" }}
+                />
+                <button
+                  onClick={() => setForm((f) => ({ ...f, opcionais: f.opcionais.filter((_, j) => j !== i) }))}
+                  style={{ background: "none", border: "none", color: C.danger, cursor: "pointer", fontSize: 20, lineHeight: 1, padding: "0 4px" }}
+                >×</button>
+              </div>
+            )}
           </div>
         ))}
-        <button
-          onClick={() => setForm((f) => ({ ...f, opcionais: [...(f.opcionais || []), { nome: "", preco: "" }] }))}
-          style={{ fontSize: 12, color: C.steel, background: "none", border: `1px dashed ${C.steel}`, borderRadius: 6, padding: "6px 14px", cursor: "pointer", fontFamily: "inherit" }}
-        >
-          + Adicionar opcional
-        </button>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <button
+            onClick={() => setForm((f) => ({ ...f, opcionais: [...(f.opcionais || []), { nome: "", preco: "" }] }))}
+            style={{ fontSize: 12, color: C.steel, background: "none", border: `1px dashed ${C.steel}`, borderRadius: 6, padding: "6px 14px", cursor: "pointer", fontFamily: "inherit" }}
+          >
+            + Manual
+          </button>
+          <button
+            onClick={() => setShowCatalogo(true)}
+            style={{ fontSize: 12, color: "#981915", background: "none", border: "1px dashed #981915", borderRadius: 6, padding: "6px 14px", cursor: "pointer", fontFamily: "inherit" }}
+          >
+            📦 Do Catálogo
+          </button>
+        </div>
       </div>
+
+      {showCatalogo && (
+        <CatalogoPicker
+          onAdd={(item) => {
+            setForm((f) => ({ ...f, opcionais: [...(f.opcionais || []), item] }));
+          }}
+          onClose={() => setShowCatalogo(false)}
+        />
+      )}
 
       {/* Ações */}
       <div style={{
@@ -1065,6 +1114,7 @@ export default function Orcamentos() {
       padrao:     form.padrao,
       status:     form.status,
       criado:     new Date().toLocaleDateString("pt-BR"),
+      opcionais:  form.opcionais || [],
     });
     if (preOrcAtivo) {
       sb.from("pre_orcamentos").update({ status: "Analisado" }).eq("id", preOrcAtivo).then(() => {});
@@ -1086,6 +1136,7 @@ export default function Orcamentos() {
       padrao:     form.padrao,
       valor:      calc.valor_total,
       status:     form.status,
+      opcionais:  form.opcionais || [],
     });
     setModal(false);
     mostrarToast(" Orçamento atualizado!");
