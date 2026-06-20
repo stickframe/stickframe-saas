@@ -84,7 +84,11 @@ function FluxoCaixa({ lancamentos }) {
 
       {/* Gráfico de barras dia a dia */}
       <div style={{ background: C.surface, borderRadius: 14, border: `1px solid ${C.border}`, padding: "18px 20px" }}>
-        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted, marginBottom: 4 }}>FLUXO DE CAIXA — PROJEÇÃO 60 DIAS</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+          <div style={{ height: 3, width: 28, borderRadius: 2, background: C.red }} />
+          <div style={{ fontSize: 14, fontWeight: 800 }}>StickFlow™</div>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted }}>PROJEÇÃO 60 DIAS</div>
+        </div>
         <div style={{ fontSize: 12, color: C.muted, marginBottom: 16 }}>Barras: entradas (verde) e saídas (vermelho) por data de vencimento · Linha: saldo acumulado</div>
         <div style={{ overflowX: "auto" }}>
           <svg width={Math.max(dias.length * 18, 400)} height={180} style={{ display: "block" }}>
@@ -766,7 +770,7 @@ export default function Financeiro() {
 
         {/* Tabs */}
         <div style={{ display: "flex", gap: 4, background: "var(--surface-2,#faf8f4)", border: "1px solid var(--line,#e7e1d8)", borderRadius: 11, padding: 4, width: "max-content", marginBottom: 20, flexWrap: "wrap" }}>
-          {[["lancamentos", "Análise"], ["fluxo", "Fluxo de Caixa"], ["dre", "DRE"], ["fluxo-mensal", "Fluxo Mensal"], ["folha", "Folha"]].map(([k, label]) => (
+          {[["lancamentos", "Análise"], ["fluxo", "StickFlow™"], ["dre", "DRE"], ["fluxo-mensal", "Fluxo Mensal"], ["folha", "Folha"]].map(([k, label]) => (
             <button key={k} onClick={() => setFinTab(k)} style={{
               padding: "8px 16px", border: "none", borderRadius: 8,
               background: finTab === k ? "var(--surface,#fff)" : "none",

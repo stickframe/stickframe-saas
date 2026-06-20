@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { C, FASES } from "../utils/constants";
 import useAppStore from "../store/useAppStore";
 import { useModuleLoad } from "../hooks/useModuleLoad";
+import { fmt } from "../utils/format";
 
 const STATUS_COR = {
   "Em andamento": "#981915",
@@ -26,14 +27,162 @@ function diffDays(a, b) {
 
 const MONTH_NAMES = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
 
+// Sigmoid S-curve: given normalized time t (0→1) returns planned % (0→100)
+function sCurve(t) {
+  const k = 10; // steepness
+  return (1 / (1 + Math.exp(-k * (t - 0.5)))) * 100;
+}
+
+// Normalize sigmoid so it starts at 0% and ends at 100%
+const S0 = sCurve(0), S1 = sCurve(1);
+function sCurveNorm(t) {
+  return ((sCurve(t) - S0) / (S1 - S0)) * 100;
+}
+
+function CurvaSChart({ obra }) {
+  const inicio = new Date(obra.prazo_inicio);
+  const fim    = new Date(obra.prazo_fim);
+  const hoje   = new Date();
+  hoje.setHours(0, 0, 0, 0);
+
+  const totalMs  = fim - inicio;
+  const elapsedMs = Math.min(hoje - inicio, totalMs);
+  const tAtual   = Math.max(0, Math.min(1, elapsedMs / totalMs));
+  const progAtual = obra.progresso || 0;
+
+  // Generate 40 evenly-spaced points
+  const N = 40;
+  const pts = Array.from({ length: N + 1 }, (_, i) => {
+    const t = i / N;
+    const planejado = sCurveNorm(t);
+    const dataPoint = new Date(inicio.getTime() + t * totalMs);
+    // Real curve: linear from 0% at inicio to progAtual% at hoje (only for past/today)
+    const real = t <= tAtual ? (tAtual > 0 ? (t / tAtual) * progAtual : 0) : null;
+    return { t, planejado, real, dataPoint };
+  });
+
+  // SVG dimensions
+  const W = 520, H = 180, PL = 40, PT = 10, PB = 30, PR = 10;
+  const cW = W - PL - PR, cH = H - PT - PB;
+
+  function px(t)  { return PL + t * cW; }
+  function py(pct){ return PT + cH - (pct / 100) * cH; }
+
+  const planejadoPts = pts.map((p) => `${px(p.t)},${py(p.planejado)}`).join(" ");
+  const realPts      = pts.filter((p) => p.real !== null).map((p) => `${px(p.t)},${py(p.real)}`).join(" ");
+  const tHoje        = px(tAtual);
+  const deltaVsPlano = progAtual - sCurveNorm(tAtual);
+  const atrasado     = deltaVsPlano < -3;
+
+  // Y axis ticks
+  const yTicks = [0, 25, 50, 75, 100];
+  // X axis labels: inicio, meio, fim
+  const xLabels = [
+    { t: 0,   label: inicio.toLocaleDateString("pt-BR", { month: "short", year: "2-digit" }) },
+    { t: 0.5, label: new Date(inicio.getTime() + totalMs / 2).toLocaleDateString("pt-BR", { month: "short" }) },
+    { t: 1,   label: fim.toLocaleDateString("pt-BR", { month: "short", year: "2-digit" }) },
+  ];
+
+  return (
+    <div style={{ background: C.surface, borderRadius: 14, border: `1px solid ${C.border}`, padding: "18px 20px" }}>
+      {/* Header */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 }}>
+        <div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+            <div style={{ height: 3, width: 28, borderRadius: 2, background: C.red }} />
+            <div style={{ fontSize: 14, fontWeight: 800 }}>Curva-S</div>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted }}>PLANEJADO × REAL</div>
+          </div>
+          <div style={{ fontSize: 12, color: C.muted }}>{obra.nome}</div>
+        </div>
+        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+          <div style={{
+            padding: "6px 14px", borderRadius: 20, fontSize: 12, fontWeight: 700,
+            background: atrasado ? "#fff5f5" : "#f0fdf4",
+            color: atrasado ? C.danger : C.success,
+            border: `1px solid ${atrasado ? "#fca5a5" : "#86efac"}`,
+          }}>
+            {atrasado ? `⚠ Atraso ${Math.abs(deltaVsPlano).toFixed(0)}pp` : `✓ No prazo (+${deltaVsPlano.toFixed(0)}pp)`}
+          </div>
+        </div>
+      </div>
+
+      {/* SVG Chart */}
+      <div style={{ overflowX: "auto" }}>
+        <svg width={W} height={H} style={{ display: "block" }}>
+          {/* Grid Y */}
+          {yTicks.map((v) => (
+            <g key={v}>
+              <line x1={PL} y1={py(v)} x2={W - PR} y2={py(v)} stroke={C.border} strokeWidth={1} strokeDasharray="4,4" />
+              <text x={PL - 5} y={py(v) + 4} textAnchor="end" fontSize={9} fill={C.muted}>{v}%</text>
+            </g>
+          ))}
+
+          {/* Shaded gap between real and planned (when real < planned) */}
+          {tAtual > 0 && atrasado && (
+            <polygon
+              fill="#981915"
+              fillOpacity={0.07}
+              points={[
+                ...pts.filter((p) => p.real !== null).map((p) => `${px(p.t)},${py(p.real)}`),
+                ...pts.filter((p) => p.real !== null).reverse().map((p) => `${px(p.t)},${py(p.planejado)}`),
+              ].join(" ")}
+            />
+          )}
+
+          {/* Planned S-curve */}
+          <polyline fill="none" stroke={C.steel} strokeWidth={2} strokeDasharray="6,3" points={planejadoPts} />
+
+          {/* Real curve */}
+          {realPts && <polyline fill="none" stroke={C.red} strokeWidth={2.5} points={realPts} />}
+
+          {/* Today line */}
+          <line x1={tHoje} y1={PT} x2={tHoje} y2={PT + cH} stroke="#981915" strokeWidth={1.5} strokeDasharray="3,3" opacity={0.6} />
+          <text x={tHoje + 3} y={PT + 10} fontSize={9} fill="#981915" fontWeight={700}>Hoje</text>
+
+          {/* Current actual dot */}
+          <circle cx={tHoje} cy={py(progAtual)} r={5} fill={atrasado ? C.danger : C.success} />
+
+          {/* X axis labels */}
+          {xLabels.map(({ t, label }) => (
+            <text key={t} x={px(t)} y={H - 4} textAnchor={t === 0 ? "start" : t === 1 ? "end" : "middle"} fontSize={9} fill={C.muted}>{label}</text>
+          ))}
+
+          {/* Legend */}
+          <line x1={PL}      y1={H - 16} x2={PL + 20}  y2={H - 16} stroke={C.steel} strokeWidth={2} strokeDasharray="6,3" />
+          <text x={PL + 24}  y={H - 12}  fontSize={9} fill={C.muted}>Planejado (Curva-S)</text>
+          <line x1={PL + 130} y1={H - 16} x2={PL + 150} y2={H - 16} stroke={C.red} strokeWidth={2.5} />
+          <text x={PL + 154}  y={H - 12}  fontSize={9} fill={C.muted}>Realizado</text>
+        </svg>
+      </div>
+
+      {/* KPIs */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginTop: 14 }}>
+        {[
+          { label: "Progresso real", value: `${progAtual}%`, color: atrasado ? C.danger : C.success },
+          { label: "Progresso planejado", value: `${sCurveNorm(tAtual).toFixed(0)}%`, color: C.steel },
+          { label: "Variação", value: `${deltaVsPlano >= 0 ? "+" : ""}${deltaVsPlano.toFixed(1)}pp`, color: atrasado ? C.danger : C.success },
+          { label: "Dias p/ entrega", value: Math.max(0, Math.round((fim - hoje) / 86400000)) + "d", color: C.muted },
+        ].map((k) => (
+          <div key={k.label} style={{ background: C.dark, borderRadius: 8, padding: "10px 12px" }}>
+            <div style={{ fontSize: 10, color: C.muted, marginBottom: 4 }}>{k.label.toUpperCase()}</div>
+            <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: 20, fontWeight: 700, color: k.color }}>{k.value}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function Cronograma() {
   useModuleLoad("obras");
   const obras      = useAppStore((s) => s.obras);
   const updateObra = useAppStore((s) => s.updateObra);
 
-  const [editId, setEditId] = useState(null);
+  const [editId, setEditId]     = useState(null);
   const [editForm, setEditForm] = useState({ prazo_inicio: "", prazo_fim: "" });
-  const [saving, setSaving]   = useState(false);
+  const [saving, setSaving]     = useState(false);
+  const [curvaSObra, setCurvaSObra] = useState(null); // obra id for Curva-S
 
   // Obras com datas definidas
   const obrasComData = useMemo(
@@ -259,6 +408,37 @@ export default function Cronograma() {
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {/* Curva-S Planejado × Real */}
+      {obrasComData.length > 0 && (
+        <div style={{ marginTop: 28 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+            <div>
+              <h3 style={{ fontSize: 18, fontWeight: 800, margin: 0 }}>
+                Curva-S™
+                <span style={{ fontSize: 12, fontWeight: 500, color: C.muted, marginLeft: 8 }}>Planejado × Real por obra</span>
+              </h3>
+            </div>
+            <select
+              value={curvaSObra || obrasComData[0]?.id || ""}
+              onChange={(e) => setCurvaSObra(e.target.value)}
+              style={{
+                padding: "8px 14px", borderRadius: 8, border: `1px solid ${C.border}`,
+                background: C.surface, color: C.text, fontSize: 13,
+                fontFamily: "inherit", cursor: "pointer", outline: "none",
+              }}
+            >
+              {obrasComData.map((o) => (
+                <option key={o.id} value={o.id}>{o.nome?.split("—")[0]?.trim()}</option>
+              ))}
+            </select>
+          </div>
+          {(() => {
+            const obra = obrasComData.find((o) => o.id === (curvaSObra || obrasComData[0]?.id));
+            return obra ? <CurvaSChart obra={obra} /> : null;
+          })()}
         </div>
       )}
     </>
