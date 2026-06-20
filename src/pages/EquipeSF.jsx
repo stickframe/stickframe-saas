@@ -1,4 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
+import {
+  listarColaboradores, criarColaborador, atualizarColaborador, deletarColaborador,
+  listarAlocacoes, listarHoras,
+} from "../services/repositories/colaboradorRepository";
+import { listarCertificacoes } from "../services/repositories/certificacaoRepository";
 
 // SVG icon helper
 function Ic({ n, w = 15, c }) {
@@ -20,6 +25,8 @@ function Ic({ n, w = 15, c }) {
     x:        <g><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></g>,
     print:    <g><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></g>,
     user:     <g><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></g>,
+    alert:    <g><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></g>,
+    check:    <polyline points="20 6 9 17 4 12"/>,
   };
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke={c || "currentColor"}
@@ -30,16 +37,13 @@ function Ic({ n, w = 15, c }) {
   );
 }
 
-const MEMBROS_INICIAL = [
-  { id: 1, nome: "AJUDANTE - 1",            cargo: "AJUDANTE",    area: "Ajudante",      salario: 150,  status: "Ativo", nrs: [],                                                            email: "",                          tel: "" },
-  { id: 2, nome: "ANDRE QUEIROZ CANDIDO",   cargo: "DIRETOR",     area: "Administração", salario: 300,  status: "Ativo", nrs: ["Habilitação","NR-35","NR-12","NR-18","NR-10","NR-6","ASO"], email: "andre@stickframe.com.br",    tel: "" },
-  { id: 3, nome: "EDUARDO MORAES DO PRADO", cargo: "PCP",         area: "Montador",      salario: 350,  status: "Ativo", nrs: ["NR-5","NR-18","ASO","NR-35","Habilitação","NR-6","NR-12"],  email: "",                          tel: "", cargo_extra: "Planejamento e Controle da Produção" },
-  { id: 4, nome: "JONATHAN DE SOUZA",       cargo: "CEO",         area: "Administração", salario: 300,  status: "Ativo", nrs: [],                                                            email: "jonathan@stickframe.com.br", tel: "+1 732 862-7054" },
-  { id: 5, nome: "MONTADOR 1",              cargo: "MONTADOR",    area: "Montador",      salario: 200,  status: "Ativo", nrs: [],                                                            email: "",                          tel: "" },
-  { id: 6, nome: "MONTADOR 2",              cargo: "MONTADOR",    area: "Montador",      salario: 220,  status: "Ativo", nrs: [],                                                            email: "",                          tel: "" },
-  { id: 7, nome: "MONTADOR 3",              cargo: "MONTADOR",    area: "Montador",      salario: 250,  status: "Ativo", nrs: [],                                                            email: "",                          tel: "" },
-  { id: 8, nome: "PCP - OBRAS",             cargo: "PCP - OBRAS", area: "Outro",         salario: 350,  status: "Ativo", nrs: [],                                                            email: "",                          tel: "" },
-];
+// de-para: campo frontend ↔ coluna DB
+function toDb(form) {
+  return { ...form, especialidade: form.area };
+}
+function fromDb(row) {
+  return { ...row, area: row.especialidade || row.area || "" };
+}
 
 const TABS = [
   { id: "equipe", label: "Equipe",       icon: "users" },
@@ -58,13 +62,16 @@ function fmtBRL(v) {
   return Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
-
 function StatusPill({ status }) {
-  const s = { Ativo: { background: "#e8f3eb", color: "#3f7a4b" }, Férias: { background: "#fef5e7", color: "#b07a1e" }, Afastado: { background: "#fef5e7", color: "#b07a1e" }, Inativo: { background: "var(--surface-2)", color: "var(--muted)" } }[status] || {};
+  const s = {
+    Ativo:    { background: "#e8f3eb", color: "#3f7a4b" },
+    Férias:   { background: "#fef5e7", color: "#b07a1e" },
+    Afastado: { background: "#fef5e7", color: "#b07a1e" },
+    Inativo:  { background: "var(--surface-2)", color: "var(--muted)" },
+  }[status] || {};
   return <span style={{ ...s, fontSize: 10.5, fontWeight: 800, padding: "3px 9px", borderRadius: 5 }}>{status}</span>;
 }
 
-// ── Impressão do crachá ───────────────────────────────────────────────────────
 function imprimirCracha(m) {
   const initials = m.nome.split(" ").slice(0, 2).map(w => w[0]).join("");
   const win = window.open("", "_blank", "width=400,height=560");
@@ -94,8 +101,8 @@ function imprimirCracha(m) {
       <div class="cargo">${m.cargo}${m.area ? " · " + m.area : ""}</div>
     </div>
     <div class="body">
-      ${m.email ? `<div class="row"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8c847a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>${m.email}</div>` : ""}
-      ${m.tel ? `<div class="row"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8c847a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.56 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 8.91a16 16 0 0 0 5.61 5.61l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>${m.tel}</div>` : ""}
+      ${m.email ? `<div class="row">${m.email}</div>` : ""}
+      ${m.tel ? `<div class="row">${m.tel}</div>` : ""}
       ${m.cargo_extra ? `<div class="row" style="font-style:italic;color:#8c847a">${m.cargo_extra}</div>` : ""}
       ${m.nrs?.length ? `<div class="nrs">${m.nrs.map(n => `<span class="nr">${n}</span>`).join("")}</div>` : ""}
     </div>
@@ -106,19 +113,18 @@ function imprimirCracha(m) {
   win.document.close();
 }
 
-// ── Modal Editar / Novo ───────────────────────────────────────────────────────
-function ModalMembro({ membro, onSave, onClose }) {
+function ModalMembro({ membro, onSave, onClose, saving }) {
   const novo = !membro.id;
   const [form, setForm] = useState({
-    nome: membro.nome || "",
-    cargo: membro.cargo || "",
-    area: membro.area || "Montador",
+    nome:        membro.nome        || "",
+    cargo:       membro.cargo       || "",
+    area:        membro.area        || "Montador",
     cargo_extra: membro.cargo_extra || "",
-    salario: membro.salario || "",
-    status: membro.status || "Ativo",
-    email: membro.email || "",
-    tel: membro.tel || "",
-    nrs: membro.nrs || [],
+    salario:     membro.salario     || "",
+    status:      membro.status      || "Ativo",
+    email:       membro.email       || "",
+    tel:         membro.tel         || "",
+    nrs:         membro.nrs         || [],
   });
 
   function toggle(nr) {
@@ -143,12 +149,12 @@ function ModalMembro({ membro, onSave, onClose }) {
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
           {[
-            { label: "Nome completo", key: "nome", span: 2 },
+            { label: "Nome completo", key: "nome",        span: 2 },
             { label: "Cargo",         key: "cargo" },
-            { label: "Área",          key: "area", type: "select", opts: AREAS },
+            { label: "Área",          key: "area",        type: "select", opts: AREAS },
             { label: "Cargo extra",   key: "cargo_extra", span: 2 },
-            { label: "Salário (R$)",  key: "salario", type: "number" },
-            { label: "Status",        key: "status", type: "select", opts: STATUS_L },
+            { label: "Salário (R$)",  key: "salario",     type: "number" },
+            { label: "Status",        key: "status",      type: "select", opts: STATUS_L },
             { label: "E-mail",        key: "email" },
             { label: "Telefone",      key: "tel" },
           ].map(f => (
@@ -198,10 +204,10 @@ function ModalMembro({ membro, onSave, onClose }) {
               background: "var(--surface)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
             Cancelar
           </button>
-          <button onClick={() => onSave({ ...membro, ...form, salario: Number(form.salario) || 0 })}
-            style={{ padding: "8px 22px", borderRadius: 8, border: "none",
-              background: "var(--brick,#981915)", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
-            {novo ? "Adicionar" : "Salvar"}
+          <button disabled={saving} onClick={() => onSave({ ...membro, ...form, salario: Number(form.salario) || 0 })}
+            style={{ padding: "8px 22px", borderRadius: 8, border: "none", opacity: saving ? .7 : 1,
+              background: "var(--brick,#981915)", color: "#fff", fontSize: 13, fontWeight: 700, cursor: saving ? "not-allowed" : "pointer" }}>
+            {saving ? "Salvando…" : novo ? "Adicionar" : "Salvar"}
           </button>
         </div>
       </div>
@@ -209,7 +215,6 @@ function ModalMembro({ membro, onSave, onClose }) {
   );
 }
 
-// ── Card ──────────────────────────────────────────────────────────────────────
 function CardMembro({ m, onEdit, onCracha, onDelete }) {
   const initials = m.nome.split(" ").slice(0, 2).map(w => w[0]).join("");
   return (
@@ -272,8 +277,8 @@ function CardMembro({ m, onEdit, onCracha, onDelete }) {
 
       <div style={{ display: "flex", gap: 6, marginTop: 12, flexWrap: "wrap" }}>
         {[
-          { icon: "pencil", label: "Editar",  action: onEdit },
-          { icon: "badge",  label: "Crachá",  action: onCracha },
+          { icon: "pencil", label: "Editar", action: onEdit },
+          { icon: "badge",  label: "Crachá", action: onCracha },
         ].map(a => (
           <button key={a.label} onClick={a.action}
             style={{ display: "inline-flex", alignItems: "center", gap: 5,
@@ -323,36 +328,234 @@ function EmptyState({ icon, title, text, action, onAction }) {
   );
 }
 
+// ── Aba Compliance ────────────────────────────────────────────────────────────
+function TabCompliance({ certs, loading }) {
+  if (loading) return <div style={{ padding: 32, textAlign: "center", color: "var(--muted)" }}>Carregando…</div>;
+  if (!certs.length) return (
+    <EmptyState icon="shield" title="Compliance em dia"
+      text="Vencimentos de NRs, ASO e habilitações serão exibidos conforme os dados dos colaboradores." />
+  );
+
+  const COR = { Vigente: "#3f7a4b", Vencendo: "#b07a1e", Vencida: "#a33327" };
+  const BG  = { Vigente: "#e8f3eb", Vencendo: "#fef5e7", Vencida: "#fdf0ef" };
+
+  return (
+    <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 14, overflow: "hidden" }}>
+      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+        <thead>
+          <tr style={{ background: "var(--surface-2)", borderBottom: "1px solid var(--line)" }}>
+            {["Colaborador", "Tipo / NR", "Validade", "Dias Restantes", "Status"].map(h => (
+              <th key={h} style={{ padding: "10px 14px", textAlign: "left", fontSize: 10.5,
+                fontWeight: 800, color: "var(--muted)", letterSpacing: 1, textTransform: "uppercase" }}>{h}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {certs.map((c, i) => (
+            <tr key={c.id} style={{ borderBottom: i < certs.length - 1 ? "1px solid var(--line-2,#efeae2)" : "none" }}>
+              <td style={{ padding: "10px 14px", fontWeight: 600, color: "var(--ink)" }}>
+                {c.colaborador?.nome || "—"}
+              </td>
+              <td style={{ padding: "10px 14px", color: "var(--ink-2)" }}>{c.tipo}</td>
+              <td style={{ padding: "10px 14px", color: "var(--muted)" }}>
+                {c.data_validade ? new Date(c.data_validade).toLocaleDateString("pt-BR") : "—"}
+              </td>
+              <td style={{ padding: "10px 14px", fontFamily: "'Barlow Condensed',sans-serif",
+                fontSize: 16, fontWeight: 700, color: COR[c.status] || "var(--ink)" }}>
+                {c.diasRestantes != null ? `${c.diasRestantes}d` : "—"}
+              </td>
+              <td style={{ padding: "10px 14px" }}>
+                <span style={{ fontSize: 10.5, fontWeight: 800, padding: "3px 9px", borderRadius: 5,
+                  background: BG[c.status] || "var(--surface-2)", color: COR[c.status] || "var(--muted)" }}>
+                  {c.status}
+                </span>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+// ── Aba Alocações ─────────────────────────────────────────────────────────────
+function TabAlocacoes({ alocacoes, loading }) {
+  if (loading) return <div style={{ padding: 32, textAlign: "center", color: "var(--muted)" }}>Carregando…</div>;
+  if (!alocacoes.length) return (
+    <EmptyState icon="calendar" title="Sem alocações registradas"
+      text="Aloque colaboradores a fases da obra para controlar presença e produtividade." />
+  );
+  return (
+    <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 14, overflow: "hidden" }}>
+      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+        <thead>
+          <tr style={{ background: "var(--surface-2)", borderBottom: "1px solid var(--line)" }}>
+            {["Colaborador", "Obra", "Início", "Fim", "Função"].map(h => (
+              <th key={h} style={{ padding: "10px 14px", textAlign: "left", fontSize: 10.5,
+                fontWeight: 800, color: "var(--muted)", letterSpacing: 1, textTransform: "uppercase" }}>{h}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {alocacoes.map((a, i) => (
+            <tr key={a.id} style={{ borderBottom: i < alocacoes.length - 1 ? "1px solid var(--line-2,#efeae2)" : "none" }}>
+              <td style={{ padding: "10px 14px", fontWeight: 600, color: "var(--ink)" }}>{a.colaborador_nome || a.colaborador_id}</td>
+              <td style={{ padding: "10px 14px", color: "var(--ink-2)" }}>{a.obra_nome || a.obra_id || "—"}</td>
+              <td style={{ padding: "10px 14px", color: "var(--muted)" }}>{a.data_inicio ? new Date(a.data_inicio).toLocaleDateString("pt-BR") : "—"}</td>
+              <td style={{ padding: "10px 14px", color: "var(--muted)" }}>{a.data_fim ? new Date(a.data_fim).toLocaleDateString("pt-BR") : "Em curso"}</td>
+              <td style={{ padding: "10px 14px", color: "var(--ink-2)" }}>{a.funcao || "—"}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+// ── Aba Horas ─────────────────────────────────────────────────────────────────
+function TabHoras({ horas, loading }) {
+  if (loading) return <div style={{ padding: 32, textAlign: "center", color: "var(--muted)" }}>Carregando…</div>;
+  if (!horas.length) return (
+    <EmptyState icon="clock" title="Nenhuma hora lançada"
+      text="Lançamentos de horas extras, banco de horas e apuração de ponto aparecem aqui." />
+  );
+
+  const totalHoras = horas.reduce((s, h) => s + (h.horas || 0), 0);
+
+  return (
+    <div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12, marginBottom: 16 }}>
+        {[
+          { label: "Total de lançamentos", value: horas.length, color: "var(--steel,#3b6ea5)" },
+          { label: "Total de horas",        value: `${totalHoras.toFixed(1)}h`, color: "var(--ink)" },
+        ].map(k => (
+          <div key={k.label} style={{ background: "var(--surface)", border: "1px solid var(--line)",
+            borderRadius: 12, padding: "16px 18px" }}>
+            <div style={{ height: 3, width: 28, borderRadius: 2, marginBottom: 10, background: k.color }} />
+            <div style={{ fontSize: 10, fontWeight: 800, color: "var(--muted)", letterSpacing: 1.2, marginBottom: 6 }}>
+              {k.label.toUpperCase()}
+            </div>
+            <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: 26, fontWeight: 700,
+              color: "var(--ink)", lineHeight: 1 }}>{k.value}</div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 14, overflow: "hidden" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+          <thead>
+            <tr style={{ background: "var(--surface-2)", borderBottom: "1px solid var(--line)" }}>
+              {["Colaborador", "Obra", "Data", "Horas", "Tipo"].map(h => (
+                <th key={h} style={{ padding: "10px 14px", textAlign: "left", fontSize: 10.5,
+                  fontWeight: 800, color: "var(--muted)", letterSpacing: 1, textTransform: "uppercase" }}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {horas.map((h, i) => (
+              <tr key={h.id} style={{ borderBottom: i < horas.length - 1 ? "1px solid var(--line-2,#efeae2)" : "none" }}>
+                <td style={{ padding: "10px 14px", fontWeight: 600, color: "var(--ink)" }}>{h.colaborador_nome || h.colaborador_id}</td>
+                <td style={{ padding: "10px 14px", color: "var(--ink-2)" }}>{h.obra_nome || h.obra_id || "—"}</td>
+                <td style={{ padding: "10px 14px", color: "var(--muted)" }}>{h.data ? new Date(h.data).toLocaleDateString("pt-BR") : "—"}</td>
+                <td style={{ padding: "10px 14px", fontFamily: "'Barlow Condensed',sans-serif",
+                  fontSize: 15, fontWeight: 700, color: "var(--ink)" }}>{h.horas}h</td>
+                <td style={{ padding: "10px 14px", color: "var(--ink-2)" }}>{h.tipo || "Normal"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 // ── Componente principal ──────────────────────────────────────────────────────
 export default function EquipeSF() {
-  const [membros, setMembros] = useState(MEMBROS_INICIAL);
-  const [tab, setTab]         = useState("equipe");
-  const [filtro, setFiltro]   = useState("Todos");
-  const [busca, setBusca]     = useState("");
-  const [editando, setEditando] = useState(null);   // membro ou {} para novo
+  const [membros,    setMembros]    = useState([]);
+  const [alocacoes,  setAlocacoes]  = useState([]);
+  const [horas,      setHoras]      = useState([]);
+  const [certs,      setCerts]      = useState([]);
+  const [loading,    setLoading]    = useState(true);
+  const [loadAloc,   setLoadAloc]   = useState(false);
+  const [loadHoras,  setLoadHoras]  = useState(false);
+  const [loadComp,   setLoadComp]   = useState(false);
+  const [tab,        setTab]        = useState("equipe");
+  const [filtro,     setFiltro]     = useState("Todos");
+  const [busca,      setBusca]      = useState("");
+  const [editando,   setEditando]   = useState(null);
   const [confirmDel, setConfirmDel] = useState(null);
+  const [saving,     setSaving]     = useState(false);
+  const [erro,       setErro]       = useState("");
+
+  const carregar = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await listarColaboradores();
+      setMembros(data.map(fromDb));
+    } catch (e) {
+      setErro(e.message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { carregar(); }, [carregar]);
+
+  // Carrega dados das abas sob demanda
+  useEffect(() => {
+    if (tab === "aloc" && !alocacoes.length) {
+      setLoadAloc(true);
+      listarAlocacoes().then(d => setAlocacoes(d)).catch(() => {}).finally(() => setLoadAloc(false));
+    }
+    if (tab === "horas" && !horas.length) {
+      setLoadHoras(true);
+      listarHoras().then(d => setHoras(d)).catch(() => {}).finally(() => setLoadHoras(false));
+    }
+    if (tab === "comp" && !certs.length) {
+      setLoadComp(true);
+      listarCertificacoes().then(d => setCerts(d)).catch(() => {}).finally(() => setLoadComp(false));
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab]);
+
+  async function salvar(m) {
+    setSaving(true);
+    setErro("");
+    try {
+      const payload = toDb({ ...m });
+      if (m.id && !String(m.id).startsWith("tmp_")) {
+        const updated = await atualizarColaborador(m.id, payload);
+        setMembros(prev => prev.map(x => x.id === m.id ? fromDb(updated) : x));
+      } else {
+        const { id: _id, ...rest } = payload;
+        const created = await criarColaborador(rest);
+        setMembros(prev => [...prev, fromDb(created)]);
+      }
+      setEditando(null);
+    } catch (e) {
+      setErro(e.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function deletar(id) {
+    try {
+      await deletarColaborador(id);
+      setMembros(prev => prev.filter(m => m.id !== id));
+    } catch (e) {
+      setErro(e.message);
+    }
+    setConfirmDel(null);
+  }
 
   const ativos = membros.filter(m => m.status === "Ativo").length;
   const folha  = membros.reduce((s, m) => s + (m.salario || 0), 0);
 
-  function salvar(m) {
-    if (m.id) {
-      setMembros(prev => prev.map(x => x.id === m.id ? m : x));
-    } else {
-      setMembros(prev => [...prev, { ...m, id: Date.now() }]);
-    }
-    setEditando(null);
-  }
-
-  function deletar(id) {
-    setMembros(prev => prev.filter(m => m.id !== id));
-    setConfirmDel(null);
-  }
-
   const lista = membros.filter(m => {
     if (filtro !== "Todos" && m.status !== filtro) return false;
     const q = busca.toLowerCase();
-    if (busca && !m.nome.toLowerCase().includes(q) && !m.cargo.toLowerCase().includes(q)) return false;
+    if (busca && !m.nome.toLowerCase().includes(q) && !(m.cargo || "").toLowerCase().includes(q)) return false;
     return true;
   });
 
@@ -360,37 +563,34 @@ export default function EquipeSF() {
     <div style={{ padding: 24 }}>
       {/* Header */}
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 20 }}>
-        <div>
-          <h1 style={{ fontFamily: "var(--cond,'Barlow Condensed',sans-serif)", fontWeight: 700, fontSize: 28, color: "var(--ink)", lineHeight: 1 }}>
-            Equipe SF
-          </h1>
-          <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4, display: "flex", gap: 8, alignItems: "center" }}>
-            <span style={{ fontWeight: 700, color: "#3f7a4b" }}>{ativos} ativos</span>
-            <span>·</span>
-            <span>Folha: <strong style={{ color: "var(--ink)" }}>{fmtBRL(folha)}</strong></span>
+        <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+          <div style={{ width: 4, height: 42, borderRadius: 3, background: "var(--brick,#981915)", flexShrink: 0, marginTop: 2 }} />
+          <div>
+            <h1 style={{ fontFamily: "var(--cond,'Barlow Condensed',sans-serif)", fontWeight: 700, fontSize: 28, color: "var(--ink)", lineHeight: 1 }}>
+              Equipe SF
+            </h1>
+            <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4, display: "flex", gap: 8, alignItems: "center" }}>
+              <span style={{ fontWeight: 700, color: "#3f7a4b" }}>{ativos} ativos</span>
+              <span>·</span>
+              <span>Folha: <strong style={{ color: "var(--ink)" }}>{fmtBRL(folha)}</strong></span>
+            </div>
           </div>
         </div>
         <div style={{ display: "flex", gap: 10 }}>
-          <button
-            style={{ display: "inline-flex", alignItems: "center", gap: 7, background: "var(--surface)",
-              color: "#3f7a4b", border: "1.5px solid #b8dfc2", borderRadius: 8,
-              padding: "8px 14px", fontFamily: "inherit", fontSize: 13, fontWeight: 700, cursor: "pointer" }}
-            onMouseEnter={e => { e.currentTarget.style.background = "#e8f3eb"; }}
-            onMouseLeave={e => { e.currentTarget.style.background = "var(--surface)"; }}>
-            <Ic n="dollar" w={14} c="#3f7a4b" />
-            Lançar folha ({fmtBRL(folha)})
-          </button>
           <button onClick={() => setEditando({})}
             style={{ display: "inline-flex", alignItems: "center", gap: 7,
               background: "var(--brick,#981915)", color: "#fff", border: "none", borderRadius: 8,
-              padding: "9px 18px", fontFamily: "inherit", fontSize: 13, fontWeight: 700, cursor: "pointer" }}
-            onMouseEnter={e => { e.currentTarget.style.background = "#7d1411"; }}
-            onMouseLeave={e => { e.currentTarget.style.background = "var(--brick,#981915)"; }}>
+              padding: "9px 18px", fontFamily: "inherit", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
             <Ic n="plus" w={14} c="#fff" />
             Novo colaborador
           </button>
         </div>
       </div>
+
+      {erro && (
+        <div style={{ background: "#fdf0ef", border: "1px solid #f5c9c7", color: "#a33327",
+          fontSize: 13, padding: "10px 14px", borderRadius: 9, marginBottom: 16 }}>{erro}</div>
+      )}
 
       {/* Subtabs */}
       <div style={{ display: "flex", gap: 2, background: "var(--surface-2)", border: "1px solid var(--line)",
@@ -435,11 +635,14 @@ export default function EquipeSF() {
               </div>
             ))}
           </div>
-          {lista.length === 0 ? (
+          {loading ? (
+            <div style={{ padding: 48, textAlign: "center", color: "var(--muted)" }}>Carregando colaboradores…</div>
+          ) : lista.length === 0 ? (
             <EmptyState icon="users" title="Nenhum colaborador"
-              text="Nenhum colaborador encontrado com os filtros selecionados." />
+              text="Clique em «Novo colaborador» para adicionar o primeiro membro da equipe."
+              action="Novo colaborador" onAction={() => setEditando({})} />
           ) : (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 14 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px,1fr))", gap: 14 }}>
               {lista.map(m => (
                 <CardMembro key={m.id} m={m}
                   onEdit={() => setEditando(m)}
@@ -454,16 +657,14 @@ export default function EquipeSF() {
       {tab === "empr" && <EmptyState icon="wrench" title="Nenhum empreiteiro cadastrado"
         text="Cadastre empreiteiros e subempreiteiros para vincular às etapas da obra."
         action="Novo empreiteiro" onAction={() => {}} />}
-      {tab === "aloc" && <EmptyState icon="calendar" title="Sem alocações registradas"
-        text="Aloque colaboradores a fases da obra para controlar presença e produtividade." />}
-      {tab === "horas" && <EmptyState icon="clock" title="Nenhuma hora lançada"
-        text="Lançamentos de horas extras, banco de horas e apuração de ponto aparecem aqui." />}
-      {tab === "comp" && <EmptyState icon="shield" title="Compliance em dia"
-        text="Vencimentos de NRs, ASO e habilitações serão exibidos conforme os dados dos colaboradores." />}
 
-      {/* Modal editar/novo */}
+      {tab === "aloc" && <TabAlocacoes alocacoes={alocacoes} loading={loadAloc} />}
+      {tab === "horas" && <TabHoras horas={horas} loading={loadHoras} />}
+      {tab === "comp"  && <TabCompliance certs={certs} loading={loadComp} />}
+
+      {/* Modal */}
       {editando !== null && (
-        <ModalMembro membro={editando} onSave={salvar} onClose={() => setEditando(null)} />
+        <ModalMembro membro={editando} onSave={salvar} onClose={() => setEditando(null)} saving={saving} />
       )}
 
       {/* Confirm delete */}
