@@ -2327,16 +2327,20 @@ export default function GestaoObras() {
 
                   async function addPainel() {
                     if (!painelForm.codigo.trim()) return;
-                    const payload = { ...painelForm, obra_id: obraId, empresa_id: empresaId };
+                    const token = `pn-${Math.random().toString(36).slice(2, 10)}-${Date.now().toString(36)}`;
+                    const payload = { ...painelForm, obra_id: obraId, empresa_id: empresaId, token };
                     if (!payload.ifc_element_id) delete payload.ifc_element_id;
                     else payload.ifc_element_id = parseInt(payload.ifc_element_id);
                     const { data, error } = await sb.from("paineis").insert(payload).select().single();
-                    if (!error) { setPaineis((p) => [...p, data]); setPainelForm({ codigo: "", descricao: "", local_instalacao: "", ifc_element_id: "" }); mostrarToast(" Painel adicionado!"); }
+                    if (error) { mostrarToast("Erro ao adicionar painel: " + error.message); return; }
+                    setPaineis((p) => [...p, data]); setPainelForm({ codigo: "", descricao: "", local_instalacao: "", ifc_element_id: "" }); mostrarToast(" Painel adicionado!");
                   }
                   async function addAmbiente() {
                     if (!ambForm.nome.trim()) return;
-                    const { data, error } = await sb.from("ambientes_qr").insert({ ...ambForm, obra_id: obraId, empresa_id: empresaId }).select().single();
-                    if (!error) { setAmbientes((a) => [...a, data]); setAmbForm({ nome: "", andar: "" }); mostrarToast(" Ambiente adicionado!"); }
+                    const token = `amb-${Math.random().toString(36).slice(2, 10)}-${Date.now().toString(36)}`;
+                    const { data, error } = await sb.from("ambientes_qr").insert({ ...ambForm, obra_id: obraId, empresa_id: empresaId, token }).select().single();
+                    if (error) { mostrarToast("Erro ao adicionar ambiente: " + error.message); return; }
+                    setAmbientes((a) => [...a, data]); setAmbForm({ nome: "", andar: "" }); mostrarToast(" Ambiente adicionado!");
                   }
                   function gerarPlacaAmbiente(amb) {
                     const link = `${BASE}/ambiente/${amb.token}`;
