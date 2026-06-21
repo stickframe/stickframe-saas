@@ -1360,7 +1360,15 @@ export default function GestaoObras() {
   }
 
   function handleFiles(files) {
-    const lista = Array.from(files);
+    const ALLOWED = ["image/jpeg","image/png","image/gif","image/webp","image/heic","application/pdf",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "application/msword","application/vnd.ms-excel","text/plain"];
+    const lista = Array.from(files).filter(f => {
+      if (ALLOWED.some(t => f.type === t) || f.name.match(/\.(ifc|dxf|dwg|rvt|skp)$/i)) return true;
+      mostrarToast(` Tipo não suportado: ${f.name} (${f.type || "desconhecido"})`);
+      return false;
+    });
     if (!lista.length) return;
     setUploadMeta({ files: lista, disciplina: "Outro", status_doc: "Ativo" });
   }

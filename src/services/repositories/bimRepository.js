@@ -35,6 +35,7 @@ export async function listarApontamentos(obraId) {
 export async function criarApontamento(apt) {
   const payload = {
     ...apt,
+    titulo:     apt.titulo || apt.descricao?.slice(0, 120) || "Apontamento",
     empresa_id: getEmpresaId(),
     modelo_id:  apt.modelo_id  || null,
     prazo:      apt.prazo      || null,
