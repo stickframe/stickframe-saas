@@ -1,16 +1,39 @@
-import { useState, useEffect } from "react";
-// Inline SVG icons — no external dependencies needed
-function IcInline({ d, w = 14, c = "currentColor" }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"
-      style={{ width: w, height: w, flexShrink: 0, verticalAlign: "middle", display: "inline-block" }}>
-      {d}
-    </svg>
-  );
-}
+import { useState, useEffect, useRef } from "react";
 import { sb } from "../services/supabase";
 
-//  Kit data (shared with internal Calculadora) 
+// ─── Icon component ──────────────────────────────────────────────────────────
+function Ic({ p, s = 17 }) {
+  return (
+    <svg
+      width={s}
+      height={s}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.9"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      dangerouslySetInnerHTML={{ __html: p }}
+    />
+  );
+}
+
+const ICONS = {
+  zap:     '<path d="M13 2 3 14h7l-1 8 10-12h-7z"/>',
+  grid:    '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
+  home:    '<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/>',
+  layers:  '<path d="M12 2 2 7l10 5 10-5z"/><path d="m2 12 10 5 10-5M2 17l10 5 10-5"/>',
+  shield:  '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+  check:   '<path d="M20 6 9 17l-5-5"/>',
+  chevron: '<path d="M6 9l6 6 6-6"/>',
+  refresh: '<path d="M3 12a9 9 0 0 1 15-6.7L21 8M21 3v5h-5M21 12a9 9 0 0 1-15 6.7L3 16M3 21v-5h5"/>',
+  arrow:   '<path d="M5 12h14M13 6l6 6-6 6"/>',
+  maximize:'<path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M16 21h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>',
+  bed:     '<path d="M2 9v11M2 13h20v7M22 13v-2a3 3 0 0 0-3-3h-5v5M2 13V8a2 2 0 0 1 2-2h6"/>',
+  bath:    '<path d="M4 12V5a2 2 0 0 1 4 0M2 12h20v3a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4zM6 19l-1 2M19 19l-1 2"/>',
+};
+
+// ─── Kit data ─────────────────────────────────────────────────────────────────
 const INSUMOS_KIT = [
   { categoria: "Estrutura de Aço",      nome: "Montante C 90×40×15×1,25mm",         un: "pç",  base: 1.50,  preco: 18.50 },
   { categoria: "Estrutura de Aço",      nome: "Guia U 92×40×1,25mm",                un: "m",   base: 1.10,  preco: 12.00 },
@@ -19,7 +42,7 @@ const INSUMOS_KIT = [
   { categoria: "Fechamento",            nome: "Placa de Gesso ST 13mm (1,20×2,40)", un: "chp", base: 0.85,  preco: 17.00 },
   { categoria: "Fechamento",            nome: "Placa Cimentícia 10mm (1,20×2,40)",  un: "chp", base: 0.18,  preco: 65.00 },
   { categoria: "Isolamento",            nome: "Lã de Vidro 50mm",                   un: "m²",  base: 1.30,  preco: 16.00 },
-  { categoria: "Isolamento",            nome: "Impermeabilizante flexível",         un: "m²",  base: 0.15,  preco: 35.00 },
+  { categoria: "Isolamento",            nome: "Impermeabilizante flexível",          un: "m²",  base: 0.15,  preco: 35.00 },
   { categoria: "Fixação",               nome: "Parafuso TEX 4,2×16mm (flangeado)",  un: "cx",  base: 0.40,  preco: 48.00 },
   { categoria: "Fixação",               nome: "Parafuso TEX 4,2×38mm",              un: "cx",  base: 0.80,  preco: 52.00 },
   { categoria: "Fundação (Radier)",     nome: "Concreto C-25",                      un: "m³",  base: 0.10,  preco: 420.0, fund: true },
@@ -28,7 +51,7 @@ const INSUMOS_KIT = [
   { categoria: "Cobertura",             nome: "Telha shingle (fardo 3m²)",          un: "fd",  base: 0.38,  preco: 185.0 },
   { categoria: "Cobertura",             nome: "Manta subcobertura 1,5m",            un: "m²",  base: 1.05,  preco:  8.50 },
   { categoria: "Cobertura",             nome: "Calha PVC 150mm",                    un: "m",   base: 0.30,  preco: 28.00 },
-  { categoria: "Esquadrias",            nome: "Janela alumínio c/ vidro (1,20×1,20)", un: "un", base: 0.055, preco: 680.0 },
+  { categoria: "Esquadrias",            nome: "Janela alumínio c/ vidro (1,20×1,20)",un:"un",  base: 0.055, preco: 680.0 },
   { categoria: "Esquadrias",            nome: "Porta interna 0,80×2,10",            un: "un",  base: 0.08,  preco: 420.0 },
   { categoria: "Instalações Elétricas", nome: "Conduíte + fios + caixas",           un: "m²",  base: 1.00,  preco: 62.00 },
   { categoria: "Inst. Hidrossanitárias",nome: "Tubulação PVC água fria/quente",     un: "m²",  base: 1.00,  preco: 60.00 },
@@ -38,7 +61,7 @@ const INSUMOS_KIT = [
   { categoria: "Projetos e Engenharia", nome: "Projeto Arquitetônico",              un: "m²",  base: 1.00,  preco: 46.00 },
   { categoria: "Projetos e Engenharia", nome: "Projeto Estrutural LSF",             un: "m²",  base: 1.00,  preco: 14.00 },
   { categoria: "Mão de Obra",           nome: "Montagem estrutura LSF",             un: "m²",  base: 1.00,  preco: 400.00 },
-  { categoria: "Mão de Obra",           nome: "Instalação vedações (OSB/gesso/cim)", un: "m²", base: 1.00,  preco: 200.00 },
+  { categoria: "Mão de Obra",           nome: "Instalação vedações (OSB/gesso/cim)",un: "m²",  base: 1.00,  preco: 200.00 },
   { categoria: "Mão de Obra",           nome: "Cobertura (telha shingle)",          un: "m²",  base: 1.00,  preco: 300.00 },
 ];
 
@@ -49,18 +72,23 @@ const CATS_ORDEM_KIT = [
 ];
 const CATS_OPCIONAIS_KIT = ["Projetos e Engenharia", "Mão de Obra"];
 
-const PADROES_KIT = { "Econômico": { fator: 0.85 }, "Padrão": { fator: 1.00 }, "Alto Padrão": { fator: 1.20 } };
+const PADROES_KIT = {
+  "Econômico":   { fator: 0.85 },
+  "Padrão":      { fator: 1.00 },
+  "Alto Padrão": { fator: 1.20 },
+};
 
 const KITS = [
-  { id: "studio",    nome: "Studio Compact",       area: 42,  pavs: 1, padrao: "Padrão",      tag: "MAIS VENDIDO",  tagCor: "#3f7a4b", emoji: "", quartos: 1, banheiros: 1, descricao: "Ideal para uso individual, home office ou kitnet. Layout inteligente e construção rápida.", destaques: ["Entrega em 45 dias","Kit completo estrutural","Perfeito para kitnet"] },
-  { id: "vila",      nome: "Vila 78m²",             area: 78,  pavs: 1, padrao: "Padrão",      tag: "POPULAR",       tagCor: "#3b6ea5", emoji: "", quartos: 2, banheiros: 1, descricao: "Casa térrea completa para família pequena. Conforto e economia em um só projeto.", destaques: ["2 quartos confortáveis","Varanda integrada","Custo-benefício ótimo"] },
-  { id: "casa120",   nome: "Casa Serena 120m²",     area: 120, pavs: 1, padrao: "Padrão",      tag: "RECOMENDADO",   tagCor: "#981915", emoji: "", quartos: 3, banheiros: 2, descricao: "O modelo mais completo para família de 4 pessoas. Suíte master, sala ampla e área gourmet.", destaques: ["Suíte master com closet","Área gourmet","Sala de TV + jantar"] },
-  { id: "sobrado160",nome: "Sobrado Vivo 160m²",    area: 160, pavs: 2, padrao: "Padrão",      tag: "2 PAVIMENTOS",  tagCor: "#8b5cf6", emoji: "", quartos: 3, banheiros: 3, descricao: "Sobrado moderno com térreo social e pavimento superior privativo.", destaques: ["Térreo social separado","3 suítes no andar","Sacada com guarda-corpo"] },
-  { id: "alto200",   nome: "Residência Alto 200m²", area: 200, pavs: 1, padrao: "Alto Padrão", tag: "ALTO PADRÃO",   tagCor: "#e07020", emoji: "", quartos: 4, banheiros: 3, descricao: "Para quem não abre mão do melhor. Acabamentos superiores e projeto exclusivo.", destaques: ["4 suítes amplas","Home theater","Piscina prevista"] },
-  { id: "vigo273",   nome: "Casa Vigo 273m²",       area: 273, pavs: 2, padrao: "Alto Padrão", tag: "PREMIUM",       tagCor: "#a33327", emoji: "", quartos: 4, banheiros: 4, descricao: "Nossa flagship — o lar dos sonhos em Steel Frame. Projeto inspirado em casas europeias.", destaques: ["Estilo europeu moderno","Pé-direito duplo na sala","Área total de lazer"] },
+  { id: "studio",     nome: "Studio Compact",       area: 42,  pavs: 1, padrao: "Padrão",      tag: "MAIS VENDIDO", tagCor: "#3f7a4b", quartos: 1, banheiros: 1, descricao: "Ideal para uso individual, home office ou kitnet. Layout inteligente e construção rápida." },
+  { id: "vila",       nome: "Vila 78m²",             area: 78,  pavs: 1, padrao: "Padrão",      tag: "POPULAR",      tagCor: "#3b6ea5", quartos: 2, banheiros: 1, descricao: "Casa térrea completa para família pequena. Conforto e economia em um só projeto." },
+  { id: "casa120",    nome: "Casa Serena 120m²",     area: 120, pavs: 1, padrao: "Padrão",      tag: "RECOMENDADO",  tagCor: "#981915", quartos: 3, banheiros: 2, descricao: "O modelo mais completo para família de 4 pessoas. Suíte master, sala ampla e área gourmet." },
+  { id: "sobrado160", nome: "Sobrado Vivo 160m²",    area: 160, pavs: 2, padrao: "Padrão",      tag: "2 PAVIMENTOS", tagCor: "#8b5cf6", quartos: 3, banheiros: 3, descricao: "Sobrado moderno com térreo social e pavimento superior privativo." },
+  { id: "alto200",    nome: "Residência Alto 200m²", area: 200, pavs: 1, padrao: "Alto Padrão", tag: "ALTO PADRÃO",  tagCor: "#e07020", quartos: 4, banheiros: 3, descricao: "Para quem não abre mão do melhor. Acabamentos superiores e projeto exclusivo." },
+  { id: "vigo273",    nome: "Casa Vigo 273m²",       area: 273, pavs: 2, padrao: "Alto Padrão", tag: "PREMIUM",      tagCor: "#a33327", quartos: 4, banheiros: 4, descricao: "Nossa flagship — o lar dos sonhos em Steel Frame. Projeto inspirado em casas europeias." },
 ];
 
-const fmtR = (v) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 0, maximumFractionDigits: 0 });
+const fmtR = (v) =>
+  v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 0, maximumFractionDigits: 0 });
 
 function calcKit(kit) {
   const fator = PADROES_KIT[kit.padrao].fator;
@@ -71,33 +99,25 @@ function calcKit(kit) {
   });
 }
 
-// Pricing constants
+// Legacy constants kept for handleContact/handleCalculate
 const STEEL_FRAME = { "Econômico": 2800, "Padrão": 3500, "Alto Padrão": 5200 };
 const ALVENARIA   = { "Econômico": 2200, "Padrão": 2900, "Alto Padrão": 4200 };
 const PAVIMENTOS  = { "Térreo": 1, "2 pavimentos": 1.85, "3 pavimentos": 2.65 };
+const PRAZOS_SF   = { "Econômico": "4–6 meses", "Padrão": "5–7 meses", "Alto Padrão": "6–9 meses" };
 
-const PRAZOS_SF = { "Econômico": "4–6 meses", "Padrão": "5–7 meses", "Alto Padrão": "6–9 meses" };
-
-const PADROES = [
-  {
-    key: "Econômico",
-    title: "Econômico",
-    desc: "Acabamentos básicos, funcional e acessível",
-  },
-  {
-    key: "Padrão",
-    title: "Padrão",
-    desc: "Bom acabamento, equilíbrio custo-benefício",
-  },
-  {
-    key: "Alto Padrão",
-    title: "Alto Padrão",
-    desc: "Acabamentos premium, materiais superiores",
-  },
+// ─── Simulator constants ──────────────────────────────────────────────────────
+const PADROES_SIM = [
+  { id: "eco",  nm: "Econômico",   m2: 2800, dot: "#4f7d57" },
+  { id: "pad",  nm: "Padrão",      m2: 3500, dot: "#3b6ea5" },
+  { id: "alto", nm: "Alto Padrão", m2: 4800, dot: "#c0892d" },
 ];
 
-function formatBRL(value) {
-  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value);
+function estimateSim(area, padrao, pav) {
+  const factor = 1 + (pav - 1) * 0.05;
+  const total = area * padrao.m2 * factor;
+  const perM2 = total / area;
+  const prazo = Math.max(4, Math.round(area / 22) + (pav - 1));
+  return { total, perM2, prazo };
 }
 
 function applyPhoneMask(value) {
@@ -108,8 +128,67 @@ function applyPhoneMask(value) {
   return value;
 }
 
+function formatBRL(value) {
+  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value);
+}
+
+// ─── Count-up hook ────────────────────────────────────────────────────────────
+function useCountUp(target, duration = 420) {
+  const [display, setDisplay] = useState(target);
+  const prevRef = useRef(target);
+  const rafRef = useRef(null);
+
+  useEffect(() => {
+    const from = prevRef.current;
+    const to = target;
+    prevRef.current = target;
+    if (from === to) return;
+    const start = performance.now();
+    const tick = (now) => {
+      const t = Math.min((now - start) / duration, 1);
+      const ease = 1 - Math.pow(1 - t, 3);
+      setDisplay(Math.round(from + (to - from) * ease));
+      if (t < 1) rafRef.current = requestAnimationFrame(tick);
+    };
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    rafRef.current = requestAnimationFrame(tick);
+    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
+  }, [target, duration]);
+
+  return display;
+}
+
+// ─── FAQ data ─────────────────────────────────────────────────────────────────
+const FAQ_ITEMS = [
+  {
+    q: "Quanto custa construir uma casa em Steel Frame?",
+    a: "O custo varia entre R$ 3.000 e R$ 6.000 por m², dependendo do padrão. Uma residência de 120 m² no padrão médio fica em torno de R$ 420.000 a R$ 480.000 completa — estrutura LSF, fechamentos, cobertura, instalações e mão de obra especializada.",
+  },
+  {
+    q: "Steel Frame vs Alvenaria: qual é mais barato?",
+    a: "O Steel Frame costuma ter custo de materiais 10 a 20% superior à alvenaria, mas o prazo de obra é até 40% menor — reduzindo custo financeiro. Obras de 120 m² em alvenaria levam 12–18 meses; em Steel Frame, 5–8 meses.",
+  },
+  {
+    q: "O que está incluído no orçamento?",
+    a: "Estrutura metálica LSF, painéis OSB/drywall, manta impermeabilizante, fechamentos, cobertura, esquadrias, instalações hidráulicas e elétricas, e mão de obra especializada.",
+  },
+  {
+    q: "Steel Frame é seguro e resistente?",
+    a: "Sim. Aço galvanizado com vida útil superior a 50 anos, resistente a ventos fortes e antissísmico. É o sistema mais usado nos EUA, Canadá e Austrália.",
+  },
+  {
+    q: "Posso financiar uma casa em Steel Frame?",
+    a: "Sim. Aceito pela Caixa Econômica Federal e principais bancos, incluindo MCMV e crédito imobiliário convencional.",
+  },
+  {
+    q: "Como receber um orçamento personalizado?",
+    a: "Preencha o simulador acima. Nossa equipe entra em contato em até 24h com proposta detalhada, sem compromisso.",
+  },
+];
+
+// ─── Main component ───────────────────────────────────────────────────────────
 export default function CalculadoraPublica() {
-  // White-label branding
+  // White-label
   const [empresaBranding, setEmpresaBranding] = useState(null);
   useEffect(() => {
     const token = new URLSearchParams(window.location.search).get("e");
@@ -121,33 +200,17 @@ export default function CalculadoraPublica() {
       .then(({ data }) => { if (data) setEmpresaBranding(data); });
   }, []);
 
+  // Dynamic insumos
   const [listaInsumos, setListaInsumos] = useState(INSUMOS_KIT);
-  const [carregandoInsumos, setCarregandoInsumos] = useState(true);
-
   useEffect(() => {
-    async function carregarInsumosPublicos() {
-      try {
-        const { data, error } = await sb
-          .from("insumos_sistema")
-          .select("*");
-
-        if (error) throw error;
-
-        if (data && data.length > 0) {
-          const insumosMesclados = INSUMOS_KIT.map(ins => {
-            const itemBanco = data.find(d => d.nome === ins.nome);
-            return itemBanco ? { ...ins, preco: Number(itemBanco.preco) } : ins;
-          });
-          setListaInsumos(insumosMesclados);
-        }
-      } catch (err) {
-        console.error("Erro ao carregar insumos públicos, usando fallback:", err);
-      } finally {
-        setCarregandoInsumos(false);
+    sb.from("insumos_sistema").select("*").then(({ data }) => {
+      if (data && data.length > 0) {
+        setListaInsumos(INSUMOS_KIT.map(ins => {
+          const item = data.find(d => d.nome === ins.nome);
+          return item ? { ...ins, preco: Number(item.preco) } : ins;
+        }));
       }
-    }
-
-    carregarInsumosPublicos();
+    }).catch(() => {});
   }, []);
 
   function calcKitDinamico(kit) {
@@ -159,172 +222,116 @@ export default function CalculadoraPublica() {
     });
   }
 
-  // "metro" | "kits"
-  const [modo, setModo] = useState("metro");
+  // Tab: "simular" | "kits"
+  const [tab, setTab] = useState("simular");
 
-  // Kit states
-  const [kitSel, setKitSel] = useState(null);
+  // ── Simulator state ──────────────────────────────────────────────────────
+  const [simArea, setSimArea]   = useState(120);
+  const [simPad,  setSimPad]    = useState(PADROES_SIM[1]);
+  const [simPav,  setSimPav]    = useState(1);
+  const [dropOpen, setDropOpen] = useState(false);
+  const dropRef = useRef(null);
+  const sliderRef = useRef(null);
+  const formRef = useRef(null);
+
+  const est = estimateSim(simArea, simPad, simPav);
+  const countUpVal = useCountUp(Math.round(est.total));
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    function onMouseDown(e) {
+      if (dropRef.current && !dropRef.current.contains(e.target)) setDropOpen(false);
+    }
+    document.addEventListener("mousedown", onMouseDown);
+    return () => document.removeEventListener("mousedown", onMouseDown);
+  }, []);
+
+  // Slider filled track
+  function sliderBg(val, min, max) {
+    const pct = ((val - min) / (max - min)) * 100;
+    return `linear-gradient(to right, #981915 ${pct}%, #e7e1d8 ${pct}%)`;
+  }
+
+  function handleSimCTA() {
+    if (formRef.current) formRef.current.scrollIntoView({ behavior: "smooth" });
+  }
+
+  function resetSim() {
+    setSimArea(120);
+    setSimPad(PADROES_SIM[1]);
+    setSimPav(1);
+  }
+
+  // ── Kits state ────────────────────────────────────────────────────────────
+  const [kitSel,  setKitSel]  = useState(null);
   const [kitItems, setKitItems] = useState(null);
   const [catsAtivas, setCatsAtivas] = useState(Object.fromEntries(CATS_ORDEM_KIT.map(c => [c, true])));
-  const [kitStep, setKitStep] = useState("lista"); // "lista" | "result" | "contact" | "success"
+  const [kitStep, setKitStep] = useState("lista");
 
   function selecionarKit(kit) {
-    setKitSel(kit);
-    setKitItems(calcKitDinamico(kit));
-    setCatsAtivas(Object.fromEntries(CATS_ORDEM_KIT.map(c => [c, true])));
-    setKitStep("result");
+    setTab("simular");
+    setSimArea(kit.area);
+    setSimPav(kit.pavs);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
-  function toggleCatKit(cat) { setCatsAtivas(prev => ({ ...prev, [cat]: !prev[cat] })); }
 
-  const totalAtivo = kitItems ? kitItems.filter(i => catsAtivas[i.categoria]).reduce((s, i) => s + i.total, 0) : 0;
-  const totalSoMateriais = kitItems ? kitItems.filter(i => !CATS_OPCIONAIS_KIT.includes(i.categoria)).reduce((s, i) => s + i.total, 0) : 0;
-  const totalCompleto = kitItems ? kitItems.reduce((s, i) => s + i.total, 0) : 0;
-  const totalComProjetos = kitItems ? kitItems.filter(i => i.categoria !== "Mão de Obra").reduce((s, i) => s + i.total, 0) : 0;
+  // ── FAQ state ─────────────────────────────────────────────────────────────
+  const [faqOpen, setFaqOpen] = useState(0);
 
-  // Step: "form" | "result" | "success"
-  const [step, setStep] = useState("form");
-  // Lead gate: result is blurred until user submits contact
-  const [leadUnlocked, setLeadUnlocked] = useState(false);
-
-  // Form values
-  const [area, setArea] = useState(120);
-  const [pavimentos, setPavimentos] = useState("Térreo");
-  const [padrao, setPadrao] = useState("Padrão");
-  const [cidade, setCidade] = useState("");
-
-  // Results
-  const [sfMin, setSfMin] = useState(0);
-  const [sfMax, setSfMax] = useState(0);
-  const [alMin, setAlMin] = useState(0);
-  const [alMax, setAlMax] = useState(0);
-  const [sfMidValue, setSfMidValue] = useState(0);
-
-  // Contact (shared for both flows)
-  const [nome, setNome] = useState("");
-  const [whatsapp, setWhatsapp] = useState("");
-  const [email, setEmail] = useState("");
-  const [sending, setSending] = useState(false);
+  // ── Lead form (pre_orcamentos) ─────────────────────────────────────────────
+  const [nome,      setNome]      = useState("");
+  const [whatsapp,  setWhatsapp]  = useState("");
+  const [cidade,    setCidade]    = useState("");
+  const [email,     setEmail]     = useState("");
+  const [sending,   setSending]   = useState(false);
   const [sendError, setSendError] = useState("");
+  const [formSent,  setFormSent]  = useState(false);
 
-  async function handleKitContact(e) {
-    e.preventDefault();
-    setSendError(""); setSending(true);
-    try {
-      const { error } = await sb.rpc("captar_lead_publico", {
-        p_nome: nome, p_contato: whatsapp, p_email: email || null,
-        p_cidade: null, p_area: kitSel.area, p_padrao: kitSel.padrao,
-        p_valor_estimado: Math.round(totalAtivo),
-        p_origem: `Kit-${kitSel.id}`,
-        p_pavimentos: `${kitSel.pavs} pav.`,
-        p_valor_min: Math.round(totalSoMateriais),
-        p_valor_max: Math.round(totalCompleto),
-      });
-      if (error) throw error;
-      try {
-        const { data: waNum } = await sb.rpc("get_empresa_whatsapp_alertas");
-        const numLimpo = (waNum || "").replace(/\D/g, "");
-        if (numLimpo) {
-          const msg = ` *Novo lead — Kit ${kitSel.nome}*\n\n *${nome}*\n ${whatsapp}\n\n Estimativa: ${fmtR(totalAtivo)}\n ${kitSel.area}m² · ${kitSel.pavs} pav. · ${kitSel.padrao}\n\nAcesse: https://stickframe.com.br`;
-          window.open(`https://wa.me/${numLimpo.startsWith("55") ? numLimpo : "55" + numLimpo}?text=${encodeURIComponent(msg)}`, "_blank");
-        }
-      } catch (_) {}
-      setKitStep("success");
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    } catch (err) {
-      setSendError("Erro ao enviar. Tente novamente.");
-    } finally { setSending(false); }
-  }
-
-  function handleCalculate(e) {
-    e.preventDefault();
-
-    const custoInsumosM2Base = listaInsumos.reduce((s, ins) => s + (ins.base * ins.preco), 0);
-    const fatorPadrao = PADROES_KIT[padrao].fator;
-    const sfValorM2 = custoInsumosM2Base * fatorPadrao;
-    const alValorM2 = sfValorM2 * 0.82;
-
-    const areaTotal = area * PAVIMENTOS[pavimentos];
-    const sfValor = areaTotal * sfValorM2;
-    const alValor = areaTotal * alValorM2;
-
-    setSfMin(Math.round(sfValor * 0.92));
-    setSfMax(Math.round(sfValor * 1.12));
-    setAlMin(Math.round(alValor * 0.92));
-    setAlMax(Math.round(alValor * 1.12));
-    setSfMidValue(Math.round(sfValor));
-    setLeadUnlocked(false);
-    setStep("result");
-    window.scrollTo({ top: 0, behavior: "smooth" });
-
-    try { window.dataLayer?.push({ event: "view_simulacao", value: Math.round(sfValor), padrao, area }); } catch (_) {}
-  }
-
-  async function handleContact(e) {
+  async function handleFormSubmit(e) {
     e.preventDefault();
     setSendError("");
     setSending(true);
     try {
-      const custoInsumosM2Base = listaInsumos.reduce((s, ins) => s + (ins.base * ins.preco), 0);
-      const sfValorM2 = custoInsumosM2Base * PADROES_KIT[padrao].fator;
+      const custoInsumosM2Base = listaInsumos.reduce((s, ins) => s + ins.base * ins.preco, 0);
+      const sfValorM2 = custoInsumosM2Base * PADROES_KIT[simPad.nm]?.fator ?? 1;
+      const sfValor = simArea * (simPav === 2 ? 1.85 : 1) * sfValorM2;
 
-      const sfValor = area * PAVIMENTOS[pavimentos] * sfValorM2;
-      const { error } = await sb.rpc("captar_lead_publico", {
-        p_nome: nome,
-        p_contato: whatsapp,
-        p_email: email || null,
-        p_cidade: cidade || null,
-        p_area: area,
-        p_padrao: padrao,
-        p_valor_estimado: sfMidValue,
-        p_origem: "Calculadora",
-        p_pavimentos: pavimentos,
-        p_valor_min: Math.round(sfValor * 0.92),
-        p_valor_max: Math.round(sfValor * 1.12),
+      const { error } = await sb.from("pre_orcamentos").insert({
+        nome,
+        whatsapp,
+        email: email || null,
+        cidade: cidade || null,
+        area: simArea,
+        padrao: simPad.nm,
+        valor_estimado: Math.round(est.total),
+        pavimentos: simPav === 1 ? "Térreo" : "2 pavimentos",
+        origem: "CalculadoraPublica-v2",
       });
       if (error) throw error;
 
-      // Email de confirmação para o lead
-      if (email) {
-        import("../services/emailService").then(({ emailNovoLead }) => {
-          emailNovoLead({
-            email,
-            nome,
-            padrao,
-            area,
-            valorMin: Math.round(sfValor * 0.92),
-            valorMax: Math.round(sfValor * 1.12),
-            cidade,
-          }).catch(() => {});
-        });
-      }
-
-      // WhatsApp automático para o LEAD com resultado da simulação
+      // WhatsApp automático para o lead
       sb.functions.invoke("whatsapp-lead", {
         body: {
           nome, whatsapp,
-          area, padrao,
-          valorSF:  Math.round(sfValor),
-          valorAlv: Math.round(ALVENARIA[padrao] * area),
-          prazo:    PRAZOS_SF[padrao] || "5–8 meses",
+          area: simArea, padrao: simPad.nm,
+          valorSF: Math.round(est.total),
+          valorAlv: Math.round(ALVENARIA[simPad.nm] * simArea),
+          prazo: `${est.prazo} meses`,
         },
       }).catch(() => {});
 
-      // Tracking via GTM dataLayer — configure as tags no painel GTM
-      try { window.dataLayer?.push({ event: "lead_gerado", value: Math.round(sfValor), currency: "BRL", padrao, area, cidade }); } catch (_) {}
+      try { window.dataLayer?.push({ event: "lead_gerado", value: Math.round(est.total), currency: "BRL", padrao: simPad.nm, area: simArea, cidade }); } catch (_) {}
 
-      // Open WhatsApp notification to empresa owner
       try {
-        const msg = ` *Novo lead via Calculadora!*\n\n *${nome}*\n ${whatsapp}\n ${cidade || "—"}\n\n *Projeto:*\n• Área: ${area}m² · ${pavimentos}\n• Padrão: ${padrao}\n• Estimativa: R$ ${Math.round(sfValor * 0.92).toLocaleString("pt-BR")} – R$ ${Math.round(sfValor * 1.12).toLocaleString("pt-BR")}\n\nAcesse o sistema para responder: https://stickframe.com.br`;
+        const msg = `🏠 *Novo lead via Calculadora!*\n\n👤 *${nome}*\n📱 ${whatsapp}\n📍 ${cidade || "—"}\n\n📐 *Projeto:*\n• Área: ${simArea}m² · ${simPav === 1 ? "Térrea" : "Sobrado"}\n• Padrão: ${simPad.nm}\n• Estimativa: ${fmtR(est.total)}\n\nAcesse o sistema: https://stickframe.com.br`;
         const { data: waNum } = await sb.rpc("get_empresa_whatsapp_alertas");
         const numLimpo = (waNum || "").replace(/\D/g, "");
         if (numLimpo) {
           window.open(`https://wa.me/${numLimpo.startsWith("55") ? numLimpo : "55" + numLimpo}?text=${encodeURIComponent(msg)}`, "_blank");
         }
-      } catch (_) { /* WhatsApp notification is non-critical */ }
+      } catch (_) {}
 
-      setLeadUnlocked(true);
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      setFormSent(true);
     } catch (err) {
       setSendError("Erro ao enviar. Tente novamente.");
       console.error(err);
@@ -333,744 +340,706 @@ export default function CalculadoraPublica() {
     }
   }
 
-  function handleReset() {
-    setArea(120);
-    setPavimentos("Térreo");
-    setPadrao("Padrão");
-    setCidade("");
-    setNome("");
-    setWhatsapp("");
-    setSendError("");
-    setLeadUnlocked(false);
-    setStep("form");
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }
-
-  // Speedup comparison
-  const alMid = (alMin + alMax) / 2;
-  const sfMid = (sfMin + sfMax) / 2;
-  const speedPct = alMid > 0 ? Math.round(((alMid - sfMid) / alMid) * 100) : 0;
-
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800;900&family=Hanken+Grotesk:wght@400;500;600;700;800;900&display=swap');
-        .calc-root *, .calc-root *::before, .calc-root *::after { box-sizing: border-box; }
-        .calc-root {
+        @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800;900&family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap');
+        :root {
+          --brick: #981915; --brick-dk: #7d1411; --brick-soft: #f3e7e5;
+          --ink: #26231f; --ink-2: #57514a; --muted: #8c847a;
+          --line: #e7e1d8; --line-2: #efeae2;
+          --bg: #f4f1ec; --surface: #fff; --surface-2: #faf8f4;
+          --pos: #3f7a4b;
+        }
+        .cp-root *, .cp-root *::before, .cp-root *::after { box-sizing: border-box; }
+        .cp-root {
           font-family: 'Hanken Grotesk', sans-serif;
-          background: #f4f1ec;
+          background: var(--bg);
           min-height: 100vh;
-          color: #26231f;
+          color: var(--ink);
         }
-        .calc-body {
-          max-width: 560px;
-          margin: 0 auto;
-          padding: 24px 16px 64px;
-        }
-        .calc-card {
-          background: #ffffff;
-          border: 1px solid #e7e1d8;
-          border-radius: 14px;
-          padding: 24px;
-          margin-bottom: 16px;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-        }
-        .calc-title {
-          font-size: 22px;
-          font-weight: 700;
-          margin: 0 0 4px;
-          color: #26231f;
-        }
-        .calc-subtitle {
-          font-size: 14px;
-          color: #8c847a;
-          margin: 0 0 24px;
-        }
-        .calc-label {
-          display: block;
-          font-size: 13px;
-          font-weight: 600;
-          margin-bottom: 6px;
-          color: #8c847a;
-        }
-        .calc-input {
-          width: 100%;
-          border: 1.5px solid #e7e1d8;
-          border-radius: 8px;
-          background: #ffffff;
-          color: #26231f;
-          padding: 10px 12px;
-          font-size: 15px;
-          font-family: inherit;
-          outline: none;
-          transition: border-color .15s;
-          margin-bottom: 16px;
-        }
-        .calc-input:focus { border-color: #981915; }
-        .calc-select {
-          width: 100%;
-          border: 1.5px solid #e7e1d8;
-          border-radius: 8px;
-          padding: 10px 12px;
-          font-size: 15px;
-          font-family: inherit;
-          outline: none;
-          background: #ffffff;
-          color: #26231f;
-          cursor: pointer;
-          transition: border-color .15s;
-          margin-bottom: 16px;
-        }
-        .calc-select option { background: #ffffff; color: #26231f; }
-        .calc-select:focus { border-color: #981915; }
-        .padrao-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr 1fr;
-          gap: 10px;
-          margin-bottom: 16px;
-        }
-        .padrao-card {
-          border: 2px solid #e7e1d8;
-          border-radius: 10px;
-          padding: 10px 8px;
-          cursor: pointer;
-          text-align: center;
-          transition: border-color .15s, background .15s;
-          user-select: none;
-          background: #ffffff;
-        }
-        .padrao-card.selected {
-          border-color: #981915;
-          background: rgba(152,25,21,.08);
-          color: #981915;
-        }
-        .padrao-card-title {
-          font-size: 13px;
-          font-weight: 700;
-          margin-bottom: 4px;
-          color: #26231f;
-        }
-        .padrao-card.selected .padrao-card-title {
-          color: #981915;
-        }
-        .padrao-card-desc {
-          font-size: 11px;
-          color: #8c847a;
-          line-height: 1.4;
-        }
-        .calc-btn {
-          width: 100%;
-          background: linear-gradient(135deg, #981915, #7d1411);
-          color: #fff;
-          border: none;
-          border-radius: 10px;
-          padding: 15px;
-          font-size: 16px;
-          font-weight: 800;
-          font-family: inherit;
-          cursor: pointer;
-          transition: opacity .15s, transform .1s;
-          box-shadow: 0 4px 20px rgba(152,25,21,.4);
-        }
-        .calc-btn:hover { opacity: .9; transform: translateY(-1px); }
-        .calc-btn:disabled { background: #ccc; color: #888; cursor: not-allowed; box-shadow: none; }
-        .result-headline {
-          font-size: 20px;
-          font-weight: 700;
-          margin: 0 0 20px;
-          text-align: center;
-          color: #26231f;
-        }
-        .result-card {
-          border-radius: 12px;
-          padding: 18px;
-          margin-bottom: 12px;
-        }
-        .result-card.sf {
-          border: 2px solid #981915;
-          background: rgba(152,25,21,.04);
-        }
-        .result-card.al {
-          border: 2px solid #e7e1d8;
-          background: #ffffff;
-        }
-        .result-card-header {
+        .bc { font-family: 'Barlow Condensed', sans-serif; }
+
+        /* NAV */
+        .cp-nav {
+          background: rgba(244,241,236,.92);
+          backdrop-filter: blur(14px);
+          border-bottom: 1px solid var(--line);
+          height: 64px;
+          padding: 0 28px;
           display: flex;
-          justify-content: space-between;
           align-items: center;
-          margin-bottom: 12px;
+          justify-content: space-between;
+          position: sticky; top: 0; z-index: 200;
         }
-        .result-card-name {
-          font-size: 15px;
-          font-weight: 700;
-          color: #26231f;
+        .cp-nav-logo { display: flex; align-items: center; gap: 9px; text-decoration: none; }
+        .cp-nav-wordmark { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 18px; letter-spacing: 2px; line-height: 1; }
+        .cp-nav-wordmark .w-stick { color: var(--ink); }
+        .cp-nav-wordmark .w-frame { color: var(--brick); }
+        .cp-nav-cta {
+          display: inline-flex; align-items: center; gap: 6px;
+          background: var(--brick); color: #fff;
+          border: none; border-radius: 9px; padding: 9px 16px;
+          font-family: 'Hanken Grotesk', sans-serif;
+          font-size: 13px; font-weight: 700; cursor: pointer;
+          transition: background .15s;
         }
-        .result-badge {
-          background: #981915;
-          color: #fff;
-          font-size: 11px;
-          font-weight: 700;
-          padding: 3px 8px;
-          border-radius: 20px;
+        .cp-nav-cta:hover { background: var(--brick-dk); }
+
+        /* HERO */
+        .cp-hero {
+          background: radial-gradient(ellipse at 70% 40%, rgba(152,25,21,.07) 0%, transparent 60%), #fff;
+          border-bottom: 1px solid var(--line);
+          padding: 72px 20px 60px;
+          text-align: center;
         }
-        .result-faixa-label {
-          font-size: 12px;
-          color: #8c847a;
-          margin-bottom: 2px;
+        .cp-hero-inner { max-width: 760px; margin: 0 auto; }
+        .cp-chip {
+          display: inline-flex; align-items: center; gap: 5px;
+          background: var(--brick-soft); color: var(--brick);
+          font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+          padding: 6px 16px; border-radius: 30px; margin-bottom: 24px;
         }
-        .result-faixa {
-          font-size: 20px;
-          font-weight: 700;
-          color: #26231f;
-          margin-bottom: 8px;
+        .cp-h1 {
           font-family: 'Barlow Condensed', sans-serif;
-        }
-        .result-prazo {
-          font-size: 13px;
-          color: #8c847a;
-          margin-bottom: 10px;
-        }
-        .result-tags {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 6px;
-        }
-        .result-tag {
-          background: #f4f1ec;
-          border-radius: 20px;
-          padding: 4px 10px;
-          font-size: 12px;
-          font-weight: 500;
-          color: #26231f;
-        }
-        .result-tag.green { background: rgba(63,122,75,.1); color: #3f7a4b; }
-        .comparison-note {
-          text-align: center;
-          font-size: 13px;
-          color: #b07a1e;
-          margin: 4px 0 20px;
-          padding: 10px;
-          background: rgba(176,122,30,.08);
-          border: 1px solid rgba(176,122,30,.2);
-          border-radius: 8px;
-        }
-        .cta-heading {
-          font-size: 17px;
           font-weight: 700;
-          margin: 0 0 6px;
-          color: #26231f;
+          font-size: clamp(44px, 6.2vw, 76px);
+          line-height: 1.02;
+          margin: 0 0 18px;
+          color: var(--ink);
         }
-        .cta-sub {
-          font-size: 13px;
-          color: #8c847a;
-          margin: 0 0 20px;
+        .cp-h1 .red { color: var(--brick); }
+        .cp-lede { font-size: 16px; color: var(--ink-2); max-width: 480px; margin: 0 auto 36px; line-height: 1.65; }
+        .cp-stats {
+          display: grid; grid-template-columns: repeat(3,1fr);
+          background: var(--surface); border: 1px solid var(--line);
+          border-radius: 16px; overflow: hidden; max-width: 480px; margin: 0 auto;
+          box-shadow: 0 2px 8px rgba(0,0,0,.04);
         }
-        .error-msg {
-          color: #a33327;
-          font-size: 13px;
-          margin-bottom: 10px;
+        .cp-stat { padding: 18px 12px; text-align: center; border-right: 1px solid var(--line); }
+        .cp-stat:last-child { border-right: none; }
+        .cp-stat-val { font-family: 'Barlow Condensed', sans-serif; font-size: 30px; font-weight: 700; color: var(--brick); }
+        .cp-stat-lbl { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+        /* TABS */
+        .cp-tabs-wrap { max-width: 1180px; margin: 0 auto; padding: 40px 20px 0; }
+        .cp-tabs {
+          display: inline-flex; align-items: center; gap: 4px;
+          background: var(--brick-soft); border-radius: 14px; padding: 4px;
         }
-        .success-icon {
-          font-size: 48px;
-          text-align: center;
-          margin-bottom: 12px;
+        .cp-tab-btn {
+          display: inline-flex; align-items: center; gap: 7px;
+          padding: 10px 18px; border-radius: 11px; border: none; cursor: pointer;
+          font-family: 'Hanken Grotesk', sans-serif; font-size: 14px; font-weight: 700;
+          transition: background .18s, color .18s;
+          background: transparent; color: var(--brick);
         }
-        .success-title {
-          font-size: 22px;
-          font-weight: 700;
-          text-align: center;
-          margin-bottom: 8px;
-          color: #26231f;
+        .cp-tab-btn.active { background: var(--brick); color: #fff; }
+
+        /* SIMULATOR SECTION */
+        .cp-sim-section { max-width: 1180px; margin: 0 auto; padding: 32px 20px 56px; }
+        .cp-sim-grid {
+          display: grid; grid-template-columns: 1fr 430px; gap: 40px; align-items: start;
         }
-        .success-msg {
-          font-size: 15px;
-          color: #8c847a;
-          text-align: center;
-          margin-bottom: 28px;
-          line-height: 1.6;
+        @media (max-width: 920px) { .cp-sim-grid { grid-template-columns: 1fr; } }
+
+        /* SIM INTRO */
+        .cp-sim-eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--brick); margin-bottom: 10px; }
+        .cp-sim-h2 {
+          font-family: 'Barlow Condensed', sans-serif;
+          font-size: 36px; font-weight: 700; color: var(--ink);
+          margin: 0 0 14px; line-height: 1.08;
         }
-        .btn-outline {
-          width: 100%;
-          background: #f4f1ec;
-          border: 1.5px solid #e7e1d8;
-          color: #26231f;
-          border-radius: 8px;
-          padding: 13px;
-          font-size: 15px;
-          font-weight: 700;
-          font-family: inherit;
-          cursor: pointer;
+        .cp-sim-desc { font-size: 15px; color: var(--ink-2); line-height: 1.65; margin-bottom: 28px; }
+        .cp-bullets { display: flex; flex-direction: column; gap: 14px; }
+        .cp-bullet { display: flex; align-items: center; gap: 14px; }
+        .cp-bullet-icon {
+          width: 36px; height: 36px; flex-shrink: 0;
+          background: var(--brick-soft); border-radius: 9px;
+          display: flex; align-items: center; justify-content: center;
+          color: var(--brick);
+        }
+        .cp-bullet-text { font-size: 14px; color: var(--ink-2); font-weight: 500; }
+
+        /* SIM CARD */
+        .cp-sim-card {
+          background: var(--surface); border-radius: 26px;
+          box-shadow: 0 8px 40px rgba(0,0,0,.08);
+          padding: 28px;
+        }
+        .cp-card-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24px; }
+        .cp-card-title { font-size: 15px; font-weight: 700; color: var(--ink); margin: 0 0 3px; }
+        .cp-card-sub   { font-size: 12px; color: var(--muted); margin: 0; }
+        .cp-reset-btn {
+          width: 32px; height: 32px; flex-shrink: 0;
+          border: 1px solid var(--line); border-radius: 50%;
+          background: var(--surface); cursor: pointer;
+          display: flex; align-items: center; justify-content: center;
+          color: var(--muted); transition: transform .25s, color .15s;
+        }
+        .cp-reset-btn:hover { transform: rotate(-180deg); color: var(--brick); }
+
+        /* AREA SLIDER */
+        .cp-field { margin-bottom: 20px; }
+        .cp-field-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; color: var(--ink-2); margin-bottom: 6px; display: block; }
+        .cp-area-val { display: flex; align-items: baseline; gap: 5px; margin-bottom: 10px; }
+        .cp-area-num { font-family: 'Barlow Condensed', sans-serif; font-size: 52px; font-weight: 700; color: var(--ink); line-height: 1; }
+        .cp-area-unit { font-size: 18px; color: var(--muted); }
+        .cp-slider {
+          width: 100%; -webkit-appearance: none; appearance: none;
+          height: 5px; border-radius: 3px; outline: none; cursor: pointer;
+          border: none; margin-bottom: 6px;
+        }
+        .cp-slider::-webkit-slider-thumb {
+          -webkit-appearance: none; appearance: none;
+          width: 20px; height: 20px; border-radius: 50%;
+          background: var(--brick); border: 2px solid #fff;
+          box-shadow: 0 1px 4px rgba(0,0,0,.2); cursor: pointer;
+        }
+        .cp-slider::-moz-range-thumb {
+          width: 20px; height: 20px; border-radius: 50%;
+          background: var(--brick); border: 2px solid #fff;
+          box-shadow: 0 1px 4px rgba(0,0,0,.2); cursor: pointer;
+        }
+        .cp-slider-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); }
+
+        /* DROPDOWN */
+        .cp-drop { position: relative; margin-bottom: 20px; }
+        .cp-drop-trigger {
+          width: 100%; display: flex; align-items: center; gap: 10px;
+          padding: 12px 14px; border: 1.5px solid var(--line); border-radius: 13px;
+          background: var(--surface); cursor: pointer; font-family: inherit;
+          transition: border-color .15s;
+        }
+        .cp-drop-trigger:hover { border-color: var(--brick); }
+        .cp-drop-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+        .cp-drop-nm  { font-size: 14px; font-weight: 600; color: var(--ink); flex: 1; text-align: left; }
+        .cp-drop-m2  { font-size: 12px; color: var(--muted); }
+        .cp-drop-chev { color: var(--muted); transition: transform .18s; }
+        .cp-drop-chev.open { transform: rotate(180deg); }
+        .cp-drop-menu {
+          position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 50;
+          background: var(--surface); border: 1px solid var(--line);
+          border-radius: 13px; box-shadow: 0 8px 28px rgba(0,0,0,.1);
+          overflow: hidden;
+          animation: dropIn .18s ease;
+        }
+        @keyframes dropIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+        .cp-drop-opt {
+          display: flex; align-items: center; gap: 10px;
+          padding: 12px 14px; cursor: pointer; transition: background .12s;
+        }
+        .cp-drop-opt:hover { background: var(--brick-soft); }
+        .cp-drop-opt.sel  { background: var(--brick-soft); }
+        .cp-drop-opt-nm   { font-size: 14px; font-weight: 600; color: var(--ink); flex: 1; }
+        .cp-drop-opt-m2   { font-size: 12px; color: var(--muted); }
+        .cp-drop-check    { color: var(--brick); }
+
+        /* PAV SEGMENTS */
+        .cp-pav { display: flex; gap: 8px; margin-bottom: 20px; }
+        .cp-pav-btn {
+          flex: 1; padding: 10px; border-radius: 10px;
+          border: 1.5px solid var(--line); background: var(--surface);
+          font-family: inherit; font-size: 13px; font-weight: 600;
+          color: var(--ink-2); cursor: pointer; transition: all .15s;
+        }
+        .cp-pav-btn.active { border-color: var(--brick); background: var(--brick-soft); color: var(--brick); }
+
+        /* RESUMO */
+        .cp-resumo {
+          background: var(--surface-2); border: 1px solid var(--line);
+          border-radius: 13px; display: grid; grid-template-columns: repeat(3,1fr);
+          margin-bottom: 20px; overflow: hidden;
+        }
+        .cp-resumo-col { padding: 12px 10px; text-align: center; border-right: 1px solid var(--line); }
+        .cp-resumo-col:last-child { border-right: none; }
+        .cp-resumo-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 3px; }
+        .cp-resumo-val { font-family: 'Barlow Condensed', sans-serif; font-size: 17px; font-weight: 700; color: var(--ink); }
+
+        /* PRICE */
+        .cp-price-block { margin-bottom: 18px; }
+        .cp-price-eyebrow { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 4px; }
+        .cp-price-row { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+        .cp-price-val { font-family: 'Barlow Condensed', sans-serif; font-size: 42px; font-weight: 700; color: var(--ink); line-height: 1; }
+        .cp-price-sub { font-size: 12px; color: var(--muted); }
+
+        /* CTA */
+        .cp-cta-btn {
+          width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;
+          background: var(--brick); color: #fff; border: none;
+          border-radius: 13px; padding: 16px;
+          font-family: 'Hanken Grotesk', sans-serif; font-size: 15px; font-weight: 700;
+          cursor: pointer; margin-bottom: 12px;
+          box-shadow: 0 8px 22px -10px rgba(152,25,21,.7);
+          transition: background .15s, transform .12s;
+        }
+        .cp-cta-btn:hover { background: var(--brick-dk); transform: translateY(-1px); }
+        .cp-trust { display: flex; justify-content: center; gap: 16px; }
+        .cp-trust-item { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--muted); }
+        .cp-trust-check { color: var(--pos); }
+
+        /* KITS */
+        .cp-kits-section { max-width: 1180px; margin: 0 auto; padding: 32px 20px 56px; }
+        .cp-kit-grid {
+          display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;
+        }
+        @media (max-width: 920px) { .cp-kit-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 680px) { .cp-kit-grid { grid-template-columns: 1fr; } }
+        .cp-kit-card {
+          background: var(--surface); border: 1px solid var(--line);
+          border-radius: 20px; padding: 22px; position: relative;
+          transition: transform .2s, box-shadow .2s;
+          cursor: default;
+        }
+        .cp-kit-card:hover { transform: translateY(-4px); box-shadow: 0 14px 40px rgba(0,0,0,.1); }
+        .cp-kit-badge {
+          display: inline-block; font-size: 10px; font-weight: 800;
+          padding: 3px 9px; border-radius: 20px; color: #fff;
+          text-transform: uppercase; letter-spacing: .6px; margin-bottom: 14px;
+        }
+        .cp-kit-icon {
+          width: 48px; height: 48px; background: var(--brick-soft);
+          border-radius: 13px; display: flex; align-items: center; justify-content: center;
+          color: var(--brick); margin-bottom: 14px;
+        }
+        .cp-kit-name { font-family: 'Barlow Condensed', sans-serif; font-size: 24px; font-weight: 700; color: var(--ink); margin: 0 0 6px; }
+        .cp-kit-desc { font-size: 13px; color: var(--ink-2); line-height: 1.5; margin-bottom: 14px; }
+        .cp-kit-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+        .cp-kit-chip {
+          display: inline-flex; align-items: center; gap: 4px;
+          background: var(--surface-2); border-radius: 8px;
+          padding: 4px 8px; font-size: 12px; color: var(--ink-2); font-weight: 600;
+        }
+        .cp-kit-price-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; color: var(--muted); margin-bottom: 3px; }
+        .cp-kit-price { font-family: 'Barlow Condensed', sans-serif; font-size: 30px; font-weight: 700; color: var(--brick); margin-bottom: 14px; }
+        .cp-kit-btn {
+          width: 100%; padding: 10px; border-radius: 10px;
+          border: 1.5px solid var(--brick); color: var(--brick);
+          background: transparent; font-family: 'Hanken Grotesk', sans-serif;
+          font-size: 14px; font-weight: 700; cursor: pointer;
           transition: background .15s, color .15s;
         }
-        .btn-outline:hover { background: #981915; border-color: #981915; color: #fff; }
-        .divider { height: 1px; background: #e7e1d8; margin: 20px 0; }
-        .mode-tabs { display: flex; gap: 0; margin-bottom: 20px; border-radius: 10px; overflow: hidden; border: 1.5px solid #e7e1d8; background: #ffffff; }
-        .mode-tab { flex: 1; padding: 11px 8px; font-size: 14px; font-weight: 700; font-family: inherit; cursor: pointer; border: none; background: transparent; color: #8c847a; transition: background .15s, color .15s; }
-        .mode-tab.active { background: #981915; color: #fff; }
-        .kit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 8px; }
-        @media (max-width: 400px) { .kit-grid { grid-template-columns: 1fr; } }
-        .kit-card { border: 1.5px solid #e7e1d8; border-radius: 14px; padding: 18px 14px; cursor: pointer; background: #ffffff; transition: border-color .2s, background .2s, transform .15s; box-shadow: 0 2px 6px rgba(0,0,0,0.02); }
-        .kit-card:hover { border-color: #981915; background: rgba(152,25,21,.04); transform: translateY(-2px); }
-        .kit-tag { display: inline-block; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 20px; color: #fff; margin-bottom: 8px; letter-spacing: .5px; }
-        .kit-emoji { font-size: 30px; margin-bottom: 8px; }
-        .kit-name { font-size: 15px; font-weight: 800; margin-bottom: 4px; color: #26231f; }
-        .kit-desc { font-size: 11px; color: #8c847a; line-height: 1.4; margin-bottom: 10px; }
-        .kit-meta { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 10px; }
-        .kit-chip { background: #f4f1ec; border-radius: 20px; padding: 3px 8px; font-size: 11px; color: #26231f; font-weight: 600; }
-        .kit-price-label { font-size: 10px; color: #8c847a; text-transform: uppercase; letter-spacing: .5px; }
-        .kit-price { font-size: 18px; font-weight: 900; color: #981915; font-family: 'Barlow Condensed', sans-serif; }
-        .kit-btn { width: 100%; background: linear-gradient(135deg,#981915,#7d1411); color: #fff; border: none; border-radius: 8px; padding: 10px; font-size: 13px; font-weight: 700; font-family: inherit; cursor: pointer; margin-top: 10px; box-shadow: 0 3px 12px rgba(152,25,21,.35); transition: opacity .15s; }
-        .kit-btn:hover { opacity: .85; }
-        .kit-result-banner { background: linear-gradient(135deg,#7d1411,#981915); border-radius: 12px; padding: 20px; color: #fff; margin-bottom: 16px; }
-        .kit-toggles { border-top: 1px solid rgba(255,255,255,.15); padding-top: 12px; display: flex; flex-wrap: wrap; gap: 8px; }
-        .kit-toggle-btn { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-family: inherit; font-size: 12px; font-weight: 700; transition: all .2s; }
-        .kit-breakdown { border-top: 1px solid #e7e1d8; margin-top: 12px; padding-top: 12px; display: flex; flex-wrap: wrap; gap: 16px; }
-        .kit-breakdown-item { }
-        .kit-breakdown-label { font-size: 10px; opacity: .5; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; }
-        .kit-breakdown-val { font-size: 14px; font-weight: 800; color: #26231f; }
-        .kit-cat-block { background: #ffffff; border-radius: 10px; border: 1px solid #e7e1d8; margin-bottom: 10px; overflow: hidden; transition: opacity .2s; }
-        .kit-cat-header { background: #f4f1ec; padding: 8px 14px; display: flex; justify-content: space-between; align-items: center; color: #26231f; font-weight: 700; }
-        .kit-cat-row { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; padding: 8px 14px; border-top: 1px solid #e7e1d8; align-items: center; font-size: 12px; color: #8c847a; }
-        .back-link {
-          display: inline-block;
-          font-size: 13px;
-          color: #981915;
-          cursor: pointer;
-          margin-bottom: 16px;
-          text-decoration: none;
-          font-weight: 500;
+        .cp-kit-btn:hover { background: var(--brick); color: #fff; }
+
+        /* FAQ */
+        .cp-faq-section { max-width: 760px; margin: 0 auto; padding: 56px 20px; }
+        .cp-faq-eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--brick); text-align: center; margin-bottom: 8px; }
+        .cp-faq-h2 { font-family: 'Barlow Condensed', sans-serif; font-size: 36px; font-weight: 700; color: var(--ink); text-align: center; margin: 0 0 32px; }
+        .cp-faq-item {
+          background: var(--surface); border: 1px solid var(--line);
+          border-radius: 16px; margin-bottom: 10px; overflow: hidden;
+          transition: border-color .2s, box-shadow .2s;
         }
-        .back-link:hover { text-decoration: underline; }
-        .calc-header {
-          background: rgba(244,241,236,.85);
-          backdrop-filter: blur(12px);
-          padding: 0 24px;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          height: 64px;
-          border-bottom: 1px solid #e7e1d8;
-          position: sticky; top: 0; z-index: 100;
+        .cp-faq-item.open { border-color: var(--brick); box-shadow: 0 4px 16px rgba(152,25,21,.1); }
+        .cp-faq-header {
+          display: flex; align-items: center; justify-content: space-between;
+          padding: 18px 22px; cursor: pointer; gap: 14px;
         }
-        .calc-header-logo {
-          display: flex; align-items: center; gap: 10px;
+        .cp-faq-q { font-family: 'Barlow Condensed', sans-serif; font-size: 21px; font-weight: 700; color: var(--ink); flex: 1; }
+        .cp-faq-toggle {
+          width: 32px; height: 32px; flex-shrink: 0; border-radius: 50%;
+          border: 1px solid var(--line); background: var(--surface);
+          display: flex; align-items: center; justify-content: center;
+          color: var(--muted); transition: background .18s, color .18s, transform .25s;
         }
-        .calc-header-logo img { height: 36px; width: auto; }
-        .calc-header-brand { font-size: 15px; font-weight: 900; letter-spacing: 2px; }
-        .calc-header-brand span:first-child { color: #26231f; }
-        .calc-header-brand span:last-child { color: #981915; }
-        .calc-header-nav { display: flex; align-items: center; gap: 20px; }
-        .calc-header-nav a { color: #8c847a; font-size: 13px; font-weight: 600; text-decoration: none; transition: color .15s; }
-        .calc-header-nav a:hover { color: #26231f; }
-        .calc-header-cta { background: #981915; color: #fff; border: none; border-radius: 8px; padding: 8px 16px; font-size: 13px; font-weight: 700; font-family: inherit; cursor: pointer; transition: background .15s; white-space: nowrap; }
-        .calc-header-cta:hover { background: #7a1210; }
-        @media (max-width: 480px) { .calc-header-nav { display: none; } }
-        .calc-hero {
-          background: radial-gradient(ellipse at 70% 50%, rgba(152,25,21,.08) 0%, transparent 65%),
-                      radial-gradient(ellipse at 20% 80%, rgba(244,241,236,.6) 0%, transparent 60%),
-                      #ffffff;
-          padding: 64px 20px 56px;
-          text-align: center;
-          color: #26231f;
-          position: relative;
-          overflow: hidden;
-          border-bottom: 1px solid #e7e1d8;
+        .cp-faq-item.open .cp-faq-toggle { background: var(--brick); color: #fff; border-color: var(--brick); transform: rotate(180deg); }
+        .cp-faq-body { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .28s ease; }
+        .cp-faq-item.open .cp-faq-body { grid-template-rows: 1fr; }
+        .cp-faq-inner { overflow: hidden; }
+        .cp-faq-a { padding: 0 22px 20px; font-size: 14.5px; color: var(--ink-2); line-height: 1.7; }
+
+        /* FORM SECTION */
+        .cp-form-section { padding: 56px 20px; background: var(--bg); }
+        .cp-form-card {
+          max-width: 560px; margin: 0 auto;
+          background: var(--surface); border: 1px solid var(--line);
+          border-radius: 20px; padding: 32px;
+          box-shadow: 0 4px 20px rgba(0,0,0,.05);
         }
-        .calc-hero::before {
-          content: '';
-          position: absolute; inset: 0;
-          background-image: radial-gradient(circle, rgba(152,25,21,.03) 1px, transparent 1px);
-          background-size: 28px 28px;
-          pointer-events: none;
+        .cp-form-eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--brick); text-align: center; margin-bottom: 8px; }
+        .cp-form-h2 { font-family: 'Barlow Condensed', sans-serif; font-size: 30px; font-weight: 700; color: var(--ink); text-align: center; margin: 0 0 6px; }
+        .cp-form-sub { font-size: 14px; color: var(--muted); text-align: center; margin: 0 0 24px; }
+        .cp-f-label { display: block; font-size: 12px; font-weight: 700; color: var(--ink-2); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+        .cp-f-input {
+          width: 100%; border: 1.5px solid var(--line); border-radius: 10px;
+          background: var(--surface); color: var(--ink); padding: 12px 14px;
+          font-size: 15px; font-family: inherit; outline: none;
+          transition: border-color .15s; margin-bottom: 14px;
         }
-        .calc-hero-tag {
-          display: inline-flex; align-items: center; gap: 6px;
-          background: rgba(152,25,21,.1);
-          border: 1px solid rgba(152,25,21,.2); border-radius: 20px;
-          font-size: 11px; font-weight: 700; padding: 5px 16px;
-          letter-spacing: 1px; text-transform: uppercase; margin-bottom: 22px;
-          color: #981915;
+        .cp-f-input:focus { border-color: var(--brick); }
+        .cp-f-submit {
+          width: 100%; background: var(--brick); color: #fff;
+          border: none; border-radius: 12px; padding: 15px;
+          font-size: 16px; font-weight: 800; font-family: inherit;
+          cursor: pointer; transition: background .15s, transform .12s;
+          box-shadow: 0 6px 22px rgba(152,25,21,.35);
+          margin-top: 4px;
         }
-        .calc-hero h1 {
-          font-size: clamp(28px, 7vw, 48px); font-weight: 900;
-          line-height: 1.1; margin: 0 0 16px; letter-spacing: -1.5px;
-          color: #26231f;
-        }
-        .calc-hero h1 span { color: #981915; }
-        .calc-hero p {
-          font-size: 16px; color: #8c847a; margin: 0 auto 36px;
-          max-width: 420px; line-height: 1.65;
-        }
-        .calc-hero-stats {
-          display: flex; justify-content: center; gap: 0; flex-wrap: wrap;
-          border: 1px solid #e7e1d8; border-radius: 14px;
-          max-width: 380px; margin: 0 auto; overflow: hidden;
-          background: #ffffff;
-          box-shadow: 0 2px 6px rgba(0,0,0,0.03);
-        }
-        .calc-hero-stat {
-          flex: 1; text-align: center; padding: 16px 12px;
-          border-right: 1px solid #e7e1d8;
-        }
-        .calc-hero-stat:last-child { border-right: none; }
-        .calc-hero-stat-val { font-size: 24px; font-weight: 900; color: #981915; font-family: 'Barlow Condensed', sans-serif; }
-        .calc-hero-stat-lbl { font-size: 10px; color: #8c847a; margin-top: 3px; letter-spacing: .5px; text-transform: uppercase; }
+        .cp-f-submit:hover { background: var(--brick-dk); transform: translateY(-1px); }
+        .cp-f-submit:disabled { background: #ccc; color: #888; cursor: not-allowed; box-shadow: none; }
+        .cp-f-error { color: var(--brick); font-size: 13px; margin-bottom: 10px; }
+        .cp-success-icon { text-align: center; margin-bottom: 12px; color: var(--pos); }
+        .cp-success-title { font-family: 'Barlow Condensed', sans-serif; font-size: 30px; font-weight: 700; text-align: center; color: var(--ink); margin: 0 0 10px; }
+        .cp-success-msg { font-size: 15px; color: var(--muted); text-align: center; line-height: 1.65; }
+
+        /* FOOTER */
+        .cp-footer { padding: 28px 20px; text-align: center; font-size: 12px; color: var(--muted); border-top: 1px solid var(--line); background: var(--surface); }
+
+        /* Misc */
+        .cp-divider { height: 1px; background: var(--line); margin: 0; }
       `}</style>
 
-      <div className="calc-root">
-        <header className="calc-header">
-          <div className="calc-header-logo">
-            {empresaBranding ? (
-              <>
-                {empresaBranding.logo_url && <img src={empresaBranding.logo_url} alt={empresaBranding.nome} style={{ height: 36, width: "auto", objectFit: "contain" }} />}
-                <div className="calc-header-brand" style={{ color: empresaBranding.cor_primaria || "#981915" }}>
-                  <span style={{ color: "rgba(255,255,255,.85)", letterSpacing: 1, fontSize: 14, fontWeight: 900 }}>{empresaBranding.nome}</span>
+      <div className="cp-root">
+
+        {/* ── NAV ──────────────────────────────────────────────────────────── */}
+        <nav className="cp-nav">
+          <a className="cp-nav-logo" href="#">
+            <img
+              src={empresaBranding?.logo_url || "/logo-transparente-122x122.png"}
+              alt="Stick Frame"
+              width={30}
+              height={30}
+              style={{ objectFit: "contain" }}
+            />
+            {!empresaBranding && (
+              <span className="cp-nav-wordmark">
+                <span className="w-stick">STICK</span><span className="w-frame">FRAME</span>
+              </span>
+            )}
+            {empresaBranding && (
+              <span style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700, fontSize: 17, letterSpacing: 1, color: empresaBranding.cor_primaria || "#981915" }}>
+                {empresaBranding.nome}
+              </span>
+            )}
+          </a>
+          <button className="cp-nav-cta" onClick={handleSimCTA}>
+            <Ic p={ICONS.zap} s={14} /> Simular agora
+          </button>
+        </nav>
+
+        {/* ── HERO ─────────────────────────────────────────────────────────── */}
+        <section className="cp-hero">
+          <div className="cp-hero-inner">
+            <div className="cp-chip">
+              <Ic p={ICONS.zap} s={12} /> Calculadora gratuita
+            </div>
+            <h1 className="cp-h1">
+              Quanto custa sua<br />
+              <span className="red">casa em Steel Frame?</span>
+            </h1>
+            <p className="cp-lede">Simule o custo completo em segundos — materiais, projetos e mão de obra. Sem compromisso.</p>
+            <div className="cp-stats">
+              <div className="cp-stat">
+                <div className="cp-stat-val">6</div>
+                <div className="cp-stat-lbl">Modelos prontos</div>
+              </div>
+              <div className="cp-stat">
+                <div className="cp-stat-val">40%</div>
+                <div className="cp-stat-lbl">Mais rápido</div>
+              </div>
+              <div className="cp-stat">
+                <div className="cp-stat-val">24h</div>
+                <div className="cp-stat-lbl">Retorno garantido</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── TABS ─────────────────────────────────────────────────────────── */}
+        <div className="cp-tabs-wrap">
+          <div className="cp-tabs">
+            <button
+              className={`cp-tab-btn${tab === "simular" ? " active" : ""}`}
+              onClick={() => setTab("simular")}
+            >
+              <Ic p={ICONS.grid} s={15} /> Simular por m²
+            </button>
+            <button
+              className={`cp-tab-btn${tab === "kits" ? " active" : ""}`}
+              onClick={() => setTab("kits")}
+            >
+              <Ic p={ICONS.home} s={15} /> Kits de Casa
+            </button>
+          </div>
+        </div>
+
+        {/* ── SIMULATOR ────────────────────────────────────────────────────── */}
+        {tab === "simular" && (
+          <section className="cp-sim-section">
+            <div className="cp-sim-grid">
+              {/* Left intro */}
+              <div className="cp-sim-intro">
+                <div className="cp-sim-eyebrow">Simulador inteligente</div>
+                <h2 className="cp-sim-h2">Monte sua obra e veja o custo em tempo real</h2>
+                <p className="cp-sim-desc">
+                  Ajuste a área, o padrão e os pavimentos — o valor é atualizado instantaneamente com base em insumos reais do mercado.
+                </p>
+                <div className="cp-bullets">
+                  <div className="cp-bullet">
+                    <div className="cp-bullet-icon"><Ic p={ICONS.zap} s={18} /></div>
+                    <span className="cp-bullet-text">Resultado instantâneo, sem compromisso</span>
+                  </div>
+                  <div className="cp-bullet">
+                    <div className="cp-bullet-icon"><Ic p={ICONS.layers} s={18} /></div>
+                    <span className="cp-bullet-text">Estrutura, fechamentos, instalações e acabamento</span>
+                  </div>
+                  <div className="cp-bullet">
+                    <div className="cp-bullet-icon"><Ic p={ICONS.shield} s={18} /></div>
+                    <span className="cp-bullet-text">Valores médios praticados pela Stick Frame</span>
+                  </div>
                 </div>
+              </div>
+
+              {/* Right card */}
+              <div className="cp-sim-card">
+                {/* Header */}
+                <div className="cp-card-header">
+                  <div>
+                    <p className="cp-card-title">Sua casa em Steel Frame</p>
+                    <p className="cp-card-sub">Estimativa de obra completa</p>
+                  </div>
+                  <button className="cp-reset-btn" onClick={resetSim} title="Resetar">
+                    <Ic p={ICONS.refresh} s={15} />
+                  </button>
+                </div>
+
+                {/* Area slider */}
+                <div className="cp-field">
+                  <span className="cp-field-label">Área construída</span>
+                  <div className="cp-area-val">
+                    <span className="cp-area-num bc">{simArea}</span>
+                    <span className="cp-area-unit">m²</span>
+                  </div>
+                  <input
+                    type="range" min={20} max={600} value={simArea}
+                    className="cp-slider"
+                    style={{ background: sliderBg(simArea, 20, 600) }}
+                    onChange={e => setSimArea(Number(e.target.value))}
+                  />
+                  <div className="cp-slider-labels"><span>20 m²</span><span>600 m²</span></div>
+                </div>
+
+                {/* Padrão dropdown */}
+                <div className="cp-field">
+                  <span className="cp-field-label">Padrão de acabamento</span>
+                  <div className="cp-drop" ref={dropRef}>
+                    <button
+                      className="cp-drop-trigger"
+                      type="button"
+                      onClick={() => setDropOpen(o => !o)}
+                    >
+                      <span className="cp-drop-dot" style={{ background: simPad.dot }} />
+                      <span className="cp-drop-nm">{simPad.nm}</span>
+                      <span className="cp-drop-m2">R$ {simPad.m2.toLocaleString("pt-BR")}/m²</span>
+                      <span className={`cp-drop-chev${dropOpen ? " open" : ""}`}>
+                        <Ic p={ICONS.chevron} s={16} />
+                      </span>
+                    </button>
+                    {dropOpen && (
+                      <div className="cp-drop-menu">
+                        {PADROES_SIM.map(p => (
+                          <div
+                            key={p.id}
+                            className={`cp-drop-opt${p.id === simPad.id ? " sel" : ""}`}
+                            onClick={() => { setSimPad(p); setDropOpen(false); }}
+                          >
+                            <span className="cp-drop-dot" style={{ background: p.dot, width: 9, height: 9, borderRadius: "50%", flexShrink: 0 }} />
+                            <span className="cp-drop-opt-nm">{p.nm}</span>
+                            <span className="cp-drop-opt-m2">R$ {p.m2.toLocaleString("pt-BR")}/m²</span>
+                            {p.id === simPad.id && (
+                              <span className="cp-drop-check"><Ic p={ICONS.check} s={15} /></span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Pavimentos */}
+                <div className="cp-field">
+                  <span className="cp-field-label">Pavimentos</span>
+                  <div className="cp-pav">
+                    <button
+                      className={`cp-pav-btn${simPav === 1 ? " active" : ""}`}
+                      onClick={() => setSimPav(1)}
+                    >
+                      1 Térrea
+                    </button>
+                    <button
+                      className={`cp-pav-btn${simPav === 2 ? " active" : ""}`}
+                      onClick={() => setSimPav(2)}
+                    >
+                      2 Sobrado
+                    </button>
+                  </div>
+                </div>
+
+                {/* Resumo */}
+                <div className="cp-resumo">
+                  <div className="cp-resumo-col">
+                    <div className="cp-resumo-label">Por m²</div>
+                    <div className="cp-resumo-val bc">{fmtR(est.perM2)}</div>
+                  </div>
+                  <div className="cp-resumo-col">
+                    <div className="cp-resumo-label">Prazo</div>
+                    <div className="cp-resumo-val bc">{est.prazo} meses</div>
+                  </div>
+                  <div className="cp-resumo-col">
+                    <div className="cp-resumo-label">Proposta</div>
+                    <div className="cp-resumo-val bc">24h</div>
+                  </div>
+                </div>
+
+                {/* Price */}
+                <div className="cp-price-block">
+                  <div className="cp-price-eyebrow">Investimento estimado</div>
+                  <div className="cp-price-row">
+                    <span className="cp-price-val bc">
+                      {fmtR(countUpVal)}
+                    </span>
+                    <span className="cp-price-sub">{simArea} m² / {simPad.nm}</span>
+                  </div>
+                </div>
+
+                {/* CTA */}
+                <button className="cp-cta-btn" onClick={handleSimCTA}>
+                  Ver estimativa completa <Ic p={ICONS.arrow} s={16} />
+                </button>
+
+                {/* Trust */}
+                <div className="cp-trust">
+                  <span className="cp-trust-item">
+                    <span className="cp-trust-check"><Ic p={ICONS.check} s={13} /></span> Resultado na hora
+                  </span>
+                  <span className="cp-trust-item">
+                    <span className="cp-trust-check"><Ic p={ICONS.check} s={13} /></span> Dados protegidos
+                  </span>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* ── KITS ─────────────────────────────────────────────────────────── */}
+        {tab === "kits" && (
+          <section className="cp-kits-section">
+            <div className="cp-kit-grid">
+              {KITS.map(kit => {
+                const items = calcKitDinamico(kit);
+                const totalMat = items
+                  .filter(i => !["Projetos e Engenharia", "Mão de Obra"].includes(i.categoria))
+                  .reduce((s, i) => s + i.total, 0);
+                return (
+                  <div key={kit.id} className="cp-kit-card">
+                    <div className="cp-kit-badge" style={{ background: kit.tagCor }}>{kit.tag}</div>
+                    <div className="cp-kit-icon"><Ic p={ICONS.home} s={24} /></div>
+                    <h3 className="cp-kit-name">{kit.nome}</h3>
+                    <p className="cp-kit-desc">{kit.descricao}</p>
+                    <div className="cp-kit-chips">
+                      <span className="cp-kit-chip">
+                        <Ic p={ICONS.maximize} s={12} /> {kit.area} m²
+                      </span>
+                      <span className="cp-kit-chip">
+                        <Ic p={ICONS.bed} s={12} /> {kit.quartos} qts
+                      </span>
+                      <span className="cp-kit-chip">
+                        <Ic p={ICONS.bath} s={12} /> {kit.banheiros} ban
+                      </span>
+                      <span className="cp-kit-chip">
+                        <Ic p={ICONS.layers} s={12} /> {kit.pavs} pav.
+                      </span>
+                    </div>
+                    <div className="cp-kit-price-label">Materiais a partir de</div>
+                    <div className="cp-kit-price">{fmtR(totalMat)}</div>
+                    <button className="cp-kit-btn" onClick={() => selecionarKit(kit)}>
+                      Calcular →
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
+        <div className="cp-divider" />
+
+        {/* ── FAQ ──────────────────────────────────────────────────────────── */}
+        <section className="cp-faq-section">
+          <div className="cp-faq-eyebrow">Tire suas dúvidas</div>
+          <h2 className="cp-faq-h2">Perguntas frequentes sobre Steel Frame</h2>
+          {FAQ_ITEMS.map((item, i) => (
+            <div key={i} className={`cp-faq-item${faqOpen === i ? " open" : ""}`}>
+              <div className="cp-faq-header" onClick={() => setFaqOpen(faqOpen === i ? -1 : i)}>
+                <span className="cp-faq-q">{item.q}</span>
+                <span className="cp-faq-toggle">
+                  <Ic p={ICONS.chevron} s={16} />
+                </span>
+              </div>
+              <div className="cp-faq-body">
+                <div className="cp-faq-inner">
+                  <p className="cp-faq-a">{item.a}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </section>
+
+        <div className="cp-divider" />
+
+        {/* ── PRÉ-ORÇAMENTO FORM ────────────────────────────────────────────── */}
+        <section className="cp-form-section" ref={formRef}>
+          <div className="cp-form-card">
+            {formSent ? (
+              <>
+                <div className="cp-success-icon"><Ic p={ICONS.check} s={48} /></div>
+                <h3 className="cp-success-title">Recebemos seu contato!</h3>
+                <p className="cp-success-msg">
+                  Nossa equipe vai entrar em contato em até 24h pelo WhatsApp <strong>{whatsapp}</strong> com a proposta personalizada.
+                </p>
               </>
             ) : (
               <>
-                <img src="/logo-transparente-122x122.png" alt="Stick Frame" />
-                <div className="calc-header-brand"><span>STICK</span><span>FRAME</span></div>
+                <div className="cp-form-eyebrow">Pré-orçamento gratuito</div>
+                <h2 className="cp-form-h2">Receba sua estimativa completa</h2>
+                <p className="cp-form-sub">Nossa equipe retorna em até 24h com proposta detalhada, sem compromisso.</p>
+                <form onSubmit={handleFormSubmit}>
+                  <label className="cp-f-label">Nome completo</label>
+                  <input
+                    className="cp-f-input" type="text" placeholder="Seu nome"
+                    value={nome} onChange={e => setNome(e.target.value)} required
+                  />
+                  <label className="cp-f-label">WhatsApp</label>
+                  <input
+                    className="cp-f-input" type="tel" placeholder="(11) 99999-9999"
+                    value={whatsapp} onChange={e => setWhatsapp(applyPhoneMask(e.target.value))} required
+                  />
+                  <label className="cp-f-label">Cidade</label>
+                  <input
+                    className="cp-f-input" type="text" placeholder="Ex: São Paulo – SP"
+                    value={cidade} onChange={e => setCidade(e.target.value)}
+                  />
+                  <label className="cp-f-label">
+                    E-mail <span style={{ color: "#888", fontWeight: 400, textTransform: "none", fontSize: 12 }}>(opcional)</span>
+                  </label>
+                  <input
+                    className="cp-f-input" type="email" placeholder="seu@email.com"
+                    value={email} onChange={e => setEmail(e.target.value)}
+                  />
+                  {sendError && <p className="cp-f-error">{sendError}</p>}
+                  <button className="cp-f-submit" type="submit" disabled={sending}>
+                    {sending ? "Enviando..." : "Solicitar orçamento grátis →"}
+                  </button>
+                </form>
               </>
             )}
           </div>
-          <nav className="calc-header-nav">
-            <button className="calc-header-cta" onClick={() => document.querySelector('.calc-body')?.scrollIntoView({ behavior: 'smooth' })}>Simular agora</button>
-          </nav>
-        </header>
-
-        <div className="calc-hero">
-          <div className="calc-hero-tag">
-            <IcInline d={<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>} w={11} c="#981915" /> Calculadora Gratuita
-          </div>
-          <h1>Quanto custa sua<br /><span>casa em Steel Frame?</span></h1>
-          <p>Simule o custo completo em segundos — materiais, projetos e mão de obra. Sem compromisso.</p>
-          <div className="calc-hero-stats">
-            <div className="calc-hero-stat">
-              <div className="calc-hero-stat-val">6</div>
-              <div className="calc-hero-stat-lbl">modelos prontos</div>
-            </div>
-            <div className="calc-hero-stat">
-              <div className="calc-hero-stat-val">40%</div>
-              <div className="calc-hero-stat-lbl">mais rápido</div>
-            </div>
-            <div className="calc-hero-stat">
-              <div className="calc-hero-stat-val">24h</div>
-              <div className="calc-hero-stat-lbl">retorno garantido</div>
-            </div>
-          </div>
-        </div>
-
-        <div className="calc-body">
-
-          {/* ============ MODO TABS ============ */}
-          {(step === "form" || modo === "kits") && (
-            <div className="mode-tabs">
-              <button className={`mode-tab${modo === "metro" ? " active" : ""}`} onClick={() => { setModo("metro"); setStep("form"); }}>
-                <IcInline d={<><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></>} w={13} /> Simular por m²
-              </button>
-              <button className={`mode-tab${modo === "kits" ? " active" : ""}`} onClick={() => { setModo("kits"); setKitStep("lista"); }}>
-                <IcInline d={<><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></>} w={13} /> Kits de Casa
-              </button>
-            </div>
-          )}
-
-          {/* ============ MODO KITS ============ */}
-          {modo === "kits" && kitStep === "lista" && (
-            <div>
-              <div className="calc-card" style={{ paddingBottom: 8 }}>
-                <h1 className="calc-title">Kits de Casa prontos</h1>
-                <p className="calc-subtitle">Escolha um modelo e veja o orçamento completo de materiais em segundos</p>
-              </div>
-              <div className="kit-grid">
-                {KITS.map(kit => {
-                  const items = calcKitDinamico(kit);
-                  const total = items.reduce((s, i) => s + i.total, 0);
-                  return (
-                    <div key={kit.id} className="kit-card">
-                      <div className="kit-tag" style={{ background: kit.tagCor }}>{kit.tag}</div>
-                      <div className="kit-emoji">
-                        <IcInline d={<><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></>} w={28} c={kit.tagCor} />
-                      </div>
-                      <div className="kit-name">{kit.nome}</div>
-                      <div className="kit-desc">{kit.descricao}</div>
-                      <div className="kit-meta">
-                        <span className="kit-chip">{kit.area} m²</span>
-                        <span className="kit-chip">{kit.quartos} qts</span>
-                        <span className="kit-chip">{kit.banheiros} ban</span>
-                        <span className="kit-chip">{kit.pavs}P</span>
-                      </div>
-                      <div className="kit-price-label">Materiais a partir de</div>
-                      <div className="kit-price">{fmtR(items.filter(i => !["Projetos e Engenharia","Mão de Obra"].includes(i.categoria)).reduce((s,i)=>s+i.total,0))}</div>
-                      <button className="kit-btn" onClick={() => selecionarKit(kit)}>Calcular →</button>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {modo === "kits" && kitStep === "result" && kitSel && (
-            <div>
-              <span className="back-link" onClick={() => setKitStep("lista")}>← Voltar aos modelos</span>
-              <div className="kit-result-banner">
-                <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 12, marginBottom: 16 }}>
-                  <div>
-                    <div style={{ fontSize: 10, opacity: .6, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 4 }}>Kit selecionado</div>
-                    <div style={{ fontSize: 22, fontWeight: 900, marginBottom: 2 }}>{kitSel.nome}</div>
-                    <div style={{ fontSize: 13, opacity: .7 }}>{kitSel.area} m² · {kitSel.pavs} pav. · {kitSel.padrao}</div>
-                  </div>
-                  <div style={{ textAlign: "right" }}>
-                    <div style={{ fontSize: 10, opacity: .6, letterSpacing: 1, textTransform: "uppercase", marginBottom: 2 }}>Total incluído</div>
-                    <div style={{ fontSize: 32, fontWeight: 900, letterSpacing: -1 }}>{fmtR(totalAtivo)}</div>
-                  </div>
-                </div>
-                <div className="kit-toggles">
-                  {CATS_OPCIONAIS_KIT.map(cat => {
-                    const sub = kitItems.filter(i => i.categoria === cat).reduce((s,i) => s+i.total, 0);
-                    const ativo = catsAtivas[cat];
-                    return (
-                      <button key={cat} onClick={() => toggleCatKit(cat)} className="kit-toggle-btn" style={{
-                        border: `1px solid ${ativo ? "rgba(255,255,255,.4)" : "rgba(255,255,255,.15)"}`,
-                        background: ativo ? "rgba(255,255,255,.15)" : "rgba(0,0,0,.2)",
-                        color: ativo ? "#fff" : "rgba(255,255,255,.45)",
-                      }}>
-                        <IcInline d={ativo ? <><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></> : <><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>} w={12} c={ativo ? "#fff" : "rgba(255,255,255,.45)"} />
-                        <span>{cat}</span>
-                        <span style={{ opacity: .7, fontSize: 11 }}>{fmtR(sub)}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-                <div className="kit-breakdown">
-                  {[["Só materiais", totalSoMateriais],["+Projetos", totalComProjetos],["Obra completa", totalCompleto]].map(([label, val]) => (
-                    <div key={label} className="kit-breakdown-item">
-                      <div className="kit-breakdown-label">{label}</div>
-                      <div className="kit-breakdown-val">{fmtR(val)}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <button className="calc-btn" style={{ marginTop: 4 }} onClick={() => { setNome(""); setWhatsapp(""); setEmail(""); setKitStep("contact"); window.scrollTo({top:0,behavior:"smooth"}); }}>
-                Solicitar orçamento completo
-              </button>
-            </div>
-          )}
-
-          {modo === "kits" && kitStep === "contact" && (
-            <div>
-              <span className="back-link" onClick={() => setKitStep("result")}>← Voltar ao resultado</span>
-              <div className="calc-card">
-                <div className="cta-heading">Solicitar orçamento — {kitSel?.nome}</div>
-                <p className="cta-sub">Preencha abaixo e nossa equipe entra em contato em até 24h com proposta detalhada.</p>
-                <form onSubmit={handleKitContact}>
-                  <label className="calc-label">Nome completo</label>
-                  <input className="calc-input" type="text" placeholder="Seu nome" value={nome} onChange={e => setNome(e.target.value)} required />
-                  <label className="calc-label">WhatsApp</label>
-                  <input className="calc-input" type="tel" placeholder="(11) 99999-9999" value={whatsapp} onChange={e => setWhatsapp(applyPhoneMask(e.target.value))} required />
-                  <label className="calc-label">E-mail <span style={{ color: "#888", fontWeight: 400 }}>(opcional)</span></label>
-                  <input className="calc-input" type="email" placeholder="seu@email.com" value={email} onChange={e => setEmail(e.target.value)} />
-                  {sendError && <p className="error-msg">{sendError}</p>}
-                  <button className="calc-btn" type="submit" disabled={sending}>{sending ? "Enviando..." : "Receber proposta grátis"}</button>
-                </form>
-              </div>
-            </div>
-          )}
-
-          {modo === "kits" && kitStep === "success" && (
-            <div className="calc-card">
-              <div className="success-icon">
-                <IcInline d={<><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></>} w={48} c="#3f7a4b" />
-              </div>
-              <div className="success-title">Recebemos seu contato!</div>
-              <p className="success-msg">Nossa equipe vai entrar em contato em até 24h pelo WhatsApp <strong>{whatsapp}</strong> com a proposta do kit <strong>{kitSel?.nome}</strong>.</p>
-              <button className="btn-outline" onClick={() => { setModo("kits"); setKitStep("lista"); setKitSel(null); setKitItems(null); }}>Ver outros modelos</button>
-            </div>
-          )}
-
-          {/* ============ STEP: FORM ============ */}
-          {modo === "metro" && step === "form" && (
-            <div className="calc-card">
-              <h1 className="calc-title">Calcule o custo da sua obra</h1>
-              <p className="calc-subtitle">Compare Steel Frame vs Alvenaria em segundos</p>
-
-              <form onSubmit={handleCalculate}>
-                <label className="calc-label">Área construída (m²)</label>
-                <input
-                  className="calc-input"
-                  type="number"
-                  min={40}
-                  max={2000}
-                  value={area}
-                  onChange={(e) => setArea(Number(e.target.value))}
-                  required
-                />
-
-                <label className="calc-label">Pavimentos</label>
-                <select
-                  className="calc-select"
-                  value={pavimentos}
-                  onChange={(e) => setPavimentos(e.target.value)}
-                >
-                  <option>Térreo</option>
-                  <option>2 pavimentos</option>
-                  <option>3 pavimentos</option>
-                </select>
-
-                <label className="calc-label">Padrão de acabamento</label>
-                <div className="padrao-grid">
-                  {PADROES.map((p) => (
-                    <div
-                      key={p.key}
-                      className={`padrao-card${padrao === p.key ? " selected" : ""}`}
-                      onClick={() => setPadrao(p.key)}
-                    >
-                      <div className="padrao-card-title">{p.title}</div>
-                      <div className="padrao-card-desc">{p.desc}</div>
-                    </div>
-                  ))}
-                </div>
-
-                <label className="calc-label">Cidade</label>
-                <input
-                  className="calc-input"
-                  type="text"
-                  placeholder="Ex: São Paulo – SP"
-                  value={cidade}
-                  onChange={(e) => setCidade(e.target.value)}
-                />
-
-                <button className="calc-btn" type="submit">
-                  Calcular agora →
-                </button>
-              </form>
-            </div>
-          )}
-
-          {/* ============ STEP: RESULT ============ */}
-          {modo === "metro" && step === "result" && (
-            <>
-              <span className="back-link" onClick={handleReset}>← Nova simulação</span>
-
-              {/* Lead gate modal — shown OVER the blurred result until unlocked */}
-              {!leadUnlocked && (
-                <div style={{ position: "fixed", inset: 0, zIndex: 300, background: "rgba(38,35,31,.7)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "16px" }}>
-                  <div style={{ background: "#fff", borderRadius: 16, padding: "32px 28px", maxWidth: 420, width: "100%", boxShadow: "0 24px 60px rgba(0,0,0,.25)" }}>
-                    <div style={{ textAlign: "center", marginBottom: 8 }}>
-                      <IcInline d={<><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></>} w={32} c="#3f7a4b" />
-                    </div>
-                    <div className="cta-heading" style={{ textAlign: "center", marginBottom: 6 }}>Sua estimativa está pronta!</div>
-                    <p className="cta-sub" style={{ textAlign: "center", marginBottom: 24 }}>Informe seus dados para liberar o resultado completo. Nossa equipe também entra em contato em até 24h.</p>
-                    <form onSubmit={handleContact}>
-                      <label className="calc-label">Nome completo</label>
-                      <input
-                        className="calc-input"
-                        type="text"
-                        placeholder="Seu nome"
-                        value={nome}
-                        onChange={(e) => setNome(e.target.value)}
-                        required
-                      />
-                      <label className="calc-label">WhatsApp</label>
-                      <input
-                        className="calc-input"
-                        type="tel"
-                        placeholder="(11) 99999-9999"
-                        value={whatsapp}
-                        onChange={(e) => setWhatsapp(e.target.value)}
-                        required
-                      />
-                      <label className="calc-label">E-mail <span style={{color:"#888",fontWeight:400}}>(opcional)</span></label>
-                      <input
-                        className="calc-input"
-                        type="email"
-                        placeholder="seu@email.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                      />
-                      {sendError && <p className="error-msg">{sendError}</p>}
-                      <button className="calc-btn" type="submit" disabled={sending}>
-                        {sending ? "Enviando..." : "Ver minha estimativa →"}
-                      </button>
-                    </form>
-                  </div>
-                </div>
-              )}
-
-              {/* Result — blurred until lead is captured */}
-              <div className="calc-card" style={!leadUnlocked ? { filter: "blur(6px)", userSelect: "none", pointerEvents: "none" } : {}}>
-                <p className="result-headline">Sua estimativa está pronta!</p>
-
-                {/* Steel Frame */}
-                <div className="result-card sf">
-                  <div className="result-card-header">
-                    <span className="result-card-name">Steel Frame</span>
-                    <span className="result-badge">Recomendado</span>
-                  </div>
-                  <div className="result-faixa-label">Faixa de investimento</div>
-                  <div className="result-faixa">{formatBRL(sfMin)} – {formatBRL(sfMax)}</div>
-                  <div className="result-prazo">Prazo médio: {PRAZOS_SF[padrao]}</div>
-                  <div className="result-tags">
-                    <span className="result-tag green"><IcInline d={<path d="M20 6 9 17l-5-5"/>} w={11} c="#3f7a4b" /> Mais leve</span>
-                    <span className="result-tag green"><IcInline d={<path d="M20 6 9 17l-5-5"/>} w={11} c="#3f7a4b" /> Menos resíduos</span>
-                    <span className="result-tag green"><IcInline d={<path d="M20 6 9 17l-5-5"/>} w={11} c="#3f7a4b" /> Alta precisão</span>
-                  </div>
-                </div>
-
-                {/* Alvenaria */}
-                <div className="result-card al">
-                  <div className="result-card-header">
-                    <span className="result-card-name">Alvenaria Convencional</span>
-                  </div>
-                  <div className="result-faixa-label">Faixa de investimento</div>
-                  <div className="result-faixa">{formatBRL(alMin)} – {formatBRL(alMax)}</div>
-                  <div className="result-prazo">Prazo médio: 8–14 meses</div>
-                  <div className="result-tags">
-                    <span className="result-tag">• Método convencional</span>
-                  </div>
-                </div>
-
-                {speedPct > 0 && (
-                  <div className="comparison-note">
-                    <IcInline d={<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>} w={13} c="#c0892d" /> Steel Frame pode ser até <strong>{speedPct}% mais rápido</strong> que a alvenaria convencional
-                  </div>
-                )}
-              </div>
-            </>
-          )}
-
-          {/* ============ STEP: SUCCESS ============ */}
-          {modo === "metro" && step === "success" && (
-            <div className="calc-card">
-              <div className="success-icon">
-                <IcInline d={<><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></>} w={48} c="#3f7a4b" />
-              </div>
-              <div className="success-title">Recebemos seu contato!</div>
-              <p className="success-msg">
-                Nossa equipe vai entrar em contato em até 24h pelo WhatsApp <strong>{whatsapp}</strong>.
-              </p>
-              <button className="btn-outline" onClick={handleReset}>
-                Fazer outra simulação
-              </button>
-            </div>
-          )}
-
-        </div>
-
-        {/* SEO content — visível para crawlers, discreto visualmente */}
-        <section style={{ maxWidth: 860, margin: "0 auto", padding: "48px 24px 64px", color: "#8c847a", fontSize: 14, lineHeight: 1.8 }}>
-          <h2 style={{ fontSize: 20, fontWeight: 700, color: "#26231f", marginBottom: 16 }}>Quanto custa construir uma casa em Steel Frame?</h2>
-          <p>O custo de construção em <strong>Steel Frame</strong> varia entre <strong>R$ 3.000 e R$ 6.000 por m²</strong>, dependendo do padrão de acabamento escolhido. Uma residência de <strong>120 m² no padrão médio</strong> fica em torno de R$ 420.000 a R$ 480.000 completa — incluindo estrutura LSF, fechamentos, cobertura, instalações e mão de obra especializada.</p>
-          <h3 style={{ fontSize: 16, fontWeight: 700, color: "#26231f", margin: "24px 0 8px" }}>Steel Frame vs Alvenaria: qual é mais barato?</h3>
-          <p>O Steel Frame costuma ter custo de materiais <strong>10 a 20% superior</strong> à alvenaria convencional, porém o prazo de obra é até <strong>40% menor</strong> — o que reduz o custo financeiro e libera a família para morar mais cedo. Obras em alvenaria de 120 m² levam de 12 a 18 meses; em Steel Frame, de <strong>5 a 8 meses</strong>.</p>
-          <h3 style={{ fontSize: 16, fontWeight: 700, color: "#26231f", margin: "24px 0 8px" }}>O que está incluído no orçamento de Steel Frame?</h3>
-          <p>Um orçamento completo contempla: <strong>estrutura metálica LSF</strong> (Light Steel Framing), painéis de OSB ou drywall, manta impermeabilizante, fechamentos internos e externos, cobertura com telha shingle ou metálica, esquadrias, instalações hidráulicas e elétricas, e mão de obra especializada. Use nossa calculadora acima para obter uma estimativa personalizada gratuitamente.</p>
-          <h3 style={{ fontSize: 16, fontWeight: 700, color: "#26231f", margin: "24px 0 8px" }}>Perguntas frequentes sobre Steel Frame</h3>
-          <p><strong>Steel Frame é seguro e resistente?</strong> Sim. A estrutura de aço galvanizado tem vida útil superior a 50 anos, suporta ventos fortes e é antissísmica. É o sistema construtivo mais usado nos EUA, Canadá e Austrália.</p>
-          <p style={{ marginTop: 12 }}><strong>Posso financiar uma casa em Steel Frame?</strong> Sim. O sistema é aceito pela Caixa Econômica Federal e pelos principais bancos, incluindo financiamento MCMV e crédito imobiliário convencional.</p>
-          <p style={{ marginTop: 12 }}><strong>Como receber um orçamento personalizado?</strong> Preencha o simulador acima com a área e o padrão desejado. Nossa equipe entra em contato em até 24h com uma proposta detalhada, sem compromisso.</p>
         </section>
+
+        {/* ── FOOTER ───────────────────────────────────────────────────────── */}
+        <footer className="cp-footer">
+          © 2026 Stick Frame Sistemas Construtivos · Santo André/SP · Política de privacidade
+        </footer>
 
       </div>
     </>
