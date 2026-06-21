@@ -112,9 +112,14 @@ export async function adicionarArquivos(obraId, arquivos, empresaId) {
     path: row.storage_path,
   }));
 }
-export async function marcarCienteArquivo(id) {
-  const { error } = await sb.rpc("ged_marcar_ciente", { p_arquivo_id: id });
-  if (error) throw error;
+export async function marcarCienteArquivo(id, userId) {
+  // Fetch current array, append userId, update
+  const { data: arq, error: e1 } = await sb.from("arquivos").select("cientes_uids").eq("id", id).single();
+  if (e1) throw e1;
+  const arr = Array.isArray(arq?.cientes_uids) ? arq.cientes_uids : [];
+  if (arr.includes(userId)) return; // already marked
+  const { error: e2 } = await sb.from("arquivos").update({ cientes_uids: [...arr, userId] }).eq("id", id);
+  if (e2) throw e2;
 }
 
 export async function deletarArquivo(id, storagePath) {

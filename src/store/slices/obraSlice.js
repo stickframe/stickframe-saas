@@ -173,7 +173,7 @@ export const createObraSlice = (set, get) => ({
   },
 
   marcarCiente: async (obraId, arqId, userId) => {
-    await marcarCienteArquivo(arqId);
+    await marcarCienteArquivo(arqId, userId);
     set((s) => ({
       arquivos: {
         ...s.arquivos,
