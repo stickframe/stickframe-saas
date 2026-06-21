@@ -338,10 +338,6 @@ export default function OrcamentoTecnico() {
     } catch { /* storage cheia */ }
   }, [estado, cubManual, area, areaMolhada, pavimentos, padrao, incluiMO, bdi, prazoMeses, selecoes, habilitados]);
 
-  useEffect(() => {
-    try { localStorage.setItem("sf_mat_sistema_v1", JSON.stringify(materiaisSistema)); } catch { /* */ }
-  }, [materiaisSistema]);
-
   const [usarPrecosVivos, setUsarPrecosVivos] = useState(true);
   const [precosVivos, setPrecosVivos]         = useState({});
   const [loadingPrecos, setLoadingPrecos]     = useState(false);
@@ -562,6 +558,9 @@ export default function OrcamentoTecnico() {
   const [materiaisSistema, setMateriaisSistema]     = useState(() => {
     try { return JSON.parse(localStorage.getItem("sf_mat_sistema_v1") || "{}"); } catch { return {}; }
   });
+  useEffect(() => {
+    try { localStorage.setItem("sf_mat_sistema_v1", JSON.stringify(materiaisSistema)); } catch { /* */ }
+  }, [materiaisSistema]);
   const [catPicker, setCatPicker]                   = useState(null);
   const [catSearch, setCatSearch]                   = useState("");
 
