@@ -597,20 +597,30 @@ function TabQuantitativos({ obraId }) {
     listarQuantitativos(obraId).then(data => setItens(data || [])).catch(() => setItens([]));
   }, [obraId]);
 
-  const total = itens.reduce((a,i) => a + (i.qtd||0)*(i.preco||0), 0);
+  // DB cols: descricao, categoria, unidade, quantidade, custo_unitario
+  const nom = (i) => i.descricao || i.item || "";
+  const cat = (i) => i.categoria || i.cat || "";
+  const un  = (i) => i.unidade   || i.un  || "";
+  const qtd = (i) => Number(i.quantidade   ?? i.qtd  ?? 0);
+  const preco = (i) => Number(i.custo_unitario ?? i.preco ?? 0);
+
+  const total = itens.reduce((a,i) => a + qtd(i)*preco(i), 0);
 
   function gerarId() { return Math.random().toString(36).slice(2,9); }
   function fmtR(v) { return 'R$ ' + (v||0).toLocaleString('pt-BR',{minimumFractionDigits:2}); }
 
   async function salvar() {
     if(!form.item.trim()) return;
-    const item = { item: form.item, cat: form.cat, un: form.un, qtd: parseFloat(form.qtd)||0, preco: parseFloat((form.preco||'0').replace(',','.'))||0, obra_id: obraId };
+    const row = { descricao: form.item, categoria: form.cat, unidade: form.un,
+      quantidade: parseFloat(form.qtd)||0,
+      custo_unitario: parseFloat((form.preco||'0').replace(',','.'))||0,
+      obra_id: obraId };
     try {
       const { criarQuantitativo } = await import('../services/repositories/quantitativoRepository');
-      const novo = await criarQuantitativo(item);
-      setItens(prev => [...prev, novo || { ...item, id: gerarId() }]);
+      const novo = await criarQuantitativo(row);
+      setItens(prev => [...prev, novo || { ...row, id: gerarId() }]);
     } catch {
-      setItens(prev => [...prev, { ...item, id: gerarId() }]);
+      setItens(prev => [...prev, { ...row, id: gerarId() }]);
     }
     setModal(false);
     setForm({ item:'', cat:'Estrutura', un:'un', qtd:'', preco:'' });
@@ -626,12 +636,12 @@ function TabQuantitativos({ obraId }) {
 
   async function carregarTemplate() {
     const template = [
-      {item:'Montante 90mm 0,90',cat:'Estrutura',un:'un',qtd:0,preco:18.50},
-      {item:'Guia 90mm 0,90',cat:'Estrutura',un:'un',qtd:0,preco:16.40},
-      {item:'Placa Cimentícia 10mm',cat:'Fechamento',un:'m²',qtd:0,preco:42.00},
-      {item:'Lã de Vidro 50mm',cat:'Isolamento',un:'m²',qtd:0,preco:28.60},
-      {item:'Telha Shingle',cat:'Cobertura',un:'m²',qtd:0,preco:55.90},
-      {item:'Parafuso Auto-atarraxante',cat:'Fixação',un:'cx',qtd:0,preco:24.00},
+      {descricao:'Montante 90mm 0,90',categoria:'Estrutura',unidade:'un',quantidade:0,custo_unitario:18.50},
+      {descricao:'Guia 90mm 0,90',categoria:'Estrutura',unidade:'un',quantidade:0,custo_unitario:16.40},
+      {descricao:'Placa Cimentícia 10mm',categoria:'Fechamento',unidade:'m²',quantidade:0,custo_unitario:42.00},
+      {descricao:'Lã de Vidro 50mm',categoria:'Isolamento',unidade:'m²',quantidade:0,custo_unitario:28.60},
+      {descricao:'Telha Shingle',categoria:'Cobertura',unidade:'m²',quantidade:0,custo_unitario:55.90},
+      {descricao:'Parafuso Auto-atarraxante',categoria:'Fixação',unidade:'cx',quantidade:0,custo_unitario:24.00},
     ];
     try {
       const { criarQuantitativo } = await import('../services/repositories/quantitativoRepository');
@@ -682,12 +692,12 @@ function TabQuantitativos({ obraId }) {
               <tbody>
                 {itens.map(i => (
                   <tr key={i.id} style={{ borderBottom:'1px solid var(--line-2)' }}>
-                    <td style={{ padding:'11px 14px', fontSize:13.5, fontWeight:700, color:'var(--ink)' }}>{i.item}</td>
-                    <td style={{ padding:'11px 14px', fontSize:12.5, color:'var(--muted)' }}>{i.cat}</td>
-                    <td style={{ padding:'11px 14px', fontSize:12.5, color:'var(--muted)' }}>{i.un}</td>
-                    <td style={{ padding:'11px 14px', fontWeight:700, fontSize:15 }}>{i.qtd}</td>
-                    <td style={{ padding:'11px 14px', fontSize:14, color:'var(--ink-2)' }}>{fmtR(i.preco)}</td>
-                    <td style={{ padding:'11px 14px', fontSize:15, fontWeight:700, color:'var(--brick)' }}>{fmtR(i.qtd*i.preco)}</td>
+                    <td style={{ padding:'11px 14px', fontSize:13.5, fontWeight:700, color:'var(--ink)' }}>{nom(i)}</td>
+                    <td style={{ padding:'11px 14px', fontSize:12.5, color:'var(--muted)' }}>{cat(i)}</td>
+                    <td style={{ padding:'11px 14px', fontSize:12.5, color:'var(--muted)' }}>{un(i)}</td>
+                    <td style={{ padding:'11px 14px', fontWeight:700, fontSize:15 }}>{qtd(i)}</td>
+                    <td style={{ padding:'11px 14px', fontSize:14, color:'var(--ink-2)' }}>{fmtR(preco(i))}</td>
+                    <td style={{ padding:'11px 14px', fontSize:15, fontWeight:700, color:'var(--brick)' }}>{fmtR(qtd(i)*preco(i))}</td>
                     <td style={{ padding:'11px 14px', textAlign:'right' }}>
                       <button onClick={() => remover(i.id)}
                         style={{ padding:'5px 8px', background:'var(--surface-2)', border:'1px solid var(--line)', borderRadius:6, cursor:'pointer', color:'var(--neg,#a33327)', fontFamily:'inherit', fontSize:11, fontWeight:700 }}>
