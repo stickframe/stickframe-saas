@@ -362,18 +362,14 @@ export default function CalculadoraPublica() {
 
         /* NAV */
         .cp-nav {
-          background: rgba(244,241,236,.92);
-          backdrop-filter: blur(14px);
-          border-bottom: 1px solid var(--line);
-          height: 64px;
-          padding: 0 28px;
+          padding: 26px 28px;
           display: flex;
           align-items: center;
-          justify-content: space-between;
-          position: sticky; top: 0; z-index: 200;
+          justify-content: center;
+          position: relative;
         }
-        .cp-nav-logo { display: flex; align-items: center; gap: 9px; text-decoration: none; }
-        .cp-nav-wordmark { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 18px; letter-spacing: 2px; line-height: 1; }
+        .cp-nav-logo { display: flex; align-items: center; gap: 13px; text-decoration: none; }
+        .cp-nav-wordmark { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 28px; letter-spacing: 1.4px; line-height: 1; }
         .cp-nav-wordmark .w-stick { color: var(--ink); }
         .cp-nav-wordmark .w-frame { color: var(--brick); }
         .cp-nav-cta {
@@ -383,8 +379,13 @@ export default function CalculadoraPublica() {
           font-family: 'Hanken Grotesk', sans-serif;
           font-size: 13px; font-weight: 700; cursor: pointer;
           transition: background .15s;
+          position: absolute; right: 28px; top: 50%; transform: translateY(-50%);
         }
         .cp-nav-cta:hover { background: var(--brick-dk); }
+        @media (max-width: 560px) {
+          .cp-nav { flex-direction: column; gap: 14px; }
+          .cp-nav-cta { position: static; transform: none; }
+        }
 
         /* HERO */
         .cp-hero {
@@ -622,7 +623,11 @@ export default function CalculadoraPublica() {
         .cp-kit-btn:hover { background: var(--brick); color: #fff; }
 
         /* FAQ */
-        .cp-faq-section { max-width: 760px; margin: 0 auto; padding: 56px 20px; }
+        .cp-faq-section { max-width: 1100px; margin: 0 auto; padding: 56px 20px; }
+        .cp-faq-head { text-align: center; margin-bottom: 32px; }
+        .cp-acc-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+        @media (max-width: 760px) { .cp-acc-cols { grid-template-columns: 1fr; } }
+        .cp-acc-col { display: flex; flex-direction: column; gap: 12px; }
         .cp-faq-eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--brick); text-align: center; margin-bottom: 8px; }
         .cp-faq-h2 { font-family: 'Barlow Condensed', sans-serif; font-size: 36px; font-weight: 700; color: var(--ink); text-align: center; margin: 0 0 32px; }
         .cp-faq-item {
@@ -683,6 +688,30 @@ export default function CalculadoraPublica() {
         .cp-success-msg { font-size: 15px; color: var(--muted); text-align: center; line-height: 1.65; }
 
         /* FOOTER */
+        /* CTA BAND */
+        .cp-cta-wrap { padding: 8px 20px 56px; max-width: 1100px; margin: 0 auto; }
+        .cp-cta-band {
+          position: relative; overflow: hidden;
+          border-radius: 24px; padding: 46px 54px;
+          background: #232225; color: #fff;
+          display: flex; align-items: center; justify-content: space-between;
+          gap: 36px; flex-wrap: wrap;
+        }
+        .cp-cta-band::before {
+          content: ""; position: absolute; inset: 0;
+          background: radial-gradient(680px 320px at 88% -20%, rgba(152,25,21,.42), transparent 62%);
+          pointer-events: none;
+        }
+        .cp-cta-band > * { position: relative; z-index: 1; }
+        .cp-ct-eyebrow { font-size: 11.5px; font-weight: 800; letter-spacing: 1.4px; text-transform: uppercase; color: #e0726d; }
+        .cp-cta-band h2 { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: clamp(30px,3.2vw,42px); line-height: 1.02; margin-top: 10px; max-width: 16em; }
+        .cp-cta-band p { font-size: 14.5px; color: rgba(255,255,255,.6); margin-top: 10px; max-width: 30em; line-height: 1.55; }
+        .cp-ct-act { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; flex-shrink: 0; }
+        .cp-btn-white { background: #fff; color: var(--brick); height: 56px; padding: 0 30px; border-radius: 14px; font-family: 'Hanken Grotesk', sans-serif; font-weight: 700; font-size: 16.5px; display: inline-flex; align-items: center; gap: 10px; border: none; cursor: pointer; transition: .16s; box-shadow: 0 12px 30px -12px rgba(0,0,0,.5); }
+        .cp-btn-white:hover { background: #f0ece6; transform: translateY(-1px); }
+        .cp-ct-note { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 600; color: rgba(255,255,255,.5); }
+        @media (max-width: 680px) { .cp-cta-band { padding: 34px 28px; flex-direction: column; align-items: flex-start; } }
+
         .cp-footer { padding: 28px 20px; text-align: center; font-size: 12px; color: var(--muted); border-top: 1px solid var(--line); background: var(--surface); }
 
         /* Misc */
@@ -697,8 +726,8 @@ export default function CalculadoraPublica() {
             <img
               src={empresaBranding?.logo_url || "/logo-transparente-122x122.png"}
               alt="Stick Frame"
-              width={30}
-              height={30}
+              width={42}
+              height={42}
               style={{ objectFit: "contain" }}
             />
             {!empresaBranding && (
@@ -966,23 +995,34 @@ export default function CalculadoraPublica() {
 
         {/* ── FAQ ──────────────────────────────────────────────────────────── */}
         <section className="cp-faq-section">
-          <div className="cp-faq-eyebrow">Tire suas dúvidas</div>
-          <h2 className="cp-faq-h2">Perguntas frequentes sobre Steel Frame</h2>
-          {FAQ_ITEMS.map((item, i) => (
-            <div key={i} className={`cp-faq-item${faqOpen === i ? " open" : ""}`}>
-              <div className="cp-faq-header" onClick={() => setFaqOpen(faqOpen === i ? -1 : i)}>
-                <span className="cp-faq-q">{item.q}</span>
-                <span className="cp-faq-toggle">
-                  <Ic p={ICONS.chevron} s={16} />
-                </span>
+          <div className="cp-faq-head">
+            <div className="cp-faq-eyebrow">Tire suas dúvidas</div>
+            <h2 className="cp-faq-h2">Perguntas frequentes sobre Steel Frame</h2>
+          </div>
+          <div className="cp-acc-cols">
+            {[[0,1,2],[3,4,5]].map((col, ci) => (
+              <div className="cp-acc-col" key={ci}>
+                {col.map((i) => {
+                  const item = FAQ_ITEMS[i];
+                  return (
+                    <div key={i} className={`cp-faq-item${faqOpen === i ? " open" : ""}`}>
+                      <div className="cp-faq-header" onClick={() => setFaqOpen(faqOpen === i ? -1 : i)}>
+                        <span className="cp-faq-q">{item.q}</span>
+                        <span className="cp-faq-toggle">
+                          <Ic p={ICONS.chevron} s={16} />
+                        </span>
+                      </div>
+                      <div className="cp-faq-body">
+                        <div className="cp-faq-inner">
+                          <p className="cp-faq-a">{item.a}</p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-              <div className="cp-faq-body">
-                <div className="cp-faq-inner">
-                  <p className="cp-faq-a">{item.a}</p>
-                </div>
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </section>
 
         <div className="cp-divider" />
@@ -1035,6 +1075,25 @@ export default function CalculadoraPublica() {
             )}
           </div>
         </section>
+
+        {/* ── BANDA CTA ────────────────────────────────────────────────────── */}
+        <div className="cp-cta-wrap">
+          <div className="cp-cta-band">
+            <div>
+              <span className="cp-ct-eyebrow">Comece agora · grátis</span>
+              <h2>Pronto para descobrir o custo da sua casa?</h2>
+              <p>Simule em segundos e receba uma proposta detalhada da nossa equipe em até 24h. Sem cartão, sem compromisso.</p>
+            </div>
+            <div className="cp-ct-act">
+              <button className="cp-btn-white" onClick={handleSimCTA}>
+                <Ic p={ICONS.zap} s={18} /> Simular agora
+              </button>
+              <span className="cp-ct-note">
+                <Ic p={ICONS.check} s={14} /> Retorno garantido em 24h
+              </span>
+            </div>
+          </div>
+        </div>
 
         {/* ── FOOTER ───────────────────────────────────────────────────────── */}
         <footer className="cp-footer">
