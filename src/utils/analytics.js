@@ -1,7 +1,7 @@
 // Google Analytics 4 — StickFrame
 // Não rastrear dados sensíveis: sem senhas, dados pessoais ou informações privadas.
 
-const GA_ID = import.meta.env.VITE_GA_ID;
+const GA_ID = import.meta.env.VITE_GA_ID || "G-WSMBGMCHC5";
 
 function gtag(...args) {
   if (typeof window === "undefined") return;
