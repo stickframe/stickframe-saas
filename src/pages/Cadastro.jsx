@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { sb } from "../services/supabase";
 import { salvarOrigemLead, obterOrigemLead } from "../utils/leadOrigem";
+import { trackPageView, analytics } from "../utils/analytics";
 
 const LOGO = "https://gpzmglcxmbboxxogbibq.supabase.co/storage/v1/object/public/arquivos/logos/34ec14d3-02fc-4b0a-8040-67f7a739394d/logo.jpg?t=1780161932174";
 
@@ -30,7 +31,11 @@ export default function Cadastro() {
   const planKey = searchParams.get("plan");
   const planInfo = PLAN_INFO[planKey] || null;
 
-  useEffect(() => { salvarOrigemLead(); }, []);
+  useEffect(() => {
+    salvarOrigemLead();
+    trackPageView("/cadastro");
+    analytics.signupStarted();
+  }, []);
 
   const [nomeEmpresa, setNomeEmpresa] = useState("");
   const [nomeUsuario, setNomeUsuario] = useState("");
@@ -54,6 +59,7 @@ export default function Cadastro() {
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
+      analytics.signupCompleted();
       setSucesso(true);
     } catch (err) {
       setErro(err.message || "Erro ao criar conta. Tente novamente.");

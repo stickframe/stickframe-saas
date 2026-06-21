@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect } from "react";
+import { initGA, trackPageView } from "./utils/analytics";
 import { setEmpresaId } from "./services/supabase";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import "./styles/globals.css";
@@ -144,6 +145,7 @@ function AuthenticatedApp() {
     if (window.location.pathname !== path) {
       window.history.pushState(null, "", path);
     }
+    trackPageView(path);
   }, [activePage]);
 
   useEffect(() => {
@@ -218,6 +220,11 @@ function GlobalHotkeys() {
 }
 
 export default function App() {
+  useEffect(() => {
+    initGA();
+    trackPageView(window.location.pathname);
+  }, []);
+
   return (
     <BrowserRouter>
       <ToastProvider>

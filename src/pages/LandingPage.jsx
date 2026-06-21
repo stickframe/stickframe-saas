@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { salvarOrigemLead } from "../utils/leadOrigem";
+import { trackPageView, analytics } from "../utils/analytics";
 
 // ─── Icons ───────────────────────────────────────────────────────────────────
 const Ic = {
@@ -328,14 +329,27 @@ export default function LandingPage() {
 
   useEffect(() => {
     salvarOrigemLead();
+    trackPageView("/");
     const fn = () => setSolid(window.scrollY > 24);
     window.addEventListener("scroll", fn, { passive: true });
-    return () => window.removeEventListener("scroll", fn);
+
+    const featEl = document.getElementById("funcionalidades") || document.getElementById("features");
+    let tracked = false;
+    const io = featEl ? new IntersectionObserver(([e]) => {
+      if (e.isIntersecting && !tracked) { tracked = true; analytics.viewFeatures(); }
+    }, { threshold: 0.3 }) : null;
+    if (io && featEl) io.observe(featEl);
+
+    return () => {
+      window.removeEventListener("scroll", fn);
+      if (io) io.disconnect();
+    };
   }, []);
 
   function handleDemo(e) {
     e.preventDefault();
-    // Redireciona para WhatsApp com dados preenchidos
+    analytics.requestDemo("landing_form");
+    analytics.clickWhatsapp("demo_form");
     const msg = encodeURIComponent(
       `Olá! Quero uma demonstração do StickFrame.\nNome: ${form.nome}\nE-mail: ${form.email}\nWhatsApp: ${form.whatsapp}\nObras/ano: ${form.obras}`
     );
@@ -598,7 +612,7 @@ export default function LandingPage() {
                     </li>
                   ))}
                 </ul>
-                <a href={pl.href} className={`btn${pl.hot ? " btn-brick" : " btn-outline"}`}>
+                <a href={pl.href} className={`btn${pl.hot ? " btn-brick" : " btn-outline"}`} onClick={() => analytics.clickSignup(`pricing_${pl.key}`)}>
                   {pl.cta}
                 </a>
               </div>

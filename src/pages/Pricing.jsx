@@ -1,4 +1,6 @@
 import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import { trackPageView, analytics } from "../utils/analytics";
 
 const LOGO = "https://gpzmglcxmbboxxogbibq.supabase.co/storage/v1/object/public/arquivos/logos/34ec14d3-02fc-4b0a-8040-67f7a739394d/logo.jpg?t=1780161932174";
 
@@ -78,6 +80,8 @@ const PLANOS = [
 export default function Pricing() {
   const navigate = useNavigate();
 
+  useEffect(() => { trackPageView("/pricing"); }, []);
+
   // Logado → /checkout (ativa trial/assinatura na conta atual).
   // Deslogado → /cadastro com o plano na URL.
   async function irParaPlano(planKey) {
@@ -144,7 +148,7 @@ export default function Pricing() {
 
             <a
               href={p.ctaHref || "#"}
-              onClick={p.checkoutPlan ? (e) => { e.preventDefault(); irParaPlano(p.checkoutPlan); } : undefined}
+              onClick={p.checkoutPlan ? (e) => { e.preventDefault(); analytics.clickSignup(`pricing_${p.checkoutPlan}`); irParaPlano(p.checkoutPlan); } : () => analytics.clickSignup(`pricing_${p.key || "free"}`)}
               style={{
                 display: "block", textAlign: "center", padding: "12px 0",
                 background: p.destaque ? "#981915" : "transparent",

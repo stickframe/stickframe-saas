@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import useAppStore from "../store/useAppStore";
 import { sb } from "../services/supabase";
+import { trackPageView } from "../utils/analytics";
 import {
   isWebAuthnAvailable,
   hasSavedCredential,
@@ -76,6 +77,7 @@ export default function LoginScreen() {
   const [empresaBranding, setEmpresaBranding] = useState(null);
 
   useEffect(() => {
+    trackPageView("/login");
     injectStyle();
     const token = new URLSearchParams(window.location.search).get("e");
     if (!token) return;
