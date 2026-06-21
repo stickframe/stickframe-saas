@@ -1058,7 +1058,11 @@ export default function Orcamentos() {
   const [preOrcamentos, setPreOrcamentos] = useState([]);
   const [preOrcAtivo, setPreOrcAtivo] = useState(null); // ID do lead sendo convertido
   const [estimativo, setEstimativoRaw] = useState(() => {
-    try { return JSON.parse(localStorage.getItem("sf_estimativo") || "null"); } catch { return null; }
+    try {
+      const v = JSON.parse(localStorage.getItem("sf_estimativo") || "null");
+      if (v && Array.isArray(v.itens)) return v;
+      return null;
+    } catch { return null; }
   });
   const [estimativoAberto, setEstimativoAberto] = useState(false);
   const [memorialOrcamento, setMemorialOrcamento] = useState(null);
@@ -1677,10 +1681,10 @@ export default function Orcamentos() {
                     {estimativo.itens.map((it, i) => (
                       <tr key={i} style={{ borderTop: `1px solid ${C.border}` }}>
                         <td style={{ padding: "6px 0", color: C.text }}>{it.item}</td>
-                        <td style={{ textAlign: "right", padding: "6px 0", fontFamily: "monospace" }}>{it.qtd.toFixed(2)}</td>
+                        <td style={{ textAlign: "right", padding: "6px 0", fontFamily: "monospace" }}>{(it.qtd ?? 0).toFixed(2)}</td>
                         <td style={{ textAlign: "right", padding: "6px 0", color: C.muted }}>{it.un}</td>
-                        <td style={{ textAlign: "right", padding: "6px 0", fontFamily: "monospace" }}>{it.precoUnit.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</td>
-                        <td style={{ textAlign: "right", padding: "6px 0", fontWeight: 700 }}>{it.total.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</td>
+                        <td style={{ textAlign: "right", padding: "6px 0", fontFamily: "monospace" }}>{(it.precoUnit ?? 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</td>
+                        <td style={{ textAlign: "right", padding: "6px 0", fontWeight: 700 }}>{(it.total ?? it.preco ?? 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</td>
                       </tr>
                     ))}
                   </tbody>
