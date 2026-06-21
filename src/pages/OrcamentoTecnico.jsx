@@ -321,6 +321,10 @@ export default function OrcamentoTecnico() {
     } catch { /* storage cheia */ }
   }, [estado, cubManual, area, areaMolhada, pavimentos, padrao, incluiMO, bdi, prazoMeses, selecoes, habilitados]);
 
+  useEffect(() => {
+    try { localStorage.setItem("sf_mat_sistema_v1", JSON.stringify(materiaisSistema)); } catch { /* */ }
+  }, [materiaisSistema]);
+
   const [usarPrecosVivos, setUsarPrecosVivos] = useState(true);
   const [precosVivos, setPrecosVivos]         = useState({});
   const [loadingPrecos, setLoadingPrecos]     = useState(false);
@@ -386,12 +390,19 @@ export default function OrcamentoTecnico() {
       totalMateriais += totalSistema;
       if (incluiMO) totalMO += mo;
 
+      const matsExtra = (materiaisSistema[sistema.id] || []).map((m) => {
+        const t = m.qtd * m.preco;
+        totalSistema += t;
+        totalMateriais += t;
+        return { nome: m.nome, un: m.un, qtd: m.qtd, preco: m.preco, precoUsado: m.preco, total: t, extra: true };
+      });
+
       breakdown.push({
         id: sistema.id,
         label: sistema.label,
         icon: sistema.icon,
         opcaoLabel: opcaoSel?.label,
-        itensCalc,
+        itensCalc: [...itensCalc, ...matsExtra],
         totalMat: totalSistema,
         totalMO: incluiMO ? mo : 0,
       });
@@ -531,6 +542,28 @@ export default function OrcamentoTecnico() {
   const [comparativoVersoes, setComparativoVersoes] = useState(null);
   const [itensAdicionais, setItensAdicionais]       = useState([]);
   const [showCatalogo, setShowCatalogo]             = useState(false);
+  const [materiaisSistema, setMateriaisSistema]     = useState(() => {
+    try { return JSON.parse(localStorage.getItem("sf_mat_sistema_v1") || "{}"); } catch { return {}; }
+  });
+  const [catPicker, setCatPicker]                   = useState(null);
+  const [catSearch, setCatSearch]                   = useState("");
+
+  const SISTEMA_CATEGORIAS = {
+    fundacao:           [],
+    estrutura:          ["Steel Framing"],
+    fechamento_externo: ["Vedação Externa", "Revestimentos"],
+    fechamento_interno: ["Drywall"],
+    isolamento:         ["Termoacústico"],
+    cobertura:          ["Telhado Shingle"],
+    estrutura_cobertura:["Steel Framing"],
+    fixacao:            ["Ferramentas"],
+    impermeabilizacao:  ["Vedação Externa"],
+    eletrica:           [],
+    hidraulica:         [],
+    gas:                [],
+    esquadrias:         [],
+    revestimentos:      ["Pisos", "Revestimentos", "Forros"],
+  };
 
   const gerarComparativoVersoes = () => {
     const estSistema = SISTEMAS_SF.find((s) => s.id === "estrutura");
@@ -1435,6 +1468,100 @@ export default function OrcamentoTecnico() {
                   {s.opcoes.find((o) => o.id === selecoes[s.id])?.desc}
                 </p>
               )}
+
+              {/* Materiais extras do catálogo para este sistema */}
+              {habilitados[s.id] && (() => {
+                const cats = SISTEMA_CATEGORIAS[s.id] || [];
+                const mats = materiaisSistema[s.id] || [];
+                const isOpen = catPicker === s.id;
+                const catProds = cats.length > 0
+                  ? CATALOGO_PRODUTOS.filter((p) => cats.includes(p.categoria))
+                  : CATALOGO_PRODUTOS;
+                const filtered = catSearch
+                  ? catProds.filter((p) => p.nome.toLowerCase().includes(catSearch.toLowerCase()) || (p.codigo || "").toLowerCase().includes(catSearch.toLowerCase()))
+                  : catProds;
+
+                return (
+                  <div style={{ marginTop: 6 }}>
+                    {mats.length > 0 && (
+                      <div style={{ marginBottom: 6 }}>
+                        {mats.map((m, mi) => (
+                          <div key={mi} style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 0", borderBottom: `1px solid ${C.border}`, fontSize: 12 }}>
+                            <span style={{ flex: 1, color: C.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.nome}</span>
+                            <span style={{ color: C.muted, fontSize: 11 }}>{m.un}</span>
+                            <input type="number" min={1} value={m.qtd}
+                              onChange={(e) => {
+                                const qtd = Math.max(1, Number(e.target.value) || 1);
+                                setMateriaisSistema(prev => ({
+                                  ...prev,
+                                  [s.id]: prev[s.id].map((x, xi) => xi === mi ? { ...x, qtd } : x),
+                                }));
+                              }}
+                              style={{ width: 46, padding: "3px 5px", border: `1px solid ${C.border}`, borderRadius: 5, fontSize: 12, textAlign: "center", fontFamily: "inherit" }}
+                            />
+                            <span style={{ fontSize: 12, fontWeight: 700, minWidth: 70, textAlign: "right", color: C.steel }}>{fmtBRL(m.qtd * m.preco)}</span>
+                            <button onClick={() => setMateriaisSistema(prev => ({ ...prev, [s.id]: prev[s.id].filter((_, xi) => xi !== mi) }))}
+                              style={{ background: "none", border: "none", color: C.danger, cursor: "pointer", fontSize: 16, lineHeight: 1, padding: "0 2px" }}>×</button>
+                          </div>
+                        ))}
+                        <div style={{ fontSize: 11, fontWeight: 700, color: C.steel, textAlign: "right", paddingTop: 4 }}>
+                          +{fmtBRL(mats.reduce((a, m) => a + m.qtd * m.preco, 0))} materiais
+                        </div>
+                      </div>
+                    )}
+                    <button
+                      onClick={() => { setCatPicker(isOpen ? null : s.id); setCatSearch(""); }}
+                      style={{ fontSize: 11, color: C.red, background: "none", border: `1px dashed ${C.red}`, borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit", opacity: 0.85 }}
+                    >
+                      {isOpen ? "− Fechar catálogo" : `+ Adicionar materiais${cats.length ? ` (${cats.join(", ")})` : ""}`}
+                    </button>
+                    {isOpen && (
+                      <div style={{ marginTop: 8, background: C.surface2, border: `1px solid ${C.border}`, borderRadius: 8, overflow: "hidden" }}>
+                        <div style={{ padding: "8px 10px", borderBottom: `1px solid ${C.border}` }}>
+                          <input
+                            autoFocus
+                            placeholder="Buscar produto..."
+                            value={catSearch}
+                            onChange={(e) => setCatSearch(e.target.value)}
+                            style={{ ...inputSt, fontSize: 12 }}
+                          />
+                        </div>
+                        <div style={{ maxHeight: 220, overflowY: "auto" }}>
+                          {filtered.slice(0, 60).map((p) => {
+                            const already = mats.some((m) => m.produtoId === p.id);
+                            return (
+                              <div key={p.id}
+                                onClick={() => {
+                                  if (already) return;
+                                  setMateriaisSistema(prev => ({
+                                    ...prev,
+                                    [s.id]: [...(prev[s.id] || []), { produtoId: p.id, nome: p.nome, un: p.un, preco: p.preco, qtd: 1 }],
+                                  }));
+                                }}
+                                style={{
+                                  display: "flex", alignItems: "center", gap: 8, padding: "7px 10px",
+                                  borderBottom: `1px solid ${C.border}`, cursor: already ? "default" : "pointer",
+                                  background: already ? C.darker : "transparent",
+                                  opacity: already ? 0.5 : 1,
+                                }}
+                              >
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <div style={{ fontSize: 12, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.nome}</div>
+                                  <div style={{ fontSize: 10, color: C.muted }}>{p.categoria}{p.subcategoria ? ` · ${p.subcategoria}` : ""}</div>
+                                </div>
+                                <span style={{ fontSize: 11, color: C.muted, flexShrink: 0 }}>{p.un}</span>
+                                <span style={{ fontSize: 12, fontWeight: 700, color: C.steel, flexShrink: 0 }}>{fmtBRL(p.preco)}</span>
+                                {!already && <span style={{ fontSize: 14, color: C.red, flexShrink: 0, fontWeight: 700 }}>+</span>}
+                              </div>
+                            );
+                          })}
+                          {filtered.length === 0 && <div style={{ padding: "16px", fontSize: 12, color: C.muted, textAlign: "center" }}>Nenhum produto encontrado</div>}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
           ))}
         </Card>
