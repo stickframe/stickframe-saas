@@ -1,11 +1,43 @@
 import { useEffect, useRef, useState } from "react";
 import * as OBC from "@thatopen/components";
+import * as THREE from "three";
 
-export default function IfcViewer({ file, onLoad, onError }) {
+const STATUS_COLORS = {
+  planejado:  0x2e2e38,
+  fabricando: 0x7a5010,
+  montando:   0x1e4070,
+  concluido:  0x1e4a28,
+  problema:   0x6a1a14,
+};
+
+// Reverse map: IFC type keyword → element ID
+const IFC_TYPE_TO_ELEM = {
+  IFCMEMBER: "montante-90", IFCBEAM: "guia-90", IFCCOLUMN: "montante-90",
+  IFCWALLSTANDARDCASE: "osb-externo", IFCWALL: "drywall", IFCPLATE: "osb-externo",
+  IFCROOFING: "cobertura", IFCROOF: "cobertura",
+  IFCFASTENER: "parafuso", IFCMECHANICALFASTENER: "parafuso",
+  IFCCOVERING: "la-vidro",
+  IFCSTRUCTURALMEMBER: "montante-90", IFCSTRUCTURALCURVEMEMBER: "guia-90",
+  IFCPILE: "montante-90", IFCFOOTING: "montante-90",
+  IFCSLAB: "osb-externo", IFCBUILDINGELEMENTPROXY: "montante-90",
+};
+
+function getElemIdFromName(name) {
+  if (!name) return null;
+  const upper = name.toUpperCase();
+  for (const [key, id] of Object.entries(IFC_TYPE_TO_ELEM)) {
+    if (upper.includes(key)) return id;
+  }
+  return null;
+}
+
+export default function IfcViewer({ file, onLoad, onError, statusMap, onElementClick }) {
   const mountRef     = useRef(null);
   const stateRef     = useRef({ components: null, world: null, model: null });
+  const modelRef     = useRef(null);
   const [loading, setLoading] = useState(false);
   const [err,     setErr]     = useState(null);
+  const [clickedEl, setClickedEl] = useState(null);
 
   // Init engine once
   useEffect(() => {
@@ -80,7 +112,35 @@ export default function IfcViewer({ file, onLoad, onError }) {
         if (cancelled) return;
 
         stateRef.current.model = model;
+        modelRef.current = model;
         world.scene.three.add(model.object);
+
+        // Click detection via Raycaster
+        const container = mountRef.current;
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+        function handleClick(e) {
+          const rect = container.getBoundingClientRect();
+          mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+          mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+          raycaster.setFromCamera(mouse, world.camera.three);
+          const meshes = [];
+          model.object.traverse(c => { if (c.isMesh) meshes.push(c); });
+          const hits = raycaster.intersectObjects(meshes);
+          if (hits.length > 0) {
+            const hit = hits[0];
+            const name = hit.object.name || hit.object.parent?.name || "Elemento IFC";
+            const el = { name, expressId: hit.object.userData?.expressID };
+            setClickedEl(el);
+            if (onElementClick) onElementClick(el);
+          } else {
+            setClickedEl(null);
+            if (onElementClick) onElementClick(null);
+          }
+        }
+        container.addEventListener("click", handleClick);
+        // Store cleanup fn
+        stateRef.current._clickCleanup = () => container.removeEventListener("click", handleClick);
 
         // Fit camera to bounding box
         const { Box3, Vector3 } = await import("three");
@@ -110,8 +170,33 @@ export default function IfcViewer({ file, onLoad, onError }) {
       }
     })();
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+      stateRef.current._clickCleanup?.();
+      stateRef.current._clickCleanup = null;
+    };
   }, [file]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Apply statusMap colors when statusMap changes
+  useEffect(() => {
+    const model = modelRef.current;
+    if (!model || !statusMap) return;
+    model.object.traverse(mesh => {
+      if (!mesh.isMesh) return;
+      const name = (mesh.name || mesh.parent?.name || "").toUpperCase();
+      let elemId = getElemIdFromName(name);
+      const status = elemId ? (statusMap[elemId] || "planejado") : "planejado";
+      const color = STATUS_COLORS[status] ?? STATUS_COLORS.planejado;
+      if (mesh.material) {
+        if (Array.isArray(mesh.material)) {
+          mesh.material.forEach(m => { m.color?.setHex(color); m.needsUpdate = true; });
+        } else {
+          mesh.material.color?.setHex(color);
+          mesh.material.needsUpdate = true;
+        }
+      }
+    });
+  }, [statusMap]);
 
   return (
     <div style={{ position: "relative", width: "100%", height: "100%", background: "#0f0e12" }}>
@@ -129,6 +214,25 @@ export default function IfcViewer({ file, onLoad, onError }) {
           </svg>
           <style>{`@keyframes ifc-spin { to { transform: rotate(360deg); } }`}</style>
           <span style={{ fontSize: 12, color: "rgba(255,255,255,.4)" }}>Carregando modelo IFC…</span>
+        </div>
+      )}
+
+      {clickedEl && (
+        <div style={{
+          position: "absolute", bottom: 60, left: 12,
+          background: "rgba(10,9,14,0.92)", backdropFilter: "blur(10px)",
+          border: "1px solid rgba(255,255,255,.1)", borderRadius: 10,
+          padding: "10px 14px", maxWidth: 240,
+        }}>
+          <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: 1, color: "rgba(255,255,255,.3)", textTransform: "uppercase", marginBottom: 4 }}>Elemento IFC</div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", wordBreak: "break-word" }}>{clickedEl.name}</div>
+          {clickedEl.expressId != null && (
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,.3)", marginTop: 3 }}>ID: #{clickedEl.expressId}</div>
+          )}
+          <button onClick={() => setClickedEl(null)} style={{
+            position: "absolute", top: 6, right: 6, background: "none", border: "none",
+            cursor: "pointer", color: "rgba(255,255,255,.3)", fontSize: 14, lineHeight: 1, padding: 2,
+          }}>×</button>
         </div>
       )}
 

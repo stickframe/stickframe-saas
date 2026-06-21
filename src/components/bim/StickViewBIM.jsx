@@ -36,6 +36,15 @@ const IFC_ELEMENT_MAP = {
   IFCROOFING: "cobertura", IFCROOF: "cobertura",
   IFCFASTENER: "parafuso", IFCMECHANICALFASTENER: "parafuso",
   IFCCOVERING: "la-vidro",
+  // Additional types:
+  IFCSTRUCTURALMEMBER: "montante-90",
+  IFCSTRUCTURALCURVEMEMBER: "guia-90",
+  IFCPILE: "montante-90",
+  IFCFOOTING: "montante-90",
+  IFCSLAB: "osb-externo",
+  IFCSTAIRFLIGHT: "drywall",
+  IFCRAMPDLIGHT: "drywall",
+  IFCBUILDINGELEMENTPROXY: "montante-90",
 };
 
 export function parseIFCText(text) {
@@ -673,8 +682,10 @@ export default function StickViewBIM({ obraId, user, onAddToOrcamento }) {
     try {
       const text = await file.text();
       const counts = parseIFCText(text);
+      const matched = Object.keys(counts).length;
+      if (matched === 0) console.warn("IFC import: nenhum tipo de elemento reconhecido em", file.name);
       await applyIFCQtd(counts);
-      setIfcLabel(file.name);
+      setIfcLabel(`${file.name}${matched > 0 ? ` · ${matched} tipos` : " · sem qtds"}`);
       setIfcFile(file);
     } catch(err) { console.error("IFC error", err); }
     e.target.value = "";
@@ -724,6 +735,7 @@ export default function StickViewBIM({ obraId, user, onAddToOrcamento }) {
           {ifcFile ? (
             <IfcViewer
               file={ifcFile}
+              statusMap={statusMap}
               onLoad={(count) => console.log(`IFC loaded: ${count} elements`)}
               onError={(err) => console.error("IFC viewer error:", err)}
             />
