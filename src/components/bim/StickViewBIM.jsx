@@ -603,7 +603,7 @@ function Legend({ selected, onSelect, getEl }) {
 }
 
 // ── Componente principal ─────────────────────────────────────────────────────
-export default function StickViewBIM({ obraId, user, onAddToOrcamento }) {
+export default function StickViewBIM({ obraId, user, onAddToOrcamento, modelos = [] }) {
   const mountRef   = useRef(null);
   const engineRef  = useRef(null);
   const ifcRef     = useRef(null);
@@ -613,6 +613,7 @@ export default function StickViewBIM({ obraId, user, onAddToOrcamento }) {
   const [showModal, setShowModal] = useState(false);
   const [ifcLabel,  setIfcLabel]  = useState(null);
   const [ifcFile,   setIfcFile]   = useState(null); // File object for real IFC render
+  const [loadingUrl, setLoadingUrl] = useState(false);
 
   const { loading, getEl, setStatus, setQtdComprada, applyIFCQtd } = useExecStatus(obraId);
 
@@ -691,6 +692,23 @@ export default function StickViewBIM({ obraId, user, onAddToOrcamento }) {
     e.target.value = "";
   }
 
+  async function handleLoadModelo(modelo) {
+    if (!modelo?.url) return;
+    setLoadingUrl(true);
+    try {
+      const res = await fetch(modelo.url);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const blob = await res.blob();
+      const file = new File([blob], modelo.nome, { type: "application/octet-stream" });
+      const text = await file.text();
+      const counts = parseIFCText(text);
+      await applyIFCQtd(counts);
+      setIfcLabel(`${modelo.nome}${Object.keys(counts).length > 0 ? ` · ${Object.keys(counts).length} tipos` : " · sem qtds"}`);
+      setIfcFile(file);
+    } catch(err) { console.error("Erro ao carregar modelo:", err); }
+    finally { setLoadingUrl(false); }
+  }
+
   function handleAdd(lista, total) {
     onAddToOrcamento?.(lista, total);
     setAdded(`${lista.length} itens`);
@@ -719,6 +737,17 @@ export default function StickViewBIM({ obraId, user, onAddToOrcamento }) {
           )}
           {loading && <span style={{fontSize:11,color:"rgba(255,255,255,.25)"}}>carregando…</span>}
           <div style={{flex:1}}/>
+          {modelos.length > 0 && (
+            <select
+              onChange={(e) => { const m = modelos.find(x => x.id === e.target.value); if (m) handleLoadModelo(m); e.target.value = ""; }}
+              defaultValue=""
+              disabled={loadingUrl}
+              style={{background:"rgba(255,255,255,.06)",border:"1px solid rgba(255,255,255,.12)",borderRadius:7,padding:"5px 10px",fontFamily:"inherit",fontSize:11.5,fontWeight:600,color:"rgba(255,255,255,.7)",cursor:"pointer",maxWidth:200}}
+            >
+              <option value="" disabled>{loadingUrl ? "Carregando…" : "Carregar modelo salvo"}</option>
+              {modelos.map(m => <option key={m.id} value={m.id}>{m.nome}</option>)}
+            </select>
+          )}
           <input ref={ifcRef} type="file" accept=".ifc" style={{display:"none"}} onChange={handleIFC}/>
           <button onClick={() => ifcRef.current?.click()} style={{display:"inline-flex",alignItems:"center",gap:5,background:"rgba(255,255,255,.05)",border:"1px solid rgba(255,255,255,.09)",borderRadius:7,padding:"5px 11px",fontFamily:"inherit",fontSize:11.5,fontWeight:600,color:"rgba(255,255,255,.5)",cursor:"pointer"}}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{width:12,height:12}}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>

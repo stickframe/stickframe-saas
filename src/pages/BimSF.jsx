@@ -375,7 +375,7 @@ function TabRevisoes({ onGoToModelos }) {
   );
 }
 
-function TabStickView({ obraId, user, onAddToOrcamento }) {
+function TabStickView({ obraId, user, onAddToOrcamento, modelos }) {
   return (
     <div>
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
@@ -388,10 +388,10 @@ function TabStickView({ obraId, user, onAddToOrcamento }) {
           StickView™ — Gêmeo Digital
         </div>
         <span style={{ fontSize: 12, color: "var(--muted)" }}>
-          Clique nos elementos para atualizar execução · Importe um IFC real para atualizar quantidades · Gere orçamento completo pelo modelo
+          Clique nos elementos para atualizar execução · {modelos?.length > 0 ? "Selecione um modelo salvo ou importe um IFC" : "Importe um IFC para atualizar quantidades"} · Gere orçamento pelo modelo
         </span>
       </div>
-      <StickViewBIM obraId={obraId} user={user} onAddToOrcamento={onAddToOrcamento} />
+      <StickViewBIM obraId={obraId} user={user} onAddToOrcamento={onAddToOrcamento} modelos={modelos} />
     </div>
   );
 }
@@ -428,7 +428,6 @@ const TABS = [
   { id: "modelos",      l: "Modelos",      icon: "file"     },
   { id: "revisoes",     l: "Revisões",     icon: "refresh"  },
   { id: "apontamentos", l: "Apontamentos", icon: "pin"      },
-  { id: "preview",      l: "Preview Kit",  icon: "home"     },
 ];
 
 export default function BimSF() {
@@ -561,7 +560,7 @@ export default function BimSF() {
         ))}
       </div>
 
-      {tab === "stickview"    && <TabStickView obraId={obraId} user={usuario} onAddToOrcamento={async (lista, total) => {
+      {tab === "stickview"    && <TabStickView obraId={obraId} user={usuario} modelos={modelos} onAddToOrcamento={async (lista, total) => {
         try {
           const ref = `BIM-${new Date().getFullYear()}-${String(Date.now()).slice(-4)}`;
           await criarOrcamento({
@@ -585,7 +584,6 @@ export default function BimSF() {
       {tab === "modelos"      && <TabModelos obraId={obraId} empresaId={empresaId} modelos={modelos} carregarModelos={carregarModelos} deletando={deletando} setDeletando={setDeletando} />}
       {tab === "revisoes"     && <TabRevisoes onGoToModelos={() => setTab("modelos")} />}
       {tab === "apontamentos" && <TabApontamentos obraId={obraId} modelos={modelos} apontamentos={apontamentos} carregarApontamentos={carregarApontamentos} />}
-      {tab === "preview"      && <TabPreviewKit />}
     </div>
   );
 }
