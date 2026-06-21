@@ -193,17 +193,22 @@ function ModalApontamento({ modelos, onSalvar, onClose }) {
 function TabModelos({ obraId, empresaId, modelos, carregarModelos, deletando, setDeletando }) {
   const fileRef = useRef();
   const [uploading, setUploading] = useState(false);
+  const [erroUpload, setErroUpload] = useState(null);
 
   async function handleFile(e) {
     const file = e.target.files[0];
     if (!file) return;
     setUploading(true);
+    setErroUpload(null);
     try {
       const ext = file.name.split(".").pop().toUpperCase();
       const { path, publicUrl } = await uploadIFC(obraId, empresaId, file);
       await criarModelo({ obra_id: obraId, nome: file.name, tipo: ext, storage_path: path, url: publicUrl });
       await carregarModelos();
-    } catch (err) { console.error(err); }
+    } catch (err) {
+      console.error(err);
+      setErroUpload(err?.message || String(err));
+    }
     finally { setUploading(false); e.target.value = ""; }
   }
 
@@ -223,6 +228,11 @@ function TabModelos({ obraId, empresaId, modelos, carregarModelos, deletando, se
         <BtnPrimary onClick={() => fileRef.current?.click()} disabled={uploading}>
           <Ic n="upload" w={14} c="#fff" /> {uploading ? "Importando…" : "Importar primeiro modelo"}
         </BtnPrimary>
+        {erroUpload && (
+          <div style={{ marginTop: 12, padding: "10px 14px", background: "#fef2f2", border: "1px solid #fca5a5", borderRadius: 8, fontSize: 12, color: "#991b1b", maxWidth: 420, textAlign: "left" }}>
+            <strong>Erro ao importar:</strong> {erroUpload}
+          </div>
+        )}
       </EmptyBox>
     );
   }
