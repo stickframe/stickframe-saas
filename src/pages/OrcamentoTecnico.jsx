@@ -12,6 +12,23 @@ import CatalogoPicker from "../components/orcamento/CatalogoPicker";
 
 const _catalogoMap = Object.fromEntries(CATALOGO_PRODUTOS.map(p => [p.id, p]));
 
+const SISTEMA_CATEGORIAS = {
+  fundacao:            [],
+  estrutura:           ["Steel Framing"],
+  fechamento_externo:  ["Vedação Externa", "Revestimentos"],
+  fechamento_interno:  ["Drywall"],
+  isolamento:          ["Termoacústico"],
+  cobertura:           ["Telhado Shingle"],
+  estrutura_cobertura: ["Steel Framing"],
+  fixacao:             ["Ferramentas"],
+  impermeabilizacao:   ["Vedação Externa"],
+  eletrica:            [],
+  hidraulica:          [],
+  gas:                 [],
+  esquadrias:          [],
+  revestimentos:       ["Pisos", "Revestimentos", "Forros"],
+};
+
 const LS_KEY = "sf_orcamento_tecnico_v1";
 
 const fmtBRL = (v) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -547,23 +564,6 @@ export default function OrcamentoTecnico() {
   });
   const [catPicker, setCatPicker]                   = useState(null);
   const [catSearch, setCatSearch]                   = useState("");
-
-  const SISTEMA_CATEGORIAS = {
-    fundacao:           [],
-    estrutura:          ["Steel Framing"],
-    fechamento_externo: ["Vedação Externa", "Revestimentos"],
-    fechamento_interno: ["Drywall"],
-    isolamento:         ["Termoacústico"],
-    cobertura:          ["Telhado Shingle"],
-    estrutura_cobertura:["Steel Framing"],
-    fixacao:            ["Ferramentas"],
-    impermeabilizacao:  ["Vedação Externa"],
-    eletrica:           [],
-    hidraulica:         [],
-    gas:                [],
-    esquadrias:         [],
-    revestimentos:      ["Pisos", "Revestimentos", "Forros"],
-  };
 
   const gerarComparativoVersoes = () => {
     const estSistema = SISTEMAS_SF.find((s) => s.id === "estrutura");
