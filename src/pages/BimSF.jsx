@@ -201,9 +201,8 @@ function TabModelos({ obraId, empresaId, modelos, carregarModelos, deletando, se
     setUploading(true);
     setErroUpload(null);
     try {
-      const ext = file.name.split(".").pop().toUpperCase();
       const { path, publicUrl } = await uploadIFC(obraId, empresaId, file);
-      await criarModelo({ obra_id: obraId, nome: file.name, tipo: ext, storage_path: path, url: publicUrl });
+      await criarModelo({ obra_id: obraId, nome: file.name, storage_path: path, url: publicUrl });
       await carregarModelos();
     } catch (err) {
       console.error(err);
@@ -380,7 +379,7 @@ function TabRevisoes({ onGoToModelos }) {
   return (
     <EmptyBox icon="refresh" title="Nenhuma revisão registrada"
       sub="Revisões de projeto aparecem aqui após a importação do primeiro modelo IFC.">
-      <BtnGhost onClick={onGoToModelos}><Ic n="upload" w={14} /> Importar modelo</BtnGhost>
+      <BtnPrimary onClick={onGoToModelos}><Ic n="upload" w={14} c="#fff" /> Ir para Modelos</BtnPrimary>
     </EmptyBox>
   );
 }
@@ -459,7 +458,12 @@ export default function BimSF() {
 
   const carregarModelos = useCallback(async () => {
     if (!obraId) return;
-    try { setModelos(await listarModelos(obraId)); }
+    try {
+      const lista = await listarModelos(obraId);
+      setModelos(lista);
+      // Se não há modelos e o usuário está na tab StickView, redireciona para Modelos
+      if (lista.length === 0) setTab((t) => t === "stickview" ? "modelos" : t);
+    }
     catch { /* silently skip */ }
   }, [obraId]);
 
