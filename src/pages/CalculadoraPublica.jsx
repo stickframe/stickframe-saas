@@ -296,16 +296,16 @@ export default function CalculadoraPublica() {
       const sfValorM2 = custoInsumosM2Base * PADROES_KIT[simPad.nm]?.fator ?? 1;
       const sfValor = simArea * (simPav === 2 ? 1.85 : 1) * sfValorM2;
 
-      const { error } = await sb.from("pre_orcamentos").insert({
-        nome,
-        whatsapp,
-        email: email || null,
-        cidade: cidade || null,
-        area: simArea,
-        padrao: simPad.nm,
-        valor_estimado: Math.round(est.total),
-        pavimentos: simPav === 1 ? "Térreo" : "2 pavimentos",
-        origem: "CalculadoraPublica-v2",
+      const { error } = await sb.rpc("inserir_lead_publico", {
+        p_nome:       nome,
+        p_contato:    whatsapp,
+        p_email:      email || null,
+        p_cidade:     cidade || null,
+        p_area:       simArea,
+        p_padrao:     simPad.nm,
+        p_valor_min:  Math.round(est.total),
+        p_pavimentos: simPav === 1 ? "Térreo" : "2 pavimentos",
+        p_origem:     "CalculadoraPublica-v2",
       });
       if (error) throw error;
 

@@ -151,10 +151,16 @@ export default function OrcamentoSF() {
   }, [state.projetos]);
 
   // Função de save reutilizável
-  function doSave(projetos) {
+  async function doSave(projetos) {
     var empId = getEmpresaId();
     if(!empId) return;
-    var payload = { empresa_id: empId, data: { projetos: projetos }, updated_at: new Date().toISOString() };
+    // Merge: preserve precos/composicoes saved by ConfigSF, only update projetos
+    var existing = {};
+    if(recordId.current) {
+      var { data: exRow } = await sb.from('sf_orcamentos').select('data').eq('id', recordId.current).single();
+      existing = exRow?.data || {};
+    }
+    var payload = { empresa_id: empId, data: { ...existing, projetos: projetos }, updated_at: new Date().toISOString() };
     var promise;
     if(recordId.current) {
       promise = sb.from('sf_orcamentos').update(payload).eq('id', recordId.current);
