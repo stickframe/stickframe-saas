@@ -311,6 +311,7 @@ export function PainelModal({ painel, composicoes, onSave, onClose }) {
   var [form, setForm] = React.useState(painel);
   function upd(k, v){ setForm(function(f){ return {...f, [k]:v}; }); }
   var comp = composicoes.find(function(c){ return c.id === form.composicaoId; });
+  var isForro = comp && comp.tipo === 'forro';
   var area = (+form.largura||0) * (+form.altura||0);
 
   return (
@@ -336,11 +337,11 @@ export function PainelModal({ painel, composicoes, onSave, onClose }) {
         </div>
         <div className="sf-orc-frow">
           <div className="sf-orc-field">
-            <label>Largura (m)</label>
+            <label>{isForro ? 'Lado A (m)' : 'Largura (m)'}</label>
             <div className="sf-orc-input-w"><input type="number" min="0.1" step="0.01" placeholder="3,50" value={form.largura||''} onChange={function(e){ upd('largura',e.target.value); }} /><span className="sf-orc-suf">m</span></div>
           </div>
           <div className="sf-orc-field">
-            <label>Altura (m)</label>
+            <label>{isForro ? 'Lado B (m)' : 'Altura (m)'}</label>
             <div className="sf-orc-input-w"><input type="number" min="0.1" step="0.01" placeholder="2,80" value={form.altura||''} onChange={function(e){ upd('altura',e.target.value); }} /><span className="sf-orc-suf">m</span></div>
           </div>
         </div>
