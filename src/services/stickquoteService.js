@@ -64,7 +64,7 @@ export async function atualizarStatusStickQuote(id, status) {
 /**
  * Gera o PDF comercial StickQuote™ e abre a janela de impressão.
  */
-export function gerarStickQuotePDF({ nome, obraNome, clienteNome, selecoes, resultado, observacoes, versaoId, versaoNum }) {
+export function gerarStickQuotePDF({ nome, obraNome, clienteNome, selecoes, resultado, observacoes, versaoId, versaoNum, origemIFC }) {
   const LOGO = LOGO_STICKFRAME;
   const dataGeracao = agora();
   const totalCusto  = resultado.totalCusto || 0;
@@ -239,7 +239,7 @@ export function gerarStickQuotePDF({ nome, obraNome, clienteNome, selecoes, resu
     <strong style="color:#6b7280">Rastreabilidade StickQuote&trade;</strong><br>
     Biblioteca: StickFrame v1.0 &middot; Gerado em: ${dataGeracao}
     ${versaoId ? ` &middot; ID: ${versaoId}` : ''}<br>
-    Os quantitativos foram calculados pela metodologia de composição técnica Steel Frame.
+    ${origemIFC ? `Premissas: Quantidades calculadas automaticamente pelo modelo BIM IFC (${origemIFC}). ` : ''}Os quantitativos foram calculados pela metodologia de composição técnica Steel Frame.
     Preços sujeitos a confirmação com fornecedores. Perdas já incluídas nas quantidades.
   </div>
 
