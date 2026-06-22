@@ -3,6 +3,7 @@ import { COMPOSICOES_SF, calcMotorComposicao } from '../../utils/composicoesSF';
 import { CATALOGO_PRODUTOS } from '../../utils/insumosSF';
 import { C } from '../../utils/constants';
 import { sb } from '../../services/supabase';
+import { gerarStickQuotePDF, salvarStickQuote, carregarHistoricoStickQuote } from '../../services/stickquoteService';
 
 const fmtBRL = (v) => Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 const fmtN   = (v, d = 2) => Number(v).toLocaleString('pt-BR', { minimumFractionDigits: d, maximumFractionDigits: d });
@@ -66,8 +67,24 @@ export default function MotorComposicao({ onEnviarOrcamento }) {
 
   // Estado: lista de composições ativas com area
   const [linhas, setLinhas] = useState([]);
-  const [expandido, setExpandido] = useState(null); // id da linha expandida
+  const [expandido, setExpandido] = useState(null);
   const [enviado, setEnviado] = useState(false);
+
+  // Metadados do quote
+  const [nomeQuote, setNomeQuote] = useState('');
+  const [obraNome,  setObraNome]  = useState('');
+  const [clienteNome, setClienteNome] = useState('');
+  const [observacoes, setObservacoes] = useState('');
+
+  // Histórico
+  const [historico, setHistorico] = useState([]);
+  const [mostrarHistorico, setMostrarHistorico] = useState(false);
+  const [salvando, setSalvando] = useState(false);
+  const [gerandoPdf, setGerandoPdf] = useState(false);
+
+  useEffect(() => {
+    carregarHistoricoStickQuote().then(setHistorico).catch(() => {});
+  }, []);
 
   // Inicializa primeira linha quando composições carregarem
   useEffect(() => {
@@ -115,6 +132,49 @@ export default function MotorComposicao({ onEnviarOrcamento }) {
     onEnviarOrcamento(itens);
     setEnviado(true);
     setTimeout(() => setEnviado(false), 3000);
+  }
+
+  function buildSelecoesMeta() {
+    return seloesCalc.map((s) => ({
+      ...s,
+      composicaoNome: compMap[s.composicaoId]?.nome || s.composicaoId,
+    }));
+  }
+
+  async function handleGerarPDF() {
+    if (!resultado || resultado.lista.length === 0) return;
+    setGerandoPdf(true);
+    try {
+      const selecoesMeta = buildSelecoesMeta();
+      let versaoId = null;
+      let versaoNum = null;
+      try {
+        const saved = await salvarStickQuote({
+          nome:        nomeQuote || 'StickQuote sem título',
+          obraNome,
+          clienteNome,
+          selecoes:    selecoesMeta,
+          resultado,
+          observacoes,
+        });
+        versaoId  = saved.id;
+        versaoNum = saved.numero;
+        setHistorico((h) => [saved, ...h]);
+      } catch (_) { /* salvar é best-effort */ }
+
+      gerarStickQuotePDF({
+        nome:        nomeQuote || 'StickQuote',
+        obraNome,
+        clienteNome,
+        selecoes:    selecoesMeta,
+        resultado,
+        observacoes,
+        versaoId,
+        versaoNum,
+      });
+    } finally {
+      setGerandoPdf(false);
+    }
   }
 
   const compMap = Object.fromEntries(composicoes.map((c) => [c.id, c]));
@@ -249,6 +309,39 @@ export default function MotorComposicao({ onEnviarOrcamento }) {
         + Adicionar sistema
       </button>
 
+      {/* Metadados do quote */}
+      {seloesCalc.length > 0 && (
+        <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+            <div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>Título do orçamento</div>
+              <input value={nomeQuote} onChange={(e) => setNomeQuote(e.target.value)}
+                placeholder="Ex: Casa João — Parede Externa"
+                style={{ ...inp, width: '100%', boxSizing: 'border-box' }} />
+            </div>
+            <div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>Cliente</div>
+              <input value={clienteNome} onChange={(e) => setClienteNome(e.target.value)}
+                placeholder="Nome do cliente"
+                style={{ ...inp, width: '100%', boxSizing: 'border-box' }} />
+            </div>
+          </div>
+          <div>
+            <div style={{ fontSize: 10, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>Obra</div>
+            <input value={obraNome} onChange={(e) => setObraNome(e.target.value)}
+              placeholder="Nome da obra"
+              style={{ ...inp, width: '100%', boxSizing: 'border-box' }} />
+          </div>
+          <div>
+            <div style={{ fontSize: 10, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>Observações técnicas</div>
+            <textarea value={observacoes} onChange={(e) => setObservacoes(e.target.value)}
+              placeholder="Notas, condições, exclusões..."
+              rows={2}
+              style={{ ...inp, width: '100%', boxSizing: 'border-box', resize: 'vertical', lineHeight: 1.5 }} />
+          </div>
+        </div>
+      )}
+
       {/* Resumo consolidado */}
       {resultado && resultado.lista.length > 0 && (
         <div style={{ marginTop: 16, border: `1px solid ${C.border}`, borderRadius: 10, overflow: 'hidden' }}>
@@ -294,17 +387,68 @@ export default function MotorComposicao({ onEnviarOrcamento }) {
                 {resultado.totalCusto > 0 ? fmtBRL(resultado.totalCusto) : 'Preços a configurar'}
               </div>
             </div>
-            <button
-              onClick={handleEnviar}
-              style={{
-                padding: '10px 18px', fontSize: 13, fontFamily: 'inherit', fontWeight: 700,
-                background: enviado ? '#3f7a4b' : 'var(--brick,#981915)', color: '#fff',
-                border: 'none', borderRadius: 10, cursor: 'pointer', transition: 'background .2s',
-              }}
-            >
-              {enviado ? '✓ Adicionado!' : '→ Enviar para Orçamento'}
-            </button>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                onClick={handleGerarPDF}
+                disabled={gerandoPdf}
+                style={{
+                  padding: '10px 16px', fontSize: 13, fontFamily: 'inherit', fontWeight: 700,
+                  background: gerandoPdf ? '#374151' : '#232325', color: '#fff',
+                  border: '1px solid rgba(255,255,255,.15)', borderRadius: 10, cursor: gerandoPdf ? 'wait' : 'pointer',
+                }}
+                title="Gerar PDF StickQuote™ e salvar no histórico"
+              >
+                {gerandoPdf ? '...' : '📄 PDF'}
+              </button>
+              <button
+                onClick={handleEnviar}
+                style={{
+                  padding: '10px 18px', fontSize: 13, fontFamily: 'inherit', fontWeight: 700,
+                  background: enviado ? '#3f7a4b' : 'var(--brick,#981915)', color: '#fff',
+                  border: 'none', borderRadius: 10, cursor: 'pointer', transition: 'background .2s',
+                }}
+              >
+                {enviado ? '✓ Adicionado!' : '→ Enviar para Orçamento'}
+              </button>
+            </div>
           </div>
+
+          {/* Histórico de versões */}
+          {historico.length > 0 && (
+            <div style={{ borderTop: '1px solid rgba(255,255,255,.08)', background: '#18181b' }}>
+              <button
+                onClick={() => setMostrarHistorico((v) => !v)}
+                style={{ width: '100%', padding: '8px 14px', background: 'none', border: 'none', color: '#9ca3af', fontSize: 11, cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit' }}
+              >
+                {mostrarHistorico ? '▲' : '▼'} Histórico de versões ({historico.length})
+              </button>
+              {mostrarHistorico && (
+                <div style={{ padding: '0 14px 12px', maxHeight: 200, overflowY: 'auto' }}>
+                  {historico.map((h) => (
+                    <div key={h.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,.06)', fontSize: 11 }}>
+                      <div>
+                        <div style={{ color: '#e5e7eb', fontWeight: 600 }}>{h.nome}</div>
+                        <div style={{ color: '#6b7280', marginTop: 1 }}>
+                          {h.obra_nome ? `${h.obra_nome} · ` : ''}{new Date(h.created_at).toLocaleDateString('pt-BR')}
+                        </div>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ color: '#9ca3af', fontWeight: 700 }}>
+                          {h.resultado?.totalCusto > 0 ? fmtBRL(h.resultado.totalCusto) : '—'}
+                        </div>
+                        <button
+                          onClick={() => gerarStickQuotePDF({ nome: h.nome, obraNome: h.obra_nome, clienteNome: h.cliente_nome, selecoes: h.selecoes || [], resultado: h.resultado, versaoId: h.id })}
+                          style={{ fontSize: 10, color: '#6b7280', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 0', fontFamily: 'inherit' }}
+                        >
+                          📄 Reimprimir
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 
