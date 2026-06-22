@@ -9,6 +9,7 @@ import useAppStore from "../store/useAppStore";
 import { listarPrecosVivos } from "../services/repositories/precosRepository";
 import { criarOrcamento } from "../services/repositories/orcamentoRepository";
 import CatalogoPicker from "../components/orcamento/CatalogoPicker";
+import MotorComposicao from "../components/orcamento/MotorComposicao";
 
 const _catalogoMap = Object.fromEntries(CATALOGO_PRODUTOS.map(p => [p.id, p]));
 
@@ -1563,6 +1564,15 @@ export default function OrcamentoTecnico() {
               })()}
             </div>
           ))}
+        </Card>
+
+        {/* Motor de Composição Técnica */}
+        <Card title="Motor de Composição SF" icon="bolt" iconBg={C.red}>
+          <MotorComposicao
+            onEnviarOrcamento={(itens) =>
+              setItensAdicionais((arr) => [...arr, ...itens])
+            }
+          />
         </Card>
 
         {/* Itens Adicionais do Catálogo */}
