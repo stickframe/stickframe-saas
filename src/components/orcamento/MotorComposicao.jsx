@@ -1,7 +1,8 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { COMPOSICOES_SF, calcMotorComposicao } from '../../utils/composicoesSF';
 import { CATALOGO_PRODUTOS } from '../../utils/insumosSF';
 import { C } from '../../utils/constants';
+import { sb } from '../../services/supabase';
 
 const fmtBRL = (v) => Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 const fmtN   = (v, d = 2) => Number(v).toLocaleString('pt-BR', { minimumFractionDigits: d, maximumFractionDigits: d });
@@ -26,15 +27,57 @@ function Chip({ label, cor }) {
 }
 
 export default function MotorComposicao({ onEnviarOrcamento }) {
+  // Composições carregadas do Supabase (globais + da empresa) com fallback estático
+  const [composicoes, setComposicoes] = useState(COMPOSICOES_SF);
+  const [loadingComp, setLoadingComp] = useState(true);
+
+  useEffect(() => {
+    sb.from('composicoes_sf')
+      .select('*, composicao_itens(*)')
+      .eq('ativo', true)
+      .order('ordem')
+      .then(({ data, error }) => {
+        if (!error && data && data.length > 0) {
+          // Mapear para formato do COMPOSICOES_SF
+          const mapped = data.map((c) => ({
+            id: c.id,
+            _dbId: c.id,
+            nome: c.nome,
+            descricao: c.descricao,
+            sistema: c.sistema,
+            unidade: c.unidade || 'm²',
+            cor: c.cor || '#981915',
+            isGlobal: !c.empresa_id,
+            itens: (c.composicao_itens || [])
+              .sort((a, b) => a.ordem - b.ordem)
+              .map((it) => ({
+                nome: it.nome,
+                un: it.un,
+                consumo: Number(it.consumo),
+                grupo: it.grupo,
+                catBusca: it.cat_busca || [],
+              })),
+          }));
+          setComposicoes(mapped);
+        }
+      })
+      .finally(() => setLoadingComp(false));
+  }, []);
+
   // Estado: lista de composições ativas com area
-  const [linhas, setLinhas] = useState([
-    { id: Date.now(), composicaoId: 'par-ext', area: '' },
-  ]);
+  const [linhas, setLinhas] = useState([]);
   const [expandido, setExpandido] = useState(null); // id da linha expandida
   const [enviado, setEnviado] = useState(false);
 
+  // Inicializa primeira linha quando composições carregarem
+  useEffect(() => {
+    if (composicoes.length > 0 && linhas.length === 0) {
+      setLinhas([{ id: Date.now(), composicaoId: composicoes[0].id, area: '' }]);
+    }
+  }, [composicoes]);
+
   function addLinha() {
-    setLinhas((prev) => [...prev, { id: Date.now(), composicaoId: COMPOSICOES_SF[0].id, area: '' }]);
+    setLinhas((prev) => [...prev, { id: Date.now(), composicaoId: composicoes[0]?.id || '', area: '' }]);
   }
 
   function removeLinha(id) {
@@ -74,7 +117,7 @@ export default function MotorComposicao({ onEnviarOrcamento }) {
     setTimeout(() => setEnviado(false), 3000);
   }
 
-  const compMap = Object.fromEntries(COMPOSICOES_SF.map((c) => [c.id, c]));
+  const compMap = Object.fromEntries(composicoes.map((c) => [c.id, c]));
 
   const inp = {
     padding: '7px 10px', fontSize: 13, fontFamily: 'inherit',
