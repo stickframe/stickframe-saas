@@ -845,8 +845,12 @@ export default function Calculadora() {
         if (error) throw error;
 
         if (data && data.length > 0) {
+          const norm = (s) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
           const insumosDinamicos = INSUMOS.map(ins => {
-            const itemBanco = data.find(d => d.nome === ins.nome);
+            const nIns = norm(ins.nome);
+            // Match exato primeiro, depois parcial
+            const itemBanco = data.find(d => norm(d.nome) === nIns)
+              || data.find(d => norm(d.nome).includes(nIns) || nIns.includes(norm(d.nome)));
             if (itemBanco) {
               return {
                 ...ins,
