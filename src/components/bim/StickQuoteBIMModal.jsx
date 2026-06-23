@@ -46,13 +46,14 @@ export default function StickQuoteBIMModal({ ifcFile, obraId, obraNome, empresaI
       setCatalogoCount(null);
       try {
         // P0-3: Carregar catálogo no init (Dependency Gate)
+        // Tabela real: insumos_sistema (id, nome, preco, un, categoria, grupo)
         const { data: catalogoRows } = await sb
-          .from("produtos")
-          .select("id, nome, preco, unidade, categoria")
-          .limit(500);
+          .from("insumos_sistema")
+          .select("id, nome, preco, un, categoria, grupo")
+          .limit(1000);
         const cat = (catalogoRows || []).map((p) => ({
           id: p.id, nome: p.nome, preco: p.preco || 0,
-          un: p.unidade, categoria: p.categoria,
+          un: p.un, categoria: p.categoria || p.grupo,
         }));
         setCatalogo(cat);
         setCatalogoCount(cat.length);
