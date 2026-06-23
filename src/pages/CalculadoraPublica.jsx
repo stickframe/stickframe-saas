@@ -293,7 +293,7 @@ export default function CalculadoraPublica() {
     setSending(true);
     try {
       const custoInsumosM2Base = listaInsumos.reduce((s, ins) => s + ins.base * ins.preco, 0);
-      const sfValorM2 = custoInsumosM2Base * PADROES_KIT[simPad.nm]?.fator ?? 1;
+      const sfValorM2 = custoInsumosM2Base * (PADROES_KIT[simPad.nm]?.fator ?? 1);
       const sfValor = simArea * (simPav === 2 ? 1.85 : 1) * sfValorM2;
 
       const { error } = await sb.rpc("inserir_lead_publico", {
