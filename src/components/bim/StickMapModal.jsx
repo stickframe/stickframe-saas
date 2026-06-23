@@ -116,6 +116,7 @@ export default function StickMapModal({ analise, composicoes, empresaId, onConfi
   const [mapa, setMapa] = useState(() => buildMapaInicial(familiasDetectadas, composicoes));
   const [salvarRegras, setSalvarRegras] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [erroFracoes, setErroFracoes] = useState(null);
 
   function setRegra(familia, idx, patch) {
     setMapa((prev) => ({
@@ -138,13 +139,36 @@ export default function StickMapModal({ analise, composicoes, empresaId, onConfi
     }));
   }
 
+  // Valida que a soma de frações por família não excede 1.0
+  function validarFracoes() {
+    for (const [familia, regras] of Object.entries(mapa)) {
+      const soma = regras.reduce((s, r) => s + Number(r.fracao || 0), 0);
+      if (soma > 1.001) {
+        return `Soma de frações para "${FAMILIA_LABEL[familia] || familia}" é ${Math.round(soma * 100)}% — máximo permitido é 100%.`;
+      }
+    }
+    return null;
+  }
+
   async function handleConfirmar() {
+    const erroFracao = validarFracoes();
+    if (erroFracao) {
+      setErroFracoes(erroFracao);
+      return;
+    }
+    setErroFracoes(null);
     setSaving(true);
     try {
       // Salvar regras no Supabase
       if (salvarRegras && empresaId) {
-        // Desativar regras antigas
-        await sb.from("stickmap_regras").update({ ativo: false }).eq("empresa_id", empresaId);
+        // Desativar apenas regras das famílias que estão sendo remapeadas (não todas)
+        const familias = Object.keys(mapa);
+        if (familias.length > 0) {
+          await sb.from("stickmap_regras")
+            .update({ ativo: false })
+            .eq("empresa_id", empresaId)
+            .in("ifc_familia", familias);
+        }
 
         // Inserir novas
         const novas = [];
@@ -275,6 +299,24 @@ export default function StickMapModal({ analise, composicoes, empresaId, onConfi
                     <span style={{ fontSize: 10.5, color: "rgba(255,255,255,.25)", marginLeft: "auto" }}>
                       {count} instâncias · ~{Math.round(areaBase)} m² estimado
                     </span>
+                    {(() => {
+                      const soma = (mapa[familia] || []).reduce((s, r) => s + Number(r.fracao || 0), 0);
+                      const pct  = Math.round(soma * 100);
+                      if (soma > 1.001) return (
+                        <span style={{ fontSize: 10, fontWeight: 700, color: "#fca5a5",
+                          background: "rgba(152,25,21,.2)", border: "1px solid rgba(152,25,21,.4)",
+                          borderRadius: 4, padding: "1px 6px" }}>
+                          {pct}% ⚠ excede 100%
+                        </span>
+                      );
+                      return (
+                        <span style={{ fontSize: 10, color: soma > 0 ? "rgba(63,122,75,.8)" : "rgba(255,255,255,.2)",
+                          background: soma > 0 ? "rgba(63,122,75,.12)" : "transparent",
+                          borderRadius: 4, padding: "1px 6px" }}>
+                          {pct}%
+                        </span>
+                      );
+                    })()}
                   </div>
 
                   {/* Regras desta família */}
@@ -352,6 +394,17 @@ export default function StickMapModal({ analise, composicoes, empresaId, onConfi
                   </div>
                 </div>
               </label>
+
+              {/* Erro de validação de fração */}
+              {erroFracoes && (
+                <div style={{
+                  background: "rgba(152,25,21,.15)", border: "1px solid rgba(152,25,21,.35)",
+                  borderRadius: 8, padding: "9px 14px", marginBottom: 12,
+                  fontSize: 12, color: "#fca5a5", lineHeight: 1.5,
+                }}>
+                  ⚠ {erroFracoes}
+                </div>
+              )}
 
               {/* Ações */}
               <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>

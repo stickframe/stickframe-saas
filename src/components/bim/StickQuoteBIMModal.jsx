@@ -129,7 +129,17 @@ export default function StickQuoteBIMModal({ ifcFile, obraId, obraNome, empresaI
         };
       });
 
-      const resultado = calcMotorComposicao(selecoes, [], {});
+      // Carregar catálogo da empresa para vincular preços no cálculo
+      const { data: catalogoRows } = await sb
+        .from("produtos")
+        .select("id, nome, preco, unidade, categoria")
+        .limit(500);
+      const catalogo = (catalogoRows || []).map((p) => ({
+        id: p.id, nome: p.nome, preco: p.preco || 0,
+        un: p.unidade, categoria: p.categoria,
+      }));
+
+      const resultado = calcMotorComposicao(selecoes, catalogo, {});
 
       const versaoId = await salvarStickQuote({
         nome: nomeQuote || `StickQuote™ BIM – ${obraNome || "obra"}`,
@@ -223,18 +233,30 @@ export default function StickQuoteBIMModal({ ifcFile, obraId, obraNome, empresaI
             <>
               {/* Detection summary */}
               <div style={{
-                background: "rgba(63,122,75,.08)", border: "1px solid rgba(63,122,75,.2)",
+                background: analise.totalAreaMedida > 0
+                  ? "rgba(63,122,75,.08)" : "rgba(176,122,30,.08)",
+                border: `1px solid ${analise.totalAreaMedida > 0
+                  ? "rgba(63,122,75,.2)" : "rgba(176,122,30,.25)"}`,
                 borderRadius: 10, padding: "10px 14px", marginBottom: 16,
-                display: "flex", gap: 20, flexWrap: "wrap",
+                display: "flex", gap: 20, flexWrap: "wrap", alignItems: "center",
               }}>
                 <DetStat label="Paredes" value={analise.wallCount} />
                 <DetStat label="Lajes" value={analise.slabCount} />
                 <DetStat label="Cobertura" value={analise.roofCount} />
                 <DetStat label="Membros" value={analise.mbrCount} />
-                {analise.totalAreaMedida > 0 && (
+                {analise.totalAreaMedida > 0 ? (
                   <DetStat label="Área IFC" value={`${analise.totalAreaMedida} m²`} />
-                )}
-                {!analise.temDados && (
+                ) : analise.temDados ? (
+                  <span style={{
+                    fontSize: 11, color: "#fcd34d",
+                    background: "rgba(176,122,30,.15)",
+                    border: "1px solid rgba(176,122,30,.3)",
+                    borderRadius: 6, padding: "4px 10px", lineHeight: 1.5,
+                  }}>
+                    ⚠ Áreas estimadas por heurística (8 m²/parede) — sem IFCAREAMEASURE no arquivo.<br/>
+                    <span style={{ fontWeight: 700 }}>Valide com a planta antes de usar o orçamento.</span>
+                  </span>
+                ) : (
                   <span style={{ fontSize: 11, color: "#c0892d", alignSelf: "center" }}>
                     ⚠ Nenhum elemento reconhecido — insira áreas manualmente.
                   </span>
