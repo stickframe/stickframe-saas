@@ -35,12 +35,28 @@ export default function StickQuoteBIMModal({ ifcFile, obraId, obraNome, empresaI
   const [saving, setSaving]           = useState(false);
   const [erro, setErro]               = useState(null);
   const [showStickMap, setShowStickMap] = useState(false);
-  const [modelHealth, setModelHealth]   = useState(null); // resultado de validarModeloIFC()
+  const [modelHealth, setModelHealth]   = useState(null);
+  // Preflight: catálogo carregado no init para gate de dependência
+  const [catalogoCount, setCatalogoCount] = useState(null); // null=carregando, 0=vazio, N=ok
+  const [catalogo, setCatalogo]           = useState([]);
 
   useEffect(() => {
     async function init() {
       setLoading(true);
+      setCatalogoCount(null);
       try {
+        // P0-3: Carregar catálogo no init (Dependency Gate)
+        const { data: catalogoRows } = await sb
+          .from("produtos")
+          .select("id, nome, preco, unidade, categoria")
+          .limit(500);
+        const cat = (catalogoRows || []).map((p) => ({
+          id: p.id, nome: p.nome, preco: p.preco || 0,
+          un: p.unidade, categoria: p.categoria,
+        }));
+        setCatalogo(cat);
+        setCatalogoCount(cat.length);
+
         // Load composicoes from Supabase
         const { data: comps } = await sb
           .from("composicoes_sf")
@@ -59,22 +75,30 @@ export default function StickQuoteBIMModal({ ifcFile, obraId, obraNome, empresaI
         // Verificar regras StickMap™ salvas para esta empresa
         const regras = await carregarStickMapRegras(empresaId);
 
+        // P0-2: propagar confianca + origem para cada linha
+        const confiancaGlobal = result.confianca;
+        const origemGlobal    = result.totalAreaMedida > 0 ? "IFCAREAMEASURE" : "HEURISTICA";
+
+        function withConfianca(linhasArr) {
+          return linhasArr.map((l) => ({
+            ...l,
+            confianca: l.confianca || confiancaGlobal,
+            origem:    l.origem    || origemGlobal,
+          }));
+        }
+
         if (regras.length > 0) {
-          // Aplicar regras salvas automaticamente
           const linhasAuto = aplicarStickMapRegras(result, regras, disponiveis);
-          setLinhas(linhasAuto.length > 0
+          setLinhas(withConfianca(linhasAuto.length > 0
             ? linhasAuto
-            : [{ composicaoId: "", area: 0, detectadoPor: "manual" }]
-          );
+            : [{ composicaoId: "", area: 0, detectadoPor: "manual", confianca: "baixa", origem: "HEURISTICA" }]
+          ));
         } else if (result.temDados) {
-          // Sem regras salvas + dados detectados → abrir StickMap™ para confirmação guiada
           setShowStickMap(true);
-          // Fallback enquanto StickMap™ não é confirmado
           const sugestoes = mapearComposicoes(result, disponiveis);
-          setLinhas(sugestoes.map((s) => ({ ...s, area: s.areaEstimada })));
+          setLinhas(withConfianca(sugestoes.map((s) => ({ ...s, area: s.areaEstimada }))));
         } else {
-          // Sem dados IFC → entrada manual
-          setLinhas([{ composicaoId: "", area: 0, detectadoPor: "manual" }]);
+          setLinhas([{ composicaoId: "", area: 0, detectadoPor: "manual", confianca: "baixa", origem: "HEURISTICA" }]);
         }
       } catch (e) {
         console.error("StickQuoteBIM init error", e);
@@ -132,15 +156,12 @@ export default function StickQuoteBIMModal({ ifcFile, obraId, obraNome, empresaI
         };
       });
 
-      // Carregar catálogo da empresa para vincular preços no cálculo
-      const { data: catalogoRows } = await sb
-        .from("produtos")
-        .select("id, nome, preco, unidade, categoria")
-        .limit(500);
-      const catalogo = (catalogoRows || []).map((p) => ({
-        id: p.id, nome: p.nome, preco: p.preco || 0,
-        un: p.unidade, categoria: p.categoria,
-      }));
+      // P0-3: Dependency Gate — catálogo já carregado no init
+      if (catalogo.length === 0) {
+        setErro("Catálogo de produtos não carregado. Configure preços na aba Configurações antes de gerar o orçamento BIM.");
+        setSaving(false);
+        return;
+      }
 
       const resultado = calcMotorComposicao(selecoes, catalogo, {});
 
@@ -176,6 +197,18 @@ export default function StickQuoteBIMModal({ ifcFile, obraId, obraNome, empresaI
   }
 
   const totalArea = linhas.reduce((s, l) => s + (Number(l.area) || 0), 0);
+
+  // Preflight checks (P0-3 Dependency Gate)
+  const linhasValidas = linhas.filter((l) => l.composicaoId && l.area > 0);
+  const preflight = {
+    catalogo:  catalogoCount > 0,
+    empresa:   !!empresaId,
+    linhas:    linhasValidas.length > 0,
+    todas:     catalogoCount > 0 && !!empresaId && linhasValidas.length > 0,
+  };
+
+  // Se alguma linha tem confiança baixa
+  const temConfiancaBaixa = linhas.some((l) => l.confianca === "baixa" && l.composicaoId && l.area > 0);
 
   return (
     <>
@@ -334,10 +367,23 @@ export default function StickQuoteBIMModal({ ifcFile, obraId, obraNome, empresaI
                           />
                           <span style={{ fontSize: 11, color: "rgba(255,255,255,.3)" }}>m²</span>
                         </div>
+                        {/* P0-2: badge de confiança por linha */}
+                        {linha.confianca && linha.composicaoId && (() => {
+                          const c = confiancaUI(linha.confianca);
+                          return (
+                            <span style={{
+                              fontSize: 9.5, fontWeight: 700, color: c.cor,
+                              background: c.bg, border: `1px solid ${c.border}`,
+                              borderRadius: 4, padding: "2px 6px", flexShrink: 0,
+                            }} title={`Origem: ${linha.origem || "—"}`}>
+                              {c.label}
+                            </span>
+                          );
+                        })()}
                         {linha.detectadoPor && (
                           <span style={{
                             fontSize: 10, color: "rgba(255,255,255,.25)", flexShrink: 0,
-                            whiteSpace: "nowrap", maxWidth: 100, overflow: "hidden", textOverflow: "ellipsis",
+                            whiteSpace: "nowrap", maxWidth: 80, overflow: "hidden", textOverflow: "ellipsis",
                           }} title={linha.detectadoPor}>
                             {linha.detectadoPor}
                           </span>
@@ -398,6 +444,27 @@ export default function StickQuoteBIMModal({ ifcFile, obraId, obraNome, empresaI
                 </div>
               )}
 
+              {/* P0-3: Preflight checklist */}
+              <div style={{
+                display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 14,
+                padding: "10px 14px",
+                background: preflight.todas ? "rgba(5,150,105,.06)" : "rgba(255,255,255,.03)",
+                border: `1px solid ${preflight.todas ? "rgba(5,150,105,.2)" : "rgba(255,255,255,.07)"}`,
+                borderRadius: 9,
+              }}>
+                <PreflightItem ok={preflight.catalogo}
+                  label={preflight.catalogo ? `Catálogo (${catalogoCount} produtos)` : "Catálogo não carregado"} />
+                <PreflightItem ok={preflight.empresa}
+                  label={preflight.empresa ? "Empresa definida" : "Empresa não identificada"} />
+                <PreflightItem ok={preflight.linhas}
+                  label={preflight.linhas ? `${linhasValidas.length} sistema(s) válido(s)` : "Nenhum sistema com área"} />
+                {temConfiancaBaixa && (
+                  <span style={{ fontSize: 10.5, color: "#fcd34d", alignSelf: "center" }}>
+                    ⚠ Área por heurística — valide com a planta
+                  </span>
+                )}
+              </div>
+
               {/* Actions */}
               <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
                 <button onClick={onClose} style={{
@@ -417,12 +484,20 @@ export default function StickQuoteBIMModal({ ifcFile, obraId, obraNome, empresaI
                     🗺️ Editar mapeamento
                   </button>
                 )}
-                <button onClick={handleGerar} disabled={saving} style={{
-                  background: saving ? "rgba(152,25,21,.4)" : "#981915",
-                  border: "none", borderRadius: 8, padding: "8px 20px", fontSize: 13,
-                  fontWeight: 700, color: "#fff", cursor: saving ? "not-allowed" : "pointer",
-                  display: "flex", alignItems: "center", gap: 7,
-                }}>
+                <button
+                  onClick={handleGerar}
+                  disabled={saving || !preflight.todas}
+                  title={!preflight.todas ? "Resolva os itens do preflight antes de gerar" : ""}
+                  style={{
+                    background: saving ? "rgba(152,25,21,.4)"
+                      : !preflight.todas ? "rgba(255,255,255,.08)"
+                      : "#981915",
+                    border: "none", borderRadius: 8, padding: "8px 20px", fontSize: 13,
+                    fontWeight: 700,
+                    color: !preflight.todas ? "rgba(255,255,255,.3)" : "#fff",
+                    cursor: (saving || !preflight.todas) ? "not-allowed" : "pointer",
+                    display: "flex", alignItems: "center", gap: 7,
+                  }}>
                   {saving ? "Gerando…" : "📄 Gerar StickQuote™"}
                 </button>
               </div>
@@ -449,6 +524,19 @@ function DetStat({ label, value }) {
       </span>
       <span style={{ fontSize: 15, fontWeight: 700, color: value === 0 ? "rgba(255,255,255,.2)" : "#fff" }}>
         {value}
+      </span>
+    </div>
+  );
+}
+
+function PreflightItem({ ok, label }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+      <span style={{ fontSize: 12, color: ok ? "#6ee7b7" : "#fca5a5" }}>
+        {ok ? "✔" : "✗"}
+      </span>
+      <span style={{ fontSize: 11, color: ok ? "rgba(255,255,255,.6)" : "rgba(255,100,100,.7)" }}>
+        {label}
       </span>
     </div>
   );

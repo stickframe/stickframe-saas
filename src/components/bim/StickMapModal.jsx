@@ -151,6 +151,27 @@ export default function StickMapModal({ analise, composicoes, empresaId, onConfi
     return null;
   }
 
+  // P0-1: Redistribui frações proporcionalmente para que somem exatamente 1.0
+  function ajustarDistribuicao(familia) {
+    setMapa((prev) => {
+      const regras = prev[familia] || [];
+      const soma   = regras.reduce((s, r) => s + Number(r.fracao || 0), 0);
+      if (soma <= 0) return prev;
+      const ajustadas = regras.map((r) => ({
+        ...r,
+        fracao: Math.round((Number(r.fracao) / soma) * 100) / 100,
+      }));
+      // Corrigir arredondamento: garantir que soma seja exatamente 1.0
+      const somaAdj = ajustadas.reduce((s, r) => s + r.fracao, 0);
+      const diff    = Math.round((1.0 - somaAdj) * 100) / 100;
+      if (diff !== 0 && ajustadas.length > 0) {
+        ajustadas[0] = { ...ajustadas[0], fracao: Math.round((ajustadas[0].fracao + diff) * 100) / 100 };
+      }
+      return { ...prev, [familia]: ajustadas };
+    });
+    setErroFracoes(null);
+  }
+
   async function handleConfirmar() {
     const erroFracao = validarFracoes();
     if (erroFracao) {
@@ -315,19 +336,27 @@ export default function StickMapModal({ analise, composicoes, empresaId, onConfi
                     {(() => {
                       const soma = (mapa[familia] || []).reduce((s, r) => s + Number(r.fracao || 0), 0);
                       const pct  = Math.round(soma * 100);
-                      if (soma > 1.001) return (
-                        <span style={{ fontSize: 10, fontWeight: 700, color: "#fca5a5",
-                          background: "rgba(152,25,21,.2)", border: "1px solid rgba(152,25,21,.4)",
-                          borderRadius: 4, padding: "1px 6px" }}>
-                          {pct}% ⚠ excede 100%
-                        </span>
-                      );
+                      const excede = soma > 1.001;
+                      const barCor = excede ? "#981915" : soma >= 0.99 ? "#059669" : "#b07a1e";
                       return (
-                        <span style={{ fontSize: 10, color: soma > 0 ? "rgba(63,122,75,.8)" : "rgba(255,255,255,.2)",
-                          background: soma > 0 ? "rgba(63,122,75,.12)" : "transparent",
-                          borderRadius: 4, padding: "1px 6px" }}>
-                          {pct}%
-                        </span>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                          {/* Barra de soma */}
+                          <div style={{ width: 60, height: 5, borderRadius: 3, background: "rgba(255,255,255,.1)", overflow: "hidden" }}>
+                            <div style={{ height: "100%", width: `${Math.min(100, pct)}%`, background: barCor, borderRadius: 3, transition: "width .2s" }} />
+                          </div>
+                          <span style={{ fontSize: 10, fontWeight: 700, color: barCor }}>
+                            {pct}%
+                          </span>
+                          {excede && (
+                            <button
+                              onClick={() => ajustarDistribuicao(familia)}
+                              style={{ fontSize: 9.5, color: "#fcd34d", background: "rgba(176,122,30,.2)",
+                                border: "1px solid rgba(176,122,30,.3)", borderRadius: 4,
+                                padding: "1px 6px", cursor: "pointer" }}>
+                              Ajustar
+                            </button>
+                          )}
+                        </div>
                       );
                     })()}
                   </div>
