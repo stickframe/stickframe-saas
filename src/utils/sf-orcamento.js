@@ -14,11 +14,11 @@ export var SF_COMP = [
 ];
 
 export var SF_PRECOS = {
-  guia:18, mont:16,
-  placa_ext:45, placa_st:39, placa_ru:51, placa_rf:64, placa_performa:54, placa_leve:39,
+  guia:57, mont:62,
+  placa_ext:118, placa_st:42, placa_ru:58, placa_rf:64, placa_performa:84, placa_leve:48,
   membrana:320, iso:180,
-  massa:48, fita_t10:22, parafusos:28, buchas:32, fita_anti:45,
-  mao_obra:85,
+  massa:141, fita_t10:22, parafusos:78, buchas:32, fita_anti:45,
+  mao_obra:130,
 };
 
 export var SF_LABELS = {
