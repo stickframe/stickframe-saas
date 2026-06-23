@@ -205,8 +205,11 @@ export default function CalculadoraPublica() {
   useEffect(() => {
     sb.from("insumos_sistema").select("*").then(({ data }) => {
       if (data && data.length > 0) {
+        const norm = (s) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
         setListaInsumos(INSUMOS_KIT.map(ins => {
-          const item = data.find(d => d.nome === ins.nome);
+          const nIns = norm(ins.nome);
+          const item = data.find(d => norm(d.nome) === nIns)
+            || data.find(d => norm(d.nome).includes(nIns) || nIns.includes(norm(d.nome)));
           return item ? { ...ins, preco: Number(item.preco) } : ins;
         }));
       }
