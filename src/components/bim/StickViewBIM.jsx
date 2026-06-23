@@ -616,6 +616,7 @@ export default function StickViewBIM({ obraId, empresaId, user, onAddToOrcamento
   const [ifcLabel,  setIfcLabel]  = useState(null);
   const [ifcFile,   setIfcFile]   = useState(null); // File object for real IFC render
   const [loadingUrl, setLoadingUrl] = useState(false);
+  const [ifcProgress, setIfcProgress] = useState(null); // { stage, pct } | null
 
   const { loading, getEl, setStatus, setQtdComprada, applyIFCQtd } = useExecStatus(obraId);
 
@@ -679,35 +680,63 @@ export default function StickViewBIM({ obraId, empresaId, user, onAddToOrcamento
 
   useEffect(() => { if (ready) updateColors(selected, statusMap); }, [selected, statusMap, ready, updateColors]);
 
+  async function processIFC(file) {
+    try {
+      setIfcProgress({ stage: "Lendo arquivo…", pct: 10 });
+      const text = await file.text();
+      setIfcProgress({ stage: "Analisando elementos IFC…", pct: 40 });
+      await new Promise(r => setTimeout(r, 0)); // yield to paint
+      const counts = parseIFCText(text);
+      const matched = Object.keys(counts).length;
+      setIfcProgress({ stage: "Aplicando quantitativos…", pct: 75 });
+      await applyIFCQtd(counts);
+      setIfcProgress({ stage: "Renderizando modelo 3D…", pct: 90 });
+      await new Promise(r => setTimeout(r, 50));
+      setIfcLabel(`${file.name}${matched > 0 ? ` · ${matched} tipos` : " · sem qtds"}`);
+      setIfcFile(file);
+      if (matched === 0) console.warn("IFC import: nenhum tipo reconhecido em", file.name);
+    } finally {
+      setIfcProgress(null);
+    }
+  }
+
   async function handleIFC(e) {
     const file = e.target.files[0];
     if (!file) return;
-    try {
-      const text = await file.text();
-      const counts = parseIFCText(text);
-      const matched = Object.keys(counts).length;
-      if (matched === 0) console.warn("IFC import: nenhum tipo de elemento reconhecido em", file.name);
-      await applyIFCQtd(counts);
-      setIfcLabel(`${file.name}${matched > 0 ? ` · ${matched} tipos` : " · sem qtds"}`);
-      setIfcFile(file);
-    } catch(err) { console.error("IFC error", err); }
+    await processIFC(file).catch(err => console.error("IFC error", err));
     e.target.value = "";
   }
 
   async function handleLoadModelo(modelo) {
     if (!modelo?.url) return;
     setLoadingUrl(true);
+    setIfcProgress({ stage: "Baixando modelo…", pct: 5 });
     try {
       const res = await fetch(modelo.url);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const blob = await res.blob();
+      // Stream com progresso se Content-Length disponível
+      const contentLength = res.headers.get("Content-Length");
+      let blob;
+      if (contentLength) {
+        const total = Number(contentLength);
+        const reader = res.body.getReader();
+        const chunks = [];
+        let received = 0;
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          chunks.push(value);
+          received += value.length;
+          setIfcProgress({ stage: "Baixando modelo…", pct: Math.round(5 + (received / total) * 30) });
+        }
+        blob = new Blob(chunks);
+      } else {
+        blob = await res.blob();
+        setIfcProgress({ stage: "Baixando modelo…", pct: 35 });
+      }
       const file = new File([blob], modelo.nome, { type: "application/octet-stream" });
-      const text = await file.text();
-      const counts = parseIFCText(text);
-      await applyIFCQtd(counts);
-      setIfcLabel(`${modelo.nome}${Object.keys(counts).length > 0 ? ` · ${Object.keys(counts).length} tipos` : " · sem qtds"}`);
-      setIfcFile(file);
-    } catch(err) { console.error("Erro ao carregar modelo:", err); }
+      await processIFC(file);
+    } catch(err) { console.error("Erro ao carregar modelo:", err); setIfcProgress(null); }
     finally { setLoadingUrl(false); }
   }
 
@@ -747,7 +776,22 @@ export default function StickViewBIM({ obraId, empresaId, user, onAddToOrcamento
               ✓ {ifcLabel}
             </span>
           )}
-          {loading && <span style={{fontSize:11,color:"rgba(255,255,255,.25)"}}>carregando…</span>}
+          {loading && !ifcProgress && <span style={{fontSize:11,color:"rgba(255,255,255,.25)"}}>carregando…</span>}
+          {ifcProgress && (
+            <div style={{display:"flex",alignItems:"center",gap:8,flex:1,maxWidth:280}}>
+              <div style={{flex:1,height:4,borderRadius:3,background:"rgba(255,255,255,.08)",overflow:"hidden"}}>
+                <div style={{
+                  height:"100%", borderRadius:3,
+                  width:`${ifcProgress.pct}%`,
+                  background:"linear-gradient(90deg,#981915,#e07060)",
+                  transition:"width .35s ease",
+                }}/>
+              </div>
+              <span style={{fontSize:10,color:"rgba(255,255,255,.4)",whiteSpace:"nowrap",flexShrink:0}}>
+                {ifcProgress.pct}% · {ifcProgress.stage}
+              </span>
+            </div>
+          )}
           <div style={{flex:1}}/>
           {modelos.length > 0 && (
             <select
@@ -760,8 +804,8 @@ export default function StickViewBIM({ obraId, empresaId, user, onAddToOrcamento
               {modelos.map(m => <option key={m.id} value={m.id}>{m.nome}</option>)}
             </select>
           )}
-          <input ref={ifcRef} type="file" accept=".ifc" style={{display:"none"}} onChange={handleIFC}/>
-          <button onClick={() => ifcRef.current?.click()} style={{display:"inline-flex",alignItems:"center",gap:5,background:"rgba(255,255,255,.05)",border:"1px solid rgba(255,255,255,.09)",borderRadius:7,padding:"5px 11px",fontFamily:"inherit",fontSize:11.5,fontWeight:600,color:"rgba(255,255,255,.5)",cursor:"pointer"}}>
+          <input ref={ifcRef} type="file" accept=".ifc" style={{display:"none"}} onChange={handleIFC} disabled={!!ifcProgress}/>
+          <button onClick={() => ifcRef.current?.click()} disabled={!!ifcProgress} style={{display:"inline-flex",alignItems:"center",gap:5,background:"rgba(255,255,255,.05)",border:"1px solid rgba(255,255,255,.09)",borderRadius:7,padding:"5px 11px",fontFamily:"inherit",fontSize:11.5,fontWeight:600,color:ifcProgress?"rgba(255,255,255,.2)":"rgba(255,255,255,.5)",cursor:ifcProgress?"not-allowed":"pointer"}}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{width:12,height:12}}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
             Importar IFC
           </button>
