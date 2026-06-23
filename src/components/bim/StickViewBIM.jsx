@@ -728,6 +728,7 @@ export default function StickViewBIM({ obraId, user, onAddToOrcamento, modelos =
           ifcFile={ifcFile}
           obraId={obraId}
           obraNome={modelos[0]?.nome || ifcFile.name}
+          empresaId={user?.empresa_id}
           onClose={() => setShowBIMQuote(false)}
           onGerado={() => setShowBIMQuote(false)}
         />

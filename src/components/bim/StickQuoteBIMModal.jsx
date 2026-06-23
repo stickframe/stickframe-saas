@@ -1,11 +1,13 @@
 /**
  * StickQuoteBIMModal — IFC → StickQuote™ quantification modal
  * Shows detected systems from IFC analysis, lets user edit areas, then generates StickQuote™.
+ * Integra StickMap™: verifica regras salvas por empresa; se não houver, abre confirmação guiada.
  */
 import { useState, useEffect } from "react";
 import { analisarIFCText, mapearComposicoes } from "../../utils/ifcQuantitativo";
 import { calcMotorComposicao } from "../../utils/composicoesSF";
 import { gerarStickQuotePDF, salvarStickQuote } from "../../services/stickquoteService";
+import StickMapModal, { carregarStickMapRegras, aplicarStickMapRegras } from "./StickMapModal";
 import { createClient } from "@supabase/supabase-js";
 
 const sb = createClient(
@@ -22,16 +24,17 @@ const CORES_SISTEMA = {
   "estrutura-lsf":"#981915",
 };
 
-export default function StickQuoteBIMModal({ ifcFile, obraId, obraNome, onClose, onGerado }) {
-  const [loading, setLoading]       = useState(true);
-  const [analise, setAnalise]       = useState(null);
-  const [linhas, setLinhas]         = useState([]);
+export default function StickQuoteBIMModal({ ifcFile, obraId, obraNome, empresaId, onClose, onGerado }) {
+  const [loading, setLoading]         = useState(true);
+  const [analise, setAnalise]         = useState(null);
+  const [linhas, setLinhas]           = useState([]);
   const [composicoes, setComposicoes] = useState([]);
-  const [nomeQuote, setNomeQuote]   = useState("");
+  const [nomeQuote, setNomeQuote]     = useState("");
   const [clienteNome, setClienteNome] = useState("");
-  const [obs, setObs]               = useState("");
-  const [saving, setSaving]         = useState(false);
-  const [erro, setErro]             = useState(null);
+  const [obs, setObs]                 = useState("");
+  const [saving, setSaving]           = useState(false);
+  const [erro, setErro]               = useState(null);
+  const [showStickMap, setShowStickMap] = useState(false);
 
   useEffect(() => {
     async function init() {
@@ -50,14 +53,25 @@ export default function StickQuoteBIMModal({ ifcFile, obraId, obraNome, onClose,
         const result = analisarIFCText(text);
         setAnalise(result);
 
-        // Map to composicao suggestions
-        const sugestoes = mapearComposicoes(result, disponiveis);
+        // Verificar regras StickMap™ salvas para esta empresa
+        const regras = await carregarStickMapRegras(empresaId);
 
-        // If nothing detected, show empty row for manual entry
-        if (sugestoes.length === 0) {
-          setLinhas([{ composicaoId: "", area: 0, detectadoPor: "manual" }]);
-        } else {
+        if (regras.length > 0) {
+          // Aplicar regras salvas automaticamente
+          const linhasAuto = aplicarStickMapRegras(result, regras, disponiveis);
+          setLinhas(linhasAuto.length > 0
+            ? linhasAuto
+            : [{ composicaoId: "", area: 0, detectadoPor: "manual" }]
+          );
+        } else if (result.temDados) {
+          // Sem regras salvas + dados detectados → abrir StickMap™ para confirmação guiada
+          setShowStickMap(true);
+          // Fallback enquanto StickMap™ não é confirmado
+          const sugestoes = mapearComposicoes(result, disponiveis);
           setLinhas(sugestoes.map((s) => ({ ...s, area: s.areaEstimada })));
+        } else {
+          // Sem dados IFC → entrada manual
+          setLinhas([{ composicaoId: "", area: 0, detectadoPor: "manual" }]);
         }
       } catch (e) {
         console.error("StickQuoteBIM init error", e);
@@ -67,7 +81,7 @@ export default function StickQuoteBIMModal({ ifcFile, obraId, obraNome, onClose,
       }
     }
     if (ifcFile) init();
-  }, [ifcFile]);
+  }, [ifcFile, empresaId]);
 
   function setLinha(idx, patch) {
     setLinhas((prev) => prev.map((l, i) => (i === idx ? { ...l, ...patch } : l)));
@@ -151,6 +165,19 @@ export default function StickQuoteBIMModal({ ifcFile, obraId, obraNome, onClose,
   const totalArea = linhas.reduce((s, l) => s + (Number(l.area) || 0), 0);
 
   return (
+    <>
+    {showStickMap && analise && (
+      <StickMapModal
+        analise={analise}
+        composicoes={composicoes}
+        empresaId={empresaId}
+        onClose={() => setShowStickMap(false)}
+        onConfirm={(linhasConfirmadas) => {
+          setLinhas(linhasConfirmadas);
+          setShowStickMap(false);
+        }}
+      />
+    )}
     <div style={{
       position: "fixed", inset: 0, background: "rgba(0,0,0,.78)", zIndex: 9999,
       display: "flex", alignItems: "center", justifyContent: "center", padding: 16,
@@ -350,6 +377,16 @@ export default function StickQuoteBIMModal({ ifcFile, obraId, obraNome, onClose,
                 }}>
                   Cancelar
                 </button>
+                {analise?.temDados && (
+                  <button onClick={() => setShowStickMap(true)} style={{
+                    background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.12)",
+                    borderRadius: 8, padding: "8px 14px", fontSize: 12.5,
+                    color: "rgba(255,255,255,.55)", cursor: "pointer",
+                    display: "flex", alignItems: "center", gap: 6,
+                  }}>
+                    🗺️ Editar mapeamento
+                  </button>
+                )}
                 <button onClick={handleGerar} disabled={saving} style={{
                   background: saving ? "rgba(152,25,21,.4)" : "#981915",
                   border: "none", borderRadius: 8, padding: "8px 20px", fontSize: 13,
@@ -370,6 +407,7 @@ export default function StickQuoteBIMModal({ ifcFile, obraId, obraNome, onClose,
         </div>
       </div>
     </div>
+    </>
   );
 }
 
