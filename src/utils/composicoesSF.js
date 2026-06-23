@@ -150,17 +150,38 @@ export function calcMotorComposicao(selecoes, catalogo, precosCustom = {}) {
   const breakdown = [];     // por composição
 
   for (const sel of selecoes) {
-    const comp = compMap[sel.composicaoId];
-    if (!comp || !sel.area || sel.area <= 0) continue;
+    if (!sel.area || sel.area <= 0) continue;
 
-    const itensComp = comp.itens.map((item) => {
-      const qtd = item.consumo * sel.area;
+    // Usa itens passados diretamente na seleção (BIM/Supabase) se disponíveis,
+    // caso contrário busca na biblioteca estática COMPOSICOES_SF (path manual)
+    const comp = compMap[sel.composicaoId] || {
+      id:     sel.composicaoId,
+      nome:   sel.composicaoNome || sel.composicaoId,
+      cor:    sel.composicaoCor  || "#666",
+      sistema: sel.composicaoSistema || "",
+      itens:  [],
+    };
+    const itensBase = (sel.itens && sel.itens.length > 0) ? sel.itens : comp.itens;
+    if (!itensBase || itensBase.length === 0) continue;
+
+    const itensComp = itensBase.map((item) => {
+      // Aplica perda: qtd_bruta = consumo × área × (1 + perda%)
+      const fatorPerda = 1 + (Number(item.perda || item.perda_pct || 0) / 100);
+      const qtdBruta   = item.consumo * sel.area * fatorPerda;
       const produtoCat = buscarProdutoCatalogo(item, catalogo);
       const preco = precosCustom[item.nome]
         ?? (produtoCat ? produtoCat.preco : null)
+        ?? item.preco
         ?? 0;
-      const custo = qtd * preco;
-      return { ...item, qtd, qtdArredondada: Math.ceil(qtd), preco, custo, produtoCat };
+      const custo = qtdBruta * preco;
+      return {
+        ...item,
+        qtd:           qtdBruta,
+        qtdArredondada: Math.ceil(qtdBruta),
+        preco,
+        custo,
+        produtoCat,
+      };
     });
 
     breakdown.push({ composicao: comp, area: sel.area, itens: itensComp });
