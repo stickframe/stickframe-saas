@@ -604,7 +604,7 @@ function Legend({ selected, onSelect, getEl }) {
 }
 
 // ── Componente principal ─────────────────────────────────────────────────────
-export default function StickViewBIM({ obraId, user, onAddToOrcamento, modelos = [] }) {
+export default function StickViewBIM({ obraId, empresaId, user, onAddToOrcamento, modelos = [] }) {
   const mountRef   = useRef(null);
   const engineRef  = useRef(null);
   const ifcRef     = useRef(null);
@@ -728,7 +728,7 @@ export default function StickViewBIM({ obraId, user, onAddToOrcamento, modelos =
           ifcFile={ifcFile}
           obraId={obraId}
           obraNome={modelos[0]?.nome || ifcFile.name}
-          empresaId={user?.empresa_id}
+          empresaId={empresaId}
           onClose={() => setShowBIMQuote(false)}
           onGerado={() => setShowBIMQuote(false)}
         />

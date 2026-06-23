@@ -299,8 +299,8 @@ export default function StickMapModal({ analise, composicoes, empresaId, onConfi
                 borderRadius: 9, padding: "10px 14px", marginBottom: 18, fontSize: 12,
                 color: "rgba(255,255,255,.5)", lineHeight: 1.6,
               }}>
-                O StickMap™ detectou automaticamente as famílias abaixo no modelo IFC.
-                Confirme ou ajuste o mapeamento — as regras serão salvas para importações futuras.
+                O StickMap™ detectou automaticamente as famílias abaixo e sugeriu o mapeamento mais compatível com steel frame.
+                Confirme ou ajuste cada De→Para antes de gerar o orçamento — as regras são salvas para importações futuras.
               </div>
 
               {/* Tabela De/Para por família */}
@@ -361,7 +361,18 @@ export default function StickMapModal({ analise, composicoes, empresaId, onConfi
                     {(mapa[familia] || []).map((regra, idx) => {
                       const comp = (composicoes || []).find((c) => c.id === regra.composicaoId);
                       return (
-                        <div key={idx} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <div key={idx} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                          {regra._sugerido && regra.composicaoId && (
+                            <div style={{
+                              display: "inline-flex", alignItems: "center", gap: 5,
+                              fontSize: 10, color: "#fbbf24",
+                              background: "rgba(251,191,36,.08)", border: "1px solid rgba(251,191,36,.2)",
+                              borderRadius: 5, padding: "2px 8px", alignSelf: "flex-start",
+                            }}>
+                              ✨ Sugestão StickMap™ — confirme antes de prosseguir
+                            </div>
+                          )}
+                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                           <div style={{
                             width: 3, height: 28, borderRadius: 2, flexShrink: 0,
                             background: comp?.cor || "rgba(255,255,255,.15)",
@@ -369,8 +380,8 @@ export default function StickMapModal({ analise, composicoes, empresaId, onConfi
                           <span style={{ fontSize: 11, color: "rgba(255,255,255,.3)", flexShrink: 0, width: 20 }}>→</span>
                           <select
                             value={regra.composicaoId}
-                            onChange={(e) => setRegra(familia, idx, { composicaoId: e.target.value })}
-                            style={{ ...SEL, flex: 1 }}
+                            onChange={(e) => setRegra(familia, idx, { composicaoId: e.target.value, _sugerido: false })}
+                            style={{ ...SEL, flex: 1, border: regra._sugerido && regra.composicaoId ? "1px solid rgba(251,191,36,.35)" : SEL.border }}
                           >
                             <option value="">— sem mapeamento —</option>
                             {(composicoes || []).map((c) => (
@@ -396,6 +407,7 @@ export default function StickMapModal({ analise, composicoes, empresaId, onConfi
                             background: "none", border: "none", color: "rgba(255,255,255,.2)",
                             cursor: "pointer", fontSize: 16, lineHeight: 1, flexShrink: 0,
                           }}>×</button>
+                        </div>
                         </div>
                       );
                     })}
@@ -482,14 +494,46 @@ function buildFamiliasDetectadas(analise) {
   return entries.filter((e) => e.count > 0);
 }
 
+// Palavras-chave por família IFC para busca fuzzy nas composições
+const FAMILIA_KEYWORDS = {
+  IFCWALL:             ["parede", "wall", "fechamento", "panel", "painel"],
+  IFCWALLSTANDARDCASE: ["parede", "wall", "fechamento", "panel"],
+  IFCSLAB:             ["laje", "slab", "piso", "forro", "losa"],
+  IFCROOF:             ["cobertura", "telhado", "roof", "estrutura", "lsf"],
+  IFCROOFING:          ["cobertura", "telhado", "roof"],
+  IFCMEMBER:           ["estrutura", "perfil", "montante", "lsf", "steel", "membro"],
+  IFCCOLUMN:           ["pilar", "coluna", "column", "estrutura"],
+  IFCBEAM:             ["viga", "beam", "estrutura", "lsf"],
+};
+
+function sugerirComposicao(familia, composicoes) {
+  if (!composicoes?.length) return null;
+  const keywords = FAMILIA_KEYWORDS[familia] || [];
+  let best = null, bestScore = 0;
+  for (const comp of composicoes) {
+    const nome = (comp.nome || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+    let score = 0;
+    for (const kw of keywords) {
+      if (nome.includes(kw)) score++;
+    }
+    if (score > bestScore) { bestScore = score; best = comp; }
+  }
+  return bestScore > 0 ? { composicao: best, score: bestScore, maxScore: keywords.length } : null;
+}
+
 function buildMapaInicial(familiasDetectadas, composicoes) {
   const compIds = new Set((composicoes || []).map((c) => c.id));
   const mapa = {};
   for (const { familia } of familiasDetectadas) {
+    // Primeiro tenta IDs hardcoded
     const defaults = (FAMILIA_DEFAULT[familia] || []).filter((r) => compIds.has(r.composicaoId));
-    mapa[familia] = defaults.length > 0
-      ? defaults.map((r) => ({ composicaoId: r.composicaoId, fracao: r.fracao }))
-      : [{ composicaoId: "", fracao: 1.0 }];
+    if (defaults.length > 0) {
+      mapa[familia] = defaults.map((r) => ({ composicaoId: r.composicaoId, fracao: r.fracao }));
+    } else {
+      // Fallback: busca fuzzy por nome
+      const sugestao = sugerirComposicao(familia, composicoes);
+      mapa[familia] = [{ composicaoId: sugestao?.composicao?.id || "", fracao: 1.0, _sugerido: !!sugestao }];
+    }
   }
   return mapa;
 }

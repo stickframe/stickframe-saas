@@ -384,7 +384,7 @@ function TabRevisoes({ onGoToModelos }) {
   );
 }
 
-function TabStickView({ obraId, user, onAddToOrcamento, modelos }) {
+function TabStickView({ obraId, empresaId, user, onAddToOrcamento, modelos }) {
   return (
     <div>
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
@@ -400,7 +400,7 @@ function TabStickView({ obraId, user, onAddToOrcamento, modelos }) {
           Clique nos elementos para atualizar execução · {modelos?.length > 0 ? "Selecione um modelo salvo ou importe um IFC" : "Importe um IFC para atualizar quantidades"} · Gere orçamento pelo modelo
         </span>
       </div>
-      <StickViewBIM obraId={obraId} user={user} onAddToOrcamento={onAddToOrcamento} modelos={modelos} />
+      <StickViewBIM obraId={obraId} empresaId={empresaId} user={user} onAddToOrcamento={onAddToOrcamento} modelos={modelos} />
     </div>
   );
 }
@@ -574,7 +574,7 @@ export default function BimSF() {
         ))}
       </div>
 
-      {tab === "stickview"    && <TabStickView obraId={obraId} user={usuario} modelos={modelos} onAddToOrcamento={async (lista, total) => {
+      {tab === "stickview"    && <TabStickView obraId={obraId} empresaId={empresaId} user={usuario} modelos={modelos} onAddToOrcamento={async (lista, total) => {
         try {
           const ref = `BIM-${new Date().getFullYear()}-${String(Date.now()).slice(-4)}`;
           await criarOrcamento({
