@@ -3,8 +3,8 @@
  * Shows detected systems from IFC analysis, lets user edit areas, then generates StickQuote™.
  * Integra StickMap™: verifica regras salvas por empresa; se não houver, abre confirmação guiada.
  */
-import { useState, useEffect } from "react";
-import { analisarIFCText, mapearComposicoes } from "../../utils/ifcQuantitativo";
+import { useState, useEffect, useCallback } from "react";
+import { analisarIFCText, mapearComposicoes, validarModeloIFC, confiancaUI, healthUI } from "../../utils/ifcQuantitativo";
 import { calcMotorComposicao } from "../../utils/composicoesSF";
 import { gerarStickQuotePDF, salvarStickQuote } from "../../services/stickquoteService";
 import StickMapModal, { carregarStickMapRegras, aplicarStickMapRegras } from "./StickMapModal";
@@ -35,6 +35,7 @@ export default function StickQuoteBIMModal({ ifcFile, obraId, obraNome, empresaI
   const [saving, setSaving]           = useState(false);
   const [erro, setErro]               = useState(null);
   const [showStickMap, setShowStickMap] = useState(false);
+  const [modelHealth, setModelHealth]   = useState(null); // resultado de validarModeloIFC()
 
   useEffect(() => {
     async function init() {
@@ -48,8 +49,10 @@ export default function StickQuoteBIMModal({ ifcFile, obraId, obraNome, empresaI
         const disponiveis = comps || [];
         setComposicoes(disponiveis);
 
-        // Parse IFC text
-        const text = await ifcFile.text();
+        // Parse IFC text + validar modelo
+        const text   = await ifcFile.text();
+        const health = validarModeloIFC(text);
+        setModelHealth(health);
         const result = analisarIFCText(text);
         setAnalise(result);
 
@@ -263,6 +266,11 @@ export default function StickQuoteBIMModal({ ifcFile, obraId, obraNome, empresaI
                 )}
               </div>
 
+              {/* Model Health (IFC Intake Validator) */}
+              {modelHealth && (
+                <ModelHealthPanel health={modelHealth} />
+              )}
+
               {/* Identification */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
                 <div>
@@ -442,6 +450,72 @@ function DetStat({ label, value }) {
       <span style={{ fontSize: 15, fontWeight: 700, color: value === 0 ? "rgba(255,255,255,.2)" : "#fff" }}>
         {value}
       </span>
+    </div>
+  );
+}
+
+function ModelHealthPanel({ health }) {
+  const h = healthUI(health.modelHealth);
+  const c = confiancaUI(health.confianca);
+  const [expandido, setExpandido] = useState(false);
+
+  return (
+    <div style={{
+      background: h.bg, border: `1px solid ${h.cor}30`,
+      borderRadius: 10, padding: "10px 14px", marginBottom: 16,
+    }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}
+           onClick={() => setExpandido((v) => !v)}>
+        {/* Health score */}
+        <div style={{
+          width: 36, height: 36, borderRadius: 8, flexShrink: 0,
+          background: `${h.cor}20`, border: `2px solid ${h.cor}50`,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          fontSize: 14, fontWeight: 900, color: h.cor,
+        }}>
+          {health.modelHealth}
+        </div>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: h.cor }}>
+            Modelo IFC {h.label} — {health.schema}
+          </div>
+          <div style={{ fontSize: 10.5, color: "rgba(255,255,255,.35)", marginTop: 1 }}>
+            {health.software !== "desconhecido" ? health.software : "software desconhecido"}
+            {" · "}
+            {health.elementosTotal} elementos · {health.areaMeasuresCount} medidas de área
+          </div>
+        </div>
+        {/* Confiança badge */}
+        <div style={{
+          background: c.bg, border: `1px solid ${c.border}`,
+          borderRadius: 6, padding: "3px 9px", fontSize: 10.5,
+          fontWeight: 700, color: c.cor, flexShrink: 0,
+        }}>
+          Confiança {c.label}
+        </div>
+        <span style={{ fontSize: 11, color: "rgba(255,255,255,.25)", flexShrink: 0 }}>
+          {expandido ? "▲" : "▼"}
+        </span>
+      </div>
+
+      {expandido && health.warnings.length > 0 && (
+        <div style={{ marginTop: 10, borderTop: "1px solid rgba(255,255,255,.07)", paddingTop: 10 }}>
+          {health.warnings.map((w, i) => (
+            <div key={i} style={{
+              display: "flex", gap: 8, marginBottom: 5,
+              fontSize: 11.5, color: "rgba(255,255,255,.5)", lineHeight: 1.5,
+            }}>
+              <span style={{ color: "#fcd34d", flexShrink: 0 }}>⚠</span>
+              <span>{w}</span>
+            </div>
+          ))}
+        </div>
+      )}
+      {expandido && health.warnings.length === 0 && (
+        <div style={{ marginTop: 8, fontSize: 11.5, color: "rgba(255,255,255,.35)" }}>
+          Nenhum aviso detectado.
+        </div>
+      )}
     </div>
   );
 }

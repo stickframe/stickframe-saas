@@ -6,6 +6,7 @@
  * as regras para que próximas importações sejam aplicadas sem perguntas.
  */
 import { useState } from "react";
+import { confiancaUI } from "../../utils/ifcQuantitativo";
 import { createClient } from "@supabase/supabase-js";
 
 const sb = createClient(
@@ -250,6 +251,18 @@ export default function StickMapModal({ analise, composicoes, empresaId, onConfi
                 {totalFamilias} famílias detectadas · confirme o De/Para antes de gerar o orçamento
               </div>
             </div>
+            {analise?.confianca && (() => {
+              const c = confiancaUI(analise.confianca);
+              return (
+                <div style={{
+                  background: c.bg, border: `1px solid ${c.border}`,
+                  borderRadius: 6, padding: "3px 10px", fontSize: 11,
+                  fontWeight: 700, color: c.cor, flexShrink: 0,
+                }}>
+                  Confiança {c.label}
+                </div>
+              );
+            })()}
             <button onClick={onClose} style={{
               marginLeft: "auto", background: "none", border: "none",
               color: "rgba(255,255,255,.3)", fontSize: 20, cursor: "pointer", lineHeight: 1,
