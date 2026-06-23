@@ -7,12 +7,7 @@
  */
 import { useState } from "react";
 import { confiancaUI } from "../../utils/ifcQuantitativo";
-import { createClient } from "@supabase/supabase-js";
-
-const sb = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
-);
+import { sb } from "../../services/supabase";
 
 // IFC família → label legível
 const FAMILIA_LABEL = {

@@ -1424,8 +1424,8 @@ export default function Orcamentos() {
             <div style={{ background: C.red + "0d", border: `1px solid ${C.red}33`, borderRadius: 10, padding: "12px 16px", marginBottom: 16 }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: C.red, marginBottom: 4 }}><Zap size={13} /> Estimativo — {estimativo.tipo === "residencial" ? "Residencial" : "Galpão/Comercial"} · {estimativo.area}m²</div>
               <div style={{ fontSize: 12, color: C.muted }}>
-                {estimativo.itens.length} itens · Custo materiais: <strong style={{ color: C.text }}>{estimativo.totalGeral.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</strong>
-                <span style={{ marginLeft: 8 }}>· {(estimativo.totalGeral / estimativo.area).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}/m²</span>
+                {estimativo.itens.length} itens · Custo materiais: <strong style={{ color: C.text }}>{(estimativo.totalGeral ?? 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</strong>
+                <span style={{ marginLeft: 8 }}>· {((estimativo.totalGeral ?? 0) / (estimativo.area || 1)).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}/m²</span>
               </div>
             </div>
           )}
@@ -1656,7 +1656,7 @@ export default function Orcamentos() {
             <div style={{ padding: "14px 18px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div>
                 <div style={{ fontSize: 12, fontWeight: 700, color: C.red, marginBottom: 2 }}><Zap size={13} /> Estimativo calculado — {["residencial","galpão"].includes(estimativo.tipo) ? (estimativo.tipo === "residencial" ? "Residencial" : "Galpão") : estimativo.tipo || "Residencial"} · {estimativo.area}m²</div>
-                <div style={{ fontSize: 11, color: C.muted }}>{estimativo.itens.length} itens · Total materiais: <strong>{estimativo.totalGeral.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</strong></div>
+                <div style={{ fontSize: 11, color: C.muted }}>{estimativo.itens.length} itens · Total materiais: <strong>{(estimativo.totalGeral ?? 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</strong></div>
               </div>
               <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                 <button onClick={() => setEstimativoAberto((v) => !v)} style={{ background: C.red + "18", border: `1px solid ${C.red}44`, borderRadius: 6, padding: "4px 10px", color: C.red, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
@@ -1691,7 +1691,7 @@ export default function Orcamentos() {
                   <tfoot>
                     <tr style={{ borderTop: `2px solid ${C.red}44` }}>
                       <td colSpan={4} style={{ paddingTop: 10, fontWeight: 700, fontSize: 12 }}>Total materiais</td>
-                      <td style={{ textAlign: "right", paddingTop: 10, fontWeight: 900, fontSize: 14, color: C.red }}>{estimativo.totalGeral.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</td>
+                      <td style={{ textAlign: "right", paddingTop: 10, fontWeight: 900, fontSize: 14, color: C.red }}>{(estimativo.totalGeral ?? 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</td>
                     </tr>
                   </tfoot>
                 </table>

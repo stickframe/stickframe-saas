@@ -8,12 +8,7 @@ import { analisarIFCText, mapearComposicoes, validarModeloIFC, confiancaUI, heal
 import { calcMotorComposicao } from "../../utils/composicoesSF";
 import { gerarStickQuotePDF, salvarStickQuote } from "../../services/stickquoteService";
 import StickMapModal, { carregarStickMapRegras, aplicarStickMapRegras } from "./StickMapModal";
-import { createClient } from "@supabase/supabase-js";
-
-const sb = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
-);
+import { sb } from "../../services/supabase";
 
 const CORES_SISTEMA = {
   "par-ext":      "#3b6ea5",
