@@ -77,13 +77,18 @@ export function gerarStickQuotePDF({ nome, obraNome, clienteNome, selecoes, resu
     const itensRows = (bd.itens || []).map((it, i) => {
       const bgRow = i % 2 === 0 ? '#fff' : '#fafaf9';
       const consumoFmt = `${fmtN(it.consumo, 3)} ${it.un}/m²`;
+      const origemBadge = it.origemPreco === 'catalogo'
+        ? '<span title="Preço do catálogo da empresa" style="font-size:9px;padding:1px 5px;border-radius:10px;background:#dcfce7;color:#166534;font-weight:700">🟢 CAT</span>'
+        : it.origemPreco === 'mercado'
+        ? '<span title="Preço de mercado (match fuzzy)" style="font-size:9px;padding:1px 5px;border-radius:10px;background:#fef9c3;color:#713f12;font-weight:700">🟡 MKT</span>'
+        : '<span title="Preço fallback — confirmar" style="font-size:9px;padding:1px 5px;border-radius:10px;background:#fee2e2;color:#991b1b;font-weight:700">🔴 EST</span>';
       return `
         <tr style="background:${bgRow}">
           <td style="padding:7px 12px;border-bottom:1px solid #eee;font-size:12px">${it.nome}</td>
           <td style="padding:7px 12px;text-align:center;border-bottom:1px solid #eee;font-size:11px;color:#6b7280">${it.grupo || ''}</td>
           <td style="padding:7px 12px;text-align:center;border-bottom:1px solid #eee;font-size:11px;color:#6b7280">${consumoFmt}</td>
           <td style="padding:7px 12px;text-align:right;border-bottom:1px solid #eee;font-size:12px;font-weight:600">${fmtN(it.qtdArredondada, 0)} ${it.un}</td>
-          <td style="padding:7px 12px;text-align:right;border-bottom:1px solid #eee;font-size:12px;color:#6b7280">${it.preco > 0 ? fmtBRL(it.preco) : '—'}</td>
+          <td style="padding:7px 12px;text-align:right;border-bottom:1px solid #eee;font-size:12px;color:#6b7280">${it.preco > 0 ? fmtBRL(it.preco) : '—'} ${origemBadge}</td>
           <td style="padding:7px 12px;text-align:right;border-bottom:1px solid #eee;font-size:12px;font-weight:700;color:${it.custo > 0 ? '#1a1a1a' : '#d1d5db'}">${it.custo > 0 ? fmtBRL(it.custo) : '—'}</td>
         </tr>`;
     }).join('');
@@ -234,8 +239,16 @@ export function gerarStickQuotePDF({ nome, obraNome, clienteNome, selecoes, resu
     ${observacoes}
   </div>` : ''}
 
+  <!-- LEGENDA DE ORIGEM DE PREÇO -->
+  <div style="margin-top:20px;padding:10px 14px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;font-size:10px;color:#6b7280;display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+    <strong style="color:#374151">Origem do preço:</strong>
+    <span><span style="background:#dcfce7;color:#166534;padding:1px 6px;border-radius:10px;font-weight:700">🟢 CAT</span> Catálogo confirmado</span>
+    <span><span style="background:#fef9c3;color:#713f12;padding:1px 6px;border-radius:10px;font-weight:700">🟡 MKT</span> Preço de mercado (match automático)</span>
+    <span><span style="background:#fee2e2;color:#991b1b;padding:1px 6px;border-radius:10px;font-weight:700">🔴 EST</span> Estimado — confirmar com fornecedor</span>
+  </div>
+
   <!-- RASTREABILIDADE -->
-  <div style="margin-top:32px;padding:12px 16px;background:#f3f4f6;border-radius:8px;font-size:10px;color:#9ca3af;line-height:1.6">
+  <div style="margin-top:16px;padding:12px 16px;background:#f3f4f6;border-radius:8px;font-size:10px;color:#9ca3af;line-height:1.6">
     <strong style="color:#6b7280">Rastreabilidade StickQuote&trade;</strong><br>
     Biblioteca: StickFrame v1.0 &middot; Gerado em: ${dataGeracao}
     ${versaoId ? ` &middot; ID: ${versaoId}` : ''}<br>

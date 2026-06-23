@@ -60,6 +60,7 @@ const OrcamentoTecnico  = lazyWithRetry(() => import("./pages/OrcamentoTecnico")
 const Insumos           = lazyWithRetry(() => import("./pages/Insumos"));
 const OrcamentoSF       = lazyWithRetry(() => import("./pages/OrcamentoSF"));
 const MonitorPrecos     = lazyWithRetry(() => import("./pages/MonitorPrecos"));
+const StickPrice        = lazyWithRetry(() => import("./pages/StickPrice"));
 const Equipamentos      = lazyWithRetry(() => import("./pages/Equipamentos"));
 const Checklists        = lazyWithRetry(() => import("./pages/Checklists"));
 const QRObra            = lazyWithRetry(() => import("./pages/QRObra"));
@@ -103,6 +104,7 @@ const PAGES = {
   orcamento_tecnico: OrcamentoTecnico,
   orcamento_sf:      OrcamentoSF,
   monitor_precos: MonitorPrecos,
+  stickprice:     StickPrice,
   equipamentos:   Equipamentos,
   checklists:     Checklists,
   insumos:        Insumos,

@@ -125,38 +125,49 @@ export const COMPOSICOES_SF = [
  * Busca produto no catálogo usando os termos de busca do item.
  * Retorna o produto encontrado ou null.
  */
+/**
+ * Retorna { produto, confidence (0–1), method } ou null.
+ * confidence < 0.60 = match ambíguo (ex: C90 vs C140) → descartado.
+ */
 export function buscarProdutoCatalogo(item, catalogo) {
   if (!catalogo) return null;
-  const nomeNorm = (s) =>
+  const norm = (s) =>
     s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
 
-  // Prioridade 1: vínculo direto por produto_id (itens do Supabase)
+  // Prioridade 1: vínculo direto por produto_id
   if (item.produtoId) {
     const pid = Number(item.produtoId);
     const byId = catalogo.find((p) => p.id === pid);
-    if (byId) return byId;
+    if (byId) return { produto: byId, confidence: 1.0, method: 'produto_id' };
   }
 
-  // Busca via catBusca (itens estáticos)
+  // Prioridade 2: catBusca — regex explícita do item estático
   if (item.catBusca && item.catBusca.length > 0) {
     for (const termo of item.catBusca) {
       const re = new RegExp(termo, 'i');
-      const found = catalogo.find((p) => re.test(nomeNorm(p.nome)));
-      if (found) return found;
+      const found = catalogo.find((p) => re.test(norm(p.nome)));
+      if (found) return { produto: found, confidence: 0.90, method: 'cat_busca' };
     }
   }
 
-  // Fallback: match por nome do item (itens vindos do Supabase/BIM)
+  // Prioridade 3: fuzzy por nome (apenas itens BIM/Supabase sem catBusca)
   if (item.nome) {
-    const nItem = nomeNorm(item.nome);
-    // Tenta match exato primeiro
-    const exact = catalogo.find((p) => nomeNorm(p.nome) === nItem);
-    if (exact) return exact;
-    // Match parcial: catálogo contém o nome do item ou vice-versa
+    const nItem = norm(item.nome);
+    const exact = catalogo.find((p) => norm(p.nome) === nItem);
+    if (exact) return { produto: exact, confidence: 0.85, method: 'nome_exato' };
+
     const partial = catalogo.find(
-      (p) => nomeNorm(p.nome).includes(nItem) || nItem.includes(nomeNorm(p.nome))
+      (p) => norm(p.nome).includes(nItem) || nItem.includes(norm(p.nome))
     );
-    if (partial) return partial;
+    if (partial) {
+      // Score de sobreposição — evita confundir C90 com C140
+      const lenA = norm(partial.nome).length;
+      const lenB = nItem.length;
+      const overlap = Math.min(lenA, lenB) / Math.max(lenA, lenB);
+      const confidence = overlap > 0.80 ? 0.75 : 0.45;
+      if (confidence < 0.60) return null; // match ambíguo descartado
+      return { produto: partial, confidence, method: 'nome_parcial' };
+    }
   }
 
   return null;
@@ -194,11 +205,25 @@ export function calcMotorComposicao(selecoes, catalogo, precosCustom = {}) {
       // Aplica perda: qtd_bruta = consumo × área × (1 + perda%)
       const fatorPerda = 1 + (Number(item.perda || item.perda_pct || 0) / 100);
       const qtdBruta   = item.consumo * sel.area * fatorPerda;
-      const produtoCat = buscarProdutoCatalogo(item, catalogo);
-      const preco = precosCustom[item.nome]
-        ?? (produtoCat ? produtoCat.preco : null)
-        ?? item.preco
-        ?? 0;
+      const match      = buscarProdutoCatalogo(item, catalogo);
+      const produtoCat = match?.produto || null;
+
+      // Determina origem do preço para rastreabilidade
+      let origemPreco, preco;
+      if (precosCustom[item.nome] != null) {
+        preco = precosCustom[item.nome];
+        origemPreco = 'catalogo'; // preço da empresa (customizado)
+      } else if (produtoCat) {
+        preco = produtoCat.preco;
+        origemPreco = match.confidence >= 0.90 ? 'catalogo' : 'mercado';
+      } else if (item.preco) {
+        preco = item.preco;
+        origemPreco = 'fallback';
+      } else {
+        preco = 0;
+        origemPreco = 'fallback';
+      }
+
       const custo = qtdBruta * preco;
       return {
         ...item,
@@ -207,6 +232,9 @@ export function calcMotorComposicao(selecoes, catalogo, precosCustom = {}) {
         preco,
         custo,
         produtoCat,
+        origemPreco,
+        matchConfidence: match?.confidence ?? 0,
+        matchMethod:     match?.method ?? 'none',
       };
     });
 
