@@ -126,13 +126,32 @@ export const COMPOSICOES_SF = [
  * Retorna o produto encontrado ou null.
  */
 export function buscarProdutoCatalogo(item, catalogo) {
-  if (!catalogo || !item.catBusca) return null;
-  const nomeNorm = (s) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
-  for (const termo of item.catBusca) {
-    const re = new RegExp(termo, 'i');
-    const found = catalogo.find((p) => re.test(nomeNorm(p.nome)));
-    if (found) return found;
+  if (!catalogo) return null;
+  const nomeNorm = (s) =>
+    s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
+
+  // Busca via catBusca (itens estáticos)
+  if (item.catBusca && item.catBusca.length > 0) {
+    for (const termo of item.catBusca) {
+      const re = new RegExp(termo, 'i');
+      const found = catalogo.find((p) => re.test(nomeNorm(p.nome)));
+      if (found) return found;
+    }
   }
+
+  // Fallback: match por nome do item (itens vindos do Supabase/BIM)
+  if (item.nome) {
+    const nItem = nomeNorm(item.nome);
+    // Tenta match exato primeiro
+    const exact = catalogo.find((p) => nomeNorm(p.nome) === nItem);
+    if (exact) return exact;
+    // Match parcial: catálogo contém o nome do item ou vice-versa
+    const partial = catalogo.find(
+      (p) => nomeNorm(p.nome).includes(nItem) || nItem.includes(nomeNorm(p.nome))
+    );
+    if (partial) return partial;
+  }
+
   return null;
 }
 
