@@ -130,6 +130,13 @@ export function buscarProdutoCatalogo(item, catalogo) {
   const nomeNorm = (s) =>
     s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
 
+  // Prioridade 1: vínculo direto por produto_id (itens do Supabase)
+  if (item.produtoId) {
+    const pid = Number(item.produtoId);
+    const byId = catalogo.find((p) => p.id === pid);
+    if (byId) return byId;
+  }
+
   // Busca via catBusca (itens estáticos)
   if (item.catBusca && item.catBusca.length > 0) {
     for (const termo of item.catBusca) {

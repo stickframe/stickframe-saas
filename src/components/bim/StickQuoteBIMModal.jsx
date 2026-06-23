@@ -149,10 +149,12 @@ export default function StickQuoteBIMModal({ ifcFile, obraId, obraNome, empresaI
           area: l.area,
           itens: (comp?.composicao_itens || []).map((it) => ({
             nome: it.nome,
-            un: it.unidade,
-            consumo: it.consumo_por_m2,
-            perda: it.perda_pct || 0,
+            un: it.un,
+            consumo: Number(it.consumo) || 0,
+            perda: Number(it.perda) || 0,
             grupo: it.grupo,
+            catBusca: it.cat_busca || undefined,
+            produtoId: it.produto_id || undefined,
           })),
         };
       });
