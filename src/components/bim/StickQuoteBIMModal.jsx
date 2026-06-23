@@ -56,7 +56,7 @@ export default function StickQuoteBIMModal({ ifcFile, obraId, obraNome, empresaI
         // Load composicoes from Supabase
         const { data: comps } = await sb
           .from("composicoes_sf")
-          .select("id, nome, sistema, unidade, cor, tipo")
+          .select("id, nome, sistema, unidade, cor")
           .order("ordem");
         const disponiveis = comps || [];
         setComposicoes(disponiveis);
