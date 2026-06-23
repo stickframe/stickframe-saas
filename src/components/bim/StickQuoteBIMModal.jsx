@@ -3,7 +3,7 @@
  * Shows detected systems from IFC analysis, lets user edit areas, then generates StickQuote™.
  * Integra StickMap™: verifica regras salvas por empresa; se não houver, abre confirmação guiada.
  */
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { analisarIFCText, mapearComposicoes, validarModeloIFC, confiancaUI, healthUI } from "../../utils/ifcQuantitativo";
 import { calcMotorComposicao } from "../../utils/composicoesSF";
 import { gerarStickQuotePDF, salvarStickQuote } from "../../services/stickquoteService";
@@ -165,7 +165,7 @@ export default function StickQuoteBIMModal({ ifcFile, obraId, obraNome, empresaI
 
       const resultado = calcMotorComposicao(selecoes, catalogo, {});
 
-      const versaoId = await salvarStickQuote({
+      const saved = await salvarStickQuote({
         nome: nomeQuote || `StickQuote™ BIM – ${obraNome || "obra"}`,
         obraNome: obraNome || "",
         clienteNome,
@@ -181,8 +181,8 @@ export default function StickQuoteBIMModal({ ifcFile, obraId, obraNome, empresaI
         selecoes,
         resultado,
         observacoes: obs,
-        versaoId,
-        versaoNum: 1,
+        versaoId:  saved?.id,
+        versaoNum: saved?.numero,
         origemIFC: ifcFile?.name,
       });
 
