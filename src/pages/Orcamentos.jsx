@@ -633,111 +633,219 @@ function gerarContratoHTML(o) {
   setTimeout(() => w.print(), 400);
 }
 
-//  Proposta Comercial PDF profissional 
-function gerarPropostaComercialPDF(o) {
-  const fmtBRL = (v) => Number(v).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-  const dataHoje = new Date().toLocaleDateString("pt-BR");
-  const validadeDias = o.validade_dias || 30;
+//  Proposta Comercial PDF profissional
+function gerarPropostaComercialPDF(o, opts = {}) {
+  const area      = Number(o.area) || 0;
+  const unidades  = Number(o.unidades) || 1;
+  const areaTotal = area * unidades;
+  const m2        = (PRECOS[o.padrao] || PRECOS["Padrão"]).m2;
+  const total     = Number(o.valor) || m2 * areaTotal;
+
+  const sinal = Number(o.sinal) || Math.round(total * 0.10);
+  const saldo = total - sinal;
+
   const numProposta = `${new Date().getFullYear()}/${String(o.id || Date.now()).slice(-4).padStart(4, "0")}`;
-  const precoVenda = o.valor || 0;
-  const sinal = precoVenda * 0.10;
-  const m2 = o.area > 0 ? precoVenda / (o.area * (o.unidades || 1)) : 0;
+  const dataHoje    = new Date().toLocaleDateString("pt-BR");
+  const validade    = o.validade_dias || 30;
+  const origin      = typeof window !== "undefined" ? window.location.origin : "stickframe.com.br";
+  const linkAceite  = o.proposta_token ? `${origin}/proposta/${o.proposta_token}` : null;
+  const projeto     = o.projeto || `Residência em Sistema Steel Frame — ${areaTotal} m²`;
+  const contato     = opts.contato || o.contato || null;
 
   const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
-  <title>Proposta Comercial ${numProposta} — Stickframe</title>
-  <style>*{box-sizing:border-box}body{font-family:Arial,Helvetica,sans-serif;color:#1a1a1a;margin:0;padding:0;background:#fff}
-  @media print{@page{margin:15mm 14mm}body{padding:0}}table{border-collapse:collapse;width:100%}</style>
-  </head><body style="padding:36px 44px;max-width:860px;margin:auto">
-  <div style="background:#1a1a1a;color:#fff;padding:8px 16px;font-size:11px;letter-spacing:.5px">
-    Stick Frame &middot; Proposta Comercial &middot; Steel Frame &middot; ${o.cliente}
-  </div>
-  <div style="display:flex;justify-content:space-between;align-items:flex-start;padding:20px 0 18px;border-bottom:2px solid #e5e7eb;margin-bottom:28px">
-    <img src="${LOGO_STICKFRAME}" style="width:54px;height:54px;object-fit:contain;border-radius:8px">
-    <div style="text-align:right">
-      <div style="font-size:11px;letter-spacing:2px;color:#6b7280;font-weight:700">PROPOSTA COMERCIAL</div>
-      <div style="font-size:22px;font-weight:800;color:#981915">N&ordm; ${numProposta}</div>
-      <div style="font-size:10px;color:#6b7280;margin-top:2px">DATA DE EMISS&Atilde;O</div>
-      <div style="font-size:13px;font-weight:700">${dataHoje}</div>
+<title>Proposta Comercial Nº ${numProposta} — StickFrame</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Hanken+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --brick:#981915;--brick-dk:#7d1411;--brick-soft:#f3e7e5;
+    --graphite:#232225;--graphite-2:#1a191c;
+    --ink:#26231f;--ink-2:#57514a;--muted:#8c847a;
+    --line:#e7e1d8;--line-2:#efeae2;--surface:#fff;--surface-2:#faf8f4;
+    --cat:#4f7d57;--steel:#3b6ea5;--steel-soft:#e7eef5;
+    --sans:'Hanken Grotesk',system-ui,sans-serif;
+    --cond:'Barlow Condensed',var(--sans);--mono:'JetBrains Mono',ui-monospace,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--sans);color:var(--ink);-webkit-print-color-adjust:exact;print-color-adjust:exact;line-height:1.5}
+  .num{font-family:var(--cond);font-variant-numeric:tabular-nums}
+  .pad{padding:18mm 16mm 14mm}
+  .dochead{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;padding-bottom:16px;border-bottom:2px solid var(--graphite)}
+  .dh-l .wm{font-family:var(--cond);font-weight:700;font-size:25px;letter-spacing:1.2px;line-height:1;color:var(--ink)}
+  .dh-l .wm span{color:var(--brick)}
+  .dh-l .sb{font-size:9px;letter-spacing:1.6px;text-transform:uppercase;color:var(--muted);margin-top:4px}
+  .dh-r{text-align:right}
+  .dh-r .ver{display:inline-flex;background:var(--brick);color:#fff;font-family:var(--cond);font-weight:700;font-size:15px;letter-spacing:.5px;padding:4px 12px;border-radius:7px}
+  .dh-r .gen{font-size:10.5px;color:var(--muted);margin-top:7px;line-height:1.4}
+  .dh-r .gen b{color:var(--ink-2);font-weight:700}
+  .doctitle{margin-top:20px}
+  .doctitle .ey{font-size:11px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--brick)}
+  .doctitle h1{font-family:var(--cond);font-weight:700;font-size:38px;letter-spacing:.5px;line-height:.96;margin-top:6px}
+  .doctitle .h-sub{font-size:12.5px;color:var(--ink-2);margin-top:5px}
+  .idgrid{display:grid;grid-template-columns:1fr 248px;gap:16px;margin-top:22px}
+  .idbox{border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .idbox .cap{font-size:9.5px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--muted);background:var(--surface-2);padding:9px 15px;border-bottom:1px solid var(--line)}
+  .idrow{display:grid;grid-template-columns:108px 1fr;gap:10px;padding:9px 15px;font-size:12px;border-bottom:1px solid var(--line-2)}
+  .idrow:last-child{border-bottom:none}
+  .idrow .k{color:var(--muted);font-weight:700}.idrow .v{color:var(--ink);font-weight:600;word-break:break-word}
+  .totalbox{background:var(--graphite-2);border-radius:12px;padding:18px;color:#fff;display:flex;flex-direction:column;position:relative;overflow:hidden}
+  .totalbox::after{content:"";position:absolute;right:-30px;top:-30px;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,rgba(152,25,21,.5),transparent 70%)}
+  .totalbox .tl{font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.5);position:relative}
+  .totalbox .tv{font-family:var(--cond);font-weight:700;font-size:42px;line-height:.9;margin-top:6px;position:relative}
+  .totalbox .tu{font-size:12px;color:rgba(255,255,255,.55);margin-top:8px;position:relative}
+  .totalbox .area{display:flex;gap:16px;margin-top:14px;padding-top:13px;border-top:1px solid rgba(255,255,255,.12);position:relative}
+  .totalbox .area .a b{font-family:var(--cond);font-weight:700;font-size:20px;color:#fff;display:block;line-height:1}
+  .totalbox .area .a span{font-size:10px;color:rgba(255,255,255,.5)}
+  .sec-h{font-family:var(--cond);font-weight:700;font-size:13px;letter-spacing:2.5px;text-transform:uppercase;color:var(--ink);display:flex;align-items:center;gap:10px;margin:26px 0 14px}
+  .sec-h::after{content:"";flex:1;height:1px;background:var(--line)}
+  .tbl-wrap{border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  table{width:100%;border-collapse:collapse;font-size:11.5px}
+  thead th{text-align:left;font-size:9px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--muted);padding:10px 14px;background:var(--surface-2);border-bottom:1px solid var(--line)}
+  thead th.r{text-align:right}
+  tbody td{padding:12px 14px;border-bottom:1px solid var(--line-2);vertical-align:top}
+  tbody tr:last-child td{border-bottom:none}
+  td.r{text-align:right}
+  .insumo{font-weight:700;color:var(--ink);font-size:13px;line-height:1.3}
+  .insumo .scope{display:block;font-weight:500;color:var(--ink-2);font-size:11px;margin-top:3px}
+  .qtd{font-family:var(--cond);font-weight:700;font-size:15px;color:var(--ink);white-space:nowrap}
+  .unit{color:var(--ink-2);white-space:nowrap;font-variant-numeric:tabular-nums}
+  .tot{font-family:var(--cond);font-weight:700;font-size:16px;color:var(--ink);white-space:nowrap}
+  .org{display:inline-flex;align-items:center;gap:5px;font-size:9.5px;font-weight:800;letter-spacing:.4px;padding:2px 8px;border-radius:20px;margin-top:6px;background:var(--steel-soft);color:var(--steel)}
+  .org .d{width:7px;height:7px;border-radius:50%;background:var(--steel)}
+  .pay .parc{font-weight:700;color:var(--ink);font-size:13px}
+  .pay .when{display:block;color:var(--ink-2);font-size:11px;font-weight:500;margin-top:3px;line-height:1.4}
+  .pay tr.tot-row td{background:var(--brick-soft);border-bottom:none}
+  .pay tr.tot-row .pl{font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--brick)}
+  .pay tr.tot-row .note{display:block;color:var(--brick-dk);font-weight:500;font-size:10.5px;margin-top:3px}
+  .pay tr.tot-row .pv{font-family:var(--cond);font-weight:700;font-size:18px;color:var(--brick)}
+  .twocol{display:grid;grid-template-columns:1.05fr .95fr;gap:18px;margin-top:14px}
+  .panel{border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .panel .cap{font-size:9.5px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--muted);background:var(--surface-2);padding:10px 16px;border-bottom:1px solid var(--line)}
+  .panel .body{padding:14px 16px}
+  .inc{list-style:none;display:flex;flex-direction:column;gap:11px}
+  .inc li{font-size:12px;display:flex;gap:10px;align-items:flex-start;color:var(--ink);font-weight:600}
+  .inc li svg{width:16px;height:16px;flex-shrink:0;margin-top:1px;fill:none;stroke:var(--cat);stroke-width:2.2}
+  .obs{list-style:none;display:flex;flex-direction:column;gap:10px}
+  .obs li{font-size:11.5px;display:flex;gap:9px;align-items:flex-start;color:var(--ink-2);line-height:1.45}
+  .obs li .b{width:5px;height:5px;border-radius:50%;background:var(--brick);flex-shrink:0;margin-top:6px}
+  .obs li b{color:var(--ink);font-weight:700}
+  .accept-online{display:flex;gap:12px;align-items:center;margin-top:22px;background:var(--brick-soft);border:1px solid #e6cdca;border-radius:11px;padding:13px 16px;font-size:12px;color:var(--ink-2);line-height:1.45}
+  .accept-online b{color:var(--brick-dk);font-weight:700}
+  .accept-online .ic{width:34px;height:34px;border-radius:9px;background:var(--brick);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px}
+  .sign{display:grid;grid-template-columns:1fr 1fr;gap:44px;margin-top:40px}
+  .sign .line{border-top:1.5px solid var(--graphite);padding-top:9px;font-size:11px;color:var(--muted);line-height:1.5}
+  .sign .line b{display:block;color:var(--ink);font-size:12.5px;font-weight:700}
+  .sign .line .cnpj{font-family:var(--mono);font-size:9.5px;color:var(--muted);margin-top:2px}
+  .docfoot{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 16mm;border-top:1px solid var(--line);font-size:9.5px;color:var(--muted);margin-top:30px}
+  .docfoot b{color:var(--ink-2);font-weight:700}
+  @page{size:A4;margin:0}
+</style></head><body>
+  <div class="pad">
+    <div class="dochead">
+      <div class="dh-l">
+        <div class="wm">STICK<span>FRAME</span></div>
+        <div class="sb">Sistemas Construtivos · Steel Frame</div>
+      </div>
+      <div class="dh-r">
+        <span class="ver">Nº ${numProposta}</span>
+        <div class="gen">Data de emissão<br><b>${o.criado || dataHoje}</b></div>
+      </div>
+    </div>
+
+    <div class="doctitle">
+      <div class="ey">Proposta Comercial</div>
+      <h1>Residência em<br>Sistema Steel Frame</h1>
+      <div class="h-sub">Fornecimento e montagem de sistema construtivo completo · Padrão StickFrame</div>
+    </div>
+
+    <div class="idgrid">
+      <div class="idbox">
+        <div class="cap">Identificação do projeto</div>
+        <div class="idrow"><span class="k">Cliente</span><span class="v">${o.cliente}</span></div>
+        ${contato ? `<div class="idrow"><span class="k">Contato</span><span class="v">${contato}</span></div>` : ""}
+        <div class="idrow"><span class="k">Projeto</span><span class="v">${projeto}</span></div>
+        <div class="idrow"><span class="k">Padrão</span><span class="v">Steel Frame — ${o.padrao}</span></div>
+        <div class="idrow"><span class="k">Data do orçamento</span><span class="v">${o.criado || dataHoje}</span></div>
+        <div class="idrow"><span class="k">Validade</span><span class="v">${validade} dias a partir da emissão</span></div>
+      </div>
+      <div class="totalbox">
+        <div class="tl">Valor total do contrato</div>
+        <div class="tv">${fmt(total)}</div>
+        <div class="tu">Sistema Steel Frame completo</div>
+        <div class="area">
+          <div class="a"><b class="num">${areaTotal} m²</b><span>Área total</span></div>
+          <div class="a"><b class="num">${fmt(m2)}</b><span>Valor / m²</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec-h">Composição do valor</div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Descrição</th><th class="r">Qtd</th><th class="r">Unid.</th><th class="r">R$ / m²</th><th class="r">Total</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><div class="insumo">Sistema Steel Frame completo<span class="scope">Estrutura + fechamentos + cobertura + instalações</span></div><span class="org"><span class="d"></span>SISTEMA</span></td>
+            <td class="r"><span class="qtd">${areaTotal}</span></td>
+            <td class="r unit">m²</td>
+            <td class="r unit">${fmt(m2)}</td>
+            <td class="r"><span class="tot">${fmt(total)}</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="sec-h">Condições de pagamento</div>
+    <div class="tbl-wrap">
+      <table class="pay">
+        <thead><tr><th>Parcela</th><th class="r">Valor</th><th>Condição</th></tr></thead>
+        <tbody>
+          <tr><td><span class="parc">Sinal / Mobilização</span></td><td class="r"><span class="qtd">${fmt(sinal)}</span></td><td><span class="when">Pagamento antes do início da obra, destinado à compra de materiais e mobilização da equipe</span></td></tr>
+          <tr><td><span class="parc">Saldo</span></td><td class="r"><span class="qtd">${fmt(saldo)}</span></td><td><span class="when">Conforme medições das etapas de evolução de obra</span></td></tr>
+          <tr class="tot-row"><td><span class="pl">Total do contrato</span></td><td class="r"><span class="pv">${fmt(total)}</span></td><td><span class="note">Sinal de ${fmt(sinal)} + saldo conforme medições</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="twocol">
+      <div class="panel">
+        <div class="cap">O que está incluído</div>
+        <div class="body">
+          <ul class="inc">
+            <li><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Estrutura em perfis de aço galvanizado (Steel Frame)</li>
+            <li><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Fechamentos e vedações conforme padrão contratado</li>
+            <li><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Cobertura completa do sistema</li>
+            <li><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Instalações da edificação</li>
+          </ul>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="cap">Observações gerais</div>
+        <div class="body">
+          <ul class="obs">
+            <li><span class="b"></span><span>Proposta válida por <b>${validade} dias</b> a partir de ${o.criado || dataHoje}.</span></li>
+            <li><span class="b"></span><span>Valores sujeitos a confirmação mediante <b>vistoria do terreno</b>.</span></li>
+            <li><span class="b"></span><span>Não inclui <b>móveis planejados</b> e <b>paisagismo</b>.</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    ${linkAceite ? `<div class="accept-online"><div class="ic">✓</div><div>Prefere aceitar online? Acesse <b>${linkAceite}</b> — ao aceitar, o status atualiza automaticamente e nossa equipe é avisada na hora.</div></div>` : ""}
+
+    <div class="sign">
+      <div class="line"><b>${o.cliente}</b>Contratante</div>
+      <div class="line"><b>Stick Frame Sistemas Construtivos Ltda.</b>Contratada · Santo André / SP<div class="cnpj">CNPJ 49.458.905/0001-07</div></div>
     </div>
   </div>
-  <div style="font-size:11px;font-weight:700;letter-spacing:2px;color:#374151;text-transform:uppercase;margin-bottom:14px">Identifica&ccedil;&atilde;o do Projeto</div>
-  <table style="margin-bottom:32px;font-size:13px">
-    <tr><td style="padding:7px 0;color:#6b7280;width:160px">Cliente</td><td style="padding:7px 0;font-weight:600">${o.cliente}</td></tr>
-    <tr><td style="padding:7px 0;color:#6b7280">Projeto</td><td style="padding:7px 0">Resid&ecirc;ncia em Sistema Steel Frame &mdash; ${o.area * (o.unidades || 1)} m&sup2;</td></tr>
-    <tr><td style="padding:7px 0;color:#6b7280">Padr&atilde;o</td><td style="padding:7px 0">Steel Frame &mdash; ${o.padrao}</td></tr>
-    ${o.unidades > 1 ? `<tr><td style="padding:7px 0;color:#6b7280">Unidades</td><td style="padding:7px 0">${o.unidades} unidades de ${o.area} m² cada</td></tr>` : `<tr><td style="padding:7px 0;color:#6b7280">&Aacute;rea Total</td><td style="padding:7px 0">${o.area} m&sup2;</td></tr>`}
-    <tr><td style="padding:7px 0;color:#6b7280">Data do Or&ccedil;amento</td><td style="padding:7px 0">${o.criado || dataHoje}</td></tr>
-    <tr><td style="padding:7px 0;color:#6b7280">Validade</td><td style="padding:7px 0">${validadeDias} dias</td></tr>
-  </table>
-  <div style="font-size:11px;font-weight:700;letter-spacing:2px;color:#374151;text-transform:uppercase;margin-bottom:14px">Composi&ccedil;&atilde;o do Valor</div>
-  <table style="margin-bottom:8px;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden">
-    <thead><tr style="background:#1a1a1a;color:#fff">
-      <th style="padding:10px 14px;text-align:left;font-size:11px">Descri&ccedil;&atilde;o</th>
-      <th style="padding:10px 14px;text-align:right;font-size:11px">Qtde</th>
-      <th style="padding:10px 14px;text-align:right;font-size:11px">Unid.</th>
-      <th style="padding:10px 14px;text-align:right;font-size:11px">R$/m&sup2;</th>
-      <th style="padding:10px 14px;text-align:right;font-size:11px">Total</th>
-    </tr></thead>
-    <tbody><tr style="border-bottom:1px solid #e5e7eb">
-      <td style="padding:14px;font-size:13px"><div style="font-weight:600">Sistema Steel Frame completo</div>
-        <div style="font-size:11px;color:#6b7280;margin-top:2px">Estrutura + fechamentos + cobertura + instala&ccedil;&otilde;es</div></td>
-      <td style="padding:14px;text-align:right;font-size:13px">${o.area * (o.unidades || 1)}</td>
-      <td style="padding:14px;text-align:right;font-size:13px">m&sup2;</td>
-      <td style="padding:14px;text-align:right;font-size:13px">${fmtBRL(m2)}</td>
-      <td style="padding:14px;text-align:right;font-size:14px;font-weight:800;color:#981915">${fmtBRL(precoVenda)}</td>
-    </tr></tbody>
-  </table>
-  <div style="text-align:right;font-size:13px;color:#374151;margin-bottom:32px"><strong>Valor total do contrato: ${fmtBRL(precoVenda)}</strong></div>
-  <div style="page-break-before:always"></div>
-  <div style="font-size:11px;font-weight:700;letter-spacing:2px;color:#374151;text-transform:uppercase;margin-bottom:14px">Condi&ccedil;&otilde;es de Pagamento</div>
-  <table style="margin-bottom:32px;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden">
-    <thead><tr style="background:#1a1a1a;color:#fff">
-      <th style="padding:10px 14px;text-align:left;font-size:11px">Parcela</th>
-      <th style="padding:10px 14px;text-align:left;font-size:11px">Valor</th>
-      <th style="padding:10px 14px;text-align:left;font-size:11px">Condi&ccedil;&atilde;o</th>
-    </tr></thead>
-    <tbody>
-      <tr style="border-bottom:1px solid #e5e7eb">
-        <td style="padding:12px 14px;font-weight:700;font-size:13px">Sinal / Mobiliza&ccedil;&atilde;o</td>
-        <td style="padding:12px 14px;font-weight:700;color:#981915;font-size:13px">${fmtBRL(sinal)}</td>
-        <td style="padding:12px 14px;font-size:13px;color:#374151">Pagamento antes do in&iacute;cio da obra, destinado &agrave; compra de materiais e mobiliza&ccedil;&atilde;o da equipe</td>
-      </tr>
-      <tr style="border-bottom:1px solid #e5e7eb">
-        <td style="padding:12px 14px;font-weight:700;font-size:13px">Saldo</td>
-        <td style="padding:12px 14px;font-weight:700;color:#981915;font-size:13px">${fmtBRL(precoVenda - sinal)}</td>
-        <td style="padding:12px 14px;font-size:13px;color:#374151">Conforme medi&ccedil;&otilde;es das etapas de evolu&ccedil;&atilde;o de obra</td>
-      </tr>
-      <tr style="background:#981915">
-        <td style="padding:12px 14px;font-weight:700;color:#fff;font-size:13px">Total do Contrato</td>
-        <td style="padding:12px 14px;font-weight:700;color:#fff;font-size:14px">${fmtBRL(precoVenda)}</td>
-        <td style="padding:12px 14px;color:#fecaca;font-size:12px">Sinal de ${fmtBRL(sinal)} + saldo conforme medi&ccedil;&otilde;es</td>
-      </tr>
-    </tbody>
-  </table>
-  <div style="font-size:11px;font-weight:700;letter-spacing:2px;color:#374151;text-transform:uppercase;margin-bottom:14px">Observa&ccedil;&otilde;es Gerais</div>
-  <ul style="font-size:13px;color:#374151;line-height:2;margin:0 0 40px;padding-left:20px">
-    <li>Proposta v&aacute;lida por ${validadeDias} dias a partir de ${dataHoje}.</li>
-    <li>Valores sujeitos a confirma&ccedil;&atilde;o mediante vistoria do terreno.</li>
-    <li>N&atilde;o inclui m&oacute;veis planejados e paisagismo.</li>
-    ${o.observacoes_proposta ? `<li>${o.observacoes_proposta}</li>` : ""}
-  </ul>
-  <div style="font-size:11px;font-weight:700;letter-spacing:2px;color:#374151;text-transform:uppercase;margin-bottom:24px">Aceite da Proposta</div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:60px;margin-bottom:60px">
-    <div style="text-align:center">
-      <div style="border-top:1px solid #374151;padding-top:10px;font-size:13px;font-weight:700">${o.cliente}</div>
-      <div style="font-size:12px;color:#6b7280">Contratante</div>
-    </div>
-    <div style="text-align:center">
-      <div style="border-top:1px solid #374151;padding-top:10px;font-size:13px;font-weight:700">Stick Frame Sistemas Construtivos Ltda.</div>
-      <div style="font-size:12px;color:#6b7280">CNPJ 49.458.905/0001-07 &mdash; Contratada</div>
-    </div>
+
+  <div class="docfoot">
+    <span><b>Stick Frame Sistemas Construtivos Ltda.</b> · Rua Trento, 52 — Santo André / SP</span>
+    <span>(11) 98985-9995 · contato@stickframe.com.br</span>
+    <span>Nº <b>${numProposta}</b></span>
   </div>
-  <div style="background:#1a1a1a;color:#fff;padding:14px 20px;border-radius:6px;font-size:11px;display:flex;justify-content:space-between;align-items:center">
-    <div><strong>Stick Frame Sistemas Construtivos Ltda.</strong><br>CNPJ 49.458.905/0001-07 &middot; Rua Trento, 52 &mdash; Santo Andr&eacute; / SP<br>(11) 98985-9995 &middot; contato@stickframe.com.br &middot; www.stickframe.com.br</div>
-    <div style="text-align:right"><div style="color:#9ca3af">Validade desta proposta</div><div style="color:#ef4444;font-size:16px;font-weight:800">${validadeDias} dias</div><div style="color:#9ca3af">N&ordm; ${numProposta}</div></div>
-  </div>
-  </body></html>`;
-  printHtml(html, `proposta-comercial-${o.ref || "orcamento"}`);
+</body></html>`;
+
+  printHtml(html, `proposta-${o.ref || numProposta}`);
 }
 
 //  Índices técnicos StickFrame (baseados em obras reais) 
@@ -1768,7 +1876,7 @@ export default function Orcamentos() {
 
                     {/* Ação Principal: Proposta Comercial */}
                     <button
-                      onClick={() => gerarPropostaComercialPDF(o)}
+                      onClick={() => gerarPropostaComercialPDF(o, { contato: clientes.find(c => c.id === o.cliente_id)?.telefone || clientes.find(c => c.nome === o.cliente)?.telefone })}
                       className="sf-btn sf-btn-sm sf-btn-primary"
                     >
                       <ClipboardList size={13} /> Proposta Comercial
