@@ -1296,73 +1296,263 @@ export default function GestaoObras() {
     const receitas = lans.filter((l) => l.tipo === "receita").reduce((a, l) => a + (l.valor || 0), 0);
     const despesas = lans.filter((l) => l.tipo === "despesa").reduce((a, l) => a + (l.valor || 0), 0);
     const saldo = receitas - despesas;
-    const diarioObra = (diario[obraId] || []).slice(0, 5);
-
-    const secResumo = opcoes.resumo ? `
-      <section>
-        <h2 style="font-size:14px;font-weight:700;color:#e63329;border-bottom:2px solid #e63329;padding-bottom:6px;margin-top:28px">Resumo Geral</h2>
-        <table style="width:100%;border-collapse:collapse;font-size:13px;margin-top:10px">
-          <tr><td style="padding:6px 8px;color:#555;width:40%">Área</td><td style="padding:6px 8px;font-weight:600">${obra.area || "—"} m²</td></tr>
-          <tr style="background:#f9f9f9"><td style="padding:6px 8px;color:#555">Fase atual</td><td style="padding:6px 8px;font-weight:600">${obra.fase || "—"}</td></tr>
-          <tr><td style="padding:6px 8px;color:#555">Início previsto</td><td style="padding:6px 8px;font-weight:600">${obra.prazo_inicio || "—"}</td></tr>
-          <tr style="background:#f9f9f9"><td style="padding:6px 8px;color:#555">Fim previsto</td><td style="padding:6px 8px;font-weight:600">${obra.prazo_fim || obra.prazo || "—"}</td></tr>
-          <tr><td style="padding:6px 8px;color:#555">Progresso</td><td style="padding:6px 8px;font-weight:600">${obra.progresso || 0}%</td></tr>
-        </table>
-        <div style="margin-top:10px;background:#eee;border-radius:4px;height:10px"><div style="width:${Math.min(obra.progresso||0,100)}%;height:10px;background:#e63329;border-radius:4px"></div></div>
-      </section>` : "";
-
-    const secDiario = opcoes.diario && diarioObra.length > 0 ? `
-      <section>
-        <h2 style="font-size:14px;font-weight:700;color:#e63329;border-bottom:2px solid #e63329;padding-bottom:6px;margin-top:28px">Últimas Entradas do Diário</h2>
-        ${diarioObra.map((r) => `
-          <div style="border:1px solid #e5e7eb;border-radius:8px;padding:12px 16px;margin-top:10px">
-            <div style="font-size:11px;color:#888;margin-bottom:4px">${r.data || ""} ${r.turno ? `· ${r.turno}` : ""}</div>
-            <div style="font-size:13px;color:#1a1a1a">${r.texto || r.observacoes || "—"}</div>
-          </div>`).join("")}
-      </section>` : "";
-
-    const secFinanceiro = opcoes.financeiro ? `
-      <section>
-        <h2 style="font-size:14px;font-weight:700;color:#e63329;border-bottom:2px solid #e63329;padding-bottom:6px;margin-top:28px">Resumo Financeiro</h2>
-        <div style="display:flex;gap:12px;margin-top:10px;flex-wrap:wrap">
-          <div style="flex:1;min-width:120px;background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:12px;text-align:center">
-            <div style="font-size:11px;color:#555;margin-bottom:4px">Receitas</div>
-            <div style="font-size:16px;font-weight:800;color:#3f7a4b">${fmtR(receitas)}</div>
-          </div>
-          <div style="flex:1;min-width:120px;background:#fff5f5;border:1px solid #fca5a5;border-radius:8px;padding:12px;text-align:center">
-            <div style="font-size:11px;color:#555;margin-bottom:4px">Despesas</div>
-            <div style="font-size:16px;font-weight:800;color:#e63329">${fmtR(despesas)}</div>
-          </div>
-          <div style="flex:1;min-width:120px;background:${saldo>=0?"#f0fdf4":"#fff5f5"};border:1px solid ${saldo>=0?"#86efac":"#fca5a5"};border-radius:8px;padding:12px;text-align:center">
-            <div style="font-size:11px;color:#555;margin-bottom:4px">Saldo</div>
-            <div style="font-size:16px;font-weight:800;color:${saldo>=0?"#3f7a4b":"#e63329"}">${fmtR(saldo)}</div>
-          </div>
-        </div>
-      </section>` : "";
-
+    const diarioObra = diario[obraId] || [];
     const contrato = Number(obra.contrato) || 0;
-    const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
-      <title>Relatório — ${obra.nome}</title>
-      <style>
-        *{box-sizing:border-box;margin:0;padding:0}
-        body{font-family:'Segoe UI',Arial,sans-serif;color:#1a1a1a;background:#fff;padding:40px;max-width:860px;margin:auto}
-        @media print{body{padding:20px}}
-      </style>
-    </head><body>
-      <div style="background:linear-gradient(135deg,#e63329,#6e1210);color:#fff;border-radius:12px;padding:32px 36px;margin-bottom:24px">
-        <div style="font-size:11px;letter-spacing:2px;opacity:0.7;margin-bottom:8px">RELATÓRIO DE OBRA</div>
-        <div style="font-size:22px;font-weight:800;margin-bottom:6px">${obra.nome}</div>
-        <div style="font-size:13px;opacity:0.85">${obra.cliente || "Sem cliente"} · Status: ${obra.status || "—"} · Contrato: ${fmtR(contrato)}</div>
-        <div style="margin-top:16px;background:rgba(255,255,255,0.2);border-radius:4px;height:8px">
-          <div style="width:${Math.min(obra.progresso||0,100)}%;height:8px;background:#fff;border-radius:4px;opacity:0.9"></div>
+    const progresso = Math.min(obra.progresso || 0, 100);
+
+    // StickScore
+    const score = calcularStickScore(obra, { financeiro: lans, medicoes: [] });
+    const scoreTotal = score.total ?? 0;
+    const scoreCor = scoreTotal >= 75 ? "#4f7d57" : scoreTotal >= 50 ? "#b07a1e" : "#981915";
+    const R = 52, circ = 2 * Math.PI * R;
+    const dashOffset = circ * (1 - scoreTotal / 100);
+    const DIMENSOES = [
+      { key: "cronograma", label: "Cronograma", peso: "25%" },
+      { key: "financeiro", label: "Financeiro",  peso: "30%" },
+      { key: "compras",    label: "Compras",     peso: "20%" },
+      { key: "equipe",     label: "Equipe",      peso: "15%" },
+      { key: "qualidade",  label: "Qualidade",   peso: "10%" },
+    ];
+
+    // Fases com progresso
+    const faseAtual = obra.fase || FASES[0];
+    const faseIdx = FASES.indexOf(faseAtual);
+    const proximaFase = faseIdx >= 0 && faseIdx < FASES.length - 1 ? FASES[faseIdx + 1] : "—";
+    const fasePesos = FASES.map(() => Math.round(100 / FASES.length));
+    const fasesHtml = FASES.map((f, i) => {
+      const isCurrent = f === faseAtual;
+      const isDone = i < faseIdx;
+      const pct = isDone ? 100 : isCurrent ? (progresso % Math.round(100 / FASES.length)) * (FASES.length) : 0;
+      const barColor = isDone ? "#4f7d57" : isCurrent ? "#981915" : "#e7e1d8";
+      return `<tr style="border-bottom:1px solid #efeae2">
+        <td style="padding:9px 12px;font-size:12px;font-weight:${isCurrent ? 700 : 500};color:${isCurrent ? "#26231f" : "#57514a"}">${f}</td>
+        <td style="padding:9px 12px;font-size:11px;color:#8c847a;text-align:center">${fasePesos[i]}%</td>
+        <td style="padding:9px 12px;width:140px">
+          <div style="height:6px;background:#efeae2;border-radius:3px;overflow:hidden">
+            <div style="height:6px;width:${isDone ? 100 : isCurrent ? 50 : 0}%;background:${barColor};border-radius:3px"></div>
+          </div>
+        </td>
+        <td style="padding:9px 12px;font-size:11px;font-weight:700;color:${isDone ? "#4f7d57" : isCurrent ? "#981915" : "#8c847a"};text-align:right">
+          ${isDone ? "Concluída" : isCurrent ? "Em andamento" : "Pendente"}
+        </td>
+      </tr>`;
+    }).join("");
+
+    // Seção: Resumo Geral
+    const secResumo = opcoes.resumo ? `
+    <div class="sec-h">Resumo Geral</div>
+    <div style="display:grid;grid-template-columns:1fr 220px;gap:14px;margin-bottom:0">
+      <div class="idbox">
+        <div class="cap">Identificação da obra</div>
+        <div class="idrow"><span class="k">Obra</span><span class="v">${obra.nome}</span></div>
+        <div class="idrow"><span class="k">Cliente</span><span class="v">${obra.cliente || "—"}</span></div>
+        <div class="idrow"><span class="k">Área</span><span class="v">${obra.area || "—"} m²</span></div>
+        <div class="idrow"><span class="k">Fase atual</span><span class="v">${faseAtual}</span></div>
+        <div class="idrow"><span class="k">Próxima fase</span><span class="v">${proximaFase}</span></div>
+        <div class="idrow"><span class="k">Início previsto</span><span class="v">${obra.prazo_inicio || "—"}</span></div>
+        <div class="idrow"><span class="k">Fim previsto</span><span class="v">${obra.prazo_fim || obra.prazo || "—"}</span></div>
+        <div class="idrow"><span class="k">Status</span><span class="v">${obra.status || "—"}</span></div>
+      </div>
+      <div class="totalbox">
+        <div class="tl">Progresso físico</div>
+        <div class="tv">${progresso}%</div>
+        <div style="margin-top:10px;background:rgba(255,255,255,.15);border-radius:4px;height:6px;position:relative">
+          <div style="width:${progresso}%;height:6px;background:#fff;border-radius:4px"></div>
         </div>
-        <div style="font-size:11px;margin-top:6px;opacity:0.75">${obra.progresso||0}% concluído</div>
+        <div class="area" style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.12)">
+          <div class="a"><b>${fmtR(contrato)}</b><span>Contrato</span></div>
+        </div>
+        <div style="margin-top:10px;font-size:10px;color:rgba(255,255,255,.4)">${FASES.length} fases · StickFrame</div>
       </div>
-      ${secResumo}${secDiario}${secFinanceiro}
-      <div style="margin-top:40px;padding-top:16px;border-top:1px solid #e5e7eb;font-size:11px;color:#aaa;text-align:center">
-        Gerado em ${hoje} — StickFrame
+    </div>` : "";
+
+    // Seção: StickScore
+    const secScore = opcoes.resumo ? `
+    <div class="sec-h">StickScore™</div>
+    <div style="display:grid;grid-template-columns:180px 1fr;gap:14px">
+      <div class="totalbox" style="align-items:center;justify-content:center;padding:22px 16px">
+        <div class="tl" style="text-align:center">Score</div>
+        <div style="position:relative;width:120px;height:120px;margin:10px auto 0">
+          <svg width="120" height="120" viewBox="0 0 120 120" style="transform:rotate(-90deg)">
+            <circle cx="60" cy="60" r="${R}" fill="none" stroke="${scoreCor}30" stroke-width="10"/>
+            <circle cx="60" cy="60" r="${R}" fill="none" stroke="${scoreCor}" stroke-width="10"
+              stroke-dasharray="${circ.toFixed(1)}" stroke-dashoffset="${dashOffset.toFixed(1)}" stroke-linecap="round"/>
+          </svg>
+          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+            font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:32px;color:${scoreCor}">${scoreTotal}</div>
+        </div>
+        <div style="margin-top:8px;font-size:11px;font-weight:800;letter-spacing:1px;
+          color:${scoreCor};text-transform:uppercase;text-align:center">
+          ${scoreTotal >= 75 ? "Bom" : scoreTotal >= 50 ? "Atenção" : "Crítico"}
+        </div>
       </div>
-    </body></html>`;
+      <div class="idbox">
+        <div class="cap">Dimensões</div>
+        ${DIMENSOES.map((d) => {
+          const v = score.scores?.[d.key] ?? 0;
+          const bc = v >= 75 ? "#4f7d57" : v >= 50 ? "#b07a1e" : "#981915";
+          return `<div style="padding:8px 14px;border-bottom:1px solid #efeae2">
+            <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+              <span style="font-size:11px;color:#57514a;font-weight:600">${d.label} <span style="font-size:9px;color:#8c847a">${d.peso}</span></span>
+              <span style="font-size:12px;font-weight:800;color:${bc}">${v}</span>
+            </div>
+            <div style="height:5px;background:#efeae2;border-radius:3px;overflow:hidden">
+              <div style="height:5px;width:${v}%;background:${bc};border-radius:3px"></div>
+            </div>
+          </div>`;
+        }).join("")}
+      </div>
+    </div>` : "";
+
+    // Seção: Financeiro
+    const secFinanceiro = opcoes.financeiro ? `
+    <div class="sec-h">Resumo Financeiro</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+      <div class="idbox">
+        <div class="cap" style="color:#4f7d57">Receitas</div>
+        <div style="padding:16px;text-align:center">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:700;color:#4f7d57">${fmtR(receitas)}</div>
+        </div>
+      </div>
+      <div class="idbox">
+        <div class="cap">Despesas</div>
+        <div style="padding:16px;text-align:center">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:700;color:#57514a">${fmtR(despesas)}</div>
+        </div>
+      </div>
+      <div class="totalbox" style="border-radius:12px;padding:0;overflow:hidden">
+        <div style="padding:8px 14px;font-size:9.5px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.45)">Saldo</div>
+        <div style="padding:0 14px 14px;font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:700;color:${saldo>=0?"#22c578":"#e0463c"}">${fmtR(saldo)}</div>
+      </div>
+    </div>` : "";
+
+    // Seção: Cronograma
+    const secCronograma = opcoes.resumo ? `
+    <div class="sec-h">Cronograma Físico</div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>Fase</th><th style="text-align:center">Peso</th>
+          <th>Avanço</th><th style="text-align:right">Status</th>
+        </tr></thead>
+        <tbody>${fasesHtml}</tbody>
+        <tfoot><tr style="background:#faf8f4">
+          <td colspan="2" style="padding:9px 12px;font-size:11px;font-weight:800;color:#8c847a;text-transform:uppercase;letter-spacing:.5px">Progresso total</td>
+          <td style="padding:9px 12px">
+            <div style="height:6px;background:#e7e1d8;border-radius:3px;overflow:hidden">
+              <div style="height:6px;width:${progresso}%;background:#981915;border-radius:3px"></div>
+            </div>
+          </td>
+          <td style="padding:9px 12px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;color:#981915;text-align:right">${progresso}%</td>
+        </tr></tfoot>
+      </table>
+    </div>` : "";
+
+    // Seção: Diário
+    const secDiario = opcoes.diario ? (() => {
+      const entradas = diarioObra.slice(0, 8);
+      if (entradas.length === 0) return `
+    <div class="sec-h">Diário de Obra · StickField™</div>
+    <div style="border:1px solid #e7e1d8;border-radius:12px;padding:32px;text-align:center">
+      <div style="font-size:28px;margin-bottom:10px;opacity:.3">📋</div>
+      <div style="font-size:13px;font-weight:700;color:#57514a">Nenhum registro neste período</div>
+      <div style="margin-top:8px;display:inline-flex;align-items:center;gap:6px;padding:4px 12px;background:#faf8f4;border:1px solid #e7e1d8;border-radius:20px;font-size:11px;color:#8c847a">
+        <span style="width:6px;height:6px;border-radius:50%;background:#b07a1e;display:inline-block"></span>Sem registros · Use StickField™ para registrar
+      </div>
+    </div>`;
+      return `
+    <div class="sec-h">Diário de Obra · StickField™</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      ${entradas.map((r) => {
+        const d = r.data ? new Date(r.data + "T00:00:00") : null;
+        const dia  = d ? String(d.getDate()).padStart(2, "0") : "—";
+        const mes  = d ? d.toLocaleDateString("pt-BR", { month: "short" }).replace(".", "") : "";
+        return `<div style="display:flex;gap:12px;border:1px solid #e7e1d8;border-radius:10px;overflow:hidden">
+          <div style="min-width:52px;background:#faf8f4;border-right:1px solid #e7e1d8;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 8px">
+            <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:22px;line-height:1;color:#26231f">${dia}</div>
+            <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#8c847a">${mes}</div>
+          </div>
+          <div style="padding:10px 12px;flex:1">
+            <div style="font-size:10px;font-weight:700;color:#8c847a;letter-spacing:.5px;margin-bottom:4px">
+              ${r.turno || "Turno"} ${r.resp ? "· " + r.resp : ""}
+            </div>
+            <div style="font-size:12.5px;color:#26231f;line-height:1.5">${r.texto || r.observacoes || "—"}</div>
+          </div>
+        </div>`;
+      }).join("")}
+    </div>`;
+    })() : "";
+
+    const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+<title>Relatório — ${obra.nome}</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --brick:#981915;--brick-dk:#7d1411;--brick-soft:#f3e7e5;
+    --graphite:#232225;--graphite-2:#1a191c;
+    --ink:#26231f;--ink-2:#57514a;--muted:#8c847a;
+    --line:#e7e1d8;--line-2:#efeae2;--surface:#fff;--surface-2:#faf8f4;
+    --cat:#4f7d57;--steel:#3b6ea5;
+    --sans:'Hanken Grotesk',system-ui,sans-serif;
+    --cond:'Barlow Condensed',var(--sans);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--sans);color:var(--ink);-webkit-print-color-adjust:exact;print-color-adjust:exact;line-height:1.5}
+  .pad{padding:16mm 15mm 12mm}
+  .dochead{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;padding-bottom:14px;border-bottom:2px solid var(--graphite)}
+  .dh-l .wm{font-family:var(--cond);font-weight:700;font-size:22px;letter-spacing:1.2px;color:var(--ink)}
+  .dh-l .wm span{color:var(--brick)}
+  .dh-l .sb{font-size:9px;letter-spacing:1.6px;text-transform:uppercase;color:var(--muted);margin-top:3px}
+  .dh-r{text-align:right}
+  .dh-r .ey{font-size:9px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--brick)}
+  .dh-r .title{font-family:var(--cond);font-size:18px;font-weight:700;color:var(--ink);margin-top:3px}
+  .dh-r .sub{font-size:10.5px;color:var(--muted);margin-top:3px}
+  .sec-h{font-family:var(--cond);font-weight:700;font-size:12px;letter-spacing:2.5px;text-transform:uppercase;color:var(--ink);display:flex;align-items:center;gap:10px;margin:22px 0 12px}
+  .sec-h::after{content:"";flex:1;height:1px;background:var(--line)}
+  .tbl-wrap{border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  table{width:100%;border-collapse:collapse;font-size:11px}
+  thead th{text-align:left;font-size:8.5px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--muted);padding:9px 12px;background:var(--surface-2);border-bottom:1px solid var(--line)}
+  .idbox{border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .idbox .cap{font-size:9px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--muted);background:var(--surface-2);padding:8px 14px;border-bottom:1px solid var(--line)}
+  .idrow{display:grid;grid-template-columns:110px 1fr;gap:8px;padding:8px 14px;font-size:11.5px;border-bottom:1px solid var(--line-2)}
+  .idrow:last-child{border-bottom:none}
+  .idrow .k{color:var(--muted);font-weight:700}.idrow .v{color:var(--ink);font-weight:600}
+  .totalbox{background:var(--graphite-2);border-radius:12px;padding:16px;color:#fff;display:flex;flex-direction:column;position:relative;overflow:hidden}
+  .totalbox::after{content:"";position:absolute;right:-20px;top:-20px;width:90px;height:90px;border-radius:50%;background:radial-gradient(circle,rgba(152,25,21,.5),transparent 70%)}
+  .totalbox .tl{font-size:9px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.45);position:relative}
+  .totalbox .tv{font-family:var(--cond);font-weight:700;font-size:36px;line-height:.9;margin-top:6px;position:relative}
+  .totalbox .area{display:flex;gap:12px;position:relative}
+  .totalbox .area .a b{font-family:var(--cond);font-weight:700;font-size:16px;color:#fff;display:block;line-height:1}
+  .totalbox .area .a span{font-size:9px;color:rgba(255,255,255,.45)}
+  .docfoot{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 15mm;border-top:1px solid var(--line);font-size:9px;color:var(--muted);margin-top:24px}
+  .docfoot b{color:var(--ink-2);font-weight:700}
+  @page{size:A4;margin:0}
+</style></head><body>
+<div class="pad">
+  <div class="dochead">
+    <div class="dh-l">
+      <div class="wm">STICK<span>FRAME</span></div>
+      <div class="sb">Sistemas Construtivos · Steel Frame</div>
+    </div>
+    <div class="dh-r">
+      <div class="ey">Relatório de Obra</div>
+      <div class="title">${obra.nome}</div>
+      <div class="sub">${obra.cliente || ""} · Gerado em ${hoje}</div>
+    </div>
+  </div>
+
+  ${secResumo}
+  ${secScore}
+  ${secFinanceiro}
+  ${secCronograma}
+  ${secDiario}
+</div>
+<div class="docfoot">
+  <span><b>StickFrame</b> · Sistemas Construtivos · Steel Frame</span>
+  <span>${obra.nome} · ${hoje}</span>
+  <span>StickScore™ <b>${scoreTotal}</b></span>
+</div>
+</body></html>`;
 
     printHtml(html, `relatorio-${obra.nome.replace(/\s+/g, "-").toLowerCase()}`);
     const encoded = encodeURIComponent(`Relatório da obra ${obra.nome} gerado em ${hoje}`);
