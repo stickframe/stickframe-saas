@@ -6,6 +6,7 @@ import {
   listarApontamentos, criarApontamento, atualizarApontamento, deletarApontamento,
 } from "../services/repositories/bimRepository";
 import StickViewBIM from "../components/bim/StickViewBIM";
+import StickQuotePDFModal from "../components/bim/StickQuotePDFModal";
 import { useToast } from "../components/ui/Toast";
 import { criarOrcamento } from "../services/repositories/orcamentoRepository";
 
@@ -442,6 +443,7 @@ const TABS = [
 export default function BimSF() {
   useModuleLoad("obras");
   const [tab, setTab] = useState("stickview");
+  const [pdfModalOpen, setPdfModalOpen] = useState(false);
   const toast = useToast();
   const obras     = useAppStore((s) => s.obras);
   const user      = useAppStore((s) => s.user);
@@ -499,6 +501,13 @@ export default function BimSF() {
               <p style={{ fontSize: 13, color: "var(--muted)", marginTop: 4 }}>Modelos IFC · Visualização 3D · Apontamentos</p>
             </div>
             <div style={{ display: "flex", gap: 10 }}>
+              <BtnGhost onClick={() => setPdfModalOpen(true)} style={{ borderColor: "rgba(192,36,28,.3)", color: "#e0463c" }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/>
+                </svg>
+                Analisar PDF
+              </BtnGhost>
               <BtnGhost onClick={() => { setTab("apontamentos"); }}>
                 <Ic n="plus" w={14} /> Apontamento
               </BtnGhost>
@@ -598,6 +607,13 @@ export default function BimSF() {
       {tab === "modelos"      && <TabModelos obraId={obraId} empresaId={empresaId} modelos={modelos} carregarModelos={carregarModelos} deletando={deletando} setDeletando={setDeletando} />}
       {tab === "revisoes"     && <TabRevisoes onGoToModelos={() => setTab("modelos")} />}
       {tab === "apontamentos" && <TabApontamentos obraId={obraId} modelos={modelos} apontamentos={apontamentos} carregarApontamentos={carregarApontamentos} />}
+      {pdfModalOpen && (
+        <StickQuotePDFModal
+          onClose={() => setPdfModalOpen(false)}
+          obraNome={obras[obraIdx]?.nome || ""}
+          empresaId={empresaId}
+        />
+      )}
     </div>
   );
 }
