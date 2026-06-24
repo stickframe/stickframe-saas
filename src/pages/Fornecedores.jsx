@@ -330,6 +330,7 @@ export default function Fornecedores() {
   const [isSaving,  setIsSaving]  = useState(false);
   const [poModal,   setPoModal]   = useState(null); // cotação selecionada para gerar PO
   const [poForm,    setPoForm]    = useState({ local_entrega: "", condicao_pagamento: "30 dias", observacoes_po: "" });
+  const [poItens,   setPoItens]   = useState([]);   // itens da tabela do PO
   const { toast, mostrarToast }   = useToast();
 
   const buscaDebounced = useDebounce(busca, 300);
@@ -377,81 +378,157 @@ export default function Fornecedores() {
     const empresa = user?.empresa || user?.nome || "Construtora";
     const poNum = `PO-${Date.now().toString().slice(-6)}`;
     const dataEmissao = new Date().toLocaleDateString("pt-BR");
-    const valorFmt = c.valor != null ? `R$ ${Number(c.valor).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}` : "A definir";
+    const dataValidade = new Date(Date.now() + 10 * 86400000).toLocaleDateString("pt-BR");
 
-    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${poNum}</title>
+    // Monta lista de itens: itens manuais OU item único da cotação
+    const itens = poItens.length > 0 ? poItens : [{
+      descricao: c.descricao, un: "VB", qtd: 1, vlr_unit: Number(c.valor) || 0, desc: 0,
+    }];
+
+    const fmtN = (v) => Number(v || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 });
+    const subtotais = itens.map((it) => {
+      const bruto = (Number(it.qtd) || 0) * (Number(it.vlr_unit) || 0);
+      const descVal = bruto * ((Number(it.desc) || 0) / 100);
+      return bruto - descVal;
+    });
+    const totalMercadorias = subtotais.reduce((a, v) => a + v, 0);
+    const totalDesconto = itens.reduce((a, it) => {
+      const bruto = (Number(it.qtd) || 0) * (Number(it.vlr_unit) || 0);
+      return a + bruto * ((Number(it.desc) || 0) / 100);
+    }, 0);
+    const totalGeral = totalMercadorias;
+
+    const linhasItens = itens.map((it, i) => {
+      const bruto = (Number(it.qtd) || 0) * (Number(it.vlr_unit) || 0);
+      const descVal = bruto * ((Number(it.desc) || 0) / 100);
+      const total = bruto - descVal;
+      return `<tr>
+        <td>${String(i + 1).padStart(2, "0")}</td>
+        <td>${it.descricao || ""}</td>
+        <td style="text-align:center">${it.un || "UN"}</td>
+        <td style="text-align:right">${fmtN(it.qtd)}</td>
+        <td style="text-align:right">${fmtN(it.vlr_unit)}</td>
+        <td style="text-align:right">${fmtN(it.desc)}%</td>
+        <td style="text-align:right;font-weight:700">${fmtN(total)}</td>
+      </tr>`;
+    }).join("");
+
+    const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><title>${poNum}</title>
 <style>
-  body { font-family: Arial, sans-serif; margin: 0; padding: 40px; color: #1a1a1a; background: #fff; }
-  .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #a33327; padding-bottom: 20px; margin-bottom: 28px; }
-  .logo-area h1 { margin: 0; font-size: 24px; color: #a33327; font-weight: 900; letter-spacing: -0.5px; }
-  .logo-area p { margin: 4px 0 0; font-size: 12px; color: #666; }
-  .po-badge { background: #a33327; color: #fff; padding: 10px 20px; border-radius: 8px; text-align: center; }
-  .po-badge .num { font-size: 18px; font-weight: 900; }
-  .po-badge .label { font-size: 11px; letter-spacing: 1px; opacity: 0.85; }
-  .section { margin-bottom: 24px; }
-  .section-title { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #a33327; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 4px; }
-  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-  .field label { font-size: 10px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 3px; }
-  .field span { font-size: 13px; font-weight: 600; }
-  .item-table { width: 100%; border-collapse: collapse; }
-  .item-table th { background: #f5f5f5; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; padding: 10px 14px; text-align: left; border-bottom: 2px solid #ddd; }
-  .item-table td { padding: 14px; border-bottom: 1px solid #eee; font-size: 13px; }
-  .item-table .valor { font-size: 18px; font-weight: 900; color: #a33327; text-align: right; }
-  .footer { margin-top: 48px; border-top: 1px solid #eee; padding-top: 20px; display: flex; justify-content: space-between; }
-  .assinatura { border-top: 1px solid #333; width: 200px; padding-top: 8px; font-size: 11px; color: #666; text-align: center; }
-  .obs { background: #fafafa; border: 1px solid #eee; border-radius: 6px; padding: 12px 14px; font-size: 12px; color: #555; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; font-size: 11px; color: #1a1a1a; background: #fff; padding: 24px 32px; }
+  .header-top { display: flex; align-items: flex-start; gap: 16px; border-bottom: 2px solid #c0241c; padding-bottom: 10px; margin-bottom: 14px; }
+  .logo-box { display: flex; flex-direction: column; }
+  .logo-box .co { font-size: 15px; font-weight: 900; letter-spacing: 1px; color: #c0241c; }
+  .logo-box .sub { font-size: 9.5px; color: #555; margin-top: 1px; }
+  .logo-box .addr { font-size: 9px; color: #888; margin-top: 3px; }
+  .po-title { flex: 1; text-align: center; }
+  .po-title .lbl { font-size: 14px; font-weight: 900; letter-spacing: 2px; }
+  .po-title .num { font-size: 13px; font-weight: 700; color: #555; }
+  .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border: 1px solid #ccc; margin-bottom: 10px; }
+  .info-row { display: grid; grid-template-columns: 100px 1fr; border-bottom: 1px solid #e0e0e0; }
+  .info-row:last-child { border-bottom: none; }
+  .info-row .k { background: #f2f2f2; padding: 4px 7px; font-weight: 700; font-size: 9.5px; border-right: 1px solid #e0e0e0; color: #555; }
+  .info-row .v { padding: 4px 7px; font-size: 10px; }
+  .pag-row { display: grid; grid-template-columns: 120px 1fr 140px; border: 1px solid #ccc; border-top: none; margin-bottom: 10px; }
+  .pag-row .k { background: #f2f2f2; padding: 5px 8px; font-weight: 700; font-size: 9.5px; border-right: 1px solid #e0e0e0; }
+  .pag-row .v { padding: 5px 8px; font-size: 10px; }
+  .pag-row .vl { padding: 5px 8px; font-size: 11px; font-weight: 900; text-align: right; }
+  table.itens { width: 100%; border-collapse: collapse; border: 1px solid #ccc; margin-bottom: 0; }
+  table.itens th { background: #f2f2f2; font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; padding: 6px 7px; border: 1px solid #ccc; text-align: left; }
+  table.itens td { padding: 7px 7px; border: 1px solid #e8e8e8; font-size: 10px; vertical-align: top; }
+  table.itens tr:nth-child(even) td { background: #fafafa; }
+  .totais { border: 1px solid #ccc; border-top: none; display: grid; grid-template-columns: repeat(5, 1fr); }
+  .totais .tc { padding: 6px 8px; border-right: 1px solid #ddd; }
+  .totais .tc:last-child { border-right: none; }
+  .totais .tk { font-size: 8.5px; font-weight: 700; text-transform: uppercase; color: #666; }
+  .totais .tv { font-size: 11px; font-weight: 700; margin-top: 2px; }
+  .totais .tv.red { color: #c0241c; font-size: 13px; font-weight: 900; }
+  .cond { margin-top: 14px; font-size: 9px; color: #555; line-height: 1.7; }
+  .cond li { margin-left: 12px; }
+  .assin { margin-top: 28px; display: flex; justify-content: center; gap: 80px; }
+  .assin-line { width: 200px; border-top: 1px solid #333; padding-top: 5px; text-align: center; font-size: 9.5px; color: #666; }
+  .foot { margin-top: 12px; display: flex; justify-content: space-between; font-size: 8.5px; color: #aaa; border-top: 1px solid #eee; padding-top: 6px; }
+  @media print { body { padding: 16px 20px; } }
 </style></head><body>
-<div class="header">
-  <div class="logo-area">
-    <h1>${empresa}</h1>
-    <p>Pedido de Compra Oficial · ${dataEmissao}</p>
+
+<div class="header-top">
+  <div class="logo-box">
+    <div class="co">${empresa}</div>
+    <div class="sub">Pedido de Compra</div>
+    ${forn.endereco ? `<div class="addr">${forn.endereco}</div>` : ""}
   </div>
-  <div class="po-badge">
-    <div class="label">PEDIDO DE COMPRA</div>
-    <div class="num">${poNum}</div>
-    <div style="font-size:10px;margin-top:3px;opacity:.8">${dataEmissao}</div>
+  <div class="po-title">
+    <div class="lbl">PEDIDO DE COMPRA</div>
+    <div class="num">NÚMERO: ${poNum}</div>
   </div>
 </div>
 
-<div class="grid-2">
-  <div class="section">
-    <div class="section-title">Fornecedor</div>
-    <div class="field" style="margin-bottom:8px"><label>Razão Social</label><span>${forn.nome}</span></div>
-    ${forn.cnpj ? `<div class="field" style="margin-bottom:8px"><label>CNPJ</label><span>${forn.cnpj}</span></div>` : ""}
-    ${forn.telefone ? `<div class="field" style="margin-bottom:8px"><label>Telefone</label><span>${forn.telefone}</span></div>` : ""}
-    ${forn.email ? `<div class="field" style="margin-bottom:8px"><label>E-mail</label><span>${forn.email}</span></div>` : ""}
+<div class="info-grid">
+  <div>
+    <div class="info-row"><div class="k">FORNECEDOR:</div><div class="v">${forn.nome}</div></div>
+    ${forn.cnpj ? `<div class="info-row"><div class="k">CNPJ:</div><div class="v">${forn.cnpj}</div></div>` : ""}
+    ${forn.telefone ? `<div class="info-row"><div class="k">TELEFONE:</div><div class="v">${forn.telefone}</div></div>` : ""}
+    ${forn.email ? `<div class="info-row"><div class="k">E-MAIL:</div><div class="v">${forn.email}</div></div>` : ""}
   </div>
-  <div class="section">
-    <div class="section-title">Dados da Entrega</div>
-    ${obra ? `<div class="field" style="margin-bottom:8px"><label>Obra</label><span>${obra.nome}</span></div>` : ""}
-    ${poForm.local_entrega ? `<div class="field" style="margin-bottom:8px"><label>Local de Entrega</label><span>${poForm.local_entrega}</span></div>` : ""}
-    <div class="field" style="margin-bottom:8px"><label>Condição de Pagamento</label><span>${poForm.condicao_pagamento}</span></div>
+  <div>
+    <div class="info-row"><div class="k">EMISSÃO:</div><div class="v">${dataEmissao}</div></div>
+    <div class="info-row"><div class="k">VALIDADE:</div><div class="v">${dataValidade}</div></div>
+    ${obra ? `<div class="info-row"><div class="k">OBRA:</div><div class="v">${obra.nome}</div></div>` : ""}
+    ${poForm.local_entrega ? `<div class="info-row"><div class="k">ENTREGA:</div><div class="v">${poForm.local_entrega}</div></div>` : ""}
   </div>
 </div>
 
-<div class="section">
-  <div class="section-title">Item do Pedido</div>
-  <table class="item-table">
-    <thead><tr><th>#</th><th>Descrição</th><th>Valor Total</th></tr></thead>
-    <tbody>
-      <tr>
-        <td>01</td>
-        <td>${c.descricao}</td>
-        <td class="valor">${valorFmt}</td>
-      </tr>
-    </tbody>
-  </table>
+<div class="pag-row">
+  <div class="k">PAGAMENTOS: FORMA</div>
+  <div class="v">${poForm.condicao_pagamento}</div>
+  <div class="vl">R$ ${fmtN(totalGeral)}</div>
+</div>
+
+<table class="itens">
+  <thead>
+    <tr>
+      <th style="width:28px">#</th>
+      <th>DESCRIÇÃO</th>
+      <th style="width:36px;text-align:center">UN</th>
+      <th style="width:70px;text-align:right">QTD.</th>
+      <th style="width:80px;text-align:right">VLR.UNIT.</th>
+      <th style="width:50px;text-align:right">DESC.</th>
+      <th style="width:90px;text-align:right">TOTAL</th>
+    </tr>
+  </thead>
+  <tbody>${linhasItens}</tbody>
+</table>
+
+<div class="totais">
+  <div class="tc"><div class="tk">Mercadorias</div><div class="tv">R$ ${fmtN(totalMercadorias + totalDesconto)}</div></div>
+  <div class="tc"><div class="tk">Descontos</div><div class="tv">R$ ${fmtN(totalDesconto)}</div></div>
+  <div class="tc"><div class="tk">Despesas</div><div class="tv">R$ 0,00</div></div>
+  <div class="tc"><div class="tk">IPI + ST</div><div class="tv">R$ 0,00</div></div>
+  <div class="tc"><div class="tk">TOTAL</div><div class="tv red">R$ ${fmtN(totalGeral)}</div></div>
 </div>
 
 ${(c.observacoes || poForm.observacoes_po) ? `
-<div class="section">
-  <div class="section-title">Observações</div>
-  <div class="obs">${[c.observacoes, poForm.observacoes_po].filter(Boolean).join(" · ")}</div>
+<div class="cond" style="margin-top:10px">
+  <strong>Observações:</strong> ${[c.observacoes, poForm.observacoes_po].filter(Boolean).join(" · ")}
 </div>` : ""}
 
-<div class="footer">
-  <div class="assinatura">${empresa}<br>Responsável pela Compra</div>
-  <div style="font-size:11px;color:#999;text-align:right">Emitido em ${dataEmissao}<br>Pedido Nº ${poNum}</div>
+<div class="cond">
+  <ul>
+    <li>Este pedido está sujeito à confirmação de estoques e preços até a data de validade.</li>
+    <li>Os materiais devem estar em conformidade com as especificações descritas acima.</li>
+    <li>Para confirmação, devolver este documento datado e assinado.</li>
+  </ul>
+</div>
+
+<div class="assin">
+  <div class="assin-line">${empresa}<br>Responsável pela Compra</div>
+  <div class="assin-line">${forn.nome}<br>Fornecedor / Vendedor</div>
+</div>
+
+<div class="foot">
+  <span>Emitido em ${dataEmissao} às ${new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span>
+  <span>Pedido Nº ${poNum}</span>
 </div>
 </body></html>`;
 
@@ -673,7 +750,7 @@ ${(c.observacoes || poForm.observacoes_po) ? `
                         </div>
                         <div style={{ display: "flex", gap: 8, marginTop: 12, justifyContent: "flex-end" }}>
                           {c.status === "Aprovada" && (
-                            <button onClick={() => { setPoModal(c); setPoForm({ local_entrega: obras.find((o) => o.id === c.obra_id)?.endereco || "", condicao_pagamento: "30 dias", observacoes_po: "" }); }}
+                            <button onClick={() => { setPoModal(c); setPoItens([]); setPoForm({ local_entrega: obras.find((o) => o.id === c.obra_id)?.endereco || "", condicao_pagamento: "30 dias", observacoes_po: "" }); }}
                               style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 12px", background: C.success + "22", border: `1px solid ${C.success}44`, borderRadius: 6, fontSize: 11, fontWeight: 700, color: C.success, cursor: "pointer", fontFamily: "inherit" }}>
                               <Ic n="cart" w={13} c={C.success} /> Gerar PO
                             </button>
@@ -793,6 +870,46 @@ ${(c.observacoes || poForm.observacoes_po) ? `
             <div>
               <Label>Observações adicionais</Label>
               <Input value={poForm.observacoes_po} onChange={(v) => setPoForm((f) => ({ ...f, observacoes_po: v }))} placeholder="Ex: Entregar das 8h às 17h" />
+            </div>
+            {/* Itens do pedido */}
+            <div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                <Label>Itens do Pedido</Label>
+                <button onClick={() => setPoItens((prev) => [...prev, { descricao: "", un: "PC", qtd: 1, vlr_unit: 0, desc: 0 }])}
+                  style={{ fontSize: 11, fontWeight: 700, color: C.red, background: "none", border: `1px solid ${C.red}44`, borderRadius: 6, padding: "3px 10px", cursor: "pointer" }}>
+                  + Item
+                </button>
+              </div>
+              {poItens.length === 0 ? (
+                <div style={{ fontSize: 11, color: C.muted, background: C.surface2, borderRadius: 8, padding: "10px 12px" }}>
+                  Sem itens — o PDF usará a descrição e valor da cotação como item único. Clique em <strong>+ Item</strong> para detalhar.
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {poItens.map((it, i) => (
+                    <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 44px 72px 72px 52px 28px", gap: 4, alignItems: "center" }}>
+                      <input value={it.descricao} onChange={(e) => setPoItens((p) => p.map((x, j) => j === i ? { ...x, descricao: e.target.value } : x))}
+                        placeholder="Descrição" style={{ padding: "6px 8px", borderRadius: 6, border: `1px solid ${C.line}`, fontSize: 11, background: C.surface, color: C.ink, fontFamily: "inherit" }} />
+                      <input value={it.un} onChange={(e) => setPoItens((p) => p.map((x, j) => j === i ? { ...x, un: e.target.value } : x))}
+                        placeholder="UN" style={{ padding: "6px 6px", borderRadius: 6, border: `1px solid ${C.line}`, fontSize: 11, textAlign: "center", background: C.surface, color: C.ink, fontFamily: "inherit" }} />
+                      <input type="number" value={it.qtd} onChange={(e) => setPoItens((p) => p.map((x, j) => j === i ? { ...x, qtd: e.target.value } : x))}
+                        placeholder="Qtd" style={{ padding: "6px 6px", borderRadius: 6, border: `1px solid ${C.line}`, fontSize: 11, textAlign: "right", background: C.surface, color: C.ink, fontFamily: "inherit" }} />
+                      <input type="number" value={it.vlr_unit} onChange={(e) => setPoItens((p) => p.map((x, j) => j === i ? { ...x, vlr_unit: e.target.value } : x))}
+                        placeholder="R$ unit" style={{ padding: "6px 6px", borderRadius: 6, border: `1px solid ${C.line}`, fontSize: 11, textAlign: "right", background: C.surface, color: C.ink, fontFamily: "inherit" }} />
+                      <input type="number" value={it.desc} onChange={(e) => setPoItens((p) => p.map((x, j) => j === i ? { ...x, desc: e.target.value } : x))}
+                        placeholder="Desc%" style={{ padding: "6px 6px", borderRadius: 6, border: `1px solid ${C.line}`, fontSize: 11, textAlign: "right", background: C.surface, color: C.ink, fontFamily: "inherit" }} />
+                      <button onClick={() => setPoItens((p) => p.filter((_, j) => j !== i))}
+                        style={{ background: "none", border: "none", color: C.muted, cursor: "pointer", fontSize: 16, lineHeight: 1 }}>×</button>
+                    </div>
+                  ))}
+                  <div style={{ fontSize: 11, color: C.muted, textAlign: "right", marginTop: 2 }}>
+                    Total: <strong style={{ color: C.ink }}>R$ {poItens.reduce((a, it) => {
+                      const bruto = (Number(it.qtd) || 0) * (Number(it.vlr_unit) || 0);
+                      return a + bruto * (1 - (Number(it.desc) || 0) / 100);
+                    }, 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</strong>
+                  </div>
+                </div>
+              )}
             </div>
             <div style={{ background: C.success + "10", border: `1px solid ${C.success}33`, borderRadius: 8, padding: "10px 14px", fontSize: 12, color: C.success, fontWeight: 600, display: "flex", alignItems: "flex-start", gap: 8 }}>
               <Ic n="check" w={14} c={C.success} style={{ marginTop: 1 }} />
