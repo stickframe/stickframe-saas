@@ -188,10 +188,10 @@ export default function MonitorPrecos() {
                 </div>
                 
                 <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginTop: 12 }}>
-                  <span className="num" style={{ fontSize: 26, fontWeight: 700, color: C.text }}>R$ {item.preco_atual.toLocaleString("pt-BR", {minimumFractionDigits: 2})}</span>
+                  <span className="num" style={{ fontSize: 26, fontWeight: 700, color: C.text }}>R$ {(item.preco_atual ?? 0).toLocaleString("pt-BR", {minimumFractionDigits: 2})}</span>
                   <span style={{ fontSize: 12, color: C.muted }}>/ {item.unidade}</span>
                 </div>
-                {isAlta && <div style={{ fontSize: 11, color: C.danger, marginTop: 4 }}>Anteriormente R$ {item.preco_anterior.toLocaleString("pt-BR", {minimumFractionDigits: 2})}</div>}
+                {isAlta && <div style={{ fontSize: 11, color: C.danger, marginTop: 4 }}>Anteriormente R$ {(item.preco_anterior ?? 0).toLocaleString("pt-BR", {minimumFractionDigits: 2})}</div>}
               </div>
               
               {/* Mini-Gráfico (Sparkline em Área) do Histórico */}
