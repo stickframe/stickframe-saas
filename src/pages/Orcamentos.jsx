@@ -573,64 +573,161 @@ function gerarPDF(o) {
 
 //  Contrato PDF 
 function gerarContratoHTML(o) {
-  const hoje = new Date().toLocaleDateString("pt-BR");
-  const html = `<!DOCTYPE html><html><head><title>Contrato</title><style>
-    body { font-family: Arial, sans-serif; font-size: 12px; line-height: 1.6; color: #1a1a1a; max-width: 800px; margin: 0 auto; padding: 40px; }
-    h1 { font-size: 18px; text-align: center; margin-bottom: 4px; }
-    h2 { font-size: 13px; margin-top: 24px; margin-bottom: 8px; border-bottom: 1px solid #ddd; padding-bottom: 4px; }
-    .header { text-align: center; margin-bottom: 32px; border-bottom: 2px solid #981915; padding-bottom: 16px; }
-    .kv { display: flex; gap: 8px; margin-bottom: 6px; }
-    .kv span:first-child { font-weight: bold; min-width: 140px; }
-    table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 11px; }
-    th { background: #981915; color: #fff; padding: 6px 10px; text-align: left; }
-    td { padding: 6px 10px; border-bottom: 1px solid #eee; }
-    .assinatura { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 60px; }
-    .ass-box { border-top: 1px solid #333; padding-top: 8px; text-align: center; font-size: 11px; }
-    @media print { @page { margin: 20mm; } }
-  </style></head><body>
-    <div class="header">
-      <div style="font-size:10px;letter-spacing:2px;color:#981915;margin-bottom:4px">STICK FRAME SISTEMAS CONSTRUTIVOS</div>
-      <h1>CONTRATO DE PRESTAÇÃO DE SERVIÇOS</h1>
-      <div style="font-size:11px;color:#666">Ref: ${o.ref} · ${hoje}</div>
+  const area      = Number(o.area) || 0;
+  const unidades  = Number(o.unidades) || 1;
+  const areaTotal = area * unidades;
+  const total     = Number(o.valor) || 0;
+  const sinal     = Number(o.sinal) || Math.round(total * 0.10);
+  const saldo     = total - sinal;
+  const hoje      = new Date().toLocaleDateString("pt-BR");
+  const hojeExt   = new Date().toLocaleDateString("pt-BR", { day: "numeric", month: "long", year: "numeric" });
+  const numRef    = o.ref || `${new Date().getFullYear()}/${String(o.id || Date.now()).slice(-4).padStart(4, "0")}`;
+
+  const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+<title>Contrato Nº ${numRef} — StickFrame</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Hanken+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --brick:#981915;--brick-dk:#7d1411;--brick-soft:#f3e7e5;
+    --graphite:#232225;--graphite-2:#1a191c;
+    --ink:#26231f;--ink-2:#57514a;--muted:#8c847a;
+    --line:#e7e1d8;--line-2:#efeae2;--surface:#fff;--surface-2:#faf8f4;
+    --cat:#4f7d57;
+    --sans:'Hanken Grotesk',system-ui,sans-serif;
+    --cond:'Barlow Condensed',var(--sans);--mono:'JetBrains Mono',ui-monospace,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--sans);color:var(--ink);-webkit-print-color-adjust:exact;print-color-adjust:exact;line-height:1.6}
+  .pad{padding:18mm 16mm 14mm}
+  .dochead{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;padding-bottom:16px;border-bottom:2px solid var(--graphite)}
+  .dh-l .wm{font-family:var(--cond);font-weight:700;font-size:25px;letter-spacing:1.2px;line-height:1;color:var(--ink)}
+  .dh-l .wm span{color:var(--brick)}
+  .dh-l .sb{font-size:9px;letter-spacing:1.6px;text-transform:uppercase;color:var(--muted);margin-top:4px}
+  .dh-r{text-align:right}
+  .dh-r .ver{display:inline-flex;background:var(--graphite-2);color:#fff;font-family:var(--cond);font-weight:700;font-size:13px;letter-spacing:.5px;padding:4px 12px;border-radius:7px}
+  .dh-r .gen{font-size:10.5px;color:var(--muted);margin-top:7px;line-height:1.4}
+  .dh-r .gen b{color:var(--ink-2);font-weight:700}
+  .doctitle{margin-top:20px;border-bottom:1px solid var(--line);padding-bottom:18px}
+  .doctitle .ey{font-size:11px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--brick)}
+  .doctitle h1{font-family:var(--cond);font-weight:700;font-size:34px;letter-spacing:.5px;line-height:.96;margin-top:6px}
+  .doctitle .h-sub{font-size:12px;color:var(--ink-2);margin-top:5px}
+  .clausula{margin-top:26px}
+  .cl-head{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+  .cl-num{width:28px;height:28px;border-radius:8px;background:var(--graphite-2);color:#fff;font-family:var(--cond);font-weight:700;font-size:15px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .cl-title{font-family:var(--cond);font-weight:700;font-size:17px;letter-spacing:.5px;text-transform:uppercase;color:var(--ink)}
+  .cl-body{font-size:12px;color:var(--ink-2);line-height:1.7;margin-left:40px}
+  .partes-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-left:40px}
+  .parte-box{border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .parte-box .cap{font-size:9px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--muted);background:var(--surface-2);padding:8px 14px;border-bottom:1px solid var(--line)}
+  .parte-box .body{padding:12px 14px;font-size:12px;color:var(--ink);font-weight:600;line-height:1.6}
+  .parte-box .body .sub{font-size:11px;color:var(--ink-2);font-weight:500}
+  .totalbox{background:var(--graphite-2);border-radius:12px;padding:18px;color:#fff;margin-left:40px;margin-top:14px;position:relative;overflow:hidden}
+  .totalbox::after{content:"";position:absolute;right:-30px;top:-30px;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,rgba(152,25,21,.5),transparent 70%)}
+  .totalbox .tl{font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.5);position:relative}
+  .totalbox .tv{font-family:var(--cond);font-weight:700;font-size:36px;line-height:.9;margin-top:6px;position:relative}
+  .tbl-wrap{border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-left:40px;margin-top:14px}
+  table{width:100%;border-collapse:collapse;font-size:11.5px}
+  thead th{text-align:left;font-size:9px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--muted);padding:10px 14px;background:var(--surface-2);border-bottom:1px solid var(--line)}
+  thead th.r{text-align:right}
+  tbody td{padding:11px 14px;border-bottom:1px solid var(--line-2);vertical-align:top;font-size:12px}
+  tbody tr:last-child td{border-bottom:none;background:var(--brick-soft)}
+  tbody tr:last-child td b{color:var(--brick-dk)}
+  td.r{text-align:right;font-family:var(--cond);font-weight:700;font-size:14px}
+  .fecho{margin-top:36px;text-align:center;font-size:12px;color:var(--ink-2);border-top:1px solid var(--line);padding-top:18px}
+  .sign{display:grid;grid-template-columns:1fr 1fr;gap:44px;margin-top:40px}
+  .sign .line{border-top:1.5px solid var(--graphite);padding-top:9px;font-size:11px;color:var(--muted);line-height:1.5}
+  .sign .line b{display:block;color:var(--ink);font-size:12.5px;font-weight:700}
+  .sign .line .cnpj{font-family:var(--mono);font-size:9.5px;color:var(--muted);margin-top:2px}
+  .docfoot{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 16mm;border-top:1px solid var(--line);font-size:9.5px;color:var(--muted);margin-top:30px}
+  .docfoot b{color:var(--ink-2);font-weight:700}
+  @page{size:A4;margin:0}
+</style></head><body>
+  <div class="pad">
+    <div class="dochead">
+      <div class="dh-l">
+        <div class="wm">STICK<span>FRAME</span></div>
+        <div class="sb">Sistemas Construtivos · Steel Frame</div>
+      </div>
+      <div class="dh-r">
+        <span class="ver">CONTRATO Nº ${numRef}</span>
+        <div class="gen">Data de emissão<br><b>${hoje}</b></div>
+      </div>
     </div>
 
-    <h2>1. PARTES</h2>
-    <div class="kv"><span>Contratado:</span><span>Stick Frame Sistemas Construtivos Ltda · Santo André/SP</span></div>
-    <div class="kv"><span>Contratante:</span><span>${o.cliente}</span></div>
-
-    <h2>2. OBJETO</h2>
-    <p>Fornecimento e montagem de sistema estrutural em Steel Frame para ${o.unidades} unidade(s) habitacional(is) com área total de ${o.area} m², conforme projeto executivo aprovado.</p>
-
-    <h2>3. VALOR E CONDIÇÕES DE PAGAMENTO</h2>
-    <table>
-      <thead><tr><th>Etapa</th><th>%</th><th>Valor</th><th>Condição</th></tr></thead>
-      <tbody>
-        <tr><td>Sinal / Assinatura</td><td>30%</td><td>${fmt(o.valor * 0.3)}</td><td>Na assinatura do contrato</td></tr>
-        <tr><td>Estrutura montada</td><td>40%</td><td>${fmt(o.valor * 0.4)}</td><td>Conclusão da estrutura</td></tr>
-        <tr><td>Saldo final</td><td>30%</td><td>${fmt(o.valor * 0.3)}</td><td>Na entrega da obra</td></tr>
-        <tr><td><strong>Total</strong></td><td><strong>100%</strong></td><td><strong>${fmt(o.valor)}</strong></td><td></td></tr>
-      </tbody>
-    </table>
-
-    <h2>4. PRAZO</h2>
-    <p>Prazo estimado de execução: conforme cronograma físico-financeiro a ser aprovado pelas partes. A Stick Frame não se responsabiliza por atrasos decorrentes de fatores externos (clima, fornecedores, aprovações de projeto).</p>
-
-    <h2>5. GARANTIA</h2>
-    <p>A estrutura em Steel Frame possui garantia de 5 (cinco) anos contra defeitos de fabricação e montagem, conforme ABNT NBR 15575.</p>
-
-    <h2>6. DISPOSIÇÕES GERAIS</h2>
-    <p>Fica eleito o foro da Comarca de Santo André/SP para dirimir quaisquer controvérsias oriundas deste contrato.</p>
-
-    <div class="assinatura">
-      <div class="ass-box">Stick Frame Sistemas Construtivos<br>Contratado</div>
-      <div class="ass-box">${o.cliente}<br>Contratante</div>
+    <div class="doctitle">
+      <div class="ey">Contrato de Prestação de Serviços</div>
+      <h1>Sistema Construtivo<br>em Steel Frame</h1>
+      <div class="h-sub">Fornecimento e montagem completo · Padrão StickFrame</div>
     </div>
-  </body></html>`;
 
-  const w = window.open("", "_blank");
-  w.document.write(html);
-  w.document.close();
-  setTimeout(() => w.print(), 400);
+    <div class="clausula">
+      <div class="cl-head"><div class="cl-num">1</div><div class="cl-title">Partes</div></div>
+      <div class="partes-grid">
+        <div class="parte-box">
+          <div class="cap">Contratada</div>
+          <div class="body">Stick Frame Sistemas Construtivos Ltda.<div class="sub">CNPJ 49.458.905/0001-07<br>Rua Trento, 52 — Santo André / SP</div></div>
+        </div>
+        <div class="parte-box">
+          <div class="cap">Contratante</div>
+          <div class="body">${o.cliente}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="clausula">
+      <div class="cl-head"><div class="cl-num">2</div><div class="cl-title">Objeto</div></div>
+      <div class="cl-body">Fornecimento e montagem de sistema estrutural em Steel Frame para <b>${unidades}</b> unidade(s) habitacional(is) com área total de <b>${areaTotal} m²</b>, padrão <b>${o.padrao || "StickFrame"}</b>, contemplando estrutura, fechamentos, cobertura e instalações, conforme projeto executivo aprovado.</div>
+    </div>
+
+    <div class="clausula">
+      <div class="cl-head"><div class="cl-num">3</div><div class="cl-title">Valor e Condições de Pagamento</div></div>
+      <div class="totalbox">
+        <div class="tl">Valor total do contrato</div>
+        <div class="tv">${fmt(total)}</div>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Parcela</th><th class="r">Valor</th><th>Condição</th></tr></thead>
+          <tbody>
+            <tr><td>Sinal / Mobilização</td><td class="r">${fmt(sinal)}</td><td>Pagamento antes do início — compra de materiais e mobilização</td></tr>
+            <tr><td>Saldo</td><td class="r">${fmt(saldo)}</td><td>Conforme medições das etapas de evolução de obra</td></tr>
+            <tr><td><b>Total do contrato</b></td><td class="r"><b>${fmt(total)}</b></td><td><b>Sinal de ${fmt(sinal)} + saldo conforme medições</b></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="clausula">
+      <div class="cl-head"><div class="cl-num">4</div><div class="cl-title">Prazo</div></div>
+      <div class="cl-body">O prazo estimado de execução será definido no cronograma físico-financeiro a ser aprovado pelas partes. A Stick Frame não se responsabiliza por atrasos decorrentes de fatores externos tais como condições climáticas adversas, atraso de fornecedores e pendências de aprovação de projeto junto a órgãos públicos.</div>
+    </div>
+
+    <div class="clausula">
+      <div class="cl-head"><div class="cl-num">5</div><div class="cl-title">Garantia</div></div>
+      <div class="cl-body">A estrutura em Steel Frame possui garantia de <b>5 (cinco) anos</b> contra defeitos de fabricação e montagem, conforme <b>ABNT NBR 15575</b>. A garantia não cobre danos causados por mau uso, modificações não autorizadas ou eventos de força maior.</div>
+    </div>
+
+    <div class="clausula">
+      <div class="cl-head"><div class="cl-num">6</div><div class="cl-title">Disposições Gerais</div></div>
+      <div class="cl-body">Fica eleito o foro da Comarca de <b>Santo André / SP</b> para dirimir quaisquer controvérsias oriundas deste contrato, com renúncia expressa a qualquer outro, por mais privilegiado que seja.</div>
+    </div>
+
+    <div class="fecho">Santo André / SP, ${hojeExt}</div>
+
+    <div class="sign">
+      <div class="line"><b>Stick Frame Sistemas Construtivos Ltda.</b>Contratada · Santo André / SP<div class="cnpj">CNPJ 49.458.905/0001-07</div></div>
+      <div class="line"><b>${o.cliente}</b>Contratante</div>
+    </div>
+  </div>
+
+  <div class="docfoot">
+    <span><b>Stick Frame Sistemas Construtivos Ltda.</b> · Rua Trento, 52 — Santo André / SP</span>
+    <span>(11) 98985-9995 · contato@stickframe.com.br</span>
+    <span>Contrato <b>${numRef}</b></span>
+  </div>
+</body></html>`;
+
+  printHtml(html, `contrato-${o.ref || numRef}`);
 }
 
 //  Proposta Comercial PDF profissional

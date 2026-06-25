@@ -122,26 +122,31 @@ export default function PortalOnline() {
   const diasRestantes = prazoFim ? Math.ceil((prazoFim - new Date()) / (1000 * 60 * 60 * 24)) : null;
   const atrasada    = diasRestantes !== null && diasRestantes < 0 && obra.status !== "Concluída";
 
+  const S = {
+    brand: { fontFamily: "'Barlow Condensed',system-ui,sans-serif", fontWeight: 700, fontSize: 18, letterSpacing: 1.2, lineHeight: 1, color: "#fff" },
+    card: { background: "#fff", borderRadius: 14, padding: "18px 16px", marginBottom: 12, border: "1px solid #e7e1d8", boxShadow: "0 1px 4px rgba(0,0,0,.04)" },
+    cardCap: { fontFamily: "'Barlow Condensed',system-ui,sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: "#8c847a", marginBottom: 14 },
+  };
+
   return (
-    <div style={{ minHeight: "100vh", background: "#f4f4f4", fontFamily: "'DM Sans',sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: "#faf8f4", fontFamily: "'Hanken Grotesk',system-ui,sans-serif" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
         @keyframes spin { to { transform: rotate(360deg); } }
+        .portal-hero-grid { background-image: repeating-linear-gradient(0deg,rgba(255,255,255,.06) 0px,rgba(255,255,255,.06) 1px,transparent 1px,transparent 40px), repeating-linear-gradient(90deg,rgba(255,255,255,.06) 0px,rgba(255,255,255,.06) 1px,transparent 1px,transparent 40px); }
       `}</style>
 
-      {/* Header */}
-      <div style={{ background: "#1A1A1A", padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      {/* Topbar */}
+      <div style={{ background: "#1a191c", padding: "14px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #2a282d" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <img src={empresa?.logo_url || LOGO_STICKFRAME} style={{ width: 32, height: 32, borderRadius: 7, objectFit: "contain" }} alt="Logo da empresa" />
+          <img src={empresa?.logo_url || LOGO_STICKFRAME} style={{ width: 30, height: 30, borderRadius: 7, objectFit: "contain" }} alt="Logo da empresa" />
           <div>
-            <div style={{ fontSize: 14, fontWeight: 800, letterSpacing: 2, color: "#fff" }}>
-              <span style={{ color: "#555" }}>STICK</span><span style={{ color: "#981915" }}>FRAME</span>
-            </div>
-            <div style={{ fontSize: 8, color: "#444", letterSpacing: 1.5 }}>SISTEMAS CONSTRUTIVOS</div>
+            <div style={S.brand}>STICK<span style={{ color: "#981915" }}>FRAME</span></div>
+            <div style={{ fontSize: 8, color: "#55524e", letterSpacing: 1.8, marginTop: 2 }}>SISTEMAS CONSTRUTIVOS</div>
           </div>
         </div>
-        <div style={{ fontSize: 10, color: "#444" }}>Atualizado em {hoje}</div>
+        <div style={{ fontSize: 10, color: "#55524e" }}>Atualizado {hoje}</div>
       </div>
 
       {/* Switcher: outras obras do mesmo cliente */}
@@ -168,10 +173,13 @@ export default function PortalOnline() {
       )}
 
       {/* Hero */}
-      <div style={{ background: "linear-gradient(135deg,#981915,#6e1210)", padding: "28px 20px", color: "#fff" }}>
-        <div style={{ fontSize: 10, letterSpacing: 1.5, opacity: .7, marginBottom: 6 }}>ACOMPANHAMENTO DE OBRA</div>
-        <div style={{ fontSize: 22, fontWeight: 800, marginBottom: 4 }}>{obra.nome}</div>
-        <div style={{ fontSize: 13, opacity: .8, marginBottom: 16 }}>Cliente: {obra.cliente}</div>
+      <div className="portal-hero-grid" style={{ background: "linear-gradient(135deg,#981915 0%,#7d1411 60%,#5c0f0c 100%)", padding: "28px 20px 24px", color: "#fff" }}>
+        <div style={{ fontSize: 9, letterSpacing: 2.5, fontWeight: 700, opacity: .65, marginBottom: 8 }}>ACOMPANHAMENTO DE OBRA</div>
+        <div style={{ fontFamily: "'Barlow Condensed',system-ui,sans-serif", fontWeight: 700, fontSize: 26, letterSpacing: .5, lineHeight: 1.05, marginBottom: 5 }}>{obra.nome}</div>
+        <div style={{ fontSize: 12, opacity: .75, marginBottom: 8 }}>Cliente: {obra.cliente}</div>
+        <span style={{ display: "inline-flex", padding: "3px 12px", borderRadius: 20, fontSize: 10, fontWeight: 700, letterSpacing: .5, marginBottom: 18, background: obra.status === "Concluída" ? "rgba(79,125,87,.7)" : obra.status === "Em obra" ? "rgba(255,255,255,.18)" : "rgba(176,122,30,.7)", border: "1px solid rgba(255,255,255,.2)" }}>
+          {obra.status || "Planejamento"}
+        </span>
 
         {/* KPIs rápidos no hero */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
@@ -179,18 +187,18 @@ export default function PortalOnline() {
             { label: "Progresso", value: `${obra.progresso || 0}%` },
             { label: "Fase atual", value: obra.fase?.split(" ")[0] || "—" },
             { label: prazoFim ? (atrasada ? "Atraso" : "Dias restantes") : "Status",
-              value: prazoFim ? (atrasada ? `${Math.abs(diasRestantes)}d` : `${diasRestantes}d`) : obra.status,
+              value: prazoFim ? (atrasada ? `${Math.abs(diasRestantes)}d` : `${diasRestantes}d`) : (obra.status || "—"),
               alert: atrasada },
           ].map((k) => (
-            <div key={k.label} style={{ background: "rgba(255,255,255,.12)", borderRadius: 10, padding: "10px 12px", border: k.alert ? "1px solid rgba(255,200,0,.5)" : "1px solid rgba(255,255,255,.15)" }}>
-              <div style={{ fontSize: 9, opacity: .7, marginBottom: 4, letterSpacing: 1 }}>{k.label.toUpperCase()}</div>
-              <div style={{ fontSize: 18, fontWeight: 800, color: k.alert ? "#ffd700" : "#fff" }}>{k.value}</div>
+            <div key={k.label} style={{ background: "rgba(0,0,0,.22)", backdropFilter: "blur(4px)", borderRadius: 10, padding: "10px 12px", border: k.alert ? "1px solid rgba(255,200,0,.4)" : "1px solid rgba(255,255,255,.1)" }}>
+              <div style={{ fontFamily: "'Barlow Condensed',system-ui,sans-serif", fontSize: 9, fontWeight: 700, opacity: .65, marginBottom: 4, letterSpacing: 1.5 }}>{k.label.toUpperCase()}</div>
+              <div style={{ fontFamily: "'Barlow Condensed',system-ui,sans-serif", fontSize: 22, fontWeight: 700, color: k.alert ? "#ffd700" : "#fff" }}>{k.value}</div>
             </div>
           ))}
         </div>
       </div>
 
-      <div style={{ padding: "14px", maxWidth: 520, margin: "0 auto" }}>
+      <div style={{ padding: "14px", maxWidth: 520, margin: "0 auto", paddingBottom: 0 }}>
 
         {/* Progresso + Fases */}
         <Card title="Etapas da Obra">
@@ -305,26 +313,32 @@ export default function PortalOnline() {
         )}
 
         {/* Diário de obra */}
-        {diario.length > 0 && (
-          <Card title="Últimas Atualizações">
-            {diario.map((r, i) => (
-              <div key={r.id || i} style={{ paddingBottom: 12, marginBottom: 12, borderBottom: i < diario.length - 1 ? "1px solid #f5f5f5" : "none" }}>
-                <div style={{ fontSize: 10, color: "#888", marginBottom: 4 }}>{r.data} · {r.clima} · {r.turno}</div>
-                <div style={{ fontSize: 13, color: "#333", lineHeight: 1.6 }}>{r.atividades}</div>
-                {r.ocorrencias && (
-                  <div style={{ background: "#fff5f5", borderLeft: "3px solid #981915", padding: "6px 10px", borderRadius: "0 6px 6px 0", fontSize: 12, color: "#555", marginTop: 8, lineHeight: 1.5 }}>
-                     {r.ocorrencias}
-                  </div>
-                )}
+        <Card title="Últimas Atualizações">
+          {diario.length === 0 ? (
+            <EmptyState icon="📋" title="Nenhum registro neste período" desc="Os registros de campo aparecerão aqui conforme a obra avança." status={obra.status} />
+          ) : diario.map((r, i) => (
+            <div key={r.id || i} style={{ paddingBottom: 12, marginBottom: 12, borderBottom: i < diario.length - 1 ? "1px solid #f0ece4" : "none" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 5 }}>
+                <div style={{ fontFamily: "'Barlow Condensed',system-ui,sans-serif", fontWeight: 700, fontSize: 18, color: "#981915", lineHeight: 1 }}>
+                  {r.data ? new Date(r.data).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" }).replace(".", "") : "—"}
+                </div>
+                <div style={{ fontSize: 10, color: "#8c847a" }}>{r.turno}{r.clima ? ` · ${r.clima}` : ""}{r.responsavel ? ` · ${r.responsavel}` : ""}</div>
               </div>
-            ))}
-          </Card>
-        )}
+              <div style={{ fontSize: 13, color: "#26231f", lineHeight: 1.6 }}>{r.atividades}</div>
+              {r.ocorrencias && (
+                <div style={{ background: "#fff5f5", borderLeft: "3px solid #981915", padding: "6px 10px", borderRadius: "0 6px 6px 0", fontSize: 12, color: "#555", marginTop: 8, lineHeight: 1.5 }}>
+                   {r.ocorrencias}
+                </div>
+              )}
+            </div>
+          ))}
+        </Card>
 
         {/* Fotos da obra */}
-        {fotos.length > 0 && (
+        {fotos.length === 0 ? (
+          <Card title="Fotos da Obra"><EmptyState icon="📸" title="Nenhuma foto ainda" desc="Fotos do andamento da obra serão publicadas aqui pela equipe." /></Card>
+        ) : (
           <Card title={`Fotos da Obra (${fotos.length})`}>
-            {/* Agrupar por fase */}
             {Object.entries(
               fotos.reduce((acc, f) => {
                 const fase = f.fase || "Geral";
@@ -334,12 +348,10 @@ export default function PortalOnline() {
               }, {})
             ).map(([fase, imgs]) => (
               <div key={fase} style={{ marginBottom: 14 }}>
-                <div style={{ fontSize: 10, fontWeight: 700, color: "#888", letterSpacing: 1, marginBottom: 8 }}>{fase.toUpperCase()}</div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: "#8c847a", letterSpacing: 1.2, marginBottom: 8 }}>{fase.toUpperCase()}</div>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6 }}>
                   {imgs.map((f) => {
-                    const url = f.storage_path
-                      ? storageUrl(f.storage_path)
-                      : null;
+                    const url = f.storage_path ? storageUrl(f.storage_path) : null;
                     if (!url) return null;
                     return (
                       <div key={f.id} onClick={() => setFotoAberta(url)}
@@ -413,7 +425,7 @@ export default function PortalOnline() {
         {/* Chat com a empresa */}
         <Card title="Mensagens">
           {mensagens.length === 0 && (
-            <div style={{ fontSize: 12, color: "#aaa", textAlign: "center", padding: "12px 0" }}>Nenhuma mensagem ainda. Envie uma abaixo.</div>
+            <EmptyState icon="💬" title="Nenhuma mensagem ainda" desc="Envie uma mensagem abaixo e nossa equipe responderá em breve." />
           )}
           <div style={{ maxHeight: 320, overflowY: "auto", marginBottom: 12, display: "flex", flexDirection: "column", gap: 8 }}>
             {mensagens.map((m, i) => {
@@ -694,29 +706,29 @@ export default function PortalOnline() {
           </Card>
         )}
 
-        {/* Contato */}
-        <div style={{ background: "#1A1A1A", borderRadius: 14, padding: "20px", marginBottom: 12, textAlign: "center" }}>
-          <div style={{ fontSize: 11, color: "#555", letterSpacing: 1, marginBottom: 8 }}>DÚVIDAS SOBRE SUA OBRA?</div>
-          <div style={{ fontSize: 15, fontWeight: 700, color: "#fff", marginBottom: 14 }}>Fale com a Stick Frame</div>
+        {/* Contato WhatsApp */}
+        <div style={{ background: "#1a191c", borderRadius: 14, padding: "22px 20px", marginBottom: 12, textAlign: "center" }}>
+          <div style={{ fontFamily: "'Barlow Condensed',system-ui,sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: 2, color: "#55524e", marginBottom: 6 }}>DÚVIDAS SOBRE SUA OBRA?</div>
+          <div style={{ fontFamily: "'Barlow Condensed',system-ui,sans-serif", fontWeight: 700, fontSize: 20, color: "#fff", marginBottom: 16 }}>Fale com a Stick Frame</div>
           {empresa?.telefone ? (
             <a
               href={`https://wa.me/55${empresa.telefone.replace(/\D/g, "")}?text=${encodeURIComponent(`Olá! Tenho dúvidas sobre a obra: ${obra.nome}`)}`}
               target="_blank" rel="noreferrer"
-              style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#3f7a4b", color: "#fff", borderRadius: 8, padding: "10px 24px", fontSize: 13, fontWeight: 700, textDecoration: "none" }}
+              style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#4f7d57", color: "#fff", borderRadius: 10, padding: "11px 28px", fontSize: 13, fontWeight: 700, textDecoration: "none" }}
             >
               <span style={{ fontSize: 16 }}></span> WhatsApp
             </a>
           ) : empresa?.email ? (
             <a href={`mailto:${empresa.email}?subject=Dúvida sobre obra: ${obra.nome}`}
-              style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#981915", color: "#fff", borderRadius: 8, padding: "10px 24px", fontSize: 13, fontWeight: 700, textDecoration: "none" }}>
+              style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#981915", color: "#fff", borderRadius: 10, padding: "11px 28px", fontSize: 13, fontWeight: 700, textDecoration: "none" }}>
               <span style={{ fontSize: 16 }}></span> Enviar e-mail
             </a>
           ) : null}
         </div>
 
-        <div style={{ textAlign: "center", padding: "12px 0 24px", fontSize: 10, color: "#aaa" }}>
-          <strong style={{ color: "#555" }}>Stick Frame Sistemas Construtivos</strong><br />
-          Santo André/SP · {hoje}
+        <div style={{ textAlign: "center", padding: "12px 0 28px", fontSize: 10, color: "#8c847a" }}>
+          <span style={{ fontFamily: "'Barlow Condensed',system-ui,sans-serif", fontWeight: 700, fontSize: 12, color: "#57514a" }}>Stick Frame Sistemas Construtivos</span><br />
+          Santo André / SP · {hoje}
         </div>
       </div>
     </div>
@@ -725,8 +737,8 @@ export default function PortalOnline() {
 
 function Card({ title, children }) {
   return (
-    <div style={{ background: "#fff", borderRadius: 14, padding: "18px 16px", marginBottom: 12, boxShadow: "0 1px 6px rgba(0,0,0,.06)" }}>
-      <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1.2, color: "#888", marginBottom: 12, textTransform: "uppercase" }}>{title}</div>
+    <div style={{ background: "#fff", borderRadius: 14, padding: "18px 16px", marginBottom: 12, border: "1px solid #e7e1d8", boxShadow: "0 1px 4px rgba(0,0,0,.04)" }}>
+      <div style={{ fontFamily: "'Barlow Condensed',system-ui,sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: 2, color: "#8c847a", marginBottom: 14, textTransform: "uppercase" }}>{title}</div>
       {children}
     </div>
   );
@@ -734,17 +746,28 @@ function Card({ title, children }) {
 
 function Bar({ val, color }) {
   return (
-    <div style={{ height: 8, background: "#f0f0f0", borderRadius: 4, overflow: "hidden" }}>
-      <div style={{ height: 8, width: `${Math.min(val, 100)}%`, background: color, borderRadius: 4, transition: "width .5s ease" }} />
+    <div style={{ height: 7, background: "#f0ece4", borderRadius: 4, overflow: "hidden" }}>
+      <div style={{ height: 7, width: `${Math.min(val, 100)}%`, background: color, borderRadius: 4, transition: "width .5s ease" }} />
     </div>
   );
 }
 
-function FinItem({ label, value, color = "#222" }) {
+function FinItem({ label, value, color = "#26231f" }) {
   return (
-    <div style={{ background: "#f9f9f9", borderRadius: 10, padding: "10px 12px" }}>
-      <div style={{ fontSize: 9, color: "#888", marginBottom: 4, letterSpacing: .5 }}>{label.toUpperCase()}</div>
-      <div style={{ fontSize: 13, fontWeight: 800, color }}>{value}</div>
+    <div style={{ background: "#faf8f4", borderRadius: 10, padding: "10px 12px", border: "1px solid #e7e1d8" }}>
+      <div style={{ fontFamily: "'Barlow Condensed',system-ui,sans-serif", fontSize: 9, fontWeight: 700, color: "#8c847a", marginBottom: 4, letterSpacing: 1 }}>{label.toUpperCase()}</div>
+      <div style={{ fontFamily: "'Barlow Condensed',system-ui,sans-serif", fontSize: 15, fontWeight: 700, color }}>{value}</div>
+    </div>
+  );
+}
+
+function EmptyState({ icon, title, desc, status }) {
+  return (
+    <div style={{ textAlign: "center", padding: "22px 12px" }}>
+      <div style={{ fontSize: 32, marginBottom: 10 }}>{icon}</div>
+      <div style={{ fontFamily: "'Barlow Condensed',system-ui,sans-serif", fontWeight: 700, fontSize: 16, color: "#26231f", marginBottom: 6 }}>{title}</div>
+      <div style={{ fontSize: 12, color: "#8c847a", lineHeight: 1.5, marginBottom: status ? 12 : 0 }}>{desc}</div>
+      {status && <span style={{ display: "inline-flex", padding: "3px 12px", borderRadius: 20, fontSize: 10, fontWeight: 700, background: "#f0ece4", color: "#57514a", letterSpacing: .5 }}>{status}</span>}
     </div>
   );
 }
