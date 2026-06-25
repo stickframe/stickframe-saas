@@ -398,10 +398,23 @@ export default function StickQuotePDFModal({ onClose, obraNome = "", clienteNome
               </div>
             </div>
 
-            {analise.confianca < 50 && (
+            {analise.cotaCount === 0 && (
+              <div style={{ background: C.amberSoft || "#e0902020", border: `1px solid ${C.amber}40`, borderRadius: 10,
+                padding: "10px 14px", fontSize: 12, color: C.amber, marginBottom: 10 }}>
+                ⚠ <strong>PDF escaneado ou sem texto selecionável</strong> — nenhuma cota foi encontrada. As medidas abaixo são estimativas. <strong>Revise a área construída antes de confirmar.</strong>
+              </div>
+            )}
+            {analise.cotaCount > 0 && analise.confianca < 55 && (
               <div style={{ background: C.redSoft, border: `1px solid ${C.red}40`, borderRadius: 10,
-                padding: "10px 14px", fontSize: 12, color: C.red2, marginBottom: 14 }}>
-                ⚠ Não foram encontradas cotas suficientes. Revise as medidas abaixo ou forneça um IFC para maior precisão.
+                padding: "10px 14px", fontSize: 12, color: C.red2, marginBottom: 10 }}>
+                ⚠ Poucas cotas encontradas. Revise as medidas ou use um IFC para maior precisão.
+              </div>
+            )}
+            {analise.ambientesExcluidos?.length > 0 && (
+              <div style={{ padding: "8px 12px", background: C.surface2, borderRadius: 8,
+                border: `1px solid ${C.line}`, fontSize: 11, color: C.muted, marginBottom: 10 }}>
+                ℹ {analise.ambientesExcluidos.length} ambiente(s) de apoio excluído(s) da área construída:{" "}
+                {analise.ambientesExcluidos.map(a => `${a.label} (${a.area} m²)`).join(", ")}
               </div>
             )}
 

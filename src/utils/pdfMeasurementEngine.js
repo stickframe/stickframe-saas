@@ -32,29 +32,50 @@ export async function extractPDFText(file) {
 }
 
 // Parseia medidas do texto extraído
+// Palavras que indicam área de apoio / garagem — excluir da área construída principal
+const LABELS_EXCLUIR_AREA = /vaga|garagem|estacionamento|biciclet|depósito|dep[oó]sito|copa|lixo|play|vest[ií]|estar\s+serv/i;
+
 export function parseMeasurements(text) {
   const t = text;
 
   // ── ÁREAS ──
-  // "Área construída: 149,00 m²"  /  "149,00 m²"  /  "149m2"
-  const areaMatches = [];
-  const areaPatterns = [
-    /[Áá]rea\s*(?:constru[íi]da|total|[Úú]til|privativa|bruta)?\s*[=:]\s*([\d.,]+)\s*m[²2]/gi,
-    /(\d{2,4}[,.]?\d{0,2})\s*m[²2]/g,
+  // Prioridade 1: padrão explícito "Área construída: 149,00 m²"
+  const areaExplicitaPatterns = [
+    /[Áá]rea\s*(?:constru[íi]da|total\s+constru[íi]da)\s*[=:]\s*([\d.,]+)\s*m[²2]/gi,
+    /[Áá]rea\s*(?:[Úú]til|privativa|bruta)\s*[=:]\s*([\d.,]+)\s*m[²2]/gi,
+    /total\s+(?:de\s+)?[Áá]rea\s*[=:]?\s*([\d.,]+)\s*m[²2]/gi,
+    /(?:área|area)\s*(?:total)?\s*[=:]?\s*([\d.,]+)\s*m[²2]/gi,
   ];
-  for (const pat of areaPatterns) {
+  const areaExplicitas = [];
+  for (const pat of areaExplicitaPatterns) {
     let m;
     while ((m = pat.exec(t)) !== null) {
       const v = brToNum(m[1]);
-      if (v >= 20 && v <= 5000) areaMatches.push(v);
+      if (v >= 20 && v <= 5000) areaExplicitas.push(v);
     }
   }
-  // Área construída: maior valor razoável encontrado
-  const areaConstruida = areaMatches.length > 0 ? Math.max(...areaMatches) : 0;
 
-  // ── AMBIENTES (dimensões X) ──
+  // Prioridade 2: qualquer "NNN m²" genérico (exclui áreas < 20)
+  const areaGenerica = [];
+  const areaGenPat = /(\d{2,4}[,.]?\d{0,2})\s*m[²2]/g;
+  let mg;
+  while ((mg = areaGenPat.exec(t)) !== null) {
+    const v = brToNum(mg[1]);
+    if (v >= 20 && v <= 5000) areaGenerica.push(v);
+  }
+
+  // Usa explícita (max) se encontrada; senão usa genérica (max)
+  const areaConstruida = areaExplicitas.length > 0
+    ? Math.max(...areaExplicitas)
+    : areaGenerica.length > 0 ? Math.max(...areaGenerica) : 0;
+
+  // Flag: área veio de padrão explícito (maior confiança)
+  const areaFoiExplicita = areaExplicitas.length > 0;
+
+  // ── AMBIENTES (dimensões X) — exclui vagas / garagem ──
   // "5,00 x 4,00"  /  "5.00X4.00"  /  "Sala 5,00x4,00"
   const ambientes = [];
+  const ambientesExcluidos = []; // vagas e afins — mantidos para info mas não usados na área
   const dimPat = /([A-Za-zÀ-ÿ\s]{2,20})?\s*([\d.,]+)\s*[xX×]\s*([\d.,]+)/g;
   let dm;
   while ((dm = dimPat.exec(t)) !== null) {
@@ -62,7 +83,12 @@ export function parseMeasurements(text) {
     const w = brToNum(dm[2]);
     const h = brToNum(dm[3]);
     if (w >= 0.5 && w <= 50 && h >= 0.5 && h <= 50) {
-      ambientes.push({ label: lbl || `Ambiente ${ambientes.length + 1}`, w, h, area: parseFloat((w * h).toFixed(2)) });
+      const amb = { label: lbl || `Ambiente ${ambientes.length + 1}`, w, h, area: parseFloat((w * h).toFixed(2)) };
+      if (LABELS_EXCLUIR_AREA.test(lbl)) {
+        ambientesExcluidos.push({ ...amb, excluido: true });
+      } else {
+        ambientes.push(amb);
+      }
     }
   }
 
@@ -99,7 +125,7 @@ export function parseMeasurements(text) {
     },
   };
 
-  return { areaConstruida, ambientes, alturaMedia, cotaCount, rawText: t.slice(0, 800), medidasDetalhadas };
+  return { areaConstruida, areaFoiExplicita, ambientes, ambientesExcluidos, alturaMedia, cotaCount, rawText: t.slice(0, 800), medidasDetalhadas };
 }
 
 // Estima áreas Steel Frame a partir das medidas encontradas
@@ -152,18 +178,40 @@ export function estimarAreasSF(parsed) {
 
 // Calcula StickTrust™ score (0–100)
 export function calcularConfiancaPDF(parsed, areas) {
-  let score = 40; // base
-  const { areaConstruida, ambientes, cotaCount, alturaMedia } = parsed;
+  let score = 30; // base mais conservadora
+  const { areaConstruida, areaFoiExplicita, ambientes, ambientesExcluidos, cotaCount, alturaMedia } = parsed;
 
-  if (areaConstruida > 0) score += 20;          // área explícita encontrada
-  if (ambientes.length >= 2) score += 15;       // dimensões de ambientes
-  if (cotaCount >= 10) score += 10;             // muitas cotas
-  if (alturaMedia !== 2.7) score += 5;          // pé direito explícito
-  if (areas.perimetroExt > 0) score += 5;       // perímetro calculado
-  if (ambientes.length === 0 && areaConstruida === 0) score -= 20; // nada encontrado
+  // Área explícita com rótulo ("Área construída: X m²") → alta confiança
+  if (areaFoiExplicita && areaConstruida > 0) {
+    score += 30;
+  } else if (areaConstruida > 0) {
+    score += 10; // área genérica — menos confiável
+  }
 
-  score = Math.max(20, Math.min(96, score));
-  const nivel = score >= 80 ? "alto" : score >= 60 ? "medio" : "baixo";
+  // Cotas são o maior sinal de qualidade do PDF
+  if (cotaCount >= 20) score += 20;
+  else if (cotaCount >= 10) score += 14;
+  else if (cotaCount >= 3)  score += 7;
+
+  // Ambientes úteis (não vagas)
+  if (ambientes.length >= 4) score += 12;
+  else if (ambientes.length >= 2) score += 8;
+
+  // Pé direito explícito
+  if (alturaMedia !== 2.7) score += 5;
+
+  // Perímetro calculável
+  if (areas.perimetroExt > 0) score += 3;
+
+  // Penalizações
+  if (ambientes.length === 0 && areaConstruida === 0) score -= 20;
+  // Só vagas encontradas, sem área útil
+  if (ambientesExcluidos?.length > 0 && ambientes.length === 0 && !areaFoiExplicita) score -= 15;
+  // PDF provavelmente escaneado (zero cotas)
+  if (cotaCount === 0) score -= 10;
+
+  score = Math.max(20, Math.min(94, score));
+  const nivel = score >= 75 ? "alto" : score >= 55 ? "medio" : "baixo";
   return { score, nivel };
 }
 
@@ -184,6 +232,8 @@ export async function analisarPDF(file) {
     forro: areas.forro,
     cobertura: areas.cobertura,
     alturaMedia: parsed.alturaMedia,
+    areaFoiExplicita: parsed.areaFoiExplicita,
+    ambientesExcluidos: parsed.ambientesExcluidos,
     metadados: areas.metadados,
     ambientes: parsed.ambientes,
     cotaCount: parsed.cotaCount,
