@@ -7,6 +7,7 @@ import {
 } from "../services/repositories/bimRepository";
 import StickViewBIM from "../components/bim/StickViewBIM";
 import StickQuotePDFModal from "../components/bim/StickQuotePDFModal";
+import StickQuoteDWGModal from "../components/bim/StickQuoteDWGModal";
 import { useToast } from "../components/ui/Toast";
 import { criarOrcamento } from "../services/repositories/orcamentoRepository";
 
@@ -444,6 +445,7 @@ export default function BimSF() {
   useModuleLoad("obras");
   const [tab, setTab] = useState("stickview");
   const [pdfModalOpen, setPdfModalOpen] = useState(false);
+  const [dwgModalOpen, setDwgModalOpen] = useState(false);
   const toast = useToast();
   const obras     = useAppStore((s) => s.obras);
   const user      = useAppStore((s) => s.user);
@@ -507,6 +509,14 @@ export default function BimSF() {
                   <polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/>
                 </svg>
                 Analisar PDF
+              </BtnGhost>
+              <BtnGhost onClick={() => setDwgModalOpen(true)} style={{ borderColor: "rgba(59,130,246,.3)", color: "#3b82f6" }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                  <rect x="3" y="3" width="18" height="18" rx="2"/>
+                  <line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/>
+                  <line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/>
+                </svg>
+                Analisar DWG
               </BtnGhost>
               <BtnGhost onClick={() => { setTab("apontamentos"); }}>
                 <Ic n="plus" w={14} /> Apontamento
@@ -610,6 +620,13 @@ export default function BimSF() {
       {pdfModalOpen && (
         <StickQuotePDFModal
           onClose={() => setPdfModalOpen(false)}
+          obraNome={obras[obraIdx]?.nome || ""}
+          empresaId={empresaId}
+        />
+      )}
+      {dwgModalOpen && (
+        <StickQuoteDWGModal
+          onClose={() => setDwgModalOpen(false)}
           obraNome={obras[obraIdx]?.nome || ""}
           empresaId={empresaId}
         />
