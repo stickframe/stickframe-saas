@@ -85,7 +85,21 @@ export function parseMeasurements(text) {
   // ── CONTAGEM DE COTAS (qualidade do PDF) ──
   const cotaCount = (t.match(/\d+[,.]?\d*\s*m(?![²2])/g) || []).length;
 
-  return { areaConstruida, ambientes, alturaMedia, cotaCount, rawText: t.slice(0, 800) };
+  // ── METADADOS DE ORIGEM por medida ──
+  const medidasDetalhadas = {
+    areaConstruida: {
+      valor: areaConstruida,
+      tipo: areaConstruida > 0 ? "extraido" : "inferido",
+      origem: areaConstruida > 0 ? "texto_pdf" : "calculo",
+    },
+    alturaMedia: {
+      valor: alturaMedia,
+      tipo: alturaMedia !== 2.7 ? "extraido" : "inferido",
+      origem: alturaMedia !== 2.7 ? "texto_pdf" : "calculo",
+    },
+  };
+
+  return { areaConstruida, ambientes, alturaMedia, cotaCount, rawText: t.slice(0, 800), medidasDetalhadas };
 }
 
 // Estima áreas Steel Frame a partir das medidas encontradas
@@ -119,7 +133,21 @@ export function estimarAreasSF(parsed) {
   // Cobertura = área × fator inclinação 1.25
   const cobertura = parseFloat((area * 1.25).toFixed(1));
 
-  return { area: parseFloat(area.toFixed(1)), paredesExternas, paredesInternas, forro, cobertura, perimetroExt };
+  // Todas as derivadas são sempre "inferido/calculo" — exceto área que vem do parsed
+  const meta = (v, tipo, origem) => ({ valor: v, tipo, origem });
+  const areaOrigem = parsed.medidasDetalhadas?.areaConstruida;
+  return {
+    area: parseFloat(area.toFixed(1)),
+    paredesExternas, paredesInternas, forro, cobertura, perimetroExt,
+    metadados: {
+      area:           areaOrigem || meta(area, "inferido", "calculo"),
+      paredesExternas: meta(paredesExternas, "inferido", "calculo"),
+      paredesInternas: meta(paredesInternas, "inferido", "calculo"),
+      forro:           meta(forro,           areaOrigem?.tipo === "extraido" ? "inferido" : "inferido", "calculo"),
+      cobertura:       meta(cobertura,       "inferido", "calculo"),
+      alturaMedia:     parsed.medidasDetalhadas?.alturaMedia || meta(parsed.alturaMedia, "inferido", "calculo"),
+    },
+  };
 }
 
 // Calcula StickTrust™ score (0–100)
@@ -156,6 +184,7 @@ export async function analisarPDF(file) {
     forro: areas.forro,
     cobertura: areas.cobertura,
     alturaMedia: parsed.alturaMedia,
+    metadados: areas.metadados,
     ambientes: parsed.ambientes,
     cotaCount: parsed.cotaCount,
     perimetroExt: areas.perimetroExt,

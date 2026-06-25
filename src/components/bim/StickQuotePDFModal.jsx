@@ -236,16 +236,36 @@ export default function StickQuotePDFModal({ onClose, obraNome = "", clienteNome
         observacoes: `Origem: PDF — ${file?.name} | StickTrust™ ${analise?.confianca}% | Área: ${medidas?.area} m²`,
       });
 
-      // Salva registro em projetos_pdf (best-effort)
+      // Salva registro em projetos_pdf com upload do PDF (best-effort)
       const eid = empId || getEmpresaId();
-      if (eid) {
-        await sb.from("projetos_pdf").insert({
-          empresa_id: eid,
-          nome_arquivo: file?.name,
-          area_extraida: medidas?.area,
-          confianca: analise?.confianca,
-          dados_json: analise,
-        }).then(() => {}).catch(() => {});
+      if (eid && file) {
+        try {
+          // Hash SHA-256 do arquivo
+          const buf = await file.arrayBuffer();
+          const hashBuffer = await crypto.subtle.digest("SHA-256", buf);
+          const hashArray = Array.from(new Uint8Array(hashBuffer));
+          const hashHex = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+
+          // Upload para Storage
+          const storagePath = `projetos_pdf/${eid}/${Date.now()}-${file.name}`;
+          const { data: uploadData } = await sb.storage.from("arquivos").upload(storagePath, file, {
+            contentType: "application/pdf", upsert: false,
+          });
+          const arquivoUrl = uploadData?.path
+            ? sb.storage.from("arquivos").getPublicUrl(uploadData.path).data.publicUrl
+            : null;
+
+          await sb.from("projetos_pdf").insert({
+            empresa_id: eid,
+            nome_arquivo: file.name,
+            area_extraida: medidas?.area,
+            confianca: analise?.confianca,
+            dados_json: analise,
+            arquivo_url: arquivoUrl,
+            hash_documento: hashHex,
+            versao: 1,
+          });
+        } catch (_) { /* best-effort — não bloqueia o fluxo */ }
       }
 
       // Gera PDF
@@ -403,15 +423,61 @@ export default function StickQuotePDFModal({ onClose, obraNome = "", clienteNome
 
             <div style={{ background: C.surface, borderRadius: 12, border: `1px solid ${C.line}`, overflow: "hidden", marginBottom: 16 }}>
               <div style={{ padding: "10px 14px", background: C.surface2, borderBottom: `1px solid ${C.line}`,
-                fontSize: 10, fontWeight: 800, letterSpacing: 1.5, textTransform: "uppercase", color: C.muted }}>
-                Medidas extraídas — edite se necessário
+                display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: 1.5, textTransform: "uppercase", color: C.muted }}>
+                  Medidas extraídas — edite se necessário
+                </span>
+                <div style={{ display: "flex", gap: 8, fontSize: 10, color: C.muted }}>
+                  <span style={{ color: C.green }}>✓ extraído</span>
+                  <span style={{ color: C.amber }}>~ estimado</span>
+                </div>
               </div>
-              <EditField label="Área construída" value={medidas.area} onChange={(v) => setMedidas((m) => ({ ...m, area: v, forro: v, cobertura: parseFloat((v * 1.25).toFixed(1)) }))} />
-              <EditField label="Paredes externas" value={medidas.paredesExternas} onChange={(v) => setMedidas((m) => ({ ...m, paredesExternas: v }))} />
-              <EditField label="Paredes internas" value={medidas.paredesInternas} onChange={(v) => setMedidas((m) => ({ ...m, paredesInternas: v }))} />
-              <EditField label="Forro" value={medidas.forro} onChange={(v) => setMedidas((m) => ({ ...m, forro: v }))} />
-              <EditField label="Cobertura" value={medidas.cobertura} onChange={(v) => setMedidas((m) => ({ ...m, cobertura: v }))} />
-              <EditField label="Pé direito" value={medidas.alturaMedia} onChange={(v) => setMedidas((m) => ({ ...m, alturaMedia: v }))} unit="m" />
+              {[
+                { key: "area",           label: "Área construída",  unit: "m²",
+                  onChange: (v) => setMedidas((m) => ({ ...m, area: v, forro: v, cobertura: parseFloat((v * 1.25).toFixed(1)) })),
+                  metaKey: "area" },
+                { key: "paredesExternas", label: "Paredes externas", unit: "m²",
+                  onChange: (v) => setMedidas((m) => ({ ...m, paredesExternas: v })),
+                  metaKey: "paredesExternas" },
+                { key: "paredesInternas", label: "Paredes internas", unit: "m²",
+                  onChange: (v) => setMedidas((m) => ({ ...m, paredesInternas: v })),
+                  metaKey: "paredesInternas" },
+                { key: "forro",           label: "Forro",            unit: "m²",
+                  onChange: (v) => setMedidas((m) => ({ ...m, forro: v })),
+                  metaKey: "forro" },
+                { key: "cobertura",       label: "Cobertura",        unit: "m²",
+                  onChange: (v) => setMedidas((m) => ({ ...m, cobertura: v })),
+                  metaKey: "cobertura" },
+                { key: "alturaMedia",     label: "Pé direito",       unit: "m",
+                  onChange: (v) => setMedidas((m) => ({ ...m, alturaMedia: v })),
+                  metaKey: "alturaMedia" },
+              ].map(({ key, label, unit, onChange, metaKey }) => {
+                const meta = analise?.metadados?.[metaKey];
+                const isExtraido = meta?.tipo === "extraido";
+                const badge = isExtraido
+                  ? { l: "✓ extraído do PDF", bg: C.greenSoft, c: C.green }
+                  : { l: "~ estimado por cálculo", bg: "#e0902015", c: C.amber };
+                return (
+                  <div key={key} style={{ display: "flex", alignItems: "center", justifyContent: "space-between",
+                    padding: "10px 14px", borderBottom: `1px solid ${C.line}` }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{ fontSize: 13, color: C.ink2, fontWeight: 600 }}>{label}</span>
+                      <span style={{ fontSize: 9, fontWeight: 800, padding: "2px 7px", borderRadius: 6,
+                        background: badge.bg, color: badge.c }}>{badge.l}</span>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <input
+                        type="number" value={medidas[key]} min="0" step="0.5"
+                        onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
+                        style={{ width: 80, padding: "4px 8px", borderRadius: 7, border: `1px solid ${C.line2}`,
+                          background: C.surface2, color: C.ink, fontSize: 13, fontFamily: "inherit",
+                          textAlign: "right", borderColor: isExtraido ? C.green + "50" : C.amber + "50" }}
+                      />
+                      <span style={{ fontSize: 12, color: C.muted, width: 24 }}>{unit}</span>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
 
             <div style={{ display: "flex", gap: 10 }}>
