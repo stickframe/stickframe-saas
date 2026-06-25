@@ -111,38 +111,58 @@ async function parseDXF(text) {
 // Lê strings ASCII do binário e extrai cotas e nomes de layer
 function extractFromBinary(buffer) {
   const bytes = new Uint8Array(buffer);
-  let text = "";
+  // Coleta tokens de texto: sequências de caracteres imprimíveis com >= 3 chars
+  const tokens = [];
+  let cur = "";
   for (let i = 0; i < bytes.length; i++) {
     const c = bytes[i];
-    if ((c >= 32 && c < 127) || c === 10 || c === 13) {
-      text += String.fromCharCode(c);
+    if (c >= 32 && c < 127) {
+      cur += String.fromCharCode(c);
     } else {
-      text += " ";
+      if (cur.length >= 3) tokens.push(cur);
+      cur = "";
     }
   }
+  if (cur.length >= 3) tokens.push(cur);
+  const text = tokens.join(" ");
 
-  // Extrai nomes de layer encontrados no texto
+  // Extrai nomes de layer
   const layerNames = new Set();
-  const layerPat = /(?:LAYER|layer)\s*\n?\s*([A-Z_][A-Z0-9_\-\s]{1,30})/g;
-  let m;
-  while ((m = layerPat.exec(text)) !== null) {
-    layerNames.add(m[1].trim().toUpperCase());
-  }
-
-  // Busca todos os termos que parecem layer
   for (const key of Object.keys(LAYER_MAP)) {
     if (text.toUpperCase().includes(key)) layerNames.add(key);
   }
+  // Padrão explícito: sequência após "LAYER" no binário
+  const layerPat = /\bLAYER\s+([A-Z][A-Z0-9_\-]{1,29})/gi;
+  let m;
+  while ((m = layerPat.exec(text)) !== null) layerNames.add(m[1].trim().toUpperCase());
 
-  // Extrai cotas numéricas (brasileiras e internacionais)
-  const cotaPat = /\b(\d{1,4}[,.]?\d{0,3})\s*(?:m|M)?\b/g;
+  // Cotas dimensionais (0.5 – 50 m): distâncias reais
+  const cotaDimPat = /\b(\d{1,2}[.,]\d{1,4})\b/g;
   const cotas = [];
-  while ((m = cotaPat.exec(text)) !== null) {
+  while ((m = cotaDimPat.exec(text)) !== null) {
     const v = parseFloat(m[1].replace(",", "."));
-    if (v >= 0.5 && v <= 5000) cotas.push(v);
+    if (v >= 0.5 && v <= 50) cotas.push(v);
   }
 
-  return { layerNames: [...layerNames], cotas, rawText: text.slice(0, 1000) };
+  // ── Candidatos a área construída ──
+  // Procura números inteiros ou decimais na faixa 50–5000 que podem ser m²
+  // Estratégia: frequência — o valor que aparece mais vezes é candidato a area total
+  const areaFreq = {};
+  const areaPat = /\b(\d{2,4}(?:[.,]\d{1,2})?)\b/g;
+  while ((m = areaPat.exec(text)) !== null) {
+    const v = parseFloat(m[1].replace(",", "."));
+    if (v >= 50 && v <= 5000) {
+      const k = Math.round(v); // agrupa por inteiro
+      areaFreq[k] = (areaFreq[k] || 0) + 1;
+    }
+  }
+  // Candidatos: pelo menos 2 ocorrências, ordenados por frequência decrescente
+  const areaCandidatos = Object.entries(areaFreq)
+    .filter(([, f]) => f >= 2)
+    .sort((a, b) => b[1] - a[1])
+    .map(([v]) => parseInt(v));
+
+  return { layerNames: [...layerNames], cotas, areaCandidatos, rawText: text.slice(0, 1000) };
 }
 
 // ── Análise principal DXF via parser ──
@@ -208,8 +228,8 @@ function analisarDXF(dxf) {
 
 // ── Inferir áreas SF a partir de comprimentos de parede ──
 function inferirAreas(layerLengths, layerAreas, alturaMedia) {
-  // Área construída: forro ou genérico ou estimativa a partir de perímetro externo
-  let areaConstruida = layerAreas["forro"] || layerAreas["_generic"] || 0;
+  // Área construída: forro > genérico (polilinha fechada) > candidato binário > 0
+  let areaConstruida = layerAreas["forro"] || layerAreas["_generic"] || layerAreas["_candidato"] || 0;
 
   const perimetroExt = layerLengths["paredesExternas"] || 0;
   if (!areaConstruida && perimetroExt > 4) {
@@ -277,7 +297,7 @@ export async function analisarDWG(file) {
   const buffer = await file.arrayBuffer();
   const isDXF = file.name.toLowerCase().endsWith(".dxf");
 
-  let layerLengths = {}, layerAreas = {}, layersDetectadas = [], cotas = [];
+  let layerLengths = {}, layerAreas = {}, layersDetectadas = [], cotas = [], areaCandidatos = [];
   let origem = "dwg_text";
 
   if (isDXF) {
@@ -286,26 +306,34 @@ export async function analisarDWG(file) {
     const dxf = await parseDXF(text);
     if (dxf) {
       const result = analisarDXF(dxf);
-      layerLengths = result.layerLengths;
-      layerAreas   = result.layerAreas;
+      layerLengths     = result.layerLengths;
+      layerAreas       = result.layerAreas;
       layersDetectadas = result.layersDetectadas;
-      cotas        = result.cotas;
-      origem       = "dxf";
+      cotas            = result.cotas;
+      origem           = "dxf";
     } else {
-      // fallback textual no DXF malformado
-      const fb = extractFromBinary(buffer);
+      const fb         = extractFromBinary(buffer);
       layersDetectadas = fb.layerNames;
-      cotas = fb.cotas;
+      cotas            = fb.cotas;
+      areaCandidatos   = fb.areaCandidatos || [];
     }
   } else {
     // DWG: binário → extração textual
-    const fb = extractFromBinary(buffer);
+    const fb         = extractFromBinary(buffer);
     layersDetectadas = fb.layerNames;
-    cotas = fb.cotas;
+    cotas            = fb.cotas;
+    areaCandidatos   = fb.areaCandidatos || [];
   }
 
   const alturaMedia = detectarAlturaMedia(cotas);
-  const areas = inferirAreas(layerLengths, layerAreas, alturaMedia);
+
+  // Se nenhuma área foi inferida por geometria, tenta candidatos do binário
+  let layerAreasUsadas = layerAreas;
+  if (!layerAreas["forro"] && !layerAreas["_generic"] && areaCandidatos.length > 0) {
+    // Usa o candidato mais frequente como estimativa de área — marca como "candidato"
+    layerAreasUsadas = { ...layerAreas, _candidato: areaCandidatos[0] };
+  }
+  const areas = inferirAreas(layerLengths, layerAreasUsadas, alturaMedia);
   const { score, nivel } = calcularConfiancaDWG(layersDetectadas, cotas, areas, origem);
 
   // Metadados de origem por campo (mesmo padrão do pdfMeasurementEngine)
@@ -318,6 +346,8 @@ export async function analisarDWG(file) {
     cobertura:       meta(areas.cobertura,       layerAreas["cobertura"] ? "extraido" : "inferido", layerAreas["cobertura"] ? "geometria_dxf" : "calculo"),
     alturaMedia:     meta(alturaMedia,           cotas.filter(v => v >= 2 && v <= 4.5).length > 0 ? "extraido" : "inferido", "cotas"),
   };
+
+  const precisaManual = areas.areaConstruida === 0 && layersDetectadas.length === 0;
 
   return {
     origem: "DWG",
@@ -333,6 +363,8 @@ export async function analisarDWG(file) {
     perimetroExt: areas.perimetroExt,
     layersDetectadas,
     cotaCount: cotas.length,
+    areaCandidatos: areaCandidatos.slice(0, 5), // top 5 candidatos para exibir na UI
+    precisaManual,
     metadados,
   };
 }

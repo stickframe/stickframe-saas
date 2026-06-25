@@ -131,6 +131,7 @@ export default function StickQuoteDWGModal({ onClose, obraNome = "", clienteNome
       const compMap = {};
       composicoes.forEach(c => { compMap[c.id] = c; });
 
+      // Mantém todas as linhas mesmo com area=0 para modo manual
       const novasLinhas = DWG_PARA_SF.map(({ key, composicaoId, label, cor }) => ({
         composicaoId,
         composicaoNome: compMap[composicaoId]?.nome || label,
@@ -138,7 +139,7 @@ export default function StickQuoteDWGModal({ onClose, obraNome = "", clienteNome
         area:           res[key] || 0,
         origem:         "DWG",
         confianca:      res.confianca,
-      })).filter(l => l.area > 0);
+      }));
 
       setLinhas(novasLinhas);
       setStep(2);
@@ -157,9 +158,20 @@ export default function StickQuoteDWGModal({ onClose, obraNome = "", clienteNome
   }, [handleFile]);
 
   function aplicarMedidas() {
+    // Reconstrói áreas derivadas se paredes ainda zeradas mas área foi preenchida
+    const area = medidas.area || 0;
+    const h    = medidas.alturaMedia || 2.7;
+    const medidasFinal = {
+      ...medidas,
+      paredesExternas: medidas.paredesExternas > 0 ? medidas.paredesExternas : parseFloat((4 * Math.sqrt(area) * h).toFixed(1)),
+      paredesInternas: medidas.paredesInternas > 0 ? medidas.paredesInternas : parseFloat((area * 0.55 * h).toFixed(1)),
+      forro:           medidas.forro           > 0 ? medidas.forro           : area,
+      cobertura:       medidas.cobertura       > 0 ? medidas.cobertura       : parseFloat((area * 1.25).toFixed(1)),
+    };
+    setMedidas(medidasFinal);
     setLinhas(prev => prev.map(l => {
       const chave = DWG_PARA_SF.find(p => p.composicaoId === l.composicaoId)?.key;
-      return chave ? { ...l, area: medidas[chave] || 0 } : l;
+      return chave ? { ...l, area: medidasFinal[chave] || 0 } : l;
     }).filter(l => l.area > 0));
     calcularOrcamento();
   }
@@ -381,11 +393,48 @@ export default function StickQuoteDWGModal({ onClose, obraNome = "", clienteNome
               </div>
             </div>
 
-            {analise.layersDetectadas.length === 0 && (
+            {analise.precisaManual && (
+              <div style={{ background: C.redSoft, border: `1px solid ${C.red}40`, borderRadius: 12,
+                padding: "14px 16px", marginBottom: 14 }}>
+                <div style={{ fontWeight: 800, color: C.red2, fontSize: 13, marginBottom: 6 }}>
+                  ⚠ DWG binário — entrada manual necessária
+                </div>
+                <div style={{ fontSize: 12, color: C.ink2, marginBottom: 10 }}>
+                  Arquivos DWG binários não permitem leitura de geometria. Preencha a <strong>Área construída</strong> abaixo e as demais serão estimadas automaticamente.
+                </div>
+                {analise.areaCandidatos?.length > 0 && (
+                  <div>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 6 }}>
+                      Valores encontrados no arquivo — clique para usar:
+                    </div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                      {analise.areaCandidatos.map((v, i) => (
+                        <button key={i} onClick={() => setMedidas(m => ({
+                          ...m,
+                          area: v,
+                          forro: v,
+                          cobertura: parseFloat((v * 1.25).toFixed(1)),
+                          paredesExternas: parseFloat((4 * Math.sqrt(v) * m.alturaMedia).toFixed(1)),
+                          paredesInternas: parseFloat((v * 0.55 * m.alturaMedia).toFixed(1)),
+                        }))}
+                          style={{ padding: "4px 12px", background: C.surface2, border: `1px solid ${C.amber}60`,
+                            borderRadius: 8, cursor: "pointer", fontSize: 12, fontWeight: 700, color: C.amber }}>
+                          {v} m²
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                <div style={{ marginTop: 10, fontSize: 11, color: C.muted }}>
+                  Dica: exporte como <strong style={{ color: C.green }}>DXF</strong> no AutoCAD (Salvar Como → DXF) para leitura automática de layers e geometria.
+                </div>
+              </div>
+            )}
+            {!analise.precisaManual && analise.layersDetectadas.length === 0 && (
               <div style={{ background: C.amberSoft, border: `1px solid ${C.amber}40`, borderRadius: 10,
                 padding: "10px 14px", fontSize: 12, color: C.amber, marginBottom: 14 }}>
-                ⚠ Não foram encontrados layers construtivos reconhecidos. As medidas foram estimadas por inferência.
-                Recomendado: exportar como DXF ou usar PDF cotado / IFC para maior precisão.
+                ⚠ Nenhum layer construtivo reconhecido. Medidas estimadas por inferência.
+                Exporte como DXF para maior precisão.
               </div>
             )}
 
@@ -450,9 +499,13 @@ export default function StickQuoteDWGModal({ onClose, obraNome = "", clienteNome
                 background: "none", border: `1px solid ${C.line2}`, color: C.ink2, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
                 ← Novo arquivo
               </button>
-              <button onClick={aplicarMedidas} style={{ flex: 2, padding: "11px 0", borderRadius: 10,
-                background: C.blue, color: "#fff", border: "none", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
-                Confirmar e Gerar Orçamento →
+              <button onClick={aplicarMedidas} disabled={!medidas.area || medidas.area <= 0}
+                style={{ flex: 2, padding: "11px 0", borderRadius: 10,
+                  background: (!medidas.area || medidas.area <= 0) ? C.surface2 : C.blue,
+                  color: (!medidas.area || medidas.area <= 0) ? C.muted : "#fff",
+                  border: "none", fontSize: 14, fontWeight: 700,
+                  cursor: (!medidas.area || medidas.area <= 0) ? "not-allowed" : "pointer" }}>
+                {(!medidas.area || medidas.area <= 0) ? "Informe a área construída ↑" : "Confirmar e Gerar Orçamento →"}
               </button>
             </div>
           </div>
