@@ -374,6 +374,8 @@ export default function OrcamentoTecnico() {
     const areaNum = parseN(area);
     if (areaNum <= 0) return;
     const areaMolhadaNum = parseN(areaMolhada) || areaNum * 0.15;
+    const pavsNum = parseInt(pavimentos) || 1;
+    const areaProjecao = areaNum / pavsNum; // footprint horizontal (fundação/cobertura)
 
     const sistemasAtivos = SISTEMAS_SF.filter((s) => habilitados[s.id]);
     let totalMateriais = 0;
@@ -385,7 +387,9 @@ export default function OrcamentoTecnico() {
         sistema.opcoes?.find((o) => o.id === selecoes[sistema.id]) || sistema.opcoes?.[0];
       const itensBase = opcaoSel ? opcaoSel.itens : sistema.itens;
       const aplicaFatorOpcao = opcaoSel?.aplicaFatorPadrao ?? false;
-      const areaUsada = sistema.usaAreaMolhada ? areaMolhadaNum : areaNum;
+      // Fundação e cobertura usam apenas a projeção horizontal (footprint), não a área total
+      const isHorizontal = ["fundacao", "cobertura", "estrutura_cobertura"].includes(sistema.id);
+      const areaUsada = isHorizontal ? areaProjecao : (sistema.usaAreaMolhada ? areaMolhadaNum : areaNum);
 
       let totalSistema = 0;
       const itensCalc = itensBase.map((item, itemIdx) => {
@@ -501,6 +505,8 @@ export default function OrcamentoTecnico() {
     const areaNum = parseN(area);
     if (areaNum <= 0) return null;
     const areaMolhadaNum = parseN(areaMolhada) || areaNum * 0.15;
+    const pavsNum2 = parseInt(pavimentos) || 1;
+    const areaProjecao2 = areaNum / pavsNum2;
     const fP = PADROES_SF[padraoKey]?.fator || 1;
     const sistemasAtivos = SISTEMAS_SF.filter((s) => habilitados[s.id]);
     let totalMat = 0, totalMO2 = 0;
@@ -508,7 +514,8 @@ export default function OrcamentoTecnico() {
       const opcaoSel = sistema.opcoes?.find((o) => o.id === selecoes[sistema.id]) || sistema.opcoes?.[0];
       const itensBase = opcaoSel ? opcaoSel.itens : sistema.itens;
       const aplicaFatorOpcao = opcaoSel?.aplicaFatorPadrao ?? false;
-      const areaUsada = sistema.usaAreaMolhada ? areaMolhadaNum : areaNum;
+      const isHorizontal2 = ["fundacao", "cobertura", "estrutura_cobertura"].includes(sistema.id);
+      const areaUsada = isHorizontal2 ? areaProjecao2 : (sistema.usaAreaMolhada ? areaMolhadaNum : areaNum);
       for (const item of itensBase) {
         const fator = item.aplicaFatorPadrao || aplicaFatorOpcao ? fP : 1;
         const qtd = item.base * areaUsada * fator;
@@ -532,6 +539,8 @@ export default function OrcamentoTecnico() {
     const areaNum = parseN(area);
     if (areaNum <= 0) return null;
     const areaMolhadaNum = parseN(areaMolhada) || areaNum * 0.15;
+    const pavsNum3 = parseInt(pavimentos) || 1;
+    const areaProjecao3 = areaNum / pavsNum3;
     const sistemasAtivos = SISTEMAS_SF.filter((s) => habilitados[s.id]);
     let totalMat = 0, totalMO2 = 0;
     for (const sistema of sistemasAtivos) {
@@ -539,7 +548,8 @@ export default function OrcamentoTecnico() {
       const opcaoSel = sistema.opcoes?.find((o) => o.id === selOpcaoId) || sistema.opcoes?.[0];
       const itensBase = opcaoSel ? opcaoSel.itens : sistema.itens;
       const aplicaFatorOpcao = opcaoSel?.aplicaFatorPadrao ?? false;
-      const areaUsada = sistema.usaAreaMolhada ? areaMolhadaNum : areaNum;
+      const isHorizontal3 = ["fundacao", "cobertura", "estrutura_cobertura"].includes(sistema.id);
+      const areaUsada = isHorizontal3 ? areaProjecao3 : (sistema.usaAreaMolhada ? areaMolhadaNum : areaNum);
       for (const item of itensBase) {
         const fator = item.aplicaFatorPadrao || aplicaFatorOpcao ? fatorPadrao : 1;
         const qtd = item.base * areaUsada * fator;

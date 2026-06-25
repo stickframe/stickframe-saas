@@ -160,7 +160,7 @@ export default function Sidebar({ open, onClose }) {
       .subscribe();
 
     return () => {
-      ch.unsubscribe();
+      sb.removeChannel(ch);
     };
   }, []);
 

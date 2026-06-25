@@ -92,9 +92,12 @@ const fmtR = (v) =>
 
 function calcKit(kit) {
   const fator = PADROES_KIT[kit.padrao].fator;
+  const areaProjecao = kit.area / (kit.pavs || 1); // footprint horizontal
   return INSUMOS_KIT.map((ins) => {
-    const f = ins.fund ? 1 : fator * kit.pavs;
-    const qtd = Math.ceil(ins.base * kit.area * f);
+    const isHorizontal = ins.fund || ins.categoria === "Cobertura";
+    const areaUsada = isHorizontal ? areaProjecao : kit.area;
+    const f = isHorizontal ? (ins.fund ? 1 : fator) : fator * kit.pavs;
+    const qtd = Math.ceil(ins.base * areaUsada * f);
     return { ...ins, qtd, total: qtd * ins.preco };
   });
 }
@@ -218,9 +221,12 @@ export default function CalculadoraPublica() {
 
   function calcKitDinamico(kit) {
     const fator = PADROES_KIT[kit.padrao].fator;
+    const areaProjecao = kit.area / (kit.pavs || 1); // footprint horizontal
     return listaInsumos.map((ins) => {
-      const f = ins.fund ? 1 : fator * kit.pavs;
-      const qtd = Math.ceil(ins.base * kit.area * f);
+      const isHorizontal = ins.fund || ins.categoria === "Cobertura";
+      const areaUsada = isHorizontal ? areaProjecao : kit.area;
+      const f = isHorizontal ? (ins.fund ? 1 : fator) : fator * kit.pavs;
+      const qtd = Math.ceil(ins.base * areaUsada * f);
       return { ...ins, qtd, total: qtd * ins.preco };
     });
   }

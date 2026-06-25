@@ -1304,8 +1304,8 @@ export default function Orcamentos() {
       .subscribe();
 
     return () => {
-      chPg.unsubscribe();
-      chBc.unsubscribe();
+      sb.removeChannel(chPg);
+      sb.removeChannel(chBc);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

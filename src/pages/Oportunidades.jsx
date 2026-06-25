@@ -243,6 +243,7 @@ export default function Oportunidades() {
   const [converting, setConverting] = useState(false);
   const [toast, setToast]         = useState(null);
   const channelRef                = useRef(null);
+  const timeoutsRef               = useRef(new Set());
 
   async function carregar() {
     setLoading(true);
@@ -263,7 +264,11 @@ export default function Oportunidades() {
         const nl = payload.new;
         setLeads(prev => [nl, ...prev]);
         setNovoIds(prev => new Set([...prev, nl.id]));
-        setTimeout(() => setNovoIds(prev => { const s = new Set(prev); s.delete(nl.id); return s; }), 5000);
+        const tId = setTimeout(() => {
+          setNovoIds(prev => { const s = new Set(prev); s.delete(nl.id); return s; });
+          timeoutsRef.current.delete(tId);
+        }, 5000);
+        timeoutsRef.current.add(tId);
       })
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'leads_captacao' }, payload => {
         setLeads(prev => prev.map(l => l.id === payload.new.id ? payload.new : l));
@@ -274,7 +279,11 @@ export default function Oportunidades() {
         setSel(s => s?.id === payload.old.id ? null : s);
       })
       .subscribe();
-    return () => { if (channelRef.current) sb.removeChannel(channelRef.current); };
+    return () => {
+      if (channelRef.current) sb.removeChannel(channelRef.current);
+      timeoutsRef.current.forEach(tId => clearTimeout(tId));
+      timeoutsRef.current.clear();
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

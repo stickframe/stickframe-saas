@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import useAppStore from "../store/useAppStore";
+import { sb } from "../services/supabase";
 import {
   listarNotificacoes,
   marcarLida,
@@ -63,7 +64,7 @@ export function useNotificacoes() {
       }
     });
 
-    return () => { channel?.unsubscribe(); };
+    return () => { if (channel) sb.removeChannel(channel); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.uid]);
 

@@ -897,7 +897,7 @@ export default function GestaoObras() {
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "portal_mensagens", filter: `obra_id=eq.${obraId}` },
         (p) => setPortalMsgs((prev) => prev.find((m) => m.id === p.new.id) ? prev : [...prev, p.new]))
       .subscribe();
-    return () => ch.unsubscribe();
+    return () => sb.removeChannel(ch);
   }, [obraId]);
 
   useEffect(() => {

@@ -24,7 +24,7 @@ function usePreOrcamentos() {
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "pre_orcamentos", filter: `empresa_id=eq.${empId}` },
         () => sb.from("pre_orcamentos").select("id, nome, created_at").eq("empresa_id", empId).eq("status", "Novo").order("created_at", { ascending: false }).then(({ data }) => setPreOrcs(data || [])))
       .subscribe();
-    return () => ch.unsubscribe();
+    return () => sb.removeChannel(ch);
   }, []);
   return preOrcs;
 }
@@ -40,7 +40,7 @@ function useMsgsPendentes() {
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "portal_mensagens", filter: `empresa_id=eq.${empresaId}` },
         (p) => { if (p.new.autor === "cliente") setMsgs((prev) => [p.new, ...prev]); })
       .subscribe();
-    return () => ch.unsubscribe();
+    return () => sb.removeChannel(ch);
   }, [empresaId]);
   return msgs;
 }
@@ -57,7 +57,7 @@ function useOrcamentosAceitos() {
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "orcamentos", filter: `empresa_id=eq.${empId}` },
         () => sb.from("orcamentos").select("id, cliente, ref, aceite_nome, aceite_data").eq("empresa_id", empId).eq("status", "Aprovado").gte("aceite_data", em7d).order("aceite_data", { ascending: false }).then(({ data }) => setAceitos(data || [])))
       .subscribe();
-    return () => ch.unsubscribe();
+    return () => sb.removeChannel(ch);
   }, []);
   return aceitos;
 }
@@ -101,7 +101,7 @@ function useComentariosRecentes() {
         })
       .subscribe();
 
-    return () => ch.unsubscribe();
+    return () => sb.removeChannel(ch);
   }, [user?.id]);
 
   return comentarios;
