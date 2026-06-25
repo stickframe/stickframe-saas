@@ -304,6 +304,21 @@ export default function OrcamentoTecnico() {
   const [comparativo, setComparativo]   = useState(null);
   const [precosEditados, setPrecosEditados] = useState({});
   const [modalSalvar, setModalSalvar]   = useState(false);
+  const PREMISSAS_PADRAO = [
+    { id: "terraplenagem",  label: "Terraplenagem / nivelamento do terreno incluso no escopo" },
+    { id: "remocao_solo",   label: "Remoção / transporte de solo excedente incluso" },
+    { id: "proj_civil",     label: "Projetos de engenharia civil (estrutural, hidráulico, elétrico) inclusos" },
+    { id: "agua_obra",      label: "Ponto de água e energia provisória fornecidos pelo contratante" },
+    { id: "fundacao_radier",label: "Fundação em radier (sem estacas/tubulões)" },
+    { id: "moveis",         label: "Móveis planejados e paisagismo inclusos" },
+    { id: "ar_cond",        label: "Sistema de ar-condicionado incluso" },
+    { id: "piscina",        label: "Piscina inclusa no escopo" },
+    { id: "aprovacao",      label: "Aprovação junto à prefeitura inclusa" },
+    { id: "frete",          label: "Frete dos materiais incluso (entrega no canteiro)" },
+  ];
+  const [premissas, setPremissas] = useState(() =>
+    Object.fromEntries(PREMISSAS_PADRAO.map((p) => [p.id, false]))
+  );
   const [formSalvar, setFormSalvar]     = useState({ cliente: "", validade_dias: 30, observacoes: "" });
   const [salvando, setSalvando]         = useState(false);
   const [modalFinanc, setModalFinanc]   = useState(false);
@@ -677,6 +692,7 @@ export default function OrcamentoTecnico() {
         total_materiais: Math.round(resultado.totalMateriais * 100) / 100,
         total_mo: Math.round(resultado.totalMO * 100) / 100,
         origem: "orcamento_tecnico",
+        premissas_escopo: premissas,
         composicao_tecnica: resultado.breakdown.map((s) => ({
           sistema: s.label,
           opcao: s.opcaoLabel,
@@ -935,6 +951,28 @@ export default function OrcamentoTecnico() {
 
     const obsCliente = formSalvar.observacoes ? `<li>${formSalvar.observacoes}</li>` : "";
 
+    // Premissas incluídas e exclusões (não marcadas)
+    const premissasIncluidas = PREMISSAS_PADRAO.filter((p) => premissas[p.id]);
+    const premissasExcluidas = PREMISSAS_PADRAO.filter((p) => !premissas[p.id]);
+    const secPremissas = (premissasIncluidas.length > 0 || premissasExcluidas.length > 0) ? `
+      <div style="font-size:11px;font-weight:700;letter-spacing:2px;color:#374151;text-transform:uppercase;margin-bottom:14px">Premissas e Exclus&otilde;es de Escopo</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:32px">
+        ${premissasIncluidas.length > 0 ? `
+        <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:16px">
+          <div style="font-size:11px;font-weight:700;color:#166534;margin-bottom:10px">&#10003; INCLUSO NO ESCOPO</div>
+          <ul style="margin:0;padding-left:16px;font-size:12px;color:#166534;line-height:1.8">
+            ${premissasIncluidas.map((p) => `<li>${p.label}</li>`).join("")}
+          </ul>
+        </div>` : ""}
+        ${premissasExcluidas.length > 0 ? `
+        <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:16px">
+          <div style="font-size:11px;font-weight:700;color:#c2410c;margin-bottom:10px">&#9888; N&Atilde;O INCLUSO / EXCLUS&Otilde;ES</div>
+          <ul style="margin:0;padding-left:16px;font-size:12px;color:#c2410c;line-height:1.8">
+            ${premissasExcluidas.map((p) => `<li>${p.label}</li>`).join("")}
+          </ul>
+        </div>` : ""}
+      </div>` : "";
+
     const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
     <title>Proposta Comercial ${numProposta} — Stickframe</title>
     <style>
@@ -1048,13 +1086,15 @@ export default function OrcamentoTecnico() {
 
       <!-- OBSERVAÇÕES -->
       <div style="font-size:11px;font-weight:700;letter-spacing:2px;color:#374151;text-transform:uppercase;margin-bottom:14px">Observa&ccedil;&otilde;es Gerais</div>
-      <ul style="font-size:13px;color:#374151;line-height:2;margin:0 0 40px;padding-left:20px">
+      <ul style="font-size:13px;color:#374151;line-height:2;margin:0 0 32px;padding-left:20px">
         <li>Proposta v&aacute;lida por ${validadeDias} dias a partir de ${dataHoje}.</li>
         <li>Valores baseados no CUB ${r.estado} &mdash; R$ ${r.cub.toLocaleString("pt-BR")}/m&sup2;.</li>
         <li>Valores sujeitos a confirma&ccedil;&atilde;o mediante vistoria do terreno.</li>
-        <li>N&atilde;o inclui m&oacute;veis planejados e paisagismo.</li>
         ${obsCliente}
       </ul>
+
+      <!-- PREMISSAS E EXCLUSÕES -->
+      ${secPremissas}
 
       <!-- ACEITE -->
       <div style="font-size:11px;font-weight:700;letter-spacing:2px;color:#374151;text-transform:uppercase;margin-bottom:24px">Aceite da Proposta</div>
@@ -2038,6 +2078,40 @@ export default function OrcamentoTecnico() {
                   placeholder="Condições comerciais, escopo, etc."
                   style={{ ...inputSt, resize: "vertical" }}
                 />
+              </div>
+
+              {/* Premissas técnicas */}
+              <div>
+                <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: C.graphite, marginBottom: 8 }}>
+                  Premissas e exclusões de escopo
+                  <span style={{ fontWeight: 400, color: C.muted, marginLeft: 6 }}>
+                    (marque o que está <b>incluído</b>)
+                  </span>
+                </label>
+                <div style={{ border: `1px solid ${C.border}`, borderRadius: 10, overflow: "hidden", maxHeight: 220, overflowY: "auto" }}>
+                  {PREMISSAS_PADRAO.map((p, i) => (
+                    <label key={p.id} style={{
+                      display: "flex", alignItems: "center", gap: 10,
+                      padding: "9px 14px", cursor: "pointer",
+                      background: premissas[p.id] ? "#f0fdf4" : i % 2 === 0 ? "#faf8f4" : "#fff",
+                      borderBottom: i < PREMISSAS_PADRAO.length - 1 ? `1px solid ${C.border}` : "none",
+                      fontSize: 12, transition: "background .1s",
+                    }}>
+                      <input
+                        type="checkbox"
+                        checked={premissas[p.id]}
+                        onChange={(e) => setPremissas((prev) => ({ ...prev, [p.id]: e.target.checked }))}
+                        style={{ accentColor: C.red, width: 15, height: 15, flexShrink: 0 }}
+                      />
+                      <span style={{ color: premissas[p.id] ? "#166534" : C.graphite, fontWeight: premissas[p.id] ? 600 : 400 }}>
+                        {p.label}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+                <div style={{ fontSize: 10, color: C.muted, marginTop: 5 }}>
+                  Itens <b>não marcados</b> serão listados como exclusões no PDF.
+                </div>
               </div>
 
               {/* Resumo */}
