@@ -527,21 +527,24 @@ export default function StickQuotePDFModal({ onClose, obraNome = "", clienteNome
                 fontSize: 10, fontWeight: 800, letterSpacing: 1.5, textTransform: "uppercase", color: C.muted }}>
                 Composições Steel Frame
               </div>
-              {resultado.breakdown?.map((b, i) => (
-                <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between",
-                  padding: "10px 14px", borderBottom: `1px solid ${C.line}` }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <div style={{ width: 10, height: 10, borderRadius: 3, background: b.cor || C.steel }} />
-                    <div>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: C.ink }}>{b.composicao}</div>
-                      <div style={{ fontSize: 11, color: C.muted }}>{fmtN(b.area)} m²</div>
+              {resultado.breakdown?.map((b, i) => {
+                const comp = b.composicao && typeof b.composicao === "object" ? b.composicao : { nome: b.composicao, cor: b.cor };
+                return (
+                  <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between",
+                    padding: "10px 14px", borderBottom: `1px solid ${C.line}` }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <div style={{ width: 10, height: 10, borderRadius: 3, background: comp.cor || C.steel }} />
+                      <div>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: C.ink }}>{comp.nome || comp.id || "—"}</div>
+                        <div style={{ fontSize: 11, color: C.muted }}>{fmtN(b.area)} m²</div>
+                      </div>
+                    </div>
+                    <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 16, fontWeight: 700, color: C.ink }}>
+                      {fmtBRL(b.custo)}
                     </div>
                   </div>
-                  <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 16, fontWeight: 700, color: C.ink }}>
-                    {fmtBRL(b.custo)}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
               <div style={{ display: "flex", justifyContent: "space-between", padding: "12px 14px",
                 background: "#1a191c", borderTop: `1px solid ${C.line2}` }}>
                 <span style={{ fontSize: 12, fontWeight: 800, color: "rgba(255,255,255,.5)", textTransform: "uppercase", letterSpacing: 1 }}>
