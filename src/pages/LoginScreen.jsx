@@ -37,7 +37,7 @@ const GLOBAL_CSS = `
 @keyframes sf-spin { to { transform: rotate(360deg) } }
 @media (max-width: 767px) {
   .sf-login-left { display: none !important; }
-  .sf-login-right { width: 100% !important; min-height: 100vh; }
+  .sf-login-right { flex: 1 1 auto !important; width: 100% !important; min-height: 100vh; }
   .sf-login-wrap { padding: 0 !important; }
 }
 `;
