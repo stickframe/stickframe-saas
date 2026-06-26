@@ -45,6 +45,14 @@ const FUNIL = [
 ];
 const funilInfo = (k) => FUNIL.find((f) => f.key === k) || FUNIL[3];
 
+// Proposta enviada e parada há >3 dias → precisa follow-up
+function precisaFollowup(o) {
+  if ((o.status_funil || "") !== "proposta_enviada") return false;
+  const ref = o.ultima_interacao || o.created_at;
+  if (!ref) return true;
+  return (Date.now() - new Date(ref).getTime()) / 36e5 > 72;
+}
+
 // ── Origem do lead (de onde veio) ──
 function origemBadge(origem = "") {
   const o = String(origem).toLowerCase();
@@ -1301,6 +1309,8 @@ export default function Orcamentos() {
   const { toast, mostrarToast } = useToast();
   const [form,         setForm]         = useState({ ...FORM_VAZIO });
   const [converterOrc, setConverterOrc] = useState(null);
+  const [docOrc,       setDocOrc]       = useState(null);  // orçamento com modal de documentos aberto
+  const [docBusy,      setDocBusy]      = useState(false);
   const [calculadora,  setCalculadora]  = useState(false);
   const [preOrcamentos, setPreOrcamentos] = useState([]);
   const [preOrcAtivo, setPreOrcAtivo] = useState(null); // ID do lead sendo convertido
@@ -1443,6 +1453,35 @@ export default function Orcamentos() {
     }
     setModal(false);
     mostrarToast(" Orçamento gerado com sucesso!");
+  }
+
+  // ── Documentos vinculados ao orçamento ──
+  async function anexarDocumento(orc, file) {
+    if (!file) return;
+    setDocBusy(true);
+    try {
+      const eid = getEmpresaId();
+      const path = `orcamentos/${eid}/${orc.id}/${Date.now()}-${file.name}`;
+      const { data: up, error: upErr } = await sb.storage.from("arquivos").upload(path, file, { upsert: false });
+      if (upErr) throw upErr;
+      const url = sb.storage.from("arquivos").getPublicUrl(up.path).data.publicUrl;
+      const ext = (file.name.split(".").pop() || "").toLowerCase();
+      const tipo = ["pdf"].includes(ext) ? "PDF" : ["dwg", "dxf"].includes(ext) ? "DWG" : ["ifc"].includes(ext) ? "IFC" : ["png", "jpg", "jpeg"].includes(ext) ? "Imagem" : "Arquivo";
+      const docs = [...(orc.documentos || []), { nome: file.name, tipo, url, created_at: new Date().toISOString() }];
+      await updateOrcamento(orc.id, { documentos: docs, ultima_interacao: new Date().toISOString() });
+      setDocOrc((prev) => prev && prev.id === orc.id ? { ...prev, documentos: docs } : prev);
+      mostrarToast(" Documento anexado!");
+    } catch (e) {
+      mostrarToast(` Erro ao anexar: ${e.message}`, true);
+    } finally {
+      setDocBusy(false);
+    }
+  }
+
+  async function removerDocumento(orc, idx) {
+    const docs = (orc.documentos || []).filter((_, i) => i !== idx);
+    await updateOrcamento(orc.id, { documentos: docs });
+    setDocOrc((prev) => prev && prev.id === orc.id ? { ...prev, documentos: docs } : prev);
   }
 
   function salvarEdicao() {
@@ -1720,6 +1759,40 @@ export default function Orcamentos() {
         </div>
       )}
 
+      {/* Modal de documentos vinculados */}
+      {docOrc && (
+        <Modal title={`Documentos — ${docOrc.ref || docOrc.cliente || "Orçamento"}`} onClose={() => setDocOrc(null)}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.5 }}>
+              Vincule plantas, modelos e projetos a este orçamento (PDF, DWG, DXF, IFC, imagens).
+            </div>
+
+            {(docOrc.documentos?.length || 0) === 0 ? (
+              <div style={{ textAlign: "center", padding: "24px 0", color: C.muted, fontSize: 13, border: `1px dashed ${C.border}`, borderRadius: 10 }}>
+                Nenhum documento vinculado ainda.
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {docOrc.documentos.map((d, i) => (
+                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", background: C.surface, border: `1px solid ${C.border}`, borderRadius: 8 }}>
+                    <span style={{ fontSize: 9, fontWeight: 800, color: C.red, background: C.red + "14", borderRadius: 4, padding: "2px 7px" }}>{d.tipo}</span>
+                    <a href={d.url} target="_blank" rel="noreferrer" style={{ flex: 1, fontSize: 12.5, color: C.text, textDecoration: "none", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.nome}</a>
+                    <button onClick={() => removerDocumento(docOrc, i)} style={{ background: "none", border: "none", color: C.muted, cursor: "pointer", fontSize: 16 }} title="Remover">×</button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <label style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8, background: docBusy ? C.muted : C.red, color: "#fff", fontWeight: 700, fontSize: 13, padding: "10px 18px", borderRadius: 10, cursor: docBusy ? "wait" : "pointer" }}>
+              <FileText size={14} /> {docBusy ? "Enviando…" : "Anexar documento"}
+              <input type="file" hidden disabled={docBusy}
+                accept=".pdf,.dwg,.dxf,.ifc,.png,.jpg,.jpeg"
+                onChange={(e) => { const f = e.target.files[0]; e.target.value = ""; anexarDocumento(docOrc, f); }} />
+            </label>
+          </div>
+        </Modal>
+      )}
+
       {/* Modal converter em obra */}
       {converterOrc && (
         <Modal title="Converter em Obra" onClose={() => setConverterOrc(null)}>
@@ -1790,11 +1863,13 @@ export default function Orcamentos() {
           const pipeline = orcamentos
             .filter((o) => o.status !== "Recusado")
             .reduce((a, o) => a + (Number(o.valor) || 0), 0);
+          const followups = orcamentos.filter(precisaFollowup).length;
           const kpis = [
             { l: "Leads novos", v: preOrcamentos.length, c: "#3f7a4b" },
             { l: "Orçamentos", v: orcamentos.length, c: C.text },
             { l: "Aprovados", v: aprovados, c: "#3f7a4b" },
             { l: "Conversão", v: `${conv}%`, c: conv >= 25 ? "#3f7a4b" : "#c88a00" },
+            { l: "Follow-up", v: followups, c: followups > 0 ? "#c88a00" : C.muted },
             { l: "Pipeline", v: pipeline.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }), c: C.red },
           ];
           return (
@@ -2048,6 +2123,11 @@ export default function Orcamentos() {
                           const info = getValidadeText(o.criado, o.validade_dias);
                           return <Badge label={info.text} color={info.color} dot={info.isExpired} />;
                         })()}
+                        {precisaFollowup(o) && (
+                          <span title="Proposta enviada sem retorno há mais de 3 dias" style={{ fontSize: 10, fontWeight: 800, background: "#c88a0018", color: "#c88a00", borderRadius: 4, padding: "2px 8px", border: "1px solid #c88a0040" }}>
+                            ⏰ Follow-up
+                          </span>
+                        )}
                       </div>
                       <div style={{ fontSize: 15, fontWeight: 700 }}>{o.cliente}</div>
                       <div style={{ fontSize: 11, color: C.muted, marginTop: 3 }}>
@@ -2091,6 +2171,9 @@ export default function Orcamentos() {
                     </button>
 
                     {/* Ações Secundárias */}
+                    <Btn variant="ghost" size="sm" onClick={() => setDocOrc(o)}>
+                      <FileText size={13} /> Docs{(o.documentos?.length || 0) > 0 ? ` (${o.documentos.length})` : ""}
+                    </Btn>
                     <Btn variant="ghost" size="sm" onClick={() => abrirEditar(o)}><Pencil size={13} /> Editar</Btn>
                     <Btn variant="danger" size="sm" onClick={() => confirmarDelete(o.id)}><Trash2 size={13} /> Excluir</Btn>
 
