@@ -362,14 +362,15 @@ export function gerarRelatorioStickScore(obra, score, historico = []) {
     const min  = Math.max(0, Math.min(...vals) - 8);
     const max  = Math.min(100, Math.max(...vals) + 5);
     const range = max - min || 1;
+    const padX = 16;
     const pts = vals.map((v, i) => ({
-      x: (i / (vals.length - 1)) * W,
+      x: padX + (i / (vals.length - 1)) * (W - padX * 2),
       y: H - ((v - min) / range) * (H - 12),
       v,
       mes: historico[i].mes.slice(5),
     }));
     const poly = pts.map(p => `${p.x},${p.y}`).join(" ");
-    const area = `M ${poly.replace(/ /g, " L ")} L ${W},${H} L 0,${H} Z`;
+    const area = `M ${poly.replace(/ /g, " L ")} L ${pts[pts.length-1].x},${H} L ${pts[0].x},${H} Z`;
 
     historicoHtml = `
       <div style="margin-top:24px">
