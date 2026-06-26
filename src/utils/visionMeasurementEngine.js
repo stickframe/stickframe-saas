@@ -79,6 +79,29 @@ async function arquivoParaImagens(file, maxPaginas = 3) {
   throw new Error("Formato não suportado. Envie PNG, JPG ou PDF.");
 }
 
+// Traduz erros comuns da OpenAI em mensagens claras com o próximo passo.
+function mensagemErroOpenAI(status, code, raw) {
+  if (status === 429 || code === "insufficient_quota") {
+    return "Sua conta OpenAI está sem saldo (erro de cota). Adicione crédito em platform.openai.com/account/billing — a API é pré-paga e separada do ChatGPT. Com US$ 5 você analisa centenas de plantas.";
+  }
+  if (status === 401 || code === "invalid_api_key") {
+    return "Chave OpenAI inválida ou revogada. Gere uma nova em platform.openai.com/api-keys e atualize em Configurações → IA.";
+  }
+  if (status === 403) {
+    return "A chave OpenAI não tem permissão para este modelo. Verifique as permissões da chave (precisa de acesso a modelos de visão como gpt-4o).";
+  }
+  if (status === 400 && /image|content|invalid/i.test(raw || "")) {
+    return "A imagem da planta não pôde ser processada. Tente um PDF/PNG/JPG mais nítido ou com menos páginas.";
+  }
+  if (status === 413) {
+    return "Arquivo grande demais para a IA. Envie uma planta com resolução menor ou menos páginas.";
+  }
+  if (status >= 500) {
+    return "A OpenAI está temporariamente indisponível. Tente novamente em alguns instantes.";
+  }
+  return `Falha na análise por IA (erro ${status}). Tente novamente; se persistir, verifique sua chave e saldo em Configurações → IA.`;
+}
+
 const PROMPT_SISTEMA = `Você é um especialista em leitura de plantas arquitetônicas e levantamento de quantitativos para construção em Steel Frame (LSF). Receberá imagem(ns) de uma planta baixa. Analise VISUALMENTE o desenho e extraia apenas informações geométricas e de quantidades. NUNCA inclua nomes de pessoas, endereços, telefones ou qualquer dado pessoal — apenas medidas e contagens.
 
 Responda EXCLUSIVAMENTE com um objeto JSON válido (sem markdown, sem cercas de código) no formato:
@@ -161,7 +184,9 @@ export async function analisarVision(file, { empresaId } = {}) {
 
   if (!res.ok) {
     const errTxt = await res.text().catch(() => "");
-    throw new Error(`Chamada OpenAI falhou (${res.status}). ${errTxt.slice(0, 160)}`);
+    let apiCode = "";
+    try { apiCode = JSON.parse(errTxt)?.error?.code || JSON.parse(errTxt)?.error?.type || ""; } catch (_) { /* ignore */ }
+    throw new Error(mensagemErroOpenAI(res.status, apiCode, errTxt));
   }
 
   const resData = await res.json();
