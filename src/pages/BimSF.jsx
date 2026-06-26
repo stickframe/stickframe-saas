@@ -8,6 +8,7 @@ import {
 import StickViewBIM from "../components/bim/StickViewBIM";
 import StickQuotePDFModal from "../components/bim/StickQuotePDFModal";
 import StickQuoteDWGModal from "../components/bim/StickQuoteDWGModal";
+import StickQuoteVisionModal from "../components/bim/StickQuoteVisionModal";
 import { useToast } from "../components/ui/Toast";
 import { criarOrcamento } from "../services/repositories/orcamentoRepository";
 
@@ -446,6 +447,7 @@ export default function BimSF() {
   const [tab, setTab] = useState("stickview");
   const [pdfModalOpen, setPdfModalOpen] = useState(false);
   const [dwgModalOpen, setDwgModalOpen] = useState(false);
+  const [visionModalOpen, setVisionModalOpen] = useState(false);
   const toast = useToast();
   const obras     = useAppStore((s) => s.obras);
   const user      = useAppStore((s) => s.user);
@@ -517,6 +519,12 @@ export default function BimSF() {
                   <line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/>
                 </svg>
                 Analisar DWG
+              </BtnGhost>
+              <BtnGhost onClick={() => setVisionModalOpen(true)} style={{ borderColor: "rgba(139,92,246,.3)", color: "#a78bfa" }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                  <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>
+                </svg>
+                AI Vision
               </BtnGhost>
               <BtnGhost onClick={() => { setTab("apontamentos"); }}>
                 <Ic n="plus" w={14} /> Apontamento
@@ -627,6 +635,13 @@ export default function BimSF() {
       {dwgModalOpen && (
         <StickQuoteDWGModal
           onClose={() => setDwgModalOpen(false)}
+          obraNome={obras[obraIdx]?.nome || ""}
+          empresaId={empresaId}
+        />
+      )}
+      {visionModalOpen && (
+        <StickQuoteVisionModal
+          onClose={() => setVisionModalOpen(false)}
           obraNome={obras[obraIdx]?.nome || ""}
           empresaId={empresaId}
         />
