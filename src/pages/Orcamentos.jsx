@@ -32,6 +32,34 @@ const STATUS_COR  = {
 };
 const statusColor = (s) => STATUS_COR[s] || C.muted;
 
+// ── Origem do lead (de onde veio) ──
+function origemBadge(origem = "") {
+  const o = String(origem).toLowerCase();
+  if (o.startsWith("kit-") || o.includes("calc")) return { label: "Calculadora", cor: "#3f7a4b", dot: "🟢" };
+  if (o.includes("pdf"))    return { label: "PDF Analyzer", cor: "#c0241c", dot: "🔴" };
+  if (o.includes("dwg"))    return { label: "DWG", cor: "#3b82f6", dot: "🟠" };
+  if (o.includes("vision")) return { label: "AI Vision", cor: "#8b5cf6", dot: "🟣" };
+  if (o.includes("bim") || o.includes("ifc")) return { label: "BIM / IFC", cor: "#2a9d8f", dot: "🔵" };
+  if (o.includes("manual"))  return { label: "Manual", cor: "#8c847a", dot: "⚪" };
+  return { label: origem || "Calculadora", cor: "#3f7a4b", dot: "🟢" };
+}
+
+// ── Temperatura do lead (qualificação) ──
+// Quente: calculou há pouco + área + valor definidos. Esfria com o tempo.
+function temperaturaLead(p) {
+  const ageH = p.created_at ? (Date.now() - new Date(p.created_at).getTime()) / 36e5 : 999;
+  const temArea  = Number(p.area) > 0;
+  const temValor = Number(p.valor_max || p.valor_min) > 0;
+  let score = 0;
+  if (ageH <= 24) score += 3; else if (ageH <= 72) score += 2; else if (ageH <= 168) score += 1;
+  if (temArea)  score += 1;
+  if (temValor) score += 1;
+  if (p.contato) score += 1;
+  if (score >= 5) return { nivel: "Quente", icon: "🔥", cor: "#c0241c", score };
+  if (score >= 3) return { nivel: "Médio",  icon: "🟡", cor: "#c88a00", score };
+  return { nivel: "Frio", icon: "❄️", cor: "#3b6ea5", score };
+}
+
 const parseCriadoDate = (dateStr) => {
   if (!dateStr) return new Date();
   if (typeof dateStr === "string" && dateStr.includes("/")) {
@@ -1233,6 +1261,7 @@ const FORM_VAZIO = {
   desconto:   0,
   valor_m2_custom: 3500,
   opcionais:  [],
+  origem:     "Manual",
 };
 
 export default function Orcamentos() {
@@ -1390,6 +1419,7 @@ export default function Orcamentos() {
       status:     form.status,
       criado:     new Date().toLocaleDateString("pt-BR"),
       opcionais:  form.opcionais || [],
+      origem:     form.origem || "Manual",
     });
     if (preOrcAtivo) {
       sb.from("pre_orcamentos").update({ status: "Analisado" }).eq("id", preOrcAtivo).then(() => {});
@@ -1738,6 +1768,32 @@ export default function Orcamentos() {
       <div>
         <FluxoOrcamentoStepper step={1} onGo={(i) => { if (i === 0) setActivePage("calculadora"); }} />
 
+        {/* Mini-dashboard comercial */}
+        {(() => {
+          const aprovados = orcamentos.filter((o) => o.status === "Aprovado").length;
+          const conv = orcamentos.length ? Math.round((aprovados / orcamentos.length) * 100) : 0;
+          const pipeline = orcamentos
+            .filter((o) => o.status !== "Recusado")
+            .reduce((a, o) => a + (Number(o.valor) || 0), 0);
+          const kpis = [
+            { l: "Leads novos", v: preOrcamentos.length, c: "#3f7a4b" },
+            { l: "Orçamentos", v: orcamentos.length, c: C.text },
+            { l: "Aprovados", v: aprovados, c: "#3f7a4b" },
+            { l: "Conversão", v: `${conv}%`, c: conv >= 25 ? "#3f7a4b" : "#c88a00" },
+            { l: "Pipeline", v: pipeline.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }), c: C.red },
+          ];
+          return (
+            <div className="kpi-grid-5" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(130px,1fr))", gap: 10, marginBottom: 20 }}>
+              {kpis.map((k, i) => (
+                <div key={i} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 14px" }}>
+                  <div style={{ fontSize: 10, color: C.muted, textTransform: "uppercase", letterSpacing: 0.6, fontWeight: 700 }}>{k.l}</div>
+                  <div style={{ fontFamily: "var(--cond)", fontSize: 22, fontWeight: 800, color: k.c, marginTop: 3, lineHeight: 1 }}>{k.v}</div>
+                </div>
+              ))}
+            </div>
+          );
+        })()}
+
         {/* Header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
           <div>
@@ -1784,8 +1840,18 @@ export default function Orcamentos() {
               <div key={p.id} style={{ background: C.surface, border: `1px solid ${kitId ? "#981915" : C.border}`, borderRadius: 8, padding: "12px 16px", marginBottom: 8 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
                   <div style={{ flex: 1 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2, flexWrap: "wrap" }}>
                       <span style={{ fontSize: 13, fontWeight: 700 }}>{p.nome}</span>
+                      {(() => { const t = temperaturaLead(p); return (
+                        <span title={`Lead ${t.nivel} (score ${t.score}/6)`} style={{ fontSize: 10, fontWeight: 800, background: t.cor + "18", color: t.cor, borderRadius: 4, padding: "2px 7px", border: `1px solid ${t.cor}33` }}>
+                          {t.icon} {t.nivel}
+                        </span>
+                      ); })()}
+                      {(() => { const b = origemBadge(p.origem); return (
+                        <span title={`Origem: ${b.label}`} style={{ fontSize: 10, fontWeight: 700, background: b.cor + "14", color: b.cor, borderRadius: 4, padding: "2px 7px", border: `1px solid ${b.cor}2e` }}>
+                          {b.dot} {b.label}
+                        </span>
+                      ); })()}
                       {kitNome && (
                         <span style={{ fontSize: 10, fontWeight: 800, background: "#98191518", color: "#981915", borderRadius: 4, padding: "2px 7px", border: "1px solid #98191533" }}>
                            Kit: {kitNome}
@@ -1826,6 +1892,7 @@ export default function Orcamentos() {
                         padrao: leadPadrao,
                         valor_m2_custom: leadPreco ? leadPreco.m2 : 3500,
                         unidades: 1,
+                        origem: p.origem || "Calculadora",
                       });
                       setPreOrcAtivo(p.id);
                       setModal("novo");
