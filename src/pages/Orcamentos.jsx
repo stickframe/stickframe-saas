@@ -32,6 +32,19 @@ const STATUS_COR  = {
 };
 const statusColor = (s) => STATUS_COR[s] || C.muted;
 
+// ── Funil comercial (status_funil) ──
+const FUNIL = [
+  { key: "novo",              label: "Novo Lead",        cor: "#8c847a" },
+  { key: "analise",           label: "Análise",          cor: "#3b6ea5" },
+  { key: "projeto_recebido",  label: "Projeto recebido", cor: "#6d557e" },
+  { key: "orcamento_criado",  label: "Orçamento criado", cor: "#c88a00" },
+  { key: "proposta_enviada",  label: "Proposta enviada", cor: "#3b82f6" },
+  { key: "negociacao",        label: "Negociação",       cor: "#c0241c" },
+  { key: "fechado",           label: "Fechado",          cor: "#3f7a4b" },
+  { key: "perdido",           label: "Perdido",          cor: "#a33327" },
+];
+const funilInfo = (k) => FUNIL.find((f) => f.key === k) || FUNIL[3];
+
 // ── Origem do lead (de onde veio) ──
 function origemBadge(origem = "") {
   const o = String(origem).toLowerCase();
@@ -1420,6 +1433,8 @@ export default function Orcamentos() {
       criado:     new Date().toLocaleDateString("pt-BR"),
       opcionais:  form.opcionais || [],
       origem:     form.origem || "Manual",
+      status_funil: "orcamento_criado",
+      ultima_interacao: new Date().toISOString(),
     });
     if (preOrcAtivo) {
       sb.from("pre_orcamentos").update({ status: "Analisado" }).eq("id", preOrcAtivo).then(() => {});
@@ -1520,7 +1535,7 @@ export default function Orcamentos() {
       }
 
       // 2. Atualizar o orçamento (status + vinculação da obra_id)
-      await updateOrcamento(o.id, { status: "Aprovado", obra_id: obraCriada.id });
+      await updateOrcamento(o.id, { status: "Aprovado", status_funil: "fechado", obra_id: obraCriada.id, ultima_interacao: new Date().toISOString() });
       orcamentoAtualizado = true;
 
       // 3. Se há estimativo da calculadora, importa para quantitativos da obra
@@ -1587,7 +1602,7 @@ export default function Orcamentos() {
       let token = o.proposta_token;
       if (!token) {
         token = crypto.randomUUID();
-        await updateOrcamento(o.id, { proposta_token: token });
+        await updateOrcamento(o.id, { proposta_token: token, status_funil: o.status_funil === "fechado" || o.status_funil === "perdido" ? o.status_funil : "proposta_enviada", ultima_interacao: new Date().toISOString() });
       }
       const url = `${window.location.origin}/proposta/${token}`;
       if (navigator.share) {
@@ -1607,7 +1622,7 @@ export default function Orcamentos() {
       let token = o.proposta_token;
       if (!token) {
         token = crypto.randomUUID();
-        await updateOrcamento(o.id, { proposta_token: token });
+        await updateOrcamento(o.id, { proposta_token: token, status_funil: o.status_funil === "fechado" || o.status_funil === "perdido" ? o.status_funil : "proposta_enviada", ultima_interacao: new Date().toISOString() });
       }
       const url = `${window.location.origin}/proposta/${token}`;
       const msg = encodeURIComponent(`Olá! Segue o link da sua proposta Stickframe:\n${url}`);
@@ -1788,6 +1803,28 @@ export default function Orcamentos() {
                 <div key={i} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 14px" }}>
                   <div style={{ fontSize: 10, color: C.muted, textTransform: "uppercase", letterSpacing: 0.6, fontWeight: 700 }}>{k.l}</div>
                   <div style={{ fontFamily: "var(--cond)", fontSize: 22, fontWeight: 800, color: k.c, marginTop: 3, lineHeight: 1 }}>{k.v}</div>
+                </div>
+              ))}
+            </div>
+          );
+        })()}
+
+        {/* Pipeline comercial por estágio */}
+        {orcamentos.length > 0 && (() => {
+          const porEstagio = FUNIL.map((f) => {
+            const itens = orcamentos.filter((o) => (o.status_funil || "orcamento_criado") === f.key);
+            return { ...f, n: itens.length, valor: itens.reduce((a, o) => a + (Number(o.valor) || 0), 0) };
+          }).filter((e) => !["perdido"].includes(e.key) || e.n > 0);
+          return (
+            <div style={{ display: "flex", gap: 6, overflowX: "auto", marginBottom: 20, paddingBottom: 4 }}>
+              {porEstagio.map((e) => (
+                <div key={e.key} title={`${e.n} orçamento(s)`} style={{
+                  flex: "1 0 auto", minWidth: 104, background: C.surface, border: `1px solid ${C.border}`,
+                  borderTop: `3px solid ${e.cor}`, borderRadius: 8, padding: "9px 11px",
+                }}>
+                  <div style={{ fontSize: 10, color: C.muted, fontWeight: 700, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{e.label}</div>
+                  <div style={{ fontFamily: "var(--cond)", fontSize: 19, fontWeight: 800, color: e.cor, lineHeight: 1.1 }}>{e.n}</div>
+                  <div style={{ fontSize: 10, color: C.muted }}>{e.valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 })}</div>
                 </div>
               ))}
             </div>
@@ -1999,7 +2036,14 @@ export default function Orcamentos() {
                         <span style={{ fontSize: 11, color: C.red, fontWeight: 700, letterSpacing: 1 }}>
                           {o.ref}
                         </span>
-                        <Badge label={o.status} color={statusColor(o.status)} />
+                        {(() => { const f = funilInfo(o.status_funil); return (
+                          <span style={{ fontSize: 10, fontWeight: 800, background: f.cor + "1c", color: f.cor, borderRadius: 4, padding: "2px 8px", border: `1px solid ${f.cor}3a` }}>
+                            {f.label}
+                          </span>
+                        ); })()}
+                        {o.origem && (() => { const b = origemBadge(o.origem); return (
+                          <span title={`Origem: ${b.label}`} style={{ fontSize: 10, fontWeight: 700, color: b.cor }}>{b.dot}</span>
+                        ); })()}
                         {(() => {
                           const info = getValidadeText(o.criado, o.validade_dias);
                           return <Badge label={info.text} color={info.color} dot={info.isExpired} />;
@@ -2063,6 +2107,13 @@ export default function Orcamentos() {
                       value={o.status}
                       onChange={(v) => updateOrcamento(o.id, { status: v })}
                       options={STATUS_OPTS.map((s) => ({ value: s, label: s }))}
+                    />
+
+                    {/* Estágio no funil comercial */}
+                    <Select
+                      value={o.status_funil || "orcamento_criado"}
+                      onChange={(v) => updateOrcamento(o.id, { status_funil: v, ultima_interacao: new Date().toISOString() })}
+                      options={FUNIL.map((f) => ({ value: f.key, label: f.label }))}
                     />
 
                     {/* Menu Dropdown de Mais Ações */}
