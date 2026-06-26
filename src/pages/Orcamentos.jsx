@@ -18,6 +18,7 @@ import Badge from "../components/ui/Badge";
 import Modal from "../components/ui/Modal";
 import FormAiMemorial from "../components/ui/FormAiMemorial";
 import CatalogoPicker from "../components/orcamento/CatalogoPicker";
+import { listarStickQuotesDoOrcamento, listarStickQuotesParaVincular, vincularStickQuoteAoOrcamento } from "../services/stickquoteService";
 import { CATALOGO_PRODUTOS } from "../utils/insumosSF";
 
 const _catalogoMap = Object.fromEntries(CATALOGO_PRODUTOS.map(p => [p.id, p]));
@@ -1311,6 +1312,9 @@ export default function Orcamentos() {
   const [converterOrc, setConverterOrc] = useState(null);
   const [docOrc,       setDocOrc]       = useState(null);  // orçamento com modal de documentos aberto
   const [docBusy,      setDocBusy]      = useState(false);
+  const [sqVinculados, setSqVinculados] = useState([]);
+  const [sqLivres,     setSqLivres]     = useState([]);
+  const [sqSel,        setSqSel]        = useState("");
   const [calculadora,  setCalculadora]  = useState(false);
   const [preOrcamentos, setPreOrcamentos] = useState([]);
   const [preOrcAtivo, setPreOrcAtivo] = useState(null); // ID do lead sendo convertido
@@ -1453,6 +1457,39 @@ export default function Orcamentos() {
     }
     setModal(false);
     mostrarToast(" Orçamento gerado com sucesso!");
+  }
+
+  // ── StickQuotes técnicos vinculados ──
+  useEffect(() => {
+    if (!docOrc) { setSqVinculados([]); setSqLivres([]); setSqSel(""); return; }
+    Promise.all([
+      listarStickQuotesDoOrcamento(docOrc.id).catch(() => []),
+      listarStickQuotesParaVincular({ apenasLivres: true }).catch(() => []),
+    ]).then(([vinc, livres]) => { setSqVinculados(vinc); setSqLivres(livres); });
+  }, [docOrc]);
+
+  async function vincularSQ() {
+    if (!sqSel || !docOrc) return;
+    try {
+      await vincularStickQuoteAoOrcamento(sqSel, docOrc.id, docOrc.cliente_id || null);
+      const [vinc, livres] = await Promise.all([
+        listarStickQuotesDoOrcamento(docOrc.id),
+        listarStickQuotesParaVincular({ apenasLivres: true }),
+      ]);
+      setSqVinculados(vinc); setSqLivres(livres); setSqSel("");
+      mostrarToast(" StickQuote vinculado ao orçamento!");
+    } catch (e) { mostrarToast(` Erro ao vincular: ${e.message}`, true); }
+  }
+
+  async function desvincularSQ(id) {
+    try {
+      await vincularStickQuoteAoOrcamento(id, null, null);
+      const [vinc, livres] = await Promise.all([
+        listarStickQuotesDoOrcamento(docOrc.id),
+        listarStickQuotesParaVincular({ apenasLivres: true }),
+      ]);
+      setSqVinculados(vinc); setSqLivres(livres);
+    } catch (e) { mostrarToast(` Erro: ${e.message}`, true); }
   }
 
   // ── Documentos vinculados ao orçamento ──
@@ -1789,6 +1826,34 @@ export default function Orcamentos() {
                 accept=".pdf,.dwg,.dxf,.ifc,.png,.jpg,.jpeg"
                 onChange={(e) => { const f = e.target.files[0]; e.target.value = ""; anexarDocumento(docOrc, f); }} />
             </label>
+
+            {/* StickQuote técnico vinculado (costura engenharia↔comercial) */}
+            <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: 14, marginTop: 2 }}>
+              <div style={{ fontSize: 11, fontWeight: 800, color: C.red, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>StickQuote™ técnico</div>
+              {sqVinculados.length === 0 ? (
+                <div style={{ fontSize: 12, color: C.muted, marginBottom: 10 }}>Nenhum orçamento técnico vinculado.</div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 10 }}>
+                  {sqVinculados.map((sq) => (
+                    <div key={sq.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", background: C.red + "0d", border: `1px solid ${C.red}33`, borderRadius: 8 }}>
+                      <span style={{ fontSize: 9, fontWeight: 800, color: C.red, background: C.red + "1a", borderRadius: 4, padding: "2px 7px" }}>{sq.numero ? `#${sq.numero}` : "SQ"}</span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 12.5, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{sq.nome || sq.obra_nome || "StickQuote"}</div>
+                        {sq.resultado?.total != null && <div style={{ fontSize: 11, color: "#3f7a4b", fontWeight: 700 }}>{fmt(sq.resultado.total)}</div>}
+                      </div>
+                      <button onClick={() => desvincularSQ(sq.id)} style={{ background: "none", border: "none", color: C.muted, cursor: "pointer", fontSize: 16 }} title="Desvincular">×</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {sqLivres.length > 0 && (
+                <div style={{ display: "flex", gap: 8 }}>
+                  <Select value={sqSel} onChange={setSqSel}
+                    options={[{ value: "", label: "Vincular um StickQuote existente…" }, ...sqLivres.map((sq) => ({ value: sq.id, label: `${sq.numero ? "#" + sq.numero + " · " : ""}${sq.nome || sq.obra_nome || "StickQuote"}${sq.resultado?.total != null ? " · " + fmt(sq.resultado.total) : ""}` }))]} />
+                  <Btn variant="primary" size="sm" disabled={!sqSel} onClick={vincularSQ}>Vincular</Btn>
+                </div>
+              )}
+            </div>
           </div>
         </Modal>
       )}

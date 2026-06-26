@@ -9,7 +9,7 @@ const agora  = () => new Date().toLocaleString('pt-BR');
 /**
  * Salva a versão do StickQuote no Supabase e retorna o registro.
  */
-export async function salvarStickQuote({ nome, obraNome, clienteNome, selecoes, resultado, observacoes }) {
+export async function salvarStickQuote({ nome, obraNome, clienteNome, selecoes, resultado, observacoes, orcamentoId, clienteId }) {
   const empresaId = getEmpresaId();
   if (!empresaId) throw new Error('empresa_id não encontrado');
 
@@ -20,6 +20,8 @@ export async function salvarStickQuote({ nome, obraNome, clienteNome, selecoes, 
       nome,
       obra_nome:    obraNome  || null,
       cliente_nome: clienteNome || null,
+      orcamento_id: orcamentoId || null,
+      cliente_id:   clienteId   || null,
       selecoes:     JSON.parse(JSON.stringify(selecoes)),
       resultado:    JSON.parse(JSON.stringify(resultado)),
       observacoes:  observacoes || null,
@@ -29,6 +31,42 @@ export async function salvarStickQuote({ nome, obraNome, clienteNome, selecoes, 
 
   if (error) throw error;
   return data;
+}
+
+/**
+ * Lista StickQuotes da empresa para vínculo a um orçamento.
+ * `apenasLivres` = só os ainda não vinculados a nenhum orçamento.
+ */
+export async function listarStickQuotesParaVincular({ apenasLivres = true } = {}) {
+  let q = sb
+    .from('stickquote_versoes')
+    .select('id, numero, nome, obra_nome, cliente_nome, resultado, orcamento_id, created_at')
+    .order('created_at', { ascending: false })
+    .limit(80);
+  if (apenasLivres) q = q.is('orcamento_id', null);
+  const { data, error } = await q;
+  if (error) throw error;
+  return data || [];
+}
+
+/** Vincula/desvincula um StickQuote a um orçamento (e cliente opcional). */
+export async function vincularStickQuoteAoOrcamento(stickquoteId, orcamentoId, clienteId = null) {
+  const { error } = await sb
+    .from('stickquote_versoes')
+    .update({ orcamento_id: orcamentoId, cliente_id: clienteId })
+    .eq('id', stickquoteId);
+  if (error) throw error;
+}
+
+/** StickQuotes técnicos vinculados a um orçamento. */
+export async function listarStickQuotesDoOrcamento(orcamentoId) {
+  const { data, error } = await sb
+    .from('stickquote_versoes')
+    .select('id, numero, nome, obra_nome, cliente_nome, resultado, created_at')
+    .eq('orcamento_id', orcamentoId)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data || [];
 }
 
 /**
