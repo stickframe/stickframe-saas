@@ -4,6 +4,7 @@ import { fmt } from "../utils/format";
 import useAppStore from "../store/useAppStore";
 import { useModuleLoad } from "../hooks/useModuleLoad";
 import StickBrainAnalytics from "../components/inteligencia/StickBrainAnalytics";
+import KpiCard, { KpiGrid } from "../components/KpiCard";
 
 /*  Lucide icons (viewBox 0 0 24 24)  */
 function Ic({ n, w = 16, c = "currentColor" }) {
@@ -158,32 +159,32 @@ export default function Inteligencia() {
       <StickBrainAnalytics />
 
       {/* KPIs */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12, marginBottom: 16 }}>
+      <KpiGrid style={{ marginBottom: 16 }}>
         <KpiCard
-          accent={C.red} icon="trendU"
+          accent={C.red} icon={<Ic n="trendU" w={15} c={C.red} />}
           label="Custo histórico geral"
-          val={custoMedio > 0 ? fmt(custoMedio) : "—"} unit={custoMedio > 0 ? "/m²" : ""}
+          value={custoMedio > 0 ? fmt(custoMedio) + "/m²" : "—"}
           sub={`Média real de ${obrasAnalisadas} obra${obrasAnalisadas !== 1 ? "s" : ""} concluída${obrasAnalisadas !== 1 ? "s" : ""}`}
         />
         <KpiCard
-          accent={C.steel} icon="barchart"
+          accent={C.steel} icon={<Ic n="barchart" w={15} c={C.steel} />}
           label="Custo projetado (em andamento)"
-          val={projetadoM2 > 0 ? fmt(projetadoM2) : "—"} unit={projetadoM2 > 0 ? "/m²" : ""}
+          value={projetadoM2 > 0 ? fmt(projetadoM2) + "/m²" : "—"}
           sub="Projeção atual com base no progresso físico"
         />
         <KpiCard
-          accent={tendCor} icon={tendIcon}
+          accent={tendCor} icon={<Ic n={tendIcon} w={15} c={tendCor} />}
           label="Tendência de custo"
-          val={tendencia}
+          value={tendencia}
           sub="Obras atuais vs Histórico consolidado"
         />
         <KpiCard
-          accent={C.ochre} icon="clock"
+          accent={C.ochre} icon={<Ic n="clock" w={15} c={C.ochre} />}
           label="Prazo médio de entrega"
-          val={prazoMedio > 0 ? prazoMedio : "—"} unit={prazoMedio > 0 ? " dias" : ""}
+          value={prazoMedio > 0 ? `${prazoMedio} dias` : "—"}
           sub="Tempo real médio de execução"
         />
-      </div>
+      </KpiGrid>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 14 }}>
         {/* Custo por padrão */}
@@ -253,26 +254,6 @@ export default function Inteligencia() {
           </div>
         </div>
       </div>
-    </div>
-  );
-}
-
-/*  KPI Card  */
-function KpiCard({ accent, icon, label, val, unit, sub }) {
-  return (
-    <div className="card" style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12, padding: "16px 18px" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
-        <div style={{ height: 3, width: 28, borderRadius: 2, background: accent }} />
-        <Ic n={icon} w={16} c={accent} />
-      </div>
-      <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 1.2, color: C.muted, textTransform: "uppercase", marginBottom: 6 }}>
-        {label}
-      </div>
-      <div className="num" style={{ fontFamily: cond, fontSize: 30, fontWeight: 700, lineHeight: 1, color: accent, marginBottom: 4 }}>
-        {val}
-        {unit && <span style={{ fontSize: 15, fontWeight: 600, color: C.muted }}>{unit}</span>}
-      </div>
-      <div style={{ fontSize: 11.5, color: C.muted }}>{sub}</div>
     </div>
   );
 }

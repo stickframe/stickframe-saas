@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { C } from "../../utils/constants";
 import { getEmpresaId } from "../../services/supabase";
 import { carregarMetricasFunil, analisarComStickBrain } from "../../services/stickbrainService";
+import KpiCard, { KpiGrid } from "../KpiCard";
 
 const cond = "var(--cond)";
 const fmt = (v) => Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
@@ -81,14 +82,14 @@ export default function StickBrainAnalytics() {
       </div>
 
       {/* Indicadores */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", gap: 10, marginBottom: 12 }}>
-        <Mini label="StickQuotes órfãos" valor={pct(m.taxa_orfao)} cor={orfaoAlto ? "#a33327" : C.muted} alerta={orfaoAlto} />
-        <Mini label="Valor ganho" valor={fmt(m.valor_ganho)} cor="#3f7a4b" />
-        <Mini label="Ticket médio" valor={fmt(m.ticket_medio)} cor={C.text} />
-        <Mini label="Pipeline aberto" valor={fmt(m.valor_pipeline)} cor={C.red} />
-        <Mini label="Tempo SQ→Orçam." valor={`${m.tempo_medio_sq_orcamento_h || 0}h`} cor={C.text} />
-        <Mini label="Tempo Orçam→Fech." valor={`${m.tempo_medio_orcamento_fechamento_d || 0}d`} cor={C.text} />
-      </div>
+      <KpiGrid style={{ marginBottom: 12 }}>
+        <KpiCard label="StickQuotes órfãos" value={pct(m.taxa_orfao)} accent={orfaoAlto ? C.danger : C.muted} alerta={orfaoAlto ? "danger" : null} />
+        <KpiCard label="Valor ganho" value={fmt(m.valor_ganho)} accent={C.success} />
+        <KpiCard label="Ticket médio" value={fmt(m.ticket_medio)} accent={C.graphite} />
+        <KpiCard label="Pipeline aberto" value={fmt(m.valor_pipeline)} accent={C.red} />
+        <KpiCard label="Tempo SQ→Orçam." value={`${m.tempo_medio_sq_orcamento_h || 0}h`} accent={C.steel} />
+        <KpiCard label="Tempo Orçam→Fech." value={`${m.tempo_medio_orcamento_fechamento_d || 0}d`} accent={C.steel} />
+      </KpiGrid>
 
       {/* Performance por origem */}
       {Array.isArray(m.origens) && m.origens.length > 0 && (
@@ -153,15 +154,6 @@ export default function StickBrainAnalytics() {
           {ia.previsao && <div style={{ fontSize: 12, color: "#9aa0a8", marginTop: 10, fontStyle: "italic" }}>Previsão: {ia.previsao}</div>}
         </div>
       )}
-    </div>
-  );
-}
-
-function Mini({ label, valor, cor, alerta }) {
-  return (
-    <div style={{ background: C.surface, border: `1px solid ${alerta ? "#a3332744" : C.border}`, borderRadius: 8, padding: "10px 12px" }}>
-      <div style={{ fontSize: 10, color: C.muted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5 }}>{label}</div>
-      <div style={{ fontFamily: cond, fontSize: 18, fontWeight: 800, color: cor, lineHeight: 1.1, marginTop: 2 }}>{valor}</div>
     </div>
   );
 }

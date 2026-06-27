@@ -19,6 +19,7 @@ import Modal from "../components/ui/Modal";
 import FormAiMemorial from "../components/ui/FormAiMemorial";
 import CatalogoPicker from "../components/orcamento/CatalogoPicker";
 import { listarStickQuotesDoOrcamento, listarStickQuotesParaVincular, vincularStickQuoteAoOrcamento } from "../services/stickquoteService";
+import KpiCard, { KpiGrid } from "../components/KpiCard";
 import { CATALOGO_PRODUTOS } from "../utils/insumosSF";
 
 const _catalogoMap = Object.fromEntries(CATALOGO_PRODUTOS.map(p => [p.id, p]));
@@ -1930,22 +1931,19 @@ export default function Orcamentos() {
             .reduce((a, o) => a + (Number(o.valor) || 0), 0);
           const followups = orcamentos.filter(precisaFollowup).length;
           const kpis = [
-            { l: "Leads novos", v: preOrcamentos.length, c: "#3f7a4b" },
-            { l: "Orçamentos", v: orcamentos.length, c: C.text },
-            { l: "Aprovados", v: aprovados, c: "#3f7a4b" },
-            { l: "Conversão", v: `${conv}%`, c: conv >= 25 ? "#3f7a4b" : "#c88a00" },
-            { l: "Follow-up", v: followups, c: followups > 0 ? "#c88a00" : C.muted },
-            { l: "Pipeline", v: pipeline.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }), c: C.red },
+            { l: "Leads novos", v: preOrcamentos.length, accent: C.success },
+            { l: "Orçamentos", v: orcamentos.length, accent: C.graphite },
+            { l: "Aprovados", v: aprovados, accent: C.success },
+            { l: "Conversão", v: `${conv}%`, accent: conv >= 25 ? C.success : C.warning },
+            { l: "Follow-up", v: followups, accent: followups > 0 ? C.warning : C.border, alerta: followups > 0 ? "warning" : null },
+            { l: "Pipeline", v: pipeline.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }), accent: C.red },
           ];
           return (
-            <div className="kpi-grid-5" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(130px,1fr))", gap: 10, marginBottom: 20 }}>
+            <KpiGrid style={{ marginBottom: 20 }}>
               {kpis.map((k, i) => (
-                <div key={i} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 14px" }}>
-                  <div style={{ fontSize: 10, color: C.muted, textTransform: "uppercase", letterSpacing: 0.6, fontWeight: 700 }}>{k.l}</div>
-                  <div style={{ fontFamily: "var(--cond)", fontSize: 22, fontWeight: 800, color: k.c, marginTop: 3, lineHeight: 1 }}>{k.v}</div>
-                </div>
+                <KpiCard key={i} label={k.l} value={k.v} accent={k.accent} alerta={k.alerta} />
               ))}
-            </div>
+            </KpiGrid>
           );
         })()}
 
