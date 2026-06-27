@@ -1,0 +1,3 @@
+-- StickBrain metricas do funil tecnico->comercial (RPC SECURITY DEFINER por empresa).
+-- Definicao completa aplicada via apply_migration stickbrain_metricas_funil.
+-- (arquivo de registro; a funcao stickbrain_metricas() ja esta no banco)

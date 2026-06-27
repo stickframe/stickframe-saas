@@ -3,6 +3,7 @@ import { C } from "../utils/constants";
 import { fmt } from "../utils/format";
 import useAppStore from "../store/useAppStore";
 import { useModuleLoad } from "../hooks/useModuleLoad";
+import StickBrainAnalytics from "../components/inteligencia/StickBrainAnalytics";
 
 /*  Lucide icons (viewBox 0 0 24 24)  */
 function Ic({ n, w = 16, c = "currentColor" }) {
@@ -118,6 +119,7 @@ export default function Inteligencia() {
     return (
       <div>
         {Header}
+        <StickBrainAnalytics />
         <div className="card" style={{
           background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12,
           display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
@@ -153,6 +155,7 @@ export default function Inteligencia() {
   return (
     <div>
       {Header}
+      <StickBrainAnalytics />
 
       {/* KPIs */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12, marginBottom: 16 }}>
