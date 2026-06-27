@@ -239,7 +239,7 @@ export default function StickQuoteBIMModal({ ifcFile, obraId, obraNome, empresaI
               borderRadius: 8, padding: "5px 10px", fontFamily: "'Barlow Condensed',sans-serif",
               fontSize: 13, fontWeight: 700, color: "#fff", letterSpacing: .3,
             }}>
-              StickQuote™ <span style={{ color: "#981915" }}>BIM</span>
+              StickQuote™ <span style={{ color: "#c0892d" }}>BIM</span>
             </div>
             {ifcFile && (
               <span style={{ fontSize: 11, color: "rgba(255,255,255,.4)" }}>

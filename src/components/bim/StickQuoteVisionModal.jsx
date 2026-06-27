@@ -3,6 +3,7 @@ import { sb, getEmpresaId } from "../../services/supabase";
 import { calcMotorComposicao } from "../../utils/composicoesSF";
 import { gerarStickQuotePDF, salvarStickQuote } from "../../services/stickquoteService";
 import { analisarVision } from "../../utils/visionMeasurementEngine";
+import QuoteModalShell from "./QuoteModalShell";
 
 const C = {
   bg: "#111013", surface: "#1b1a20", surface2: "#211f27", elev: "#2a2832",
@@ -270,32 +271,7 @@ export default function StickQuoteVisionModal({ onClose, obraNome = "", clienteN
   const sumArea = linhas.reduce((a, l) => a + (l.area > 0 ? 1 : 0), 0);
 
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,.72)",
-      display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
-      <div style={{ background: C.bg, border: `1px solid ${C.line2}`, borderRadius: 20,
-        width: "100%", maxWidth: 700, maxHeight: "92vh", overflow: "auto", padding: 28, position: "relative" }}>
-
-        {/* Header */}
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 22 }}>
-          <div>
-            <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
-              <div style={{ width: 30, height: 30, borderRadius: 8, background: C.violetSoft,
-                display: "grid", placeItems: "center" }}>
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke={C.violet2} strokeWidth="2">
-                  <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z" /><circle cx="12" cy="12" r="3" />
-                </svg>
-              </div>
-              <div>
-                <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: 21, fontWeight: 800, color: C.ink, lineHeight: 1 }}>
-                  StickQuote™ AI Vision
-                </div>
-                <div style={{ fontSize: 11, color: C.muted, marginTop: 3 }}>Planta visual → orçamento Steel Frame</div>
-              </div>
-            </div>
-          </div>
-          <button onClick={onClose} style={{ background: "none", border: "none", color: C.muted, fontSize: 22, cursor: "pointer", lineHeight: 1 }}>×</button>
-        </div>
-
+    <QuoteModalShell tipo="AI Vision" accent="#6d557e" descricao="Planta visual → orçamento Steel Frame" arquivo={file?.name} onClose={onClose}>
         <Steps current={step} />
 
         {erro && (
@@ -464,8 +440,7 @@ export default function StickQuoteVisionModal({ onClose, obraNome = "", clienteN
             </div>
           </div>
         )}
-      </div>
-    </div>
+    </QuoteModalShell>
   );
 }
 

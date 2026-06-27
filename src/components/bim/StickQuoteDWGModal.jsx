@@ -3,6 +3,7 @@ import { sb, getEmpresaId } from "../../services/supabase";
 import { calcMotorComposicao } from "../../utils/composicoesSF";
 import { gerarStickQuotePDF, salvarStickQuote } from "../../services/stickquoteService";
 import { analisarDWG } from "../../utils/dwgMeasurementEngine";
+import QuoteModalShell from "./QuoteModalShell";
 
 const C = {
   bg: "#111013", surface: "#1b1a20", surface2: "#211f27", elev: "#2a2832",
@@ -286,29 +287,7 @@ export default function StickQuoteDWGModal({ onClose, obraNome = "", clienteNome
   ];
 
   return (
-    <div style={{
-      position: "fixed", inset: 0, zIndex: 9999,
-      background: "rgba(0,0,0,.75)", display: "flex", alignItems: "center", justifyContent: "center",
-      padding: 16,
-    }}>
-      <div style={{
-        background: C.bg, border: `1px solid ${C.line2}`, borderRadius: 20,
-        width: "100%", maxWidth: 700, maxHeight: "92vh", overflow: "auto",
-        padding: 28, position: "relative",
-      }}>
-        {/* Header */}
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 24 }}>
-          <div>
-            <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 2, textTransform: "uppercase", color: C.blue, marginBottom: 4 }}>
-              StickQuote™ DWG Analyzer
-            </div>
-            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 22, color: C.ink }}>
-              DWG / DXF → Orçamento Steel Frame
-            </div>
-          </div>
-          <button onClick={onClose} style={{ background: "none", border: "none", color: C.muted, cursor: "pointer", fontSize: 22, lineHeight: 1 }}>×</button>
-        </div>
-
+    <QuoteModalShell tipo="DWG" accent="#3b6ea5" descricao="DWG / DXF → orçamento Steel Frame" arquivo={file?.name} onClose={onClose}>
         <Steps current={step} />
 
         {erro && (
@@ -629,7 +608,6 @@ export default function StickQuoteDWGModal({ onClose, obraNome = "", clienteNome
             </div>
           </div>
         )}
-      </div>
-    </div>
+    </QuoteModalShell>
   );
 }
