@@ -64,46 +64,59 @@ export default function PWAInstallBanner() {
 
       {showNotifBanner && (
         <div style={{
-          position: "fixed", bottom: prompt && !dismissed ? 100 : 16, left: 16, right: 16, zIndex: 9997,
-          background: "#fff", border: "2px solid #2563eb",
-          borderRadius: 12, padding: "14px 16px",
-          boxShadow: "0 4px 24px rgba(0,0,0,0.18)",
+          position: "fixed",
+          bottom: `calc(${prompt && !dismissed ? 92 : 12}px + env(safe-area-inset-bottom, 0px))`,
+          left: 12, right: 12, zIndex: 9997, maxWidth: 460, margin: "0 auto",
+          background: C.surface, border: `1px solid ${C.border}`,
+          borderRadius: 12, padding: "12px 14px",
+          boxShadow: "0 6px 24px rgba(40,30,20,.16)",
           display: "flex", alignItems: "center", gap: 12,
         }}>
-          <span style={{ fontSize: 28 }}></span>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontWeight: 700, fontSize: 14, color: "#2563eb" }}>Ativar notificações</div>
-            <div style={{ fontSize: 12, color: "#555" }}>Receba aviso quando um lead novo chegar</div>
+          <div aria-hidden="true" style={{
+            width: 34, height: 34, borderRadius: 9, flexShrink: 0,
+            background: C.brickSoft, color: C.red, display: "grid", placeItems: "center",
+          }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+            </svg>
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontWeight: 700, fontSize: 12.5, color: C.text }}>Ativar notificações</div>
+            <div style={{ fontSize: 11, color: C.muted }}>Receba aviso quando um lead novo chegar</div>
           </div>
           <button onClick={ativarNotificacoes} style={{
-            background: "#2563eb", color: "#fff", border: "none",
+            background: C.red, color: "#fff", border: "none",
             borderRadius: 8, padding: "8px 14px", fontWeight: 700, fontSize: 13, cursor: "pointer",
+            fontFamily: "inherit", minHeight: 36,
           }}>Ativar</button>
-          <button onClick={dispensarNotif} style={{
-            background: "none", border: "none", fontSize: 18, cursor: "pointer", color: "#999", lineHeight: 1,
+          <button onClick={dispensarNotif} aria-label="Dispensar" title="Dispensar" style={{
+            background: "none", border: "none", fontSize: 18, cursor: "pointer", color: C.muted, lineHeight: 1, padding: 4,
           }}>×</button>
         </div>
       )}
 
       {prompt && !dismissed && (
         <div style={{
-          position: "fixed", bottom: 16, left: 16, right: 16, zIndex: 9998,
-          background: "#fff", border: `2px solid ${C.red}`,
-          borderRadius: 12, padding: "14px 16px",
-          boxShadow: "0 4px 24px rgba(0,0,0,0.18)",
+          position: "fixed",
+          bottom: "calc(12px + env(safe-area-inset-bottom, 0px))", left: 12, right: 12, zIndex: 9998,
+          maxWidth: 460, margin: "0 auto",
+          background: C.surface, border: `1px solid ${C.border}`,
+          borderRadius: 12, padding: "12px 14px",
+          boxShadow: "0 6px 24px rgba(40,30,20,.16)",
           display: "flex", alignItems: "center", gap: 12,
         }}>
-          <img src="/logo-transparente-122x122.png" alt="" width={40} height={40} style={{ borderRadius: 8 }} />
-          <div style={{ flex: 1 }}>
-            <div style={{ fontWeight: 700, fontSize: 14, color: C.red }}>Instalar Stickframe</div>
-            <div style={{ fontSize: 12, color: "#555" }}>Acesse rápido pelo celular, funciona offline</div>
+          <img src="/logo-transparente-122x122.png" alt="" width={34} height={34} style={{ borderRadius: 8 }} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontWeight: 700, fontSize: 12.5, color: C.text }}>Instalar Stickframe</div>
+            <div style={{ fontSize: 11, color: C.muted }}>Acesse rápido pelo celular, funciona offline</div>
           </div>
           <button onClick={install} style={{
             background: C.red, color: "#fff", border: "none",
             borderRadius: 8, padding: "8px 14px", fontWeight: 700, fontSize: 13, cursor: "pointer",
+            fontFamily: "inherit", minHeight: 36,
           }}>Instalar</button>
-          <button onClick={dismiss} style={{
-            background: "none", border: "none", fontSize: 18, cursor: "pointer", color: "#999", lineHeight: 1,
+          <button onClick={dismiss} aria-label="Dispensar" title="Dispensar" style={{
+            background: "none", border: "none", fontSize: 18, cursor: "pointer", color: C.muted, lineHeight: 1, padding: 4,
           }}>×</button>
         </div>
       )}
