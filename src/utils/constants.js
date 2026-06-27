@@ -70,6 +70,7 @@ export const NAV = [
   { key: "checklists",        label: "Checklist SF",         icon: "CheckSquare",       grupo: "Engenharia" },
   { key: "insumos",           label: "Banco de Insumos",     icon: "Database",          grupo: "Engenharia", badge: "NOVO" },
   { key: "bi",                label: "Analytics",            brand: "StickPulse™",      icon: "BarChart2",       grupo: "Gestão", badge: "PRO", perfis: ["diretor"] },
+  { key: "stickbrain",        label: "Analytics",            brand: "StickBrain™",      icon: "Brain",           grupo: "Gestão", badge: "IA",  perfis: ["diretor", "engenheiro", "comercial"] },
   { key: "inteligencia",      label: "Inteligência Artificial", brand: "StickBrain™",   icon: "Brain",           grupo: "Gestão", badge: "IA",  perfis: ["diretor", "engenheiro"] },
   { key: "ecossistema",       label: "Ecossistema Stick™",   icon: "Layers",            grupo: "Gestão" },
   { key: "configuracoes",     label: "Configurações",        icon: "Settings",          grupo: null },
@@ -80,17 +81,17 @@ export const PERFIS = {
   diretor: {
     label: "Diretor",
     cor: C.red,
-    paginas: ["dashboard","agenda","oportunidades","crm","orcamentos","obras","cronograma","medicoes","diario","vistorias","bim","quantitativos","financeiro","rentabilidade","contratos","historico","fornecedores","monitor_precos","stickprice","calculadora","orcamento_tecnico","orcamento_sf","equipamentos","checklists","insumos","equipe","equipe_sf","sst","suprimentos","inteligencia","bi","ecossistema","configuracoes"],
+    paginas: ["dashboard","agenda","oportunidades","crm","orcamentos","obras","cronograma","medicoes","diario","vistorias","bim","quantitativos","financeiro","rentabilidade","contratos","historico","fornecedores","monitor_precos","stickprice","calculadora","orcamento_tecnico","orcamento_sf","equipamentos","checklists","insumos","equipe","equipe_sf","sst","suprimentos","stickbrain","inteligencia","bi","ecossistema","configuracoes"],
   },
   comercial: {
     label: "Comercial",
     cor: C.warning,
-    paginas: ["dashboard","agenda","oportunidades","crm","orcamentos","configuracoes"],
+    paginas: ["dashboard","agenda","oportunidades","crm","orcamentos","stickbrain","configuracoes"],
   },
   engenheiro: {
     label: "Engenheiro",
     cor: C.steel,
-    paginas: ["dashboard","obras","cronograma","medicoes","diario","vistorias","bim","quantitativos","fornecedores","monitor_precos","stickprice","calculadora","orcamento_tecnico","orcamento_sf","equipamentos","checklists","equipe","equipe_sf","sst","suprimentos","historico","inteligencia","configuracoes"],
+    paginas: ["dashboard","obras","cronograma","medicoes","diario","vistorias","bim","quantitativos","fornecedores","monitor_precos","stickprice","calculadora","orcamento_tecnico","orcamento_sf","equipamentos","checklists","equipe","equipe_sf","sst","suprimentos","historico","stickbrain","inteligencia","configuracoes"],
   },
   financeiro: {
     label: "Financeiro",

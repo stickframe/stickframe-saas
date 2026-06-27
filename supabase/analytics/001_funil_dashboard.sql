@@ -1,0 +1,5 @@
+-- StickBrain Analytics Dashboard — views + RPC (adaptadas ao schema real).
+-- Aplicada via apply_migration stickbrain_dashboard_views.
+-- vw_stickbrain_funil: funil por lead. stickbrain_dashboard(periodo): payload completo.
+-- lead=pre_orcamentos | proposta/negociacao/fechamento=orcamentos.status_funil
+-- stickquote=stickquote_versoes (orcamento_id vincula tecnico<->comercial).

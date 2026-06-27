@@ -65,6 +65,7 @@ const Equipamentos      = lazyWithRetry(() => import("./pages/Equipamentos"));
 const Checklists        = lazyWithRetry(() => import("./pages/Checklists"));
 const QRObra            = lazyWithRetry(() => import("./pages/QRObra"));
 const Inteligencia      = lazyWithRetry(() => import("./pages/Inteligencia"));
+const StickBrainDashboard = lazyWithRetry(() => import("./pages/StickBrainDashboard"));
 const CalculadoraPublica   = lazyWithRetry(() => import("./pages/CalculadoraPublica"));
 const AnalisePublica       = lazyWithRetry(() => import("./pages/AnalisePublica"));
 const ConcorrenciaPublica  = lazyWithRetry(() => import("./pages/ConcorrenciaPublica"));
@@ -109,6 +110,7 @@ const PAGES = {
   checklists:     Checklists,
   insumos:        Insumos,
   inteligencia:   Inteligencia,
+  stickbrain:     StickBrainDashboard,
   bi:             BI,
   sst:            SST,
   suprimentos:    Suprimentos,

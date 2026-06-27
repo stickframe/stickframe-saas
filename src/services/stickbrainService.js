@@ -17,6 +17,13 @@ export async function carregarMetricasFunil() {
   return data || {};
 }
 
+/** Dashboard Analytics completo (pipeline, KPIs, funil, origens, evolução). */
+export async function carregarDashboard(periodo = "90d") {
+  const { data, error } = await sb.rpc("stickbrain_dashboard", { p_periodo: periodo });
+  if (error) throw error;
+  return data || {};
+}
+
 async function carregarChaveIA(empresaId) {
   let q = sb.from("ia_config").select("openai_key, modelo_openai");
   if (empresaId) q = q.eq("empresa_id", empresaId);
