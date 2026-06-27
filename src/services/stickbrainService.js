@@ -6,7 +6,7 @@
 // (contagens, taxas, valores totais) — nunca dados pessoais de clientes.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { sb } from "./supabase";
+import { sb, getEmpresaId } from "./supabase";
 
 const VISION_MODELS = ["gpt-4o", "gpt-4o-mini", "gpt-4.1", "gpt-4.1-mini", "gpt-4-turbo", "chatgpt-4o-latest", "gpt-3.5-turbo"];
 
@@ -22,6 +22,30 @@ export async function carregarDashboard(periodo = "90d") {
   const { data, error } = await sb.rpc("stickbrain_dashboard", { p_periodo: periodo });
   if (error) throw error;
   return data || {};
+}
+
+/** Cockpit operacional: oportunidades scoradas, sinais, automações do dia. */
+export async function carregarOperacional() {
+  const { data, error } = await sb.rpc("stickbrain_operacional");
+  if (error) throw error;
+  return data || {};
+}
+
+/** Registra uma ação automática no log de auditoria (reversível). */
+export async function registrarAcaoIA({ tipo, entidadeId, entidadeNome, descricao, automatica = true }) {
+  const eid = getEmpresaId();
+  const { data, error } = await sb.from("stickbrain_acoes_log").insert({
+    empresa_id: eid, tipo, entidade_id: entidadeId || null,
+    entidade_nome: entidadeNome || null, descricao, automatica,
+  }).select().single();
+  if (error) throw error;
+  return data;
+}
+
+/** Desfaz uma ação automática (marca desfeito). */
+export async function desfazerAcaoIA(id) {
+  const { error } = await sb.from("stickbrain_acoes_log").update({ desfeito: true }).eq("id", id);
+  if (error) throw error;
 }
 
 async function carregarChaveIA(empresaId) {
