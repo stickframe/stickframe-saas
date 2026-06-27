@@ -20,6 +20,7 @@ import FormAiMemorial from "../components/ui/FormAiMemorial";
 import CatalogoPicker from "../components/orcamento/CatalogoPicker";
 import { listarStickQuotesDoOrcamento, listarStickQuotesParaVincular, vincularStickQuoteAoOrcamento } from "../services/stickquoteService";
 import KpiCard, { KpiGrid } from "../components/KpiCard";
+import EmptyState from "../components/EmptyState";
 import { CATALOGO_PRODUTOS } from "../utils/insumosSF";
 
 const _catalogoMap = Object.fromEntries(CATALOGO_PRODUTOS.map(p => [p.id, p]));
@@ -1806,8 +1807,11 @@ export default function Orcamentos() {
             </div>
 
             {(docOrc.documentos?.length || 0) === 0 ? (
-              <div style={{ textAlign: "center", padding: "24px 0", color: C.muted, fontSize: 13, border: `1px dashed ${C.border}`, borderRadius: 10 }}>
-                Nenhum documento vinculado ainda.
+              <div style={{ border: `1px dashed ${C.border}`, borderRadius: 10 }}>
+                <EmptyState compact
+                  icon={<svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" /></svg>}
+                  title="Nenhum documento vinculado"
+                  description="Anexe plantas, modelos e projetos (PDF, DWG, DXF, IFC, imagens) a este orçamento." />
               </div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -2149,13 +2153,13 @@ export default function Orcamentos() {
 
         {/* Lista */}
         {orcamentos.length === 0 ? (
-          <div style={{
-            background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", border: `1px solid ${C.border}`,
-            padding: 48, textAlign: "center", color: C.muted,
-          }}>
-            <div style={{ fontSize: 32, marginBottom: 12 }}></div>
-            <div style={{ fontSize: 14, fontWeight: 600 }}>Nenhum orçamento ainda</div>
-            <div style={{ fontSize: 12, marginTop: 4 }}>Clique em "+ Novo orçamento" para começar</div>
+          <div style={{ background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", border: `1px solid ${C.border}` }}>
+            <EmptyState
+              icon={<svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /></svg>}
+              title="Nenhum orçamento ainda"
+              description="Crie seu primeiro orçamento ou converta um lead da calculadora em proposta."
+              action={{ label: "+ Novo orçamento", onClick: abrirNovo }}
+            />
           </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
