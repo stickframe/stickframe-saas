@@ -3,6 +3,8 @@ import { C } from "../../utils/constants";
 import { getEmpresaId } from "../../services/supabase";
 import { carregarMetricasFunil, analisarComStickBrain } from "../../services/stickbrainService";
 import KpiCard, { KpiGrid } from "../KpiCard";
+import { SkeletonKpis } from "../Skeleton";
+import ErrorState from "../ErrorState";
 
 const cond = "var(--cond)";
 const fmt = (v) => Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
@@ -43,8 +45,8 @@ export default function StickBrainAnalytics() {
   }
 
   if (carregando) return (
-    <div style={{ marginBottom: 24, padding: "14px 16px", background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, fontSize: 12.5, color: C.muted }}>
-      Carregando inteligência do funil…
+    <div style={{ marginBottom: 24 }}>
+      <SkeletonKpis count={6} />
     </div>
   );
   if (erro) return null; // RPC indisponível — não bloqueia a página
@@ -136,7 +138,9 @@ export default function StickBrainAnalytics() {
 
       {/* Copiloto IA */}
       {iaErro && (
-        <div style={{ background: "#a3332714", border: "1px solid #a3332740", borderRadius: 10, padding: "10px 14px", fontSize: 12.5, color: "#a33327", marginBottom: 12 }}>{iaErro}</div>
+        <div style={{ marginBottom: 12 }}>
+          <ErrorState title="O copiloto não respondeu" message={iaErro} onRetry={rodarCopiloto} compact />
+        </div>
       )}
       {ia && (
         <div style={{ background: "linear-gradient(135deg,#1a191c,#2b2b2e)", borderRadius: 12, padding: "18px 20px", color: "#f5f2ec", marginBottom: 4 }}>
