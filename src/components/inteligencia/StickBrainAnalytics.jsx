@@ -82,6 +82,7 @@ export default function StickBrainAnalytics() {
         <FunnelStep label="Fechados" valor={m.fechados} sub={pct(m.taxa_proposta_fechamento) + " da proposta"} cor="#3f7a4b" />
         <FunnelStep label="Perdidos" valor={m.perdidos} cor="#a33327" />
       </div>
+      <div className="scroll-hint" style={{ marginTop: -8, marginBottom: 12 }}>→ arraste para ver todas as fases</div>
 
       {/* Indicadores */}
       <KpiGrid style={{ marginBottom: 12 }}>

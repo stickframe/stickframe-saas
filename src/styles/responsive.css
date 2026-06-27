@@ -146,6 +146,13 @@
   }
 }
 
+/* ── Dica de scroll horizontal (funil/pipeline) ────────────────────────────── */
+/* Visível só quando há scroll possível em telas estreitas. */
+.scroll-hint { display: none; font-size: 10.5px; color: #8c847a; margin-top: 2px; }
+@media (max-width: 640px) {
+  .scroll-hint { display: block; }
+}
+
 /* ── Extra small (360px) ───────────────────────────────────────────────────── */
 @media (max-width: 360px) {
   .kpi-grid-6,

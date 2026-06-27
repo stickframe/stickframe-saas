@@ -1972,6 +1972,7 @@ export default function Orcamentos() {
             </div>
           );
         })()}
+        {orcamentos.length > 0 && <div className="scroll-hint">→ arraste para ver todas as fases</div>}
 
         {/* Header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
