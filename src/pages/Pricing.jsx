@@ -1,4 +1,4 @@
-﻿import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const LOGO = "https://gpzmglcxmbboxxogbibq.supabase.co/storage/v1/object/public/arquivos/logos/34ec14d3-02fc-4b0a-8040-67f7a739394d/logo.jpg?t=1780161932174";
 
@@ -7,19 +7,19 @@ const PLANOS = [
     key: "essencial",
     nome: "Essencial",
     preco: "R$ 97",
-    periodo: "por m├¬s",
-    desc: "Do lead ao contrato, sem complica├º├úo",
+    periodo: "por mês",
+    desc: "Do lead ao contrato, sem complicação",
     cor: "#3b6ea5",
     border: "rgba(59,110,165,.4)",
     bg: "rgba(59,110,165,.06)",
     items: [
       "3 obras ativas",
-      "2 usu├írios",
-      "Or├ºamentos e di├írio de obra",
+      "2 usuários",
+      "Orçamentos e diário de obra",
       "Calculadora white-label",
       "Suporte por e-mail",
     ],
-    nao: ["Obras ilimitadas", "CRM de clientes", "Relat├│rios PDF", "StickScoreÔäó"],
+    nao: ["Obras ilimitadas", "CRM de clientes", "Relatórios PDF", "StickScore™"],
     cta: "Assinar Essencial",
     checkoutPlan: "essencial",
     destaque: false,
@@ -28,25 +28,25 @@ const PLANOS = [
     key: "profissional",
     nome: "Profissional",
     preco: "R$ 197",
-    periodo: "por m├¬s ┬À 14 dias gr├ítis",
-    desc: "Margem, prazo e cliente na palma da m├úo",
+    periodo: "por mês · 14 dias grátis",
+    desc: "Margem, prazo e cliente na palma da mão",
     cor: "#981915",
     border: "#981915",
     bg: "rgba(152,25,21,.08)",
     items: [
       "Obras ilimitadas",
-      "At├® 10 usu├írios",
+      "Até 10 usuários",
       "Calculadora white-label",
-      "Di├írio de obra + fotos",
-      "Or├ºamentos completos",
+      "Diário de obra + fotos",
+      "Orçamentos completos",
       "CRM de clientes",
-      "Relat├│rios PDF",
-      "Medi├º├Áes e contratos",
-      "StickScoreÔäó ÔÇö Alerta de Estouro",
-      "Suporte priorit├írio no WhatsApp",
+      "Relatórios PDF",
+      "Medições e contratos",
+      "StickScore™ — Alerta de Estouro",
+      "Suporte prioritário no WhatsApp",
     ],
     nao: [],
-    cta: "Testar 14 dias gr├ítis ÔåÆ",
+    cta: "Testar 14 dias grátis →",
     checkoutPlan: "profissional",
     destaque: true,
   },
@@ -55,16 +55,16 @@ const PLANOS = [
     nome: "Construtora+",
     preco: "Sob consulta",
     periodo: "",
-    desc: "Multi-opera├º├úo com intelig├¬ncia total",
+    desc: "Multi-operação com inteligência total",
     cor: "#6d557e",
     border: "rgba(109,85,126,.3)",
     bg: "rgba(109,85,126,.05)",
     items: [
       "Tudo do Profissional",
-      "Usu├írios ilimitados",
+      "Usuários ilimitados",
       "Multi-empresa",
-      "Marca pr├│pria (white-label total)",
-      "Integra├º├úo ERP",
+      "Marca própria (white-label total)",
+      "Integração ERP",
       "SLA garantido",
       "Onboarding com engenheiro",
     ],
@@ -82,8 +82,8 @@ export default function Pricing() {
     import("../services/health/productMetrics").then(({ trackViewedPricing }) => trackViewedPricing());
   }, []);
 
-  // Logado ÔåÆ /checkout (ativa trial/assinatura na conta atual).
-  // Deslogado ÔåÆ /cadastro com o plano na URL.
+  // Logado → /checkout (ativa trial/assinatura na conta atual).
+  // Deslogado → /cadastro com o plano na URL.
   async function irParaPlano(planKey) {
     const { sb } = await import("../services/supabase");
     const { data } = await sb.auth.getSession();
@@ -106,20 +106,20 @@ export default function Pricing() {
         </a>
         <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
           <a href="/login" style={{ color: "rgba(255,255,255,.6)", fontSize: 13, fontWeight: 600, textDecoration: "none" }}>Entrar</a>
-          <a href="/cadastro" style={{ background: "#981915", color: "#fff", borderRadius: 8, padding: "8px 16px", fontSize: 13, fontWeight: 700, textDecoration: "none" }}>Criar conta gr├ítis</a>
+          <a href="/cadastro" style={{ background: "#981915", color: "#fff", borderRadius: 8, padding: "8px 16px", fontSize: 13, fontWeight: 700, textDecoration: "none" }}>Criar conta grátis</a>
         </div>
       </div>
 
       {/* Hero */}
       <div style={{ textAlign: "center", padding: "56px 24px 40px" }}>
         <div style={{ display: "inline-block", background: "rgba(152,25,21,.15)", border: "1px solid rgba(152,25,21,.3)", borderRadius: 20, padding: "4px 14px", fontSize: 11, fontWeight: 700, color: "#981915", letterSpacing: 1.5, marginBottom: 20, textTransform: "uppercase" }}>
-          Planos e Pre├ºos
+          Planos e Preços
         </div>
         <h1 style={{ fontSize: "clamp(28px,5vw,44px)", fontWeight: 900, color: "#fff", margin: "0 0 16px", letterSpacing: -1 }}>
-          Controle custo, prazo e cliente<br />em um ├║nico fluxo
+          Controle custo, prazo e cliente<br />em um único fluxo
         </h1>
         <p style={{ fontSize: 15, color: "rgba(255,255,255,.5)", maxWidth: 500, margin: "0 auto", lineHeight: 1.7 }}>
-          Empresas que usam StickQuote + Portal Cliente reduzem retrabalho e fecham mais obras. Comece gr├ítis, fa├ºa upgrade quando precisar.
+          Empresas que usam StickQuote + Portal Cliente reduzem retrabalho e fecham mais obras. Comece grátis, faça upgrade quando precisar.
         </p>
       </div>
 
@@ -182,12 +182,12 @@ export default function Pricing() {
       {/* FAQ */}
       <div style={{ borderTop: "1px solid rgba(255,255,255,.08)", padding: "48px 24px" }}>
         <div style={{ maxWidth: 600, margin: "0 auto" }}>
-          <h2 style={{ fontSize: 20, fontWeight: 800, color: "#fff", textAlign: "center", marginBottom: 32 }}>D├║vidas frequentes</h2>
+          <h2 style={{ fontSize: 20, fontWeight: 800, color: "#fff", textAlign: "center", marginBottom: 32 }}>Dúvidas frequentes</h2>
           {[
             ["Posso cancelar quando quiser?", "Sim. Sem multa, sem fidelidade. Cancele a qualquer momento pelo painel."],
-            ["O que acontece com meus dados se cancelar?", "Seus dados ficam dispon├¡veis por 30 dias ap├│s o cancelamento para exporta├º├úo."],
-            ["O plano Free ├® realmente gr├ítis?", "Sim, para sempre. Sem cart├úo de cr├®dito para come├ºar."],
-            ["Posso mudar de plano depois?", "Sim, upgrade ou downgrade a qualquer momento pelo painel de configura├º├Áes."],
+            ["O que acontece com meus dados se cancelar?", "Seus dados ficam disponíveis por 30 dias após o cancelamento para exportação."],
+            ["O plano Free é realmente grátis?", "Sim, para sempre. Sem cartão de crédito para começar."],
+            ["Posso mudar de plano depois?", "Sim, upgrade ou downgrade a qualquer momento pelo painel de configurações."],
           ].map(([q, a]) => (
             <div key={q} style={{ borderBottom: "1px solid rgba(255,255,255,.08)", paddingBottom: 20, marginBottom: 20 }}>
               <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", marginBottom: 6 }}>{q}</div>
@@ -198,7 +198,7 @@ export default function Pricing() {
       </div>
 
       <div style={{ textAlign: "center", padding: "20px 24px", fontSize: 11, color: "rgba(255,255,255,.2)", borderTop: "1px solid rgba(255,255,255,.06)" }}>
-        Stick Frame Sistemas Construtivos ┬À Santo Andr├®/SP ┬À contato@stickframe.com.br
+        Stick Frame Sistemas Construtivos · Santo André/SP · contato@stickframe.com.br
       </div>
     </div>
   );

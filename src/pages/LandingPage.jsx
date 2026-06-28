@@ -1,7 +1,7 @@
-﻿import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { salvarOrigemLead } from "../utils/leadOrigem";
 
-// ÔöÇÔöÇÔöÇ Icons ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+// ─── Icons ───────────────────────────────────────────────────────────────────
 const Ic = {
   Building: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 21h18M6 21V9M10 21V9"/><path d="M4 9h16l-2-5H8z"/><path d="M16 9v6m0 0a2 2 0 1 0 .01 0"/></svg>,
   Doc:      () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2h8l4 4v16H6z"/><path d="M14 2v4h4M9 13h6M9 17h6"/></svg>,
@@ -20,84 +20,84 @@ const Ic = {
   Mobile:   () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg>,
 };
 
-// ÔöÇÔöÇÔöÇ Data ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+// ─── Data ────────────────────────────────────────────────────────────────────
 const METRICS = [
-  { val: "3├ù", label: "mais r├ípido para or├ºar" },
+  { val: "3×", label: "mais rápido para orçar" },
   { val: "+38%", label: "leads pela calculadora" },
-  { val: "100%", label: "das obras num s├│ painel" },
-  { val: "ÔêÆ15%", label: "de perda de material" },
+  { val: "100%", label: "das obras num só painel" },
+  { val: "−15%", label: "de perda de material" },
 ];
 
 const DORES = [
   {
-    title: "Or├ºamento lento",
-    desc: "Cada proposta leva dias em planilhas fr├ígeis. O cliente esfria antes de receber o pre├ºo ÔÇö e voc├¬ perde a obra para quem respondeu primeiro.",
+    title: "Orçamento lento",
+    desc: "Cada proposta leva dias em planilhas frágeis. O cliente esfria antes de receber o preço — e você perde a obra para quem respondeu primeiro.",
   },
   {
     title: "Obra sem visibilidade",
-    desc: "Voc├¬ s├│ descobre o atraso quando ele j├í aconteceu. Cronograma no papel, medi├º├úo no caderno e margem que some no caminho.",
+    desc: "Você só descobre o atraso quando ele já aconteceu. Cronograma no papel, medição no caderno e margem que some no caminho.",
   },
   {
     title: "Margem que escapa",
-    desc: "Sem ligar or├ºado, comprado e medido, o lucro vaza obra a obra ÔÇö e no fim do m├¬s ningu├®m sabe explicar para onde foi.",
+    desc: "Sem ligar orçado, comprado e medido, o lucro vaza obra a obra — e no fim do mês ninguém sabe explicar para onde foi.",
   },
 ];
 
 const FEATS = [
-  { Icon: Ic.Doc,      title: "CRM & Funil",              desc: "Leads da calculadora caem direto no funil, com hist├│rico e temperatura. Nenhum cliente esfria esquecido.", badge: null },
-  { Icon: Ic.Doc,      title: "Or├ºamento & Proposta",      desc: "Composi├º├Áes de Steel Frame prontas. Gere proposta profissional e contrato em minutos, com aceite digital.", badge: null },
-  { Icon: Ic.Calc,     title: "Calculadora white-label",   desc: "Um link com a sua marca onde o cliente simula o custo da obra ÔÇö e vira lead qualificado automaticamente.", badge: "Diferencial" },
-  { Icon: Ic.Building, title: "Gest├úo de Obras",           desc: "Cronograma, di├írio, medi├º├Áes e quantitativos. Acompanhe avan├ºo f├¡sico e financeiro de cada etapa.", badge: null },
-  { Icon: Ic.Money,    title: "Financeiro StickCashÔäó",     desc: "Fluxo de caixa, DRE e margem por obra. Saiba o lucro real de cada projeto sem fechar planilha no fim do m├¬s.", badge: null },
-  { Icon: Ic.Mobile,   title: "Campo & RDO mobile",        desc: "Di├írio de obra com foto direto do celular, mesmo offline. O escrit├│rio v├¬ o que acontece no canteiro em tempo real.", badge: null },
+  { Icon: Ic.Doc,      title: "CRM & Funil",              desc: "Leads da calculadora caem direto no funil, com histórico e temperatura. Nenhum cliente esfria esquecido.", badge: null },
+  { Icon: Ic.Doc,      title: "Orçamento & Proposta",      desc: "Composições de Steel Frame prontas. Gere proposta profissional e contrato em minutos, com aceite digital.", badge: null },
+  { Icon: Ic.Calc,     title: "Calculadora white-label",   desc: "Um link com a sua marca onde o cliente simula o custo da obra — e vira lead qualificado automaticamente.", badge: "Diferencial" },
+  { Icon: Ic.Building, title: "Gestão de Obras",           desc: "Cronograma, diário, medições e quantitativos. Acompanhe avanço físico e financeiro de cada etapa.", badge: null },
+  { Icon: Ic.Money,    title: "Financeiro StickCash™",     desc: "Fluxo de caixa, DRE e margem por obra. Saiba o lucro real de cada projeto sem fechar planilha no fim do mês.", badge: null },
+  { Icon: Ic.Mobile,   title: "Campo & RDO mobile",        desc: "Diário de obra com foto direto do celular, mesmo offline. O escritório vê o que acontece no canteiro em tempo real.", badge: null },
 ];
 
 const COMPARATIVO = [
-  { rec: "Composi├º├Áes nativas de Steel Frame", sf: true,  erp: false },
-  { rec: "Calculadora p├║blica geradora de leads", sf: true, erp: false },
+  { rec: "Composições nativas de Steel Frame", sf: true,  erp: false },
+  { rec: "Calculadora pública geradora de leads", sf: true, erp: false },
   { rec: "Margem por obra em tempo real",      sf: true,  erp: "Parcial" },
   { rec: "RDO mobile offline",                 sf: true,  erp: "Parcial" },
-  { rec: "Implanta├º├úo sem consultoria cara",   sf: true,  erp: false },
+  { rec: "Implantação sem consultoria cara",   sf: true,  erp: false },
   { rec: "Interface moderna e simples",        sf: true,  erp: false },
 ];
 
 const STICK_LINE = [
-  { Icon: Ic.Score,  name: "StickScoreÔäó",  tag: "Qualifica├º├úo de lead",    desc: "Pontua cada lead pela probabilidade de virar contrato e prioriza seu time comercial." },
-  { Icon: Ic.Money,  name: "StickCashÔäó",   tag: "Intelig├¬ncia financeira",  desc: "Margem, fluxo e DRE por obra, conciliados automaticamente a cada medi├º├úo." },
-  { Icon: Ic.Eye,    name: "StickViewÔäó",   tag: "Vis├úo de obra",            desc: "Avan├ºo f├¡sico ├ù financeiro lado a lado, com alerta antes do atraso virar preju├¡zo." },
-  { Icon: Ic.Brain,  name: "StickBrainÔäó",  tag: "Copiloto de dados",        desc: "Pergunte em linguagem natural sobre suas obras e receba a resposta na hora." },
+  { Icon: Ic.Score,  name: "StickScore™",  tag: "Qualificação de lead",    desc: "Pontua cada lead pela probabilidade de virar contrato e prioriza seu time comercial." },
+  { Icon: Ic.Money,  name: "StickCash™",   tag: "Inteligência financeira",  desc: "Margem, fluxo e DRE por obra, conciliados automaticamente a cada medição." },
+  { Icon: Ic.Eye,    name: "StickView™",   tag: "Visão de obra",            desc: "Avanço físico × financeiro lado a lado, com alerta antes do atraso virar prejuízo." },
+  { Icon: Ic.Brain,  name: "StickBrain™",  tag: "Copiloto de dados",        desc: "Pergunte em linguagem natural sobre suas obras e receba a resposta na hora." },
 ];
 
 const PLANOS = [
   {
-    key: "essencial", nome: "Essencial", preco: "R$ 97", periodo: "/m├¬s",
-    desc: "Para quem est├í come├ºando",
-    items: ["Or├ºamentos & contratos ilimitados", "Calculadora white-label", "CRM & funil de vendas", "1 usu├írio ┬À suporte por e-mail"],
-    cta: "Come├ºar gr├ítis", href: "/cadastro?plan=essencial", hot: false,
+    key: "essencial", nome: "Essencial", preco: "R$ 97", periodo: "/mês",
+    desc: "Para quem está começando",
+    items: ["Orçamentos & contratos ilimitados", "Calculadora white-label", "CRM & funil de vendas", "1 usuário · suporte por e-mail"],
+    cta: "Começar grátis", href: "/cadastro?plan=essencial", hot: false,
   },
   {
-    key: "profissional", nome: "Profissional", preco: "R$ 197", periodo: "/m├¬s",
+    key: "profissional", nome: "Profissional", preco: "R$ 197", periodo: "/mês",
     desc: "Para construtoras em crescimento",
-    items: ["Tudo do Essencial", "Gest├úo de obras completa", "Financeiro StickCashÔäó por obra", "RDO mobile ┬À 5 usu├írios", "Suporte priorit├írio no WhatsApp"],
-    cta: "Testar 14 dias gr├ítis", href: "/cadastro?plan=profissional", hot: true, tag: "Mais escolhido",
+    items: ["Tudo do Essencial", "Gestão de obras completa", "Financeiro StickCash™ por obra", "RDO mobile · 5 usuários", "Suporte prioritário no WhatsApp"],
+    cta: "Testar 14 dias grátis", href: "/cadastro?plan=profissional", hot: true, tag: "Mais escolhido",
   },
   {
     key: "construtora", nome: "Construtora+", preco: "Sob consulta", periodo: "",
-    desc: "Para opera├º├Áes maiores",
-    items: ["Tudo do Profissional", "Linha StickÔäó completa (IA)", "Multiempresa & multiobra", "Usu├írios ilimitados", "Onboarding assistido & SLA"],
+    desc: "Para operações maiores",
+    items: ["Tudo do Profissional", "Linha Stick™ completa (IA)", "Multiempresa & multiobra", "Usuários ilimitados", "Onboarding assistido & SLA"],
     cta: "Falar com a equipe", href: "https://wa.me/551140038929?text=Ol%C3%A1%2C+tenho+interesse+no+plano+Construtora%2B", hot: false,
   },
 ];
 
 const DEPOIMENTOS = [
-  { text: "Antes eu levava dois dias para fechar um or├ºamento de steel frame. Hoje sai em vinte minutos, com contrato junto.", nome: "Rafael Souza", cargo: "JM Construtora ┬À Curitiba", ini: "RS" },
-  { text: "A calculadora com a nossa marca virou nossa maior fonte de leads. O cliente chega j├í sabendo a faixa de pre├ºo.", nome: "Ana Lima", cargo: "Arquiteta ┬À Belo Horizonte", ini: "AL" },
-  { text: "O financeiro por obra acabou com as planilhas soltas. Sei a margem de cada projeto em tempo real.", nome: "Carlos Melo", cargo: "Construtor ┬À S├úo Paulo", ini: "CM" },
+  { text: "Antes eu levava dois dias para fechar um orçamento de steel frame. Hoje sai em vinte minutos, com contrato junto.", nome: "Rafael Souza", cargo: "JM Construtora · Curitiba", ini: "RS" },
+  { text: "A calculadora com a nossa marca virou nossa maior fonte de leads. O cliente chega já sabendo a faixa de preço.", nome: "Ana Lima", cargo: "Arquiteta · Belo Horizonte", ini: "AL" },
+  { text: "O financeiro por obra acabou com as planilhas soltas. Sei a margem de cada projeto em tempo real.", nome: "Carlos Melo", cargo: "Construtor · São Paulo", ini: "CM" },
 ];
 
 const OBRAS_ANO = ["1 a 5 obras", "6 a 15 obras", "16 a 40 obras", "Mais de 40 obras"];
 
-// ÔöÇÔöÇÔöÇ CSS ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+// ─── CSS ─────────────────────────────────────────────────────────────────────
 const CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap');
   :root {
@@ -186,7 +186,7 @@ const CSS = `
   .dor-card h3 { font-size: 18px; font-weight: 800; color: #fff; margin-bottom: 10px; }
   .dor-card p { font-size: 14px; color: #9a948a; line-height: 1.6; }
 
-  /* Solu├º├úo */
+  /* Solução */
   .lp-solucao { background: var(--surface-2); padding: 96px 0; }
   .solucao-in { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; }
   .solucao-in .s-text h2 { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: clamp(30px,4vw,46px); line-height: 1.05; margin-bottom: 20px; }
@@ -245,7 +245,7 @@ const CSS = `
   .stick-card .st-tag { font-size: 11.5px; font-weight: 700; color: var(--brick); text-transform: uppercase; letter-spacing: .8px; margin-top: 2px; margin-bottom: 12px; }
   .stick-card p { font-size: 13.5px; color: var(--ink-2); line-height: 1.55; }
 
-  /* Pre├ºos */
+  /* Preços */
   .lp-precos { padding: 96px 0 64px; background: var(--bg); }
   .plans { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; align-items: stretch; }
   .plan { background: var(--surface); border: 1.5px solid var(--line); border-radius: 18px; padding: 30px 28px; display: flex; flex-direction: column; position: relative; }
@@ -318,7 +318,7 @@ const CSS = `
   }
 `;
 
-// ÔöÇÔöÇÔöÇ Component ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+// ─── Component ───────────────────────────────────────────────────────────────
 export default function LandingPage() {
   const [solid, setSolid] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -337,7 +337,7 @@ export default function LandingPage() {
     e.preventDefault();
     // Redireciona para WhatsApp com dados preenchidos
     const msg = encodeURIComponent(
-      `Ol├í! Quero uma demonstra├º├úo do StickFrame.\nNome: ${form.nome}\nE-mail: ${form.email}\nWhatsApp: ${form.whatsapp}\nObras/ano: ${form.obras}`
+      `Olá! Quero uma demonstração do StickFrame.\nNome: ${form.nome}\nE-mail: ${form.email}\nWhatsApp: ${form.whatsapp}\nObras/ano: ${form.obras}`
     );
     window.open(`https://wa.me/551140038929?text=${msg}`, "_blank");
     setSent(true);
@@ -353,12 +353,12 @@ export default function LandingPage() {
           <div className="lp-nav-in">
             <img src="/landing/assets/logo_branco.png" alt="StickFrame" className="lp-logo" />
             <div className="lp-nav-links">
-              <a href="#solucao">Solu├º├úo</a>
+              <a href="#solucao">Solução</a>
               <a href="#funcionalidades">Funcionalidades</a>
               <a href="#comparativo">Comparativo</a>
-              <a href="#precos">Pre├ºos</a>
+              <a href="#precos">Preços</a>
               <a href="/login">Entrar</a>
-              <a href="#demo" className="btn btn-outline-w" style={{ padding: "9px 20px", fontSize: 14 }}>Solicitar demonstra├º├úo</a>
+              <a href="#demo" className="btn btn-outline-w" style={{ padding: "9px 20px", fontSize: 14 }}>Solicitar demonstração</a>
             </div>
             <button className="lp-burger" aria-label="Menu" onClick={() => setMenuOpen(true)}>
               <Ic.Menu />
@@ -372,11 +372,11 @@ export default function LandingPage() {
         <button onClick={() => setMenuOpen(false)} style={{ position: "absolute", top: 20, right: 24, background: "none", border: "none", cursor: "pointer", color: "#fff" }}>
           <Ic.Close />
         </button>
-        {["#solucao|Solu├º├úo", "#funcionalidades|Funcionalidades", "#comparativo|Comparativo", "#precos|Pre├ºos", "/login|Entrar"].map(s => {
+        {["#solucao|Solução", "#funcionalidades|Funcionalidades", "#comparativo|Comparativo", "#precos|Preços", "/login|Entrar"].map(s => {
           const [href, label] = s.split("|");
           return <a key={href} href={href} onClick={() => setMenuOpen(false)}>{label}</a>;
         })}
-        <a href="#demo" className="btn btn-brick" onClick={() => setMenuOpen(false)}>Solicitar demonstra├º├úo</a>
+        <a href="#demo" className="btn btn-brick" onClick={() => setMenuOpen(false)}>Solicitar demonstração</a>
       </div>
 
       {/* Hero */}
@@ -384,16 +384,16 @@ export default function LandingPage() {
         <div className="ring" /><div className="ring2" />
         <div className="lp-wrap">
           <div className="lp-hero-in">
-            <span className="eyebrow">StickFrameÔäó ┬À Sistema de gest├úo</span>
-            <h1>Controle custo, prazo e<br /><em>cliente em um</em><br />├║nico fluxo</h1>
+            <span className="eyebrow">StickFrame™ · Sistema de gestão</span>
+            <h1>Controle custo, prazo e<br /><em>cliente em um</em><br />único fluxo</h1>
             <p className="h-sub">
-              Empresas que usam StickQuote + Portal Cliente reduzem retrabalho e fecham mais obras. Do primeiro lead ├á entrega da chave, tudo conectado.
+              Empresas que usam StickQuote + Portal Cliente reduzem retrabalho e fecham mais obras. Do primeiro lead à entrega da chave, tudo conectado.
             </p>
             <div className="h-cta">
-              <a href="/cadastro" className="btn btn-white btn-lg">Come├ºar gr├ítis ÔåÆ</a>
+              <a href="/cadastro" className="btn btn-white btn-lg">Começar grátis →</a>
               <a href="/pricing" className="btn btn-outline-w btn-lg">Ver planos</a>
             </div>
-            <p className="h-note">Sem cart├úo de cr├®dito ┬À 14 dias gr├ítis ┬À Configura├º├úo em minutos</p>
+            <p className="h-note">Sem cartão de crédito · 14 dias grátis · Configuração em minutos</p>
           </div>
         </div>
       </section>
@@ -418,7 +418,7 @@ export default function LandingPage() {
           <div className="sec-head">
             <span className="eyebrow">O problema</span>
             <h2>O que trava o crescimento da sua construtora</h2>
-            <p>Steel Frame ├® r├ípido na obra ÔÇö mas a gest├úo continua presa em planilhas, WhatsApp e retrabalho.</p>
+            <p>Steel Frame é rápido na obra — mas a gestão continua presa em planilhas, WhatsApp e retrabalho.</p>
           </div>
           <div className="dor-grid">
             {DORES.map(d => (
@@ -434,33 +434,33 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Solu├º├úo */}
+      {/* Solução */}
       <section className="lp-solucao" id="solucao">
         <div className="lp-wrap">
           <div className="solucao-in">
             <div className="s-text">
-              <span className="eyebrow" style={{ color: "var(--brick)" }}>A solu├º├úo</span>
-              <h2>Sua construtora n├úo precisa de mais uma <em>planilha</em></h2>
-              <p>O StickFrame conecta venda, obra e financeiro num ├║nico fluxo pensado para Steel Frame. Tudo conversa: o or├ºamento vira contrato, o contrato vira obra, a obra alimenta o caixa.</p>
+              <span className="eyebrow" style={{ color: "var(--brick)" }}>A solução</span>
+              <h2>Sua construtora não precisa de mais uma <em>planilha</em></h2>
+              <p>O StickFrame conecta venda, obra e financeiro num único fluxo pensado para Steel Frame. Tudo conversa: o orçamento vira contrato, o contrato vira obra, a obra alimenta o caixa.</p>
               {[
-                "Composi├º├Áes nativas de Steel Frame ÔÇö perfis, pain├®is e quantitativos por m┬▓",
+                "Composições nativas de Steel Frame — perfis, painéis e quantitativos por m²",
                 "Calculadora white-label que captura leads com a sua marca, 24h por dia",
-                "Margem por obra em tempo real ÔÇö or├ºado ├ù comprado ├ù medido, sempre conciliados",
+                "Margem por obra em tempo real — orçado × comprado × medido, sempre conciliados",
               ].map(t => (
                 <div className="sol-check" key={t}>
                   <span className="chk"><Ic.Check /></span>
                   {t}
                 </div>
               ))}
-              <a href="/cadastro" className="btn btn-brick" style={{ marginTop: 28 }}>Come├ºar agora</a>
+              <a href="/cadastro" className="btn btn-brick" style={{ marginTop: 28 }}>Começar agora</a>
             </div>
             <div className="sol-mock">
-              <div className="sol-mock-header">Obra ┬À Residencial Recanto</div>
+              <div className="sol-mock-header">Obra · Residencial Recanto</div>
               <div className="sol-kpi-row">
                 {[
-                  { v: "72%",   l: "Avan├ºo f├¡sico",      t: "Ôû▓ 8pp esta semana" },
-                  { v: "24,3%", l: "Margem atual",        t: "Ôû▓ 1,2pp" },
-                  { v: "+1,8%", l: "Desvio de or├ºamento", t: "Dentro do limite" },
+                  { v: "72%",   l: "Avanço físico",      t: "▲ 8pp esta semana" },
+                  { v: "24,3%", l: "Margem atual",        t: "▲ 1,2pp" },
+                  { v: "+1,8%", l: "Desvio de orçamento", t: "Dentro do limite" },
                 ].map(k => (
                   <div className="sol-kpi" key={k.l}>
                     <div className="kv">{k.v}</div>
@@ -471,10 +471,10 @@ export default function LandingPage() {
               </div>
               <div className="sol-bar-row">
                 {[
-                  { l: "Funda├º├úo",  p: 100, done: true },
+                  { l: "Fundação",  p: 100, done: true },
                   { l: "Estrutura", p: 100, done: true },
                   { l: "Fechamento",p: 72,  done: false },
-                  { l: "Instala├º├Áes",p: 28, done: false },
+                  { l: "Instalações",p: 28, done: false },
                   { l: "Acabamento", p: 0,  done: false },
                 ].map(b => (
                   <div className="sol-bar-item" key={b.l}>
@@ -496,8 +496,8 @@ export default function LandingPage() {
         <div className="lp-wrap">
           <div className="sec-head center">
             <span className="eyebrow">A plataforma</span>
-            <h2>Do lead ├á chave, num fluxo s├│</h2>
-            <p>Cada m├│dulo resolve uma etapa da opera├º├úo ÔÇö e todos compartilham os mesmos dados.</p>
+            <h2>Do lead à chave, num fluxo só</h2>
+            <p>Cada módulo resolve uma etapa da operação — e todos compartilham os mesmos dados.</p>
           </div>
           <div className="feat-grid">
             {FEATS.map(({ Icon, title, desc, badge }) => (
@@ -517,7 +517,7 @@ export default function LandingPage() {
         <div className="lp-wrap">
           <div className="sec-head">
             <span className="eyebrow">Por que StickFrame</span>
-            <h2>StickFrame vs. ERPs gen├®ricos</h2>
+            <h2>StickFrame vs. ERPs genéricos</h2>
             <p>Os grandes sistemas tentam servir qualquer construtora. O StickFrame foi feito para a sua.</p>
           </div>
           <table className="comp-table">
@@ -525,7 +525,7 @@ export default function LandingPage() {
               <tr>
                 <th style={{ width: "50%" }}>Recurso</th>
                 <th className="sf-col" style={{ width: "25%", textAlign: "center" }}>StickFrame</th>
-                <th style={{ width: "25%", textAlign: "center" }}>ERP gen├®rico</th>
+                <th style={{ width: "25%", textAlign: "center" }}>ERP genérico</th>
               </tr>
             </thead>
             <tbody>
@@ -550,16 +550,16 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Linha StickÔäó */}
+      {/* Linha Stick™ */}
       <section className="lp-stick">
         <div className="lp-wrap">
           <div style={{ maxWidth: 640 }}>
-            <span className="stick-eyebrow">Tecnologia propriet├íria</span>
+            <span className="stick-eyebrow">Tecnologia proprietária</span>
             <h2 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "clamp(32px,4.5vw,52px)", lineHeight: 1.02 }}>
-              A linha StickÔäó que protege sua margem
+              A linha Stick™ que protege sua margem
             </h2>
             <p style={{ fontSize: 17, color: "var(--ink-2)", marginTop: 12 }}>
-              Intelig├¬ncia que n├úo est├í em planilha nem em ERP gen├®rico ÔÇö s├│ no StickFrame.
+              Inteligência que não está em planilha nem em ERP genérico — só no StickFrame.
             </p>
           </div>
           <div className="stick-grid">
@@ -575,13 +575,13 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Pre├ºos */}
+      {/* Preços */}
       <section className="lp-precos" id="precos">
         <div className="lp-wrap">
           <div className="sec-head center">
             <span className="eyebrow">Planos</span>
-            <h2>Escolha o tamanho da sua opera├º├úo</h2>
-            <p>Comece gr├ítis e evolua conforme as obras crescem. Cancele quando quiser.</p>
+            <h2>Escolha o tamanho da sua operação</h2>
+            <p>Comece grátis e evolua conforme as obras crescem. Cancele quando quiser.</p>
           </div>
           <div className="plans">
             {PLANOS.map((pl) => (
@@ -604,7 +604,7 @@ export default function LandingPage() {
               </div>
             ))}
           </div>
-          <p className="plan-note">Todos os planos incluem 14 dias gr├ítis ┬À Sem cart├úo de cr├®dito</p>
+          <p className="plan-note">Todos os planos incluem 14 dias grátis · Sem cartão de crédito</p>
         </div>
       </section>
 
@@ -613,7 +613,7 @@ export default function LandingPage() {
         <div className="lp-wrap">
           <div className="sec-head center">
             <span className="eyebrow">Depoimentos</span>
-            <h2>Quem constr├│i com o StickFrame</h2>
+            <h2>Quem constrói com o StickFrame</h2>
           </div>
           <div className="quotes">
             {DEPOIMENTOS.map((d) => (
@@ -638,15 +638,15 @@ export default function LandingPage() {
         <div className="lp-wrap">
           <div className="demo-in">
             <div>
-              <span className="eyebrow" style={{ color: "#e08a84" }}>Demonstra├º├úo</span>
+              <span className="eyebrow" style={{ color: "#e08a84" }}>Demonstração</span>
               <h2 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "clamp(32px,4.5vw,52px)", lineHeight: 1.02, color: "#fff" }}>
-                Veja o StickFrame rodando na sua opera├º├úo
+                Veja o StickFrame rodando na sua operação
               </h2>
               <p style={{ fontSize: 16, color: "#9a948a", marginTop: 12, lineHeight: 1.7 }}>
-                Agende uma demonstra├º├úo guiada e descubra em 30 minutos como organizar venda, obra e financeiro num ├║nico lugar.
+                Agende uma demonstração guiada e descubra em 30 minutos como organizar venda, obra e financeiro num único lugar.
               </p>
               <div className="demo-bullets">
-                {["30 min de demonstra├º├úo guiada", "14 dias de teste gr├ítis", "Sem cart├úo de cr├®dito"].map(b => (
+                {["30 min de demonstração guiada", "14 dias de teste grátis", "Sem cartão de crédito"].map(b => (
                   <div className="demo-bullet" key={b}><div className="d-dot" />{b}</div>
                 ))}
               </div>
@@ -654,9 +654,9 @@ export default function LandingPage() {
             <div className="demo-form" ref={formRef}>
               {sent ? (
                 <div style={{ textAlign: "center", padding: "40px 0" }}>
-                  <div style={{ fontSize: 40, marginBottom: 16 }}>Ô£à</div>
-                  <p style={{ color: "#fff", fontWeight: 700, fontSize: 18, marginBottom: 8 }}>Recebemos sua solicita├º├úo!</p>
-                  <p style={{ color: "#9a948a", fontSize: 14 }}>Nossa equipe entra em contato em at├® 1 dia ├║til.</p>
+                  <div style={{ fontSize: 40, marginBottom: 16 }}>✅</div>
+                  <p style={{ color: "#fff", fontWeight: 700, fontSize: 18, marginBottom: 8 }}>Recebemos sua solicitação!</p>
+                  <p style={{ color: "#9a948a", fontSize: 14 }}>Nossa equipe entra em contato em até 1 dia útil.</p>
                 </div>
               ) : (
                 <form onSubmit={handleDemo}>
@@ -672,9 +672,9 @@ export default function LandingPage() {
                     {OBRAS_ANO.map(o => <option key={o} value={o}>{o}</option>)}
                   </select>
                   <button type="submit" className="btn btn-brick" style={{ width: "100%", fontSize: 16, padding: "15px" }}>
-                    Solicitar demonstra├º├úo
+                    Solicitar demonstração
                   </button>
-                  <p className="form-note">Ao enviar voc├¬ concorda com nossa Pol├¡tica de Privacidade.</p>
+                  <p className="form-note">Ao enviar você concorda com nossa Política de Privacidade.</p>
                 </form>
               )}
             </div>
@@ -688,21 +688,21 @@ export default function LandingPage() {
           <div className="f-row">
             <div>
               <img src="/landing/assets/logo_branco.png" alt="StickFrame" className="lp-logo" />
-              <div className="f-tag">A plataforma de gest├úo feita para construtoras de Steel Frame.</div>
+              <div className="f-tag">A plataforma de gestão feita para construtoras de Steel Frame.</div>
             </div>
             <nav>
               <a href="#funcionalidades">Funcionalidades</a>
               <a href="#comparativo">Comparativo</a>
-              <a href="#precos">Pre├ºos</a>
-              <a href="#demo">Demonstra├º├úo</a>
+              <a href="#precos">Preços</a>
+              <a href="#demo">Demonstração</a>
               <a href="/calcular">Calculadora</a>
               <a href="/termos">Termos</a>
               <a href="/privacidade">Privacidade</a>
             </nav>
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
-            <span className="f-copy">┬® {new Date().getFullYear()} StickFrame ┬À Todos os direitos reservados</span>
-            <span className="f-copy">Feito para quem constr├│i a seco.</span>
+            <span className="f-copy">© {new Date().getFullYear()} StickFrame · Todos os direitos reservados</span>
+            <span className="f-copy">Feito para quem constrói a seco.</span>
           </div>
         </div>
       </footer>
