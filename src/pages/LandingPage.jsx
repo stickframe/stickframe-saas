@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { salvarOrigemLead } from "../utils/leadOrigem";
+import PricingPlans from "../components/PricingPlans";
 
 // ─── Icons ───────────────────────────────────────────────────────────────────
 const Ic = {
@@ -66,27 +67,6 @@ const STICK_LINE = [
   { Icon: Ic.Money,  name: "StickCash™",   tag: "Inteligência financeira",  desc: "Margem, fluxo e DRE por obra, conciliados automaticamente a cada medição." },
   { Icon: Ic.Eye,    name: "StickView™",   tag: "Visão de obra",            desc: "Avanço físico × financeiro lado a lado, com alerta antes do atraso virar prejuízo." },
   { Icon: Ic.Brain,  name: "StickBrain™",  tag: "Copiloto de dados",        desc: "Pergunte em linguagem natural sobre suas obras e receba a resposta na hora." },
-];
-
-const PLANOS = [
-  {
-    key: "essencial", nome: "Essencial", preco: "R$ 97", periodo: "/mês",
-    desc: "Para quem está começando",
-    items: ["Orçamentos & contratos ilimitados", "Calculadora white-label", "CRM & funil de vendas", "1 usuário · suporte por e-mail"],
-    cta: "Começar grátis", href: "/cadastro?plan=essencial", hot: false,
-  },
-  {
-    key: "profissional", nome: "Profissional", preco: "R$ 197", periodo: "/mês",
-    desc: "Para construtoras em crescimento",
-    items: ["Tudo do Essencial", "Gestão de obras completa", "Financeiro StickCash™ por obra", "RDO mobile · 5 usuários", "Suporte prioritário no WhatsApp"],
-    cta: "Testar 14 dias grátis", href: "/cadastro?plan=profissional", hot: true, tag: "Mais escolhido",
-  },
-  {
-    key: "construtora", nome: "Construtora+", preco: "Sob consulta", periodo: "",
-    desc: "Para operações maiores",
-    items: ["Tudo do Profissional", "Linha Stick™ completa (IA)", "Multiempresa & multiobra", "Usuários ilimitados", "Onboarding assistido & SLA"],
-    cta: "Falar com a equipe", href: "https://wa.me/551140038929?text=Ol%C3%A1%2C+tenho+interesse+no+plano+Construtora%2B", hot: false,
-  },
 ];
 
 const DEPOIMENTOS = [
@@ -247,23 +227,6 @@ const CSS = `
 
   /* Preços */
   .lp-precos { padding: 96px 0 64px; background: var(--bg); }
-  .plans { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; align-items: stretch; }
-  .plan { background: var(--surface); border: 1.5px solid var(--line); border-radius: 18px; padding: 30px 28px; display: flex; flex-direction: column; position: relative; }
-  .plan.hot { background: var(--graphite); border-color: var(--graphite); color: #fff; }
-  .plan .p-tag { position: absolute; top: -12px; left: 28px; background: var(--brick); color: #fff; font-size: 11px; font-weight: 800; letter-spacing: 1.2px; padding: 5px 12px; border-radius: 99px; text-transform: uppercase; }
-  .plan .p-nm { font-size: 15px; font-weight: 800; }
-  .plan .p-ds { font-size: 13px; color: var(--muted); margin-top: 4px; }
-  .plan.hot .p-ds { color: #9a948a; }
-  .plan .p-pr { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 46px; margin: 20px 0 2px; line-height: 1; }
-  .plan .p-pr small { font-size: 15px; font-family: 'Hanken Grotesk', sans-serif; font-weight: 600; color: var(--muted); }
-  .plan.hot .p-pr small { color: #9a948a; }
-  .plan ul { list-style: none; margin: 18px 0 24px; display: flex; flex-direction: column; gap: 9px; flex: 1; }
-  .plan li { display: flex; gap: 10px; font-size: 13.5px; color: var(--ink-2); align-items: flex-start; }
-  .plan.hot li { color: #cfc9c0; }
-  .plan li .chk { color: var(--sage); flex-shrink: 0; display: flex; margin-top: 2px; }
-  .plan.hot li .chk { color: #7fb389; }
-  .plan .btn { width: 100%; }
-  .plan-note { text-align: center; margin-top: 20px; font-size: 13px; color: var(--muted); }
 
   /* Depoimentos */
   .lp-depo { padding: 64px 0; background: var(--surface); }
@@ -578,33 +541,7 @@ export default function LandingPage() {
       {/* Preços */}
       <section className="lp-precos" id="precos">
         <div className="lp-wrap">
-          <div className="sec-head center">
-            <span className="eyebrow">Planos</span>
-            <h2>Escolha o tamanho da sua operação</h2>
-            <p>Comece grátis e evolua conforme as obras crescem. Cancele quando quiser.</p>
-          </div>
-          <div className="plans">
-            {PLANOS.map((pl) => (
-              <div className={`plan${pl.hot ? " hot" : ""}`} key={pl.key}>
-                {pl.tag && <div className="p-tag">{pl.tag}</div>}
-                <div className="p-nm">{pl.nome}</div>
-                <div className="p-ds">{pl.desc}</div>
-                <div className="p-pr">{pl.preco}{pl.periodo && <small>{pl.periodo}</small>}</div>
-                <ul>
-                  {pl.items.map((it) => (
-                    <li key={it}>
-                      <span className="chk"><Ic.Check /></span>
-                      {it}
-                    </li>
-                  ))}
-                </ul>
-                <a href={pl.href} className={`btn${pl.hot ? " btn-brick" : " btn-outline"}`}>
-                  {pl.cta}
-                </a>
-              </div>
-            ))}
-          </div>
-          <p className="plan-note">Todos os planos incluem 14 dias grátis · Sem cartão de crédito</p>
+          <PricingPlans />
         </div>
       </section>
 
