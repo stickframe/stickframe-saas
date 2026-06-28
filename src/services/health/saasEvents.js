@@ -5,11 +5,13 @@ let _queue = [];
 let _flushing = false;
 
 function getSessionUserId() {
+  // sb.auth.getSession() é assíncrono; o app persiste user_id no localStorage
+  // (AppLayout). Leitura síncrona evita Promise e mantém o padrão do getEmpresaId.
   try {
-    const raw = sb.auth.getSession();
-    if (raw?.data?.session?.user?.id) return raw.data.session.user.id;
-  } catch {}
-  return null;
+    return localStorage.getItem("user_id") || null;
+  } catch {
+    return null;
+  }
 }
 
 async function flush() {
@@ -60,3 +62,12 @@ export async function flushEvents() {
 }
 
 setInterval(() => { flush(); }, 30000);
+
+// Flush ao sair/ocultar a aba — eventos de marco disparam uma vez e não podem
+// se perder na fila em memória se o usuário navegar antes do intervalo de 30s.
+if (typeof document !== "undefined") {
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") flush();
+  });
+  window.addEventListener("pagehide", () => { flush(); });
+}
