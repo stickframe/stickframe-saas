@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import useAppStore from "../store/useAppStore";
 
 const LOGO = "https://gpzmglcxmbboxxogbibq.supabase.co/storage/v1/object/public/arquivos/logos/34ec14d3-02fc-4b0a-8040-67f7a739394d/logo.jpg?t=1780161932174";
 
@@ -78,10 +79,16 @@ const PLANOS = [
 
 export default function Pricing() {
   const navigate = useNavigate();
+  const user = useAppStore((s) => s.user);
+  const empresaId = useAppStore((s) => s.empresaId);
 
   useEffect(() => {
-    import("../services/health/productMetrics").then(({ trackViewedPricing }) => trackViewedPricing());
-  }, []);
+    import("../services/health/productMetrics").then(({ trackViewedPricing, setMetricsContext }) => {
+      // /pricing roda fora do AppLayout — seta o contexto p/ o evento gravar (logado)
+      if (user && empresaId) setMetricsContext(user.uid || user.id, empresaId);
+      trackViewedPricing();
+    }).catch(() => {});
+  }, [user, empresaId]);
 
   // Logado → /checkout (ativa trial/assinatura na conta atual).
   // Deslogado → /cadastro com o plano na URL.
@@ -106,8 +113,14 @@ export default function Pricing() {
           <span style={{ fontWeight: 900, letterSpacing: 2, fontSize: 15, color: "#fff" }}>STICK<span style={{ color: "#981915" }}>FRAME</span></span>
         </a>
         <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-          <a href="/login" style={{ color: "rgba(255,255,255,.6)", fontSize: 13, fontWeight: 600, textDecoration: "none" }}>Entrar</a>
-          <a href="/cadastro" style={{ background: "#981915", color: "#fff", borderRadius: 8, padding: "8px 16px", fontSize: 13, fontWeight: 700, textDecoration: "none" }}>Criar conta grátis</a>
+          {user ? (
+            <a href="/" style={{ background: "rgba(255,255,255,.08)", color: "#fff", border: "1px solid rgba(255,255,255,.15)", borderRadius: 8, padding: "8px 16px", fontSize: 13, fontWeight: 700, textDecoration: "none" }}>← Voltar ao sistema</a>
+          ) : (
+            <>
+              <a href="/login" style={{ color: "rgba(255,255,255,.6)", fontSize: 13, fontWeight: 600, textDecoration: "none" }}>Entrar</a>
+              <a href="/cadastro" style={{ background: "#981915", color: "#fff", borderRadius: 8, padding: "8px 16px", fontSize: 13, fontWeight: 700, textDecoration: "none" }}>Criar conta grátis</a>
+            </>
+          )}
         </div>
       </div>
 
