@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { sb } from "../services/supabase";
 import { C } from "../utils/constants";
+import AdminNav from "../components/AdminNav";
 
 const ADMIN_EMAIL = "andre@stickframe.com.br";
 
@@ -173,6 +174,8 @@ export default function Admin() {
           Acesso restrito — {ADMIN_EMAIL}
         </p>
       </div>
+
+      <AdminNav />
 
       {/* Topo CEO */}
       <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginBottom: 8 }}>

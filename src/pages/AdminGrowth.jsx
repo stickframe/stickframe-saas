@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { sb } from "../services/supabase";
 import { C } from "../utils/constants";
+import AdminNav from "../components/AdminNav";
 
 const THEME = {
   surface: "#1c1b20", card: "#26252b", border: "rgba(255,255,255,.08)",
@@ -93,6 +94,8 @@ export default function AdminGrowth() {
         <h1 style={{ fontSize: 24, fontWeight: 800, margin: 0, letterSpacing: -.5 }}>Growth</h1>
         <p style={{ fontSize: 13, color: THEME.muted, marginTop: 4 }}>Métricas de crescimento e conversão</p>
       </div>
+
+      <AdminNav />
 
       {/* Stat cards */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(170px, 1fr))", gap: 12, marginBottom: 28 }}>

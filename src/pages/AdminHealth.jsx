@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { sb } from "../services/supabase";
 import { runHealthCheck, getLastHealth } from "../services/health/healthService";
 import { C } from "../utils/constants";
+import AdminNav from "../components/AdminNav";
 
 const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || "admin@stickframe.com.br";
 
@@ -98,6 +99,8 @@ export default function AdminHealth() {
           Acesso restrito — {ADMIN_EMAIL}
         </p>
       </div>
+
+      <AdminNav />
 
       {/* Quick actions */}
       <div style={{ display: "flex", gap: 12, marginBottom: 16 }}>
