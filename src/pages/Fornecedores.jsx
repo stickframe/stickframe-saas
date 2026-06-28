@@ -363,7 +363,18 @@ export default function Fornecedores() {
   async function salvarCotacao() {
     setIsSaving(true);
     try {
-      const payload = { ...formCot, valor: parseFloat(String(formCot.valor).replace(",", ".")) || null, obra_id: formCot.obra_id || null, data_validade: formCot.data_validade || null };
+      // Whitelist das colunas reais de `cotacoes`. Ao editar, formCot pode
+      // conter joins (obras, fornecedores) e campos de servidor vindos do
+      // spread de `c` — incluí-los no update quebra ("Could not find the
+      // 'obras' column of 'cotacoes' in the schema cache").
+      const payload = {
+        descricao:     formCot.descricao,
+        valor:         parseFloat(String(formCot.valor).replace(",", ".")) || null,
+        data_validade: formCot.data_validade || null,
+        status:        formCot.status,
+        obra_id:       formCot.obra_id || null,
+        observacoes:   formCot.observacoes,
+      };
       if (modal === "nova-cot") { await addCotacao(sel.id, payload); mostrarToast("Cotação registrada!"); }
       else { await updateCotacao(sel.id, cotSel.id, payload); mostrarToast("Cotação atualizada!"); }
       setModal(null);
