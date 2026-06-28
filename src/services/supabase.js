@@ -18,6 +18,17 @@ const supabaseKey = (key && key !== "COLE_AQUI") ? key : "placeholder";
 
 export const sb = createClient(supabaseUrl, supabaseKey);
 
+// Retorna uma sessão Supabase válida, tentando renovar quando o access
+// token expirou (sessões longas). Páginas que dependem de access_token
+// (ex.: edge functions admin) usam isto em vez de getSession() cru, que
+// retorna null assim que o token vence e quebra com "Sessão não encontrada".
+export async function ensureSession() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) return session;
+  const { data: refreshed } = await sb.auth.refreshSession();
+  return refreshed?.session || null;
+}
+
 let _empresaId = null;
 try {
   const persisted = JSON.parse(localStorage.getItem("stickframe-storage") || "{}");

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { sb } from "../services/supabase";
+import { sb, ensureSession } from "../services/supabase";
 import { C } from "../utils/constants";
 import AdminNav from "../components/AdminNav";
 
@@ -90,8 +90,8 @@ export default function Admin() {
     async function load() {
       setLoading(true);
       try {
-        const { data: { session } } = await sb.auth.getSession();
-        if (!session) throw new Error("Sessão não encontrada");
+        const session = await ensureSession();
+        if (!session) throw new Error("Sessão expirada. Recarregue a página ou faça login novamente.");
 
         const { data: result, error: fnError } = await sb.functions.invoke("admin-stats", {
           headers: { Authorization: `Bearer ${session.access_token}` },
