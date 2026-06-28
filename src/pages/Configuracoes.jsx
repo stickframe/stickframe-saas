@@ -541,21 +541,29 @@ export default function Configuracoes() {
             <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4 }}>Empresa · Perfil · Usuários</div>
           </div>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, background: empresa.plano === "pro" ? "#e6f9f0" : "#f0f4ff", border: `1px solid ${empresa.plano === "pro" ? "#3f7a4b" : "#4a7af8"}`, borderRadius: 10, padding: "10px 16px" }}>
-          <div>
-            <div style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, color: empresa.plano === "pro" ? "#1a6b40" : "#2c4a9e" }}>
-              Plano {empresa.plano === "pro" ? "Pro " : "Free"}
+        {(() => {
+          const PLANO_META = {
+            free:       { label: "Free",        bg: "#f0f4ff", border: "#4a7af8", fg: "#2c4a9e", sub: `${empresa.limite_obras ?? 2} obras ativas · 1 usuário` },
+            pro:        { label: "Pro",         bg: "#e6f9f0", border: "#3f7a4b", fg: "#1a6b40", sub: "Obras ilimitadas · usuários ilimitados" },
+            enterprise: { label: "Enterprise",  bg: "#f3e7e5", border: "#981915", fg: "#981915", sub: "Linha Stick™ completa · multiempresa · SLA" },
+          };
+          const m = PLANO_META[empresa.plano] || PLANO_META.free;
+          return (
+            <div style={{ display: "flex", alignItems: "center", gap: 10, background: m.bg, border: `1px solid ${m.border}`, borderRadius: 10, padding: "10px 16px" }}>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, color: m.fg }}>
+                  Plano {m.label}
+                </div>
+                <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>{m.sub}</div>
+              </div>
+              {empresa.plano === "free" && (
+                <button onClick={() => setShowUpgrade(true)} style={{ background: C.red, color: "#fff", borderRadius: 7, padding: "6px 12px", fontSize: 12, fontWeight: 700, border: "none", cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap" }}>
+                  Fazer upgrade
+                </button>
+              )}
             </div>
-            <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>
-              {empresa.plano === "free" ? `${empresa.limite_obras ?? 2} obras ativas · 1 usuário` : "Obras ilimitadas · usuários ilimitados"}
-            </div>
-          </div>
-          {empresa.plano === "free" && (
-            <button onClick={() => setShowUpgrade(true)} style={{ background: C.red, color: "#fff", borderRadius: 7, padding: "6px 12px", fontSize: 12, fontWeight: 700, border: "none", cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap" }}>
-              Fazer upgrade
-            </button>
-          )}
-        </div>
+          );
+        })()}
       </div>
 
       {/* Tabs */}
