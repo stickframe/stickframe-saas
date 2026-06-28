@@ -41,6 +41,11 @@ export default function StickBrainDashboard() {
 
   useEffect(() => { carregar(periodo); }, [periodo, carregar]);
 
+  // Telemetria de produto: marco "abriu StickBrain"
+  useEffect(() => {
+    import("../services/health/productMetrics").then(({ trackStickBrainOpened }) => trackStickBrainOpened()).catch(() => {});
+  }, []);
+
   const ia = useMemo(() => (d ? analisarDeterministico(d) : { alertas: [], oportunidades: [], recomendacoes: [] }), [d]);
 
   const Header = (

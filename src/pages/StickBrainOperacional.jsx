@@ -34,6 +34,11 @@ export default function StickBrainOperacional() {
 
   useEffect(() => { carregar(); }, [carregar]);
 
+  // Telemetria de produto: marco "abriu StickBrain"
+  useEffect(() => {
+    import("../services/health/productMetrics").then(({ trackStickBrainOpened }) => trackStickBrainOpened()).catch(() => {});
+  }, []);
+
   const fila = useMemo(() => (op ? montarFilaAcoes(op) : null), [op]);
   const gruposFiltrados = useMemo(() => {
     if (!fila) return {};

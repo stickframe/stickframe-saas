@@ -482,6 +482,7 @@ export default function CRM() {
       });
       setModal(false);
       mostrarToast(" Cliente cadastrado com sucesso!");
+      import("../services/health/productMetrics").then(({ trackFirstClient }) => trackFirstClient()).catch(() => {});
     } catch (e) {
       mostrarToast(" " + e.message);
     } finally {

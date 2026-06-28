@@ -1459,6 +1459,7 @@ export default function Orcamentos() {
     }
     setModal(false);
     mostrarToast(" Orçamento gerado com sucesso!");
+    import("../services/health/productMetrics").then(({ trackFirstQuote }) => trackFirstQuote()).catch(() => {});
   }
 
   // ── StickQuotes técnicos vinculados ──
