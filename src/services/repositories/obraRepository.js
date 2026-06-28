@@ -1,4 +1,4 @@
-import { sb, getEmpresaId } from "../supabase";
+import { sb, getEmpresaId, getSignedUrl, getSignedUrls } from "../supabase";
 
 export async function listarObras() {
   const { data, error } = await sb.from("obras").select("*").eq("empresa_id", getEmpresaId()).order("created_at");
@@ -55,11 +55,13 @@ export async function listarArquivos(obraId) {
   if (!obraId) return [];
   const { data, error } = await sb.from("arquivos").select("*").eq("obra_id", obraId).order("created_at", { ascending: false });
   if (error) throw error;
+  const paths = (data || []).map((row) => row.storage_path).filter(Boolean);
+  const signedUrls = await getSignedUrls(paths);
+  const urlMap = {};
+  paths.forEach((p, i) => { urlMap[p] = signedUrls[i]; });
   return (data || []).map((row) => ({
     ...row,
-    url: row.storage_path
-      ? sb.storage.from("arquivos").getPublicUrl(row.storage_path).data.publicUrl
-      : null,
+    url: row.storage_path ? urlMap[row.storage_path] : null,
     path: row.storage_path,
   }));
 }
@@ -99,16 +101,18 @@ export async function adicionarArquivos(obraId, arquivos, empresaId) {
         p_empresa_id: empresaId,
         p_disciplina: row.disciplina,
         p_novo_id:    row.id,
-      }).catch(() => {});
+      }).catch(e => console.warn("[obraRepo] ged_invalidar:", e));
     }
   }
 
-  // Enriquecer com URL pública
+  // Enriquecer com URL assinada (temporária)
+  const signedPaths = (data || []).map((row) => row.storage_path).filter(Boolean);
+  const signedUrls = await getSignedUrls(signedPaths);
+  const urlMap = {};
+  signedPaths.forEach((p, i) => { urlMap[p] = signedUrls[i]; });
   return (data || []).map((row) => ({
     ...row,
-    url: row.storage_path
-      ? sb.storage.from("arquivos").getPublicUrl(row.storage_path).data.publicUrl
-      : null,
+    url: row.storage_path ? urlMap[row.storage_path] : null,
     path: row.storage_path,
   }));
 }
@@ -148,8 +152,10 @@ export async function atualizarVencimentoMedicao(id, data_vencimento) {
   return data;
 }
 
-export function subscribeObras(callback) {
-  return sb.channel("obras-rt").on("postgres_changes", { event: "*", schema: "public", table: "obras" }, callback).subscribe();
+export function subscribeObras(callback, empresaId) {
+  const opts = { event: "*", schema: "public", table: "obras" };
+  if (empresaId) opts.filter = `empresa_id=eq.${empresaId}`;
+  return sb.channel("obras-rt").on("postgres_changes", opts, callback).subscribe();
 }
 export function subscribeDiario(obraId, callback) {
   return sb.channel(`diario-${obraId}`).on("postgres_changes", { event: "INSERT", schema: "public", table: "diario", filter: `obra_id=eq.${obraId}` }, callback).subscribe();

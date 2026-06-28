@@ -36,6 +36,10 @@ export default function CheckoutTrial() {
   const [searchParams] = useSearchParams();
   const planKey = searchParams.get("plan") || "profissional";
   const plano = PLANOS_CHECKOUT[planKey] || PLANOS_CHECKOUT.profissional;
+
+  useEffect(() => {
+    import("../services/health/productMetrics").then(({ trackStartedTrial }) => trackStartedTrial(planKey));
+  }, [planKey]);
   const [session, setSession] = useState(null);
   const [checking, setChecking] = useState(true);
 

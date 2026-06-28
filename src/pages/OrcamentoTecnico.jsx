@@ -362,7 +362,7 @@ export default function OrcamentoTecnico() {
     setLoadingPrecos(true);
     listarPrecosVivos()
       .then(setPrecosVivos)
-      .catch(() => {})
+      .catch(e => console.warn("[OrcTecnico] listarPrecos:", e))
       .finally(() => setLoadingPrecos(false));
   }, []);
 

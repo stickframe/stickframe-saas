@@ -11,6 +11,7 @@ import ListaTarefas from "../components/obras/ListaTarefas";
 import { ArquivoVersoes } from "../components/obras/ArquivoVersoes";
 import { PlantaApontamentos } from "../components/obras/PlantaApontamentos";
 import { PdfViewer } from "../components/obras/PdfViewer";
+import { EmptyState } from "../components/ui/EmptyState";
 import { useObraPermission, useObrasVisiveis } from "../hooks/useObraPermission";
 import Planejamento4D from "../components/obras/Planejamento4D";
 import { sb, getEmpresaId } from "../services/supabase";
@@ -1837,12 +1838,12 @@ export default function GestaoObras() {
 
       {/* Empty state */}
       {obras.length === 0 ? (
-        <div style={{ textAlign: "center", padding: "80px 0" }}>
-          <div style={{ fontSize: 40, marginBottom: 16 }}></div>
-          <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Nenhuma obra cadastrada</div>
-          <div style={{ fontSize: 13, color: C.muted, marginBottom: 24 }}>Crie sua primeira obra para gerenciar fases, arquivos e lançamentos financeiros.</div>
-          <Btn onClick={abrirNova}>+ Criar primeira obra</Btn>
-        </div>
+        <EmptyState
+          icon=""
+          title="Sua primeira obra começa aqui"
+          description="Cadastre sua primeira obra para acompanhar cronograma, medições, documentos e financeiro em um só lugar."
+          action={<Btn onClick={abrirNova}>+ Criar primeira obra</Btn>}
+        />
       ) : (
         <>
           {/* Card grid de obras */}

@@ -11,6 +11,7 @@ import { buscarEmpresa } from "../../services/repositories/empresaRepository";
 import useAppStore from "../../store/useAppStore";
 import { useTrial } from "../../hooks/useTrial";
 import OnboardingWizard from "../ui/OnboardingWizard";
+import { setMetricsContext } from "../../services/health/productMetrics";
 
 export default function AppLayout({ children }) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -38,8 +39,6 @@ export default function AppLayout({ children }) {
 
   useEffect(() => {
     if (empresaId && userId) {
-      localStorage.setItem("empresa_id", empresaId);
-      localStorage.setItem("user_id", userId);
       subscribePush(empresaId, userId);
     }
   }, [empresaId, userId]);
@@ -60,6 +59,10 @@ export default function AppLayout({ children }) {
   }, [perfil, empresaId, loadClientes]);
 
   useEffect(() => {
+    if (userId && empresaId) setMetricsContext(userId, empresaId);
+  }, [userId, empresaId]);
+
+  useEffect(() => {
     if (!empresaId) return;
     buscarEmpresa()
       .then((data) => {
@@ -74,6 +77,7 @@ export default function AppLayout({ children }) {
       {showOnboarding && checkDone && (
         <OnboardingWizard onComplete={() => setShowOnboarding(false)} />
       )}
+
 
       {menuOpen && (
         <div className="mobile-overlay" onClick={() => setMenuOpen(false)} />

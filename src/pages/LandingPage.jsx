@@ -1,361 +1,711 @@
-import { useEffect, useRef } from "react";
-import "../styles/landing-bim.css";
+﻿import { useState, useEffect, useRef } from "react";
+import { salvarOrigemLead } from "../utils/leadOrigem";
 
-// Inject Google Fonts once
-function ensureFonts() {
-  if (document.getElementById("lbim-fonts")) return;
-  const pre1 = document.createElement("link"); pre1.rel = "preconnect"; pre1.href = "https://fonts.googleapis.com";
-  const pre2 = document.createElement("link"); pre2.rel = "preconnect"; pre2.href = "https://fonts.gstatic.com"; pre2.crossOrigin = "anonymous";
-  const link = document.createElement("link");
-  link.id = "lbim-fonts"; link.rel = "stylesheet";
-  link.href = "https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap";
-  document.head.appendChild(pre1);
-  document.head.appendChild(pre2);
-  document.head.appendChild(link);
-}
+// ÔöÇÔöÇÔöÇ Icons ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+const Ic = {
+  Building: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 21h18M6 21V9M10 21V9"/><path d="M4 9h16l-2-5H8z"/><path d="M16 9v6m0 0a2 2 0 1 0 .01 0"/></svg>,
+  Doc:      () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2h8l4 4v16H6z"/><path d="M14 2v4h4M9 13h6M9 17h6"/></svg>,
+  Calc:     () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 11h.01M12 11h.01M16 11h.01M8 15h.01M12 15h.01M16 15h.01M8 19h8"/></svg>,
+  Money:    () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.5 14.5c0 1.1 1.1 2 2.5 2s2.5-.9 2.5-2-1.1-1.7-2.5-2-2.5-.9-2.5-2 1.1-2 2.5-2 2.5.9 2.5 2"/></svg>,
+  Team:     () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0 1 12 0M16 5.5a3 3 0 0 1 0 5M18 20a6 6 0 0 0-3-5.2"/></svg>,
+  Chart:    () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-5 3 3 5-7"/></svg>,
+  Check:    () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" width="16" height="16"><path d="M20 6 9 17l-5-5"/></svg>,
+  X:        () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" width="15" height="15"><path d="M18 6 6 18M6 6l12 12"/></svg>,
+  Arrow:    () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18"><path d="M5 12h14M13 6l6 6-6 6"/></svg>,
+  Menu:     () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" width="24" height="24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>,
+  Close:    () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" width="28" height="28"><path d="M18 6 6 18M6 6l12 12"/></svg>,
+  Brain:    () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"/><path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z"/><path d="M15 13a4.5 4.5 0 0 1-3-4 4.5 4.5 0 0 1-3 4"/><path d="M17.599 6.5a3 3 0 0 0 .399-1.375M6.003 5.125A3 3 0 0 0 6.401 6.5"/><path d="M3.477 10.896a4 4 0 0 1 .585-.396M19.938 10.5a4 4 0 0 1 .585.396"/><path d="M6 18a4 4 0 0 1-1.967-.516M19.967 17.484A4 4 0 0 1 18 18"/></svg>,
+  Eye:      () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>,
+  Score:    () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>,
+  Mobile:   () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg>,
+};
 
+// ÔöÇÔöÇÔöÇ Data ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+const METRICS = [
+  { val: "3├ù", label: "mais r├ípido para or├ºar" },
+  { val: "+38%", label: "leads pela calculadora" },
+  { val: "100%", label: "das obras num s├│ painel" },
+  { val: "ÔêÆ15%", label: "de perda de material" },
+];
+
+const DORES = [
+  {
+    title: "Or├ºamento lento",
+    desc: "Cada proposta leva dias em planilhas fr├ígeis. O cliente esfria antes de receber o pre├ºo ÔÇö e voc├¬ perde a obra para quem respondeu primeiro.",
+  },
+  {
+    title: "Obra sem visibilidade",
+    desc: "Voc├¬ s├│ descobre o atraso quando ele j├í aconteceu. Cronograma no papel, medi├º├úo no caderno e margem que some no caminho.",
+  },
+  {
+    title: "Margem que escapa",
+    desc: "Sem ligar or├ºado, comprado e medido, o lucro vaza obra a obra ÔÇö e no fim do m├¬s ningu├®m sabe explicar para onde foi.",
+  },
+];
+
+const FEATS = [
+  { Icon: Ic.Doc,      title: "CRM & Funil",              desc: "Leads da calculadora caem direto no funil, com hist├│rico e temperatura. Nenhum cliente esfria esquecido.", badge: null },
+  { Icon: Ic.Doc,      title: "Or├ºamento & Proposta",      desc: "Composi├º├Áes de Steel Frame prontas. Gere proposta profissional e contrato em minutos, com aceite digital.", badge: null },
+  { Icon: Ic.Calc,     title: "Calculadora white-label",   desc: "Um link com a sua marca onde o cliente simula o custo da obra ÔÇö e vira lead qualificado automaticamente.", badge: "Diferencial" },
+  { Icon: Ic.Building, title: "Gest├úo de Obras",           desc: "Cronograma, di├írio, medi├º├Áes e quantitativos. Acompanhe avan├ºo f├¡sico e financeiro de cada etapa.", badge: null },
+  { Icon: Ic.Money,    title: "Financeiro StickCashÔäó",     desc: "Fluxo de caixa, DRE e margem por obra. Saiba o lucro real de cada projeto sem fechar planilha no fim do m├¬s.", badge: null },
+  { Icon: Ic.Mobile,   title: "Campo & RDO mobile",        desc: "Di├írio de obra com foto direto do celular, mesmo offline. O escrit├│rio v├¬ o que acontece no canteiro em tempo real.", badge: null },
+];
+
+const COMPARATIVO = [
+  { rec: "Composi├º├Áes nativas de Steel Frame", sf: true,  erp: false },
+  { rec: "Calculadora p├║blica geradora de leads", sf: true, erp: false },
+  { rec: "Margem por obra em tempo real",      sf: true,  erp: "Parcial" },
+  { rec: "RDO mobile offline",                 sf: true,  erp: "Parcial" },
+  { rec: "Implanta├º├úo sem consultoria cara",   sf: true,  erp: false },
+  { rec: "Interface moderna e simples",        sf: true,  erp: false },
+];
+
+const STICK_LINE = [
+  { Icon: Ic.Score,  name: "StickScoreÔäó",  tag: "Qualifica├º├úo de lead",    desc: "Pontua cada lead pela probabilidade de virar contrato e prioriza seu time comercial." },
+  { Icon: Ic.Money,  name: "StickCashÔäó",   tag: "Intelig├¬ncia financeira",  desc: "Margem, fluxo e DRE por obra, conciliados automaticamente a cada medi├º├úo." },
+  { Icon: Ic.Eye,    name: "StickViewÔäó",   tag: "Vis├úo de obra",            desc: "Avan├ºo f├¡sico ├ù financeiro lado a lado, com alerta antes do atraso virar preju├¡zo." },
+  { Icon: Ic.Brain,  name: "StickBrainÔäó",  tag: "Copiloto de dados",        desc: "Pergunte em linguagem natural sobre suas obras e receba a resposta na hora." },
+];
+
+const PLANOS = [
+  {
+    key: "essencial", nome: "Essencial", preco: "R$ 97", periodo: "/m├¬s",
+    desc: "Para quem est├í come├ºando",
+    items: ["Or├ºamentos & contratos ilimitados", "Calculadora white-label", "CRM & funil de vendas", "1 usu├írio ┬À suporte por e-mail"],
+    cta: "Come├ºar gr├ítis", href: "/cadastro?plan=essencial", hot: false,
+  },
+  {
+    key: "profissional", nome: "Profissional", preco: "R$ 197", periodo: "/m├¬s",
+    desc: "Para construtoras em crescimento",
+    items: ["Tudo do Essencial", "Gest├úo de obras completa", "Financeiro StickCashÔäó por obra", "RDO mobile ┬À 5 usu├írios", "Suporte priorit├írio no WhatsApp"],
+    cta: "Testar 14 dias gr├ítis", href: "/cadastro?plan=profissional", hot: true, tag: "Mais escolhido",
+  },
+  {
+    key: "construtora", nome: "Construtora+", preco: "Sob consulta", periodo: "",
+    desc: "Para opera├º├Áes maiores",
+    items: ["Tudo do Profissional", "Linha StickÔäó completa (IA)", "Multiempresa & multiobra", "Usu├írios ilimitados", "Onboarding assistido & SLA"],
+    cta: "Falar com a equipe", href: "https://wa.me/551140038929?text=Ol%C3%A1%2C+tenho+interesse+no+plano+Construtora%2B", hot: false,
+  },
+];
+
+const DEPOIMENTOS = [
+  { text: "Antes eu levava dois dias para fechar um or├ºamento de steel frame. Hoje sai em vinte minutos, com contrato junto.", nome: "Rafael Souza", cargo: "JM Construtora ┬À Curitiba", ini: "RS" },
+  { text: "A calculadora com a nossa marca virou nossa maior fonte de leads. O cliente chega j├í sabendo a faixa de pre├ºo.", nome: "Ana Lima", cargo: "Arquiteta ┬À Belo Horizonte", ini: "AL" },
+  { text: "O financeiro por obra acabou com as planilhas soltas. Sei a margem de cada projeto em tempo real.", nome: "Carlos Melo", cargo: "Construtor ┬À S├úo Paulo", ini: "CM" },
+];
+
+const OBRAS_ANO = ["1 a 5 obras", "6 a 15 obras", "16 a 40 obras", "Mais de 40 obras"];
+
+// ÔöÇÔöÇÔöÇ CSS ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+const CSS = `
+  @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap');
+  :root {
+    --brick:#981915; --brick-dk:#7d1411; --brick-soft:#f3e7e5;
+    --graphite:#2b2b2e; --graphite-2:#232225;
+    --ink:#26231f; --ink-2:#57514a; --muted:#8c847a;
+    --line:#e7e1d8; --line-2:#efeae2;
+    --bg:#f4f1ec; --surface:#fff; --surface-2:#faf8f4;
+    --sage:#4f7d57; --amber:#b07a1e;
+  }
+  .lp *, .lp *::before, .lp *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  .lp { font-family: 'Hanken Grotesk', system-ui, sans-serif; color: var(--ink); background: var(--bg); font-size: 16px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+  .lp img { display: block; max-width: 100%; }
+  .lp a { text-decoration: none; transition: opacity .15s; }
+  .lp a:hover { opacity: .85; }
+  .lp-wrap { max-width: 1180px; margin: 0 auto; padding: 0 40px; }
+
+  /* Buttons */
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-family: 'Hanken Grotesk', sans-serif; font-weight: 700; font-size: 15px; padding: 13px 24px; border-radius: 10px; cursor: pointer; border: 1.5px solid transparent; white-space: nowrap; transition: .15s; text-decoration: none; }
+  .btn-lg { padding: 15px 28px; font-size: 16px; border-radius: 12px; }
+  .btn-brick { background: var(--brick); color: #fff; border-color: var(--brick); }
+  .btn-brick:hover { background: var(--brick-dk); border-color: var(--brick-dk); opacity: 1; }
+  .btn-white { background: #fff; color: var(--brick); border-color: #fff; }
+  .btn-white:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(0,0,0,.18); opacity: 1; }
+  .btn-outline-w { background: transparent; color: #fff; border-color: rgba(255,255,255,.4); }
+  .btn-outline-w:hover { border-color: #fff; background: rgba(255,255,255,.08); opacity: 1; }
+  .btn-outline { background: transparent; color: var(--ink); border-color: var(--line); }
+  .btn-outline:hover { border-color: var(--muted); opacity: 1; }
+
+  /* Nav */
+  .lp-nav { position: fixed; top: 0; left: 0; right: 0; z-index: 50; transition: background .25s, box-shadow .25s; }
+  .lp-nav.solid { background: var(--brick-dk); box-shadow: 0 4px 24px rgba(40,10,8,.3); }
+  .lp-nav-in { display: flex; align-items: center; justify-content: space-between; padding: 18px 0; }
+  .lp-logo { height: 34px; display: block; }
+  .lp-nav-links { display: flex; align-items: center; gap: 28px; font-size: 14.5px; font-weight: 600; color: #fff; }
+  .lp-nav-links a { color: inherit; opacity: .85; }
+  .lp-nav-links a:hover { opacity: 1; }
+
+  /* Hamburger */
+  .lp-burger { display: none; background: none; border: none; cursor: pointer; padding: 4px; color: #fff; align-items: center; justify-content: center; }
+  .lp-m-menu { display: none; position: fixed; inset: 0; background: var(--graphite); z-index: 200; flex-direction: column; align-items: flex-start; padding: 80px 32px 40px; gap: 28px; }
+  .lp-m-menu.open { display: flex; }
+  .lp-m-menu a { color: #fff; font-size: 22px; font-weight: 700; opacity: .85; text-decoration: none; }
+  .lp-m-menu a:hover { opacity: 1; }
+  .lp-m-menu .btn { margin-top: 12px; font-size: 16px; padding: 14px 28px; }
+
+  /* Eyebrow */
+  .eyebrow { font-size: 12.5px; font-weight: 800; letter-spacing: 2.4px; text-transform: uppercase; display: block; margin-bottom: 12px; }
+
+  /* Section headers */
+  .sec-head { margin-bottom: 48px; }
+  .sec-head .eyebrow { color: var(--brick); }
+  .sec-head h2 { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: clamp(32px,4.5vw,52px); line-height: 1.02; color: var(--ink); }
+  .sec-head p { font-size: 17px; color: var(--ink-2); margin-top: 12px; max-width: 560px; }
+  .sec-head.center { text-align: center; }
+  .sec-head.center p { margin: 12px auto 0; }
+
+  /* Hero */
+  .lp-hero { background: linear-gradient(165deg,#a51d18 0%,#981915 45%,#7d1411 100%); position: relative; overflow: hidden; color: #fff; padding: 148px 0 72px; }
+  .lp-hero .ring  { position: absolute; right: -120px; top: -120px; width: 460px; height: 460px; border: 54px solid rgba(255,255,255,.05); border-radius: 50%; pointer-events: none; }
+  .lp-hero .ring2 { position: absolute; left: -160px; bottom: -200px; width: 380px; height: 380px; border: 44px solid rgba(0,0,0,.07); border-radius: 50%; pointer-events: none; }
+  .lp-hero-in { position: relative; max-width: 820px; }
+  .lp-hero .eyebrow { color: rgba(255,255,255,.65); }
+  .lp-hero h1 { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: clamp(48px,7.5vw,88px); color: #fff; margin: 0; line-height: 1.0; letter-spacing: .5px; }
+  .lp-hero h1 em { font-style: normal; color: rgba(255,255,255,.7); }
+  .lp-hero .h-sub { font-size: 18px; color: rgba(255,255,255,.82); max-width: 580px; margin: 20px 0 0; line-height: 1.65; }
+  .lp-hero .h-cta { display: flex; gap: 12px; margin-top: 32px; flex-wrap: wrap; align-items: center; }
+  .lp-hero .h-note { font-size: 13px; color: rgba(255,255,255,.5); margin-top: 14px; }
+
+  /* Metrics bar */
+  .lp-metrics { background: var(--graphite-2); padding: 0; }
+  .metrics-row { display: grid; grid-template-columns: repeat(4,1fr); border-bottom: 1px solid rgba(255,255,255,.07); }
+  .metric { padding: 28px 32px; border-right: 1px solid rgba(255,255,255,.07); }
+  .metric:last-child { border-right: none; }
+  .metric-val { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 38px; color: #fff; line-height: 1; }
+  .metric-lbl { font-size: 13px; color: #9a948a; margin-top: 4px; }
+
+  /* Dor */
+  .lp-dor { background: var(--graphite-2); padding: 80px 0 96px; color: #fff; }
+  .lp-dor .sec-head .eyebrow { color: #e08a84; }
+  .lp-dor .sec-head h2 { color: #fff; }
+  .lp-dor .sec-head p { color: #9a948a; }
+  .dor-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 2px; }
+  .dor-card { background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.08); border-radius: 16px; padding: 32px 28px; }
+  .dor-card .d-ico { width: 40px; height: 40px; border-radius: 10px; background: rgba(152,25,21,.28); display: flex; align-items: center; justify-content: center; margin-bottom: 18px; color: #e8918c; }
+  .dor-card h3 { font-size: 18px; font-weight: 800; color: #fff; margin-bottom: 10px; }
+  .dor-card p { font-size: 14px; color: #9a948a; line-height: 1.6; }
+
+  /* Solu├º├úo */
+  .lp-solucao { background: var(--surface-2); padding: 96px 0; }
+  .solucao-in { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; }
+  .solucao-in .s-text h2 { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: clamp(30px,4vw,46px); line-height: 1.05; margin-bottom: 20px; }
+  .solucao-in .s-text h2 em { font-style: normal; color: var(--brick); }
+  .solucao-in .s-text p { font-size: 16px; color: var(--ink-2); line-height: 1.7; margin-bottom: 14px; }
+  .sol-check { display: flex; align-items: flex-start; gap: 10px; margin: 10px 0; font-size: 15px; color: var(--ink-2); }
+  .sol-check .chk { color: var(--sage); flex-shrink: 0; margin-top: 3px; }
+  .sol-mock { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 24px; box-shadow: 0 2px 4px rgba(40,30,20,.05),0 12px 32px rgba(40,30,20,.09); }
+  .sol-mock-header { font-size: 13px; font-weight: 700; color: var(--muted); margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--line-2); }
+  .sol-kpi-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 14px; }
+  .sol-kpi { background: var(--surface-2); border-radius: 10px; padding: 14px 16px; }
+  .sol-kpi .kv { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 24px; color: var(--ink); }
+  .sol-kpi .kl { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .sol-kpi .kt { font-size: 11px; font-weight: 700; color: var(--sage); margin-top: 2px; }
+  .sol-bar-row { display: flex; flex-direction: column; gap: 10px; }
+  .sol-bar-item { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--ink-2); }
+  .sol-bar-item span:first-child { min-width: 90px; }
+  .sol-bar-track { flex: 1; height: 6px; background: var(--line-2); border-radius: 99px; overflow: hidden; }
+  .sol-bar-fill { height: 100%; border-radius: 99px; background: var(--brick); }
+  .sol-bar-fill.green { background: var(--sage); }
+
+  /* Funcionalidades */
+  .lp-feats { background: var(--bg); padding: 96px 0; }
+  .feat-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; }
+  .feat { background: var(--surface); border: 1.5px solid var(--line); border-radius: 16px; padding: 26px 26px 28px; transition: border-color .2s, transform .2s, box-shadow .2s; position: relative; }
+  .feat:hover { border-color: var(--muted); transform: translateY(-3px); box-shadow: 0 8px 24px rgba(40,30,20,.08); }
+  .feat .f-ic { width: 44px; height: 44px; border-radius: 11px; background: var(--brick-soft); color: var(--brick); display: flex; align-items: center; justify-content: center; margin-bottom: 18px; }
+  .feat .f-ic svg { width: 22px; height: 22px; }
+  .feat h3 { font-size: 16px; font-weight: 800; color: var(--ink); margin-bottom: 8px; }
+  .feat p { font-size: 13.5px; color: var(--ink-2); line-height: 1.55; }
+  .feat .f-badge { position: absolute; top: 16px; right: 16px; background: var(--brick); color: #fff; font-size: 10px; font-weight: 800; letter-spacing: 1px; padding: 3px 8px; border-radius: 99px; text-transform: uppercase; }
+
+  /* Comparativo */
+  .lp-comp { background: var(--graphite-2); padding: 96px 0; }
+  .lp-comp .sec-head .eyebrow { color: #e08a84; }
+  .lp-comp .sec-head h2 { color: #fff; }
+  .lp-comp .sec-head p { color: #9a948a; }
+  .comp-table { width: 100%; border-collapse: collapse; }
+  .comp-table th { font-size: 13.5px; font-weight: 800; padding: 12px 20px; text-align: left; color: #9a948a; border-bottom: 1px solid rgba(255,255,255,.1); }
+  .comp-table th.sf-col { color: #fff; background: rgba(152,25,21,.22); border-radius: 10px 10px 0 0; }
+  .comp-table td { padding: 14px 20px; font-size: 14px; color: #b8b1a6; border-bottom: 1px solid rgba(255,255,255,.06); vertical-align: middle; }
+  .comp-table td.sf-col { background: rgba(152,25,21,.1); font-weight: 700; color: #fff; }
+  .comp-table tr:last-child td { border-bottom: none; }
+  .ic-yes { color: #7fb389; display: flex; align-items: center; }
+  .ic-no  { color: #6a6460; display: flex; align-items: center; }
+  .ic-par { color: var(--amber); font-size: 12px; font-weight: 700; }
+
+  /* Stick Line */
+  .lp-stick { background: var(--surface-2); padding: 96px 0; }
+  .stick-eyebrow { display: inline-block; background: var(--brick); color: #fff; font-size: 11px; font-weight: 800; letter-spacing: 1.6px; text-transform: uppercase; padding: 4px 12px; border-radius: 99px; margin-bottom: 16px; }
+  .stick-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-top: 48px; }
+  .stick-card { background: var(--surface); border: 1.5px solid var(--line); border-radius: 16px; padding: 28px 24px; }
+  .stick-card .st-ico { width: 44px; height: 44px; border-radius: 11px; background: var(--brick-soft); color: var(--brick); display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
+  .stick-card .st-ico svg { width: 22px; height: 22px; }
+  .stick-card .st-name { font-size: 17px; font-weight: 800; color: var(--ink); }
+  .stick-card .st-tag { font-size: 11.5px; font-weight: 700; color: var(--brick); text-transform: uppercase; letter-spacing: .8px; margin-top: 2px; margin-bottom: 12px; }
+  .stick-card p { font-size: 13.5px; color: var(--ink-2); line-height: 1.55; }
+
+  /* Pre├ºos */
+  .lp-precos { padding: 96px 0 64px; background: var(--bg); }
+  .plans { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; align-items: stretch; }
+  .plan { background: var(--surface); border: 1.5px solid var(--line); border-radius: 18px; padding: 30px 28px; display: flex; flex-direction: column; position: relative; }
+  .plan.hot { background: var(--graphite); border-color: var(--graphite); color: #fff; }
+  .plan .p-tag { position: absolute; top: -12px; left: 28px; background: var(--brick); color: #fff; font-size: 11px; font-weight: 800; letter-spacing: 1.2px; padding: 5px 12px; border-radius: 99px; text-transform: uppercase; }
+  .plan .p-nm { font-size: 15px; font-weight: 800; }
+  .plan .p-ds { font-size: 13px; color: var(--muted); margin-top: 4px; }
+  .plan.hot .p-ds { color: #9a948a; }
+  .plan .p-pr { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 46px; margin: 20px 0 2px; line-height: 1; }
+  .plan .p-pr small { font-size: 15px; font-family: 'Hanken Grotesk', sans-serif; font-weight: 600; color: var(--muted); }
+  .plan.hot .p-pr small { color: #9a948a; }
+  .plan ul { list-style: none; margin: 18px 0 24px; display: flex; flex-direction: column; gap: 9px; flex: 1; }
+  .plan li { display: flex; gap: 10px; font-size: 13.5px; color: var(--ink-2); align-items: flex-start; }
+  .plan.hot li { color: #cfc9c0; }
+  .plan li .chk { color: var(--sage); flex-shrink: 0; display: flex; margin-top: 2px; }
+  .plan.hot li .chk { color: #7fb389; }
+  .plan .btn { width: 100%; }
+  .plan-note { text-align: center; margin-top: 20px; font-size: 13px; color: var(--muted); }
+
+  /* Depoimentos */
+  .lp-depo { padding: 64px 0; background: var(--surface); }
+  .quotes { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; }
+  .quote { background: var(--surface-2); border: 1px solid var(--line); border-radius: 16px; padding: 26px; display: flex; flex-direction: column; }
+  .quote .q-mark { font-family: 'Barlow Condensed', sans-serif; font-size: 52px; font-weight: 700; color: var(--brick); line-height: .55; margin-bottom: 14px; }
+  .quote p { font-size: 14.5px; color: var(--ink-2); line-height: 1.6; flex: 1; }
+  .quote .q-who { display: flex; align-items: center; gap: 11px; margin-top: 20px; }
+  .quote .q-av { width: 38px; height: 38px; border-radius: 10px; background: var(--brick-soft); color: var(--brick); font-weight: 800; font-size: 13px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .quote .q-nm { font-size: 13.5px; font-weight: 700; color: var(--ink); }
+  .quote .q-rl { font-size: 12px; color: var(--muted); }
+
+  /* Demo form */
+  .lp-demo { background: var(--graphite-2); padding: 96px 0; }
+  .lp-demo .sec-head .eyebrow { color: #e08a84; }
+  .lp-demo .sec-head h2 { color: #fff; }
+  .lp-demo .sec-head p { color: #9a948a; }
+  .demo-in { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: start; }
+  .demo-bullets { display: flex; flex-direction: column; gap: 16px; margin-top: 32px; }
+  .demo-bullet { display: flex; align-items: center; gap: 12px; font-size: 15px; color: #cfc9c0; }
+  .demo-bullet .d-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--brick); flex-shrink: 0; }
+  .demo-form { background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1); border-radius: 18px; padding: 36px 32px; }
+  .demo-form label { display: block; font-size: 13px; font-weight: 700; color: #9a948a; margin-bottom: 6px; }
+  .demo-form input, .demo-form select { width: 100%; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12); border-radius: 9px; padding: 12px 16px; font-size: 15px; color: #fff; font-family: inherit; outline: none; margin-bottom: 16px; transition: border-color .15s; }
+  .demo-form input::placeholder { color: rgba(255,255,255,.3); }
+  .demo-form input:focus, .demo-form select:focus { border-color: rgba(152,25,21,.7); }
+  .demo-form select option { background: var(--graphite); color: #fff; }
+  .demo-form .form-note { font-size: 12px; color: #6a6460; margin-top: 12px; text-align: center; }
+
+  /* Footer */
+  .lp-foot { background: var(--graphite-2); border-top: 1px solid rgba(255,255,255,.06); color: #9a948a; padding: 46px 0 32px; font-size: 13px; }
+  .lp-foot .f-row { display: flex; align-items: center; justify-content: space-between; gap: 32px; flex-wrap: wrap; padding-bottom: 28px; border-bottom: 1px solid rgba(255,255,255,.07); margin-bottom: 20px; }
+  .lp-foot nav { display: flex; gap: 24px; flex-wrap: wrap; align-items: center; }
+  .lp-foot nav a { color: #9a948a; transition: color .15s; }
+  .lp-foot nav a:hover { color: #fff; opacity: 1; }
+  .lp-foot .f-copy { font-size: 12.5px; color: #6a6460; }
+  .lp-foot .f-tag { font-size: 12px; color: #6a6460; margin-top: 4px; }
+
+  /* Mobile */
+  @media (max-width: 860px) {
+    .lp-wrap { padding: 0 22px; }
+    .lp-nav-links { display: none; }
+    .lp-burger { display: flex; }
+    .lp-hero { padding: 120px 0 56px; }
+    .lp-hero .h-cta .btn { flex: 1 1 100%; }
+    .metrics-row { grid-template-columns: repeat(2,1fr); }
+    .metric { border-right: none; border-bottom: 1px solid rgba(255,255,255,.07); }
+    .dor-grid, .feat-grid, .plans, .quotes, .stick-grid { grid-template-columns: 1fr; }
+    .solucao-in, .demo-in { grid-template-columns: 1fr; gap: 40px; }
+    .comp-table { display: block; overflow-x: auto; }
+    .lp-dor, .lp-solucao, .lp-feats, .lp-comp, .lp-stick, .lp-precos, .lp-depo, .lp-demo { padding: 64px 0; }
+  }
+`;
+
+// ÔöÇÔöÇÔöÇ Component ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
 export default function LandingPage() {
-  const rootRef = useRef(null);
+  const [solid, setSolid] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [form, setForm] = useState({ nome: "", email: "", whatsapp: "", obras: "" });
+  const [sent, setSent] = useState(false);
+  const formRef = useRef(null);
 
   useEffect(() => {
-    ensureFonts();
-    const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const els = rootRef.current?.querySelectorAll(".rev") || [];
-    if (prefersReduced) { els.forEach(el => el.classList.add("in")); return; }
-    const io = new IntersectionObserver((entries) => {
-      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } });
-    }, { threshold: 0.12, rootMargin: "0px 0px -8% 0px" });
-    els.forEach(el => io.observe(el));
-    return () => io.disconnect();
+    salvarOrigemLead();
+    const fn = () => setSolid(window.scrollY > 24);
+    window.addEventListener("scroll", fn, { passive: true });
+    return () => window.removeEventListener("scroll", fn);
   }, []);
 
-  function scrollTo(id) { document.getElementById(id)?.scrollIntoView({ behavior: "smooth" }); }
+  function handleDemo(e) {
+    e.preventDefault();
+    // Redireciona para WhatsApp com dados preenchidos
+    const msg = encodeURIComponent(
+      `Ol├í! Quero uma demonstra├º├úo do StickFrame.\nNome: ${form.nome}\nE-mail: ${form.email}\nWhatsApp: ${form.whatsapp}\nObras/ano: ${form.obras}`
+    );
+    window.open(`https://wa.me/551140038929?text=${msg}`, "_blank");
+    setSent(true);
+  }
 
   return (
-    <div className="lbim" ref={rootRef}>
-      <div className="lbim-bg-before" aria-hidden="true" />
-      <div className="lbim-bg-after" aria-hidden="true" />
-      <div className="lbim-content">
+    <div className="lp">
+      <style>{CSS}</style>
 
-        {/* NAV */}
-        <nav className="lnav">
-          <div className="wrap nav-in">
-            <a className="brand" href="#top" onClick={e => { e.preventDefault(); window.scrollTo({top:0,behavior:"smooth"}); }}>
-              <img src="/logo-mark.png" alt="StickFrame" />
-              <span className="wm">STICK<span>FRAME</span><sup className="tm">™</sup></span>
-            </a>
-            <div className="nav-links">
-              <a href="#como" onClick={e=>{e.preventDefault();scrollTo("como")}}>Como funciona</a>
-              <a href="#produto" onClick={e=>{e.preventDefault();scrollTo("produto")}}>Plataforma</a>
-              <a href="#publicos" onClick={e=>{e.preventDefault();scrollTo("publicos")}}>Para quem é</a>
-              <a href="#preco" onClick={e=>{e.preventDefault();scrollTo("preco")}}>Preços</a>
+      {/* Nav */}
+      <nav className={`lp-nav${solid ? " solid" : ""}`}>
+        <div className="lp-wrap">
+          <div className="lp-nav-in">
+            <img src="/landing/assets/logo_branco.png" alt="StickFrame" className="lp-logo" />
+            <div className="lp-nav-links">
+              <a href="#solucao">Solu├º├úo</a>
+              <a href="#funcionalidades">Funcionalidades</a>
+              <a href="#comparativo">Comparativo</a>
+              <a href="#precos">Pre├ºos</a>
+              <a href="/login">Entrar</a>
+              <a href="#demo" className="btn btn-outline-w" style={{ padding: "9px 20px", fontSize: 14 }}>Solicitar demonstra├º├úo</a>
             </div>
-            <div className="nav-cta">
-              <button className="btn btn-ghost" onClick={()=>scrollTo("como")}>Ver como funciona</button>
-              <button className="btn btn-red" onClick={()=>scrollTo("final")}>Calcular grátis</button>
-            </div>
-            <button className="nav-burger" aria-label="Menu">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+            <button className="lp-burger" aria-label="Menu" onClick={() => setMenuOpen(true)}>
+              <Ic.Menu />
             </button>
           </div>
-        </nav>
+        </div>
+      </nav>
 
-        <span id="top" />
+      {/* Mobile menu */}
+      <div className={`lp-m-menu${menuOpen ? " open" : ""}`}>
+        <button onClick={() => setMenuOpen(false)} style={{ position: "absolute", top: 20, right: 24, background: "none", border: "none", cursor: "pointer", color: "#fff" }}>
+          <Ic.Close />
+        </button>
+        {["#solucao|Solu├º├úo", "#funcionalidades|Funcionalidades", "#comparativo|Comparativo", "#precos|Pre├ºos", "/login|Entrar"].map(s => {
+          const [href, label] = s.split("|");
+          return <a key={href} href={href} onClick={() => setMenuOpen(false)}>{label}</a>;
+        })}
+        <a href="#demo" className="btn btn-brick" onClick={() => setMenuOpen(false)}>Solicitar demonstra├º├úo</a>
+      </div>
 
-        {/* HERO */}
-        <section className="hero">
-          <div className="wrap hero-grid">
-            <div className="hero-copy">
-              <span className="eyebrow rev">Plataforma BIM · Steel Frame</span>
-              <h1 className="rev d1">Do BIM ao orçamento<br/>Steel Frame em <em>minutos</em>.</h1>
-              <p className="sub rev d2">Importe seu IFC, extraia quantitativos, aplique composições e gere um orçamento rastreável para sua obra — do modelo digital direto para a execução.</p>
-              <div className="hero-cta rev d3">
-                <button className="btn btn-red btn-lg" onClick={()=>scrollTo("final")}>
-                  Calcular meu projeto grátis
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-                </button>
-                <button className="btn btn-ghost btn-lg" onClick={()=>scrollTo("como")}>Ver como funciona</button>
-              </div>
-              <div className="hero-meta rev d4">
-                <div className="hm"><b className="num">IFC<i>.</i></b><span>Importação nativa</span></div>
-                <div className="vr" />
-                <div className="hm"><b className="num">&lt;5<i>min</i></b><span>Modelo → orçamento</span></div>
-                <div className="vr" />
-                <div className="hm"><b className="num">100<i>%</i></b><span>Rastreável e auditável</span></div>
-              </div>
+      {/* Hero */}
+      <section className="lp-hero">
+        <div className="ring" /><div className="ring2" />
+        <div className="lp-wrap">
+          <div className="lp-hero-in">
+            <span className="eyebrow">StickFrameÔäó ┬À Sistema de gest├úo</span>
+            <h1>Controle custo, prazo e<br /><em>cliente em um</em><br />├║nico fluxo</h1>
+            <p className="h-sub">
+              Empresas que usam StickQuote + Portal Cliente reduzem retrabalho e fecham mais obras. Do primeiro lead ├á entrega da chave, tudo conectado.
+            </p>
+            <div className="h-cta">
+              <a href="/cadastro" className="btn btn-white btn-lg">Come├ºar gr├ítis ÔåÆ</a>
+              <a href="/pricing" className="btn btn-outline-w btn-lg">Ver planos</a>
             </div>
-
-            {/* BIM scene */}
-            <div className="scene rev d2">
-              <div className="scene-stage">
-                <div className="scene-placeholder">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1"><path d="M4 7l8-4 8 4-8 4-8-4zM4 7v10l8 4 8-4V7M12 11v10"/></svg>
-                  <span>Modelo 3D Steel Frame</span>
-                </div>
-                <div className="scene-badge">
-                  <span className="ax">
-                    <i style={{background:"#e0463c"}}/>
-                    <i style={{background:"#22c578"}}/>
-                    <i style={{background:"#5b9bd5"}}/>
-                  </span>
-                  Vista BIM · estrutura + painéis
-                </div>
-              </div>
-              <div className="fcard fc1">
-                <div className="fl">
-                  <svg className="ico" viewBox="0 0 24 24" fill="none" stroke="var(--green)" strokeWidth="2.2"><path d="M4 7l8-4 8 4-8 4-8-4zM4 7v10l8 4 8-4V7M12 11v10"/></svg>
-                  IFC Importado
-                </div>
-                <div className="ok">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="var(--green)" strokeWidth="2.6"><path d="M20 6 9 17l-5-5"/></svg>
-                  Modelo validado
-                </div>
-              </div>
-              <div className="fcard fc2">
-                <div className="fl">
-                  <svg className="ico" viewBox="0 0 24 24" fill="none" stroke="var(--steel)" strokeWidth="2.2"><path d="M3 3v18h18M7 16l4-5 3 3 5-7"/></svg>
-                  Quantitativo BIM
-                </div>
-                <div className="grid2">
-                  <span className="k">Parede</span><span className="v num">186 m²</span>
-                  <span className="k">Perfis</span><span className="v num">1.240 m</span>
-                </div>
-              </div>
-              <div className="fcard fc3">
-                <div className="fl">
-                  <svg className="ico" viewBox="0 0 24 24" fill="none" stroke="var(--red-2)" strokeWidth="2.2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-                  StickQuote™
-                </div>
-                <div className="price num">R$ 428.500</div>
-                <div className="sm">Orçamento gerado · v1</div>
-              </div>
-              <div className="fcard fc4">
-                <div className="ring">
-                  <svg viewBox="0 0 50 50">
-                    <circle cx="25" cy="25" r="21" fill="none" stroke="rgba(255,255,255,.1)" strokeWidth="5"/>
-                    <circle cx="25" cy="25" r="21" fill="none" stroke="#22c578" strokeWidth="5" strokeLinecap="round" strokeDasharray="131.9" strokeDashoffset="10.5"/>
-                  </svg>
-                  <span className="pct num">92%</span>
-                </div>
-                <div>
-                  <div className="fl" style={{color:"var(--green)"}}>
-                    <svg className="ico" viewBox="0 0 24 24" fill="none" stroke="var(--green)" strokeWidth="2.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                    StickTrust™
-                  </div>
-                  <div style={{fontSize:12,color:"var(--ink-2)",marginTop:5,fontWeight:600}}>Confiança BIM</div>
-                </div>
-              </div>
-            </div>
+            <p className="h-note">Sem cart├úo de cr├®dito ┬À 14 dias gr├ítis ┬À Configura├º├úo em minutos</p>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* Strip */}
-        <div className="strip">
-          <div className="wrap strip-in rev">
-            <span className="lbl">Compatível com o fluxo BIM que você já usa</span>
-            <div className="items">
-              <span>IFC 2x3 / 4</span><span>Revit</span><span>ArchiCAD</span><span>Tekla</span><span>SketchUp</span>
+      {/* Metrics bar */}
+      <div className="lp-metrics">
+        <div className="lp-wrap" style={{ padding: 0 }}>
+          <div className="metrics-row">
+            {METRICS.map(m => (
+              <div className="metric" key={m.val}>
+                <div className="metric-val">{m.val}</div>
+                <div className="metric-lbl">{m.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Dor */}
+      <section className="lp-dor">
+        <div className="lp-wrap">
+          <div className="sec-head">
+            <span className="eyebrow">O problema</span>
+            <h2>O que trava o crescimento da sua construtora</h2>
+            <p>Steel Frame ├® r├ípido na obra ÔÇö mas a gest├úo continua presa em planilhas, WhatsApp e retrabalho.</p>
+          </div>
+          <div className="dor-grid">
+            {DORES.map(d => (
+              <div className="dor-card" key={d.title}>
+                <div className="dor-card">
+                  <div className="d-ico"><Ic.X /></div>
+                  <h3>{d.title}</h3>
+                  <p>{d.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Solu├º├úo */}
+      <section className="lp-solucao" id="solucao">
+        <div className="lp-wrap">
+          <div className="solucao-in">
+            <div className="s-text">
+              <span className="eyebrow" style={{ color: "var(--brick)" }}>A solu├º├úo</span>
+              <h2>Sua construtora n├úo precisa de mais uma <em>planilha</em></h2>
+              <p>O StickFrame conecta venda, obra e financeiro num ├║nico fluxo pensado para Steel Frame. Tudo conversa: o or├ºamento vira contrato, o contrato vira obra, a obra alimenta o caixa.</p>
+              {[
+                "Composi├º├Áes nativas de Steel Frame ÔÇö perfis, pain├®is e quantitativos por m┬▓",
+                "Calculadora white-label que captura leads com a sua marca, 24h por dia",
+                "Margem por obra em tempo real ÔÇö or├ºado ├ù comprado ├ù medido, sempre conciliados",
+              ].map(t => (
+                <div className="sol-check" key={t}>
+                  <span className="chk"><Ic.Check /></span>
+                  {t}
+                </div>
+              ))}
+              <a href="/cadastro" className="btn btn-brick" style={{ marginTop: 28 }}>Come├ºar agora</a>
+            </div>
+            <div className="sol-mock">
+              <div className="sol-mock-header">Obra ┬À Residencial Recanto</div>
+              <div className="sol-kpi-row">
+                {[
+                  { v: "72%",   l: "Avan├ºo f├¡sico",      t: "Ôû▓ 8pp esta semana" },
+                  { v: "24,3%", l: "Margem atual",        t: "Ôû▓ 1,2pp" },
+                  { v: "+1,8%", l: "Desvio de or├ºamento", t: "Dentro do limite" },
+                ].map(k => (
+                  <div className="sol-kpi" key={k.l}>
+                    <div className="kv">{k.v}</div>
+                    <div className="kl">{k.l}</div>
+                    <div className="kt">{k.t}</div>
+                  </div>
+                ))}
+              </div>
+              <div className="sol-bar-row">
+                {[
+                  { l: "Funda├º├úo",  p: 100, done: true },
+                  { l: "Estrutura", p: 100, done: true },
+                  { l: "Fechamento",p: 72,  done: false },
+                  { l: "Instala├º├Áes",p: 28, done: false },
+                  { l: "Acabamento", p: 0,  done: false },
+                ].map(b => (
+                  <div className="sol-bar-item" key={b.l}>
+                    <span>{b.l}</span>
+                    <div className="sol-bar-track">
+                      <div className={`sol-bar-fill${b.done ? " green" : ""}`} style={{ width: `${b.p}%` }} />
+                    </div>
+                    <span style={{ minWidth: 36, textAlign: "right", fontSize: 12 }}>{b.p}%</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
+      </section>
 
-        {/* COMO FUNCIONA */}
-        <section className="how" id="como">
-          <div className="wrap">
-            <div className="how-top rev">
-              <span className="eyebrow">Como funciona</span>
-              <h2 className="sec-h2">Do arquivo ao canteiro<br/>em quatro passos.</h2>
-              <p className="sec-lede">Sem planilha, sem retrabalho. O StickFrame lê a geometria do seu modelo e devolve um orçamento pronto para decisão.</p>
-            </div>
-            <div className="steps">
-              <div className="step rev d1">
-                <div className="sn num">1</div>
-                <div className="si"><svg viewBox="0 0 24 24" fill="none" stroke="var(--red-2)" strokeWidth="1.9"><path d="M12 16V4m0 0L8 8m4-4 4 4M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg></div>
-                <h3>Importe seu IFC</h3>
-                <p>Arraste o modelo BIM exportado do seu CAD. Leitura nativa do padrão IFC, sem conversão manual.</p>
-              </div>
-              <div className="step rev d2">
-                <div className="sn num">2</div>
-                <div className="si"><svg viewBox="0 0 24 24" fill="none" stroke="var(--red-2)" strokeWidth="1.9"><path d="M3 7l9-4 9 4-9 4-9-4zM3 7v10l9 4 9-4V7M9 9.5l6 2.7"/></svg></div>
-                <h3>Identificamos o Steel Frame</h3>
-                <p>O StickMap™ reconhece paredes, lajes e perfis e mapeia cada elemento para o sistema construtivo correto.</p>
-              </div>
-              <div className="step rev d3">
-                <div className="sn num">3</div>
-                <div className="si"><svg viewBox="0 0 24 24" fill="none" stroke="var(--red-2)" strokeWidth="1.9"><path d="M4 4h16v16H4zM4 9h16M9 9v11"/></svg></div>
-                <h3>Composições e preços</h3>
-                <p>Aplicamos as composições técnicas e os preços de catálogo, com fator de perda e mão de obra.</p>
-              </div>
-              <div className="step rev d4">
-                <div className="si"><svg viewBox="0 0 24 24" fill="none" stroke="var(--red-2)" strokeWidth="1.9"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M9 15l2 2 4-4"/></svg></div>
-                <div className="sn num">4</div>
-                <h3>Orçamento profissional</h3>
-                <p>Gere um documento rastreável, versionado e auditável — pronto para enviar ao cliente ou ao canteiro.</p>
-              </div>
-            </div>
-            <div className="pipe rev">
-              <div className="node"><span className="chip">IFC</span><small>Modelo digital</small></div>
-              <div className="arrow"><svg viewBox="0 0 26 18" fill="none" stroke="currentColor" strokeWidth="2"><path d="M2 9h20m0 0-6-6m6 6-6 6"/></svg></div>
-              <div className="node acc"><span className="chip">StickMap™</span><small>Mapeamento</small></div>
-              <div className="arrow"><svg viewBox="0 0 26 18" fill="none" stroke="currentColor" strokeWidth="2"><path d="M2 9h20m0 0-6-6m6 6-6 6"/></svg></div>
-              <div className="node acc"><span className="chip">StickQuote™</span><small>Orçamento</small></div>
-              <div className="arrow"><svg viewBox="0 0 26 18" fill="none" stroke="currentColor" strokeWidth="2"><path d="M2 9h20m0 0-6-6m6 6-6 6"/></svg></div>
-              <div className="node"><span className="chip">Obra</span><small>Execução</small></div>
-            </div>
+      {/* Funcionalidades */}
+      <section className="lp-feats" id="funcionalidades">
+        <div className="lp-wrap">
+          <div className="sec-head center">
+            <span className="eyebrow">A plataforma</span>
+            <h2>Do lead ├á chave, num fluxo s├│</h2>
+            <p>Cada m├│dulo resolve uma etapa da opera├º├úo ÔÇö e todos compartilham os mesmos dados.</p>
           </div>
-        </section>
-
-        {/* DIFERENCIAIS */}
-        <section className="diff" id="produto">
-          <div className="wrap">
-            <div className="how-top rev">
-              <span className="eyebrow">A plataforma</span>
-              <h2 className="sec-h2">Quatro módulos, um<br/>fluxo de engenharia.</h2>
-              <p className="sec-lede">Cada peça do StickFrame resolve uma etapa real do projeto Steel Frame — do modelo à confiança no número final.</p>
-            </div>
-            <div className="diff-grid">
-              <div className="dcard r rev d1">
-                <div className="di"><svg viewBox="0 0 24 24" fill="none" stroke="var(--red-2)" strokeWidth="1.8"><path d="M3 7l9-4 9 4-9 4-9-4zM3 7v10l9 4 9-4V7M9 9.5l6 2.7M12 11v10"/></svg></div>
-                <h3>StickMap<span className="tm">™</span></h3>
-                <p>Mapeamento inteligente do IFC para os sistemas Steel Frame — cada IfcWall e IfcSlab ligado à composição certa.</p>
-                <span className="tag">IFC → Sistema construtivo</span>
+          <div className="feat-grid">
+            {FEATS.map(({ Icon, title, desc, badge }) => (
+              <div className="feat" key={title}>
+                {badge && <div className="f-badge">{badge}</div>}
+                <div className="f-ic"><Icon /></div>
+                <h3>{title}</h3>
+                <p>{desc}</p>
               </div>
-              <div className="dcard g rev d2">
-                <div className="di"><svg viewBox="0 0 24 24" fill="none" stroke="var(--green)" strokeWidth="1.8"><path d="M9 7h6M9 11h6M9 15h4M5 3h14a1 1 0 0 1 1 1v17l-3-2-3 2-3-2-3 2V4a1 1 0 0 1 1-1z"/></svg></div>
-                <h3>StickQuote<span className="tm">™</span></h3>
-                <p>Orçamento BIM rastreável, com composição, preços de catálogo e versionamento imutável de cada proposta.</p>
-                <span className="tag">Composição + preço + versão</span>
-              </div>
-              <div className="dcard s rev d3">
-                <div className="di"><svg viewBox="0 0 24 24" fill="none" stroke="var(--steel)" strokeWidth="1.8"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></div>
-                <h3>StickView<span className="tm">™</span></h3>
-                <p>Visualização digital da estrutura: navegue pelo modelo, isole sistemas e confira a geometria que gerou o número.</p>
-                <span className="tag">Modelo 3D navegável</span>
-              </div>
-              <div className="dcard w rev d4">
-                <div className="di"><svg viewBox="0 0 24 24" fill="none" stroke="var(--ink)" strokeWidth="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg></div>
-                <h3>StickTrust<span className="tm">™</span></h3>
-                <p>Confiança e auditoria do orçamento: cada quantidade declara sua origem — medido no modelo ou estimado.</p>
-                <span className="tag">Auditoria e rastreabilidade</span>
-              </div>
-            </div>
+            ))}
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* ANTES / DEPOIS */}
-        <section className="ps">
-          <div className="wrap">
-            <div className="how-top rev">
-              <span className="eyebrow">O que muda</span>
-              <h2 className="sec-h2">De projeto espalhado<br/>a decisão conectada.</h2>
-            </div>
-            <div className="ps-grid">
-              <div className="ps-col antes rev d1">
-                <div className="h"><span className="b">Antes</span> Sem BIM conectado</div>
-                <ul className="ps-list">
-                  {["Projetos espalhados entre arquivos e pessoas","Planilhas manuais, frágeis e desatualizadas","Erros de quantitativo que viram prejuízo","Orçamentos que demoram dias para sair"].map(t=>(
-                    <li key={t}><span className="ic"><svg viewBox="0 0 24 24" fill="none" strokeWidth="2.4"><path d="M18 6 6 18M6 6l12 12"/></svg></span>{t}</li>
-                  ))}
-                </ul>
-              </div>
-              <div className="ps-col depois rev d2">
-                <div className="h"><span className="b">Depois</span> Com StickFrame</div>
-                <ul className="ps-list">
-                  {["Modelo BIM conectado de ponta a ponta","Quantitativo extraído automaticamente do IFC","Preço de catálogo sempre atualizado","Orçamento profissional em minutos"].map(t=>(
-                    <li key={t}><span className="ic"><svg viewBox="0 0 24 24" fill="none" strokeWidth="2.4"><path d="M20 6 9 17l-5-5"/></svg></span>{t}</li>
-                  ))}
-                </ul>
-              </div>
-            </div>
+      {/* Comparativo */}
+      <section className="lp-comp" id="comparativo">
+        <div className="lp-wrap">
+          <div className="sec-head">
+            <span className="eyebrow">Por que StickFrame</span>
+            <h2>StickFrame vs. ERPs gen├®ricos</h2>
+            <p>Os grandes sistemas tentam servir qualquer construtora. O StickFrame foi feito para a sua.</p>
           </div>
-        </section>
-
-        {/* FEITO PARA */}
-        <section className="aud" id="publicos">
-          <div className="wrap">
-            <div className="how-top rev">
-              <span className="eyebrow">Feito para</span>
-              <h2 className="sec-h2">Quem constrói a seco,<br/>decide com dados.</h2>
-            </div>
-            <div className="aud-grid">
-              {[
-                {d:1,icon:<path d="M3 21h18M5 21V8l7-4 7 4v13M9 21v-5h6v5M9 11h.01M15 11h.01"/>,title:"Construtoras Steel Frame",desc:"Padronize o orçamento e ganhe velocidade em cada proposta."},
-                {d:2,icon:<path d="M2 20h20M4 20V8l5 3V8l5 3V8l5 3v9M9 20v-4h2v4"/>,title:"Fabricantes",desc:"Quantitativo de perfis e painéis direto do modelo, sem dupla digitação."},
-                {d:3,icon:<path d="M3 3v18h18M8 17l3.5-4 2.5 2.5L20 8"/>,title:"Engenheiros",desc:"Composições técnicas rastreáveis e auditáveis para defender cada número."},
-                {d:4,icon:<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>,title:"Arquitetos",desc:"Veja o custo da sua intenção de projeto antes de fechar o partido."},
-              ].map(c=>(
-                <div className={`acard rev d${c.d}`} key={c.title}>
-                  <div className="ai"><svg viewBox="0 0 24 24" fill="none" stroke="var(--red-2)" strokeWidth="1.8">{c.icon}</svg></div>
-                  <h4>{c.title}</h4>
-                  <p>{c.desc}</p>
-                </div>
+          <table className="comp-table">
+            <thead>
+              <tr>
+                <th style={{ width: "50%" }}>Recurso</th>
+                <th className="sf-col" style={{ width: "25%", textAlign: "center" }}>StickFrame</th>
+                <th style={{ width: "25%", textAlign: "center" }}>ERP gen├®rico</th>
+              </tr>
+            </thead>
+            <tbody>
+              {COMPARATIVO.map(r => (
+                <tr key={r.rec}>
+                  <td>{r.rec}</td>
+                  <td className="sf-col" style={{ textAlign: "center" }}>
+                    <span className="ic-yes"><Ic.Check /></span>
+                  </td>
+                  <td style={{ textAlign: "center" }}>
+                    {r.erp === true
+                      ? <span className="ic-yes"><Ic.Check /></span>
+                      : r.erp === false
+                      ? <span className="ic-no"><Ic.X /></span>
+                      : <span className="ic-par">{r.erp}</span>
+                    }
+                  </td>
+                </tr>
               ))}
-            </div>
-          </div>
-        </section>
+            </tbody>
+          </table>
+        </div>
+      </section>
 
-        {/* CTA FINAL */}
-        <section className="final" id="final">
-          <div className="wrap">
-            <div className="final-band rev">
-              <span className="eyebrow" style={{justifyContent:"center"}}>Comece agora · grátis</span>
-              <h2>Seu projeto já existe.<br/>Agora transforme ele em <em>decisão</em>.</h2>
-              <p>Importe seu IFC e veja o orçamento BIM da sua obra Steel Frame em minutos.</p>
-              <div className="cta">
-                <button className="btn btn-red btn-lg" onClick={()=>window.location.href="/cadastro"}>
-                  Criar orçamento BIM grátis
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-                </button>
-                <button className="btn btn-ghost btn-lg" onClick={()=>scrollTo("como")}>Ver como funciona</button>
-              </div>
-              <div className="note">
-                <svg viewBox="0 0 24 24" fill="none" stroke="var(--green)" strokeWidth="2.2"><path d="M20 6 9 17l-5-5"/></svg>
-                Sem cartão de crédito · seu primeiro projeto é grátis
-              </div>
-            </div>
+      {/* Linha StickÔäó */}
+      <section className="lp-stick">
+        <div className="lp-wrap">
+          <div style={{ maxWidth: 640 }}>
+            <span className="stick-eyebrow">Tecnologia propriet├íria</span>
+            <h2 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "clamp(32px,4.5vw,52px)", lineHeight: 1.02 }}>
+              A linha StickÔäó que protege sua margem
+            </h2>
+            <p style={{ fontSize: 17, color: "var(--ink-2)", marginTop: 12 }}>
+              Intelig├¬ncia que n├úo est├í em planilha nem em ERP gen├®rico ÔÇö s├│ no StickFrame.
+            </p>
           </div>
-        </section>
+          <div className="stick-grid">
+            {STICK_LINE.map(({ Icon, name, tag, desc }) => (
+              <div className="stick-card" key={name}>
+                <div className="st-ico"><Icon /></div>
+                <div className="st-name">{name}</div>
+                <div className="st-tag">{tag}</div>
+                <p>{desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
-        {/* FOOTER */}
-        <footer className="foot" id="preco">
-          <div className="wrap foot-grid">
+      {/* Pre├ºos */}
+      <section className="lp-precos" id="precos">
+        <div className="lp-wrap">
+          <div className="sec-head center">
+            <span className="eyebrow">Planos</span>
+            <h2>Escolha o tamanho da sua opera├º├úo</h2>
+            <p>Comece gr├ítis e evolua conforme as obras crescem. Cancele quando quiser.</p>
+          </div>
+          <div className="plans">
+            {PLANOS.map((pl) => (
+              <div className={`plan${pl.hot ? " hot" : ""}`} key={pl.key}>
+                {pl.tag && <div className="p-tag">{pl.tag}</div>}
+                <div className="p-nm">{pl.nome}</div>
+                <div className="p-ds">{pl.desc}</div>
+                <div className="p-pr">{pl.preco}{pl.periodo && <small>{pl.periodo}</small>}</div>
+                <ul>
+                  {pl.items.map((it) => (
+                    <li key={it}>
+                      <span className="chk"><Ic.Check /></span>
+                      {it}
+                    </li>
+                  ))}
+                </ul>
+                <a href={pl.href} className={`btn${pl.hot ? " btn-brick" : " btn-outline"}`}>
+                  {pl.cta}
+                </a>
+              </div>
+            ))}
+          </div>
+          <p className="plan-note">Todos os planos incluem 14 dias gr├ítis ┬À Sem cart├úo de cr├®dito</p>
+        </div>
+      </section>
+
+      {/* Depoimentos */}
+      <section className="lp-depo">
+        <div className="lp-wrap">
+          <div className="sec-head center">
+            <span className="eyebrow">Depoimentos</span>
+            <h2>Quem constr├│i com o StickFrame</h2>
+          </div>
+          <div className="quotes">
+            {DEPOIMENTOS.map((d) => (
+              <div className="quote" key={d.nome}>
+                <div className="q-mark">"</div>
+                <p>{d.text}</p>
+                <div className="q-who">
+                  <div className="q-av">{d.ini}</div>
+                  <div>
+                    <div className="q-nm">{d.nome}</div>
+                    <div className="q-rl">{d.cargo}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Demo */}
+      <section className="lp-demo" id="demo">
+        <div className="lp-wrap">
+          <div className="demo-in">
             <div>
-              <a className="brand" href="#top" onClick={e=>{e.preventDefault();window.scrollTo({top:0,behavior:"smooth"})}}>
-                <img src="/logo-mark.png" alt="StickFrame" />
-                <span className="wm">STICK<span>FRAME</span><sup className="tm">™</sup></span>
-              </a>
-              <p className="fdesc">Plataforma BIM de engenharia para construção industrializada a seco. Do modelo digital à execução da obra.</p>
-            </div>
-            <div className="foot-cols">
-              <div className="foot-col">
-                <h5>Plataforma</h5>
-                <a href="#produto" onClick={e=>{e.preventDefault();scrollTo("produto")}}>StickMap™</a>
-                <a href="#produto" onClick={e=>{e.preventDefault();scrollTo("produto")}}>StickQuote™</a>
-                <a href="#produto" onClick={e=>{e.preventDefault();scrollTo("produto")}}>StickView™</a>
-                <a href="#produto" onClick={e=>{e.preventDefault();scrollTo("produto")}}>StickTrust™</a>
-              </div>
-              <div className="foot-col">
-                <h5>Recursos</h5>
-                <a href="#como" onClick={e=>{e.preventDefault();scrollTo("como")}}>Como funciona</a>
-                <a href="#publicos" onClick={e=>{e.preventDefault();scrollTo("publicos")}}>Para quem é</a>
-                <a href="#">Importação IFC</a>
-                <a href="#">Composições SF</a>
-              </div>
-              <div className="foot-col">
-                <h5>Empresa</h5>
-                <a href="#">Sobre</a>
-                <a href="#">Contato</a>
-                <a href="#">Privacidade</a>
+              <span className="eyebrow" style={{ color: "#e08a84" }}>Demonstra├º├úo</span>
+              <h2 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "clamp(32px,4.5vw,52px)", lineHeight: 1.02, color: "#fff" }}>
+                Veja o StickFrame rodando na sua opera├º├úo
+              </h2>
+              <p style={{ fontSize: 16, color: "#9a948a", marginTop: 12, lineHeight: 1.7 }}>
+                Agende uma demonstra├º├úo guiada e descubra em 30 minutos como organizar venda, obra e financeiro num ├║nico lugar.
+              </p>
+              <div className="demo-bullets">
+                {["30 min de demonstra├º├úo guiada", "14 dias de teste gr├ítis", "Sem cart├úo de cr├®dito"].map(b => (
+                  <div className="demo-bullet" key={b}><div className="d-dot" />{b}</div>
+                ))}
               </div>
             </div>
+            <div className="demo-form" ref={formRef}>
+              {sent ? (
+                <div style={{ textAlign: "center", padding: "40px 0" }}>
+                  <div style={{ fontSize: 40, marginBottom: 16 }}>Ô£à</div>
+                  <p style={{ color: "#fff", fontWeight: 700, fontSize: 18, marginBottom: 8 }}>Recebemos sua solicita├º├úo!</p>
+                  <p style={{ color: "#9a948a", fontSize: 14 }}>Nossa equipe entra em contato em at├® 1 dia ├║til.</p>
+                </div>
+              ) : (
+                <form onSubmit={handleDemo}>
+                  <label>Nome</label>
+                  <input required placeholder="Seu nome" value={form.nome} onChange={e => setForm(f => ({ ...f, nome: e.target.value }))} />
+                  <label>E-mail</label>
+                  <input required type="email" placeholder="seu@email.com.br" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
+                  <label>WhatsApp</label>
+                  <input required placeholder="(11) 99999-9999" value={form.whatsapp} onChange={e => setForm(f => ({ ...f, whatsapp: e.target.value }))} />
+                  <label>Obras por ano</label>
+                  <select required value={form.obras} onChange={e => setForm(f => ({ ...f, obras: e.target.value }))}>
+                    <option value="">Selecione</option>
+                    {OBRAS_ANO.map(o => <option key={o} value={o}>{o}</option>)}
+                  </select>
+                  <button type="submit" className="btn btn-brick" style={{ width: "100%", fontSize: 16, padding: "15px" }}>
+                    Solicitar demonstra├º├úo
+                  </button>
+                  <p className="form-note">Ao enviar voc├¬ concorda com nossa Pol├¡tica de Privacidade.</p>
+                </form>
+              )}
+            </div>
           </div>
-          <div className="wrap foot-base">
-            <span>© 2026 Stick Frame Sistemas Construtivos · Santo André/SP</span>
-            <span>StickFrame™ · BIM para Steel Frame</span>
-          </div>
-        </footer>
+        </div>
+      </section>
 
-      </div>
+      {/* Footer */}
+      <footer className="lp-foot">
+        <div className="lp-wrap">
+          <div className="f-row">
+            <div>
+              <img src="/landing/assets/logo_branco.png" alt="StickFrame" className="lp-logo" />
+              <div className="f-tag">A plataforma de gest├úo feita para construtoras de Steel Frame.</div>
+            </div>
+            <nav>
+              <a href="#funcionalidades">Funcionalidades</a>
+              <a href="#comparativo">Comparativo</a>
+              <a href="#precos">Pre├ºos</a>
+              <a href="#demo">Demonstra├º├úo</a>
+              <a href="/calcular">Calculadora</a>
+              <a href="/termos">Termos</a>
+              <a href="/privacidade">Privacidade</a>
+            </nav>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+            <span className="f-copy">┬® {new Date().getFullYear()} StickFrame ┬À Todos os direitos reservados</span>
+            <span className="f-copy">Feito para quem constr├│i a seco.</span>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

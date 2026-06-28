@@ -319,6 +319,20 @@ export default function CalculadoraPublica() {
       if (error) throw error;
 
       // WhatsApp automático para o lead
+      // Email de confirmação para o lead
+      if (email) {
+        import("../services/emailService").then(({ emailNovoLead }) => {
+          emailNovoLead({
+            email,
+            nome,
+            padrao,
+            area,
+            valorMin: Math.round(sfValor * 0.92),
+            valorMax: Math.round(sfValor * 1.12),
+            cidade,
+          }).catch(e => console.warn("[CalcPublica] emailLead:", e));
+        });
+      }
       sb.functions.invoke("whatsapp-lead", {
         body: {
           nome, whatsapp,
@@ -327,7 +341,7 @@ export default function CalculadoraPublica() {
           valorAlv: Math.round(ALVENARIA[simPad.nm] * simArea),
           prazo: `${est.prazo} meses`,
         },
-      }).catch(() => {});
+      }).catch(e => console.warn("[CalcPublica] whatsappLead:", e));
 
       try { window.dataLayer?.push({ event: "lead_gerado", value: Math.round(est.total), currency: "BRL", padrao: simPad.nm, area: simArea, cidade }); } catch (_) {}
 

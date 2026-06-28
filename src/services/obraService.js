@@ -103,10 +103,12 @@ export const obraService = {
   },
 
   // Realtime
-  subscribeObras(callback) {
+  subscribeObras(callback, empresaId) {
+    const opts = { event: "*", schema: "public", table: "obras" };
+    if (empresaId) opts.filter = `empresa_id=eq.${empresaId}`;
     return sb
       .channel("obras-changes")
-      .on("postgres_changes", { event: "*", schema: "public", table: "obras" }, callback)
+      .on("postgres_changes", opts, callback)
       .subscribe();
   },
 

@@ -2,6 +2,7 @@ import { useState, useMemo, useCallback, useEffect, memo } from "react";
 import { AlertTriangle, Pencil, Smartphone, Trash2 } from "../components/ui/Icon";
 const CRM_LEAD_KEY = "sf_crm_lead";
 import { C } from "../utils/constants";
+import { EmptyState } from "../components/ui/EmptyState";
 import { fmt } from "../utils/format";
 import { enviarWhatsApp, msgCliente } from "../services/whatsappService";
 import useAppStore from "../store/useAppStore";
@@ -1040,11 +1041,21 @@ export default function CRM() {
           ) : (
             <div style={{ background: C.surface, borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", border: `1px solid ${C.border}`, overflow: "hidden" }}>
               {clientesFiltrados.length === 0 ? (
-                <div style={{ padding: 48, textAlign: "center", color: C.muted }}>
-                  <div style={{ fontSize: 32, marginBottom: 12 }}></div>
-                  <div style={{ fontSize: 14, fontWeight: 600 }}>{clientes.length === 0 ? "Nenhum cliente ainda" : "Nenhum resultado para os filtros"}</div>
-                  <div style={{ fontSize: 12, marginTop: 4 }}>{clientes.length === 0 ? 'Clique em "+ Nova oportunidade" para começar' : "Tente ajustar ou limpar os filtros"}</div>
-                </div>
+                clientes.length === 0 ? (
+                  <EmptyState
+                    icon=""
+                    title="Cadastre seu primeiro cliente"
+                    description="Adicione leads e clientes para começar a construir seu pipeline comercial."
+                    compact
+                  />
+                ) : (
+                  <EmptyState
+                    icon=""
+                    title="Nenhum resultado para os filtros"
+                    description="Tente ajustar ou limpar os filtros para ver mais clientes."
+                    compact
+                  />
+                )
               ) : (
                 <div style={{ overflowX: "auto" }}>
                   <table style={{ width: "100%", borderCollapse: "collapse" }}>

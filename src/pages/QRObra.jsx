@@ -124,7 +124,7 @@ function AbaProjetos({ arquivos, obraId }) {
         initial[a.id] = cachedIds.has(a.id) ? "cached" : "unavailable";
       });
       setCacheStatus(initial);
-    }).catch(() => {});
+    }).catch(e => console.warn("[QRObra] cacheStatus:", e));
   }, [arquivos, obraId]);
 
   useEffect(() => {
@@ -248,7 +248,7 @@ function AbaCheckin({ obraId }) {
   const [erro,     setErro]     = useState(null);
 
   useEffect(() => {
-    listarCheckinsDia(obraId).then(setCheckins).catch(() => {});
+    listarCheckinsDia(obraId).then(setCheckins).catch(e => console.warn("[QRObra] checkins:", e));
   }, [obraId]);
 
   async function registrar() {

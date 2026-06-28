@@ -38,7 +38,7 @@ export default function FormAiMemorial({ orcamento, onClose }) {
             setOpenaiConfig(data);
           }
         })
-        .catch(() => {})
+        .catch(e => console.warn("[FormAiMemorial] send:", e))
         .finally(() => setLoadingConfig(false));
     } else {
       setLoadingConfig(false);

@@ -302,7 +302,7 @@ function useAlertasOperacionais() {
         });
       });
       setAlertas(result);
-    }).catch(() => {});
+    }).catch(e => console.warn("[NotifDropdown] marcarLidas:", e));
   }, []);
   return alertas;
 }

@@ -12,6 +12,10 @@ import { printHtml } from "../utils/printHtml";
 import SmartAlerts from "../components/ui/SmartAlerts";
 import AtencaoHoje from "../components/ui/AtencaoHoje";
 import DashboardKPIs from "../components/Dashboard/DashboardKPIs";
+import HojeNoStickFrame from "../components/dashboard/HojeNoStickFrame";
+import OnboardingChecklist from "../components/ui/OnboardingChecklist";
+import SeuProgresso from "../components/dashboard/SeuProgresso";
+import TrialProgress from "../components/ui/TrialProgress";
 import ComplianceNR from "../components/Dashboard/ComplianceNR";
 import CalculadoraRapida from "../components/ui/CalculadoraRapida";
 import { calcularStickScore, calcularStickScoreExecutivo, salvarSnapshotScore } from "../utils/stickScore";
@@ -333,7 +337,7 @@ function OperacionalKpis() {
         pedCriticos: pedsList.filter(p => p.urgencia === "Crítico").length,
         estoqueAbaixo: estList.filter(e => e.quantidade <= e.estoque_minimo).length,
       });
-    }).catch(() => {});
+    }).catch(e => console.warn("[Dashboard] kpis:", e));
   }, []);
 
   if (!kpis) return null;
@@ -401,7 +405,7 @@ function DashboardDiretor() {
   }, [empresaId, obras, financeiro, medicoes]);
 
   const [precosMon, setPrecosMon] = useState([]);
-  useEffect(() => { listarMonitorados().then(setPrecosMon).catch(() => {}); }, []);
+  useEffect(() => { listarMonitorados().then(setPrecosMon).catch(e => console.warn("[Dashboard] monitorados:", e)); }, []);
 
   const [kpiOp, setKpiOp] = useState({});
   useEffect(() => {
@@ -415,7 +419,7 @@ function DashboardDiretor() {
         pedCriticos: (peds.data || []).length,
         estoqueAbaixo: (est.data || []).filter(e => e.quantidade <= e.estoque_minimo).length,
       });
-    }).catch(() => {});
+    }).catch(e => console.warn("[Dashboard] kpiOp:", e));
   }, []);
 
   //  Financeiro
@@ -583,6 +587,19 @@ function DashboardDiretor() {
     printHtml(html, `relatorio-executivo-${mes}`);
   }
 
+  //  Activation / Trial progress
+  const onboardingP = useAppStore.getState().onboardingProgress;
+  const actSteps = ["empresa_configurada","primeiro_cliente","primeiro_orcamento","primeira_obra","conheceu_stickbrain"];
+  const actDone = actSteps.filter((s) => onboardingP[s]).length;
+  const activationPct = Math.round((actDone / actSteps.length) * 100);
+  const activationSteps = [
+    { key: "empresa", label: "Empresa", done: onboardingP.empresa_configurada },
+    { key: "cliente", label: "Cliente", done: onboardingP.primeiro_cliente },
+    { key: "orcamento", label: "Orçamento", done: onboardingP.primeiro_orcamento },
+    { key: "obra", label: "Obra", done: onboardingP.primeira_obra },
+    { key: "brain", label: "StickBrain", done: onboardingP.conheceu_stickbrain },
+  ];
+
   //  KPIs config 
   const kpisConfig = [
     { label: "Receitas",     value: fmt(totalRec),          sub: "total recebido",         accentColor: C.sage,    iconColor: C.sage,    iconBg: "rgba(79,125,87,.13)",   Icon: IC.TrendUp,   trend: trend(somarMes("receita", mesAtual, anoAtual), somarMes("receita", mesPrev, anoPrev)), sparkData: sparkRec  },
@@ -644,8 +661,16 @@ function DashboardDiretor() {
         </div>
       </div>
 
-      {/* Smart Alerts */}
+      {/* Onboarding & Progress */}
+      <OnboardingChecklist setActivePage={setActivePage} />
+
+      <SeuProgresso setActivePage={setActivePage} clientes={clientes} orcamentos={orcamentos} obras={obras} />
+
+      <TrialProgress activationPct={activationPct} activationSteps={activationSteps} />
+
       <div data-no-print="true"><SmartAlerts onNavigate={setActivePage} /></div>
+
+      <HojeNoStickFrame setActivePage={setActivePage} />
 
       {/* Atenção Hoje */}
       <AtencaoHoje obras={obras} financeiro={financeiro} medicoes={medicoes} kpis={kpiOp} setActivePage={setActivePage} />

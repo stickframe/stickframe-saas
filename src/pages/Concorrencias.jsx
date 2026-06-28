@@ -69,7 +69,7 @@ export default function Concorrencias() {
   useEffect(() => {
     listarConcorrencias()
       .then(setLista)
-      .catch(() => {})
+      .catch(e => console.warn("[Concorrencias] listar:", e))
       .finally(() => setLoading(false));
   }, []);
 

@@ -1,10 +1,12 @@
 import React from "react";
+import { useEffect } from "react";
 import { AlertTriangle } from "./components/ui/Icon";
 import ReactDOM from "react-dom/client";
 import * as Sentry from "@sentry/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import App from "./App.jsx";
 import { registerSW } from "virtual:pwa-register";
+import { sb } from "./services/supabase";
 
 if ("serviceWorker" in navigator) {
   registerSW({ immediate: true });
@@ -19,10 +21,34 @@ Sentry.init({
   replaysOnErrorSampleRate: 1.0,
 });
 
+function SentryAuthProvider({ children }) {
+  useEffect(() => {
+    const sub = sb.auth.onAuthStateChange((event, session) => {
+      const user = session?.user;
+      if (user) {
+        Sentry.setUser({
+          id: user.id,
+          email: user.email,
+          username: user.user_metadata?.full_name || user.email,
+        });
+        const empresaId = user.user_metadata?.empresa_id;
+        if (empresaId) {
+          Sentry.setTag("empresa_id", empresaId);
+        }
+        Sentry.setTag("modulo", "app");
+      } else {
+        Sentry.setUser(null);
+      }
+    });
+    return () => sub.data?.subscription?.unsubscribe();
+  }, []);
+  return children;
+}
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 5,   // 5 min cache
+      staleTime: 1000 * 60 * 5,
       retry: 1,
       refetchOnWindowFocus: false,
     },
@@ -42,7 +68,9 @@ ReactDOM.createRoot(document.getElementById("root")).render(
           </button>
         </div>
       )}>
-        <App />
+        <SentryAuthProvider>
+          <App />
+        </SentryAuthProvider>
       </Sentry.ErrorBoundary>
     </QueryClientProvider>
   </React.StrictMode>

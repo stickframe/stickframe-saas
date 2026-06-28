@@ -39,11 +39,23 @@ export default defineConfig({
       },
       output: {
         manualChunks(id) {
-          if (id.includes("@thatopen") || id.includes("web-ifc")) return "bim-engine";
-          if (id.includes("three"))                                 return "three";
+          if (id.includes("three"))                                  return "three";
+          if (id.includes("recharts"))                               return "charts";
+          if (id.includes("xlsx"))                                   return "xlsx";
+          if (id.includes("jspdf") || id.includes("html2canvas"))    return "pdf";
+          if (id.includes("node_modules")) {
+            if (
+              id.includes("react") ||
+              id.includes("react-dom") ||
+              id.includes("react-router") ||
+              id.includes("zustand") ||
+              id.includes("@tanstack") ||
+              id.includes("@supabase")
+            ) return "vendor";
+          }
         },
       },
     },
-    chunkSizeWarningLimit: 1500,
+    chunkSizeWarningLimit: 500,
   },
 });

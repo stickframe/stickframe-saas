@@ -34,7 +34,7 @@ export function ConfigSFTab() {
           if (d.composicoes) setComposicoes(d.composicoes);
         }
       })
-      .catch(() => {});
+      .catch(e => console.warn("[ConfigSF] save:", e));
   }, []);
 
   // Auto-save with debounce

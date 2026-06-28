@@ -36,8 +36,8 @@ export const createObraSlice = (set, get) => ({
       campos: [{ campo: "Fase", de: anterior?.fase || "—", para: novaFase }],
     });
     const uid = get().user?.uid;
-    if (uid) criarNotificacao({ usuarioId: uid, titulo: `Fase avançada: ${novaFase}`, mensagem: `Obra ${nome} avançou para a fase "${novaFase}".`, tipo: "info" }).catch(() => {});
-    if (o?.email_cliente) emailFaseAvancada({ obraEmail: o.email_cliente, obraNome: nome, fase: novaFase, progresso, portalToken: o.token_portal }).catch(() => {});
+    if (uid) criarNotificacao({ usuarioId: uid, titulo: `Fase avançada: ${novaFase}`, mensagem: `Obra ${nome} avançou para a fase "${novaFase}".`, tipo: "info" }).catch(e => console.warn("[obraSlice] criarNotificacao:", e));
+    if (o?.email_cliente) emailFaseAvancada({ obraEmail: o.email_cliente, obraNome: nome, fase: novaFase, progresso, portalToken: o.token_portal }).catch(e => console.warn("[obraSlice] emailFaseAvancada:", e));
   },
 
   addObra: async (obra) => {
@@ -64,7 +64,7 @@ export const createObraSlice = (set, get) => ({
     set((s) => ({ obras: [...s.obras, data] }));
     get().registrar("obra", "criado", `Obra ${data.nome} cadastrada`, data.id);
     const uid = get().user?.uid;
-    if (uid) criarNotificacao({ usuarioId: uid, titulo: "Nova obra cadastrada", mensagem: `A obra "${data.nome}" foi adicionada.`, tipo: "info" }).catch(() => {});
+    if (uid) criarNotificacao({ usuarioId: uid, titulo: "Nova obra cadastrada", mensagem: `A obra "${data.nome}" foi adicionada.`, tipo: "info" }).catch(e => console.warn("[obraSlice] criarNotif nova obra:", e));
     return data;
   },
 
@@ -150,8 +150,8 @@ export const createObraSlice = (set, get) => ({
     const med  = get().medicoes[obraId]?.find((m) => m.id === id);
     get().registrar("financeiro", "receita", `Medição aprovada — ${nome}`);
     const uid = get().user?.uid;
-    if (uid) criarNotificacao({ usuarioId: uid, titulo: `Medição ${med?.numero || ""} aprovada`, mensagem: `Medição da obra "${nome}" foi aprovada.`, tipo: "sucesso" }).catch(() => {});
-    if (o?.email_cliente) emailMedicaoAprovada({ obraEmail: o.email_cliente, obraNome: nome, numMedicao: med?.numero, valor: med?.valor }).catch(() => {});
+    if (uid) criarNotificacao({ usuarioId: uid, titulo: `Medição ${med?.numero || ""} aprovada`, mensagem: `Medição da obra "${nome}" foi aprovada.`, tipo: "sucesso" }).catch(e => console.warn("[obraSlice] criarNotif med:", e));
+    if (o?.email_cliente) emailMedicaoAprovada({ obraEmail: o.email_cliente, obraNome: nome, numMedicao: med?.numero, valor: med?.valor }).catch(e => console.warn("[obraSlice] emailMedicao:", e));
   },
 
   loadArquivos: async (obraId) => {
@@ -184,10 +184,13 @@ export const createObraSlice = (set, get) => ({
     }));
   },
 
-  subscribeObras: () => subscribeObras((payload) => {
-    if (payload.eventType === "UPDATE")
-      set((s) => ({ obras: s.obras.map((o) => o.id === payload.new.id ? { ...o, ...payload.new } : o) }));
-  }),
+  subscribeObras: () => {
+    const empresaId = get().empresaId;
+    return subscribeObras((payload) => {
+      if (payload.eventType === "UPDATE")
+        set((s) => ({ obras: s.obras.map((o) => o.id === payload.new.id ? { ...o, ...payload.new } : o) }));
+    }, empresaId);
+  },
 
   subscribeDiario: (obraId) => subscribeDiario(obraId, (payload) => {
     if (payload.eventType === "INSERT") {

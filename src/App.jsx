@@ -1,28 +1,22 @@
-import { lazy, Suspense, useEffect } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { initGA, trackPageView } from "./utils/analytics";
-import { setEmpresaId } from "./services/supabase";
+import { setEmpresaId, sb } from "./services/supabase";
+import { silentError } from "./utils/logger";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import "./styles/globals.css";
 import "./styles/responsive.css";
 import "./styles/theme-stickframe.css";
 import useAppStore from "./store/useAppStore";
 import AppLayout from "./components/layout/AppLayout";
-import LoginScreen from "./pages/LoginScreen";
-import Cadastro from "./pages/Cadastro";
-import Pricing from "./pages/Pricing";
-import LandingPage from "./pages/LandingPage";
-import CheckoutTrial from "./pages/CheckoutTrial";
 import LoadingScreen from "./components/ui/LoadingScreen";
 import { PageSkeleton } from "./components/ui/Skeleton";
 import { ToastProvider, useToast } from "./components/ui/Toast";
 import { ErrorBoundary } from "./components/ui/ErrorBoundary";
 import UndoBar from "./components/ui/UndoBar";
 import { OnboardingTour } from "./components/ui/OnboardingTour";
+import TourPopover from "./components/ui/TourPopover";
 import { useUndoStore } from "./store/undoStore";
 import { useHotkeys } from "react-hotkeys-hook";
-import PortalColaborador from "./pages/PortalColaborador";
-import Admin from "./pages/Admin";
-import AdminMobile from "./pages/AdminMobile";
 
 // Auto-reload on chunk fetch failure (stale SW cache after deploy)
 function lazyWithRetry(fn) {
@@ -80,6 +74,16 @@ const SST                  = lazyWithRetry(() => import("./pages/SST"));
 const Suprimentos          = lazyWithRetry(() => import("./pages/Suprimentos"));
 const EquipeSF             = lazyWithRetry(() => import("./pages/EquipeSF"));
 const Oportunidades        = lazyWithRetry(() => import("./pages/Oportunidades"));
+const LoginScreen     = lazyWithRetry(() => import("./pages/LoginScreen"));
+const Cadastro        = lazyWithRetry(() => import("./pages/Cadastro"));
+const Pricing         = lazyWithRetry(() => import("./pages/Pricing"));
+const LandingPage     = lazyWithRetry(() => import("./pages/LandingPage"));
+const CheckoutTrial   = lazyWithRetry(() => import("./pages/CheckoutTrial"));
+const PortalColaborador = lazyWithRetry(() => import("./pages/PortalColaborador"));
+const Admin           = lazyWithRetry(() => import("./pages/Admin"));
+const AdminMobile     = lazyWithRetry(() => import("./pages/AdminMobile"));
+const AdminHealth     = lazyWithRetry(() => import("./pages/AdminHealth"));
+const AdminGrowth     = lazyWithRetry(() => import("./pages/AdminGrowth"));
 
 const PAGES = {
   dashboard:  Dashboard,
@@ -186,6 +190,7 @@ function AuthenticatedApp() {
           </div>
         </Suspense>
       </ErrorBoundary>
+      <TourPopover />
     </AppLayout>
   );
 }
@@ -197,12 +202,34 @@ function RequireAuth({ children }) {
   return <Navigate to="/login" replace />;
 }
 
-const ADMIN_EMAILS = ["andrequeirozcandido@gmail.com", "andre@stickframe.com.br"];
+function useAdminEmails() {
+  const [adminEmails, setAdminEmails] = useState(null);
+  useEffect(() => {
+    const envValue = import.meta.env.VITE_ADMIN_EMAILS;
+    if (envValue) {
+      setAdminEmails(envValue.split(",").map((e) => e.trim().toLowerCase()));
+      return;
+    }
+    sb.from("configuracoes_sistema")
+      .select("valor")
+      .eq("chave", "admin_emails")
+      .single()
+      .then(({ data }) => {
+        if (data?.valor) {
+          setAdminEmails(data.valor.split(",").map((e) => e.trim().toLowerCase()));
+        }
+      })
+      .catch(silentError("App.jsx:configuracoes_sistema"));
+  }, []);
+  return adminEmails || [];
+}
 
 function RequireAdmin({ children }) {
   const user = useAppStore((s) => s.user);
+  const adminEmails = useAdminEmails();
   if (!user) return <Navigate to="/login" replace />;
-  if (!ADMIN_EMAILS.includes(user.email)) return <Navigate to="/" replace />;
+  if (adminEmails.length > 0 && !adminEmails.includes((user.email || "").toLowerCase())) return <Navigate to="/" replace />;
+  if (adminEmails.length === 0 && user.email !== "admin@stickframe.com.br") return <Navigate to="/" replace />;
   return children;
 }
 
@@ -258,6 +285,16 @@ export default function App() {
           <Route path="/admin/mobile" element={
             <RequireAdmin>
               <AdminMobile />
+            </RequireAdmin>
+          } />
+          <Route path="/admin/health" element={
+            <RequireAdmin>
+              <AdminHealth />
+            </RequireAdmin>
+          } />
+          <Route path="/admin/growth" element={
+            <RequireAdmin>
+              <AdminGrowth />
             </RequireAdmin>
           } />
           <Route path="/login"                element={<LoginScreen />} />

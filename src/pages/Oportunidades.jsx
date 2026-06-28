@@ -294,8 +294,23 @@ export default function Oportunidades() {
   }
 
   async function deletar(id) {
-    await sb.from('leads_captacao').delete().eq('id', id);
-    setConfirm(null);
+    try {
+      const { error } = await sb.from('leads_captacao').delete().eq('id', id);
+      if (error) {
+        showToast(`Erro ao excluir: ${error.message}`, true);
+        console.error("Erro ao excluir lead:", error);
+      } else {
+        // Atualização otimista caso o realtime atrase ou falhe
+        setLeads(prev => prev.filter(l => l.id !== id));
+        setSel(s => s?.id === id ? null : s);
+        showToast("Lead excluído com sucesso!");
+      }
+    } catch (err) {
+      showToast(`Erro: ${err.message}`, true);
+      console.error(err);
+    } finally {
+      setConfirm(null);
+    }
   }
 
   async function converterEmCliente(lead) {

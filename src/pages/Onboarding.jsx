@@ -92,7 +92,7 @@ export default function Onboarding({ onComplete }) {
         segmento: data.segmento  || "Construção Steel Frame",
         site:     data.site      || "",
       });
-    }).catch(() => {});
+    }).catch(e => console.warn("[Onboarding] dadosEmpresa:", e));
   }, [empresaId]);
 
   //  Step 0: salvar empresa 

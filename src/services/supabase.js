@@ -28,7 +28,6 @@ try {
 
 export const setEmpresaId = (id) => { _empresaId = id; };
 export const getEmpresaId = () => {
-  // Fallback: re-reads from localStorage if module-level var is null
   if (!_empresaId) {
     try {
       const persisted = JSON.parse(localStorage.getItem("stickframe-storage") || "{}");
@@ -39,3 +38,26 @@ export const getEmpresaId = () => {
   }
   return _empresaId;
 };
+
+const SIGNED_URL_TTL = 60 * 60; // 1 hora
+
+export async function getSignedUrl(storagePath) {
+  if (!storagePath) return null;
+  try {
+    const { data, error } = await sb.storage
+      .from("arquivos")
+      .createSignedUrl(storagePath, SIGNED_URL_TTL);
+    if (error) return null;
+    return data.signedUrl;
+  } catch {
+    return null;
+  }
+}
+
+export async function getSignedUrls(storagePaths) {
+  if (!storagePaths || storagePaths.length === 0) return [];
+  const results = await Promise.allSettled(
+    storagePaths.map((path) => getSignedUrl(path))
+  );
+  return results.map((r) => (r.status === "fulfilled" ? r.value : null));
+}

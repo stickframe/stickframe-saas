@@ -815,7 +815,7 @@ ${tabelaFases}
                                     style={{ background: "none", border: "none", cursor: "pointer", color: "#3b6ea5", fontSize: 13, padding: 3 }}></button>
                                   <button
                                     title="Substituir por produto monitorado"
-                                    onClick={() => { setMonitorarItem(item); setMonitorSel(""); listarMonitorados().then(setMonitorados).catch(() => {}); }}
+                                    onClick={() => { setMonitorarItem(item); setMonitorSel(""); listarMonitorados().then(setMonitorados).catch(e => console.warn("[Quant] monitorados:", e)); }}
                                     style={{ background: "none", border: "none", cursor: "pointer", color: "#3f7a4b", fontSize: 13, padding: 3 }}></button>
                                   <button onClick={() => {
                                     setEditId(item.id);

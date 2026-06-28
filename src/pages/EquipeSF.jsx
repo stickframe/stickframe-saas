@@ -505,15 +505,15 @@ export default function EquipeSF() {
   useEffect(() => {
     if (tab === "aloc" && !alocacoes.length) {
       setLoadAloc(true);
-      listarAlocacoes().then(d => setAlocacoes(d)).catch(() => {}).finally(() => setLoadAloc(false));
+      listarAlocacoes().then(d => setAlocacoes(d)).catch(e => console.warn("[EquipeSF] aloc:", e)).finally(() => setLoadAloc(false));
     }
     if (tab === "horas" && !horas.length) {
       setLoadHoras(true);
-      listarHoras().then(d => setHoras(d)).catch(() => {}).finally(() => setLoadHoras(false));
+      listarHoras().then(d => setHoras(d)).catch(e => console.warn("[EquipeSF] horas:", e)).finally(() => setLoadHoras(false));
     }
     if (tab === "comp" && !certs.length) {
       setLoadComp(true);
-      listarCertificacoes().then(d => setCerts(d)).catch(() => {}).finally(() => setLoadComp(false));
+      listarCertificacoes().then(d => setCerts(d)).catch(e => console.warn("[EquipeSF] certs:", e)).finally(() => setLoadComp(false));
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab]);

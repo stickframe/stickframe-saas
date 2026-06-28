@@ -925,7 +925,7 @@ export default function Calculadora() {
   const recarregarRetalhos = useCallback(() => {
     listarRetalhos(["Montante C 90", "Montante C 140"])
       .then(setRetalhos)
-      .catch(() => {});
+      .catch(e => console.warn("[Calculadora] listarRetalhos:", e));
   }, []);
 
   useEffect(() => { recarregarRetalhos(); }, [recarregarRetalhos]);

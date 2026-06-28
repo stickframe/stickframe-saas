@@ -43,7 +43,7 @@ export default function PerfisCustomizados() {
         setPerfis(data);
         setPerfisCustomizados(data);
       })
-      .catch(() => {})
+      .catch(e => console.warn("[PerfisCustomizados] save:", e))
       .finally(() => setLoading(false));
   }, []);
 

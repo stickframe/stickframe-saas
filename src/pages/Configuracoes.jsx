@@ -355,8 +355,8 @@ export default function Configuracoes() {
         if (data.api_key) setApiKey(data.api_key);
         if (data.api_key_created_at) setApiKeyCreatedAt(data.api_key_created_at);
       }
-    }).catch(() => {});
-    listarUsuariosEmpresa().then((data) => { if (data) setUsuarios(data); }).catch(() => {});
+    }).catch(e => console.warn("[Config] apiKey:", e));
+    listarUsuariosEmpresa().then((data) => { if (data) setUsuarios(data); }).catch(e => console.warn("[Config] listarUsuarios:", e));
   }, [empresaId]);
 
   useEffect(() => {
@@ -364,7 +364,7 @@ export default function Configuracoes() {
   }, [user]);
 
   useEffect(() => {
-    isWebAuthnAvailable().then(setWebAuthnDisponivel).catch(() => {});
+    isWebAuthnAvailable().then(setWebAuthnDisponivel).catch(e => console.warn("[Config] webAuthn:", e));
     setBiometriaAtiva(hasSavedCredential());
   }, []);
 
@@ -455,7 +455,7 @@ export default function Configuracoes() {
       setShowConvite(false);
       setConvite({ email: "", nome: "", perfil: "comercial" });
       mostrarToast(" Convite enviado!");
-      listarUsuariosEmpresa().then((data) => { if (data) setUsuarios(data); }).catch(() => {});
+      listarUsuariosEmpresa().then((data) => { if (data) setUsuarios(data); }).catch(e => console.warn("[Config] listarUsuarios2:", e));
     } catch (e) {
       if (e.message?.startsWith("LIMITE_PLANO:")) {
         mostrarToast(" " + e.message.replace("LIMITE_PLANO:", ""));

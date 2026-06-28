@@ -13,6 +13,8 @@ import { createVistoriaSlice }     from "./slices/vistoriaSlice";
 import { createBimSlice }          from "./slices/bimSlice";
 import { createFornecedoresSlice } from "./slices/fornecedoresSlice";
 import { createGarantiaSlice }     from "./slices/garantiaSlice";
+import { createOnboardingSlice }   from "./slices/onboardingSlice";
+import { createTourSlice }         from "./slices/tourSlice";
 
 //  ESTADO BASE (loading + loaded + activePage)
 function getInitialPage() {
@@ -79,6 +81,8 @@ const useAppStore = create(
       ...createBimSlice(...a),
       ...createFornecedoresSlice(...a),
       ...createGarantiaSlice(...a),
+      ...createOnboardingSlice(...a),
+      ...createTourSlice(...a),
     }),
     {
       name: "stickframe-storage",
@@ -86,7 +90,8 @@ const useAppStore = create(
       partialize: (s) => ({
         user:      s.user,
         empresaId: s.empresaId,
-        // activePage removido: a URL agora é a fonte de verdade da navegação
+        onboardingProgress: s.onboardingProgress,
+        toursDismissed: s.toursDismissed,
       }),
     }
   )

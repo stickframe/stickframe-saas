@@ -32,11 +32,11 @@ async function _hydrateUser(set, get, authUser, email) {
     planoReal,
     trialEndsAt: empresa?.trial_ends_at || null,
   });
-  listarMembrosEmpresa().then((list) => get().setAllObraMembros(list)).catch(() => {});
-  listarPerfisCustomizados().then((list) => set({ perfisCustomizados: list })).catch(() => {});
+  listarMembrosEmpresa().then((list) => get().setAllObraMembros(list)).catch(e => console.warn("[authSlice] listarMembros:", e));
+  listarPerfisCustomizados().then((list) => set({ perfisCustomizados: list })).catch(e => console.warn("[authSlice] listarPerfis:", e));
   import("../../services/alertasService").then(({ verificarAlertas }) => {
     verificarAlertas(empId, authUser.id);
-  }).catch(() => {});
+  }).catch(e => console.warn("[authSlice] alertasService:", e));
 }
 
 export const createAuthSlice = (set, get) => ({
