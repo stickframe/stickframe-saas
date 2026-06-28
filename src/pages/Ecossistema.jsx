@@ -171,7 +171,7 @@ export default function Ecossistema() {
           <button onClick={() => setActivePage("crm")} style={{ display: "flex", alignItems: "center", gap: 8, background: "var(--brick,#981915)", color: "#fff", border: "none", borderRadius: 10, padding: "12px 24px", fontFamily: "inherit", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
             <Ic n="phone" w={15} c="#fff" /> Falar com suporte
           </button>
-          <button onClick={() => setActivePage("bi")} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, background: "var(--surface,#fff)", color: "var(--ink-2,#57514a)", border: "1.5px solid var(--line,#e7e1d8)", borderRadius: 10, padding: "11px 24px", fontFamily: "inherit", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+          <button onClick={() => setActivePage("planos")} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, background: "var(--surface,#fff)", color: "var(--ink-2,#57514a)", border: "1.5px solid var(--line,#e7e1d8)", borderRadius: 10, padding: "11px 24px", fontFamily: "inherit", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
             Ver planos
           </button>
         </div>

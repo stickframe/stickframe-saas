@@ -74,6 +74,7 @@ const SST                  = lazyWithRetry(() => import("./pages/SST"));
 const Suprimentos          = lazyWithRetry(() => import("./pages/Suprimentos"));
 const EquipeSF             = lazyWithRetry(() => import("./pages/EquipeSF"));
 const Oportunidades        = lazyWithRetry(() => import("./pages/Oportunidades"));
+const Planos               = lazyWithRetry(() => import("./pages/Planos"));
 const LoginScreen     = lazyWithRetry(() => import("./pages/LoginScreen"));
 const Cadastro        = lazyWithRetry(() => import("./pages/Cadastro"));
 const Pricing         = lazyWithRetry(() => import("./pages/Pricing"));
@@ -122,6 +123,7 @@ const PAGES = {
   suprimentos:    Suprimentos,
   equipe_sf:      EquipeSF,
   oportunidades:  Oportunidades,
+  planos:         Planos,
 };
 
 function AuthenticatedApp() {

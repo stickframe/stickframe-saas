@@ -161,8 +161,8 @@ export default function AppLayout({ children }) {
                 ? "Seu trial expirou — "
                 : `Seu trial Pro expira em ${daysLeft} ${daysLeft === 1 ? "dia" : "dias"} — `}
             </span>
-            <a
-              href="/pricing"
+            <button
+              onClick={() => setActivePage("planos")}
               style={{
                 background: "rgba(255,255,255,0.25)",
                 color: "#fff",
@@ -177,7 +177,7 @@ export default function AppLayout({ children }) {
               }}
             >
               {isExpired ? "Assinar agora" : "Fazer upgrade"}
-            </a>
+            </button>
           </div>
         )}
         <main className="main-content">
