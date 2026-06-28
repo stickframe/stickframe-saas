@@ -672,8 +672,8 @@ function DashboardDiretor() {
 
       <HojeNoStickFrame setActivePage={setActivePage} />
 
-      {/* Atenção Hoje */}
-      <AtencaoHoje obras={obras} financeiro={financeiro} medicoes={medicoes} kpis={kpiOp} setActivePage={setActivePage} />
+      {/* Atenção Hoje — oculto a pedido */}
+      {/* <AtencaoHoje obras={obras} financeiro={financeiro} medicoes={medicoes} kpis={kpiOp} setActivePage={setActivePage} /> */}
 
       {/* StickScore */}
       {(() => {
@@ -681,7 +681,8 @@ function DashboardDiretor() {
         return (
           <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 12, marginBottom: 20 }}>
             <StickScoreHero obras={obras} financeiroPorObra={financeiro} />
-            <StickScoreExecutivoCard score={scoreExec} />
+            {/* StickScore Executivo — oculto a pedido */}
+            {/* <StickScoreExecutivoCard score={scoreExec} /> */}
             <StickScoreBenchmark obras={obras} financeiroPorObra={financeiro} medicoesPorObra={medicoes} />
           </div>
         );
