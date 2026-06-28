@@ -204,34 +204,35 @@ function RequireAuth({ children }) {
   return <Navigate to="/login" replace />;
 }
 
+// Allowlist fixo — sempre tem acesso, independente de env/banco.
+const CORE_ADMINS = ["andre@stickframe.com.br", "admin@stickframe.com.br"];
+
+const parseEmails = (s) => (s || "").split(",").map((e) => e.trim().toLowerCase()).filter(Boolean);
+
 function useAdminEmails() {
-  const [adminEmails, setAdminEmails] = useState(null);
+  // União de TODAS as fontes (fixo + env + tabela), em vez de uma sobrepor a
+  // outra. Antes, VITE_ADMIN_EMAILS tinha precedência e retornava cedo, então
+  // a tabela admin_emails era ignorada e quem não estava na env era barrado.
+  const [dbEmails, setDbEmails] = useState([]);
   useEffect(() => {
-    const envValue = import.meta.env.VITE_ADMIN_EMAILS;
-    if (envValue) {
-      setAdminEmails(envValue.split(",").map((e) => e.trim().toLowerCase()));
-      return;
-    }
     sb.from("configuracoes_sistema")
       .select("valor")
       .eq("chave", "admin_emails")
       .single()
       .then(({ data }) => {
-        if (data?.valor) {
-          setAdminEmails(data.valor.split(",").map((e) => e.trim().toLowerCase()));
-        }
+        if (data?.valor) setDbEmails(parseEmails(data.valor));
       })
       .catch(silentError("App.jsx:configuracoes_sistema"));
   }, []);
-  return adminEmails || [];
+  const envEmails = parseEmails(import.meta.env.VITE_ADMIN_EMAILS);
+  return [...new Set([...CORE_ADMINS, ...envEmails, ...dbEmails])];
 }
 
 function RequireAdmin({ children }) {
   const user = useAppStore((s) => s.user);
   const adminEmails = useAdminEmails();
   if (!user) return <Navigate to="/login" replace />;
-  if (adminEmails.length > 0 && !adminEmails.includes((user.email || "").toLowerCase())) return <Navigate to="/" replace />;
-  if (adminEmails.length === 0 && user.email !== "admin@stickframe.com.br") return <Navigate to="/" replace />;
+  if (!adminEmails.includes((user.email || "").toLowerCase())) return <Navigate to="/" replace />;
   return children;
 }
 
