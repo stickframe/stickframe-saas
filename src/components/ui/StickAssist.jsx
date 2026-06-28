@@ -3,16 +3,20 @@ import { sb, getEmpresaId } from "../../services/supabase";
 import useAppStore from "../../store/useAppStore";
 
 function buildSystemPrompt(obras, financeiro) {
-  const obrasAtivas = obras.filter((o) => o.status !== "Concluída");
-  const receita = financeiro.filter((l) => l.tipo === "Receita").reduce((s, l) => s + (l.valor || 0), 0);
-  const despesa = financeiro.filter((l) => l.tipo === "Despesa").reduce((s, l) => s + (l.valor || 0), 0);
+  const obrasArr = Array.isArray(obras) ? obras : [];
+  const obrasAtivas = obrasArr.filter((o) => o.status !== "Concluída");
+  // financeiro é um objeto keyed por obraId: { [obraId]: { contrato, lancamentos: [] } }.
+  // Achatamos todos os lançamentos para somar receita/despesa da empresa.
+  const lancamentos = Object.values(financeiro || {}).flatMap((f) => f?.lancamentos || []);
+  const receita = lancamentos.filter((l) => l.tipo === "Receita").reduce((s, l) => s + (l.valor || 0), 0);
+  const despesa = lancamentos.filter((l) => l.tipo === "Despesa").reduce((s, l) => s + (l.valor || 0), 0);
   const margem = receita > 0 ? (((receita - despesa) / receita) * 100).toFixed(1) : "?";
 
   return `Você é o StickAssist™, copiloto de inteligência do StickFrame — SaaS para construtoras de Steel Frame no Brasil.
 
 DADOS DA EMPRESA (hoje):
-- Total de obras: ${obras.length} (${obrasAtivas.length} ativas)
-- Obras: ${obras.slice(0, 10).map((o) => `${o.nome} (${o.status}, ${o.progresso || 0}%)`).join("; ")}
+- Total de obras: ${obrasArr.length} (${obrasAtivas.length} ativas)
+- Obras: ${obrasArr.slice(0, 10).map((o) => `${o.nome} (${o.status}, ${o.progresso || 0}%)`).join("; ")}
 - Receita registrada: ${receita.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
 - Despesa registrada: ${despesa.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
 - Margem bruta estimada: ${margem}%
