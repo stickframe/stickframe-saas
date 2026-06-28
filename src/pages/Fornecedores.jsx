@@ -562,6 +562,7 @@ ${(c.observacoes || poForm.observacoes_po) ? `
 
     // 3. WhatsApp ao fornecedor
     if (forn.telefone) {
+      const valorFmt = `R$ ${fmtN(totalGeral)}`;
       const msg = `Olá ${forn.nome.split(" ")[0]}! Segue nosso Pedido de Compra ${poNum}:\n\n*${c.descricao}*\n*${valorFmt}*\nEmissão: ${dataEmissao}${obra ? `\nObra: ${obra.nome}` : ""}\n\nCondição de pagamento: ${poForm.condicao_pagamento}\n\nAguardamos confirmação do recebimento. Obrigado!`;
       enviarWhatsApp(forn.telefone, msg);
     }
