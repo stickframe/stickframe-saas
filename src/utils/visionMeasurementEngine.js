@@ -13,10 +13,6 @@
 
 import { sb } from "../services/supabase";
 
-// Modelos OpenAI com suporte a visão. Se o modelo configurado pela empresa não
-// estiver nesta lista, caímos para gpt-4o-mini (com visão e baixo custo).
-const VISION_MODELS = ["gpt-4o", "gpt-4o-mini", "gpt-4.1", "gpt-4.1-mini", "gpt-4-turbo", "chatgpt-4o-latest"];
-
 async function loadPdfJs() {
   const pdfjsLib = await import("pdfjs-dist");
   pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
@@ -24,18 +20,6 @@ async function loadPdfJs() {
     import.meta.url
   ).toString();
   return pdfjsLib;
-}
-
-// Lê a chave OpenAI da empresa (mesma tabela usada por todos os recursos de IA).
-async function carregarConfigIA(empresaId) {
-  let q = sb.from("ia_config").select("openai_key, modelo_openai");
-  if (empresaId) q = q.eq("empresa_id", empresaId);
-  const { data } = await q.limit(1).maybeSingle();
-  if (!data || !data.openai_key) {
-    throw new Error("Chave OpenAI não configurada. Vá em Configurações → IA e informe sua chave para usar o AI Vision.");
-  }
-  const modelo = VISION_MODELS.includes(data.modelo_openai) ? data.modelo_openai : "gpt-4o-mini";
-  return { key: data.openai_key, modelo };
 }
 
 // Converte o arquivo enviado em uma ou mais imagens (data URL base64).
@@ -159,7 +143,6 @@ function parseJSON(content) {
  * @returns objeto padronizado para o pipeline StickQuote.
  */
 export async function analisarVision(file, { empresaId } = {}) {
-  const { key, modelo } = await carregarConfigIA(empresaId);
   const imagens = await arquivoParaImagens(file);
 
   const userContent = [
@@ -167,11 +150,12 @@ export async function analisarVision(file, { empresaId } = {}) {
     ...imagens.map((url) => ({ type: "image_url", image_url: { url, detail: "high" } })),
   ];
 
-  const res = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: { "Authorization": `Bearer ${key}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: modelo,
+  // A chamada à OpenAI roda no servidor (Edge Function openai-vision-proxy): o
+  // navegador não pode chamar api.openai.com direto (sem CORS → "Failed to fetch").
+  // A chave fica no servidor (lida de ia_config pela service role).
+  const { data, error } = await sb.functions.invoke("openai-vision-proxy", {
+    body: {
+      empresaId,
       messages: [
         { role: "system", content: PROMPT_SISTEMA },
         { role: "user", content: userContent },
@@ -179,18 +163,14 @@ export async function analisarVision(file, { empresaId } = {}) {
       temperature: 0.1,
       max_tokens: 1500,
       response_format: { type: "json_object" },
-    }),
+    },
   });
 
-  if (!res.ok) {
-    const errTxt = await res.text().catch(() => "");
-    let apiCode = "";
-    try { apiCode = JSON.parse(errTxt)?.error?.code || JSON.parse(errTxt)?.error?.type || ""; } catch (_) { /* ignore */ }
-    throw new Error(mensagemErroOpenAI(res.status, apiCode, errTxt));
-  }
+  if (error) throw new Error(`Falha ao contatar o serviço de visão: ${error.message}`);
+  if (data?.error === "openai_error") throw new Error(mensagemErroOpenAI(data.status, data.code, data.raw));
+  if (data?.error) throw new Error(data.error);
 
-  const resData = await res.json();
-  const content = resData.choices?.[0]?.message?.content || "";
+  const content = data?.content || "";
   const d = parseJSON(content);
 
   // Normaliza números
