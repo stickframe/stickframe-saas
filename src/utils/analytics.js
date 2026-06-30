@@ -36,8 +36,14 @@ function getLeadOrigem() {
 
 export function trackPageView(path) {
   if (!GA_ID || typeof window.gtag !== "function") return;
-  window.gtag("config", GA_ID, {
+  // GA4: enviar um evento page_view explícito (o app é SPA e desativa o
+  // send_page_view automático). Re-chamar gtag("config", ...) não registra
+  // page_view de forma confiável no GA4 — por isso as telas internas quase
+  // não contavam visualizações apesar dos usuários/eventos.
+  window.gtag("event", "page_view", {
     page_path: path,
+    page_location: window.location.href,
+    page_title: document.title,
     ...getLeadOrigem(),
   });
 }
