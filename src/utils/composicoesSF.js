@@ -238,7 +238,8 @@ export function calcMotorComposicao(selecoes, catalogo, precosCustom = {}) {
       };
     });
 
-    breakdown.push({ composicao: comp, area: sel.area, itens: itensComp });
+    const totalComp = itensComp.reduce((s, it) => s + it.custo, 0);
+    breakdown.push({ composicao: comp, area: sel.area, itens: itensComp, total: totalComp, custo: totalComp });
 
     // Acumula por nome de insumo
     for (const it of itensComp) {

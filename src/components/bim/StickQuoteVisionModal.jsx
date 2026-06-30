@@ -408,7 +408,7 @@ export default function StickQuoteVisionModal({ onClose, obraNome = "", clienteN
             <div style={{ background: C.surface, border: `1px solid ${C.line}`, borderRadius: 12, padding: "16px 18px", marginBottom: 14 }}>
               <div style={{ fontSize: 11, color: C.muted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>Total estimado</div>
               <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: 30, fontWeight: 800, color: C.green }}>
-                {fmtBRL(resultado.total)}
+                {fmtBRL(resultado.totalCusto)}
               </div>
               <div style={{ fontSize: 11.5, color: C.muted, marginTop: 4 }}>
                 {resultado.breakdown?.length || 0} sistemas · {fmtN(medidas?.area)} m² · StickTrust™ {analise?.confianca}%
