@@ -457,6 +457,17 @@ export default function BimSF() {
   const obraId    = obraAtual?.id;
   const usuario   = user;
 
+  // Sincroniza com a obra ativa global (mesma regra do topo: "Em andamento"
+  // → senão a 1ª). Roda só na 1ª carga das obras; não sobrescreve a escolha
+  // manual do usuário no dropdown.
+  const obraInit = useRef(false);
+  useEffect(() => {
+    if (obraInit.current || obras.length === 0) return;
+    const idx = obras.findIndex((o) => o.status === "Em andamento");
+    setObraIdx(idx >= 0 ? idx : 0);
+    obraInit.current = true;
+  }, [obras]);
+
   const [modelos, setModelos]         = useState([]);
   const [apontamentos, setApontamentos] = useState([]);
   const [loading, setLoading]         = useState(false);
@@ -534,34 +545,29 @@ export default function BimSF() {
         </div>
       </div>
 
-      {/* Obra chip */}
+      {/* Seletor de obra (único — sincronizado com a obra ativa global) */}
       {obraAtual ? (
         <div style={{ display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
-          <div style={{
-            display: "inline-flex", alignItems: "center",
-            background: "var(--brick-soft, #f3e7e5)", border: "1.5px solid var(--brick)",
-            borderRadius: 8, padding: "5px 12px",
-            fontSize: 12.5, fontWeight: 800, color: "var(--brick)",
-            letterSpacing: 0.3,
+          <span style={{
+            fontSize: 11, fontWeight: 700, color: "var(--muted)",
+            textTransform: "uppercase", letterSpacing: 0.5,
           }}>
-            {obraAtual.nome?.toUpperCase()}
-          </div>
-          {obras.length > 1 && (
-            <select
-              value={obraIdx}
-              onChange={e => setObraIdx(Number(e.target.value))}
-              style={{
-                background: "var(--surface)", color: "var(--ink-2)",
-                border: "1.5px solid var(--brick)", borderRadius: 7,
-                padding: "4px 10px", fontFamily: "inherit", fontSize: 12, fontWeight: 600,
-                cursor: "pointer", outline: "none",
-              }}
-            >
-              {obras.map((o, i) => (
-                <option key={o.id || i} value={i}>{o.nome}</option>
-              ))}
-            </select>
-          )}
+            Obra
+          </span>
+          <select
+            value={obraIdx}
+            onChange={e => setObraIdx(Number(e.target.value))}
+            style={{
+              background: "var(--surface)", color: "var(--brick)",
+              border: "1.5px solid var(--brick)", borderRadius: 8,
+              padding: "6px 12px", fontFamily: "inherit", fontSize: 12.5, fontWeight: 700,
+              cursor: "pointer", outline: "none", letterSpacing: 0.3,
+            }}
+          >
+            {obras.map((o, i) => (
+              <option key={o.id || i} value={i}>{o.nome}</option>
+            ))}
+          </select>
         </div>
       ) : (
         <div style={{
