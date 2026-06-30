@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { salvarOrigemLead } from "../utils/leadOrigem";
+import { analytics } from "../utils/analytics";
 import PricingPlans from "../components/PricingPlans";
 
 // ─── Icons ───────────────────────────────────────────────────────────────────
@@ -291,6 +292,7 @@ export default function LandingPage() {
 
   useEffect(() => {
     salvarOrigemLead();
+    analytics.landingView();
     const fn = () => setSolid(window.scrollY > 24);
     window.addEventListener("scroll", fn, { passive: true });
     return () => window.removeEventListener("scroll", fn);
@@ -353,8 +355,14 @@ export default function LandingPage() {
               Empresas que usam StickQuote + Portal Cliente reduzem retrabalho e fecham mais obras. Do primeiro lead à entrega da chave, tudo conectado.
             </p>
             <div className="h-cta">
-              <a href="/cadastro" className="btn btn-white btn-lg">Começar grátis →</a>
-              <a href="/pricing" className="btn btn-outline-w btn-lg">Ver planos</a>
+              <a href="/calcular" className="btn btn-white btn-lg"
+                 onClick={() => analytics.ctaClicked("Calcular minha obra", "landing-hero")}>
+                Calcular minha obra →
+              </a>
+              <a href="#solucao" className="btn btn-outline-w btn-lg"
+                 onClick={() => analytics.ctaClicked("Ver como funciona", "landing-hero")}>
+                Ver como funciona
+              </a>
             </div>
             <p className="h-note">Sem cartão de crédito · 14 dias grátis · Configuração em minutos</p>
           </div>

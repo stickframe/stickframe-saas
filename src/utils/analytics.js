@@ -64,4 +64,18 @@ export const analytics = {
   viewFeatures:       ()       => trackEvent("view_features",        { event_category: "engagement" }),
   signupStarted:      ()       => trackEvent("signup_started",       { event_category: "funnel" }),
   signupCompleted:    ()       => trackEvent("signup_completed",     { event_category: "funnel" }),
+
+  // ── Conversion Layer™ (StickFrame Conversion Layer) ────────────────────────
+  // Eventos do funil de aquisição. Os equivalentes de produto persistidos em
+  // saas_events (started_trial, viewed_pricing) continuam pelos seus wrappers;
+  // aqui é o lado GA4 (marketing/funil) — sem duplicar nomes.
+  landingView:        ()        => trackEvent("landing_view",        { event_category: "funnel" }),
+  calculatorStarted:  (source)  => trackEvent("calculator_started",  { event_category: "funnel", source }),
+  calculatorCompleted:(params)  => trackEvent("calculator_completed",{ event_category: "funnel", ...params }),
+  leadCreated:        (params)  => trackEvent("lead_created",        { event_category: "conversion", ...params }),
+  trialStarted:       (plan)    => trackEvent("trial_started",       { event_category: "conversion", plan }),
+  pricingViewed:      (source)  => trackEvent("pricing_viewed",      { event_category: "funnel", source }),
+  ctaClicked:         (label, location) => trackEvent("cta_clicked", { event_category: "engagement", label, location }),
+  quoteRequested:     (source)  => trackEvent("quote_requested",     { event_category: "conversion", source }),
+  stickquoteInterest: (source)  => trackEvent("stickquote_interest", { event_category: "engagement", source }),
 };

@@ -85,6 +85,7 @@ const Admin           = lazyWithRetry(() => import("./pages/Admin"));
 const AdminMobile     = lazyWithRetry(() => import("./pages/AdminMobile"));
 const AdminHealth     = lazyWithRetry(() => import("./pages/AdminHealth"));
 const AdminGrowth     = lazyWithRetry(() => import("./pages/AdminGrowth"));
+const AdminConversion = lazyWithRetry(() => import("./pages/AdminConversion"));
 
 const PAGES = {
   dashboard:  Dashboard,
@@ -298,6 +299,11 @@ export default function App() {
           <Route path="/admin/growth" element={
             <RequireAdmin>
               <AdminGrowth />
+            </RequireAdmin>
+          } />
+          <Route path="/admin/conversion" element={
+            <RequireAdmin>
+              <AdminConversion />
             </RequireAdmin>
           } />
           <Route path="/login"                element={<LoginScreen />} />
