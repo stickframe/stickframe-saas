@@ -295,10 +295,12 @@ export default function CalculadoraPublica() {
   const [faqOpen, setFaqOpen] = useState(0);
 
   // ── Lead form (pre_orcamentos) ─────────────────────────────────────────────
-  const [nome,      setNome]      = useState("");
-  const [whatsapp,  setWhatsapp]  = useState("");
-  const [cidade,    setCidade]    = useState("");
-  const [email,     setEmail]     = useState("");
+  const [nome,        setNome]        = useState("");
+  const [whatsapp,    setWhatsapp]    = useState("");
+  const [cidade,      setCidade]      = useState("");
+  const [email,       setEmail]       = useState("");
+  const [empresaLead, setEmpresaLead] = useState("");
+  const [tipoObra,    setTipoObra]    = useState("");
   const [sending,   setSending]   = useState(false);
   const [sendError, setSendError] = useState("");
   const [formSent,  setFormSent]  = useState(false);
@@ -322,6 +324,8 @@ export default function CalculadoraPublica() {
         p_valor_min:  Math.round(est.total),
         p_pavimentos: simPav === 1 ? "Térreo" : "2 pavimentos",
         p_origem:     "CalculadoraPublica-v2",
+        p_empresa_lead: empresaLead || null,
+        p_tipo_obra:    tipoObra || null,
       });
       if (error) throw error;
 
@@ -360,12 +364,13 @@ export default function CalculadoraPublica() {
           source: "calculadora-publica",
           origem: intel.origem,
           campanha: intel.campanha || undefined,
+          tipo_obra: tipoObra || undefined,
           valor: Math.round(est.total),
         });
       } catch (_) {}
 
       try {
-        const msg = `🏠 *Novo lead via Calculadora!*\n\n👤 *${nome}*\n📱 ${whatsapp}\n📍 ${cidade || "—"}\n\n📐 *Projeto:*\n• Área: ${simArea}m² · ${simPav === 1 ? "Térrea" : "Sobrado"}\n• Padrão: ${simPad.nm}\n• Estimativa: ${fmtR(est.total)}\n\nAcesse o sistema: https://stickframe.com.br`;
+        const msg = `🏠 *Novo lead via Calculadora!*\n\n👤 *${nome}*${empresaLead ? ` — ${empresaLead}` : ""}\n📱 ${whatsapp}\n📍 ${cidade || "—"}\n\n📐 *Projeto:*\n• Tipo: ${tipoObra || "—"}\n• Área: ${simArea}m² · ${simPav === 1 ? "Térrea" : "Sobrado"}\n• Padrão: ${simPad.nm}\n• Estimativa: ${fmtR(est.total)}\n\nAcesse o sistema: https://stickframe.com.br`;
         const { data: waNum } = await sb.rpc("get_empresa_whatsapp_alertas");
         const numLimpo = (waNum || "").replace(/\D/g, "");
         if (numLimpo) {
@@ -1108,6 +1113,27 @@ export default function CalculadoraPublica() {
                     className="cp-f-input" type="email" placeholder="seu@email.com"
                     value={email} onChange={e => setEmail(e.target.value)}
                   />
+                  <label className="cp-f-label">
+                    Empresa <span style={{ color: "#888", fontWeight: 400, textTransform: "none", fontSize: 12 }}>(opcional)</span>
+                  </label>
+                  <input
+                    className="cp-f-input" type="text" placeholder="Nome da sua empresa"
+                    value={empresaLead} onChange={e => setEmpresaLead(e.target.value)}
+                  />
+                  <label className="cp-f-label">
+                    Tipo de obra <span style={{ color: "#888", fontWeight: 400, textTransform: "none", fontSize: 12 }}>(opcional)</span>
+                  </label>
+                  <select
+                    className="cp-f-input"
+                    value={tipoObra} onChange={e => setTipoObra(e.target.value)}
+                  >
+                    <option value="">Selecione…</option>
+                    <option value="Residencial">Residencial</option>
+                    <option value="Comercial">Comercial</option>
+                    <option value="Reforma/Ampliação">Reforma / Ampliação</option>
+                    <option value="Galpão/Industrial">Galpão / Industrial</option>
+                    <option value="Outro">Outro</option>
+                  </select>
                   {sendError && <p className="cp-f-error">{sendError}</p>}
                   <button className="cp-f-submit" type="submit" disabled={sending}>
                     {sending ? "Enviando..." : "Solicitar orçamento grátis →"}
