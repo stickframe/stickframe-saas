@@ -152,7 +152,9 @@ export function gerarStickQuotePDF({ nome, obraNome, clienteNome, selecoes, resu
     ? 'Quantitativo extraído de PDF de projeto'
     : 'Motor de composição técnica StickQuote™';
 
-  const tituloDoc = obraNome || clienteNome || nome;
+  // Nome digitado pelo usuário tem prioridade — o PDF (e o nome do arquivo)
+  // refletem o que está no campo "Nome do orçamento", não a obra aberta.
+  const tituloDoc = nome || obraNome || clienteNome;
 
   // Grupos (resumo)
   const grupos = {};
