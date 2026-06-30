@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { salvarOrigemLead } from "../utils/leadOrigem";
 import { analytics } from "../utils/analytics";
 import PricingPlans from "../components/PricingPlans";
+import ProvaSocial from "../components/growth/ProvaSocial";
 
 // ─── Icons ───────────────────────────────────────────────────────────────────
 const Ic = {
@@ -482,6 +483,9 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* Prova Social — resultados (Conversion Layer™ C.7) */}
+      <ProvaSocial />
 
       {/* Comparativo */}
       <section className="lp-comp" id="comparativo">
