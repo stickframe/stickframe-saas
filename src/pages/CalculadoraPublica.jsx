@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { sb } from "../services/supabase";
+import { analytics } from "../utils/analytics";
+import { obterLeadIntel } from "../utils/leadOrigem";
 
 // ─── Icon component ──────────────────────────────────────────────────────────
 function Ic({ p, s = 17 }) {
@@ -205,6 +207,11 @@ export default function CalculadoraPublica() {
 
   // Dynamic insumos
   const [listaInsumos, setListaInsumos] = useState(INSUMOS_KIT);
+  // Conversion Layer™ (C.4): marca o início do uso da calculadora pública.
+  useEffect(() => {
+    analytics.calculatorStarted("calculadora-publica");
+  }, []);
+
   useEffect(() => {
     sb.from("insumos_sistema").select("*").then(({ data }) => {
       if (data && data.length > 0) {
@@ -344,6 +351,18 @@ export default function CalculadoraPublica() {
       }).catch(e => console.warn("[CalcPublica] whatsappLead:", e));
 
       try { window.dataLayer?.push({ event: "lead_gerado", value: Math.round(est.total), currency: "BRL", padrao: simPad.nm, area: simArea, cidade }); } catch (_) {}
+
+      // Conversion Layer™ (C.2/C.4/C.5): funil padronizado no GA4 + intel de origem.
+      try {
+        const intel = obterLeadIntel();
+        analytics.calculatorCompleted({ area: simArea, padrao: simPad.nm, valor: Math.round(est.total) });
+        analytics.leadCreated({
+          source: "calculadora-publica",
+          origem: intel.origem,
+          campanha: intel.campanha || undefined,
+          valor: Math.round(est.total),
+        });
+      } catch (_) {}
 
       try {
         const msg = `🏠 *Novo lead via Calculadora!*\n\n👤 *${nome}*\n📱 ${whatsapp}\n📍 ${cidade || "—"}\n\n📐 *Projeto:*\n• Área: ${simArea}m² · ${simPav === 1 ? "Térrea" : "Sobrado"}\n• Padrão: ${simPad.nm}\n• Estimativa: ${fmtR(est.total)}\n\nAcesse o sistema: https://stickframe.com.br`;

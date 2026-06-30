@@ -6,6 +6,7 @@
 const LINKS = [
   ["/admin", "Visão geral"],
   ["/admin/growth", "Growth"],
+  ["/admin/conversion", "Conversão"],
   ["/admin/health", "Health"],
   ["/admin/mobile", "Mobile"],
 ];
