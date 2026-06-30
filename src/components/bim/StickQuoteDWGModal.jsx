@@ -564,9 +564,9 @@ export default function StickQuoteDWGModal({ onClose, obraNome = "", clienteNome
                   Principais insumos
                 </div>
                 {resultado.lista.slice(0, 8).map((it, i) => {
-                  const badge = it.origem === "catalogo"
+                  const badge = it.origemPreco === "catalogo"
                     ? { l: "🟢 CAT", bg: "#22c57820", c: C.green }
-                    : it.origem === "mercado"
+                    : it.origemPreco === "mercado"
                     ? { l: "🟡 MKT", bg: "#e0902020", c: C.amber }
                     : { l: "🔴 EST", bg: C.redSoft, c: C.red2 };
                   return (
@@ -574,14 +574,14 @@ export default function StickQuoteDWGModal({ onClose, obraNome = "", clienteNome
                       padding: "8px 14px", borderBottom: `1px solid ${C.line}`, fontSize: 12 }}>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ color: C.ink, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{it.nome}</div>
-                        <div style={{ color: C.muted, fontSize: 10, marginTop: 2 }}>{fmtN(it.qtdTotal, 2)} {it.un}</div>
+                        <div style={{ color: C.muted, fontSize: 10, marginTop: 2 }}>{fmtN(it.qtdArredondada, 2)} {it.un}</div>
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
                         <span style={{ fontSize: 9, fontWeight: 800, padding: "2px 6px", borderRadius: 6, background: badge.bg, color: badge.c }}>
                           {badge.l}
                         </span>
                         <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 14, color: C.ink }}>
-                          {fmtBRL(it.custoTotal)}
+                          {fmtBRL(it.custo)}
                         </span>
                       </div>
                     </div>
