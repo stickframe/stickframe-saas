@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { salvarOrigemLead } from "../utils/leadOrigem";
 import { analytics } from "../utils/analytics";
+import { sb } from "../services/supabase";
 import PricingPlans from "../components/PricingPlans";
 import ProvaSocial from "../components/growth/ProvaSocial";
 
@@ -289,11 +290,17 @@ export default function LandingPage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [form, setForm] = useState({ nome: "", email: "", whatsapp: "", obras: "" });
   const [sent, setSent] = useState(false);
+  const [stats, setStats] = useState(null); // métricas públicas p/ Prova Social
   const formRef = useRef(null);
 
   useEffect(() => {
     salvarOrigemLead();
     analytics.landingView();
+    // Métricas reais para a prova social (RPC público só-leitura; se falhar,
+    // o ProvaSocial usa os defaults). Não bloqueia a landing.
+    sb.rpc("stats_publicos")
+      .then(({ data }) => { if (data) setStats(data); })
+      .catch(() => {});
     const fn = () => setSolid(window.scrollY > 24);
     window.addEventListener("scroll", fn, { passive: true });
     return () => window.removeEventListener("scroll", fn);
@@ -485,7 +492,7 @@ export default function LandingPage() {
       </section>
 
       {/* Prova Social — resultados (Conversion Layer™ C.7) */}
-      <ProvaSocial />
+      <ProvaSocial {...(stats || {})} />
 
       {/* Comparativo */}
       <section className="lp-comp" id="comparativo">
