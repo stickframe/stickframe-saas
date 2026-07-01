@@ -83,7 +83,7 @@ export const PERFIS = {
   diretor: {
     label: "Diretor",
     cor: C.red,
-    paginas: ["dashboard","agenda","oportunidades","crm","orcamentos","obras","cronograma","medicoes","diario","vistorias","bim","quantitativos","financeiro","rentabilidade","contratos","historico","fornecedores","monitor_precos","calculadora","orcamento_tecnico","orcamento_sf","equipamentos","checklists","equipe","equipe_sf","sst","suprimentos","stickbrain","stickbrain_op","inteligencia","bi","ecossistema","configuracoes","biblioteca","benchmarks"],
+    paginas: ["dashboard","agenda","oportunidades","crm","orcamentos","obras","cronograma","medicoes","diario","vistorias","bim","stickfem","quantitativos","financeiro","rentabilidade","contratos","historico","fornecedores","monitor_precos","calculadora","orcamento_tecnico","orcamento_sf","equipamentos","checklists","equipe","equipe_sf","sst","suprimentos","stickbrain","stickbrain_op","inteligencia","bi","ecossistema","configuracoes","biblioteca","benchmarks"],
   },
   comercial: {
     label: "Comercial",
@@ -93,7 +93,7 @@ export const PERFIS = {
   engenheiro: {
     label: "Engenheiro",
     cor: C.steel,
-    paginas: ["dashboard","obras","cronograma","medicoes","diario","vistorias","bim","quantitativos","fornecedores","monitor_precos","calculadora","orcamento_tecnico","orcamento_sf","equipamentos","checklists","equipe","equipe_sf","sst","suprimentos","historico","stickbrain","inteligencia","configuracoes","biblioteca","benchmarks"],
+    paginas: ["dashboard","obras","cronograma","medicoes","diario","vistorias","bim","stickfem","quantitativos","fornecedores","monitor_precos","calculadora","orcamento_tecnico","orcamento_sf","equipamentos","checklists","equipe","equipe_sf","sst","suprimentos","historico","stickbrain","inteligencia","configuracoes","biblioteca","benchmarks"],
   },
   financeiro: {
     label: "Financeiro",
