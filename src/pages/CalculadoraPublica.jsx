@@ -269,7 +269,16 @@ export default function CalculadoraPublica() {
   }
 
   function handleSimCTA() {
-    if (formRef.current) formRef.current.scrollIntoView({ behavior: "smooth" });
+    // "Simular agora" leva ao simulador (topo), não ao formulário de contato —
+    // que após o envio vira o card de sucesso e dava sensação de "não faz nada".
+    setTab("simular");
+    const irParaSimulador = () => {
+      const el = document.getElementById("cp-simulador");
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+      else window.scrollTo({ top: 0, behavior: "smooth" });
+    };
+    // aguarda o render da aba "simular" caso estivesse em outra aba
+    requestAnimationFrame(irParaSimulador);
   }
 
   function resetSim() {
@@ -841,7 +850,7 @@ export default function CalculadoraPublica() {
 
         {/* ── SIMULATOR ────────────────────────────────────────────────────── */}
         {tab === "simular" && (
-          <section className="cp-sim-section">
+          <section className="cp-sim-section" id="cp-simulador">
             <div className="cp-sim-grid">
               {/* Left intro */}
               <div className="cp-sim-intro">
