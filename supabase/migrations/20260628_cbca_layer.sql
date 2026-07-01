@@ -238,17 +238,17 @@ VALUES
 -- Seed: Curso Modulos
 INSERT INTO public.curso_modulos (id, curso_id, titulo, ordem)
 VALUES
-  ('m0000000-0000-0000-0000-000000000011', 'c0000000-0000-0000-0000-000000000001', 'Módulo 1: Fundamentos do Aço', 1),
-  ('m0000000-0000-0000-0000-000000000012', 'c0000000-0000-0000-0000-000000000001', 'Módulo 2: Fechamentos e Isolamento', 2),
-  ('m0000000-0000-0000-0000-000000000021', 'c0000000-0000-0000-0000-000000000002', 'Módulo 1: Levantamento de Aço (StickQuote)', 1);
+  ('b0000000-0000-0000-0000-000000000011', 'c0000000-0000-0000-0000-000000000001', 'Módulo 1: Fundamentos do Aço', 1),
+  ('b0000000-0000-0000-0000-000000000012', 'c0000000-0000-0000-0000-000000000001', 'Módulo 2: Fechamentos e Isolamento', 2),
+  ('b0000000-0000-0000-0000-000000000021', 'c0000000-0000-0000-0000-000000000002', 'Módulo 1: Levantamento de Aço (StickQuote)', 1);
 
 -- Seed: Curso Aulas
 INSERT INTO public.curso_aulas (modulo_id, titulo, video_url, material_url, duracao_min, ordem)
 VALUES
-  ('m0000000-0000-0000-0000-000000000011', 'Aula 1.1 — O que é LSF e histórico', 'https://www.youtube.com/embed/dQw4w9WgXcQ', 'https://pdfobject.com/pdf/sample.pdf', 12, 1),
-  ('m0000000-0000-0000-0000-000000000011', 'Aula 1.2 — Tipos de perfis (U e Ue) e normatização', 'https://www.youtube.com/embed/dQw4w9WgXcQ', 'https://pdfobject.com/pdf/sample.pdf', 15, 2),
-  ('m0000000-0000-0000-0000-000000000012', 'Aula 2.1 — Placas OSB e Gesso Acartonado', 'https://www.youtube.com/embed/dQw4w9WgXcQ', 'https://pdfobject.com/pdf/sample.pdf', 20, 1),
-  ('m0000000-0000-0000-0000-000000000021', 'Aula 1.1 — Integração de projetos BIM', 'https://www.youtube.com/embed/dQw4w9WgXcQ', 'https://pdfobject.com/pdf/sample.pdf', 25, 1);
+  ('b0000000-0000-0000-0000-000000000011', 'Aula 1.1 — O que é LSF e histórico', 'https://www.youtube.com/embed/dQw4w9WgXcQ', 'https://pdfobject.com/pdf/sample.pdf', 12, 1),
+  ('b0000000-0000-0000-0000-000000000011', 'Aula 1.2 — Tipos de perfis (U e Ue) e normatização', 'https://www.youtube.com/embed/dQw4w9WgXcQ', 'https://pdfobject.com/pdf/sample.pdf', 15, 2),
+  ('b0000000-0000-0000-0000-000000000012', 'Aula 2.1 — Placas OSB e Gesso Acartonado', 'https://www.youtube.com/embed/dQw4w9WgXcQ', 'https://pdfobject.com/pdf/sample.pdf', 20, 1),
+  ('b0000000-0000-0000-0000-000000000021', 'Aula 1.1 — Integração de projetos BIM', 'https://www.youtube.com/embed/dQw4w9WgXcQ', 'https://pdfobject.com/pdf/sample.pdf', 25, 1);
 
 -- Seed: Blog Posts
 INSERT INTO public.blog_posts (titulo, slug, conteudo, resumo, categoria, tags, imagem_capa, autor, publicado_em)
@@ -275,13 +275,13 @@ VALUES
 -- Seed: Guias Técnicos
 INSERT INTO public.guias (id, titulo, fase_obra, versao)
 VALUES
-  ('g0000000-0000-0000-0000-000000000001', 'Guia de Fundação — Radier', 'Fundação', '1.0'),
-  ('g0000000-0000-0000-0000-000000000002', 'Guia de Estrutura — Montagem de Painéis', 'Estrutura Steel Frame', '1.0');
+  ('f0000000-0000-0000-0000-000000000001', 'Guia de Fundação — Radier', 'Fundação', '1.0'),
+  ('f0000000-0000-0000-0000-000000000002', 'Guia de Estrutura — Montagem de Painéis', 'Estrutura Steel Frame', '1.0');
 
 -- Seed: Itens de Guias
 INSERT INTO public.guias_itens (guia_id, ordem, titulo, descricao, foto_referencia_url)
 VALUES
-  ('g0000000-0000-0000-0000-000000000001', 1, 'Nivelamento e gabarito', 'Verificar se o nível da fôrma do radier está rigorosamente plano antes da concretagem. Desvios maiores que 5mm devem ser corrigidos.', 'https://images.unsplash.com/photo-1590069261209-f8e9b8642343?w=300'),
-  ('g0000000-0000-0000-0000-000000000001', 2, 'Posicionamento de tubulações (hidráulica/elétrica)', 'Garantir que todas as esperas de instalações estejam fixadas antes da concretagem, já que o radier não aceita rasgos posteriores.', 'https://images.unsplash.com/photo-1542060748-10c28b629f6f?w=300'),
-  ('g0000000-0000-0000-0000-000000000002', 1, 'Prumo e contraventamento de paredes', 'Instalar prumo temporário e fitas metálicas de contraventamento X conforme projeto de engenharia.', 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=300'),
-  ('g0000000-0000-0000-0000-000000000002', 2, 'Instalação de chumbadores (ancoragem)', 'Verificar espaçamento de chumbadores mecânicos ou químicos que fixam a guia inferior ao concreto.', 'https://images.unsplash.com/photo-1581092921461-eab62e97a780?w=300');
+  ('f0000000-0000-0000-0000-000000000001', 1, 'Nivelamento e gabarito', 'Verificar se o nível da fôrma do radier está rigorosamente plano antes da concretagem. Desvios maiores que 5mm devem ser corrigidos.', 'https://images.unsplash.com/photo-1590069261209-f8e9b8642343?w=300'),
+  ('f0000000-0000-0000-0000-000000000001', 2, 'Posicionamento de tubulações (hidráulica/elétrica)', 'Garantir que todas as esperas de instalações estejam fixadas antes da concretagem, já que o radier não aceita rasgos posteriores.', 'https://images.unsplash.com/photo-1542060748-10c28b629f6f?w=300'),
+  ('f0000000-0000-0000-0000-000000000002', 1, 'Prumo e contraventamento de paredes', 'Instalar prumo temporário e fitas metálicas de contraventamento X conforme projeto de engenharia.', 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=300'),
+  ('f0000000-0000-0000-0000-000000000002', 2, 'Instalação de chumbadores (ancoragem)', 'Verificar espaçamento de chumbadores mecânicos ou químicos que fixam a guia inferior ao concreto.', 'https://images.unsplash.com/photo-1581092921461-eab62e97a780?w=300');

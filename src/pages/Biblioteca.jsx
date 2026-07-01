@@ -15,8 +15,10 @@ const MOCK_DOCS = [
 const PLAN_LEVELS = {
   free: 0,
   essencial: 1,
+  pro: 2,
   profissional: 2,
-  construtora: 3
+  construtora: 3,
+  enterprise: 3
 };
 
 function temPermissao(planoUser = "free", planoMin = "essencial") {
