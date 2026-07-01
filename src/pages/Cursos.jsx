@@ -17,10 +17,10 @@ const MOCK_MODULOS = [
 ];
 
 const MOCK_AULAS = [
-  { id: "a1", modulo_id: "m1", titulo: "Aula 1.1 — O que é LSF e histórico", video_url: "https://www.youtube.com/embed/dQw4w9WgXcQ", material_url: "https://pdfobject.com/pdf/sample.pdf", duracao_min: 12, ordem: 1 },
-  { id: "a2", modulo_id: "m1", titulo: "Aula 1.2 — Tipos de perfis (U e Ue) e normatização", video_url: "https://www.youtube.com/embed/dQw4w9WgXcQ", material_url: "https://pdfobject.com/pdf/sample.pdf", duracao_min: 15, ordem: 2 },
-  { id: "a3", modulo_id: "m2", titulo: "Aula 2.1 — Placas OSB e Gesso Acartonado", video_url: "https://www.youtube.com/embed/dQw4w9WgXcQ", material_url: "https://pdfobject.com/pdf/sample.pdf", duracao_min: 20, ordem: 1 },
-  { id: "a4", modulo_id: "m3", titulo: "Aula 1.1 — Integração de projetos BIM", video_url: "https://www.youtube.com/embed/dQw4w9WgXcQ", material_url: "https://pdfobject.com/pdf/sample.pdf", duracao_min: 25, ordem: 1 }
+  { id: "a1", modulo_id: "m1", titulo: "Aula 1.1 — O que é LSF e histórico", video_url: null, material_url: "https://pdfobject.com/pdf/sample.pdf", duracao_min: 12, ordem: 1 },
+  { id: "a2", modulo_id: "m1", titulo: "Aula 1.2 — Tipos de perfis (U e Ue) e normatização", video_url: null, material_url: "https://pdfobject.com/pdf/sample.pdf", duracao_min: 15, ordem: 2 },
+  { id: "a3", modulo_id: "m2", titulo: "Aula 2.1 — Placas OSB e Gesso Acartonado", video_url: null, material_url: "https://pdfobject.com/pdf/sample.pdf", duracao_min: 20, ordem: 1 },
+  { id: "a4", modulo_id: "m3", titulo: "Aula 1.1 — Integração de projetos BIM", video_url: null, material_url: "https://pdfobject.com/pdf/sample.pdf", duracao_min: 25, ordem: 1 }
 ];
 
 export default function Cursos() {
@@ -261,23 +261,45 @@ export default function Cursos() {
               {aulaAtiva ? (
                 <div>
                   {/* YouTube Iframe Container */}
-                  <div style={{
-                    position: "relative",
-                    paddingBottom: "56.25%",
-                    height: 0,
-                    borderRadius: 14,
-                    overflow: "hidden",
-                    background: "#000",
-                    border: "1px solid var(--line)"
-                  }}>
-                    <iframe
-                      style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: 0 }}
-                      src={aulaAtiva.video_url}
-                      title={aulaAtiva.titulo}
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                    ></iframe>
-                  </div>
+                  {aulaAtiva.video_url ? (
+                    <div style={{
+                      position: "relative",
+                      paddingBottom: "56.25%",
+                      height: 0,
+                      borderRadius: 14,
+                      overflow: "hidden",
+                      background: "#000",
+                      border: "1px solid var(--line)"
+                    }}>
+                      <iframe
+                        style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: 0 }}
+                        src={aulaAtiva.video_url}
+                        title={aulaAtiva.titulo}
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      ></iframe>
+                    </div>
+                  ) : (
+                    <div style={{
+                      height: 280,
+                      borderRadius: 14,
+                      background: "var(--surface)",
+                      border: "1.5px dashed var(--line)",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 12,
+                      padding: 24,
+                      textAlign: "center"
+                    }}>
+                      <div style={{ fontSize: 44 }}>📖</div>
+                      <h3 style={{ fontSize: 16, fontWeight: 700, color: "var(--ink)" }}>Material de Leitura Construtiva</h3>
+                      <p style={{ fontSize: 13, color: "var(--muted)", maxWidth: 380, lineHeight: 1.5 }}>
+                        Esta aula não possui vídeo gravado. Estude o conteúdo por meio do material de apoio e da apostila técnica recomendada para este módulo no anexo abaixo.
+                      </p>
+                    </div>
+                  )}
 
                   {/* Lesson Metadata */}
                   <div style={{ marginTop: 20 }}>

@@ -245,10 +245,10 @@ VALUES
 -- Seed: Curso Aulas
 INSERT INTO public.curso_aulas (modulo_id, titulo, video_url, material_url, duracao_min, ordem)
 VALUES
-  ('b0000000-0000-0000-0000-000000000011', 'Aula 1.1 — O que é LSF e histórico', 'https://www.youtube.com/embed/dQw4w9WgXcQ', 'https://pdfobject.com/pdf/sample.pdf', 12, 1),
-  ('b0000000-0000-0000-0000-000000000011', 'Aula 1.2 — Tipos de perfis (U e Ue) e normatização', 'https://www.youtube.com/embed/dQw4w9WgXcQ', 'https://pdfobject.com/pdf/sample.pdf', 15, 2),
-  ('b0000000-0000-0000-0000-000000000012', 'Aula 2.1 — Placas OSB e Gesso Acartonado', 'https://www.youtube.com/embed/dQw4w9WgXcQ', 'https://pdfobject.com/pdf/sample.pdf', 20, 1),
-  ('b0000000-0000-0000-0000-000000000021', 'Aula 1.1 — Integração de projetos BIM', 'https://www.youtube.com/embed/dQw4w9WgXcQ', 'https://pdfobject.com/pdf/sample.pdf', 25, 1);
+  ('b0000000-0000-0000-0000-000000000011', 'Aula 1.1 — O que é LSF e histórico', NULL, 'https://pdfobject.com/pdf/sample.pdf', 12, 1),
+  ('b0000000-0000-0000-0000-000000000011', 'Aula 1.2 — Tipos de perfis (U e Ue) e normatização', NULL, 'https://pdfobject.com/pdf/sample.pdf', 15, 2),
+  ('b0000000-0000-0000-0000-000000000012', 'Aula 2.1 — Placas OSB e Gesso Acartonado', NULL, 'https://pdfobject.com/pdf/sample.pdf', 20, 1),
+  ('b0000000-0000-0000-0000-000000000021', 'Aula 1.1 — Integração de projetos BIM', NULL, 'https://pdfobject.com/pdf/sample.pdf', 25, 1);
 
 -- Seed: Blog Posts
 INSERT INTO public.blog_posts (titulo, slug, conteudo, resumo, categoria, tags, imagem_capa, autor, publicado_em)
