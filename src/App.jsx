@@ -89,7 +89,6 @@ const AdminGrowth     = lazyWithRetry(() => import("./pages/AdminGrowth"));
 const AdminConversion = lazyWithRetry(() => import("./pages/AdminConversion"));
 const Biblioteca      = lazyWithRetry(() => import("./pages/Biblioteca"));
 const Benchmarks      = lazyWithRetry(() => import("./pages/Benchmarks"));
-const Cursos          = lazyWithRetry(() => import("./pages/Cursos"));
 const PublicObras     = lazyWithRetry(() => import("./pages/PublicObras"));
 const PublicObraDetail = lazyWithRetry(() => import("./pages/PublicObraDetail"));
 const Blog            = lazyWithRetry(() => import("./pages/Blog"));
@@ -136,7 +135,6 @@ const PAGES = {
   planos:         Planos,
   biblioteca:     Biblioteca,
   benchmarks:     Benchmarks,
-  cursos:         Cursos,
 };
 
 function AuthenticatedApp() {
