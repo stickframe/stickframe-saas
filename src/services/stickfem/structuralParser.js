@@ -48,6 +48,21 @@ function classificarPorLayer(layer) {
 }
 
 /**
+ * Lista os layers presentes na geometria com o tipo sugerido pela heurística —
+ * base para a tela de confirmação de layers (o engenheiro ajusta antes de gerar).
+ */
+export function layersDetectados(geometria) {
+  const cont = {};
+  const push = (layer) => {
+    if (!cont[layer]) cont[layer] = { layer, segmentos: 0, sugerido: classificarPorLayer(layer) || "parede" };
+    cont[layer].segmentos += 1;
+  };
+  (geometria.lines || []).forEach((l) => push(l.layer || "0"));
+  (geometria.polylines || []).forEach((p) => push(p.layer || "0"));
+  return Object.values(cont).sort((a, b) => b.segmentos - a.segmentos);
+}
+
+/**
  * @param geometria  saída do parseDXF()
  * @param opts       { peDireito=2.8, minParedeM=0.3, maxParedeM=30 }
  * @returns { elementos, resumo }

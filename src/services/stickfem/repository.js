@@ -91,6 +91,16 @@ export async function registrarAprovacao(projetoId, { analiseId, engenheiroNome,
   return data;
 }
 
+export async function listarOrcamentosStickFem(projetoId) {
+  const { data, error } = await sb
+    .from("stickquote_versoes")
+    .select("id, nome, numero, resultado, observacoes, created_at")
+    .eq("projeto_estrutural_id", projetoId)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+
 export async function carregarProjeto(id) {
   const [proj, arqs, els, aprovs] = await Promise.all([
     sb.from("projeto_estrutural").select("*").eq("id", id).single(),

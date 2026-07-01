@@ -9,7 +9,7 @@ const agora  = () => new Date().toLocaleString('pt-BR');
 /**
  * Salva a versão do StickQuote no Supabase e retorna o registro.
  */
-export async function salvarStickQuote({ nome, obraNome, clienteNome, selecoes, resultado, observacoes, orcamentoId, clienteId }) {
+export async function salvarStickQuote({ nome, obraNome, clienteNome, selecoes, resultado, observacoes, orcamentoId, clienteId, origem, projetoEstruturalId }) {
   const empresaId = getEmpresaId();
   if (!empresaId) throw new Error('empresa_id não encontrado');
 
@@ -25,6 +25,8 @@ export async function salvarStickQuote({ nome, obraNome, clienteNome, selecoes, 
       selecoes:     JSON.parse(JSON.stringify(selecoes)),
       resultado:    JSON.parse(JSON.stringify(resultado)),
       observacoes:  observacoes || null,
+      origem:       origem || null,
+      projeto_estrutural_id: projetoEstruturalId || null,
     })
     .select()
     .single();
