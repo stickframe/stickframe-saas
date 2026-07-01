@@ -10,9 +10,12 @@ import { parseDXF } from "../services/stickfem/dxfParser";
 import { parseEstrutura } from "../services/stickfem/structuralParser";
 import { gerarQuantitativo } from "../services/stickfem/quantitativo";
 import { buildStructuralModel, getSolver } from "../services/stickfem/solver/SolverAdapter";
+import { computeStickFemScore } from "../services/stickfem/score";
+import { gerarOrcamentoEstrutural, gerarPdfEstrutural } from "../services/stickfem/orcamentoBridge";
 import {
   listarPerfis, listarProjetos, criarProjeto, atualizarStatusProjeto,
   salvarArquivoCad, salvarElementos, salvarAnalise, registrarAprovacao, carregarProjeto,
+  listarOrcamentosStickFem,
 } from "../services/stickfem/repository";
 
 const COR_TIPO = { parede: "#3b6ea5", viga: "#c0892d", abertura: "#981915", eixo: "#8c847a", montante: "#4f7d57" };
@@ -145,6 +148,38 @@ function ProjetoDetalhe({ data, perfis, onVoltar, onReload }) {
     perfilMontanteId: perfMont, perfilGuiaId: perfGuia,
   }), [elementos, perfis, projeto, perfMont, perfGuia]);
 
+  // StickFEM Score — usa os perfis atribuídos (montante) para avaliar completude.
+  const score = useMemo(() => computeStickFemScore(
+    elementos.map((e) => (e.tipo === "parede" ? { ...e, perfil_id: e.perfil_id || perfMont } : e))
+  ), [elementos, perfMont]);
+
+  // Fase 8 — orçamento estrutural
+  const [orcs, setOrcs] = useState([]);
+  const [precoKg, setPrecoKg] = useState(12);
+  const [gerando, setGerando] = useState(false);
+  const versaoDxf = (data.arquivos?.length || 0) + (geometria ? 1 : 0) || 1;
+
+  useEffect(() => {
+    listarOrcamentosStickFem(projeto.id).then(setOrcs).catch(() => {});
+  }, [projeto.id]);
+
+  async function gerarOrc() {
+    if (!quant.itens.length) { setErro("Sem quantitativo — importe um DXF com paredes."); return; }
+    setGerando(true); setErro("");
+    try {
+      const { saved } = await gerarOrcamentoEstrutural({
+        projeto, quant,
+        perfilMontante: perfis.find((p) => p.id === perfMont),
+        perfilGuia: perfis.find((p) => p.id === perfGuia),
+        precoKg: Number(precoKg) || 12, obraNome: projeto.nome, versaoDxf,
+      });
+      setMsg(`Orçamento estrutural gerado (StickQuote #${saved?.numero ?? "—"}).`);
+      setOrcs(await listarOrcamentosStickFem(projeto.id));
+    } catch (err) {
+      setErro("Erro ao gerar orçamento: " + (err.message || err));
+    } finally { setGerando(false); }
+  }
+
   async function onDxf(e) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -196,9 +231,17 @@ function ProjetoDetalhe({ data, perfis, onVoltar, onReload }) {
   return (
     <div>
       <button onClick={onVoltar} style={BTN_GHOST}>← Projetos</button>
-      <div style={{ display: "flex", alignItems: "baseline", gap: 10, margin: "10px 0 6px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "10px 0 6px", flexWrap: "wrap" }}>
         <h2 style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: 24, fontWeight: 800, color: "var(--ink)", margin: 0 }}>{projeto.nome}</h2>
         <StatusBadge status={projeto.status} />
+        {geometria && (
+          <span title={score.motivos.join(" · ") || "Modelo íntegro"}
+            style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 700,
+              color: score.cor, background: score.cor + "18", border: `1px solid ${score.cor}44`,
+              borderRadius: 20, padding: "3px 11px" }}>
+            {score.emoji} StickFEM Score: {score.label} ({score.pct})
+          </span>
+        )}
       </div>
 
       {/* Importar */}
@@ -285,7 +328,45 @@ function ProjetoDetalhe({ data, perfis, onVoltar, onReload }) {
               {busy ? "Salvando…" : "Salvar projeto + montar modelo analítico"}
             </button>
           </div>
+
+          {/* 5 · Orçamento estrutural (Fase 8) */}
+          <div style={{ ...CARD, marginTop: 14 }}>
+            <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--ink-2)", marginBottom: 8 }}>
+              5 · Gerar orçamento estrutural <span style={{ fontWeight: 400, color: "var(--muted)" }}>→ StickQuote (origem StickFEM™)</span>
+            </div>
+            <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+              <label style={{ fontSize: 12, color: "var(--ink-2)" }}>
+                Preço do aço (R$/kg):{" "}
+                <input type="number" min="0" step="0.5" value={precoKg} onChange={(e) => setPrecoKg(e.target.value)}
+                  style={{ ...INPUT, width: 90 }} />
+              </label>
+              <span style={{ fontSize: 12, color: "var(--muted)" }}>
+                Peso total {quant.resumo.pesoTotal_kg} kg · estimado {(quant.resumo.pesoTotal_kg * (Number(precoKg) || 0)).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+              </span>
+              <button onClick={gerarOrc} disabled={gerando} style={{ ...BTN_PRIMARY, marginLeft: "auto" }}>
+                {gerando ? "Gerando…" : "Gerar orçamento estrutural"}
+              </button>
+            </div>
+          </div>
         </>
+      )}
+
+      {/* Histórico de orçamentos gerados */}
+      {orcs.length > 0 && (
+        <div style={{ ...CARD, marginTop: 14 }}>
+          <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--ink-2)", marginBottom: 8 }}>
+            Orçamentos gerados a partir deste projeto
+          </div>
+          {orcs.map((o) => (
+            <div key={o.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "7px 0", borderTop: "1px solid var(--line)", fontSize: 12.5 }}>
+              <span style={{ background: "rgba(152,25,21,.1)", color: "var(--brick)", fontWeight: 700, fontSize: 10.5, borderRadius: 5, padding: "2px 7px" }}>StickFEM™</span>
+              <span style={{ color: "var(--ink)", fontWeight: 600 }}>#{o.numero} · {o.nome}</span>
+              <span style={{ color: "var(--muted)" }}>{(o.resultado?.totalCusto || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</span>
+              <button onClick={() => gerarPdfEstrutural({ nome: o.nome, itens: o.resultado?.itens || [], totalCusto: o.resultado?.totalCusto || 0, premissas: o.resultado?.premissas || {} })}
+                style={{ ...BTN_GHOST, marginLeft: "auto", padding: "5px 12px" }}>PDF</button>
+            </div>
+          ))}
+        </div>
       )}
 
       {erro && <div style={ERRO}>{erro}</div>}
