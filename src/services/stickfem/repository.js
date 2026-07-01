@@ -70,12 +70,14 @@ export async function salvarElementos(projetoId, arquivoId, elementos) {
   return data || [];
 }
 
-export async function salvarAnalise(projetoId, { solver, status, modeloAnalitico, resultado, statusEstrutural }) {
+export async function salvarAnalise(projetoId, { solver, status, modeloAnalitico, cargas, combinacoes, resultado, statusEstrutural, deslocamentoMax, tensaoMax, fatorSeguranca }) {
   const empresa_id = getEmpresaId();
   const { data, error } = await sb.from("analise").insert({
     empresa_id, projeto_id: projetoId, solver: solver || null,
     status: status || "pendente", modelo_analitico: modeloAnalitico || {},
+    cargas: cargas || {}, combinacoes: combinacoes || {},
     resultado: resultado || {}, status_estrutural: statusEstrutural || null,
+    deslocamento_max: deslocamentoMax ?? null, tensao_max: tensaoMax ?? null, fator_seguranca: fatorSeguranca ?? null,
   }).select().single();
   if (error) throw error;
   return data;
