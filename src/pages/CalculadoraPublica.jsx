@@ -281,6 +281,11 @@ export default function CalculadoraPublica() {
     requestAnimationFrame(irParaSimulador);
   }
 
+  // "Ver estimativa completa" leva ao formulário (proposta detalhada + contato).
+  function handleVerEstimativa() {
+    if (formRef.current) formRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
   function resetSim() {
     setSimArea(120);
     setSimPad(PADROES_SIM[1]);
@@ -988,7 +993,7 @@ export default function CalculadoraPublica() {
                 </div>
 
                 {/* CTA */}
-                <button className="cp-cta-btn" onClick={handleSimCTA}>
+                <button className="cp-cta-btn" onClick={handleVerEstimativa}>
                   Ver estimativa completa <Ic p={ICONS.arrow} s={16} />
                 </button>
 
