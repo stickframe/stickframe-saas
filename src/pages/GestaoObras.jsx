@@ -14,6 +14,7 @@ import { PdfViewer } from "../components/obras/PdfViewer";
 import { EmptyState } from "../components/ui/EmptyState";
 import { useObraPermission, useObrasVisiveis } from "../hooks/useObraPermission";
 import Planejamento4D from "../components/obras/Planejamento4D";
+import BoasPraticasObra from "../components/obras/BoasPraticasObra";
 import { sb, getEmpresaId } from "../services/supabase";
 import { useState, useEffect, useMemo, useRef } from "react";
 import { AlertTriangle, BarChart2, ClipboardList, DollarSign, HardHat, Pencil, Ruler, Search, Trash2, TrendingUp } from "../components/ui/Icon";
@@ -1909,7 +1910,7 @@ export default function GestaoObras() {
                 {/* Abas */}
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: `1px solid ${C.border}` }}>
                 <div style={{ display: "flex", flex: 1, overflowX: "auto", scrollbarWidth: "thin" }}>
-                  {[["fases", "Fases"], ["tarefas", " Tarefas"], ["financeiro", "Financeiro"], ["fluxo", "Fluxo"], ["cronograma", "Cronograma"], ["diario", "Diário"], ["quantitativos", "Quantitativos"], ["fotos", "Fotos"], ["arquivos", "Arquivos"], ["ncr", "NCR"], ["rfis", "RFIs"], ["rastreio", "Rastreio"], ["historico", "Histórico"], ...(obra.status === "Concluída" ? [["garantia", "Garantia"]] : []), ["garantias", "Garantias"], ...(perfil === "diretor" ? [["membros", "Membros"]] : []), ["presenca", "Presença"], ["comentarios", "Comentários"], ["chat", " Chat"]].map(([k, l]) => (
+                  {[["fases", "Fases"], ["tarefas", " Tarefas"], ["boas_praticas", "Boas Práticas"], ["financeiro", "Financeiro"], ["fluxo", "Fluxo"], ["cronograma", "Cronograma"], ["diario", "Diário"], ["quantitativos", "Quantitativos"], ["fotos", "Fotos"], ["arquivos", "Arquivos"], ["ncr", "NCR"], ["rfis", "RFIs"], ["rastreio", "Rastreio"], ["historico", "Histórico"], ...(obra.status === "Concluída" ? [["garantia", "Garantia"]] : []), ["garantias", "Garantias"], ...(perfil === "diretor" ? [["membros", "Membros"]] : []), ["presenca", "Presença"], ["comentarios", "Comentários"], ["chat", " Chat"]].map(([k, l]) => (
                     <button key={k} onClick={() => {
                       if (k === "diario" && userId) {
                         const pendentes = arqObra.filter((a) => a.disciplina && a.status_doc !== "Desatualizado" && !(a.cientes_uids || []).includes(userId));
@@ -2023,6 +2024,11 @@ export default function GestaoObras() {
                   <div style={{ background: C.surface, borderRadius: "0 0 12px 12px", border: `1px solid ${C.border}`, borderTop: "none", padding: 22, overflowX: "auto" }}>
                     <ListaTarefas obraId={obraId} />
                   </div>
+                )}
+
+                {/* ABA BOAS PRÁTICAS */}
+                {abaAtiva === "boas_praticas" && (
+                  <BoasPraticasObra obraId={obraId} obra={obra} />
                 )}
 
                 {/* ABA FINANCEIRO */}

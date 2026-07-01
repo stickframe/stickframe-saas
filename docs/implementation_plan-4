@@ -1,0 +1,255 @@
+# Plano de Implementação — StickFrame™ CBCA Layer™ (Fase 14)
+
+Esta fase visa expandir o ecossistema do StickFrame™ com uma camada rica de conteúdo e inteligência baseada no CBCA, impulsionando a captação de leads, prova social, e retenção/stickiness de clientes.
+
+---
+
+## User Review Required
+
+> [!IMPORTANT]
+> **Modelo de Permissões RLS:** As tabelas públicas (`blog_posts`, `cursos` e o portfólio de `obras` publicadas) serão expostas como leitura para usuários não autenticados (`anon`). O acesso à **Biblioteca Técnica** e ao painel de **Benchmarks** será restrito por plano de assinatura (lido de `raw_user_meta_data->>'plano'` ou via RLS).
+> 
+> **Mapeamento de Benchmarks:** Para manter a integridade e privacidade, a agregação de benchmarks do setor exige um número mínimo de registros (N >= 10) por categoria/tipologia. Se houver poucas obras cadastradas no bucket, dados gerais ou uma mensagem informativa amigável serão exibidos para garantir o sigilo dos dados.
+
+---
+
+## Open Questions
+
+> [!NOTE]
+> 1. **Visualizador de PDF da Biblioteca:** Usaremos a renderização de PDF nativa do navegador (embed/iframe) ou preferimos usar uma lib existente como `pdfjs-dist` (que já está nas dependências do projeto)?
+> 2. **Vídeos dos Cursos:** Os links das aulas suportarão players externos (YouTube/Vimeo). Há algum canal/provedor oficial de vídeos já definido, ou deixaremos livre para embeds genéricos?
+
+---
+
+## Proposed Changes
+
+Abaixo estão descritas as modificações no banco de dados e os novos componentes frontend.
+
+---
+
+### [Supabase Database & Migrations]
+
+#### [NEW] [20260628_cbca_layer.sql](file:///c:/dev/stickframe-saas/supabase/migrations/20260628_cbca_layer.sql)
+Criação das tabelas de blog, biblioteca técnica, checklists de qualidade, LMS de cursos e views de benchmarks agregados com políticas RLS robustas.
+
+```sql
+-- 1. Banco de Obras (Campos Extras)
+ALTER TABLE public.obras 
+ADD COLUMN IF NOT EXISTS publicada boolean default false,
+ADD COLUMN IF NOT EXISTS descricao_publica text,
+ADD COLUMN IF NOT EXISTS fotos_publicas jsonb default '[]'::jsonb,
+ADD COLUMN IF NOT EXISTS tipologia text,
+ADD COLUMN IF NOT EXISTS destaque boolean default false,
+ADD COLUMN IF NOT EXISTS cidade_publica text,
+ADD COLUMN IF NOT EXISTS uf_publica text,
+ADD COLUMN IF NOT EXISTS prazo_dias integer;
+
+-- 2. Blog Técnico
+CREATE TABLE IF NOT EXISTS public.blog_posts (
+  id uuid default gen_random_uuid() primary key,
+  titulo text not null,
+  slug text unique not null,
+  conteudo text not null,
+  resumo text,
+  categoria text,
+  tags text[] default '{}',
+  imagem_capa text,
+  autor text,
+  publicado_em timestamptz,
+  criado_em timestamptz default now(),
+  atualizado_em timestamptz default now()
+);
+
+-- RLS para Blog
+ALTER TABLE public.blog_posts ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Leitura pública de posts publicados" ON public.blog_posts
+  FOR SELECT TO anon, authenticated USING (publicado_em IS NOT NULL AND publicado_em <= now());
+
+CREATE POLICY "Escrita total de posts por diretores" ON public.blog_posts
+  FOR ALL TO authenticated USING (public.is_diretor());
+
+-- 3. Biblioteca Técnica
+CREATE TABLE IF NOT EXISTS public.biblioteca_docs (
+  id uuid default gen_random_uuid() primary key,
+  titulo text not null,
+  descricao text,
+  categoria text not null,
+  file_url text not null,
+  thumbnail_url text,
+  plano_minimo text default 'essencial',
+  created_at timestamptz default now()
+);
+
+ALTER TABLE public.biblioteca_docs ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Leitura por plano de assinatura" ON public.biblioteca_docs
+  FOR SELECT TO authenticated USING (true); -- Controle fino de visualização no front ou via RPC
+
+-- 4. Guia de Boas Práticas (Checklist Qualidade)
+CREATE TABLE IF NOT EXISTS public.guias (
+  id uuid default gen_random_uuid() primary key,
+  titulo text not null,
+  fase_obra text not null,
+  versao text not null,
+  created_at timestamptz default now()
+);
+
+CREATE TABLE IF NOT EXISTS public.guias_itens (
+  id uuid default gen_random_uuid() primary key,
+  guia_id uuid references public.guias(id) on delete cascade not null,
+  ordem integer not null,
+  titulo text not null,
+  descricao text,
+  foto_referencia_url text,
+  obrigatorio boolean default true
+);
+
+CREATE TABLE IF NOT EXISTS public.obra_conformidade (
+  id uuid default gen_random_uuid() primary key,
+  obra_id uuid references public.obras(id) on delete cascade not null,
+  guia_item_id uuid references public.guias_itens(id) on delete cascade not null,
+  conferido_em timestamptz default now(),
+  conferido_por uuid references public.usuarios(id) on delete set null,
+  foto_registro_url text,
+  observacao text,
+  unique (obra_id, guia_item_id)
+);
+
+ALTER TABLE public.guias ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.guias_itens ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.obra_conformidade ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Leitura pública de guias" ON public.guias FOR SELECT TO authenticated USING (true);
+CREATE POLICY "Leitura pública de itens de guias" ON public.guias_itens FOR SELECT TO authenticated USING (true);
+CREATE POLICY "Acesso conformidade por empresa" ON public.obra_conformidade
+  FOR ALL TO authenticated USING (
+    exists (select 1 from public.obras o where o.id = obra_id and o.empresa_id = public.get_empresa_id())
+  );
+
+-- 5. Cursos LMS
+CREATE TABLE IF NOT EXISTS public.cursos (
+  id uuid default gen_random_uuid() primary key,
+  titulo text not null,
+  descricao_curta text,
+  descricao_longa text,
+  imagem_capa text,
+  preco numeric default 0,
+  plano_incluso text default 'profissional',
+  gratuito boolean default false,
+  carga_horaria integer,
+  ativo boolean default true,
+  created_at timestamptz default now()
+);
+
+CREATE TABLE IF NOT EXISTS public.curso_modulos (
+  id uuid default gen_random_uuid() primary key,
+  curso_id uuid references public.cursos(id) on delete cascade not null,
+  titulo text not null,
+  ordem integer not null
+);
+
+CREATE TABLE IF NOT EXISTS public.curso_aulas (
+  id uuid default gen_random_uuid() primary key,
+  modulo_id uuid references public.curso_modulos(id) on delete cascade not null,
+  titulo text not null,
+  video_url text,
+  material_url text,
+  duracao_min integer default 10,
+  ordem integer not null
+);
+
+CREATE TABLE IF NOT EXISTS public.curso_progresso (
+  id uuid default gen_random_uuid() primary key,
+  usuario_id uuid references public.usuarios(id) on delete cascade not null,
+  aula_id uuid references public.curso_aulas(id) on delete cascade not null,
+  concluido boolean default false,
+  concluido_em timestamptz default now(),
+  unique (usuario_id, aula_id)
+);
+
+CREATE TABLE IF NOT EXISTS public.curso_certificados (
+  id uuid default gen_random_uuid() primary key,
+  usuario_id uuid references public.usuarios(id) on delete cascade not null,
+  curso_id uuid references public.cursos(id) on delete cascade not null,
+  emitido_em timestamptz default now(),
+  codigo_verificacao text unique not null
+);
+
+ALTER TABLE public.cursos ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.curso_modulos ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.curso_aulas ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.curso_progresso ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.curso_certificados ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Leitura de cursos ativos" ON public.cursos FOR SELECT TO authenticated USING (ativo = true);
+CREATE POLICY "Leitura de módulos" ON public.curso_modulos FOR SELECT TO authenticated USING (true);
+CREATE POLICY "Leitura de aulas" ON public.curso_aulas FOR SELECT TO authenticated USING (true);
+CREATE POLICY "Gestão de progresso pelo usuário" ON public.curso_progresso
+  FOR ALL TO authenticated USING (usuario_id = auth.uid());
+CREATE POLICY "Leitura de certificados pelo usuário" ON public.curso_certificados
+  FOR SELECT TO authenticated USING (usuario_id = auth.uid());
+
+-- 6. Views de Benchmarks
+CREATE OR REPLACE VIEW public.vw_benchmark_m2 AS
+  SELECT 
+    tipologia,
+    cidade_publica as cidade,
+    uf_publica as uf,
+    count(id) as total_obras,
+    round(avg(contrato / area_m2), 2) as custo_medio_m2
+  FROM public.obras
+  WHERE publicada = true AND area_m2 > 0 AND contrato > 0
+  GROUP BY tipologia, cidade_publica, uf_publica
+  HAVING count(id) >= 10; -- Anonimização mínima
+```
+
+---
+
+### [Navigation & Core]
+
+#### [MODIFY] [constants.js](file:///c:/dev/stickframe-saas/src/utils/constants.js)
+Inclusão das novas telas na barra de navegação principal (`NAV` e grupos).
+
+#### [MODIFY] [Sidebar.jsx](file:///c:/dev/stickframe-saas/src/components/layout/Sidebar.jsx)
+Mapeamento dos novos links do menu lateral sob os respectivos grupos ("Visão Geral", "Inteligência" e "Qualidade").
+
+#### [MODIFY] [App.jsx](file:///c:/dev/stickframe-saas/src/App.jsx)
+Registro das novas rotas de blog, portfólio de obras, LMS e biblioteca técnica (públicas e privadas).
+
+---
+
+### [New Pages & Features]
+
+#### [NEW] [PublicObras.jsx](file:///c:/dev/stickframe-saas/src/pages/PublicObras.jsx)
+Catálogo público de portfólios compartilhados, permitindo filtrar por cidade, tipologia e área. Design moderno com cartões tipo galeria, hover dinâmico e botões de simulação/orçamento rápido.
+
+#### [NEW] [PublicObraDetail.jsx](file:///c:/dev/stickframe-saas/src/pages/PublicObraDetail.jsx)
+Detalhes de uma obra com carrossel de fotos públicas, especificações técnicas detalhadas e CTA para orçamento na calculadora pública.
+
+#### [NEW] [Blog.jsx](file:///c:/dev/stickframe-saas/src/pages/Blog.jsx) & [BlogPostDetail.jsx](file:///c:/dev/stickframe-saas/src/pages/BlogPostDetail.jsx)
+Páginas públicas de blog técnico em UTF-8 com design limpo, leitura agradável com foco em tipografia premium e cards contextuais de captação de leads.
+
+#### [NEW] [Biblioteca.jsx](file:///c:/dev/stickframe-saas/src/pages/Biblioteca.jsx)
+Painel privado do aplicativo de busca e leitura de manuais e normas de Steel Frame, com bloqueador/upsell de documentos baseado no plano (Free vs Pro).
+
+#### [NEW] [Benchmarks.jsx](file:///c:/dev/stickframe-saas/src/pages/Benchmarks.jsx)
+Visualização analítica de custos e prazos do ecossistema, exibindo gráficos elegantes de médias nacionais comparados com as métricas das obras da própria empresa do usuário.
+
+#### [NEW] [Cursos.jsx](file:///c:/dev/stickframe-saas/src/pages/Cursos.jsx)
+Plataforma LMS inside the app: listagem de treinamentos, aulas em vídeo, progresso do aluno e emissão automática de certificado de conclusão em PDF usando jsPDF.
+
+#### [NEW] [BoasPraticas.jsx](file:///c:/dev/stickframe-saas/src/pages/BoasPraticas.jsx)
+Aba ou página interativa de checklist e qualidade, onde engenheiros no canteiro podem conferir as diretrizes técnicas do CBCA por fase, tirar fotos e atestar conformidades.
+
+---
+
+## Verification Plan
+
+### Automated Tests
+- Criaremos testes unitários focados na validação do proxy de `PRECOS` e do cálculo de conformidades dos guias técnicos:
+  - `npm run test` para rodar todos os testes.
+
+### Manual Verification
+- Abertura de portfólio público `/obras` sem login e validação do fluxo do CTA para a calculadora.
+- Simulação de leitura de biblioteca com restrições por plano para verificar upsell.
+- Teste de checklist interativo na visualização mobile (canteiro de obra) salvando conformidade com fotos.
+- Conclusão de módulo de curso e emissão do certificado em PDF.

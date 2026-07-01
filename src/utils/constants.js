@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Stick Frame ÔÇö Global Style Constants
  * 
  * Objeto `C` contendo as variáveis semânticas de cor.
@@ -72,6 +72,9 @@ export const NAV = [
   { key: "stickbrain_op",     label: "Operacional",          brand: "StickBrain™",      icon: "Zap",             grupo: "inteligencia", badge: "LIVE", perfis: ["diretor", "comercial"] },
   { key: "bi",                label: "Analytics",            brand: "StickPulse™",      icon: "BarChart2",       grupo: "inteligencia", badge: "PRO", perfis: ["diretor"] },
   { key: "inteligencia",      label: "Inteligência Artificial", brand: "StickBrain™",   icon: "Brain",           grupo: "inteligencia", badge: "IA",  perfis: ["diretor", "engenheiro"] },
+  { key: "benchmarks",        label: "Benchmarks Setor",     brand: "StickPulse™",      icon: "TrendingUp",      grupo: "inteligencia", badge: "PRO" },
+  { key: "biblioteca",        label: "Biblioteca Técnica",   brand: "CBCA Layer™",      icon: "BookOpen",        grupo: "visao_geral" },
+  { key: "cursos",            label: "Cursos / LMS",         brand: "StickClass™",      icon: "GraduationCap",   grupo: "visao_geral", badge: "NOVO" },
   { key: "ecossistema",       label: "Ecossistema Stick™",   icon: "Layers",            grupo: "gestao" },
   { key: "configuracoes",     label: "Configurações",        icon: "Settings",          grupo: "gestao" },
 ];
@@ -81,22 +84,22 @@ export const PERFIS = {
   diretor: {
     label: "Diretor",
     cor: C.red,
-    paginas: ["dashboard","agenda","oportunidades","crm","orcamentos","obras","cronograma","medicoes","diario","vistorias","bim","quantitativos","financeiro","rentabilidade","contratos","historico","fornecedores","monitor_precos","calculadora","orcamento_tecnico","orcamento_sf","equipamentos","checklists","equipe","equipe_sf","sst","suprimentos","stickbrain","stickbrain_op","inteligencia","bi","ecossistema","configuracoes"],
+    paginas: ["dashboard","agenda","oportunidades","crm","orcamentos","obras","cronograma","medicoes","diario","vistorias","bim","quantitativos","financeiro","rentabilidade","contratos","historico","fornecedores","monitor_precos","calculadora","orcamento_tecnico","orcamento_sf","equipamentos","checklists","equipe","equipe_sf","sst","suprimentos","stickbrain","stickbrain_op","inteligencia","bi","ecossistema","configuracoes","biblioteca","benchmarks","cursos"],
   },
   comercial: {
     label: "Comercial",
     cor: C.warning,
-    paginas: ["dashboard","agenda","oportunidades","crm","orcamentos","stickbrain","stickbrain_op","configuracoes"],
+    paginas: ["dashboard","agenda","oportunidades","crm","orcamentos","stickbrain","stickbrain_op","configuracoes","biblioteca","cursos"],
   },
   engenheiro: {
     label: "Engenheiro",
     cor: C.steel,
-    paginas: ["dashboard","obras","cronograma","medicoes","diario","vistorias","bim","quantitativos","fornecedores","monitor_precos","calculadora","orcamento_tecnico","orcamento_sf","equipamentos","checklists","equipe","equipe_sf","sst","suprimentos","historico","stickbrain","inteligencia","configuracoes"],
+    paginas: ["dashboard","obras","cronograma","medicoes","diario","vistorias","bim","quantitativos","fornecedores","monitor_precos","calculadora","orcamento_tecnico","orcamento_sf","equipamentos","checklists","equipe","equipe_sf","sst","suprimentos","historico","stickbrain","inteligencia","configuracoes","biblioteca","benchmarks","cursos"],
   },
   financeiro: {
     label: "Financeiro",
     cor: C.success,
-    paginas: ["dashboard","financeiro","contratos","historico","monitor_precos","configuracoes"],
+    paginas: ["dashboard","financeiro","contratos","historico","monitor_precos","configuracoes","biblioteca","cursos"],
   },
 };
 

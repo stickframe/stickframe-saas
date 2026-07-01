@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>StickBrain Operacional™ — StickFrame</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Hanken+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --brick:#981915; --brick-dk:#7d1411; --brick-soft:#f3e7e5;
+  --surface:#ffffff; --surface2:#faf8f4; --bg:#f4f1ec; --border:#e7e1d8; --line2:#efeae2;
+  --ink:#26231f; --ink2:#57514a; --muted:#8c847a; --graphite:#232225; --graphite2:#1a191c; --graphite3:#2e2c31;
+  --success:#3f7a4b; --warning:#b07a1e; --danger:#a33327; --steel:#3b6ea5; --purple:#6d557e; --ochre:#c0892d; --sage:#4f7d57; --clay:#b8624a;
+  --sans:'Hanken Grotesk',system-ui,sans-serif;
+  --cond:'Barlow Condensed',var(--sans);
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+  --sh1:0 1px 3px rgba(40,30,20,.08),0 1px 2px rgba(40,30,20,.05);
+  --sh2:0 6px 22px rgba(40,30,20,.10),0 2px 6px rgba(40,30,20,.06);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:var(--sans);background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;line-height:1.5}
+::selection{background:var(--brick);color:#fff}
+.mono{font-family:var(--mono)}
+.app{display:flex;height:100vh;overflow:hidden}
+
+/* ── Sidebar ── */
+.side{width:222px;flex-shrink:0;background:var(--graphite2);display:flex;flex-direction:column;overflow:hidden}
+.side-logo{padding:16px 16px 13px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.07)}
+.side-logo img{width:30px;height:30px;flex-shrink:0}
+.side-logo .nm{font-family:var(--cond);font-weight:700;font-size:16px;letter-spacing:.5px;color:#fff;line-height:1}
+.side-logo .sub{font-size:8px;color:rgba(255,255,255,.35);letter-spacing:1.3px;text-transform:uppercase;margin-top:2px}
+.snav{flex:1;overflow-y:auto;padding:8px 0}
+.snav::-webkit-scrollbar{width:3px}.snav::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:3px}
+.nav-grp{font-size:9px;font-weight:800;letter-spacing:1.4px;color:rgba(255,255,255,.28);text-transform:uppercase;padding:12px 14px 5px}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 14px;font-size:12.5px;font-weight:500;color:rgba(255,255,255,.6);cursor:pointer;transition:.12s}
+.nav-item:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.9)}
+.nav-item.on{background:var(--brick);color:#fff;font-weight:600}
+.nav-item svg{width:14px;height:14px;flex-shrink:0;opacity:.85}
+.nav-badge{font-size:8.5px;font-weight:800;padding:2px 6px;border-radius:4px;letter-spacing:.5px;margin-left:auto;background:rgba(255,255,255,.15);color:rgba(255,255,255,.85)}
+.side-foot{padding:11px 14px;border-top:1px solid rgba(255,255,255,.07);display:flex;align-items:center;gap:9px}
+.s-av{width:28px;height:28px;border-radius:50%;background:var(--brick);color:#fff;display:grid;place-items:center;font-size:11px;font-weight:700;flex-shrink:0;font-family:var(--cond)}
+.s-nm{font-size:12px;font-weight:600;color:rgba(255,255,255,.85)}
+.s-rl{font-size:10px;color:rgba(255,255,255,.35)}
+
+/* ── Main ── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.topbar{height:54px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 22px;flex-shrink:0;gap:12px}
+.tb-l{display:flex;align-items:center;gap:11px;min-width:0}
+.tb-mark{width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,var(--graphite),var(--graphite3));display:grid;place-items:center;flex-shrink:0;position:relative}
+.tb-mark svg{width:18px;height:18px;stroke:#fff;stroke-width:1.8}
+.tb-mark .live{position:absolute;top:-3px;right:-3px;width:11px;height:11px;border-radius:50%;background:var(--success);border:2px solid var(--surface)}
+.tb-tt{font-family:var(--cond);font-weight:700;font-size:19px;letter-spacing:.3px;line-height:1}
+.tb-tt .tm{color:var(--brick)}
+.tb-sub{font-size:11px;color:var(--muted);margin-top:1px}
+.tb-r{display:flex;align-items:center;gap:8px}
+.live-pill{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--success);background:#e4efe6;border:1px solid #cfe3d3;border-radius:20px;padding:5px 11px}
+.live-pill .d{width:7px;height:7px;border-radius:50%;background:var(--success);animation:pulse 1.8s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.icon-btn{width:34px;height:34px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;display:grid;place-items:center;cursor:pointer}
+.icon-btn svg{width:16px;height:16px;stroke:var(--ink2);stroke-width:1.9}
+
+.scrollwrap{flex:1;overflow-y:auto}
+.scrollwrap::-webkit-scrollbar{width:9px}.scrollwrap::-webkit-scrollbar-thumb{background:var(--border);border-radius:9px;border:2px solid var(--bg)}
+.canvas{padding:22px 26px 60px;max-width:1320px;margin:0 auto}
+
+/* ── Today band ── */
+.today{display:grid;grid-template-columns:1.3fr 1fr 1fr 1fr;gap:0;background:linear-gradient(135deg,var(--graphite2),var(--graphite3));border-radius:16px;overflow:hidden;box-shadow:var(--sh2);margin-bottom:20px}
+.today .lead{padding:20px 24px;border-right:1px solid rgba(255,255,255,.08);display:flex;flex-direction:column;gap:6px;justify-content:center}
+.today .lead .k{font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.45);display:flex;align-items:center;gap:8px}
+.today .lead .k svg{width:14px;height:14px;stroke:#e0938a;stroke-width:2}
+.today .lead h2{font-family:var(--cond);font-weight:700;font-size:30px;color:#fff;line-height:1.05}
+.today .lead p{font-size:12px;color:rgba(255,255,255,.5)}
+.today .lead p b{color:#fff;font-weight:700}
+.today .st{padding:18px 22px;border-right:1px solid rgba(255,255,255,.08);display:flex;flex-direction:column;gap:4px;justify-content:center}
+.today .st:last-child{border-right:none}
+.today .st .l{font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:rgba(255,255,255,.45)}
+.today .st .v{font-family:var(--cond);font-weight:800;font-size:30px;line-height:1}
+.today .st .h{font-size:11px;color:rgba(255,255,255,.45)}
+.today .st.hot .v{color:#e0938a}.today .st.warm .v{color:#e0b463}.today .st.cool .v{color:#8fb6dd}
+
+/* ── 2 col layout ── */
+.cols{display:grid;grid-template-columns:1.55fr 1fr;gap:18px;align-items:start}
+.col-h{display:flex;align-items:center;gap:10px;margin-bottom:13px}
+.col-h h3{font-family:var(--cond);font-weight:700;font-size:21px;letter-spacing:.2px}
+.col-h .hi{font-size:11.5px;color:var(--muted)}
+.col-h .right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.seg{display:inline-flex;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:3px;gap:2px}
+.seg button{font-family:var(--sans);font-size:11.5px;font-weight:600;border:none;background:none;color:var(--ink2);padding:5px 11px;border-radius:6px;cursor:pointer}
+.seg button.on{background:var(--brick);color:#fff}
+
+/* group label */
+.qgrp{font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin:18px 0 9px;display:flex;align-items:center;gap:9px}
+.qgrp:first-child{margin-top:0}
+.qgrp .ct{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:1px 8px;color:var(--ink2)}
+.qgrp.now{color:var(--danger)} .qgrp.now .ct{border-color:#ecccc7;color:var(--danger);background:#fbeeec}
+
+/* ── Action card ── */
+.act{background:var(--surface);border:1px solid var(--border);border-radius:13px;box-shadow:var(--sh1);padding:14px 15px;margin-bottom:10px;display:grid;grid-template-columns:auto 1fr;gap:14px;position:relative;overflow:hidden}
+.act::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent,var(--steel))}
+.act .score{width:50px;display:flex;flex-direction:column;align-items:center;gap:3px;padding-top:2px}
+.ring{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;position:relative;background:conic-gradient(var(--accent) calc(var(--p)*1%),var(--line2) 0)}
+.ring::after{content:"";position:absolute;inset:4px;border-radius:50%;background:var(--surface)}
+.ring .pv{position:relative;z-index:2;font-family:var(--cond);font-weight:800;font-size:17px;color:var(--ink);line-height:1}
+.score .sl{font-size:8.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted)}
+.act .body{min-width:0}
+.act .verb{font-size:14.5px;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.act .verb .ent{color:var(--brick)}
+.act .meta{font-size:11.5px;color:var(--muted);margin-top:2px;display:flex;gap:12px;flex-wrap:wrap}
+.act .meta b{color:var(--ink2);font-weight:700}
+.act .why{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}
+.chip{font-size:11px;font-weight:600;padding:3px 9px;border-radius:6px;display:inline-flex;align-items:center;gap:5px;background:var(--surface2);border:1px solid var(--border);color:var(--ink2)}
+.chip svg{width:12px;height:12px;stroke-width:2.1}
+.chip.hot{background:#fbeeec;border-color:#ecccc7;color:var(--danger)}
+.chip.warm{background:#f7f0e2;border-color:#ecdfc4;color:var(--ochre)}
+.chip.good{background:#e4efe6;border-color:#cfe3d3;color:var(--success)}
+.act .acts{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.abtn{font-family:var(--sans);font-size:12px;font-weight:700;border-radius:8px;padding:8px 13px;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--ink2);display:inline-flex;align-items:center;gap:6px}
+.abtn svg{width:13px;height:13px;stroke-width:2.1}
+.abtn.pri{background:var(--brick);border-color:var(--brick);color:#fff}
+.abtn.ghost{background:none}
+.abtn .mut{margin-left:auto}
+.act .dismiss{position:absolute;top:11px;right:12px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:17px;line-height:1;padding:2px}
+
+/* auto-done card */
+.autodone{display:flex;align-items:center;gap:11px;background:#f1f6f2;border:1px solid #d8e8db;border-radius:11px;padding:11px 14px;margin-bottom:10px}
+.autodone .ck{width:30px;height:30px;border-radius:8px;background:#dcebde;background:#d8e8db;display:grid;place-items:center;flex-shrink:0}
+.autodone .ck svg{width:16px;height:16px;stroke:var(--success);stroke-width:2.4}
+.autodone .t{font-size:12.5px;font-weight:600;color:var(--ink)}
+.autodone .t b{font-weight:800}
+.autodone .s{font-size:11px;color:var(--muted)}
+.autodone .undo{margin-left:auto;font-size:11px;font-weight:700;color:var(--ink2);background:none;border:none;cursor:pointer;text-decoration:underline}
+
+/* ── Right rail cards ── */
+.rcard{background:var(--surface);border:1px solid var(--border);border-radius:13px;box-shadow:var(--sh1);margin-bottom:16px}
+.rcard-h{display:flex;align-items:center;gap:9px;padding:13px 16px 11px;border-bottom:1px solid var(--line2)}
+.rcard-h .ri{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;flex-shrink:0}
+.rcard-h .ri svg{width:15px;height:15px;stroke-width:2}
+.rcard-h h4{font-family:var(--cond);font-weight:700;font-size:16px}
+.rcard-h .hi{font-size:10.5px;color:var(--muted)}
+.rcard-b{padding:6px 16px 14px}
+
+/* temperature list */
+.trow{display:flex;align-items:center;gap:11px;padding:9px 0;border-bottom:1px solid var(--line2)}
+.trow:last-child{border-bottom:none}
+.trow .tn{font-size:12.5px;font-weight:600;min-width:0;flex:1}
+.trow .tn .v{font-size:10.5px;color:var(--muted);font-weight:500}
+.therm{width:74px;flex-shrink:0}
+.therm .bar{height:6px;border-radius:4px;background:var(--line2);overflow:hidden}
+.therm .fill{height:100%;border-radius:4px}
+.therm .lab{font-size:9.5px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;margin-top:3px;text-align:right}
+.t-hot .fill{background:var(--danger)}.t-hot .lab{color:var(--danger)}
+.t-warm .fill{background:var(--ochre)}.t-warm .lab{color:var(--ochre)}
+.t-cool .fill{background:var(--steel)}.t-cool .lab{color:var(--steel)}
+.t-good .fill{background:var(--success)}.t-good .lab{color:var(--success)}
+
+/* deal close list */
+.drow{display:flex;align-items:center;gap:11px;padding:10px 0;border-bottom:1px solid var(--line2)}
+.drow:last-child{border-bottom:none}
+.drow .prob{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;flex-shrink:0;font-family:var(--cond);font-weight:800;font-size:14px;color:#fff;position:relative}
+.drow .di{flex:1;min-width:0}
+.drow .dn{font-size:12.5px;font-weight:700}
+.drow .dv{font-size:11px;color:var(--muted)}
+.drow .dgo{background:var(--surface2);border:1px solid var(--border);border-radius:7px;width:30px;height:30px;display:grid;place-items:center;cursor:pointer;flex-shrink:0}
+.drow .dgo svg{width:14px;height:14px;stroke:var(--ink2);stroke-width:2.2}
+
+/* burning money */
+.burn{margin:0 16px 14px;background:#fbeeec;border:1px solid #ecccc7;border-radius:11px;padding:13px 15px}
+.burn .bt{font-size:13px;font-weight:700;color:var(--danger);display:flex;align-items:center;gap:8px}
+.burn .bt svg{width:16px;height:16px;stroke:var(--danger);stroke-width:2}
+.burn .bb{font-size:11.5px;color:var(--ink2);margin-top:5px;line-height:1.5}
+.burn .bb b{color:var(--danger)}
+.burn .bgo{margin-top:10px;font-size:11.5px;font-weight:700;color:#fff;background:var(--danger);border:none;border-radius:7px;padding:7px 13px;cursor:pointer}
+
+.footnote{font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:18px;text-align:center}
+
+@media(max-width:1100px){
+  .today{grid-template-columns:1fr 1fr}
+  .cols{grid-template-columns:1fr}
+}
+@media(max-width:760px){
+  .side{display:none}
+  .canvas{padding:16px 14px 50px}
+  .today{grid-template-columns:1fr}
+  .today .lead,.today .st{border-right:none;border-bottom:1px solid rgba(255,255,255,.08)}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- Sidebar -->
+  <aside class="side">
+    <div class="side-logo">
+      <img src="assets/logo-stickframe-mark.png" alt="StickFrame"/>
+      <div><div class="nm">STICKFRAME</div><div class="sub">Gestão Steel Frame</div></div>
+    </div>
+    <nav class="snav">
+      <div class="nav-grp">Comercial</div>
+      <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg> Oportunidades</div>
+      <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="9" cy="7" r="3.5"/><path d="M2 21v-1a6 6 0 0 1 12 0v1M16 3.5a3.5 3.5 0 0 1 0 7M22 21v-1a6 6 0 0 0-4-5.6"/></svg> CRM / Clientes</div>
+      <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg> Orçamentos</div>
+      <div class="nav-grp">StickBrain™</div>
+      <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 3v18h18"/><rect x="7" y="10" width="3" height="7"/><rect x="13" y="6" width="3" height="11"/></svg> Analytics <span class="nav-badge">IA</span></div>
+      <div class="nav-item on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg> Operacional <span class="nav-badge" style="background:rgba(63,122,75,.32);color:#86d196">LIVE</span></div>
+      <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.2 1 2h6c0-.8.4-1.5 1-2A7 7 0 0 0 12 2z"/></svg> Recomendações</div>
+      <div class="nav-grp">Gestão</div>
+      <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2 2 7l10 5 10-5z"/><path d="m2 17 10 5 10-5M2 12l10 5 10-5"/></svg> Ecossistema</div>
+    </nav>
+    <div class="side-foot">
+      <div class="s-av">RM</div>
+      <div><div class="s-nm">Rafael M.</div><div class="s-rl">Diretor</div></div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+    <header class="topbar">
+      <div class="tb-l">
+        <div class="tb-mark"><span class="live"></span><svg viewBox="0 0 24 24" fill="none"><path d="M12 5a3 3 0 1 0-3 3M12 5a3 3 0 1 1 3 3M12 5v6M9 8a4 4 0 0 0-4 4v1a4 4 0 0 0 4 4M15 8a4 4 0 0 1 4 4v1a4 4 0 0 1-4 4M9 17a3 3 0 1 0 6 0"/></svg></div>
+        <div><div class="tb-tt">StickBrain <span class="tm">Operacional™</span></div><div class="tb-sub">A IA agindo: o que fazer agora para não perder dinheiro.</div></div>
+      </div>
+      <div class="tb-r">
+        <span class="live-pill"><span class="d"></span> Monitorando 38 oportunidades</span>
+        <div class="icon-btn" title="Configurar automações"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1.3l2-1.6-2-3.4-2.4 1a7 7 0 0 0-2.2-1.3L13.9 2h-3.8l-.4 2.6a7 7 0 0 0-2.2 1.3l-2.4-1-2 3.4 2 1.6A7 7 0 0 0 5 12a7 7 0 0 0 .1 1.3l-2 1.6 2 3.4 2.4-1a7 7 0 0 0 2.2 1.3l.4 2.4h3.8l.4-2.6a7 7 0 0 0 2.2-1.3l2.4 1 2-3.4-2-1.6A7 7 0 0 0 19 12z"/></svg></div>
+      </div>
+    </header>
+
+    <div class="scrollwrap">
+      <div class="canvas">
+
+        <!-- Today band -->
+        <div class="today">
+          <div class="lead">
+            <span class="k"><svg viewBox="0 0 24 24" fill="none"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg> StickBrain · agora</span>
+            <h2>7 ações para hoje</h2>
+            <p><b>R$ 1,24M</b> em jogo · 3 exigem ação imediata</p>
+          </div>
+          <div class="st hot"><span class="l">Esfriando</span><span class="v">5</span><span class="h">leads perdendo tração</span></div>
+          <div class="st warm"><span class="l">Quentes p/ fechar</span><span class="v">4</span><span class="h">orçamentos &gt;70%</span></div>
+          <div class="st cool"><span class="l">Automações hoje</span><span class="v">12</span><span class="h">follow-ups disparados</span></div>
+        </div>
+
+        <div class="cols">
+          <!-- LEFT: action queue -->
+          <section>
+            <div class="col-h">
+              <div><h3>Ações de hoje</h3><div class="hi">Priorizadas pela IA por impacto × urgência</div></div>
+              <div class="right">
+                <div class="seg" id="segView"><button class="on">Sugeridas</button><button>Automáticas</button><button>Todas</button></div>
+              </div>
+            </div>
+
+            <div class="qgrp now">Agora <span class="ct">3</span></div>
+
+            <div class="act" style="--accent:var(--danger)">
+              <button class="dismiss" title="Adiar">×</button>
+              <div class="score"><div class="ring" style="--accent:var(--danger);--p:92"><span class="pv">92</span></div><span class="sl">Prioridade</span></div>
+              <div class="body">
+                <div class="verb">Ligar para <span class="ent">Construtora Alfa</span></div>
+                <div class="meta"><span><b>R$ 420k</b> · Proposta enviada</span><span>Resp.: Camila S.</span></div>
+                <div class="why">
+                  <span class="chip hot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M8 2s4 3 4 8a4 4 0 0 1-8 0c0-2 1-3 1-3M15 22a6 6 0 0 0 6-6c0-4-3-6-3-6"/></svg>Esfriando 9 dias</span>
+                  <span class="chip">Abriu a proposta 3×</span>
+                  <span class="chip warm">Sem resposta ao e-mail</span>
+                </div>
+                <div class="acts">
+                  <button class="abtn pri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.7A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.4-1.2a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg>Ligar agora</button>
+                  <button class="abtn">Enviar follow-up</button>
+                  <button class="abtn ghost">Por quê?</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="act" style="--accent:var(--danger)">
+              <button class="dismiss" title="Adiar">×</button>
+              <div class="score"><div class="ring" style="--accent:var(--danger);--p:88"><span class="pv">88</span></div><span class="sl">Prioridade</span></div>
+              <div class="body">
+                <div class="verb">Recuperar <span class="ent">8 StickQuotes órfãos</span></div>
+                <div class="meta"><span><b>R$ 540k</b> em potencial parado</span><span>Sem orçamento há &gt;7 dias</span></div>
+                <div class="why">
+                  <span class="chip hot">Receita travada</span>
+                  <span class="chip">Maioria de Indicação</span>
+                </div>
+                <div class="acts">
+                  <button class="abtn pri">Gerar orçamentos</button>
+                  <button class="abtn">Ver lista</button>
+                  <button class="abtn ghost">Por quê?</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="act" style="--accent:var(--danger)">
+              <button class="dismiss" title="Adiar">×</button>
+              <div class="score"><div class="ring" style="--accent:var(--danger);--p:81"><span class="pv">81</span></div><span class="sl">Prioridade</span></div>
+              <div class="body">
+                <div class="verb">Enviar proposta para <span class="ent">Residencial Horizonte</span></div>
+                <div class="meta"><span><b>R$ 310k</b> · Orçamento aprovado</span><span>Resp.: Júnior P.</span></div>
+                <div class="why">
+                  <span class="chip good">Cliente pediu proposta</span>
+                  <span class="chip warm">Aguardando há 2 dias</span>
+                </div>
+                <div class="acts">
+                  <button class="abtn pri">Gerar proposta</button>
+                  <button class="abtn">Agendar</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="qgrp">Hoje <span class="ct">2</span></div>
+
+            <div class="act" style="--accent:var(--ochre)">
+              <button class="dismiss" title="Adiar">×</button>
+              <div class="score"><div class="ring" style="--accent:var(--ochre);--p:67"><span class="pv">67</span></div><span class="sl">Prioridade</span></div>
+              <div class="body">
+                <div class="verb">Follow-up com <span class="ent">Galpão Logístico Sul</span></div>
+                <div class="meta"><span><b>R$ 180k</b> · Qualificação</span><span>Resp.: Camila S.</span></div>
+                <div class="why"><span class="chip warm">Sem contato há 6 dias</span><span class="chip">Veio da Calculadora</span></div>
+                <div class="acts"><button class="abtn pri">Enviar follow-up</button><button class="abtn">Agendar visita</button></div>
+              </div>
+            </div>
+
+            <div class="act" style="--accent:var(--steel)">
+              <button class="dismiss" title="Adiar">×</button>
+              <div class="score"><div class="ring" style="--accent:var(--steel);--p:58"><span class="pv">58</span></div><span class="sl">Prioridade</span></div>
+              <div class="body">
+                <div class="verb">Confirmar visita técnica · <span class="ent">Casa Vale Verde</span></div>
+                <div class="meta"><span><b>R$ 95k</b> · Em negociação</span><span>Visita amanhã 14h</span></div>
+                <div class="why"><span class="chip good">Alta chance de fechar</span></div>
+                <div class="acts"><button class="abtn pri">Confirmar</button><button class="abtn">Reagendar</button></div>
+              </div>
+            </div>
+
+            <div class="qgrp">Feito pela IA hoje <span class="ct">12</span></div>
+            <div class="autodone">
+              <div class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 6 9 17l-5-5"/></svg></div>
+              <div><div class="t"><b>9 follow-ups automáticos</b> enviados a leads mornos</div><div class="s">Modelo "reengajamento" · 2 já responderam</div></div>
+              <button class="undo">Ver</button>
+            </div>
+            <div class="autodone">
+              <div class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 6 9 17l-5-5"/></svg></div>
+              <div><div class="t"><b>3 lembretes</b> criados na agenda dos responsáveis</div><div class="s">Oportunidades em negociação sem próximo passo</div></div>
+              <button class="undo">Ver</button>
+            </div>
+          </section>
+
+          <!-- RIGHT: signals -->
+          <aside>
+            <div class="rcard">
+              <div class="rcard-h"><div class="ri" style="background:#fbeeec"><svg viewBox="0 0 24 24" fill="none" stroke="var(--danger)"><path d="M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0z"/></svg></div><div><h4>Termômetro de leads</h4><div class="hi">Tração nas últimas 2 semanas</div></div></div>
+              <div class="rcard-b" id="thermList"></div>
+            </div>
+
+            <div class="rcard">
+              <div class="rcard-h"><div class="ri" style="background:#e4efe6"><svg viewBox="0 0 24 24" fill="none" stroke="var(--success)"><path d="m9 12 2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg></div><div><h4>Alta chance de fechar</h4><div class="hi">Probabilidade estimada pela IA</div></div></div>
+              <div class="rcard-b" id="dealList"></div>
+            </div>
+
+            <div class="rcard">
+              <div class="rcard-h"><div class="ri" style="background:#f7f0e2"><svg viewBox="0 0 24 24" fill="none" stroke="var(--ochre)"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg></div><div><h4>Sinal de origem</h4><div class="hi">Onde o dinheiro está queimando</div></div></div>
+              <div class="burn">
+                <div class="bt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M8 2s4 3 4 8a4 4 0 0 1-8 0c0-2 1-3 1-3M15 22a6 6 0 0 0 6-6c0-4-3-6-3-6"/></svg> DWG está queimando dinheiro</div>
+                <div class="bb">24 leads no período, mas converte a <b>14%</b> (média 35%). Custo por lead acima da média e follow-up lento. Sugestão: <b>revisar qualificação</b> antes de investir mais.</div>
+                <button class="bgo">Ver diagnóstico</button>
+              </div>
+            </div>
+          </aside>
+        </div>
+
+        <div class="footnote">Dados ilustrativos · Fase 3 — StickBrain Operacional™ · scores e probabilidades calculados por regras determinísticas + camada IA (src/services/stickbrainAI.js)</div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.querySelectorAll('#segView button').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('#segView button').forEach(x=>x.classList.remove('on'));b.classList.add('on');
+}));
+
+// dismiss action card
+document.querySelectorAll('.act .dismiss').forEach(b=>b.addEventListener('click',()=>{
+  const c=b.closest('.act');c.style.transition='.25s';c.style.opacity='0';c.style.transform='translateX(12px)';setTimeout(()=>c.remove(),250);
+}));
+
+// temperature list
+const THERM=[
+  {n:'Construtora Alfa',v:'R$ 420k · 9d sem contato',p:18,cls:'t-hot',lab:'Esfriando'},
+  {n:'Galpão Logístico Sul',v:'R$ 180k · 6d sem contato',p:34,cls:'t-warm',lab:'Morno'},
+  {n:'Ed. Mirante',v:'R$ 260k · 5d sem contato',p:30,cls:'t-warm',lab:'Morno'},
+  {n:'Casa Vale Verde',v:'R$ 95k · visita amanhã',p:82,cls:'t-good',lab:'Quente'},
+  {n:'Residencial Horizonte',v:'R$ 310k · proposta',p:74,cls:'t-good',lab:'Quente'},
+];
+document.getElementById('thermList').innerHTML=THERM.map(t=>`
+  <div class="trow">
+    <div class="tn">${t.n}<div class="v">${t.v}</div></div>
+    <div class="therm ${t.cls}"><div class="bar"><div class="fill" style="width:${t.p}%"></div></div><div class="lab">${t.lab}</div></div>
+  </div>`).join('');
+
+// deal close list
+const DEALS=[
+  {n:'Casa Vale Verde',v:'R$ 95k · em negociação',p:84,col:'var(--success)'},
+  {n:'Residencial Horizonte',v:'R$ 310k · proposta',p:76,col:'var(--success)'},
+  {n:'Reforma Atlântico',v:'R$ 140k · em negociação',p:71,col:'var(--success)'},
+  {n:'Sobrado Jardim',v:'R$ 220k · proposta',p:63,col:'var(--ochre)'},
+];
+document.getElementById('dealList').innerHTML=DEALS.map(d=>`
+  <div class="drow">
+    <div class="prob" style="background:conic-gradient(${d.col} ${d.p}%,#e7e1d8 0)"><span style="position:relative;z-index:2;background:#fff;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;color:var(--ink);font-family:var(--cond);font-weight:800;font-size:12px">${d.p}</span></div>
+    <div class="di"><div class="dn">${d.n}</div><div class="dv">${d.v}</div></div>
+    <button class="dgo" title="Abrir"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m9 18 6-6-6-6"/></svg></button>
+  </div>`).join('');
+</script>
+</body>
+</html>

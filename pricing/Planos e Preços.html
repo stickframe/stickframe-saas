@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Planos e Preços — StickFrame</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --brick:#981915; --brick-dk:#7d1411; --brick-soft:#f3e7e5;
+  --surface:#ffffff; --surface2:#faf8f4; --bg:#f4f1ec; --border:#e7e1d8; --line2:#efeae2;
+  --ink:#26231f; --ink2:#57514a; --muted:#8c847a; --graphite:#232225; --graphite3:#2e2c31;
+  --steel:#3b6ea5; --purple:#6d557e; --sage:#4f7d57; --success:#3f7a4b;
+  --sans:'Hanken Grotesk',system-ui,sans-serif;
+  --cond:'Barlow Condensed',var(--sans);
+  --sh1:0 1px 3px rgba(40,30,20,.07),0 1px 2px rgba(40,30,20,.04);
+  --sh2:0 8px 30px rgba(40,30,20,.10),0 3px 8px rgba(40,30,20,.05);
+  --sh-pop:0 18px 50px rgba(152,25,21,.18),0 6px 16px rgba(40,30,20,.08);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;line-height:1.5}
+::selection{background:var(--brick);color:#fff}
+a{color:inherit;text-decoration:none}
+
+/* ── Nav ── */
+.nav{height:68px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 clamp(20px,5vw,56px);position:sticky;top:0;z-index:10}
+.nav-l{display:flex;align-items:center;gap:11px}
+.nav-l img{width:34px;height:34px}
+.nav-l .wm{font-family:var(--cond);font-weight:700;font-size:22px;letter-spacing:.5px;color:var(--ink);line-height:1}
+.nav-l .wm b{color:var(--brick);font-weight:700}
+.back{display:inline-flex;align-items:center;gap:7px;white-space:nowrap;font-size:13px;font-weight:600;color:var(--ink2);background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:9px 15px;transition:.14s}
+.back:hover{border-color:var(--brick);color:var(--brick);box-shadow:var(--sh1)}
+.back svg{width:15px;height:15px;stroke:currentColor;stroke-width:2;fill:none}
+
+/* ── Header ── */
+.hero{text-align:center;padding:clamp(48px,7vw,86px) 22px clamp(34px,5vw,52px)}
+.badge{display:inline-block;font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--brick);background:var(--brick-soft);border:1px solid #ecd6d3;border-radius:30px;padding:6px 16px;margin-bottom:22px;white-space:nowrap}
+.hero h1{font-family:var(--cond);font-weight:700;font-size:clamp(38px,6vw,64px);line-height:1.02;letter-spacing:-.5px;color:var(--ink);max-width:14ch;margin:0 auto;text-wrap:balance}
+.hero p{font-size:clamp(15px,1.5vw,18px);color:var(--ink2);max-width:54ch;margin:20px auto 0;text-wrap:pretty}
+.hero p b{color:var(--ink);font-weight:600}
+
+/* ── Plans ── */
+.plans{max-width:1120px;margin:0 auto;padding:0 clamp(18px,4vw,40px) 14px;display:grid;grid-template-columns:repeat(3,1fr);gap:20px;align-items:stretch}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:30px 28px;box-shadow:var(--sh1);position:relative;transition:.16s;display:flex;flex-direction:column}
+.card:hover{box-shadow:var(--sh2);transform:translateY(-2px)}
+.card.pop{background:var(--graphite);border:1px solid var(--graphite);box-shadow:var(--sh-pop);padding-top:40px}
+.poptag{position:absolute;top:-13px;left:50%;transform:translateX(-50%);font-size:10.5px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:#fff;background:var(--brick);border-radius:30px;padding:6px 18px;box-shadow:0 6px 16px rgba(152,25,21,.32);white-space:nowrap}
+.plan-name{font-size:18px;font-weight:800;color:var(--ink);letter-spacing:-.2px}
+.card.pop .plan-name{color:#fff}
+.tagline{font-size:13.5px;color:var(--muted);margin-top:5px}
+.card.pop .tagline{color:rgba(255,255,255,.55)}
+.price{font-family:var(--cond);font-weight:700;letter-spacing:-1px;line-height:.95;color:var(--ink);margin-top:20px;display:flex;align-items:baseline;gap:4px}
+.card.pop .price{color:#fff}
+.price .v{font-size:52px}
+.price.sob .v{font-size:42px}
+.price .per{font-family:var(--sans);font-size:15px;font-weight:600;color:var(--muted);letter-spacing:0}
+.card.pop .price .per{color:rgba(255,255,255,.5)}
+.cta{display:block;width:100%;text-align:center;font-family:var(--sans);font-size:15px;font-weight:700;border-radius:11px;padding:14px;margin:24px 0 24px;cursor:pointer;transition:.14s;border:1.5px solid var(--border);background:var(--surface);color:var(--ink)}
+.cta:hover{border-color:var(--brick);color:var(--brick)}
+.cta.solid{background:var(--brick);color:#fff;border-color:var(--brick);box-shadow:0 6px 18px rgba(152,25,21,.30)}
+.cta.solid:hover{background:var(--brick-dk);border-color:var(--brick-dk);color:#fff;box-shadow:0 8px 22px rgba(152,25,21,.40)}
+.feats{list-style:none;display:flex;flex-direction:column;gap:14px}
+.feats li{display:flex;align-items:flex-start;gap:10px;font-size:14px;color:var(--ink2);line-height:1.35}
+.card.pop .feats li{color:rgba(255,255,255,.82)}
+.feats li svg{width:17px;height:17px;flex-shrink:0;margin-top:1px;stroke-width:2.4;fill:none;stroke:var(--sage)}
+.note{text-align:center;font-size:13px;color:var(--muted);padding:6px 22px clamp(40px,6vw,64px)}
+
+/* ── FAQ ── */
+.faq{max-width:780px;margin:0 auto;padding:clamp(36px,5vw,56px) 22px clamp(50px,7vw,80px)}
+.faq h2{font-family:var(--cond);font-weight:700;font-size:clamp(28px,3.5vw,38px);text-align:center;color:var(--ink);margin-bottom:34px}
+.qa{border-top:1px solid var(--border);padding:22px 4px}
+.qa:last-child{border-bottom:1px solid var(--border)}
+.qa .q{font-size:17px;font-weight:700;color:var(--ink);margin-bottom:7px}
+.qa .a{font-size:15px;color:var(--ink2);text-wrap:pretty}
+
+/* ── Footer ── */
+.foot{border-top:1px solid var(--border);background:var(--surface2);text-align:center;padding:26px 22px;font-size:13px;color:var(--muted)}
+.foot a{color:var(--brick);font-weight:600}
+
+@media(max-width:880px){
+  .plans{grid-template-columns:1fr;max-width:460px}
+  .card.pop{order:-1}
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a class="nav-l" href="#">
+    <img src="assets/logo-stickframe-mark.png" alt="StickFrame"/>
+    <span class="wm">STICK<b>FRAME</b></span>
+  </a>
+  <a class="back" href="#">
+    <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    Voltar ao sistema
+  </a>
+</nav>
+
+<header class="hero">
+  <span class="badge">Planos</span>
+  <h1>Escolha o tamanho da sua operação</h1>
+  <p>Comece grátis e evolua conforme as obras crescem. Cancele quando quiser.</p>
+</header>
+
+<section class="plans">
+
+  <!-- Essencial -->
+  <article class="card">
+    <div class="plan-name">Essencial</div>
+    <div class="tagline">Para quem está começando</div>
+    <div class="price"><span class="v">R$ 97</span><span class="per">/mês</span></div>
+    <button class="cta">Começar grátis</button>
+    <ul class="feats">
+      <li><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Orçamentos &amp; contratos ilimitados</li>
+      <li><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Calculadora white-label</li>
+      <li><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>CRM &amp; funil de vendas</li>
+      <li><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>1 usuário · suporte por e-mail</li>
+    </ul>
+  </article>
+
+  <!-- Profissional -->
+  <article class="card pop">
+    <span class="poptag">Mais escolhido</span>
+    <div class="plan-name">Profissional</div>
+    <div class="tagline">Para construtoras em crescimento</div>
+    <div class="price"><span class="v">R$ 197</span><span class="per">/mês</span></div>
+    <button class="cta solid">Testar 14 dias grátis</button>
+    <ul class="feats">
+      <li><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Tudo do Essencial</li>
+      <li><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Gestão de obras completa</li>
+      <li><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Financeiro StickCash™ por obra</li>
+      <li><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>RDO mobile · 5 usuários</li>
+      <li><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Suporte prioritário no WhatsApp</li>
+    </ul>
+  </article>
+
+  <!-- Construtora+ -->
+  <article class="card">
+    <div class="plan-name">Construtora+</div>
+    <div class="tagline">Para operações maiores</div>
+    <div class="price sob"><span class="v">Sob consulta</span></div>
+    <button class="cta">Falar com a equipe</button>
+    <ul class="feats">
+      <li><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Tudo do Profissional</li>
+      <li><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Linha Stick™ completa (IA)</li>
+      <li><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Multiempresa &amp; multiobra</li>
+      <li><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Usuários ilimitados</li>
+      <li><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Onboarding assistido &amp; SLA</li>
+    </ul>
+  </article>
+
+</section>
+
+<p class="note">Todos os planos incluem 14 dias grátis · Sem cartão de crédito</p>
+
+<section class="faq">
+  <h2>Dúvidas frequentes</h2>
+  <div class="qa">
+    <div class="q">Posso cancelar quando quiser?</div>
+    <div class="a">Sim. Sem multa, sem fidelidade. Cancele a qualquer momento pelo painel.</div>
+  </div>
+  <div class="qa">
+    <div class="q">O que acontece com meus dados se cancelar?</div>
+    <div class="a">Seus dados ficam disponíveis por 30 dias após o cancelamento para exportação.</div>
+  </div>
+  <div class="qa">
+    <div class="q">O plano Free é realmente grátis?</div>
+    <div class="a">Sim, para sempre. Sem cartão de crédito para começar.</div>
+  </div>
+  <div class="qa">
+    <div class="q">Posso mudar de plano depois?</div>
+    <div class="a">Sim, upgrade ou downgrade a qualquer momento pelo painel de configurações.</div>
+  </div>
+</section>
+
+<footer class="foot">
+  Stick Frame Sistemas Construtivos · Santo André/SP · <a href="mailto:contato@stickframe.com.br">contato@stickframe.com.br</a>
+</footer>
+
+</body>
+</html>

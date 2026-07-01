@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>StickBrain Analytics™ — StickFrame</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Hanken+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --brick:#981915; --brick-dk:#7d1411; --brick-soft:#f3e7e5;
+  --surface:#ffffff; --surface2:#faf8f4; --bg:#f4f1ec; --border:#e7e1d8; --line2:#efeae2;
+  --ink:#26231f; --ink2:#57514a; --muted:#8c847a; --graphite:#232225; --graphite2:#1a191c; --graphite3:#2e2c31;
+  --success:#3f7a4b; --warning:#b07a1e; --danger:#a33327; --steel:#3b6ea5; --purple:#6d557e; --ochre:#c0892d; --sage:#4f7d57; --clay:#b8624a;
+  --sans:'Hanken Grotesk',system-ui,sans-serif;
+  --cond:'Barlow Condensed',var(--sans);
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+  --sh1:0 1px 3px rgba(40,30,20,.08),0 1px 2px rgba(40,30,20,.05);
+  --sh2:0 6px 22px rgba(40,30,20,.10),0 2px 6px rgba(40,30,20,.06);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:var(--sans);background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;line-height:1.5}
+::selection{background:var(--brick);color:#fff}
+.mono{font-family:var(--mono)}
+.app{display:flex;height:100vh;overflow:hidden}
+
+/* ── Sidebar ── */
+.side{width:222px;flex-shrink:0;background:var(--graphite2);display:flex;flex-direction:column;overflow:hidden}
+.side-logo{padding:16px 16px 13px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.07)}
+.side-logo img{width:30px;height:30px;flex-shrink:0}
+.side-logo .nm{font-family:var(--cond);font-weight:700;font-size:16px;letter-spacing:.5px;color:#fff;line-height:1}
+.side-logo .sub{font-size:8px;color:rgba(255,255,255,.35);letter-spacing:1.3px;text-transform:uppercase;margin-top:2px}
+.snav{flex:1;overflow-y:auto;padding:8px 0}
+.snav::-webkit-scrollbar{width:3px}.snav::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:3px}
+.nav-grp{font-size:9px;font-weight:800;letter-spacing:1.4px;color:rgba(255,255,255,.28);text-transform:uppercase;padding:12px 14px 5px}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 14px;font-size:12.5px;font-weight:500;color:rgba(255,255,255,.6);cursor:pointer;transition:.12s}
+.nav-item:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.9)}
+.nav-item.on{background:var(--brick);color:#fff;font-weight:600}
+.nav-item svg{width:14px;height:14px;flex-shrink:0;opacity:.85}
+.nav-badge{font-size:8.5px;font-weight:800;padding:2px 6px;border-radius:4px;letter-spacing:.5px;margin-left:auto;background:rgba(255,255,255,.15);color:rgba(255,255,255,.85)}
+.side-foot{padding:11px 14px;border-top:1px solid rgba(255,255,255,.07);display:flex;align-items:center;gap:9px}
+.s-av{width:28px;height:28px;border-radius:50%;background:var(--brick);color:#fff;display:grid;place-items:center;font-size:11px;font-weight:700;flex-shrink:0;font-family:var(--cond)}
+.s-nm{font-size:12px;font-weight:600;color:rgba(255,255,255,.85)}
+.s-rl{font-size:10px;color:rgba(255,255,255,.35)}
+
+/* ── Main ── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.topbar{height:54px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 22px;flex-shrink:0;gap:12px}
+.tb-l{display:flex;align-items:center;gap:11px;min-width:0}
+.tb-mark{width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,var(--graphite),var(--graphite3));display:grid;place-items:center;flex-shrink:0}
+.tb-mark svg{width:18px;height:18px;stroke:#fff;stroke-width:1.8}
+.tb-tt{font-family:var(--cond);font-weight:700;font-size:19px;letter-spacing:.3px;line-height:1}
+.tb-tt .tm{color:var(--brick)}
+.tb-sub{font-size:11px;color:var(--muted);margin-top:1px}
+.tb-r{display:flex;align-items:center;gap:8px}
+.badge-pro{background:rgba(255,255,255,.12);color:var(--ink2);border:1px solid var(--border);font-size:10px;font-weight:800;padding:3px 9px;border-radius:5px;letter-spacing:.5px}
+.icon-btn{width:34px;height:34px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;display:grid;place-items:center;cursor:pointer}
+.icon-btn svg{width:16px;height:16px;stroke:var(--ink2);stroke-width:1.9}
+
+.scrollwrap{flex:1;overflow-y:auto}
+.scrollwrap::-webkit-scrollbar{width:9px}.scrollwrap::-webkit-scrollbar-thumb{background:var(--border);border-radius:9px;border:2px solid var(--bg)}
+.canvas{padding:22px 26px 60px;max-width:1320px;margin:0 auto}
+
+/* ── Filters ── */
+.filters{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:20px}
+.filt{display:flex;flex-direction:column;gap:5px}
+.filt .fl{font-size:9.5px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--muted)}
+.seg{display:inline-flex;background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:3px;gap:2px}
+.seg button{font-family:var(--sans);font-size:12px;font-weight:600;border:none;background:none;color:var(--ink2);padding:6px 12px;border-radius:7px;cursor:pointer;white-space:nowrap}
+.seg button.on{background:var(--brick);color:#fff}
+.sel{background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:8px 12px;font-family:var(--sans);font-size:12.5px;color:var(--ink);font-weight:600;cursor:pointer;min-width:150px}
+.filt-spacer{margin-left:auto}
+.btn{font-family:var(--sans);font-weight:700;font-size:12.5px;border:none;border-radius:9px;padding:9px 15px;cursor:pointer;display:inline-flex;align-items:center;gap:7px}
+.btn svg{width:15px;height:15px;stroke-width:2.1}
+.btn-pri{background:var(--brick);color:#fff}
+.btn-ghost{background:var(--surface);color:var(--ink2);border:1px solid var(--border)}
+
+/* ── Grid layout ── */
+.grid{display:grid;gap:16px}
+.kpis{grid-template-columns:repeat(4,1fr);margin-bottom:16px}
+.two{grid-template-columns:1.15fr .85fr}
+.two-b{grid-template-columns:1fr 1fr;margin-top:16px}
+
+/* card */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--sh1)}
+.card-h{display:flex;align-items:center;gap:10px;padding:15px 18px 12px}
+.card-h h3{font-family:var(--cond);font-weight:700;font-size:18px;letter-spacing:.2px}
+.card-h .hi{font-size:11px;color:var(--muted);margin-top:1px}
+.card-h .right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.tag{font-size:10px;font-weight:700;padding:3px 8px;border-radius:5px;letter-spacing:.3px}
+.card-b{padding:0 18px 18px}
+
+/* KPI card (var. A — borda topo) */
+.kpi{background:var(--surface);border:1px solid var(--border);border-top:3px solid var(--accent,var(--brick));border-radius:12px;padding:15px 16px;box-shadow:var(--sh1);position:relative;overflow:hidden}
+.kpi .lab{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
+.kpi .val{font-family:var(--cond);font-weight:800;font-size:38px;line-height:1;color:var(--ink);margin-top:8px;letter-spacing:.3px}
+.kpi .sub{font-size:11.5px;color:var(--muted);margin-top:8px;display:flex;align-items:center;gap:5px}
+.kpi .sub.pos{color:var(--success);font-weight:600}.kpi .sub.neg{color:var(--danger);font-weight:600}
+.kpi .ic{position:absolute;top:14px;right:14px;width:30px;height:30px;border-radius:8px;display:grid;place-items:center;background:color-mix(in srgb,var(--accent,var(--brick)) 12%,#fff)}
+.kpi .ic svg{width:16px;height:16px;stroke:var(--accent,var(--brick));stroke-width:2}
+.kpi .conv{position:absolute;bottom:0;left:0;height:3px;background:var(--accent,var(--brick));opacity:.25}
+
+/* secondary metric strip */
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:1px solid var(--border);border-radius:12px;background:var(--surface);box-shadow:var(--sh1);overflow:hidden;margin-bottom:16px}
+.metric{padding:14px 18px;border-right:1px solid var(--line2);display:flex;flex-direction:column;gap:3px}
+.metric:last-child{border-right:none}
+.metric .ml{font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted)}
+.metric .mv{font-family:var(--cond);font-weight:800;font-size:26px;line-height:1;color:var(--ink)}
+.metric .mh{font-size:11px;color:var(--muted)}
+.metric .mh b{color:var(--success);font-weight:700}
+
+/* ── Funnel ── */
+.funnel{display:flex;flex-direction:column;gap:7px;padding-top:4px}
+.fstage{position:relative}
+.fbar{height:46px;border-radius:9px;display:flex;align-items:center;padding:0 16px;color:#fff;position:relative;overflow:hidden}
+.fbar .fn{font-size:13px;font-weight:600;z-index:2}
+.fbar .fv{margin-left:auto;font-family:var(--cond);font-weight:800;font-size:24px;z-index:2}
+.fconv{display:flex;align-items:center;gap:7px;padding:2px 16px;font-size:11px;color:var(--muted)}
+.fconv .ar{color:var(--ink2)}
+.fconv b{color:var(--ink);font-weight:700}
+.fconv .rate{margin-left:auto;font-family:var(--mono);font-weight:500;font-size:11px;padding:2px 8px;border-radius:5px;background:var(--surface2);border:1px solid var(--border)}
+
+/* ── Origin bars ── */
+.obars{display:flex;flex-direction:column;gap:13px;padding-top:6px}
+.obar{display:grid;grid-template-columns:120px 1fr auto;align-items:center;gap:12px}
+.obar .on{font-size:12.5px;font-weight:600;display:flex;align-items:center;gap:8px}
+.obar .dot{width:9px;height:9px;border-radius:3px;flex-shrink:0}
+.obar .track{height:22px;background:var(--surface2);border-radius:6px;overflow:hidden;position:relative}
+.obar .fill{height:100%;border-radius:6px;display:flex;align-items:center;padding:0 9px;color:#fff;font-size:11px;font-weight:700;min-width:36px}
+.obar .meta{display:flex;align-items:center;gap:10px;justify-content:flex-end}
+.obar .cnt{font-family:var(--cond);font-weight:800;font-size:18px;width:34px;text-align:right}
+.obar .cv{font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:5px;width:52px;text-align:center}
+.cv.good{background:#e4efe6;color:var(--success)}.cv.mid{background:#f3eee2;color:var(--ochre)}.cv.low{background:#fbeeec;color:var(--danger)}
+
+/* ── Line chart ── */
+.chart-wrap{padding:8px 4px 0}
+.chart-svg{width:100%;height:200px;display:block;overflow:visible}
+.legend{display:flex;gap:18px;flex-wrap:wrap;padding:10px 4px 0;margin-top:6px}
+.legend .li{display:flex;align-items:center;gap:7px;font-size:11.5px;color:var(--ink2);font-weight:600}
+.legend .sw{width:14px;height:3px;border-radius:2px}
+
+/* ── Alerts ── */
+.alerts{display:flex;flex-direction:column;gap:10px;padding-top:2px}
+.alert{display:flex;gap:12px;align-items:flex-start;border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:10px;padding:12px 14px;background:var(--surface)}
+.alert .ai{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;flex-shrink:0;background:color-mix(in srgb,var(--accent) 13%,#fff)}
+.alert .ai svg{width:17px;height:17px;stroke:var(--accent);stroke-width:2}
+.alert .at{font-size:13px;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:8px}
+.alert .ab{font-size:11.5px;color:var(--ink2);margin-top:2px;line-height:1.45}
+.alert .pill{font-family:var(--cond);font-weight:800;font-size:15px;color:var(--accent);background:color-mix(in srgb,var(--accent) 11%,#fff);border-radius:6px;padding:1px 9px}
+.alert .go{margin-left:auto;align-self:center;font-size:11px;font-weight:700;color:var(--ink2);background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:6px 11px;cursor:pointer;white-space:nowrap}
+
+/* ── IA insights ── */
+.ia{background:linear-gradient(135deg,var(--graphite2),var(--graphite3));border-radius:14px;color:#fff;overflow:hidden;box-shadow:var(--sh2)}
+.ia-h{display:flex;align-items:center;gap:11px;padding:16px 18px 13px;border-bottom:1px solid rgba(255,255,255,.08)}
+.ia-h .iaic{width:34px;height:34px;border-radius:9px;background:rgba(152,25,21,.25);border:1px solid rgba(152,25,21,.45);display:grid;place-items:center}
+.ia-h .iaic svg{width:18px;height:18px;stroke:#fff;stroke-width:1.8}
+.ia-h h3{font-family:var(--cond);font-weight:700;font-size:18px;letter-spacing:.2px}
+.ia-h .hi{font-size:11px;color:rgba(255,255,255,.45);margin-top:1px}
+.ia-h .beta{margin-left:auto;font-size:9.5px;font-weight:800;letter-spacing:.6px;color:rgba(255,255,255,.6);border:1px solid rgba(255,255,255,.18);border-radius:5px;padding:3px 8px}
+.ia-b{padding:14px 18px 18px;display:flex;flex-direction:column;gap:11px}
+.ins{display:flex;gap:11px;align-items:flex-start}
+.ins .ik{width:24px;height:24px;border-radius:7px;flex-shrink:0;display:grid;place-items:center;font-family:var(--cond);font-weight:800;font-size:12px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.7)}
+.ins.rec .ik{background:rgba(63,122,75,.22);color:#86d196}
+.ins.opp .ik{background:rgba(192,137,45,.22);color:#e0b463}
+.ins .it{font-size:13px;font-weight:700;line-height:1.35}
+.ins .ix{font-size:11.5px;color:rgba(255,255,255,.55);margin-top:2px;line-height:1.5}
+.ins .ix b{color:rgba(255,255,255,.85)}
+
+.placeholder-note{font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:14px;text-align:center}
+
+/* hero pipeline */
+.hero-pipe{display:grid;grid-template-columns:auto 1fr;gap:26px;align-items:center;background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--brick);border-radius:14px;padding:18px 22px;box-shadow:var(--sh1);margin-bottom:16px}
+.hero-pipe .hp-l{display:flex;flex-direction:column;gap:4px;padding-right:26px;border-right:1px solid var(--line2)}
+.hero-pipe .hp-lab{font-size:10px;font-weight:800;letter-spacing:.9px;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:7px}
+.hero-pipe .hp-lab svg{width:14px;height:14px;stroke:var(--brick);stroke-width:2}
+.hero-pipe .hp-val{font-family:var(--cond);font-weight:800;font-size:46px;line-height:.95;color:var(--ink)}
+.hero-pipe .hp-sub{font-size:12px;color:var(--success);font-weight:600}
+.hero-pipe .hp-sub .g{color:var(--muted);font-weight:500}
+.hp-break{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.hp-st{display:flex;flex-direction:column;gap:5px}
+.hp-st .t{font-size:11px;color:var(--ink2);font-weight:600;display:flex;align-items:center;gap:7px}
+.hp-st .t .dot{width:8px;height:8px;border-radius:3px;flex-shrink:0}
+.hp-st .v{font-family:var(--cond);font-weight:800;font-size:22px;color:var(--ink);line-height:1}
+.hp-st .track{height:5px;border-radius:3px;background:var(--surface2);overflow:hidden}
+.hp-st .fill{height:100%;border-radius:3px}
+.hp-st .c{font-size:10.5px;color:var(--muted)}
+/* IA action buttons */
+.ia-acts{display:flex;gap:8px;margin-top:10px}
+.iabtn{font-family:var(--sans);font-size:11.5px;font-weight:700;border-radius:8px;padding:7px 13px;cursor:pointer;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:rgba(255,255,255,.85)}
+.iabtn.pri{background:var(--brick);border-color:var(--brick);color:#fff}
+
+@media(max-width:1100px){
+  .hero-pipe{grid-template-columns:1fr}
+  .hero-pipe .hp-l{border-right:none;border-bottom:1px solid var(--line2);padding-right:0;padding-bottom:14px}
+  .kpis{grid-template-columns:1fr 1fr}
+  .two,.two-b{grid-template-columns:1fr}
+  .metrics{grid-template-columns:1fr 1fr}
+  .metric:nth-child(2){border-right:none}.metric:nth-child(1),.metric:nth-child(2){border-bottom:1px solid var(--line2)}
+}
+@media(max-width:760px){
+  .side{display:none}
+  .canvas{padding:16px 14px 50px}
+  .obar{grid-template-columns:88px 1fr auto;gap:8px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- Sidebar -->
+  <aside class="side">
+    <div class="side-logo">
+      <img src="assets/logo-stickframe-mark.png" alt="StickFrame"/>
+      <div><div class="nm">STICKFRAME</div><div class="sub">Gestão Steel Frame</div></div>
+    </div>
+    <nav class="snav">
+      <div class="nav-grp">Comercial</div>
+      <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg> Oportunidades</div>
+      <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="9" cy="7" r="3.5"/><path d="M2 21v-1a6 6 0 0 1 12 0v1M16 3.5a3.5 3.5 0 0 1 0 7M22 21v-1a6 6 0 0 0-4-5.6"/></svg> CRM / Clientes</div>
+      <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg> Orçamentos</div>
+      <div class="nav-grp">Engenharia</div>
+      <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg> Orçamento Técnico</div>
+      <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 3v18h18"/><path d="m7 14 3-3 3 3 5-6"/></svg> Calculadora SF</div>
+      <div class="nav-grp">StickBrain™</div>
+      <div class="nav-item on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 3v18h18"/><rect x="7" y="10" width="3" height="7"/><rect x="13" y="6" width="3" height="11"/></svg> Analytics <span class="nav-badge">IA</span></div>
+      <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.2 1 2h6c0-.8.4-1.5 1-2A7 7 0 0 0 12 2z"/></svg> Recomendações</div>
+      <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg> Alertas <span class="nav-badge" style="background:rgba(163,51,39,.3);color:#e0938a">3</span></div>
+      <div class="nav-grp">Gestão</div>
+      <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2 2 7l10 5 10-5z"/><path d="m2 17 10 5 10-5M2 12l10 5 10-5"/></svg> Ecossistema</div>
+    </nav>
+    <div class="side-foot">
+      <div class="s-av">RM</div>
+      <div><div class="s-nm">Rafael M.</div><div class="s-rl">Diretor</div></div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+    <header class="topbar">
+      <div class="tb-l">
+        <div class="tb-mark"><svg viewBox="0 0 24 24" fill="none"><path d="M12 5a3 3 0 1 0-3 3M12 5a3 3 0 1 1 3 3M12 5v6M9 8a4 4 0 0 0-4 4v1a4 4 0 0 0 4 4M15 8a4 4 0 0 1 4 4v1a4 4 0 0 1-4 4M9 17a3 3 0 1 0 6 0"/></svg></div>
+        <div><div class="tb-tt">StickBrain <span class="tm">Analytics™</span></div><div class="tb-sub">De onde vem dinheiro, onde está travando e o que fazer.</div></div>
+      </div>
+      <div class="tb-r">
+        <span class="badge-pro">PRO</span>
+        <div class="icon-btn" title="Atualizar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 12a9 9 0 1 1-2.6-6.4M21 3v5h-5"/></svg></div>
+        <div class="icon-btn" title="Exportar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg></div>
+      </div>
+    </header>
+
+    <div class="scrollwrap">
+      <div class="canvas">
+
+        <!-- Filters -->
+        <div class="filters">
+          <div class="filt"><span class="fl">Período</span>
+            <div class="seg" id="segPeriodo">
+              <button>7d</button><button>30d</button><button class="on">90d</button><button>12m</button>
+            </div>
+          </div>
+          <div class="filt"><span class="fl">Origem</span>
+            <select class="sel"><option>Todas as origens</option><option>Google</option><option>Indicação</option><option>Calculadora</option><option>PDF</option><option>DWG</option><option>AI Vision</option></select>
+          </div>
+          <div class="filt"><span class="fl">Status</span>
+            <select class="sel"><option>Todos os status</option><option>Em aberto</option><option>Em negociação</option><option>Ganho</option><option>Perdido</option></select>
+          </div>
+          <div class="filt"><span class="fl">Responsável</span>
+            <select class="sel"><option>Toda a equipe</option><option>Rafael M.</option><option>Camila S.</option><option>Júnior P.</option><option>Equipe SP</option></select>
+          </div>
+          <div class="filt-spacer"></div>
+          <button class="btn btn-ghost"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 4h18l-7 8v6l-4 2v-8z"/></svg>Limpar</button>
+        </div>
+
+        <!-- Hero: Pipeline em aberto -->
+        <div class="hero-pipe">
+          <div class="hp-l">
+            <span class="hp-lab"><svg viewBox="0 0 24 24" fill="none"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> Pipeline em aberto</span>
+            <span class="hp-val">R$ 2,8M</span>
+            <span class="hp-sub">▲ 14% <span class="g">&middot; 38 oportunidades ativas</span></span>
+          </div>
+          <div class="hp-break">
+            <div class="hp-st"><span class="t"><span class="dot" style="background:var(--success)"></span>Em negociação</span><span class="v">R$ 1,40M</span><div class="track"><div class="fill" style="width:100%;background:var(--success)"></div></div><span class="c">15 oportunidades</span></div>
+            <div class="hp-st"><span class="t"><span class="dot" style="background:var(--steel)"></span>Proposta enviada</span><span class="v">R$ 920k</span><div class="track"><div class="fill" style="width:66%;background:var(--steel)"></div></div><span class="c">13 oportunidades</span></div>
+            <div class="hp-st"><span class="t"><span class="dot" style="background:var(--ochre)"></span>Qualificação</span><span class="v">R$ 480k</span><div class="track"><div class="fill" style="width:34%;background:var(--ochre)"></div></div><span class="c">10 oportunidades</span></div>
+          </div>
+        </div>
+
+        <!-- KPIs -->
+        <div class="grid kpis">
+          <div class="kpi" style="--accent:var(--steel)">
+            <span class="lab">Leads</span><div class="val">248</div><div class="sub pos">▲ 12% vs. período ant.</div>
+            <div class="ic"><svg viewBox="0 0 24 24" fill="none"><circle cx="9" cy="7" r="3.5"/><path d="M2 21v-1a6 6 0 0 1 12 0v1M16 3.5a3.5 3.5 0 0 1 0 7M22 21v-1a6 6 0 0 0-4-5.6"/></svg></div>
+            <div class="conv" style="width:100%"></div>
+          </div>
+          <div class="kpi" style="--accent:var(--ochre)">
+            <span class="lab">StickQuotes™</span><div class="val">134</div><div class="sub pos">▲ 8% &middot; 54% dos leads</div>
+            <div class="ic"><svg viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></div>
+            <div class="conv" style="width:54%"></div>
+          </div>
+          <div class="kpi" style="--accent:var(--purple)">
+            <span class="lab">Orçamentos</span><div class="val">89</div><div class="sub">66% dos StickQuotes</div>
+            <div class="ic"><svg viewBox="0 0 24 24" fill="none"><path d="M9 2h6M12 2v4M5 8h14l-1.2 12a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8z"/></svg></div>
+            <div class="conv" style="width:36%"></div>
+          </div>
+          <div class="kpi" style="--accent:var(--success)">
+            <span class="lab">Fechamentos</span><div class="val">31</div><div class="sub pos">▲ 21% &middot; 35% dos orçam.</div>
+            <div class="ic"><svg viewBox="0 0 24 24" fill="none"><path d="m9 12 2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg></div>
+            <div class="conv" style="width:12.5%"></div>
+          </div>
+        </div>
+
+        <!-- Secondary metrics -->
+        <div class="metrics">
+          <div class="metric"><span class="ml">Receita vendida</span><span class="mv">R$ 4,18M</span><span class="mh"><b>+R$ 740k</b> vs. ant.</span></div>
+          <div class="metric"><span class="ml">Ticket médio</span><span class="mv">R$ 135k</span><span class="mh">por fechamento</span></div>
+          <div class="metric"><span class="ml">Conversão lead→venda</span><span class="mv">12,5%</span><span class="mh">meta: 10%</span></div>
+          <div class="metric"><span class="ml">Tempo médio fechamento</span><span class="mv">28 d</span><span class="mh">lead → contrato</span></div>
+        </div>
+
+        <!-- Funnel + Origin -->
+        <div class="grid two">
+          <div class="card">
+            <div class="card-h">
+              <div><h3>Funil comercial</h3><div class="hi">Lead → StickQuote → Orçamento → Venda</div></div>
+              <div class="right"><span class="tag" style="background:var(--surface2);color:var(--ink2)">90 dias</span></div>
+            </div>
+            <div class="card-b">
+              <div class="funnel">
+                <div class="fstage"><div class="fbar" style="background:var(--steel);width:100%"><span class="fn">Leads</span><span class="fv">248</span></div></div>
+                <div class="fconv"><span class="ar">↓</span> de lead para StickQuote <span class="rate">54%</span></div>
+                <div class="fstage"><div class="fbar" style="background:var(--ochre);width:78%"><span class="fn">StickQuote™</span><span class="fv">134</span></div></div>
+                <div class="fconv"><span class="ar">↓</span> de StickQuote para orçamento <span class="rate">66%</span></div>
+                <div class="fstage"><div class="fbar" style="background:var(--purple);width:58%"><span class="fn">Orçamento</span><span class="fv">89</span></div></div>
+                <div class="fconv"><span class="ar">↓</span> de orçamento para venda <span class="rate" style="background:#fbeeec;border-color:#ecccc7;color:var(--danger)">35%</span></div>
+                <div class="fstage"><div class="fbar" style="background:var(--success);width:34%"><span class="fn">Venda</span><span class="fv">31</span></div></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-h"><div><h3>Origem dos leads</h3><div class="hi">Volume e conversão para venda</div></div></div>
+            <div class="card-b">
+              <div class="obars" id="obars"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Monthly evolution + Alerts -->
+        <div class="grid two-b">
+          <div class="card">
+            <div class="card-h"><div><h3>Evolução mensal</h3><div class="hi">Leads · vendas · receita (6 meses)</div></div></div>
+            <div class="card-b">
+              <div class="chart-wrap"><svg class="chart-svg" id="lineChart" viewBox="0 0 560 200" preserveAspectRatio="none"></svg></div>
+              <div class="legend">
+                <div class="li"><span class="sw" style="background:var(--steel)"></span> Leads</div>
+                <div class="li"><span class="sw" style="background:var(--success)"></span> Vendas</div>
+                <div class="li"><span class="sw" style="background:var(--brick)"></span> Receita (R$)</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-h"><div><h3>Alertas inteligentes</h3><div class="hi">O que precisa de atenção agora</div></div><div class="right"><span class="tag" style="background:#fbeeec;color:var(--danger)">3 ativos</span></div></div>
+            <div class="card-b">
+              <div class="alerts">
+                <div class="alert" style="--accent:var(--danger)">
+                  <div class="ai"><svg viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9.5 13.5 14 18M14 13.5 9.5 18"/></svg></div>
+                  <div><div class="at"><span class="pill">12</span> StickQuotes órfãos</div><div class="ab">Sem orçamento vinculado há &gt;7 dias &middot; <b style="color:var(--danger)">R$ 540 mil</b> em potencial parado.</div></div>
+                  <button class="go">Recuperar</button>
+                </div>
+                <div class="alert" style="--accent:var(--warning)">
+                  <div class="ai"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+                  <div><div class="at"><span class="pill">8</span> Leads parados</div><div class="ab">Sem interação há &gt;14 dias. Concentrados em origem <b>Google</b> e <b>DWG</b>.</div></div>
+                  <button class="go">Ver lista</button>
+                </div>
+                <div class="alert" style="--accent:var(--clay)">
+                  <div class="ai"><svg viewBox="0 0 24 24" fill="none"><path d="m22 17-8.5-8.5-5 5L2 7"/><path d="M16 17h6v-6"/></svg></div>
+                  <div><div class="at">Conversão <b style="color:var(--clay)">abaixo da média</b></div><div class="ab">DWG converte a <b>14%</b> vs. média de <b>35%</b>. Avaliar qualidade do lead ou follow-up.</div></div>
+                  <button class="go">Analisar</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- IA Insights -->
+        <div class="ia" style="margin-top:16px">
+          <div class="ia-h">
+            <div class="iaic"><svg viewBox="0 0 24 24" fill="none"><path d="M12 5a3 3 0 1 0-3 3M12 5a3 3 0 1 1 3 3M12 5v6M9 8a4 4 0 0 0-4 4v1a4 4 0 0 0 4 4M15 8a4 4 0 0 1 4 4v1a4 4 0 0 1-4 4M9 17a3 3 0 1 0 6 0"/></svg></div>
+            <div><h3>StickBrain™ diz:</h3><div class="hi">Leitura automática dos dados do período</div></div>
+            <span class="beta">PRÉVIA</span>
+          </div>
+          <div class="ia-b">
+            <div class="ins rec"><div class="ik">↑</div><div style="flex:1"><div class="it">Recupere os 12 StickQuotes órfãos esta semana</div><div class="ix">Na conversão atual (66%), são <b>~4 orçamentos</b> e estimativa de <b>+R$ 540 mil</b> em pipeline recuperado.</div><div class="ia-acts"><button class="iabtn pri">Gerar lista</button><button class="iabtn">Enviar follow-up</button></div></div></div>
+            <div class="ins opp"><div class="ik">★</div><div><div class="it">Indicação é seu melhor canal — invista nele</div><div class="ix">Maior conversão para venda (<b>48%</b>) e ticket acima da média. Vale um programa de indicação formal.</div></div></div>
+            <div class="ins"><div class="ik">!</div><div><div class="it">Reveja o follow-up de leads vindos de DWG</div><div class="ix">Volume bom (24) mas conversão de <b>14%</b>. Provável gap de qualificação no primeiro contato.</div></div></div>
+          </div>
+        </div>
+
+        <div class="placeholder-note">Dados ilustrativos · views: vw_stickbrain_funil · vw_stickbrain_kpis · camada IA em src/services/stickbrainAI.js (preparação, sem modelo)</div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// segmented filter toggle
+document.querySelectorAll('#segPeriodo button').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('#segPeriodo button').forEach(x=>x.classList.remove('on'));b.classList.add('on');
+}));
+
+// origin bars
+const ORIG=[
+  {n:'Indicação',c:58,cv:48,cls:'good',col:'var(--success)'},
+  {n:'Google',c:72,cv:34,cls:'mid',col:'var(--steel)'},
+  {n:'Calculadora',c:46,cv:39,cls:'good',col:'var(--ochre)'},
+  {n:'PDF',c:31,cv:32,cls:'mid',col:'var(--purple)'},
+  {n:'AI Vision',c:17,cv:29,cls:'mid',col:'var(--clay)'},
+  {n:'DWG',c:24,cv:14,cls:'low',col:'var(--sage)'},
+];
+const maxc=Math.max(...ORIG.map(o=>o.c));
+document.getElementById('obars').innerHTML=ORIG.map(o=>`
+  <div class="obar">
+    <span class="on"><span class="dot" style="background:${o.col}"></span>${o.n}</span>
+    <div class="track"><div class="fill" style="width:${Math.round(o.c/maxc*100)}%;background:${o.col}">${o.c}</div></div>
+    <div class="meta"><span class="cv ${o.cls}">${o.cv}%</span></div>
+  </div>`).join('');
+
+// line chart
+(function(){
+  const svg=document.getElementById('lineChart');
+  const W=560,H=200,pad={l:8,r:8,t:14,b:22};
+  const months=['Jan','Fev','Mar','Abr','Mai','Jun'];
+  const leads=[28,34,31,42,55,58], vendas=[4,5,5,6,8,9], receita=[420,610,540,720,980,1180];
+  const x=i=>pad.l+i*((W-pad.l-pad.r)/(months.length-1));
+  const norm=(arr)=>{const mx=Math.max(...arr);return arr.map(v=>H-pad.b-(v/mx)*(H-pad.t-pad.b));};
+  const yL=norm(leads),yV=norm(vendas),yR=norm(receita);
+  const path=(ys)=>ys.map((y,i)=>`${i?'L':'M'}${x(i).toFixed(1)},${y.toFixed(1)}`).join(' ');
+  const dots=(ys,col)=>ys.map((y,i)=>`<circle cx="${x(i).toFixed(1)}" cy="${y.toFixed(1)}" r="3" fill="${col}"/>`).join('');
+  let g='';
+  // gridlines
+  for(let k=0;k<=3;k++){const gy=pad.t+k*((H-pad.t-pad.b)/3);g+=`<line x1="${pad.l}" y1="${gy}" x2="${W-pad.r}" y2="${gy}" stroke="#efeae2" stroke-width="1"/>`;}
+  // receita area-ish (brick) thicker
+  g+=`<path d="${path(yR)}" fill="none" stroke="#981915" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`;
+  g+=`<path d="${path(yL)}" fill="none" stroke="#3b6ea5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`;
+  g+=`<path d="${path(yV)}" fill="none" stroke="#3f7a4b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`;
+  g+=dots(yR,'#981915')+dots(yL,'#3b6ea5')+dots(yV,'#3f7a4b');
+  // x labels
+  months.forEach((m,i)=>{g+=`<text x="${x(i).toFixed(1)}" y="${H-6}" fill="#8c847a" font-size="11" font-family="Hanken Grotesk" text-anchor="middle">${m}</text>`;});
+  svg.innerHTML=g;
+})();
+</script>
+</body>
+</html>

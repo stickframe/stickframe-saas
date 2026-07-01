@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Polimento UX/UI — StickFrame™</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Hanken+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  /* tokens reais — constants.js / globals.css */
+  --brick:#981915; --brick-dk:#7d1411; --brick-soft:#f3e7e5;
+  --surface:#ffffff; --surface2:#faf8f4; --bg:#f4f1ec; --border:#e7e1d8; --line2:#efeae2;
+  --ink:#26231f; --ink2:#57514a; --muted:#8c847a; --graphite:#232225; --graphite2:#1a191c;
+  --success:#3f7a4b; --warning:#b07a1e; --danger:#a33327; --steel:#3b6ea5; --purple:#6d557e; --ochre:#c0892d; --sage:#4f7d57;
+  --sans:'Hanken Grotesk',system-ui,sans-serif;
+  --cond:'Barlow Condensed',var(--sans);
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+  --sh1:0 1px 3px rgba(40,30,20,.08),0 1px 2px rgba(40,30,20,.05);
+  --sh2:0 6px 22px rgba(40,30,20,.10),0 2px 6px rgba(40,30,20,.06);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;line-height:1.5}
+::selection{background:var(--brick);color:#fff}
+code,.mono{font-family:var(--mono)}
+
+/* ── Layout shell ── */
+.shell{display:grid;grid-template-columns:250px 1fr;min-height:100vh}
+.rail{position:sticky;top:0;height:100vh;background:var(--graphite2);color:#fff;display:flex;flex-direction:column;border-right:1px solid #000;overflow-y:auto}
+.rail::-webkit-scrollbar{width:4px}.rail::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:4px}
+.rail-logo{padding:20px 20px 16px;display:flex;align-items:center;gap:11px;border-bottom:1px solid rgba(255,255,255,.08)}
+.rail-logo img{width:34px;height:34px;display:block}
+.rail-logo .wm{font-family:var(--cond);font-weight:700;font-size:18px;letter-spacing:.6px;color:#fff;line-height:1}
+.rail-logo .sub{font-size:8.5px;letter-spacing:1.6px;color:rgba(255,255,255,.4);text-transform:uppercase;margin-top:3px}
+.rail nav{padding:10px 0;flex:1}
+.rail .grp{font-size:9px;letter-spacing:1.8px;color:rgba(255,255,255,.3);padding:14px 20px 6px;font-weight:800;text-transform:uppercase}
+.rail a{display:flex;align-items:center;gap:10px;padding:8px 20px;color:rgba(255,255,255,.6);font-size:12.5px;text-decoration:none;border-left:3px solid transparent;transition:.14s}
+.rail a:hover{color:#fff;background:rgba(255,255,255,.05)}
+.rail a.active{color:#fff;border-left-color:var(--brick);background:rgba(152,25,21,.18);font-weight:600}
+.rail a .n{margin-left:auto;font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.35)}
+.rail a.active .n{color:rgba(255,255,255,.6)}
+.rail-foot{padding:16px 20px;border-top:1px solid rgba(255,255,255,.08);font-size:11px;color:rgba(255,255,255,.4)}
+
+.main{min-width:0}
+.topbar{background:var(--graphite);color:#fff;padding:48px 56px 40px;border-bottom:4px solid var(--brick)}
+.topbar .eyebrow{font-size:11px;letter-spacing:3px;color:rgba(255,255,255,.5);font-weight:700;text-transform:uppercase}
+.topbar h1{font-family:var(--cond);font-weight:700;font-size:52px;letter-spacing:.5px;line-height:1.0;margin:14px 0 14px}
+.topbar p{color:rgba(255,255,255,.72);font-size:15px;max-width:680px}
+.topbar .meta{display:flex;gap:34px;margin-top:26px;flex-wrap:wrap}
+.topbar .meta div{font-size:12px;color:rgba(255,255,255,.45)}
+.topbar .meta b{display:block;font-family:var(--cond);font-size:21px;font-weight:700;color:#fff;margin-top:3px;letter-spacing:.3px}
+
+.content{padding:46px 56px 110px;max-width:1180px}
+section.item{margin-bottom:74px;scroll-margin-top:20px}
+.sec-head{margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:18px}
+.sec-tag{font-family:var(--mono);font-size:12px;color:#fff;background:var(--brick);font-weight:500;padding:5px 10px;border-radius:7px;flex-shrink:0;margin-top:4px}
+.sec-head h2{font-family:var(--cond);font-weight:700;font-size:33px;letter-spacing:.3px;line-height:1.05}
+.sec-head .prio{font-size:10px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;padding:3px 8px;border-radius:5px;margin-left:10px;vertical-align:middle}
+.prio.alta{background:var(--brick-soft);color:var(--brick)}
+.prio.media{background:#f3eee2;color:var(--ochre)}
+.sec-head p{color:var(--ink2);font-size:14px;margin-top:7px;max-width:760px}
+
+/* problem callout */
+.callout{display:flex;gap:12px;align-items:flex-start;background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--warning);border-radius:10px;padding:13px 16px;margin-bottom:22px}
+.callout svg{width:18px;height:18px;stroke:var(--warning);flex-shrink:0;margin-top:1px}
+.callout b{font-size:13px;font-weight:700;color:var(--ink)}
+.callout p{font-size:12.5px;color:var(--ink2);margin-top:2px;line-height:1.5}
+
+/* compare grid */
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}
+.pane{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:var(--sh1)}
+.pane-head{display:flex;align-items:center;gap:8px;padding:11px 16px;border-bottom:1px solid var(--line2);font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase}
+.pane-head .tag{font-size:9px;font-weight:800;padding:2px 7px;border-radius:4px;letter-spacing:.5px}
+.pane.before .tag{background:#efe5e3;color:#9a4a44}
+.pane.after .tag{background:#e4efe6;color:var(--success)}
+.pane.before .pane-head{color:#9a4a44}
+.pane.after .pane-head{color:var(--success)}
+.pane-body{padding:20px;background:var(--bg)}
+.pane-body.plain{background:var(--surface)}
+
+/* rationale + files */
+.foot{display:flex;justify-content:space-between;align-items:center;gap:18px;margin-top:18px;flex-wrap:wrap}
+.rationale{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--ink2);max-width:640px}
+.rationale svg{width:16px;height:16px;stroke:var(--success);flex-shrink:0;margin-top:2px}
+.rationale b{color:var(--ink);font-weight:700}
+.files{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+.files .chip{font-family:var(--mono);font-size:10.5px;color:var(--ink2);background:var(--surface);border:1px solid var(--border);padding:4px 9px;border-radius:6px}
+
+.row-label{font-size:10px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin:24px 0 12px;display:flex;align-items:center;gap:8px}
+.row-label::after{content:"";flex:1;height:1px;background:var(--border)}
+
+/* phone frame */
+.phones{display:flex;gap:24px;flex-wrap:wrap}
+.phone{width:230px;flex-shrink:0}
+.phone .scr{width:230px;height:480px;background:var(--bg);border:7px solid var(--graphite2);border-radius:30px;overflow:hidden;position:relative;box-shadow:var(--sh2)}
+.phone .notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:78px;height:16px;background:var(--graphite2);border-radius:0 0 11px 11px;z-index:30}
+.phone .cap{text-align:center;font-size:11px;color:var(--muted);margin-top:10px;font-weight:600}
+.phone .cap .tag{font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;letter-spacing:.5px;margin-right:6px}
+
+/* ════════════ IN-APP MOCK COMPONENTS (tokens reais) ════════════ */
+.m{font-family:var(--sans);color:var(--ink)}
+.m-grid{display:grid;gap:12px}
+
+/* KPI — variações */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:15px 16px;box-shadow:var(--sh1);position:relative}
+.kpi .lab{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
+.kpi .val{font-family:var(--cond);font-weight:800;font-size:30px;line-height:1;color:var(--ink);margin-top:7px;letter-spacing:.3px}
+.kpi .sub{font-size:11px;color:var(--muted);margin-top:6px;display:flex;align-items:center;gap:4px}
+.kpi .sub.pos{color:var(--success)} .kpi .sub.neg{color:var(--danger)}
+.kpi .ic{position:absolute;top:14px;right:14px;width:26px;height:26px;border-radius:7px;display:grid;place-items:center}
+.kpi .ic svg{width:14px;height:14px;stroke-width:2}
+/* var A — top accent */
+.kpi.vA{border-top:3px solid var(--accent,var(--brick))}
+.kpi.vA .ic{background:color-mix(in srgb,var(--accent,var(--brick)) 12%,#fff)}
+.kpi.vA .ic svg{stroke:var(--accent,var(--brick))}
+/* var B — icon tile left */
+.kpi.vB{display:flex;align-items:center;gap:13px;padding:16px}
+.kpi.vB .tile{width:42px;height:42px;border-radius:11px;display:grid;place-items:center;flex-shrink:0;background:color-mix(in srgb,var(--accent,var(--brick)) 13%,#fff)}
+.kpi.vB .tile svg{width:20px;height:20px;stroke:var(--accent,var(--brick));stroke-width:2}
+.kpi.vB .ic{display:none}
+.kpi.vB .val{font-size:27px;margin-top:3px}
+.kpi.vB .body{min-width:0}
+/* var C — minimal underline */
+.kpi.vC{padding:14px 16px 13px;border-radius:10px}
+.kpi.vC .lab{display:flex;align-items:center;gap:6px}
+.kpi.vC .lab .dot{width:7px;height:7px;border-radius:2px;background:var(--accent,var(--brick))}
+.kpi.vC .ic{display:none}
+.kpi.vC .val{font-size:28px}
+/* alerta */
+.kpi.alert{border-left:3px solid var(--warning)}
+.kpi.alert.vA{border-top-color:var(--warning)}
+
+/* old/before kpi styles (3 estilos diferentes) */
+.oldk1{background:#fff;border:1px solid var(--border);border-radius:8px;padding:14px}
+.oldk1 .l{font-size:12px;color:var(--muted)}
+.oldk1 .v{font-size:22px;font-weight:800;font-family:var(--sans);margin-top:4px}
+.oldk2{background:var(--surface2);border:1px solid var(--border);border-radius:16px;padding:18px;text-align:center}
+.oldk2 .v{font-size:26px;font-weight:700;color:var(--brick)}
+.oldk2 .l{font-size:11px;color:var(--muted);margin-top:6px;text-transform:uppercase}
+.oldk3{background:#fff;border-radius:6px;border-left:4px solid var(--steel);padding:12px 14px;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+.oldk3 .v{font-size:19px;font-weight:700}
+.oldk3 .l{font-size:13px;color:var(--ink2)}
+
+/* generic mock card / list */
+.mcard{background:var(--surface);border:1px solid var(--border);border-radius:12px;box-shadow:var(--sh1)}
+.mcard-h{padding:12px 15px;border-bottom:1px solid var(--line2);font-family:var(--cond);font-weight:700;font-size:16px;display:flex;align-items:center;gap:8px}
+.mrow{display:flex;align-items:center;gap:11px;padding:11px 15px;border-bottom:1px solid var(--line2)}
+.mrow:last-child{border-bottom:none}
+.mrow .av{width:34px;height:34px;border-radius:8px;background:var(--brick-soft);color:var(--brick);display:grid;place-items:center;font-weight:800;font-size:13px;flex-shrink:0;font-family:var(--cond)}
+.mrow .t{font-size:13px;font-weight:600}
+.mrow .s{font-size:11px;color:var(--muted)}
+.mrow .ref{margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--muted)}
+.btn{font-family:var(--sans);font-weight:700;font-size:12.5px;border:none;border-radius:8px;padding:9px 16px;cursor:pointer;display:inline-flex;align-items:center;gap:7px}
+.btn svg{width:14px;height:14px;stroke-width:2.2}
+.btn-pri{background:var(--brick);color:#fff}
+.btn-ghost{background:var(--surface2);color:var(--ink2);border:1px solid var(--border)}
+.btn-sm{padding:7px 13px;font-size:11.5px}
+
+/* empty states */
+.empty-bad{padding:36px 16px;text-align:center;color:var(--muted);font-size:13px;font-style:italic}
+.empty-good{padding:34px 24px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px}
+.empty-good .ill{width:60px;height:60px;border-radius:50%;background:var(--brick-soft);display:grid;place-items:center;margin-bottom:12px}
+.empty-good .ill svg{width:27px;height:27px;stroke:var(--brick);stroke-width:1.8}
+.empty-good h4{font-family:var(--cond);font-weight:700;font-size:18px;color:var(--ink)}
+.empty-good p{font-size:12.5px;color:var(--muted);max-width:280px;line-height:1.5;margin:2px 0 14px}
+
+/* skeleton */
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+.sk{background:linear-gradient(90deg,var(--line2) 25%,#f6f2ec 50%,var(--line2) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:6px}
+.spinner-bad{width:34px;height:34px;border:3px solid var(--line2);border-top-color:var(--brick);border-radius:50%;animation:spin 1s linear infinite;margin:36px auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+.err-good{display:flex;gap:13px;align-items:flex-start;background:#fbeeec;border:1px solid #ecccc7;border-radius:12px;padding:16px 18px}
+.err-good .ei{width:38px;height:38px;border-radius:10px;background:#f6dad6;display:grid;place-items:center;flex-shrink:0}
+.err-good .ei svg{width:19px;height:19px;stroke:var(--danger);stroke-width:2}
+.err-good h4{font-size:13.5px;font-weight:700;color:var(--ink)}
+.err-good p{font-size:12px;color:var(--ink2);margin:3px 0 11px;line-height:1.5}
+.err-bad{background:#fbeeec;color:var(--danger);font-size:12px;font-family:var(--mono);padding:10px 14px;border-radius:6px}
+
+/* notif banner */
+.scrmock{position:relative;height:230px;border-radius:12px;overflow:hidden;border:1px solid var(--border);background:var(--surface)}
+.scrmock .topb{height:38px;background:var(--surface);border-bottom:1px solid var(--line2);display:flex;align-items:center;padding:0 13px;gap:8px}
+.scrmock .topb .dot{width:8px;height:8px;border-radius:50%;background:#4caf50}
+.scrmock .topb .t{font-size:12px;font-weight:700}
+.scrmock .feed{padding:13px;display:flex;flex-direction:column;gap:9px;height:calc(100% - 38px);overflow:hidden}
+.scrmock .ln{height:11px;border-radius:4px;background:var(--line2)}
+.banner-bad{position:absolute;left:0;right:0;bottom:0;background:var(--graphite);color:#fff;padding:16px 16px;display:flex;align-items:center;gap:11px;box-shadow:0 -8px 20px rgba(0,0,0,.2)}
+.banner-bad .bx{font-size:12px;flex:1}
+.banner-bad .bx b{font-weight:700;display:block;font-size:13px}
+.banner-good{position:absolute;left:12px;right:12px;bottom:12px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:11px;box-shadow:var(--sh2)}
+.banner-good .bi{width:34px;height:34px;border-radius:9px;background:var(--brick-soft);display:grid;place-items:center;flex-shrink:0}
+.banner-good .bi svg{width:17px;height:17px;stroke:var(--brick);stroke-width:2}
+.banner-good .bx{flex:1;min-width:0}
+.banner-good .bx b{font-size:12.5px;font-weight:700;display:block}
+.banner-good .bx span{font-size:11px;color:var(--muted)}
+.banner-good .x{background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;line-height:1;padding:2px 4px;flex-shrink:0}
+.banner-gone{display:flex;align-items:center;justify-content:center;gap:8px;height:100%;color:var(--muted);font-size:12px;font-style:italic}
+
+/* StickQuote modal mocks */
+.sqmodal{background:#16151a;border:1px solid rgba(255,255,255,.09);border-radius:16px;overflow:hidden;color:#fff;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.sqmodal .h{padding:16px 18px 14px;border-bottom:1px solid rgba(255,255,255,.07)}
+.sqmodal .h .top{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+.sqmodal .badge{font-family:var(--cond);font-weight:700;font-size:13px;letter-spacing:.3px;padding:5px 11px;border-radius:8px;border:1px solid;display:inline-flex;gap:5px}
+.sqmodal .fn{font-size:11px;color:rgba(255,255,255,.4)}
+.sqmodal .x{margin-left:auto;background:none;border:none;color:rgba(255,255,255,.3);font-size:18px;cursor:pointer;line-height:1}
+.sqmodal .desc{font-size:12px;color:rgba(255,255,255,.4)}
+/* unified stepper */
+.stepper{display:flex;align-items:center;gap:0;padding:14px 18px;border-bottom:1px solid rgba(255,255,255,.06)}
+.step{display:flex;align-items:center;gap:8px;flex:1}
+.step .num{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:700;flex-shrink:0;border:1.5px solid rgba(255,255,255,.16);color:rgba(255,255,255,.45)}
+.step .nm{font-size:11.5px;font-weight:600;color:rgba(255,255,255,.45)}
+.step.on .num{border-color:transparent;color:#fff}
+.step.on .nm{color:#fff}
+.step.done .num{border-color:transparent;color:#fff}
+.step .bar{flex:1;height:1.5px;background:rgba(255,255,255,.12);margin:0 10px}
+.sqmodal .body{padding:16px 18px}
+.sq-detbar{display:flex;gap:18px;flex-wrap:wrap;border-radius:10px;padding:11px 14px;margin-bottom:14px}
+.sq-det{display:flex;flex-direction:column;gap:2px}
+.sq-det .l{font-size:9.5px;letter-spacing:.5px;text-transform:uppercase;color:rgba(255,255,255,.4)}
+.sq-det .v{font-family:var(--cond);font-size:17px;font-weight:700}
+.sq-fieldrow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:13px}
+.sq-field label{font-size:10.5px;color:rgba(255,255,255,.4);display:block;margin-bottom:5px}
+.sq-input{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:7px;padding:8px 11px;font-size:12px;color:#fff;width:100%}
+.sq-sysrow{display:flex;align-items:center;gap:9px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:9px 11px;margin-bottom:6px}
+.sq-sysrow .swatch{width:4px;height:30px;border-radius:2px;flex-shrink:0}
+.sq-sysrow .sn{font-size:12px;flex:1}
+.sq-sysrow .ar{font-size:11px;color:rgba(255,255,255,.5);font-family:var(--mono)}
+.sqmodal .acts{display:flex;justify-content:flex-end;gap:9px;padding:14px 18px;border-top:1px solid rgba(255,255,255,.06)}
+.sq-btn{font-family:var(--sans);font-size:12.5px;font-weight:700;border:none;border-radius:8px;padding:9px 18px;cursor:pointer}
+.sq-cancel{background:rgba(255,255,255,.06);color:rgba(255,255,255,.6)}
+/* accent helpers for modal variants */
+.acc-pdf{--acc:#981915}.acc-dwg{--acc:#3b6ea5}.acc-vision{--acc:#6d557e}.acc-bim{--acc:#c0892d}
+
+/* responsive demo */
+.ov-bad{display:flex;gap:10px;overflow:hidden;position:relative}
+.ov-bad::after{content:"corte →";position:absolute;right:0;top:0;bottom:0;width:54px;background:linear-gradient(90deg,transparent,#fbeeec);display:flex;align-items:center;justify-content:flex-end;padding-right:6px;font-size:9px;color:var(--danger);font-weight:700}
+.ov-bad .kpi{min-width:140px;flex-shrink:0}
+.ov-good{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.scroll-hint{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--muted);margin-top:8px;justify-content:center}
+
+.legend{display:flex;gap:20px;flex-wrap:wrap;margin-top:14px;padding-top:16px;border-top:1px solid var(--border)}
+.legend .li{display:flex;align-items:center;gap:7px;font-size:11.5px;color:var(--ink2)}
+.legend .sw{width:13px;height:13px;border-radius:4px;flex-shrink:0}
+
+/* variation picker */
+.vpick{display:inline-flex;background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:3px;gap:3px;margin-bottom:18px}
+.vpick button{font-family:var(--sans);font-size:12px;font-weight:600;border:none;background:none;color:var(--ink2);padding:7px 14px;border-radius:7px;cursor:pointer}
+.vpick button.on{background:var(--brick);color:#fff}
+.vhint{font-size:12px;color:var(--muted);margin:-6px 0 16px}
+
+footer.fin{background:var(--graphite);color:#fff;border-radius:16px;padding:26px 30px;display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap}
+footer.fin .ft b{font-family:var(--cond);font-size:21px;font-weight:700}
+footer.fin .ft p{font-size:13px;color:rgba(255,255,255,.55);margin-top:3px;max-width:520px}
+footer.fin .ck{display:flex;flex-direction:column;gap:7px}
+footer.fin .ck div{font-size:12px;color:rgba(255,255,255,.75);display:flex;align-items:center;gap:8px}
+footer.fin .ck svg{width:15px;height:15px;stroke:#7fc98c;stroke-width:2.4}
+
+@media(max-width:1080px){
+  .shell{grid-template-columns:1fr}
+  .rail{position:static;height:auto;flex-direction:row;flex-wrap:wrap;align-items:center}
+  .rail nav{display:flex;flex-wrap:wrap;padding:8px}
+  .rail .grp{display:none}.rail-foot{display:none}
+  .rail a{border-left:none;padding:7px 12px}
+  .topbar{padding:34px 28px 28px}.topbar h1{font-size:38px}
+  .content{padding:30px 24px 80px}
+  .cmp{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+  <!-- Rail -->
+  <aside class="rail">
+    <div class="rail-logo">
+      <img src="assets/logo-stickframe-mark.png" alt="StickFrame"/>
+      <div>
+        <div class="wm">STICKFRAME</div>
+        <div class="sub">Polimento UX/UI</div>
+      </div>
+    </div>
+    <nav>
+      <div class="grp">Punch-list</div>
+      <a href="#item1" class="active">KpiCard unificado <span class="n">01</span></a>
+      <a href="#item2">Banner notificações <span class="n">02</span></a>
+      <a href="#item3">Empty states <span class="n">03</span></a>
+      <a href="#item4">Loading / erro <span class="n">04</span></a>
+      <a href="#item5">Modais StickQuote <span class="n">05</span></a>
+      <a href="#item6">Responsividade 390px <span class="n">06</span></a>
+      <div class="grp">Referência</div>
+      <a href="#aceite">Critério de aceite <span class="n">✓</span></a>
+    </nav>
+    <div class="rail-foot">
+      Camada visual · sem mudar regras de negócio.<br/>Tokens <code style="font-size:10px;color:#c9686a">C</code> + <code style="font-size:10px;color:#c9686a">var(--cond)</code>.
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <header class="topbar">
+      <div class="eyebrow">StickFrame™ · Product Design</div>
+      <h1>Polimento de UX/UI — antes & depois</h1>
+      <p>Seis itens de polimento priorizados, cada um com mock antes/depois em desktop e 390&nbsp;px, racional de 1 linha e arquivos afetados. Apenas camada visual: nenhum módulo novo, nenhuma regra de negócio alterada, sempre reusando os tokens reais <code style="color:#e0a3a0;font-size:13px">C</code> e <code style="color:#e0a3a0;font-size:13px">var(--cond)</code>.</p>
+      <div class="meta">
+        <div>Itens<b>6 priorizados</b></div>
+        <div>Tokens<b>Sem cores novas</b></div>
+        <div>Fontes<b>Barlow Cond · Hanken</b></div>
+        <div>Breakpoint revisado<b>390 px</b></div>
+      </div>
+    </header>
+
+    <div class="content">
+<!-- ══════════ ITEM 1 — KpiCard ══════════ -->
+<section class="item" id="item1">
+  <div class="sec-head">
+    <span class="sec-tag">01</span>
+    <div>
+      <h2>Componente &lt;KpiCard&gt; unificado<span class="prio alta">prioridade alta</span></h2>
+      <p>Hoje há três estilos diferentes de "card de número" (Orçamentos, StickBrain, Dashboard/Inteligência). Criar <b>um</b> componente reutilizável com props <code>label · value · sub · accent · icon · alerta</code> e aplicá-lo nas três telas.</p>
+    </div>
+  </div>
+
+  <div class="callout">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="1.9"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
+    <div><b>Inconsistência visual</b><p>Três raios de canto, três tamanhos de número, três fontes. O número grande deveria ser sempre Barlow Condensed 800 e o label uppercase 10px muted.</p></div>
+  </div>
+
+  <div class="cmp">
+    <div class="pane before">
+      <div class="pane-head"><span class="tag">Antes</span> 3 estilos divergentes</div>
+      <div class="pane-body">
+        <div class="m-grid" style="grid-template-columns:1fr 1fr 1fr">
+          <div class="oldk1"><div class="l">Orçamentos</div><div class="v">42</div></div>
+          <div class="oldk2"><div class="v">R$ 1,2M</div><div class="l">Pipeline</div></div>
+          <div class="oldk3"><div class="v">68%</div><div class="l">Conversão</div></div>
+        </div>
+        <p style="font-size:11px;color:var(--muted);margin-top:10px">Raios 8/16/6px · fontes e pesos diferentes · um centralizado, outros não.</p>
+      </div>
+    </div>
+    <div class="pane after">
+      <div class="pane-head"><span class="tag">Depois</span> &lt;KpiCard&gt; único — escolha a variação</div>
+      <div class="pane-body">
+        <div class="vpick" id="kpiPick">
+          <button class="on" data-v="vA">A · borda topo ★</button>
+          <button data-v="vB">B · tile ícone</button>
+          <button data-v="vC">C · minimal</button>
+        </div>
+        <div class="vhint" style="margin-top:-8px;margin-bottom:14px"><b style="color:var(--brick)">★ Recomendada:</b> variação A — já documentada no Design System ("KPI — borda superior por acento").</div>
+        <div class="kpi-grid" id="kpiDemo">
+          <div class="kpi vA" style="--accent:var(--steel)"><span class="lab">Orçamentos</span><div class="val">42</div><div class="sub pos">▲ 12% vs. mês ant.</div><div class="ic"><svg viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></div></div>
+          <div class="kpi vA" style="--accent:var(--brick)"><span class="lab">Pipeline</span><div class="val">R$ 1,2M</div><div class="sub">8 obras em aberto</div><div class="ic"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div></div>
+          <div class="kpi vA" style="--accent:var(--success)"><span class="lab">Conversão</span><div class="val">68%</div><div class="sub pos">▲ acima da meta</div><div class="ic"><svg viewBox="0 0 24 24" fill="none"><path d="m22 7-8.5 8.5-5-5L2 17"/><path d="M16 7h6v6"/></svg></div></div>
+          <div class="kpi vA alert" style="--accent:var(--warning)"><span class="lab">A vencer</span><div class="val">3</div><div class="sub" style="color:var(--warning)">⚠ propostas em risco</div><div class="ic"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div></div>
+        </div>
+        <div class="vhint" style="margin-top:14px">Grid <code>repeat(auto-fit,minmax(150px,1fr))</code> · número <code>var(--cond)</code> 800 · label uppercase 10px · prop <code>alerta</code> → borda âmbar.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row-label">Mesmo componente · 390px</div>
+  <div class="phones">
+    <div class="phone"><div class="scr"><div class="notch"></div><div style="padding:24px 12px 12px"><div class="kpi-grid" id="kpiPhone" style="grid-template-columns:1fr 1fr;gap:9px"></div></div></div><div class="cap">KpiCard reflui para 2 colunas</div></div>
+  </div>
+
+  <div class="legend">
+    <div class="li"><span class="sw" style="background:var(--brick)"></span> accent="red" — refs / marca</div>
+    <div class="li"><span class="sw" style="background:var(--steel)"></span> steel — dados neutros</div>
+    <div class="li"><span class="sw" style="background:var(--success)"></span> success — ganho/meta</div>
+    <div class="li"><span class="sw" style="background:var(--warning)"></span> warning — prop. alerta</div>
+  </div>
+
+  <div class="foot">
+    <div class="rationale"><svg viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5"/></svg><div><b>Racional:</b> um componente, três telas — consistência imediata e menos CSS duplicado. Número sempre Barlow Condensed 800.</div></div>
+    <div class="files"><span class="chip">pages/Orcamentos.jsx</span><span class="chip">inteligencia/StickBrainAnalytics.jsx</span><span class="chip">pages/Inteligencia.jsx</span><span class="chip">+ components/KpiCard.jsx</span></div>
+  </div>
+</section>
+
+<!-- ══════════ ITEM 2 — Banner ══════════ -->
+<section class="item" id="item2">
+  <div class="sec-head">
+    <span class="sec-tag">02</span>
+    <div>
+      <h2>Banner "Ativar notificações"</h2>
+      <p>Fica fixo no rodapé cobrindo conteúdo em todas as telas. Recolher ao dispensar e <b>não reaparecer na mesma sessão</b> (persistir em <code>localStorage</code>), sem sobrepor ações e respeitando <code>safe-area</code> no mobile.</p>
+    </div>
+  </div>
+
+  <div class="callout">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="1.9"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
+    <div><b>Cobre o conteúdo e volta sempre</b><p>Barra full-width colada no rodapé tapa a última linha das listas e os CTAs; reaparece a cada navegação.</p></div>
+  </div>
+
+  <div class="cmp">
+    <div class="pane before">
+      <div class="pane-head"><span class="tag">Antes</span> barra fixa cobre o conteúdo</div>
+      <div class="pane-body">
+        <div class="scrmock">
+          <div class="topb"><span class="dot"></span><span class="t">Orçamentos</span></div>
+          <div class="feed"><div class="ln" style="width:70%"></div><div class="ln" style="width:90%"></div><div class="ln" style="width:55%"></div><div class="ln" style="width:80%"></div><div class="ln" style="width:60%"></div></div>
+          <div class="banner-bad"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" style="width:18px;height:18px"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><div class="bx"><b>Ativar notificações?</b>Receba alertas de orçamentos.</div><button class="btn btn-sm" style="background:#fff;color:var(--graphite)">Ativar</button></div>
+        </div>
+      </div>
+    </div>
+    <div class="pane after">
+      <div class="pane-head"><span class="tag">Depois</span> card flutuante dispensável</div>
+      <div class="pane-body">
+        <div class="scrmock">
+          <div class="topb"><span class="dot"></span><span class="t">Orçamentos</span></div>
+          <div class="feed"><div class="ln" style="width:70%"></div><div class="ln" style="width:90%"></div><div class="ln" style="width:55%"></div><div class="ln" style="width:80%"></div><div class="ln" style="width:60%"></div><div class="ln" style="width:75%"></div></div>
+          <div class="banner-good" id="bannerDemo">
+            <div class="bi"><svg viewBox="0 0 24 24" fill="none"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></div>
+            <div class="bx"><b>Ativar notificações?</b><span>Alertas de orçamentos e prazos.</span></div>
+            <button class="btn btn-pri btn-sm" onclick="dismissBanner()">Ativar</button>
+            <button class="x" title="Dispensar" aria-label="Dispensar" onclick="dismissBanner()">×</button>
+          </div>
+        </div>
+        <div class="vhint" style="margin-top:12px">Clique em <b>×</b> ou <b>Ativar</b> → recolhe e grava <code>sf_notif_dismissed</code>. Não reaparece na sessão.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <div class="rationale"><svg viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5"/></svg><div><b>Racional:</b> card flutuante com margem e <code>safe-area-inset-bottom</code> não tapa conteúdo nem CTAs; dispensar persiste por sessão.</div></div>
+    <div class="files"><span class="chip">components/NotifBanner.jsx</span><span class="chip">App layout</span><span class="chip">localStorage</span></div>
+  </div>
+</section>
+
+<!-- ══════════ ITEM 3 — Empty states ══════════ -->
+<section class="item" id="item3">
+  <div class="sec-head">
+    <span class="sec-tag">03</span>
+    <div>
+      <h2>Estados vazios padronizados</h2>
+      <p>Unificar o padrão de empty-state — ícone em <code>brickSoft</code> + título + texto <code>muted</code> + CTA primário — onde hoje só há texto solto (listas de orçamentos, medições, documentos, StickBrain sem dados).</p>
+    </div>
+  </div>
+
+  <div class="cmp">
+    <div class="pane before">
+      <div class="pane-head"><span class="tag">Antes</span> texto solto</div>
+      <div class="pane-body plain">
+        <div class="mcard">
+          <div class="mcard-h">Orçamentos</div>
+          <div class="empty-bad">Nenhum orçamento encontrado.</div>
+        </div>
+      </div>
+    </div>
+    <div class="pane after">
+      <div class="pane-head"><span class="tag">Depois</span> padrão único acionável</div>
+      <div class="pane-body plain">
+        <div class="mcard">
+          <div class="mcard-h">Orçamentos</div>
+          <div class="empty-good">
+            <div class="ill"><svg viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M12 11v6M9 14h6"/></svg></div>
+            <h4>Nenhum orçamento ainda</h4>
+            <p>Crie o primeiro StickQuote™ a partir de um projeto BIM, PDF ou DWG.</p>
+            <button class="btn btn-pri">+ Novo orçamento</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row-label">Mesmo padrão em outros contextos</div>
+  <div class="m-grid" style="grid-template-columns:1fr 1fr 1fr">
+    <div class="mcard"><div class="empty-good" style="padding:26px 18px"><div class="ill"><svg viewBox="0 0 24 24" fill="none"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 12h10"/></svg></div><h4 style="font-size:16px">Sem medições</h4><p style="font-size:12px">Registre a primeira medição de obra.</p><button class="btn btn-ghost btn-sm">Nova medição</button></div></div>
+    <div class="mcard"><div class="empty-good" style="padding:26px 18px"><div class="ill"><svg viewBox="0 0 24 24" fill="none"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5z"/><path d="M14 2v6h6"/></svg></div><h4 style="font-size:16px">Sem documentos</h4><p style="font-size:12px">Anexe contratos e plantas da obra.</p><button class="btn btn-ghost btn-sm">Enviar arquivo</button></div></div>
+    <div class="mcard"><div class="empty-good" style="padding:26px 18px"><div class="ill"><svg viewBox="0 0 24 24" fill="none"><path d="M12 5a3 3 0 1 0-3 3M12 5a3 3 0 1 1 3 3M12 5v6M9 8a4 4 0 0 0-4 4v1a4 4 0 0 0 4 4M15 8a4 4 0 0 1 4 4v1a4 4 0 0 1-4 4"/></svg></div><h4 style="font-size:16px">StickBrain™ sem dados</h4><p style="font-size:12px">Gere orçamentos para alimentar a IA.</p><button class="btn btn-ghost btn-sm">Entenda como</button></div></div>
+  </div>
+
+  <div class="foot">
+    <div class="rationale"><svg viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5"/></svg><div><b>Racional:</b> empty-state com CTA converte "tela vazia" em próximo passo claro; ícone em brickSoft mantém a identidade.</div></div>
+    <div class="files"><span class="chip">components/EmptyState.jsx</span><span class="chip">Orcamentos · Medicoes · Documentos · StickBrain</span></div>
+  </div>
+</section>
+
+<!-- ══════════ ITEM 4 — Loading / erro ══════════ -->
+<section class="item" id="item4">
+  <div class="sec-head">
+    <span class="sec-tag">04</span>
+    <div>
+      <h2>Estados de carregamento &amp; erro</h2>
+      <p>Skeletons sutis onde o layout é previsível (em vez de spinner) e mensagens de erro amigáveis e acionáveis, replicando o padrão que já existe no AI Vision / StickBrain.</p>
+    </div>
+  </div>
+
+  <div class="cmp">
+    <div class="pane before">
+      <div class="pane-head"><span class="tag">Antes</span> spinner + erro técnico</div>
+      <div class="pane-body plain">
+        <div class="mcard" style="margin-bottom:14px"><div class="mcard-h">Carregando</div><div class="spinner-bad"></div></div>
+        <div class="err-bad">Error: 500 — failed to fetch /orcamentos</div>
+      </div>
+    </div>
+    <div class="pane after">
+      <div class="pane-head"><span class="tag">Depois</span> skeleton + erro acionável</div>
+      <div class="pane-body plain">
+        <div class="mcard" style="margin-bottom:14px">
+          <div class="mcard-h">Orçamentos</div>
+          <div style="padding:13px 15px;display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;align-items:center;gap:11px"><div class="sk" style="width:34px;height:34px;border-radius:8px"></div><div style="flex:1"><div class="sk" style="width:55%;height:11px;margin-bottom:6px"></div><div class="sk" style="width:35%;height:9px"></div></div><div class="sk" style="width:48px;height:11px"></div></div>
+            <div style="display:flex;align-items:center;gap:11px"><div class="sk" style="width:34px;height:34px;border-radius:8px"></div><div style="flex:1"><div class="sk" style="width:65%;height:11px;margin-bottom:6px"></div><div class="sk" style="width:40%;height:9px"></div></div><div class="sk" style="width:48px;height:11px"></div></div>
+            <div style="display:flex;align-items:center;gap:11px"><div class="sk" style="width:34px;height:34px;border-radius:8px"></div><div style="flex:1"><div class="sk" style="width:45%;height:11px;margin-bottom:6px"></div><div class="sk" style="width:30%;height:9px"></div></div><div class="sk" style="width:48px;height:11px"></div></div>
+          </div>
+        </div>
+        <div class="err-good">
+          <div class="ei"><svg viewBox="0 0 24 24" fill="none"><path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="10"/></svg></div>
+          <div style="flex:1"><h4>Não foi possível carregar os orçamentos</h4><p>Verifique sua conexão. Os dados são recarregados automaticamente ao reconectar.</p><button class="btn btn-ghost btn-sm">↻ Tentar novamente</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <div class="rationale"><svg viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5"/></svg><div><b>Racional:</b> skeleton com a forma do conteúdo reduz a percepção de espera; erro em PT com ação evita o beco-sem-saída técnico.</div></div>
+    <div class="files"><span class="chip">components/Skeleton.jsx</span><span class="chip">components/ErrorState.jsx</span></div>
+  </div>
+</section>
+
+<!-- ══════════ ITEM 5 — Modais StickQuote ══════════ -->
+<section class="item" id="item5">
+  <div class="sec-head">
+    <span class="sec-tag">05</span>
+    <div>
+      <h2>Consistência dos 4 modais StickQuote™</h2>
+      <p>Mesmo header, mesmo stepper, mesmo espaçamento e mesma família de cores de acento (PDF=vermelho, DWG=azul, Vision=violeta, BIM=ocre) — mantendo o acento por tipo mas unificando a estrutura.</p>
+    </div>
+  </div>
+
+  <div class="row-label">Header unificado · acento por tipo</div>
+  <div class="m-grid" style="grid-template-columns:1fr 1fr">
+    <div class="sqmodal acc-pdf"><div class="h"><div class="top"><span class="badge" style="color:#fff;border-color:rgba(152,25,21,.4);background:rgba(152,25,21,.16)">StickQuote™ <span style="color:var(--acc)">PDF</span></span><span class="fn">planta-térreo.pdf</span><button class="x">×</button></div><div class="desc">Extração de áreas a partir do PDF de projeto.</div></div></div>
+    <div class="sqmodal acc-dwg"><div class="h"><div class="top"><span class="badge" style="color:#fff;border-color:rgba(59,110,165,.45);background:rgba(59,110,165,.16)">StickQuote™ <span style="color:var(--acc)">DWG</span></span><span class="fn">estrutura.dwg</span><button class="x">×</button></div><div class="desc">Leitura de camadas e polilinhas do CAD.</div></div></div>
+    <div class="sqmodal acc-vision"><div class="h"><div class="top"><span class="badge" style="color:#fff;border-color:rgba(109,85,126,.45);background:rgba(109,85,126,.18)">StickQuote™ <span style="color:var(--acc)">Vision</span></span><span class="fn">fachada.jpg</span><button class="x">×</button></div><div class="desc">Reconhecimento por IA de imagem do projeto.</div></div></div>
+    <div class="sqmodal acc-bim"><div class="h"><div class="top"><span class="badge" style="color:#fff;border-color:rgba(192,137,45,.45);background:rgba(192,137,45,.16)">StickQuote™ <span style="color:var(--acc)">BIM</span></span><span class="fn">modelo.ifc</span><button class="x">×</button></div><div class="desc">Sistemas detectados no modelo BIM IFC.</div></div></div>
+  </div>
+
+  <div class="row-label">Estrutura completa · header → stepper → corpo → ações</div>
+  <div class="cmp">
+    <div class="pane before">
+      <div class="pane-head"><span class="tag">Antes</span> espaçamento e header variando</div>
+      <div class="pane-body">
+        <div class="sqmodal" style="--acc:#3b6ea5">
+          <div class="h" style="padding:22px 14px 10px"><div class="top" style="margin-bottom:4px"><span class="badge" style="border-radius:14px;font-family:var(--sans);color:#fff;border-color:rgba(59,110,165,.4);background:rgba(59,110,165,.16)">DWG → Quote</span><button class="x">×</button></div></div>
+          <div class="body" style="padding:10px 14px 20px">
+            <div class="sq-fieldrow" style="grid-template-columns:1fr"><div class="sq-field"><label>Nome</label><div class="sq-input" style="color:rgba(255,255,255,.3)">StickQuote DWG…</div></div></div>
+            <div class="sq-sysrow" style="border-radius:4px"><div class="swatch" style="background:#3b6ea5"></div><span class="sn">Parede externa</span><span class="ar">120 m²</span></div>
+            <div style="display:flex;gap:8px;margin-top:16px"><button class="sq-btn sq-cancel">Cancelar</button><button class="sq-btn" style="background:#3b6ea5;color:#fff">Gerar</button></div>
+          </div>
+        </div>
+        <p style="font-size:11px;color:var(--muted);margin-top:10px">Sem stepper · raios e paddings diferentes a cada modal.</p>
+      </div>
+    </div>
+    <div class="pane after">
+      <div class="pane-head"><span class="tag">Depois</span> shell único (ex.: Vision)</div>
+      <div class="pane-body">
+        <div class="sqmodal acc-vision">
+          <div class="h"><div class="top"><span class="badge" style="color:#fff;border-color:rgba(109,85,126,.45);background:rgba(109,85,126,.18)">StickQuote™ <span style="color:var(--acc)">Vision</span></span><span class="fn">fachada.jpg</span><button class="x">×</button></div><div class="desc">Reconhecimento por IA de imagem do projeto.</div></div>
+          <div class="stepper">
+            <div class="step done"><span class="num" style="background:var(--acc)">✓</span><span class="nm">Upload</span></div><div class="bar" style="background:var(--acc)"></div>
+            <div class="step on"><span class="num" style="background:var(--acc)">2</span><span class="nm">Revisar</span></div><div class="bar"></div>
+            <div class="step"><span class="num">3</span><span class="nm">Gerar</span></div>
+          </div>
+          <div class="body">
+            <div class="sq-detbar" style="background:color-mix(in srgb,var(--acc) 14%,#16151a);border:1px solid color-mix(in srgb,var(--acc) 30%,transparent)">
+              <div class="sq-det"><span class="l">Paredes</span><span class="v">18</span></div>
+              <div class="sq-det"><span class="l">Aberturas</span><span class="v">7</span></div>
+              <div class="sq-det"><span class="l">Área IA</span><span class="v">142 m²</span></div>
+            </div>
+            <div class="sq-fieldrow">
+              <div class="sq-field"><label>Nome do orçamento</label><div class="sq-input" style="color:rgba(255,255,255,.35)">StickQuote™ Vision – Casa…</div></div>
+              <div class="sq-field"><label>Cliente</label><div class="sq-input" style="color:rgba(255,255,255,.35)">Nome do cliente</div></div>
+            </div>
+            <div class="sq-sysrow"><div class="swatch" style="background:#3b6ea5"></div><span class="sn">Parede externa</span><span class="ar">86 m²</span></div>
+            <div class="sq-sysrow"><div class="swatch" style="background:#c0892d"></div><span class="sn">Forro Steel</span><span class="ar">56 m²</span></div>
+          </div>
+          <div class="acts"><button class="sq-btn sq-cancel">Cancelar</button><button class="sq-btn" style="background:var(--acc);color:#fff">Gerar StickQuote™ →</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <div class="li"><span class="sw" style="background:var(--brick)"></span> PDF — vermelho</div>
+    <div class="li"><span class="sw" style="background:var(--steel)"></span> DWG — azul steel</div>
+    <div class="li"><span class="sw" style="background:var(--purple)"></span> Vision — violeta</div>
+    <div class="li"><span class="sw" style="background:var(--ochre)"></span> BIM — ocre</div>
+  </div>
+
+  <div class="foot">
+    <div class="rationale"><svg viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5"/></svg><div><b>Racional:</b> um shell de modal (header + stepper + corpo + ações) com a cor de acento como única variável — previsível para o usuário, fácil de manter.</div></div>
+    <div class="files"><span class="chip">bim/StickQuotePDFModal.jsx</span><span class="chip">…DWGModal.jsx</span><span class="chip">…VisionModal.jsx</span><span class="chip">…BIMModal.jsx</span><span class="chip">+ QuoteModalShell.jsx</span></div>
+  </div>
+</section>
+
+<!-- ══════════ ITEM 6 — Responsividade ══════════ -->
+<section class="item" id="item6">
+  <div class="sec-head">
+    <span class="sec-tag">06</span>
+    <div>
+      <h2>Responsividade — revisão em 390px</h2>
+      <p>Revisar pipelines e KPIs que usam <code>overflow-x:auto</code> para não cortar conteúdo, garantir touch targets ≥44px e reflow das grades em telas estreitas.</p>
+    </div>
+  </div>
+
+  <div class="callout">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="1.9"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
+    <div><b>Conteúdo cortado em 390px</b><p>KPIs em linha única estouram a viewport sem indicação de scroll; o último card fica inacessível.</p></div>
+  </div>
+
+  <div class="phones">
+    <div class="phone">
+      <div class="scr"><div class="notch"></div>
+        <div style="padding:24px 12px 12px">
+          <div style="font-family:var(--cond);font-weight:700;font-size:16px;margin-bottom:10px">Inteligência</div>
+          <div class="ov-bad">
+            <div class="kpi vA" style="--accent:var(--steel);padding:12px"><span class="lab">Orçam.</span><div class="val" style="font-size:24px">42</div></div>
+            <div class="kpi vA" style="--accent:var(--brick);padding:12px"><span class="lab">Pipeline</span><div class="val" style="font-size:24px">1,2M</div></div>
+            <div class="kpi vA" style="--accent:var(--success);padding:12px"><span class="lab">Conv.</span><div class="val" style="font-size:24px">68%</div></div>
+          </div>
+          <div class="feed" style="padding:14px 0 0;height:auto"><div class="ln" style="width:80%"></div><div class="ln" style="width:60%"></div></div>
+        </div>
+      </div>
+      <div class="cap"><span class="tag" style="background:#efe5e3;color:#9a4a44">Antes</span>linha única corta o 3º card</div>
+    </div>
+    <div class="phone">
+      <div class="scr"><div class="notch"></div>
+        <div style="padding:24px 12px 12px">
+          <div style="font-family:var(--cond);font-weight:700;font-size:16px;margin-bottom:10px">Inteligência</div>
+          <div class="ov-good">
+            <div class="kpi vA" style="--accent:var(--steel);padding:12px"><span class="lab">Orçam.</span><div class="val" style="font-size:24px">42</div></div>
+            <div class="kpi vA" style="--accent:var(--brick);padding:12px"><span class="lab">Pipeline</span><div class="val" style="font-size:24px">1,2M</div></div>
+            <div class="kpi vA" style="--accent:var(--success);padding:12px"><span class="lab">Conv.</span><div class="val" style="font-size:24px">68%</div></div>
+            <div class="kpi vA alert" style="--accent:var(--warning);padding:12px"><span class="lab">A vencer</span><div class="val" style="font-size:24px">3</div></div>
+          </div>
+          <div class="feed" style="padding:14px 0 0;height:auto"><div class="ln" style="width:80%"></div><div class="ln" style="width:60%"></div></div>
+        </div>
+      </div>
+      <div class="cap"><span class="tag" style="background:#e4efe6;color:var(--success)">Depois</span>reflui para 2 colunas</div>
+    </div>
+    <div class="phone">
+      <div class="scr"><div class="notch"></div>
+        <div style="padding:24px 12px 12px">
+          <div style="font-family:var(--cond);font-weight:700;font-size:16px;margin-bottom:10px">Funil comercial</div>
+          <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:8px">
+            <div class="mcard" style="min-width:120px;flex-shrink:0"><div style="padding:9px 11px;font-size:11px;font-weight:700;border-bottom:1px solid var(--line2)">Lead · 12</div><div style="padding:9px 11px;font-size:11px;color:var(--muted)">R$ 480k</div></div>
+            <div class="mcard" style="min-width:120px;flex-shrink:0"><div style="padding:9px 11px;font-size:11px;font-weight:700;border-bottom:1px solid var(--line2)">Proposta · 6</div><div style="padding:9px 11px;font-size:11px;color:var(--muted)">R$ 720k</div></div>
+            <div class="mcard" style="min-width:120px;flex-shrink:0;opacity:.5"><div style="padding:9px 11px;font-size:11px;font-weight:700;border-bottom:1px solid var(--line2)">Fechado</div></div>
+          </div>
+          <div class="scroll-hint"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><path d="m9 18 6-6-6-6"/></svg> arraste para ver as fases</div>
+        </div>
+      </div>
+      <div class="cap"><span class="tag" style="background:#e4efe6;color:var(--success)">Depois</span>funil: scroll-x com dica visual</div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <div class="rationale"><svg viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5"/></svg><div><b>Racional:</b> KPIs refluem em grade (sem corte) e o funil mantém scroll-x mas com dica clara; todos os toques ≥44px.</div></div>
+    <div class="files"><span class="chip">styles/responsive.css</span><span class="chip">Inteligencia · Funil · KPIs</span></div>
+  </div>
+</section>
+
+<!-- ══════════ ACEITE ══════════ -->
+<section id="aceite" style="scroll-margin-top:20px">
+  <footer class="fin">
+    <div class="ft">
+      <b>Critério de aceite</b>
+      <p>Apenas camada visual — nenhum módulo novo, nenhuma regra de negócio alterada, build limpo, tokens <code style="color:#e0a3a0">C</code> + <code style="color:#e0a3a0">var(--cond)</code> reusados.</p>
+    </div>
+    <div class="ck">
+      <div><svg viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5"/></svg> &lt;KpiCard&gt; único nas 3 telas</div>
+      <div><svg viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5"/></svg> Banner não reaparece após dispensar</div>
+      <div><svg viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5"/></svg> Empty / loading / erro consistentes</div>
+      <div><svg viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5"/></svg> 4 modais StickQuote com estrutura unificada</div>
+      <div><svg viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5"/></svg> Sem overflow em 390px</div>
+    </div>
+  </footer>
+</section>
+    </div>
+  </main>
+</div>
+<script>
+// ── KPI variation picker ──
+const kpiDemo=document.getElementById('kpiDemo');
+const kpiPhone=document.getElementById('kpiPhone');
+const KPIDATA=[
+  {lab:'Orçamentos',val:'42',sub:'▲ 12% vs. mês ant.',sk:'pos',ac:'var(--steel)',ic:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/>'},
+  {lab:'Pipeline',val:'R$ 1,2M',sub:'8 obras em aberto',sk:'',ac:'var(--brick)',ic:'<path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>'},
+  {lab:'Conversão',val:'68%',sub:'▲ acima da meta',sk:'pos',ac:'var(--success)',ic:'<path d="m22 7-8.5 8.5-5-5L2 17"/><path d="M16 7h6v6"/>'},
+  {lab:'A vencer',val:'3',sub:'⚠ propostas em risco',sk:'warn',ac:'var(--warning)',ic:'<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',alert:true},
+];
+function kpiHTML(v,d,small){
+  const subcls=d.sk==='warn'?'':d.sk;
+  const subStyle=d.sk==='warn'?' style="color:var(--warning)"':'';
+  const svg='<svg viewBox="0 0 24 24" fill="none">'+d.ic+'</svg>';
+  const alert=d.alert?' alert':'';
+  if(v==='vB') return `<div class="kpi vB${alert}" style="--accent:${d.ac}"><div class="tile">${svg}</div><div class="body"><span class="lab">${d.lab}</span><div class="val">${d.val}</div>${small?'':`<div class="sub ${subcls}"${subStyle}>${d.sub}</div>`}</div></div>`;
+  if(v==='vC') return `<div class="kpi vC${alert}" style="--accent:${d.ac}"><span class="lab"><span class="dot"></span>${d.lab}</span><div class="val">${d.val}</div>${small?'':`<div class="sub ${subcls}"${subStyle}>${d.sub}</div>`}</div>`;
+  return `<div class="kpi vA${alert}" style="--accent:${d.ac}"><span class="lab">${d.lab}</span><div class="val">${d.val}</div>${small?'':`<div class="sub ${subcls}"${subStyle}>${d.sub}</div>`}<div class="ic">${svg}</div></div>`;
+}
+function renderKpi(v){
+  kpiDemo.innerHTML=KPIDATA.map(d=>kpiHTML(v,d,false)).join('');
+  kpiPhone.innerHTML=KPIDATA.map(d=>kpiHTML(v,d,true)).join('');
+}
+document.querySelectorAll('#kpiPick button').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('#kpiPick button').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on');renderKpi(b.dataset.v);
+}));
+renderKpi('vA');
+
+// ── Banner dismiss ──
+function dismissBanner(){
+  const b=document.getElementById('bannerDemo');
+  b.outerHTML='<div class="banner-good banner-gone" style="justify-content:center;color:var(--muted)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M20 6 9 17l-5-5"/></svg> Dispensado — não reaparece nesta sessão</div>';
+}
+
+// active nav on scroll
+const links=[...document.querySelectorAll('.rail a[href^="#"]')];
+const obs=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(l=>l.classList.toggle('active',l.getAttribute('href')==='#'+e.target.id));}});},{rootMargin:'-30% 0px -60% 0px'});
+document.querySelectorAll('section.item,#aceite').forEach(s=>obs.observe(s));
+</script>
+</body>
+</html>

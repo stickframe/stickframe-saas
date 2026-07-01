@@ -36,6 +36,8 @@ function NavBadge({ badge }) {
 const PAGE_TO_GROUP = {
   dashboard: "visao_geral",
   agenda: "visao_geral",
+  biblioteca: "visao_geral",
+  cursos: "visao_geral",
 
   obras: "obras",
   cronograma: "obras",
@@ -68,6 +70,7 @@ const PAGE_TO_GROUP = {
 
   bi: "inteligencia",
   inteligencia: "inteligencia",
+  benchmarks: "inteligencia",
 
   ecossistema: "gestao",
   configuracoes: "gestao",

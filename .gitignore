@@ -9,3 +9,8 @@ cypress/videos
 cypress/screenshots
 .claude/worktrees/
 design_handoff_stickframe/
+assas token.txt
+*.zip
+*.pdf
+hastebin.txt
+.vscode/

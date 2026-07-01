@@ -87,6 +87,13 @@ const AdminMobile     = lazyWithRetry(() => import("./pages/AdminMobile"));
 const AdminHealth     = lazyWithRetry(() => import("./pages/AdminHealth"));
 const AdminGrowth     = lazyWithRetry(() => import("./pages/AdminGrowth"));
 const AdminConversion = lazyWithRetry(() => import("./pages/AdminConversion"));
+const Biblioteca      = lazyWithRetry(() => import("./pages/Biblioteca"));
+const Benchmarks      = lazyWithRetry(() => import("./pages/Benchmarks"));
+const Cursos          = lazyWithRetry(() => import("./pages/Cursos"));
+const PublicObras     = lazyWithRetry(() => import("./pages/PublicObras"));
+const PublicObraDetail = lazyWithRetry(() => import("./pages/PublicObraDetail"));
+const Blog            = lazyWithRetry(() => import("./pages/Blog"));
+const BlogPostDetail  = lazyWithRetry(() => import("./pages/BlogPostDetail"));
 
 const PAGES = {
   dashboard:  Dashboard,
@@ -127,6 +134,9 @@ const PAGES = {
   equipe_sf:      EquipeSF,
   oportunidades:  Oportunidades,
   planos:         Planos,
+  biblioteca:     Biblioteca,
+  benchmarks:     Benchmarks,
+  cursos:         Cursos,
 };
 
 function AuthenticatedApp() {
@@ -312,6 +322,10 @@ export default function App() {
           <Route path="/cadastro"             element={<Cadastro />} />
           <Route path="/pricing"              element={<Pricing />} />
           <Route path="/checkout"             element={<CheckoutTrial />} />
+          <Route path="/obras"                element={<PublicObras />} />
+          <Route path="/obra/:slug"           element={<PublicObraDetail />} />
+          <Route path="/blog"                 element={<Blog />} />
+          <Route path="/blog/:slug"           element={<BlogPostDetail />} />
           <Route path="/*" element={
             <RequireAuth>
               <AuthenticatedApp />

@@ -3,7 +3,11 @@ import {
   listarColaboradores, criarColaborador, atualizarColaborador, deletarColaborador,
   listarAlocacoes, listarHoras,
 } from "../services/repositories/colaboradorRepository";
-import { listarCertificacoes } from "../services/repositories/certificacaoRepository";
+import {
+  listarCertificacoes,
+  criarCertificacao,
+  deletarCertificacao,
+} from "../services/repositories/certificacaoRepository";
 
 // SVG icon helper
 function Ic({ n, w = 15, c }) {
@@ -39,10 +43,20 @@ function Ic({ n, w = 15, c }) {
 
 // de-para: campo frontend ↔ coluna DB
 function toDb(form) {
-  return { ...form, especialidade: form.area };
+  const { area, tel, nrs, ...rest } = form;
+  return {
+    ...rest,
+    especialidade: area,
+    telefone: tel,
+  };
 }
 function fromDb(row) {
-  return { ...row, area: row.especialidade || row.area || "" };
+  return {
+    ...row,
+    area: row.especialidade || "",
+    tel: row.telefone || "",
+    nrs: row.nrs || [],
+  };
 }
 
 const TABS = [
@@ -356,7 +370,7 @@ function TabCompliance({ certs, loading }) {
               <td style={{ padding: "10px 14px", fontWeight: 600, color: "var(--ink)" }}>
                 {c.colaborador?.nome || "—"}
               </td>
-              <td style={{ padding: "10px 14px", color: "var(--ink-2)" }}>{c.tipo}</td>
+              <td style={{ padding: "10px 14px", color: "var(--ink-2)" }}>{c.nr}</td>
               <td style={{ padding: "10px 14px", color: "var(--muted)" }}>
                 {c.data_validade ? new Date(c.data_validade).toLocaleDateString("pt-BR") : "—"}
               </td>
@@ -491,7 +505,19 @@ export default function EquipeSF() {
     setLoading(true);
     try {
       const data = await listarColaboradores();
-      setMembros(data.map(fromDb));
+      const certsList = await listarCertificacoes();
+      setCerts(certsList);
+
+      const certsMap = {};
+      certsList.forEach(c => {
+        if (!certsMap[c.colaborador_id]) certsMap[c.colaborador_id] = [];
+        certsMap[c.colaborador_id].push(c.nr);
+      });
+
+      setMembros(data.map(colab => ({
+        ...fromDb(colab),
+        nrs: certsMap[colab.id] || []
+      })));
     } catch (e) {
       setErro(e.message);
     } finally {
@@ -523,14 +549,42 @@ export default function EquipeSF() {
     setErro("");
     try {
       const payload = toDb({ ...m });
+      let colab;
       if (m.id && !String(m.id).startsWith("tmp_")) {
-        const updated = await atualizarColaborador(m.id, payload);
-        setMembros(prev => prev.map(x => x.id === m.id ? fromDb(updated) : x));
+        const { id: _id, ...restPayload } = payload;
+        const updated = await atualizarColaborador(m.id, restPayload);
+        colab = fromDb(updated);
       } else {
-        const { id: _id, ...rest } = payload;
-        const created = await criarColaborador(rest);
-        setMembros(prev => [...prev, fromDb(created)]);
+        const { id: _id, ...restPayload } = payload;
+        const created = await criarColaborador(restPayload);
+        colab = fromDb(created);
       }
+
+      // Salvar as certificações (NRs) se foram passadas no form
+      if (m.nrs) {
+        const existentesList = await listarCertificacoes(colab.id);
+        const existentes = existentesList.map(c => c.nr);
+        const paraAdicionar = m.nrs.filter(nr => !existentes.includes(nr));
+        const paraRemover = existentes.filter(nr => !m.nrs.includes(nr));
+
+        const validadePadrao = new Date();
+        validadePadrao.setFullYear(validadePadrao.getFullYear() + 1);
+        const dataValidade = validadePadrao.toISOString().split("T")[0];
+
+        await Promise.all(paraAdicionar.map(nr => criarCertificacao({
+          colaborador_id: colab.id,
+          nr,
+          data_validade: dataValidade,
+          descricao: `NR cadastrada via formulário de colaborador`
+        })));
+
+        await Promise.all(paraRemover.map(async nr => {
+          const cObj = existentesList.find(c => c.nr === nr);
+          if (cObj) await deletarCertificacao(cObj.id);
+        }));
+      }
+
+      await carregar();
       setEditando(null);
     } catch (e) {
       setErro(e.message);
