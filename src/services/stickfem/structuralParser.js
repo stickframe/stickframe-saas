@@ -76,16 +76,22 @@ export function parseEstrutura(geometria, opts = {}) {
   const elementos = [];
   let idx = 0;
 
+  const layerConfig = opts.layerConfig || {}; // { [layer]: 'parede'|'viga'|'abertura'|'ignorar' }
+
   for (const s of segs) {
     const L = dist(s.x1, s.y1, s.x2, s.y2);
     if (L < minM || L > maxM) continue;
 
-    let tipo = classificarPorLayer(s.layer);
-    let confianca = tipo ? "alta" : "media";
-    if (!tipo) {
-      // Sem dica de layer: trata segmento no range de parede como parede provável.
-      tipo = "parede";
-      confianca = "baixa";
+    const override = layerConfig[s.layer];
+    if (override === "ignorar") continue;
+
+    let tipo, confianca;
+    if (override) {
+      tipo = override; confianca = "alta"; // decisão explícita do engenheiro
+    } else {
+      tipo = classificarPorLayer(s.layer);
+      confianca = tipo ? "alta" : "media";
+      if (!tipo) { tipo = "parede"; confianca = "baixa"; }
     }
     if (tipo === "eixo") continue; // eixos não viram elemento físico
 

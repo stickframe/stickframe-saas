@@ -25,7 +25,8 @@ export function gerarQuantitativo(elementos, perfis, opts = {}) {
     byId[opts.perfilGuiaId] ||
     (perfis || []).find((p) => p.tipo === "guia") || null;
 
-  const paredes = (elementos || []).filter((e) => e.tipo === "parede" && e.comprimento_m > 0);
+  const paredes = (elementos || []).filter((e) =>
+    e.tipo === "parede" && e.comprimento_m > 0 && e.incluir_calculo !== false);
   const compTotal = paredes.reduce((s, p) => s + p.comprimento_m, 0);
 
   // Montantes: por parede, n = ceil(L/espac)+1; comprimento = pé-direito.

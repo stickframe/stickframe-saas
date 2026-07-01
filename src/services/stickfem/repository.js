@@ -60,6 +60,8 @@ export async function salvarElementos(projetoId, arquivoId, elementos) {
     comprimento_m: e.comprimento_m ?? null, altura_m: e.altura_m ?? null,
     layer_origem: e.layer_origem || null, perfil_id: e.perfil_id || null,
     quantidade: e.quantidade ?? 1, confianca: e.confianca || "media",
+    incluir_calculo: e.incluir_calculo !== false,
+    validado: e.validado === true,
     propriedades: e.propriedades || {},
   }));
   if (!rows.length) return [];
