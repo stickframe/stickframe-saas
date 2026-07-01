@@ -7,7 +7,7 @@
  */
 import { useEffect, useState, useMemo } from "react";
 import { parseDXF } from "../services/stickfem/dxfParser";
-import { parseEstrutura } from "../services/stickfem/structuralParser";
+import { parseEstrutura, layersDetectados } from "../services/stickfem/structuralParser";
 import { gerarQuantitativo } from "../services/stickfem/quantitativo";
 import { buildStructuralModel, getSolver } from "../services/stickfem/solver/SolverAdapter";
 import { computeStickFemScore } from "../services/stickfem/score";
@@ -180,6 +180,25 @@ function ProjetoDetalhe({ data, perfis, onVoltar, onReload }) {
     } finally { setGerando(false); }
   }
 
+  // ── Validação humana ───────────────────────────────────────────────────────
+  const [layerCfg, setLayerCfg] = useState({});
+  const layers = useMemo(() => (geometria ? layersDetectados(geometria) : []), [geometria]);
+
+  function setEl(idx, patch) {
+    setElementos((prev) => prev.map((e, i) => (i === idx ? { ...e, ...patch, validado: patch.validado ?? true } : e)));
+  }
+  function reprocessar() {
+    if (!geometria) return;
+    const { elementos: els, resumo: res } = parseEstrutura(geometria, {
+      peDireito: projeto.pe_direito_m, layerConfig: layerCfg,
+    });
+    setElementos(els); setResumo(res);
+    setMsg(`Reprocessado: ${res.total} elementos.`);
+  }
+  function validarTodas() {
+    setElementos((prev) => prev.map((e) => ({ ...e, validado: true })));
+  }
+
   async function onDxf(e) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -209,7 +228,8 @@ function ProjetoDetalhe({ data, perfis, onVoltar, onReload }) {
         }, stats: geometria.stats,
       });
       const els = elementos.map((el) => ({
-        ...el, perfil_id: el.tipo === "parede" ? perfMont : (el.tipo === "viga" ? perfGuia : null),
+        ...el,
+        perfil_id: el.perfil_id || (el.tipo === "parede" ? perfMont : el.tipo === "viga" ? perfGuia : null),
       }));
       const salvos = await salvarElementos(projeto.id, arq.id, els);
 
@@ -264,33 +284,89 @@ function ProjetoDetalhe({ data, perfis, onVoltar, onReload }) {
         <>
           <ViewerSVG geometria={geometria} elementos={elementos} />
 
-          {/* Elementos */}
+          {/* Confirmação de layers */}
+          {layers.length > 0 && (
+            <div style={CARD}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--ink-2)" }}>
+                  2 · Confirmar layers <span style={{ fontWeight: 400, color: "var(--muted)" }}>(o engenheiro decide o que é estrutura)</span>
+                </div>
+                <button onClick={reprocessar} style={BTN_GHOST}>↻ Reprocessar</button>
+              </div>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                {layers.map((l) => (
+                  <div key={l.layer} style={{ display: "flex", alignItems: "center", gap: 6, background: "var(--surface-2)", border: "1px solid var(--line)", borderRadius: 8, padding: "5px 9px" }}>
+                    <span style={{ fontSize: 11.5, color: "var(--ink)", fontWeight: 600 }}>{l.layer}</span>
+                    <span style={{ fontSize: 10, color: "var(--muted)" }}>({l.segmentos})</span>
+                    <select value={layerCfg[l.layer] || l.sugerido}
+                      onChange={(ev) => setLayerCfg((c) => ({ ...c, [l.layer]: ev.target.value }))}
+                      style={{ fontSize: 11, padding: "2px 4px", borderRadius: 5, border: "1px solid var(--line)", background: "var(--surface)" }}>
+                      <option value="parede">parede</option>
+                      <option value="viga">viga</option>
+                      <option value="abertura">abertura</option>
+                      <option value="ignorar">ignorar</option>
+                    </select>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Validação de elementos (editável) */}
           <div style={CARD}>
-            <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--ink-2)", marginBottom: 8 }}>
-              2 · Elementos identificados (StickAI Structural Parser™)
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+              <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--ink-2)" }}>
+                3 · Revisão técnica dos elementos <span style={{ fontWeight: 400, color: "var(--muted)" }}>(StickAI Structural Parser™ — corrija o que precisar)</span>
+              </div>
+              <button onClick={validarTodas} style={BTN_GHOST}>✓ Validar todas</button>
             </div>
             {resumo && (
               <div style={{ fontSize: 12, color: "var(--muted)", marginBottom: 8 }}>
                 {resumo.paredes} paredes · {resumo.comprimentoParedes_m} m lineares · confiança {resumo.confiancaGlobal}
               </div>
             )}
-            <div style={{ maxHeight: 220, overflowY: "auto", border: "1px solid var(--line)", borderRadius: 8 }}>
+            <div style={{ maxHeight: 300, overflowY: "auto", border: "1px solid var(--line)", borderRadius: 8 }}>
               <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
                 <thead><tr style={{ background: "var(--surface-2)" }}>
-                  {["Elemento", "Tipo", "Comp. (m)", "Layer", "Conf."].map((h) => (
+                  {["Elem.", "Tipo", "Comp.", "Perfil", "Calcular", "Val.", "Conf."].map((h) => (
                     <th key={h} style={TH}>{h}</th>
                   ))}
                 </tr></thead>
                 <tbody>
-                  {elementos.slice(0, 200).map((e, i) => (
-                    <tr key={i} style={{ borderTop: "1px solid var(--line)" }}>
-                      <td style={TD}>{e.nome}</td>
-                      <td style={{ ...TD, color: COR_TIPO[e.tipo] }}>{e.tipo}</td>
-                      <td style={TD}>{e.comprimento_m ?? "—"}</td>
-                      <td style={{ ...TD, color: "var(--muted)" }}>{e.layer_origem}</td>
-                      <td style={TD}>{e.confianca}</td>
-                    </tr>
-                  ))}
+                  {elementos.slice(0, 300).map((e, i) => {
+                    const perfisTipo = perfis.filter((p) => (e.tipo === "viga" ? p.tipo === "guia" : p.tipo === "montante"));
+                    return (
+                      <tr key={i} style={{ borderTop: "1px solid var(--line)", background: e.incluir_calculo === false ? "rgba(140,132,122,.08)" : undefined }}>
+                        <td style={TD}>{e.nome}</td>
+                        <td style={TD}>
+                          <select value={e.tipo} onChange={(ev) => setEl(i, { tipo: ev.target.value })}
+                            style={{ ...SEL, color: COR_TIPO[e.tipo] }}>
+                            <option value="parede">parede</option>
+                            <option value="viga">viga</option>
+                            <option value="abertura">abertura</option>
+                          </select>
+                        </td>
+                        <td style={TD}>{e.comprimento_m ?? "—"}</td>
+                        <td style={TD}>
+                          {e.tipo === "abertura" ? "—" : (
+                            <select value={e.perfil_id || (e.tipo === "viga" ? perfGuia : perfMont) || ""}
+                              onChange={(ev) => setEl(i, { perfil_id: ev.target.value })} style={SEL}>
+                              {perfisTipo.map((p) => <option key={p.id} value={p.id}>{p.nome}</option>)}
+                            </select>
+                          )}
+                        </td>
+                        <td style={{ ...TD, textAlign: "center" }}>
+                          <input type="checkbox" checked={e.incluir_calculo !== false}
+                            onChange={(ev) => setEl(i, { incluir_calculo: ev.target.checked })} />
+                        </td>
+                        <td style={{ ...TD, textAlign: "center" }}>
+                          <input type="checkbox" checked={e.validado === true}
+                            onChange={(ev) => setEl(i, { validado: ev.target.checked })} />
+                        </td>
+                        <td style={{ ...TD, color: e.confianca === "baixa" ? "#b07a1e" : "var(--muted)" }}>{e.confianca}</td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -299,7 +375,7 @@ function ProjetoDetalhe({ data, perfis, onVoltar, onReload }) {
           {/* Perfis + Quantitativo */}
           <div style={CARD}>
             <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--ink-2)", marginBottom: 8 }}>
-              3 · Perfis &amp; quantitativo
+              4 · Perfis &amp; quantitativo
             </div>
             <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 10 }}>
               <SelPerfil label="Montante" perfis={perfis.filter((p) => p.tipo === "montante")} value={perfMont} onChange={setPerfMont} />
@@ -470,6 +546,7 @@ const CARD = { background: "var(--surface)", border: "1px solid var(--line)", bo
 const BTN_PRIMARY = { background: "var(--brick)", color: "#fff", border: "none", borderRadius: 8, padding: "9px 16px", fontFamily: "inherit", fontSize: 13, fontWeight: 700, cursor: "pointer" };
 const BTN_GHOST = { background: "var(--surface)", color: "var(--ink-2)", border: "1.5px solid var(--line)", borderRadius: 8, padding: "8px 14px", fontFamily: "inherit", fontSize: 12.5, fontWeight: 600, cursor: "pointer" };
 const INPUT = { padding: "8px 10px", borderRadius: 7, border: "1px solid var(--line)", background: "var(--surface)", fontFamily: "inherit", fontSize: 12.5, color: "var(--ink)" };
+const SEL = { fontSize: 11.5, padding: "3px 5px", borderRadius: 5, border: "1px solid var(--line)", background: "var(--surface)", fontFamily: "inherit", maxWidth: 180 };
 const TH = { textAlign: "left", padding: "7px 10px", fontSize: 11, color: "var(--muted)", fontWeight: 700 };
 const TD = { padding: "6px 10px" };
 const ERRO = { background: "rgba(160,50,40,.12)", border: "1px solid rgba(160,50,40,.3)", borderRadius: 8, padding: "8px 14px", fontSize: 12.5, color: "#c0503c", margin: "12px 0" };
