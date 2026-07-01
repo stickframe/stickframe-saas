@@ -46,6 +46,7 @@ const Cronograma  = lazyWithRetry(() => import("./pages/Cronograma"));
 const Vistorias   = lazyWithRetry(() => import("./pages/Vistorias"));
 const BIM           = lazyWithRetry(() => import("./pages/BimSF")); // legacy route → BimSF
 const BimSF         = lazyWithRetry(() => import("./pages/BimSF"));
+const StickFEM      = lazyWithRetry(() => import("./pages/StickFEM"));
 const Quantitativos  = lazyWithRetry(() => import("./pages/Quantitativos"));
 const Configuracoes  = lazyWithRetry(() => import("./pages/Configuracoes"));
 const Fornecedores   = lazyWithRetry(() => import("./pages/Fornecedores"));
@@ -105,6 +106,7 @@ const PAGES = {
   vistorias:  Vistorias,
   bim:           BIM,
   bim_sf:        BimSF,
+  stickfem:      StickFEM,
   quantitativos:  Quantitativos,
   configuracoes:  Configuracoes,
   fornecedores:      Fornecedores,

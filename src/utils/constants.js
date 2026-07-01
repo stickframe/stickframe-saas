@@ -51,6 +51,7 @@ export const NAV = [
   { key: "diario",            label: "Diário de Obra",       brand: "StickField™",      icon: "BookOpen",          grupo: "obras" },
   { key: "vistorias",         label: "Qualidade / FVS",      brand: "StickInspect™",    icon: "ClipboardCheck",  grupo: "obras" },
   { key: "bim",               label: "BIM",                  icon: "Box",               grupo: "obras" },
+  { key: "stickfem",          label: "StickFEM™",            icon: "Cpu",               grupo: "obras", badge: "NOVO" },
   { key: "quantitativos",     label: "Quantitativos",        icon: "Hash",              grupo: "obras" },
   { key: "contratos",         label: "Contratos",            icon: "FileCheck",         grupo: "obras" },
   { key: "equipe",            label: "Equipe",               brand: "StickTeam™",       icon: "HardHat",         grupo: "obras" },
