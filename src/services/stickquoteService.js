@@ -77,7 +77,7 @@ export async function listarStickQuotesDoOrcamento(orcamentoId) {
 export async function carregarHistoricoStickQuote() {
   const { data, error } = await sb
     .from('stickquote_versoes')
-    .select('id, nome, obra_nome, cliente_nome, versao, status, resultado, created_at')
+    .select('id, nome, obra_nome, cliente_nome, versao, status, resultado, created_at, origem')
     .order('created_at', { ascending: false })
     .limit(50);
   if (error) throw error;
