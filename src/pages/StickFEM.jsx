@@ -156,6 +156,8 @@ function ProjetoDetalhe({ data, perfis, onVoltar, onReload }) {
   // Fase 8 — orçamento estrutural
   const [orcs, setOrcs] = useState([]);
   const [precoKg, setPrecoKg] = useState(12);
+  const [areaM2, setAreaM2] = useState("");
+  const [tipologia, setTipologia] = useState("Residencial Térreo");
   const [gerando, setGerando] = useState(false);
   const versaoDxf = (data.arquivos?.length || 0) + (geometria ? 1 : 0) || 1;
 
@@ -172,6 +174,7 @@ function ProjetoDetalhe({ data, perfis, onVoltar, onReload }) {
         perfilMontante: perfis.find((p) => p.id === perfMont),
         perfilGuia: perfis.find((p) => p.id === perfGuia),
         precoKg: Number(precoKg) || 12, obraNome: projeto.nome, versaoDxf,
+        areaM2: Number(areaM2) || null, tipologia,
       });
       setMsg(`Orçamento estrutural gerado (StickQuote #${saved?.numero ?? "—"}).`);
       setOrcs(await listarOrcamentosStickFem(projeto.id));
@@ -415,6 +418,20 @@ function ProjetoDetalhe({ data, perfis, onVoltar, onReload }) {
                 Preço do aço (R$/kg):{" "}
                 <input type="number" min="0" step="0.5" value={precoKg} onChange={(e) => setPrecoKg(e.target.value)}
                   style={{ ...INPUT, width: 90 }} />
+              </label>
+              <label style={{ fontSize: 12, color: "var(--ink-2)" }}>
+                Área construída (m²):{" "}
+                <input type="number" min="0" step="1" value={areaM2} onChange={(e) => setAreaM2(e.target.value)}
+                  placeholder="p/ benchmark" style={{ ...INPUT, width: 110 }} />
+              </label>
+              <label style={{ fontSize: 12, color: "var(--ink-2)" }}>
+                Tipologia:{" "}
+                <select value={tipologia} onChange={(e) => setTipologia(e.target.value)}
+                  style={{ ...INPUT, padding: "7px 8px" }}>
+                  <option>Residencial Térreo</option>
+                  <option>Residencial Alto Padrão</option>
+                  <option>Comercial / Loja</option>
+                </select>
               </label>
               <span style={{ fontSize: 12, color: "var(--muted)" }}>
                 Peso total {quant.resumo.pesoTotal_kg} kg · estimado {(quant.resumo.pesoTotal_kg * (Number(precoKg) || 0)).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}

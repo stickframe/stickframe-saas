@@ -4,6 +4,7 @@
  * oficial dentro do ecossistema, com rastreabilidade e premissas técnicas.
  */
 import { salvarStickQuote } from "../stickquoteService";
+import { registrarBenchmark } from "./benchmark";
 import { printHtml } from "../../utils/printHtml";
 import { LOGO_STICKFRAME } from "../../utils/cdn";
 
@@ -25,7 +26,7 @@ export function precificarEstrutura(quant, { precoKg = 12 } = {}) {
  * Gera e persiste o orçamento estrutural como StickQuote (origem StickFEM),
  * vinculado ao projeto estrutural. Retorna { saved, dados }.
  */
-export async function gerarOrcamentoEstrutural({ projeto, quant, perfilMontante, perfilGuia, precoKg = 12, obraNome, versaoDxf = 1 }) {
+export async function gerarOrcamentoEstrutural({ projeto, quant, perfilMontante, perfilGuia, precoKg = 12, obraNome, versaoDxf = 1, areaM2 = null, tipologia = null, prazoEstimado = null }) {
   const { itens, totalCusto } = precificarEstrutura(quant, { precoKg });
 
   const premissas = {
@@ -53,6 +54,14 @@ export async function gerarOrcamentoEstrutural({ projeto, quant, perfilMontante,
     nome, obraNome: obraNome || projeto.nome, selecoes, resultado, observacoes,
     origem: "StickFEM", projetoEstruturalId: projeto.id,
   });
+
+  // Benchmark Estrutural™: cada orçamento gerado vira um ponto de aprendizado
+  // (kg aço/m², custo/m², prazo) — best-effort, não bloqueia o fluxo.
+  registrarBenchmark({
+    projetoId: projeto.id, tipologia, areaM2,
+    pesoAco: premissas.pesoTotalKg, quantidadePerfis: premissas.montantes,
+    custoEstrutura: totalCusto, prazoEstimado,
+  }).catch(() => {});
 
   return { saved, dados: { nome, projeto, itens, totalCusto, premissas } };
 }
