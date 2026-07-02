@@ -45,6 +45,7 @@ const PAGE_TO_GROUP = {
   diario: "obras",
   vistorias: "obras",
   bim: "obras",
+  stickfem: "obras",
   quantitativos: "obras",
   contratos: "obras",
   equipe: "obras",
