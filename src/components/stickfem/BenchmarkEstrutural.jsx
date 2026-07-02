@@ -23,7 +23,7 @@ function CardIndicador({ titulo, meu, mercado, unidade, status }) {
         </div>
         <div>
           <div style={{ fontSize: 11, color: "var(--muted)" }}>Mercado</div>
-          <div style={{ fontSize: 20, fontWeight: 700, color: "var(--ink)", fontFamily: "'Barlow Condensed', sans-serif" }}>
+          <div style={{ fontSize: 20, fontWeight: 700, color: "var(--text, #26231f)", fontFamily: "'Barlow Condensed', sans-serif" }}>
             {mercado ?? "—"}{mercado != null && unidade ? <span style={{ fontSize: 12, color: "var(--muted)", marginLeft: 3 }}>{unidade}</span> : null}
           </div>
         </div>
@@ -55,7 +55,7 @@ export default function BenchmarkEstrutural() {
 
   return (
     <div>
-      <h3 style={{ fontSize: 14, fontWeight: 800, color: "var(--ink)", marginBottom: 4, borderBottom: "1px solid var(--line-2)", paddingBottom: 8 }}>
+      <h3 style={{ fontSize: 14, fontWeight: 800, color: "var(--text, #26231f)", marginBottom: 4, borderBottom: "1px solid var(--border, #e7e1d8)", paddingBottom: 8 }}>
         BENCHMARK ESTRUTURAL STICKFEM™
         <span style={{ marginLeft: 8, fontSize: 10, fontWeight: 800, background: "#6d557e", color: "#fff", borderRadius: 5, padding: "2px 7px", verticalAlign: "middle" }}>🟣 ENGENHARIA</span>
       </h3>
