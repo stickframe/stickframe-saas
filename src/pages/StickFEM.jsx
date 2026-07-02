@@ -12,6 +12,8 @@ import { gerarQuantitativo } from "../services/stickfem/quantitativo";
 import { buildStructuralModel, getSolver } from "../services/stickfem/solver/SolverAdapter";
 import { computeStickFemScore } from "../services/stickfem/score";
 import { gerarOrcamentoEstrutural, gerarPdfEstrutural } from "../services/stickfem/orcamentoBridge";
+import { pressaoVento, combinarCargas, REGIOES_VENTO } from "../services/stickfem/cargas";
+import { preDimensionar } from "../services/stickfem/preDimensionamento";
 import {
   listarPerfis, listarProjetos, criarProjeto, atualizarStatusProjeto,
   salvarArquivoCad, salvarElementos, salvarAnalise, registrarAprovacao, carregarProjeto,
@@ -200,6 +202,41 @@ function ProjetoDetalhe({ data, perfis, onVoltar, onReload }) {
   }
   function validarTodas() {
     setElementos((prev) => prev.map((e) => ({ ...e, validado: true })));
+  }
+
+  // ── Fase 5 — cargas + pré-dimensionamento (preliminar) ─────────────────────
+  const [carga, setCarga] = useState({ gPerm: 1.5, qSobre: 1.5, largTrib: 2.5, v0: 40 });
+  const [predim, setPredim] = useState(null);
+  const [savingPd, setSavingPd] = useState(false);
+  const setC = (k, v) => setCarga((c) => ({ ...c, [k]: v }));
+
+  function rodarPreDim() {
+    const paredesCalc = elementos.filter((e) => e.tipo === "parede" && e.incluir_calculo !== false);
+    const gLine = (Number(carga.gPerm) || 0) * (Number(carga.largTrib) || 0);   // kN/m
+    const qLine = (Number(carga.qSobre) || 0) * (Number(carga.largTrib) || 0);  // kN/m
+    const comb = combinarCargas({ g: gLine, q: qLine, w: 0 });
+    const perfil = perfis.find((p) => p.id === perfMont);
+    const res = preDimensionar({
+      paredes: paredesCalc, perfil, material: { fy_mpa: 250, e_mpa: 200000 },
+      peDireitoM: projeto.pe_direito_m, espacMontanteM: (projeto.espac_montante_mm || 400) / 1000,
+      qParedeUlt_kN_m: comb.elu.gravitacional,
+    });
+    setPredim({ ...res, comb, vento: pressaoVento({ v0: Number(carga.v0) || 40 }) });
+  }
+
+  async function salvarPreDim() {
+    if (!predim) return;
+    setSavingPd(true);
+    try {
+      await salvarAnalise(projeto.id, {
+        solver: "predim", status: "concluida",
+        cargas: { ...carga, vento: predim.vento }, combinacoes: predim.comb,
+        resultado: { porParede: predim.porParede, resumo: predim.resumo, premissas: predim.premissas },
+        statusEstrutural: predim.resumo.statusGlobal,
+      });
+      setMsg("Pré-dimensionamento salvo.");
+    } catch (err) { setErro(err.message); }
+    finally { setSavingPd(false); }
   }
 
   async function onDxf(e) {
@@ -408,10 +445,57 @@ function ProjetoDetalhe({ data, perfis, onVoltar, onReload }) {
             </button>
           </div>
 
-          {/* 5 · Orçamento estrutural (Fase 8) */}
+          {/* 5 · Cargas + pré-dimensionamento (Fase 5) */}
           <div style={{ ...CARD, marginTop: 14 }}>
             <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--ink-2)", marginBottom: 8 }}>
-              5 · Gerar orçamento estrutural <span style={{ fontWeight: 400, color: "var(--muted)" }}>→ StickQuote (origem StickFEM™)</span>
+              5 · Cargas &amp; pré-dimensionamento <span style={{ fontWeight: 400, color: "var(--muted)" }}>(preliminar — não substitui NBR 14762/6123)</span>
+            </div>
+            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "flex-end", marginBottom: 10 }}>
+              <CampoNum label="Permanente G (kN/m²)" value={carga.gPerm} onChange={(v) => setC("gPerm", v)} />
+              <CampoNum label="Sobrecarga Q (kN/m²)" value={carga.qSobre} onChange={(v) => setC("qSobre", v)} />
+              <CampoNum label="Larg. tributária laje (m)" value={carga.largTrib} onChange={(v) => setC("largTrib", v)} />
+              <CampoNum label="Vento V0 (m/s)" value={carga.v0} onChange={(v) => setC("v0", v)} />
+              <button onClick={rodarPreDim} style={BTN_PRIMARY}>Calcular pré-dimensionamento</button>
+            </div>
+
+            {predim && (
+              <>
+                <div style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "center", marginBottom: 10 }}>
+                  <StatusEstrutural status={predim.resumo.statusGlobal} />
+                  <span style={{ fontSize: 12, color: "var(--muted)" }}>
+                    Utilização máx <b>{predim.resumo.ratioMax}</b> · N_Rd {predim.resumo.nRd_kN} kN · N_Sd {predim.resumo.nSd_kN} kN ·
+                    modo {predim.resumo.modoGovernante} · esbeltez λ={predim.resumo.esbeltez}{predim.resumo.esbeltezOk ? "" : " ⚠>200"}
+                  </span>
+                  <span style={{ fontSize: 12, color: "var(--muted)" }}>Vento q={predim.vento.q_kN_m2} kN/m² (Vk {predim.vento.vk} m/s)</span>
+                  <button onClick={salvarPreDim} disabled={savingPd} style={{ ...BTN_GHOST, marginLeft: "auto" }}>
+                    {savingPd ? "Salvando…" : "Salvar análise"}
+                  </button>
+                </div>
+                <div style={{ maxHeight: 200, overflowY: "auto", border: "1px solid var(--line)", borderRadius: 8 }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                    <thead><tr style={{ background: "var(--surface-2)" }}>
+                      {["Parede", "Comp. (m)", "Montantes", "N_Sd (kN)", "N_Rd (kN)", "Utilização", "Status"].map((h) => <th key={h} style={TH}>{h}</th>)}
+                    </tr></thead>
+                    <tbody>
+                      {predim.porParede.slice(0, 200).map((p, i) => (
+                        <tr key={i} style={{ borderTop: "1px solid var(--line)" }}>
+                          <td style={TD}>{p.nome}</td><td style={TD}>{p.comprimento_m}</td><td style={TD}>{p.montantes}</td>
+                          <td style={TD}>{p.nSd_kN}</td><td style={TD}>{p.nRd_kN}</td>
+                          <td style={{ ...TD, fontWeight: 700 }}>{p.ratio}</td>
+                          <td style={TD}><StatusEstrutural status={p.status} mini /></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* 6 · Orçamento estrutural (Fase 8) */}
+          <div style={{ ...CARD, marginTop: 14 }}>
+            <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--ink-2)", marginBottom: 8 }}>
+              6 · Gerar orçamento estrutural <span style={{ fontWeight: 400, color: "var(--muted)" }}>→ StickQuote (origem StickFEM™)</span>
             </div>
             <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
               <label style={{ fontSize: 12, color: "var(--ink-2)" }}>
@@ -467,6 +551,30 @@ function ProjetoDetalhe({ data, perfis, onVoltar, onReload }) {
       {/* Aprovação técnica (Fase 10) */}
       <AprovacaoTecnica projeto={projeto} aprovacoes={data.aprovacoes} onReload={onReload} />
     </div>
+  );
+}
+
+function CampoNum({ label, value, onChange }) {
+  return (
+    <label style={{ fontSize: 11.5, color: "var(--ink-2)", display: "flex", flexDirection: "column", gap: 3 }}>
+      {label}
+      <input type="number" step="0.1" min="0" value={value} onChange={(e) => onChange(e.target.value)}
+        style={{ ...INPUT, width: 130, padding: "6px 8px" }} />
+    </label>
+  );
+}
+
+function StatusEstrutural({ status, mini }) {
+  const map = {
+    aprovado: ["#3f7a4b", "🟢", "Aprovado"], atencao: ["#b07a1e", "🟡", "Atenção"],
+    revisar: ["#981915", "🔴", "Revisar"], indefinido: ["#8c847a", "⚪", "Indefinido"],
+  };
+  const [cor, emoji, label] = map[status] || map.indefinido;
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: mini ? 11 : 12.5, fontWeight: 700, color: cor,
+      background: mini ? "transparent" : cor + "18", border: mini ? "none" : `1px solid ${cor}44`, borderRadius: 20, padding: mini ? 0 : "4px 12px" }}>
+      {emoji} {label}
+    </span>
   );
 }
 
