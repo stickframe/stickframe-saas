@@ -147,6 +147,36 @@ export async function carregarRevisao(id) {
   return data;
 }
 
+// ── Linha do Tempo da Engenharia ─────────────────────────────────────────────
+export async function inserirEventoTimeline(projetoId, evento) {
+  const empresa_id = getEmpresaId();
+  const { data: me } = await sb.auth.getUser();
+  const { data, error } = await sb.from("engineering_timeline").insert({
+    empresa_id, projeto_id: projetoId, revisao_id: evento.revisaoId || null,
+    usuario_id: me?.user?.id || null, usuario_nome: evento.usuario || me?.user?.email || null,
+    tipo: evento.tipo, modulo: evento.modulo, severidade: evento.severidade || "info",
+    descricao: evento.descricao || null, payload_json: evento.payload || {},
+    hash: evento.hash || null, engine_version: evento.engineVersion || null,
+    data: evento.data || new Date().toISOString(),
+  }).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function listarEventosTimeline(projetoId, { limit = 200, offset = 0 } = {}) {
+  const { data, error } = await sb.from("engineering_timeline")
+    .select("id, revisao_id, usuario_nome, tipo, modulo, severidade, descricao, payload_json, hash, engine_version, data")
+    .eq("projeto_id", projetoId).order("data", { ascending: false })
+    .range(offset, offset + limit - 1);
+  if (error) throw error;
+  // adapta nomes de coluna → forma canônica da timeline
+  return (data || []).map((r) => ({
+    id: r.id, revisaoId: r.revisao_id, usuario: r.usuario_nome,
+    tipo: r.tipo, modulo: r.modulo, severidade: r.severidade, descricao: r.descricao,
+    payload: r.payload_json || {}, hash: r.hash, engineVersion: r.engine_version, data: r.data,
+  }));
+}
+
 export async function carregarProjeto(id) {
   const [proj, arqs, els, aprovs] = await Promise.all([
     sb.from("projeto_estrutural").select("*").eq("id", id).single(),

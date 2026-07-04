@@ -3,7 +3,7 @@ import { registrarAprovacao, atualizarStatusProjeto } from "../../../services/st
 import { CARD, INPUT, BTN_PRIMARY, BTN_GHOST } from "../utils/styles";
 
 // ── 7 · Aprovação técnica (Fase 10) ──────────────────────────────────────────
-export default function ApprovalPanel({ projeto, aprovacoes, onReload, onGerarMemorial }) {
+export default function ApprovalPanel({ projeto, aprovacoes, onReload, onGerarMemorial, onEvento }) {
   const [nome, setNome] = useState("");
   const [crea, setCrea] = useState("");
   const [obs, setObs] = useState("");
@@ -15,6 +15,11 @@ export default function ApprovalPanel({ projeto, aprovacoes, onReload, onGerarMe
     try {
       await registrarAprovacao(projeto.id, { engenheiroNome: nome, engenheiroCrea: crea, status, observacoes: obs });
       if (status === "aprovado") await atualizarStatusProjeto(projeto.id, "aprovado");
+      onEvento?.({
+        tipo: status === "aprovado" ? "aprovacao_tecnica" : "reprovacao_tecnica",
+        descricao: `${status === "aprovado" ? "Aprovado" : "Reprovado"} por ${nome}${crea ? ` (${crea})` : ""}`,
+        usuario: nome, payload: { engenheiro: nome, crea, observacoes: obs },
+      });
       onReload();
       setNome(""); setCrea(""); setObs("");
     } finally { setBusy(false); }

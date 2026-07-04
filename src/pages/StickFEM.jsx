@@ -22,6 +22,7 @@ import ApprovalPanel from "../components/StickFEM/components/ApprovalPanel";
 import AuditPanel from "../components/StickFEM/components/AuditPanel";
 import HistoryPanel from "../components/StickFEM/components/HistoryPanel";
 import ComparisonPanel from "../components/StickFEM/components/ComparisonPanel";
+import TimelinePanel from "../components/StickFEM/components/TimelinePanel";
 import EngineeringPlayground from "../components/StickFEM/components/EngineeringPlayground";
 import { StatusBadge, StatusEstrutural, CampoNum, SelPerfil } from "../components/StickFEM/utils/atoms";
 import { CARD, BTN_PRIMARY, BTN_GHOST, INPUT, ERRO, TH, TD } from "../components/StickFEM/utils/styles";
@@ -339,8 +340,11 @@ function ProjetoDetalhe({ data, perfis, onVoltar, onReload }) {
       {/* Engineering Diff — comparação entre versões */}
       {s.comparacao && <ComparisonPanel comparacao={s.comparacao} onClose={s.fecharComparacao} />}
 
+      {/* Linha do Tempo da Engenharia */}
+      {s.eventos.length > 0 && <TimelinePanel eventos={s.eventos} projetoNome={s.projeto.nome} />}
+
       {/* Aprovação técnica (Fase 10) */}
-      <ApprovalPanel projeto={s.projeto} aprovacoes={data.aprovacoes} onReload={onReload} onGerarMemorial={s.gerarMemorial} />
+      <ApprovalPanel projeto={s.projeto} aprovacoes={data.aprovacoes} onReload={onReload} onGerarMemorial={s.gerarMemorial} onEvento={s.registrar} />
 
       {/* Modo Auditoria — memória de cálculo completa */}
       {s.auditoria && <AuditPanel auditoria={s.auditoria} onClose={s.fecharAuditoria} />}

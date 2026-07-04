@@ -14,6 +14,9 @@ import { montarMemorial, gerarMemorialPDF } from "../../../services/stickfem/mem
 import { criarSnapshot, diffSnapshots } from "../../../services/stickfem/revisao/historico";
 import { compararModelos } from "../../../services/stickfem/comparison/diffEngine";
 import { calcularImpacto } from "../../../services/stickfem/comparison/impactCalculator";
+import { timeline } from "../../../services/stickfem/timeline/EngineeringTimelineService";
+import { listarEventosTimeline } from "../../../services/stickfem/repository";
+import { ENGINE_VERSION } from "../../../services/stickfem/engine/version";
 import {
   salvarArquivoCad, salvarElementos, salvarAnalise, atualizarStatusProjeto,
   listarOrcamentosStickFem, salvarRevisao, listarRevisoes, carregarRevisao,
@@ -102,6 +105,13 @@ export function useProjetoEstrutural({ data, perfis, onReload }) {
 
   function setEl(idx, patch) {
     setElementos((prev) => prev.map((e, i) => (i === idx ? { ...e, ...patch, validado: patch.validado ?? true } : e)));
+    if ("perfil_id" in patch) {
+      const el = elementos[idx];
+      const nome = perfis.find((p) => p.id === patch.perfil_id)?.nome || patch.perfil_id;
+      registrar({ tipo: "mudanca_perfil", descricao: `Perfil de ${el?.nome ?? `#${idx}`} → ${nome}`, payload: { elemento: el?.nome, perfil_id: patch.perfil_id } });
+    } else if ("tipo" in patch || "comprimento_m" in patch) {
+      registrar({ tipo: "mudanca_manual", descricao: `Alteração manual em ${elementos[idx]?.nome ?? `#${idx}`}`, payload: { ...patch } });
+    }
   }
   function reprocessar() {
     if (!geometria) return;
@@ -118,12 +128,14 @@ export function useProjetoEstrutural({ data, perfis, onReload }) {
   // ── Assistente de Revisão: ações que realmente alteram o modelo ─────────────
   const [focoElemento, setFocoElemento] = useState(null);
   function aceitarSugestaoRevisao(idx) {
+    const alvo = elementos[idx];
     setElementos((prev) => prev.map((e, i) => {
       if (i !== idx) return e;
       const patch = { validado: true, confianca: "alta", confiancaScore: Math.min(100, (e.confiancaScore ?? 60) + 15) };
       if (e.sugestaoPerfil?.perfil_id_sugerido) patch.perfil_id = e.sugestaoPerfil.perfil_id_sugerido;
       return { ...e, ...patch };
     }));
+    if (alvo) registrar({ tipo: "sugestao_aceita", descricao: `Sugestão aceita em ${alvo.nome}${alvo.sugestaoPerfil ? `: ${alvo.sugestaoPerfil.perfil_nome_sugerido}` : ""}`, payload: { elemento: alvo.nome, perfil: alvo.sugestaoPerfil?.perfil_nome_sugerido || null } });
   }
   function corrigirManual(idx) { setFocoElemento(idx); }
 
@@ -145,6 +157,7 @@ export function useProjetoEstrutural({ data, perfis, onReload }) {
       qParedeUlt_kN_m: comb.elu.gravitacional,
     });
     setPredim({ ...res, comb, vento: pressaoVento({ v0: Number(carga.v0) || 40 }) });
+    registrar({ tipo: "predimensionamento", descricao: `Pré-dimensionamento: ${res.resumo.statusGlobal} (η máx ${res.resumo.ratioMax})`, payload: { status: res.resumo.statusGlobal, ratioMax: res.resumo.ratioMax, esbeltez: res.resumo.esbeltez } });
   }
 
   // ── Modo "Auditar cálculo" (memória de cálculo completa) ───────────────────
@@ -164,7 +177,9 @@ export function useProjetoEstrutural({ data, perfis, onReload }) {
   }
   function abrirAuditoria() {
     if (!perfis.find((p) => p.id === perfMont)) { setErro("Selecione um perfil de montante para auditar."); return; }
-    setAuditoria(auditarPreDimensionamento(dimParaAuditoria()));
+    const aud = auditarPreDimensionamento(dimParaAuditoria());
+    setAuditoria(aud);
+    registrar({ tipo: "auditoria_executada", descricao: `Auditoria: η ${aud.resultado.utilizacao} (${aud.resultado.status})`, payload: { utilizacao: aud.resultado.utilizacao, status: aud.resultado.status } });
   }
   const fecharAuditoria = () => setAuditoria(null);
 
@@ -179,6 +194,7 @@ export function useProjetoEstrutural({ data, perfis, onReload }) {
       aprovacoes: data.aprovacoes || [],
     });
     gerarMemorialPDF(memorial);
+    registrar({ tipo: "memorial_emitido", hash: memorial.hash, descricao: `Memorial emitido · hash ${memorial.hash}`, payload: { hash: memorial.hash, utilizacao: memorial.auditoria.resultado.utilizacao } });
   }
 
   function memorialAtual() {
@@ -223,10 +239,11 @@ export function useProjetoEstrutural({ data, perfis, onReload }) {
     try {
       const snapshot = snapshotAtual();
       const diff = diffSnapshots(ultimoSnapshot, snapshot);
-      await salvarRevisao(projeto.id, { snapshot, diff, memorial: memorialAtual(), motivo });
+      const rev = await salvarRevisao(projeto.id, { snapshot, diff, memorial: memorialAtual(), motivo });
       setUltimoSnapshot(snapshot);
       setRevisoes(await listarRevisoes(projeto.id));
       setMsg("Revisão salva.");
+      registrar({ tipo: "revisao_criada", revisaoId: rev?.id, hash: snapshot.calcHash, descricao: `Revisão #${rev?.numero ?? "?"} criada${motivo ? `: ${motivo}` : ""}`, payload: { numero: rev?.numero, stickScore: snapshot.stickScore, conflitos: snapshot.conflitosTotal } });
     } catch (err) { setErro("Erro ao salvar revisão: " + (err.message || err)); }
     finally { setSalvandoRev(false); }
   }
@@ -241,6 +258,7 @@ export function useProjetoEstrutural({ data, perfis, onReload }) {
         if (r.snapshot.cargas) setCarga(r.snapshot.cargas);
         setUltimoSnapshot(r.snapshot);
         setMsg(`Revisão #${r.numero} restaurada.`);
+        registrar({ tipo: "snapshot_restaurado", revisaoId: r.id, descricao: `Revisão #${r.numero} restaurada`, payload: { numero: r.numero } });
       }
     } catch (err) { setErro("Erro ao restaurar: " + (err.message || err)); }
   }
@@ -270,9 +288,21 @@ export function useProjetoEstrutural({ data, perfis, onReload }) {
         nomeAntes: `Revisão #${r?.numero ?? "?"}`, nomeDepois: "Modelo atual",
         hashAntes: r?.calc_hash || null, hashDepois: memorialAtual()?.hash || null,
       } });
+      registrar({ tipo: "comparacao_executada", revisaoId: id, descricao: `Comparação com revisão #${r?.numero ?? "?"}: ${diff.resumo.modificado} mod · ${diff.resumo.novo} novos · ${diff.resumo.removido} rem`, payload: { resumo: diff.resumo, deltaPeso: impacto.peso_kg.delta } });
     } catch (err) { setErro("Erro ao comparar: " + (err.message || err)); }
   }
   const fecharComparacao = () => setComparacao(null);
+
+  // ── Linha do Tempo da Engenharia (registro único via serviço) ───────────────
+  const [eventos, setEventos] = useState([]);
+  useEffect(() => {
+    listarEventosTimeline(projeto.id).then(setEventos).catch(() => {});
+  }, [projeto.id]);
+  function registrar(evento) {
+    const e = timeline.record(projeto.id, { engineVersion: ENGINE_VERSION, ...evento });
+    setEventos((prev) => [e, ...prev]);
+    return e;
+  }
 
   async function salvarPreDim() {
     if (!predim) return;
@@ -293,6 +323,7 @@ export function useProjetoEstrutural({ data, perfis, onReload }) {
     const file = e.target.files?.[0];
     if (!file) return;
     setErro(""); setMsg("Lendo DXF…"); setBusy(true);
+    const t0 = (typeof performance !== "undefined" ? performance.now() : Date.now());
     try {
       const text = await file.text();
       const geo = parseDXF(text, { peDireito: projeto.pe_direito_m });
@@ -305,6 +336,16 @@ export function useProjetoEstrutural({ data, perfis, onReload }) {
       setElementos(elementosComSugestoes);
       setResumo(res);
       setMsg(`Identificados ${res.total} elementos (${res.paredes} paredes). Sugestões de perfis geradas.`);
+
+      // Timeline: importação + parsing + conflitos
+      const tempoMs = Math.round((typeof performance !== "undefined" ? performance.now() : Date.now()) - t0);
+      registrar({ tipo: "dxf_importado", descricao: `DXF importado: ${file.name}`, payload: { arquivo: file.name, layers: geo.stats.layers } });
+      registrar({ tipo: "parsing_concluido", descricao: `${res.total} elementos (${res.paredes} paredes) · confiança média ${res.confiancaScoreMedia ?? "—"}%`, payload: { total: res.total, paredes: res.paredes, confiancaMedia: res.confiancaScoreMedia, tempoMs } });
+      const conf = detectarConflitos({ elementos: elementosComSugestoes, geometria: geo, perfis });
+      if (conf.length) {
+        const criticos = conf.filter((c) => c.severidade === "alta").length;
+        registrar({ tipo: "conflito_detectado", severidade: criticos ? "critico" : "atencao", descricao: `${conf.length} conflitos (${criticos} críticos)`, payload: { total: conf.length, criticos } });
+      }
     } catch (err) {
       setErro("Falha ao ler o DXF: " + (err.message || err));
       setMsg("");
@@ -355,6 +396,7 @@ export function useProjetoEstrutural({ data, perfis, onReload }) {
     auditoria, abrirAuditoria, fecharAuditoria, gerarMemorial,
     revisoes, salvandoRev, salvarRevisaoAtual, restaurarRevisao, memorialDaRevisao,
     comparacao, compararComRevisao, fecharComparacao,
+    eventos, registrar,
     onDxf, salvarTudo,
   };
 }
