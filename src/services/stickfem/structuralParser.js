@@ -76,7 +76,7 @@ export function parseEstrutura(geometria, opts = {}) {
   const elementos = [];
   let idx = 0;
 
-  const layerConfig = opts.layerConfig || {}; // { [layer]: 'parede'|'viga'|'abertura'|'ignorar' }
+  const layerConfig = opts.layerConfig || {};
 
   for (const s of segs) {
     const L = dist(s.x1, s.y1, s.x2, s.y2);
@@ -86,14 +86,30 @@ export function parseEstrutura(geometria, opts = {}) {
     if (override === "ignorar") continue;
 
     let tipo, confianca;
+    const motivosConfianca = [];
+
     if (override) {
-      tipo = override; confianca = "alta"; // decisão explícita do engenheiro
+      tipo = override;
+      confianca = "alta";
+      motivosConfianca.push(`Classificado como '${tipo}' pela configuração do engenheiro.`);
     } else {
       tipo = classificarPorLayer(s.layer);
-      confianca = tipo ? "alta" : "media";
-      if (!tipo) { tipo = "parede"; confianca = "baixa"; }
+      if (tipo) {
+        confianca = "alta";
+        motivosConfianca.push(`Reconhecido como '${tipo}' pelo nome do layer ('${s.layer}').`);
+      } else {
+        // Se não classificou pelo layer, assume parede e ajusta confiança
+        tipo = "parede";
+        if (L > 1.0) { // Segmentos longos são provavelmente paredes
+          confianca = "media";
+          motivosConfianca.push(`Assumido como 'parede' por ter comprimento significativo (${L.toFixed(2)}m).`);
+        } else {
+          confianca = "baixa";
+          motivosConfianca.push(`Assumido como 'parede' com baixa confiança (comprimento curto, layer '${s.layer}' não reconhecido).`);
+        }
+      }
     }
-    if (tipo === "eixo") continue; // eixos não viram elemento físico
+    if (tipo === "eixo") continue;
 
     idx += 1;
     const prefixo = tipo === "parede" ? "P" : tipo === "viga" ? "V" : "E";
@@ -108,12 +124,13 @@ export function parseEstrutura(geometria, opts = {}) {
       altura_m: tipo === "parede" ? peDireito : null,
       layer_origem: s.layer,
       confianca,
+      motivosConfianca, // IA Explicável (Fase 5)
       quantidade: 1,
       propriedades: {},
     });
   }
 
-  // Aberturas a partir de blocos (portas/janelas).
+  // Aberturas a partir de blocos
   for (const b of geometria.blocks || []) {
     if (BLOCK_ABERTURA.test(norm(b.nome))) {
       idx += 1;
@@ -122,11 +139,14 @@ export function parseEstrutura(geometria, opts = {}) {
         nome: `A${idx}`,
         geometria: { x1: +b.x.toFixed(3), y1: +b.y.toFixed(3), x2: +b.x.toFixed(3), y2: +b.y.toFixed(3) },
         comprimento_m: null, altura_m: null, layer_origem: b.layer,
-        confianca: "media", quantidade: 1, propriedades: { bloco: b.nome },
+        confianca: "media",
+        motivosConfianca: [`Reconhecido como 'abertura' pelo nome do bloco ('${b.nome}').`],
+        quantidade: 1, propriedades: { bloco: b.nome },
       });
     }
   }
-
+  
+  // ... (resumo)
   const paredes = elementos.filter((e) => e.tipo === "parede");
   const resumo = {
     total: elementos.length,

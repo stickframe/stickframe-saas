@@ -9,9 +9,13 @@ import { useEffect, useState, useMemo } from "react";
 import { parseDXF } from "../services/stickfem/dxfParser";
 import { parseEstrutura, layersDetectados } from "../services/stickfem/structuralParser";
 import { gerarQuantitativo } from "../services/stickfem/quantitativo";
+import { detectarConflitos } from "../services/stickfem/conflicts";
 import { buildStructuralModel, getSolver } from "../services/stickfem/solver/SolverAdapter";
-import { computeStickFemScore } from "../services/stickfem/score";
+import { computeStickScore } from "../services/stickfem/score";
 import { gerarOrcamentoEstrutural, gerarPdfEstrutural } from "../services/stickfem/orcamentoBridge";
+import { sugerirPerfisInteligentes } from "../services/stickfem/perfilInteligente";
+import AssistentedeRevisao from "../components/stickbrain/AssistentedeRevisao";
+import StickScore from "../components/stickscore/StickScore";
 import {
   listarPerfis, listarProjetos, criarProjeto, atualizarStatusProjeto,
   salvarArquivoCad, salvarElementos, salvarAnalise, registrarAprovacao, carregarProjeto,
@@ -148,10 +152,24 @@ function ProjetoDetalhe({ data, perfis, onVoltar, onReload }) {
     perfilMontanteId: perfMont, perfilGuiaId: perfGuia,
   }), [elementos, perfis, projeto, perfMont, perfGuia]);
 
-  // StickFEM Score — usa os perfis atribuídos (montante) para avaliar completude.
-  const score = useMemo(() => computeStickFemScore(
-    elementos.map((e) => (e.tipo === "parede" ? { ...e, perfil_id: e.perfil_id || perfMont } : e))
-  ), [elementos, perfMont]);
+  const [conflitos, setConflitos] = useState([]);
+  const stickScoreResult = useMemo(() => {
+    if (!geometria) return null;
+    const elementosComPerfil = elementos.map((e) => (e.tipo === "parede" ? { ...e, perfil_id: e.perfil_id || perfMont } : e));
+    
+    const conflitosDetectados = detectarConflitos({ elementos: elementosComPerfil, geometria });
+    setConflitos(conflitosDetectados);
+    
+    return computeStickScore({ elementos: elementosComPerfil, geometria, conflitos: conflitosDetectados });
+  }, [elementos, geometria, perfMont]);
+
+  const handleScoreClick = () => {
+    if (!stickScoreResult) return;
+    const detailsText = Object.entries(stickScoreResult.details)
+      .map(([key, value]) => `  - ${key.charAt(0).toUpperCase() + key.slice(1)}: ${value}/100`)
+      .join('\\n');
+    alert(`Relatório de Pontuação (WIP):\\n${detailsText}`);
+  };
 
   // Fase 8 — orçamento estrutural
   const [orcs, setOrcs] = useState([]);
@@ -207,10 +225,14 @@ function ProjetoDetalhe({ data, perfis, onVoltar, onReload }) {
       const text = await file.text();
       const geo = parseDXF(text, { peDireito: projeto.pe_direito_m });
       const { elementos: els, resumo: res } = parseEstrutura(geo, { peDireito: projeto.pe_direito_m });
+      
+      // Fase 6: Perfis Inteligentes
+      const elementosComSugestoes = sugerirPerfisInteligentes(els, perfis);
+      
       setGeometria({ ...geo, _file: file.name });
-      setElementos(els);
+      setElementos(elementosComSugestoes);
       setResumo(res);
-      setMsg(`Identificados ${res.total} elementos (${res.paredes} paredes).`);
+      setMsg(`Identificados ${res.total} elementos (${res.paredes} paredes). Sugestões de perfis geradas.`);
     } catch (err) {
       setErro("Falha ao ler o DXF: " + (err.message || err));
       setMsg("");
@@ -255,12 +277,27 @@ function ProjetoDetalhe({ data, perfis, onVoltar, onReload }) {
         <h2 style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: 24, fontWeight: 800, color: "var(--ink)", margin: 0 }}>{projeto.nome}</h2>
         <StatusBadge status={projeto.status} />
         {geometria && (
-          <span title={score.motivos.join(" · ") || "Modelo íntegro"}
-            style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 700,
-              color: score.cor, background: score.cor + "18", border: `1px solid ${score.cor}44`,
-              borderRadius: 20, padding: "3px 11px" }}>
-            {score.emoji} StickFEM Score: {score.label} ({score.pct})
-          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
+            <StickScore
+              score={stickScoreResult.score}
+              details={stickScoreResult.details}
+              onDetailsClick={handleScoreClick}
+            />
+            {conflitos.length > 0 && (
+              <div style={{ 
+                background: 'rgba(239, 68, 68, 0.1)', 
+                border: '1px solid rgba(239, 68, 68, 0.4)',
+                color: '#ef4444',
+                padding: '8px 14px',
+                borderRadius: '8px',
+                fontWeight: 'bold',
+                cursor: 'pointer'
+                // TODO: Add onClick to show conflict details
+              }}>
+                ⚠ {conflitos.length} {conflitos.length === 1 ? 'conflito encontrado' : 'conflitos encontrados'}
+              </div>
+            )}
+          </div>
         )}
       </div>
 
@@ -282,7 +319,14 @@ function ProjetoDetalhe({ data, perfis, onVoltar, onReload }) {
 
       {geometria && (
         <>
-          <ViewerSVG geometria={geometria} elementos={elementos} />
+          <div style={{ display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
+            <div style={{ flex: 1 }}>
+              <ViewerSVG geometria={geometria} elementos={elementos} perfis={perfis} />
+            </div>
+            <div style={{ width: '280px' }}>
+              <AssistentedeRevisao elementos={elementos} conflitos={conflitos} />
+            </div>
+          </div>
 
           {/* Confirmação de layers */}
           {layers.length > 0 && (
@@ -466,12 +510,42 @@ function SelPerfil({ label, perfis, value, onChange }) {
 }
 
 // ── Viewer CAD 2D (SVG) ──────────────────────────────────────────────────────
-function ViewerSVG({ geometria, elementos }) {
+function ViewerSVG({ geometria, elementos, perfis }) {
   const b = geometria.bounds;
   const pad = Math.max((b.maxX - b.minX), (b.maxY - b.minY)) * 0.05 || 1;
   const vb = `${b.minX - pad} ${b.minY - pad} ${(b.maxX - b.minX) + 2 * pad} ${(b.maxY - b.minY) + 2 * pad}`;
   const flipY = b.maxY + b.minY; // espelha Y (SVG cresce pra baixo)
   const sw = Math.max((b.maxX - b.minX), (b.maxY - b.minY)) / 300 || 0.02;
+
+  const getConfidenceColor = (el) => {
+    // Fase 2: Mapa de Confiança
+    switch (el.confianca) {
+      case 'alta': return '#22c55e'; // green-500
+      case 'media': return '#f59e0b'; // amber-500
+      case 'baixa': return '#ef4444'; // red-500
+      default: return COR_TIPO[el.tipo] || '#fff';
+    }
+  };
+
+  const handleElementClick = (el) => {
+    // Fase 2: Detalhes ao clicar & Fase 5: IA Explicável
+    const perfilNome = perfis.find(p => p.id === el.perfil_id)?.nome || 'Não atribuído';
+    const motivos = (el.motivosConfianca || ['N/A']).join('\\n  - ');
+
+    const info = `
+      Elemento: ${el.nome}
+      ---------------------------
+      Layer: ${el.layer_origem}
+      Tipo: ${el.tipo}
+      Perfil: ${perfilNome}
+      Comprimento: ${el.comprimento_m?.toFixed(2) || 'N/A'} m
+      Confiança: ${el.confianca}
+      ---------------------------
+      Decisão da IA:
+      - ${motivos}
+    `;
+    alert(info);
+  };
 
   return (
     <div style={{ ...CARD, padding: 0, overflow: "hidden" }}>
@@ -487,7 +561,8 @@ function ViewerSVG({ geometria, elementos }) {
           ))}
           {(elementos || []).filter((e) => e.geometria?.x1 != null).map((e, i) => (
             <line key={"e" + i} x1={e.geometria.x1} y1={e.geometria.y1} x2={e.geometria.x2} y2={e.geometria.y2}
-              stroke={COR_TIPO[e.tipo] || "#fff"} strokeWidth={sw * 2.4} strokeLinecap="round" opacity={0.9} />
+              stroke={getConfidenceColor(e)} strokeWidth={sw * 2.4} strokeLinecap="round" opacity={0.9} 
+              onClick={() => handleElementClick(e)} style={{ cursor: 'pointer' }} />
           ))}
         </g>
       </svg>

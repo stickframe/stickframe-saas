@@ -1,46 +1,87 @@
 /**
- * StickFEM Score — saúde do modelo estrutural interpretado do DXF.
- *   🟢 verde    — modelo completo (elementos identificados com boa confiança)
- *   🟡 amarelo  — parcialmente identificado / precisa revisão
- *   🔴 vermelho — necessita revisão (pouco reconhecido / sem perfil)
+ * StickScore™ 2.0 — Saúde e qualidade do modelo estrutural.
  *
- * Conecta com a lógica de status do StickFrame (leads, saúde, trial).
+ * Critérios:
+ * • Qualidade do DXF:      Boa prática no uso de entidades.
+ * • Organização dos layers: Nomes claros, poucos layers.
+ * • Elementos reconhecidos: % de geometria convertida em elementos.
+ * • Confiabilidade:         % de elementos com alta confiança do parser.
+ * • Perfis atribuídos:      % de paredes e vigas com perfis definidos.
+ * • Conflitos:              Detecção de inconsistências geométricas.
  */
-export function computeStickFemScore(elementos = []) {
-  const paredes = elementos.filter((e) => e.tipo === "parede");
-  const motivos = [];
+export function computeStickScore(data) {
+  const { elementos = [], geometria = null, conflitos = [] } = data;
 
-  if (paredes.length === 0) {
-    return { nivel: "vermelho", cor: "#981915", emoji: "🔴", label: "Necessita revisão",
-      motivos: ["Nenhuma parede estrutural identificada"], pct: 0 };
+  // 1. Qualidade do DXF (0-100)
+  // Penaliza DXF com muitas entidades pequenas ou não utilizadas.
+  let scoreDxf = 100;
+  if (geometria) {
+    const totalEntidades = geometria.stats.linhas + geometria.stats.polilinhas;
+    // Penaliza se menos de 50% das entidades viraram elementos
+    const utilizacao = elementos.length / totalEntidades;
+    if (totalEntidades > 0 && utilizacao < 0.5) {
+      scoreDxf -= (0.5 - utilizacao) * 50;
+    }
+    // Penaliza por excesso de layers
+    if (geometria.stats.layers > 20) {
+      scoreDxf -= Math.min(geometria.stats.layers - 20, 20);
+    }
+  } else {
+    scoreDxf = 0; // Sem geometria, sem score.
   }
 
-  const baixa    = paredes.filter((p) => p.confianca === "baixa").length;
-  const validadas = paredes.filter((p) => p.validado).length;
-  const semPerfil = paredes.filter((p) => !p.perfil_id).length;
-  const semComp   = paredes.filter((p) => !p.comprimento_m).length;
+  // 2. Organização dos Layers (0-100)
+  // Beneficia layers com nomes sugestivos.
+  let scoreLayers = 0;
+  if (geometria && geometria.layers) {
+    const layersSugeridos = geometria.layers.filter(l => l.sugerido !== 'ignorar').length;
+    scoreLayers = (layersSugeridos / geometria.layers.length) * 100;
+  }
+  
+  // 3. Parser (Elementos Reconhecidos) (0-100)
+  const paredesEVigas = elementos.filter(e => e.tipo === 'parede' || e.tipo === 'viga');
+  const scoreParser = paredesEVigas.length > 0 ? 100 : 0; // Simples por enquanto
 
-  const fBaixa   = baixa / paredes.length;
-  const fValid   = validadas / paredes.length;
-  const fSemPerf = semPerfil / paredes.length;
+  // 4. Confiabilidade (0-100)
+  // % de elementos validados pelo engenheiro + confiança do parser.
+  let scoreConfianca = 0;
+  if (elementos.length > 0) {
+      const validados = elementos.filter(e => e.validado).length;
+      const confiancaAlta = elementos.filter(e => e.confianca !== 'baixa').length;
+      scoreConfianca = ((validados / elementos.length) * 0.6 + (confiancaAlta / elementos.length) * 0.4) * 100;
+  }
 
-  // pontuação 0–100
-  let pct = 100;
-  pct -= fBaixa * 40;
-  pct -= fSemPerf * 25;
-  pct -= (1 - fValid) * 25;
-  if (semComp) pct -= 10;
-  pct = Math.max(0, Math.round(pct));
+  // 5. Perfis Atribuídos (0-100)
+  let scorePerfis = 0;
+  if (paredesEVigas.length > 0) {
+    const comPerfil = paredesEVigas.filter(e => e.perfil_id).length;
+    scorePerfis = (comPerfil / paredesEVigas.length) * 100;
+  } else {
+    scorePerfis = 100; // Se não há paredes/vigas, não há o que atribuir.
+  }
+  
+  // 6. Consistência (Conflitos) (0-100)
+  // Penaliza por cada conflito encontrado.
+  let scoreConsistencia = 100 - (conflitos.length * 5);
 
-  if (fBaixa > 0.4)     motivos.push(`${baixa} paredes com baixa confiança`);
-  if (semPerfil)        motivos.push(`${semPerfil} paredes sem perfil atribuído`);
-  if (validadas < paredes.length) motivos.push(`${paredes.length - validadas} paredes não validadas`);
-  if (semComp)          motivos.push(`${semComp} elementos sem comprimento`);
+  // --- Pontuação Final ---
+  const details = {
+    dxf: Math.round(scoreDxf),
+    layers: Math.round(scoreLayers),
+    parser: Math.round(scoreParser),
+    confiabilidade: Math.round(scoreConfianca),
+    perfis: Math.round(scorePerfis),
+    consistencia: Math.round(scoreConsistencia),
+  };
 
-  let nivel, cor, emoji, label;
-  if (pct >= 80)      { nivel = "verde";    cor = "#3f7a4b"; emoji = "🟢"; label = "Modelo completo"; }
-  else if (pct >= 50) { nivel = "amarelo";  cor = "#b07a1e"; emoji = "🟡"; label = "Parcialmente identificado"; }
-  else                { nivel = "vermelho"; cor = "#981915"; emoji = "🔴"; label = "Necessita revisão"; }
+  // Média ponderada
+  const pesos = { dxf: 0.1, layers: 0.15, parser: 0.2, confiabilidade: 0.25, perfis: 0.2, consistencia: 0.1 };
+  const scoreFinal = Object.keys(details).reduce((acc, key) => {
+    return acc + details[key] * pesos[key];
+  }, 0);
 
-  return { nivel, cor, emoji, label, motivos, pct };
+  return {
+    score: Math.round(scoreFinal),
+    details: details,
+  };
 }
