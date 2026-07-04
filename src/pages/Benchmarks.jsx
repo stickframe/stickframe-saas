@@ -3,7 +3,7 @@ import { sb } from "../services/supabase";
 import useAppStore from "../store/useAppStore";
 import { C } from "../utils/constants";
 import { useModuleLoad } from "../hooks/useModuleLoad";
-import BenchmarkEstrutural from "../components/stickfem/BenchmarkEstrutural";
+import BenchmarkCard from "../components/StickFEM/components/BenchmarkCard";
 
 export default function Benchmarks() {
   useModuleLoad("obras");
@@ -255,7 +255,7 @@ export default function Benchmarks() {
           </div>
 
           {/* Benchmark Estrutural StickFEM™ */}
-          <BenchmarkEstrutural />
+          <BenchmarkCard />
 
         </div>
       )}

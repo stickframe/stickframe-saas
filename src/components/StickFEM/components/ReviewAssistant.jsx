@@ -1,13 +1,13 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 
-const BTN_GHOST = { background: "var(--surface)", color: "var(--ink-2)", border: "1.5px solid var(--line)", borderRadius: 8, padding: "8px 14px", fontFamily: "inherit", fontSize: 12.5, fontWeight: 600, cursor: "pointer" };
-const BTN_PRIMARY = { background: "var(--brick)", color: "#fff", border: "none", borderRadius: 8, padding: "9px 16px", fontFamily: "inherit", fontSize: 13, fontWeight: 700, cursor: "pointer" };
+const BTN_GHOST = { background: "var(--surface)", color: "var(--text-muted, #57514a)", border: "1.5px solid var(--line)", borderRadius: 8, padding: "8px 14px", fontFamily: "inherit", fontSize: 12.5, fontWeight: 600, cursor: "pointer" };
+const BTN_PRIMARY = { background: "var(--red, #981915)", color: "#fff", border: "none", borderRadius: 8, padding: "9px 16px", fontFamily: "inherit", fontSize: 13, fontWeight: 700, cursor: "pointer" };
 
 /**
  * Painel Assistente de Revisão (Fase 4)
  * Guia o engenheiro pelos itens que precisam de atenção no modelo.
  */
-const AssistentedeRevisao = ({ elementos, conflitos, onElementSelect }) => {
+const ReviewAssistant = ({ elementos, conflitos, onElementSelect }) => {
   const [indiceAtual, setIndiceAtual] = useState(0);
 
   const itensParaRevisar = useMemo(() => {
@@ -93,4 +93,4 @@ const AssistentedeRevisao = ({ elementos, conflitos, onElementSelect }) => {
   );
 };
 
-export default AssistentedeRevisao;
+export default ReviewAssistant;

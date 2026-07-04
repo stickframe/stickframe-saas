@@ -4,7 +4,7 @@
  * oficial dentro do ecossistema, com rastreabilidade e premissas técnicas.
  */
 import { salvarStickQuote } from "../stickquoteService";
-import { registrarBenchmark } from "./benchmark";
+import { registrarBenchmark } from "./benchmark/benchmark";
 import { printHtml } from "../../utils/printHtml";
 import { LOGO_STICKFRAME } from "../../utils/cdn";
 

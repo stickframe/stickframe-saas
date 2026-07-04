@@ -5,8 +5,8 @@
  * pública/anonimizada.
  */
 import { useEffect, useState } from "react";
-import { carregarBenchmarkEstrutural, statusVsRef } from "../../services/stickfem/benchmark";
-import { C } from "../../utils/constants";
+import { carregarBenchmarkEstrutural, statusVsRef } from "../../../services/stickfem/benchmark/benchmark";
+import { C } from "../../../utils/constants";
 
 const fmtR = (v) => Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 
@@ -35,7 +35,7 @@ function CardIndicador({ titulo, meu, mercado, unidade, status }) {
   );
 }
 
-export default function BenchmarkEstrutural() {
+export default function BenchmarkCard() {
   const [dados, setDados] = useState(null);
 
   useEffect(() => {

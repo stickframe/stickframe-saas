@@ -3,7 +3,7 @@
  * Cada projeto vira um dado comparável (kg aço/m², custo/m², prazo), que
  * alimenta o benchmark do setor (StickPulse™).
  */
-import { sb, getEmpresaId } from "../supabase";
+import { sb, getEmpresaId } from "../../supabase";
 
 /** Indicadores estruturais a partir do quantitativo + área construída. */
 export function computeIndicadores({ pesoAco = 0, areaM2 = 0, custoEstrutura = 0, quantidadePerfis = 0, prazoEstimado = null, prazoReal = null }) {
