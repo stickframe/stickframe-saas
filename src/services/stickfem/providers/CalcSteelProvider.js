@@ -14,17 +14,18 @@
  * (toProjectData / fromResponse) ficam marcados como TODO com o contrato real.
  */
 import { StructuralAnalysisProvider, ProviderNotConfiguredError } from "./StructuralAnalysisProvider";
+import { calcSteelAnalysisDisponivel, CALCSTEEL_PROXY_URL } from "./config";
 
 export class CalcSteelProvider extends StructuralAnalysisProvider {
-  constructor({ proxyUrl = null } = {}) {
+  constructor({ proxyUrl = CALCSTEEL_PROXY_URL } = {}) {
     super();
     this._proxyUrl = proxyUrl; // Edge Function do Supabase (proxy seguro), quando existir.
   }
   get id() { return "calcsteel"; }
   get nome() { return "CalcSteel (API)"; }
   get externo() { return true; }
-  // Só ficará disponível quando o proxy seguro estiver configurado E o contrato validado.
-  get disponivel() { return false; }
+  // Feature flag: só disponível com contrato validado + proxy seguro configurado.
+  get disponivel() { return calcSteelAnalysisDisponivel(); }
 
   /** StructuralModel (StickFEM) → payload da API. TODO: confirmar contrato real. */
   toProjectData(_model) {
