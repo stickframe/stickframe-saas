@@ -1,0 +1,18 @@
+{
+  "id": "sobrado",
+  "nome": "Sobrado — Ue90",
+  "tipologia": "Residencial Alto Padrão",
+  "descricao": "Parede de pavimento inferior de sobrado, carga permanente maior.",
+  "perfil": { "nome": "Montante Ue 90×40×12×1,25", "area_mm2": 204, "inercia_x_mm4": 254000, "inercia_y_mm4": 52000, "peso_kg_m": 1.60 },
+  "material": { "fy_mpa": 250, "e_mpa": 200000 },
+  "peDireitoM": 2.8,
+  "espacMontanteM": 0.4,
+  "larguraTributariaM": 2.5,
+  "gPerm_kNm2": 3.0,
+  "qSobre_kNm2": 2.0,
+  "v0_ms": 40,
+  "paredes": [
+    { "nome": "P1", "comprimento_m": 8.0 },
+    { "nome": "P2", "comprimento_m": 6.0 }
+  ]
+}

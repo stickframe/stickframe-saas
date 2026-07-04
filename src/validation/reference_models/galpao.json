@@ -1,0 +1,18 @@
+{
+  "id": "galpao",
+  "nome": "Galpão — Ue140 (pé-direito alto)",
+  "tipologia": "Comercial / Loja",
+  "descricao": "Galpão com pé-direito 5,0 m — testa esbeltez elevada (caso de revisão).",
+  "perfil": { "nome": "Montante Ue 140×40×12×1,25", "area_mm2": 266, "inercia_x_mm4": 770000, "inercia_y_mm4": 57000, "peso_kg_m": 2.09 },
+  "material": { "fy_mpa": 250, "e_mpa": 200000 },
+  "peDireitoM": 5.0,
+  "espacMontanteM": 0.6,
+  "larguraTributariaM": 5.0,
+  "gPerm_kNm2": 1.0,
+  "qSobre_kNm2": 1.0,
+  "v0_ms": 45,
+  "paredes": [
+    { "nome": "P1", "comprimento_m": 20.0 },
+    { "nome": "P2", "comprimento_m": 20.0 }
+  ]
+}

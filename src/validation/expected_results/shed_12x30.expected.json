@@ -1,0 +1,10 @@
+{
+  "perfil": "Montante Ue 140×40×12×1,25",
+  "utilizacao": 1.314,
+  "esbeltez": 273,
+  "modoGovernante": "flambagem (Euler)",
+  "status": "revisar",
+  "peso_total_kg": 1300.1,
+  "montantes": 144,
+  "pass": false
+}

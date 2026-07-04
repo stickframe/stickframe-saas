@@ -1,0 +1,20 @@
+{
+  "id": "shed_12x30",
+  "nome": "Shed 12×30 — Ue140",
+  "tipologia": "Comercial / Loja",
+  "descricao": "Galpão leve 12×30 m, pé-direito 4,0 m, espaçamento 0,6 m, Ue140.",
+  "perfil": { "nome": "Montante Ue 140×40×12×1,25", "area_mm2": 266, "inercia_x_mm4": 770000, "inercia_y_mm4": 57000, "peso_kg_m": 2.09 },
+  "material": { "fy_mpa": 250, "e_mpa": 200000 },
+  "peDireitoM": 4.0,
+  "espacMontanteM": 0.6,
+  "larguraTributariaM": 4.0,
+  "gPerm_kNm2": 1.0,
+  "qSobre_kNm2": 1.5,
+  "v0_ms": 42,
+  "paredes": [
+    { "nome": "P1", "comprimento_m": 30.0 },
+    { "nome": "P2", "comprimento_m": 30.0 },
+    { "nome": "P3", "comprimento_m": 12.0 },
+    { "nome": "P4", "comprimento_m": 12.0 }
+  ]
+}

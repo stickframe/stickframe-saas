@@ -24,6 +24,7 @@ import HistoryPanel from "../components/StickFEM/components/HistoryPanel";
 import ComparisonPanel from "../components/StickFEM/components/ComparisonPanel";
 import TimelinePanel from "../components/StickFEM/components/TimelinePanel";
 import EngineeringPlayground from "../components/StickFEM/components/EngineeringPlayground";
+import ValidationPanel from "../components/StickFEM/components/ValidationPanel";
 import { StatusBadge, StatusEstrutural, CampoNum, SelPerfil } from "../components/StickFEM/utils/atoms";
 import { CARD, BTN_PRIMARY, BTN_GHOST, INPUT, ERRO, TH, TD } from "../components/StickFEM/utils/styles";
 
@@ -74,7 +75,7 @@ export default function StickFEM() {
 
       {/* Abas: Projetos (fluxo CAD→análise) vs Engineering Playground (bancada) */}
       <div style={{ display: "flex", gap: 6, marginBottom: 16, borderBottom: "1px solid var(--line)" }}>
-        {[["projetos", "Projetos"], ["playground", "🧪 Engineering Playground"]].map(([k, label]) => (
+        {[["projetos", "Projetos"], ["playground", "🧪 Engineering Playground"], ["validacao", "✓ Validação Técnica"]].map(([k, label]) => (
           <button key={k} onClick={() => setAba(k)} style={{
             background: "none", border: "none", borderBottom: `2px solid ${aba === k ? "var(--red, #981915)" : "transparent"}`,
             color: aba === k ? "var(--text, #26231f)" : "var(--muted)", fontFamily: "inherit", fontSize: 13,
@@ -87,6 +88,8 @@ export default function StickFEM() {
 
       {aba === "playground" ? (
         <EngineeringPlayground perfis={perfis} />
+      ) : aba === "validacao" ? (
+        <ValidationPanel />
       ) : !proj ? (
         <ListaProjetos projetos={projetos} loading={loading} onNovo={novo} onAbrir={abrir} />
       ) : (
