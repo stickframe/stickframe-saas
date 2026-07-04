@@ -427,7 +427,15 @@ export default function MotorComposicao({ onEnviarOrcamento }) {
                   {historico.map((h) => (
                     <div key={h.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,.06)', fontSize: 11 }}>
                       <div>
-                        <div style={{ color: '#e5e7eb', fontWeight: 600 }}>{h.nome}</div>
+                        <div style={{ color: '#e5e7eb', fontWeight: 600 }}>
+                          {h.nome}
+                          {h.origem === 'StickFEM' && (
+                            <span title="Quantitativo derivado de análise estrutural StickFEM™" style={{
+                              marginLeft: 6, fontSize: 9, fontWeight: 800, background: '#6d557e',
+                              color: '#fff', borderRadius: 4, padding: '1px 6px', verticalAlign: 'middle',
+                            }}>🟣 ENGENHARIA</span>
+                          )}
+                        </div>
                         <div style={{ color: '#6b7280', marginTop: 1 }}>
                           {h.obra_nome ? `${h.obra_nome} · ` : ''}{new Date(h.created_at).toLocaleDateString('pt-BR')}
                         </div>

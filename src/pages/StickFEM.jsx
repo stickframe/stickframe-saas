@@ -16,6 +16,8 @@ import { gerarOrcamentoEstrutural, gerarPdfEstrutural } from "../services/stickf
 import { sugerirPerfisInteligentes } from "../services/stickfem/perfilInteligente";
 import AssistentedeRevisao from "../components/stickbrain/AssistentedeRevisao";
 import StickScore from "../components/stickscore/StickScore";
+import { pressaoVento, combinarCargas, REGIOES_VENTO } from "../services/stickfem/cargas";
+import { preDimensionar } from "../services/stickfem/preDimensionamento";
 import {
   listarPerfis, listarProjetos, criarProjeto, atualizarStatusProjeto,
   salvarArquivoCad, salvarElementos, salvarAnalise, registrarAprovacao, carregarProjeto,
@@ -61,7 +63,7 @@ export default function StickFEM() {
   return (
     <div style={{ padding: 24, maxWidth: 1180, margin: "0 auto" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 4 }}>
-        <h1 style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: 30, fontWeight: 800, color: "var(--ink)", margin: 0 }}>
+        <h1 style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: 30, fontWeight: 800, color: "var(--text, #26231f)", margin: 0 }}>
           StickFEM™
         </h1>
         <span style={{ fontSize: 12, color: "var(--muted)" }}>Análise estrutural via CAD/DXF</span>
@@ -102,7 +104,7 @@ function ListaProjetos({ projetos, loading, onNovo, onAbrir }) {
   return (
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: "var(--ink-2)" }}>Projetos estruturais</div>
+        <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-muted, #57514a)" }}>Projetos estruturais</div>
         <button onClick={onNovo} style={BTN_PRIMARY}>+ Novo projeto</button>
       </div>
       {loading ? <p style={{ color: "var(--muted)" }}>Carregando…</p> : (
@@ -112,7 +114,7 @@ function ListaProjetos({ projetos, loading, onNovo, onAbrir }) {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(240px,1fr))", gap: 12 }}>
             {projetos.map((p) => (
               <button key={p.id} onClick={() => onAbrir(p.id)} style={{ ...CARD, textAlign: "left", cursor: "pointer" }}>
-                <div style={{ fontWeight: 700, color: "var(--ink)" }}>{p.nome}</div>
+                <div style={{ fontWeight: 700, color: "var(--text, #26231f)" }}>{p.nome}</div>
                 <div style={{ fontSize: 11.5, color: "var(--muted)", marginTop: 4 }}>
                   <StatusBadge status={p.status} /> · pé-direito {p.pe_direito_m} m
                 </div>
@@ -174,6 +176,8 @@ function ProjetoDetalhe({ data, perfis, onVoltar, onReload }) {
   // Fase 8 — orçamento estrutural
   const [orcs, setOrcs] = useState([]);
   const [precoKg, setPrecoKg] = useState(12);
+  const [areaM2, setAreaM2] = useState("");
+  const [tipologia, setTipologia] = useState("Residencial Térreo");
   const [gerando, setGerando] = useState(false);
   const versaoDxf = (data.arquivos?.length || 0) + (geometria ? 1 : 0) || 1;
 
@@ -190,6 +194,7 @@ function ProjetoDetalhe({ data, perfis, onVoltar, onReload }) {
         perfilMontante: perfis.find((p) => p.id === perfMont),
         perfilGuia: perfis.find((p) => p.id === perfGuia),
         precoKg: Number(precoKg) || 12, obraNome: projeto.nome, versaoDxf,
+        areaM2: Number(areaM2) || null, tipologia,
       });
       setMsg(`Orçamento estrutural gerado (StickQuote #${saved?.numero ?? "—"}).`);
       setOrcs(await listarOrcamentosStickFem(projeto.id));
@@ -215,6 +220,41 @@ function ProjetoDetalhe({ data, perfis, onVoltar, onReload }) {
   }
   function validarTodas() {
     setElementos((prev) => prev.map((e) => ({ ...e, validado: true })));
+  }
+
+  // ── Fase 5 — cargas + pré-dimensionamento (preliminar) ─────────────────────
+  const [carga, setCarga] = useState({ gPerm: 1.5, qSobre: 1.5, largTrib: 2.5, v0: 40 });
+  const [predim, setPredim] = useState(null);
+  const [savingPd, setSavingPd] = useState(false);
+  const setC = (k, v) => setCarga((c) => ({ ...c, [k]: v }));
+
+  function rodarPreDim() {
+    const paredesCalc = elementos.filter((e) => e.tipo === "parede" && e.incluir_calculo !== false);
+    const gLine = (Number(carga.gPerm) || 0) * (Number(carga.largTrib) || 0);   // kN/m
+    const qLine = (Number(carga.qSobre) || 0) * (Number(carga.largTrib) || 0);  // kN/m
+    const comb = combinarCargas({ g: gLine, q: qLine, w: 0 });
+    const perfil = perfis.find((p) => p.id === perfMont);
+    const res = preDimensionar({
+      paredes: paredesCalc, perfil, material: { fy_mpa: 250, e_mpa: 200000 },
+      peDireitoM: projeto.pe_direito_m, espacMontanteM: (projeto.espac_montante_mm || 400) / 1000,
+      qParedeUlt_kN_m: comb.elu.gravitacional,
+    });
+    setPredim({ ...res, comb, vento: pressaoVento({ v0: Number(carga.v0) || 40 }) });
+  }
+
+  async function salvarPreDim() {
+    if (!predim) return;
+    setSavingPd(true);
+    try {
+      await salvarAnalise(projeto.id, {
+        solver: "predim", status: "concluida",
+        cargas: { ...carga, vento: predim.vento }, combinacoes: predim.comb,
+        resultado: { porParede: predim.porParede, resumo: predim.resumo, premissas: predim.premissas },
+        statusEstrutural: predim.resumo.statusGlobal,
+      });
+      setMsg("Pré-dimensionamento salvo.");
+    } catch (err) { setErro(err.message); }
+    finally { setSavingPd(false); }
   }
 
   async function onDxf(e) {
@@ -274,7 +314,7 @@ function ProjetoDetalhe({ data, perfis, onVoltar, onReload }) {
     <div>
       <button onClick={onVoltar} style={BTN_GHOST}>← Projetos</button>
       <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "10px 0 6px", flexWrap: "wrap" }}>
-        <h2 style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: 24, fontWeight: 800, color: "var(--ink)", margin: 0 }}>{projeto.nome}</h2>
+        <h2 style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: 24, fontWeight: 800, color: "var(--text, #26231f)", margin: 0 }}>{projeto.nome}</h2>
         <StatusBadge status={projeto.status} />
         {geometria && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
@@ -303,7 +343,7 @@ function ProjetoDetalhe({ data, perfis, onVoltar, onReload }) {
 
       {/* Importar */}
       <div style={CARD}>
-        <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--ink-2)", marginBottom: 8 }}>1 · Importar CAD (DXF)</div>
+        <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-muted, #57514a)", marginBottom: 8 }}>1 · Importar CAD (DXF)</div>
         <input type="file" accept=".dxf" onChange={onDxf} disabled={busy} />
         {msg && <span style={{ marginLeft: 10, fontSize: 12, color: "var(--muted)" }}>{msg}</span>}
         {geometria && (
@@ -332,7 +372,7 @@ function ProjetoDetalhe({ data, perfis, onVoltar, onReload }) {
           {layers.length > 0 && (
             <div style={CARD}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--ink-2)" }}>
+                <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-muted, #57514a)" }}>
                   2 · Confirmar layers <span style={{ fontWeight: 400, color: "var(--muted)" }}>(o engenheiro decide o que é estrutura)</span>
                 </div>
                 <button onClick={reprocessar} style={BTN_GHOST}>↻ Reprocessar</button>
@@ -340,7 +380,7 @@ function ProjetoDetalhe({ data, perfis, onVoltar, onReload }) {
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                 {layers.map((l) => (
                   <div key={l.layer} style={{ display: "flex", alignItems: "center", gap: 6, background: "var(--surface-2)", border: "1px solid var(--line)", borderRadius: 8, padding: "5px 9px" }}>
-                    <span style={{ fontSize: 11.5, color: "var(--ink)", fontWeight: 600 }}>{l.layer}</span>
+                    <span style={{ fontSize: 11.5, color: "var(--text, #26231f)", fontWeight: 600 }}>{l.layer}</span>
                     <span style={{ fontSize: 10, color: "var(--muted)" }}>({l.segmentos})</span>
                     <select value={layerCfg[l.layer] || l.sugerido}
                       onChange={(ev) => setLayerCfg((c) => ({ ...c, [l.layer]: ev.target.value }))}
@@ -359,7 +399,7 @@ function ProjetoDetalhe({ data, perfis, onVoltar, onReload }) {
           {/* Validação de elementos (editável) */}
           <div style={CARD}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-              <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--ink-2)" }}>
+              <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-muted, #57514a)" }}>
                 3 · Revisão técnica dos elementos <span style={{ fontWeight: 400, color: "var(--muted)" }}>(StickAI Structural Parser™ — corrija o que precisar)</span>
               </div>
               <button onClick={validarTodas} style={BTN_GHOST}>✓ Validar todas</button>
@@ -418,7 +458,7 @@ function ProjetoDetalhe({ data, perfis, onVoltar, onReload }) {
 
           {/* Perfis + Quantitativo */}
           <div style={CARD}>
-            <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--ink-2)", marginBottom: 8 }}>
+            <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-muted, #57514a)", marginBottom: 8 }}>
               4 · Perfis &amp; quantitativo
             </div>
             <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 10 }}>
@@ -428,7 +468,7 @@ function ProjetoDetalhe({ data, perfis, onVoltar, onReload }) {
             <div style={{ display: "flex", gap: 20, flexWrap: "wrap", fontSize: 13 }}>
               {quant.itens.map((it) => (
                 <div key={it.tipo} style={{ background: "var(--surface-2)", border: "1px solid var(--line)", borderRadius: 8, padding: "10px 14px" }}>
-                  <div style={{ fontWeight: 700, color: "var(--ink)" }}>{it.perfil}</div>
+                  <div style={{ fontWeight: 700, color: "var(--text, #26231f)" }}>{it.perfil}</div>
                   <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 3 }}>
                     {it.tipo === "montante" ? `${it.quantidade} pç · ` : ""}{it.comprimento_total_m} m · {it.peso_kg} kg
                   </div>
@@ -449,16 +489,77 @@ function ProjetoDetalhe({ data, perfis, onVoltar, onReload }) {
             </button>
           </div>
 
-          {/* 5 · Orçamento estrutural (Fase 8) */}
+          {/* 5 · Cargas + pré-dimensionamento (Fase 5) */}
           <div style={{ ...CARD, marginTop: 14 }}>
-            <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--ink-2)", marginBottom: 8 }}>
-              5 · Gerar orçamento estrutural <span style={{ fontWeight: 400, color: "var(--muted)" }}>→ StickQuote (origem StickFEM™)</span>
+            <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-muted, #57514a)", marginBottom: 8 }}>
+              5 · Cargas &amp; pré-dimensionamento <span style={{ fontWeight: 400, color: "var(--muted)" }}>(preliminar — não substitui NBR 14762/6123)</span>
+            </div>
+            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "flex-end", marginBottom: 10 }}>
+              <CampoNum label="Permanente G (kN/m²)" value={carga.gPerm} onChange={(v) => setC("gPerm", v)} />
+              <CampoNum label="Sobrecarga Q (kN/m²)" value={carga.qSobre} onChange={(v) => setC("qSobre", v)} />
+              <CampoNum label="Larg. tributária laje (m)" value={carga.largTrib} onChange={(v) => setC("largTrib", v)} />
+              <CampoNum label="Vento V0 (m/s)" value={carga.v0} onChange={(v) => setC("v0", v)} />
+              <button onClick={rodarPreDim} style={BTN_PRIMARY}>Calcular pré-dimensionamento</button>
+            </div>
+
+            {predim && (
+              <>
+                <div style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "center", marginBottom: 10 }}>
+                  <StatusEstrutural status={predim.resumo.statusGlobal} />
+                  <span style={{ fontSize: 12, color: "var(--muted)" }}>
+                    Utilização máx <b>{predim.resumo.ratioMax}</b> · N_Rd {predim.resumo.nRd_kN} kN · N_Sd {predim.resumo.nSd_kN} kN ·
+                    modo {predim.resumo.modoGovernante} · esbeltez λ={predim.resumo.esbeltez}{predim.resumo.esbeltezOk ? "" : " ⚠>200"}
+                  </span>
+                  <span style={{ fontSize: 12, color: "var(--muted)" }}>Vento q={predim.vento.q_kN_m2} kN/m² (Vk {predim.vento.vk} m/s)</span>
+                  <button onClick={salvarPreDim} disabled={savingPd} style={{ ...BTN_GHOST, marginLeft: "auto" }}>
+                    {savingPd ? "Salvando…" : "Salvar análise"}
+                  </button>
+                </div>
+                <div style={{ maxHeight: 200, overflowY: "auto", border: "1px solid var(--line)", borderRadius: 8 }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                    <thead><tr style={{ background: "var(--surface-2)" }}>
+                      {["Parede", "Comp. (m)", "Montantes", "N_Sd (kN)", "N_Rd (kN)", "Utilização", "Status"].map((h) => <th key={h} style={TH}>{h}</th>)}
+                    </tr></thead>
+                    <tbody>
+                      {predim.porParede.slice(0, 200).map((p, i) => (
+                        <tr key={i} style={{ borderTop: "1px solid var(--line)" }}>
+                          <td style={TD}>{p.nome}</td><td style={TD}>{p.comprimento_m}</td><td style={TD}>{p.montantes}</td>
+                          <td style={TD}>{p.nSd_kN}</td><td style={TD}>{p.nRd_kN}</td>
+                          <td style={{ ...TD, fontWeight: 700 }}>{p.ratio}</td>
+                          <td style={TD}><StatusEstrutural status={p.status} mini /></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* 6 · Orçamento estrutural (Fase 8) */}
+          <div style={{ ...CARD, marginTop: 14 }}>
+            <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-muted, #57514a)", marginBottom: 8 }}>
+              6 · Gerar orçamento estrutural <span style={{ fontWeight: 400, color: "var(--muted)" }}>→ StickQuote (origem StickFEM™)</span>
             </div>
             <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
-              <label style={{ fontSize: 12, color: "var(--ink-2)" }}>
+              <label style={{ fontSize: 12, color: "var(--text-muted, #57514a)" }}>
                 Preço do aço (R$/kg):{" "}
                 <input type="number" min="0" step="0.5" value={precoKg} onChange={(e) => setPrecoKg(e.target.value)}
                   style={{ ...INPUT, width: 90 }} />
+              </label>
+              <label style={{ fontSize: 12, color: "var(--text-muted, #57514a)" }}>
+                Área construída (m²):{" "}
+                <input type="number" min="0" step="1" value={areaM2} onChange={(e) => setAreaM2(e.target.value)}
+                  placeholder="p/ benchmark" style={{ ...INPUT, width: 110 }} />
+              </label>
+              <label style={{ fontSize: 12, color: "var(--text-muted, #57514a)" }}>
+                Tipologia:{" "}
+                <select value={tipologia} onChange={(e) => setTipologia(e.target.value)}
+                  style={{ ...INPUT, padding: "7px 8px" }}>
+                  <option>Residencial Térreo</option>
+                  <option>Residencial Alto Padrão</option>
+                  <option>Comercial / Loja</option>
+                </select>
               </label>
               <span style={{ fontSize: 12, color: "var(--muted)" }}>
                 Peso total {quant.resumo.pesoTotal_kg} kg · estimado {(quant.resumo.pesoTotal_kg * (Number(precoKg) || 0)).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
@@ -474,13 +575,13 @@ function ProjetoDetalhe({ data, perfis, onVoltar, onReload }) {
       {/* Histórico de orçamentos gerados */}
       {orcs.length > 0 && (
         <div style={{ ...CARD, marginTop: 14 }}>
-          <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--ink-2)", marginBottom: 8 }}>
+          <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-muted, #57514a)", marginBottom: 8 }}>
             Orçamentos gerados a partir deste projeto
           </div>
           {orcs.map((o) => (
             <div key={o.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "7px 0", borderTop: "1px solid var(--line)", fontSize: 12.5 }}>
-              <span style={{ background: "rgba(152,25,21,.1)", color: "var(--brick)", fontWeight: 700, fontSize: 10.5, borderRadius: 5, padding: "2px 7px" }}>StickFEM™</span>
-              <span style={{ color: "var(--ink)", fontWeight: 600 }}>#{o.numero} · {o.nome}</span>
+              <span style={{ background: "rgba(152,25,21,.1)", color: "var(--red, #981915)", fontWeight: 700, fontSize: 10.5, borderRadius: 5, padding: "2px 7px" }}>StickFEM™</span>
+              <span style={{ color: "var(--text, #26231f)", fontWeight: 600 }}>#{o.numero} · {o.nome}</span>
               <span style={{ color: "var(--muted)" }}>{(o.resultado?.totalCusto || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</span>
               <button onClick={() => gerarPdfEstrutural({ nome: o.nome, itens: o.resultado?.itens || [], totalCusto: o.resultado?.totalCusto || 0, premissas: o.resultado?.premissas || {} })}
                 style={{ ...BTN_GHOST, marginLeft: "auto", padding: "5px 12px" }}>PDF</button>
@@ -497,9 +598,33 @@ function ProjetoDetalhe({ data, perfis, onVoltar, onReload }) {
   );
 }
 
+function CampoNum({ label, value, onChange }) {
+  return (
+    <label style={{ fontSize: 11.5, color: "var(--text-muted, #57514a)", display: "flex", flexDirection: "column", gap: 3 }}>
+      {label}
+      <input type="number" step="0.1" min="0" value={value} onChange={(e) => onChange(e.target.value)}
+        style={{ ...INPUT, width: 130, padding: "6px 8px" }} />
+    </label>
+  );
+}
+
+function StatusEstrutural({ status, mini }) {
+  const map = {
+    aprovado: ["#3f7a4b", "🟢", "Aprovado"], atencao: ["#b07a1e", "🟡", "Atenção"],
+    revisar: ["#981915", "🔴", "Revisar"], indefinido: ["#8c847a", "⚪", "Indefinido"],
+  };
+  const [cor, emoji, label] = map[status] || map.indefinido;
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: mini ? 11 : 12.5, fontWeight: 700, color: cor,
+      background: mini ? "transparent" : cor + "18", border: mini ? "none" : `1px solid ${cor}44`, borderRadius: 20, padding: mini ? 0 : "4px 12px" }}>
+      {emoji} {label}
+    </span>
+  );
+}
+
 function SelPerfil({ label, perfis, value, onChange }) {
   return (
-    <label style={{ fontSize: 12, color: "var(--ink-2)" }}>
+    <label style={{ fontSize: 12, color: "var(--text-muted, #57514a)" }}>
       {label}:{" "}
       <select value={value || ""} onChange={(e) => onChange(e.target.value)}
         style={{ padding: "4px 8px", borderRadius: 6, border: "1px solid var(--line)", background: "var(--surface)", fontSize: 12 }}>
@@ -590,8 +715,8 @@ function AprovacaoTecnica({ projeto, aprovacoes, onReload }) {
 
   return (
     <div style={{ ...CARD, marginTop: 18 }}>
-      <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--ink-2)", marginBottom: 8 }}>
-        4 · Aprovação técnica <span style={{ fontWeight: 400, color: "var(--muted)" }}>(engenheiro revisa → aprova → emite documento)</span>
+      <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-muted, #57514a)", marginBottom: 8 }}>
+        7 · Aprovação técnica <span style={{ fontWeight: 400, color: "var(--muted)" }}>(engenheiro revisa → aprova → emite documento)</span>
       </div>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
         <input placeholder="Engenheiro responsável" value={nome} onChange={(e) => setNome(e.target.value)} style={INPUT} />
@@ -605,7 +730,7 @@ function AprovacaoTecnica({ projeto, aprovacoes, onReload }) {
       {aprovacoes?.length > 0 && (
         <div style={{ marginTop: 12, fontSize: 12 }}>
           {aprovacoes.map((a) => (
-            <div key={a.id} style={{ padding: "6px 0", borderTop: "1px solid var(--line)", color: "var(--ink-2)" }}>
+            <div key={a.id} style={{ padding: "6px 0", borderTop: "1px solid var(--line)", color: "var(--text-muted, #57514a)" }}>
               <b style={{ color: a.status === "aprovado" ? "#3f7a4b" : "#981915" }}>{a.status}</b> — {a.engenheiro_nome}
               {a.engenheiro_crea ? ` (${a.engenheiro_crea})` : ""} {a.observacoes ? `· ${a.observacoes}` : ""}
             </div>
@@ -618,9 +743,9 @@ function AprovacaoTecnica({ projeto, aprovacoes, onReload }) {
 
 // ── estilos ──────────────────────────────────────────────────────────────────
 const CARD = { background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 12, padding: "16px 18px", marginBottom: 14 };
-const BTN_PRIMARY = { background: "var(--brick)", color: "#fff", border: "none", borderRadius: 8, padding: "9px 16px", fontFamily: "inherit", fontSize: 13, fontWeight: 700, cursor: "pointer" };
-const BTN_GHOST = { background: "var(--surface)", color: "var(--ink-2)", border: "1.5px solid var(--line)", borderRadius: 8, padding: "8px 14px", fontFamily: "inherit", fontSize: 12.5, fontWeight: 600, cursor: "pointer" };
-const INPUT = { padding: "8px 10px", borderRadius: 7, border: "1px solid var(--line)", background: "var(--surface)", fontFamily: "inherit", fontSize: 12.5, color: "var(--ink)" };
+const BTN_PRIMARY = { background: "var(--red, #981915)", color: "#fff", border: "none", borderRadius: 8, padding: "9px 16px", fontFamily: "inherit", fontSize: 13, fontWeight: 700, cursor: "pointer" };
+const BTN_GHOST = { background: "var(--surface)", color: "var(--text-muted, #57514a)", border: "1.5px solid var(--line)", borderRadius: 8, padding: "8px 14px", fontFamily: "inherit", fontSize: 12.5, fontWeight: 600, cursor: "pointer" };
+const INPUT = { padding: "8px 10px", borderRadius: 7, border: "1px solid var(--line)", background: "var(--surface)", fontFamily: "inherit", fontSize: 12.5, color: "var(--text, #26231f)" };
 const SEL = { fontSize: 11.5, padding: "3px 5px", borderRadius: 5, border: "1px solid var(--line)", background: "var(--surface)", fontFamily: "inherit", maxWidth: 180 };
 const TH = { textAlign: "left", padding: "7px 10px", fontSize: 11, color: "var(--muted)", fontWeight: 700 };
 const TD = { padding: "6px 10px" };

@@ -1,54 +1,68 @@
 /**
- * StickAI Engineer™ - Módulo de Pré-Dimensionamento (Fase 7)
+ * StickFEM™ Fase 5 — Pré-dimensionamento (verificação preliminar de compressão
+ * dos montantes de parede). Modelo simplificado de anteprojeto:
  *
- * Realiza uma análise preliminar e simplificada dos elementos estruturais,
- * fornecendo ao engenheiro uma visão rápida antes do cálculo FEM completo.
- * 
- * IMPORTANTE: Estes são cálculos preliminares e não substituem a análise
- * estrutural detalhada (FEM).
+ *   N_sd  = carga vertical na parede (ELU, kN/m) × espaçamento (m)
+ *   N_rd  = min(A·fy , π²·E·I_min/(K·L)²) / γ         [esmagamento vs Euler]
+ *   ratio = N_sd / N_rd
+ *
+ * NÃO é o dimensionamento da NBR 14762 (não há interação flexo-compressão,
+ * flambagem distorcional/local, nem contraventamento pelas placas). É triagem
+ * de anteprojeto — a verificação final é do engenheiro habilitado (ART/RRT).
  */
 
-/**
- * Calcula dados de pré-dimensionamento para uma lista de elementos.
- * 
- * @param {Array} elementos - A lista de elementos estruturais.
- * @param {Array} perfisDisponiveis - A lista de todos os perfis disponíveis.
- * @returns {Array} Uma lista de objetos de análise preliminar.
- */
-export function realizarPreDimensionamento(elementos, perfisDisponiveis) {
-  if (!perfisDisponiveis || perfisDisponiveis.length === 0) {
-    return [];
+const GAMMA = 1.1;      // coeficiente de resistência (preliminar)
+const K = 1.0;          // comprimento de flambagem (birrotulado)
+
+export function preDimensionar({ paredes, perfil, material, peDireitoM = 2.8, espacMontanteM = 0.4, qParedeUlt_kN_m = 0 }) {
+  if (!perfil || !perfil.area_mm2) {
+    return { porParede: [], resumo: { statusGlobal: "indefinido", motivo: "Perfil de montante sem propriedades." }, premissas: {} };
   }
+  const A = perfil.area_mm2;                       // mm²
+  const fy = material?.fy_mpa || 250;              // N/mm²
+  const E = material?.e_mpa || 200000;             // N/mm²
+  const Imin = Math.max(1, Math.min(perfil.inercia_x_mm4 || 0, perfil.inercia_y_mm4 || 0)); // mm⁴
+  const L = peDireitoM * 1000;                     // mm
+  const i = Math.sqrt(Imin / A);                   // raio de giração (mm)
+  const lambda = (K * L) / i;                      // esbeltez
 
-  const analise = elementos
-    .filter(el => el.tipo === 'parede' || el.tipo === 'viga')
-    .map(el => {
-      const perfilId = el.perfil_id || el.sugestaoPerfil?.perfil_id_sugerido;
-      const perfil = perfisDisponiveis.find(p => p.id === perfilId);
+  const nSquash = A * fy;                           // N
+  const nEuler = (Math.PI ** 2 * E * Imin) / ((K * L) ** 2); // N
+  const nRd = Math.min(nSquash, nEuler) / GAMMA;    // N
 
-      const vao = el.comprimento_m || 0;
-      const altura = el.altura_m || 0;
-      const nomePerfil = perfil ? perfil.nome : (el.sugestaoPerfil?.perfil_nome_sugerido || 'N/A');
-      
-      // Assumindo campos no objeto de perfil. Se não existirem, os cálculos serão 0.
-      const massaLinear = perfil?.massa_linear_kg_m || 0;
-      const espessura = perfil?.espessura_mm || 0;
+  const nSdPorMontante = qParedeUlt_kN_m * espacMontanteM * 1000; // N (kN/m × m × 1000)
+  const ratio = nRd > 0 ? nSdPorMontante / nRd : Infinity;
 
-      const peso = vao * massaLinear;
-      // Esbeltez (Lambda) = Altura / Espessura. Só faz sentido para paredes.
-      const esbeltez = (el.tipo === 'parede' && espessura > 0) ? altura / (espessura / 1000) : 0;
+  const statusDe = (r) => (r <= 0.85 ? "aprovado" : r <= 1.0 ? "atencao" : "revisar");
 
-      return {
-        elemento_nome: el.nome,
-        tipo: el.tipo,
-        perfil: nomePerfil,
-        vao: vao.toFixed(2),
-        altura: altura.toFixed(2),
-        peso: peso.toFixed(2),
-        esbeltez: esbeltez.toFixed(0),
-        status: 'pré-dimensionamento', // Marcado como preliminar
-      };
-    });
+  const porParede = (paredes || []).map((p) => {
+    const nMont = Math.ceil((p.comprimento_m || 0) / espacMontanteM) + 1;
+    return {
+      nome: p.nome, comprimento_m: p.comprimento_m, montantes: nMont,
+      nSd_kN: +(nSdPorMontante / 1000).toFixed(2),
+      nRd_kN: +(nRd / 1000).toFixed(2),
+      ratio: +ratio.toFixed(2),
+      status: statusDe(ratio),
+    };
+  });
 
-  return analise;
+  const ratioMax = porParede.reduce((m, p) => Math.max(m, p.ratio), 0);
+  const criticos = porParede.filter((p) => p.status === "revisar").map((p) => p.nome);
+  const statusGlobal = statusDe(ratioMax);
+
+  return {
+    porParede,
+    resumo: {
+      statusGlobal, ratioMax: +ratioMax.toFixed(2),
+      esbeltez: +lambda.toFixed(0), esbeltezOk: lambda <= 200,
+      criticos,
+      nRd_kN: +(nRd / 1000).toFixed(2), nSd_kN: +(nSdPorMontante / 1000).toFixed(2),
+      modoGovernante: nEuler < nSquash ? "flambagem (Euler)" : "esmagamento",
+    },
+    premissas: {
+      perfil: perfil.nome, fy_mpa: fy, e_mpa: E, area_mm2: A, imin_mm4: Imin,
+      k: K, gamma: GAMMA, peDireitoM, espacMontanteM, qParedeUlt_kN_m,
+      nota: "Modelo de anteprojeto (esmagamento vs Euler). Não substitui NBR 14762.",
+    },
+  };
 }
