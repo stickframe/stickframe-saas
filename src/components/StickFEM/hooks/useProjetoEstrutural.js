@@ -12,6 +12,8 @@ import { preDimensionar } from "../../../services/stickfem/preDimensionamento";
 import { auditarPreDimensionamento } from "../../../services/stickfem/auditoria";
 import { montarMemorial, gerarMemorialPDF } from "../../../services/stickfem/memorial";
 import { criarSnapshot, diffSnapshots } from "../../../services/stickfem/revisao/historico";
+import { compararModelos } from "../../../services/stickfem/comparison/diffEngine";
+import { calcularImpacto } from "../../../services/stickfem/comparison/impactCalculator";
 import {
   salvarArquivoCad, salvarElementos, salvarAnalise, atualizarStatusProjeto,
   listarOrcamentosStickFem, salvarRevisao, listarRevisoes, carregarRevisao,
@@ -251,6 +253,27 @@ export function useProjetoEstrutural({ data, perfis, onReload }) {
     } catch (err) { setErro("Erro ao emitir memorial: " + (err.message || err)); }
   }
 
+  // ── Engineering Diff: comparação revisão × modelo atual ─────────────────────
+  const [comparacao, setComparacao] = useState(null);
+  async function compararComRevisao(id) {
+    try {
+      const r = await carregarRevisao(id);
+      const antes = r?.snapshot?.elementos || [];
+      const depois = elementos;
+      const diff = compararModelos(antes, depois, { perfis });
+      const impacto = calcularImpacto({
+        antes, depois, perfis, projeto, precoKg: Number(precoKg) || 12,
+        preAntes: { stickScore: r?.snapshot?.stickScore, conflitosTotal: r?.snapshot?.conflitosTotal },
+        preDepois: { stickScore: stickScoreResult?.score, conflitosTotal: conflitos.length },
+      });
+      setComparacao({ diff, impacto, meta: {
+        nomeAntes: `Revisão #${r?.numero ?? "?"}`, nomeDepois: "Modelo atual",
+        hashAntes: r?.calc_hash || null, hashDepois: memorialAtual()?.hash || null,
+      } });
+    } catch (err) { setErro("Erro ao comparar: " + (err.message || err)); }
+  }
+  const fecharComparacao = () => setComparacao(null);
+
   async function salvarPreDim() {
     if (!predim) return;
     setSavingPd(true);
@@ -331,6 +354,7 @@ export function useProjetoEstrutural({ data, perfis, onReload }) {
     carga, setC, predim, savingPd, rodarPreDim, salvarPreDim,
     auditoria, abrirAuditoria, fecharAuditoria, gerarMemorial,
     revisoes, salvandoRev, salvarRevisaoAtual, restaurarRevisao, memorialDaRevisao,
+    comparacao, compararComRevisao, fecharComparacao,
     onDxf, salvarTudo,
   };
 }

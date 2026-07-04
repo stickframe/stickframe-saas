@@ -6,7 +6,7 @@ import { CARD, BTN_PRIMARY, BTN_GHOST, INPUT } from "../utils/styles";
 const seta = (d) => (d == null ? "" : d > 0 ? `▲ +${d}` : d < 0 ? `▼ ${d}` : "0");
 const corDelta = (d, bomSubir = true) => (d == null || d === 0 ? "var(--muted)" : (d > 0) === bomSubir ? "#3f7a4b" : "#981915");
 
-export default function HistoryPanel({ revisoes, salvando, onSalvar, onRestaurar, onMemorial }) {
+export default function HistoryPanel({ revisoes, salvando, onSalvar, onRestaurar, onMemorial, onComparar }) {
   const [motivo, setMotivo] = useState("");
   const [aberta, setAberta] = useState(null); // revisão expandida (mostra diff)
 
@@ -59,7 +59,8 @@ export default function HistoryPanel({ revisoes, salvando, onSalvar, onRestaurar
                         <b>{a.nome}</b>: {a.mudancas.map((m) => `${m.campo} ${m.de ?? "—"}→${m.para ?? "—"}`).join(" · ")}
                       </div>
                     ))}
-                    <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+                    <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
+                      <button onClick={(e) => { e.stopPropagation(); onComparar(r.id); }} style={BTN_GHOST}>⇄ Comparar com atual</button>
                       <button onClick={(e) => { e.stopPropagation(); onRestaurar(r.id); }} style={BTN_GHOST}>↺ Restaurar</button>
                       <button onClick={(e) => { e.stopPropagation(); onMemorial(r.id); }} style={BTN_GHOST}>📄 Memorial desta revisão</button>
                     </div>
