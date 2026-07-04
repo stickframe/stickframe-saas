@@ -11,9 +11,10 @@ import { pressaoVento, combinarCargas } from "../../../services/stickfem/cargas"
 import { preDimensionar } from "../../../services/stickfem/preDimensionamento";
 import { auditarPreDimensionamento } from "../../../services/stickfem/auditoria";
 import { montarMemorial, gerarMemorialPDF } from "../../../services/stickfem/memorial";
+import { criarSnapshot, diffSnapshots } from "../../../services/stickfem/revisao/historico";
 import {
   salvarArquivoCad, salvarElementos, salvarAnalise, atualizarStatusProjeto,
-  listarOrcamentosStickFem,
+  listarOrcamentosStickFem, salvarRevisao, listarRevisoes, carregarRevisao,
 } from "../../../services/stickfem/repository";
 
 /**
@@ -178,6 +179,78 @@ export function useProjetoEstrutural({ data, perfis, onReload }) {
     gerarMemorialPDF(memorial);
   }
 
+  function memorialAtual() {
+    const perfil = perfis.find((p) => p.id === perfMont);
+    if (!perfil) return null;
+    const ultimaAprov = (data.aprovacoes || [])[0];
+    return montarMemorial({
+      design: dimParaAuditoria(), projeto,
+      engenheiro: ultimaAprov ? { nome: ultimaAprov.engenheiro_nome, crea: ultimaAprov.engenheiro_crea } : null,
+      aprovacoes: data.aprovacoes || [],
+    });
+  }
+
+  // ── Histórico de Revisões ("Git do projeto estrutural") ─────────────────────
+  const [revisoes, setRevisoes] = useState([]);
+  const [ultimoSnapshot, setUltimoSnapshot] = useState(null);
+  const [salvandoRev, setSalvandoRev] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const lista = await listarRevisoes(projeto.id);
+        setRevisoes(lista);
+        if (lista[0]) { const r = await carregarRevisao(lista[0].id); setUltimoSnapshot(r.snapshot); }
+      } catch { /* silencioso */ }
+    })();
+  }, [projeto.id]);
+
+  function snapshotAtual() {
+    const mem = memorialAtual();
+    return criarSnapshot({
+      elementos, stickScore: stickScoreResult?.score ?? null, conflitos,
+      perfMont, perfGuia, cargas: carga,
+      pesoTotal_kg: quant?.resumo?.pesoTotal_kg ?? null,
+      calcHash: mem?.hash ?? null, engineVersion: mem?.engineVersion ?? null,
+    });
+  }
+
+  async function salvarRevisaoAtual(motivo) {
+    if (!elementos.length) { setErro("Nada para salvar como revisão — importe um DXF."); return; }
+    setSalvandoRev(true); setErro("");
+    try {
+      const snapshot = snapshotAtual();
+      const diff = diffSnapshots(ultimoSnapshot, snapshot);
+      await salvarRevisao(projeto.id, { snapshot, diff, memorial: memorialAtual(), motivo });
+      setUltimoSnapshot(snapshot);
+      setRevisoes(await listarRevisoes(projeto.id));
+      setMsg("Revisão salva.");
+    } catch (err) { setErro("Erro ao salvar revisão: " + (err.message || err)); }
+    finally { setSalvandoRev(false); }
+  }
+
+  async function restaurarRevisao(id) {
+    try {
+      const r = await carregarRevisao(id);
+      if (r?.snapshot?.elementos) {
+        setElementos(r.snapshot.elementos.map((e) => ({ ...e })));
+        if (r.snapshot.perfMont) setPerfMont(r.snapshot.perfMont);
+        if (r.snapshot.perfGuia) setPerfGuia(r.snapshot.perfGuia);
+        if (r.snapshot.cargas) setCarga(r.snapshot.cargas);
+        setUltimoSnapshot(r.snapshot);
+        setMsg(`Revisão #${r.numero} restaurada.`);
+      }
+    } catch (err) { setErro("Erro ao restaurar: " + (err.message || err)); }
+  }
+
+  async function memorialDaRevisao(id) {
+    try {
+      const r = await carregarRevisao(id);
+      if (r?.memorial) gerarMemorialPDF(r.memorial);
+      else setErro("Esta revisão não tem memorial associado (perfil não estava definido).");
+    } catch (err) { setErro("Erro ao emitir memorial: " + (err.message || err)); }
+  }
+
   async function salvarPreDim() {
     if (!predim) return;
     setSavingPd(true);
@@ -257,6 +330,7 @@ export function useProjetoEstrutural({ data, perfis, onReload }) {
     focoElemento, setFocoElemento, aceitarSugestaoRevisao, corrigirManual,
     carga, setC, predim, savingPd, rodarPreDim, salvarPreDim,
     auditoria, abrirAuditoria, fecharAuditoria, gerarMemorial,
+    revisoes, salvandoRev, salvarRevisaoAtual, restaurarRevisao, memorialDaRevisao,
     onDxf, salvarTudo,
   };
 }

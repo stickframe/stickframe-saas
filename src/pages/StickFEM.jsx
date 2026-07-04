@@ -20,6 +20,7 @@ import ReviewAssistant from "../components/StickFEM/components/ReviewAssistant";
 import StickScore from "../components/StickFEM/components/StickScore";
 import ApprovalPanel from "../components/StickFEM/components/ApprovalPanel";
 import AuditPanel from "../components/StickFEM/components/AuditPanel";
+import HistoryPanel from "../components/StickFEM/components/HistoryPanel";
 import EngineeringPlayground from "../components/StickFEM/components/EngineeringPlayground";
 import { StatusBadge, StatusEstrutural, CampoNum, SelPerfil } from "../components/StickFEM/utils/atoms";
 import { CARD, BTN_PRIMARY, BTN_GHOST, INPUT, ERRO, TH, TD } from "../components/StickFEM/utils/styles";
@@ -327,6 +328,12 @@ function ProjetoDetalhe({ data, perfis, onVoltar, onReload }) {
       )}
 
       {s.erro && <div style={ERRO}>{s.erro}</div>}
+
+      {/* Histórico de revisões */}
+      {s.geometria && (
+        <HistoryPanel revisoes={s.revisoes} salvando={s.salvandoRev}
+          onSalvar={s.salvarRevisaoAtual} onRestaurar={s.restaurarRevisao} onMemorial={s.memorialDaRevisao} />
+      )}
 
       {/* Aprovação técnica (Fase 10) */}
       <ApprovalPanel projeto={s.projeto} aprovacoes={data.aprovacoes} onReload={onReload} onGerarMemorial={s.gerarMemorial} />

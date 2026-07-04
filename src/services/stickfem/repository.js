@@ -105,6 +105,48 @@ export async function listarOrcamentosStickFem(projetoId) {
   return data || [];
 }
 
+// ── Histórico de Revisões ────────────────────────────────────────────────────
+export async function salvarRevisao(projetoId, { snapshot, diff, memorial, motivo }) {
+  const empresa_id = getEmpresaId();
+  const { data: me } = await sb.auth.getUser();
+  // próximo número sequencial por projeto
+  const { data: ultima } = await sb.from("stickfem_revisao")
+    .select("numero").eq("projeto_id", projetoId).order("numero", { ascending: false }).limit(1).maybeSingle();
+  const numero = (ultima?.numero || 0) + 1;
+
+  const { data, error } = await sb.from("stickfem_revisao").insert({
+    empresa_id, projeto_id: projetoId, numero,
+    snapshot: snapshot || {}, diff: diff || null,
+    stickscore: snapshot?.stickScore ?? null,
+    stickscore_anterior: diff?.stickScore?.antes ?? null,
+    conflitos_total: snapshot?.conflitosTotal ?? null,
+    conflitos_anterior: diff?.conflitos?.antes ?? null,
+    peso_total_kg: snapshot?.pesoTotal_kg ?? null,
+    memorial: memorial || null,
+    calc_hash: snapshot?.calcHash || memorial?.hash || null,
+    engine_version: snapshot?.engineVersion || memorial?.engineVersion || null,
+    motivo: motivo || null,
+    criado_por: me?.user?.id || null,
+    usuario_nome: me?.user?.email || null,
+  }).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function listarRevisoes(projetoId) {
+  const { data, error } = await sb.from("stickfem_revisao")
+    .select("id, numero, stickscore, stickscore_anterior, conflitos_total, peso_total_kg, calc_hash, engine_version, motivo, usuario_nome, created_at, diff")
+    .eq("projeto_id", projetoId).order("numero", { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+
+export async function carregarRevisao(id) {
+  const { data, error } = await sb.from("stickfem_revisao").select("*").eq("id", id).single();
+  if (error) throw error;
+  return data;
+}
+
 export async function carregarProjeto(id) {
   const [proj, arqs, els, aprovs] = await Promise.all([
     sb.from("projeto_estrutural").select("*").eq("id", id).single(),
