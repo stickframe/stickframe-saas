@@ -19,6 +19,8 @@ import ConflictPanel from "../components/StickFEM/components/ConflictPanel";
 import ReviewAssistant from "../components/StickFEM/components/ReviewAssistant";
 import StickScore from "../components/StickFEM/components/StickScore";
 import ApprovalPanel from "../components/StickFEM/components/ApprovalPanel";
+import AuditPanel from "../components/StickFEM/components/AuditPanel";
+import EngineeringPlayground from "../components/StickFEM/components/EngineeringPlayground";
 import { StatusBadge, StatusEstrutural, CampoNum, SelPerfil } from "../components/StickFEM/utils/atoms";
 import { CARD, BTN_PRIMARY, BTN_GHOST, INPUT, ERRO, TH, TD } from "../components/StickFEM/utils/styles";
 
@@ -28,6 +30,7 @@ export default function StickFEM() {
   const [proj, setProj] = useState(null);        // projeto aberto
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState("");
+  const [aba, setAba] = useState("projetos");    // "projetos" | "playground"
 
   useEffect(() => {
     (async () => {
@@ -66,9 +69,22 @@ export default function StickFEM() {
       </div>
       <Disclaimer />
 
+      {/* Abas: Projetos (fluxo CAD→análise) vs Engineering Playground (bancada) */}
+      <div style={{ display: "flex", gap: 6, marginBottom: 16, borderBottom: "1px solid var(--line)" }}>
+        {[["projetos", "Projetos"], ["playground", "🧪 Engineering Playground"]].map(([k, label]) => (
+          <button key={k} onClick={() => setAba(k)} style={{
+            background: "none", border: "none", borderBottom: `2px solid ${aba === k ? "var(--red, #981915)" : "transparent"}`,
+            color: aba === k ? "var(--text, #26231f)" : "var(--muted)", fontFamily: "inherit", fontSize: 13,
+            fontWeight: aba === k ? 700 : 600, cursor: "pointer", padding: "8px 12px",
+          }}>{label}</button>
+        ))}
+      </div>
+
       {erro && <div style={ERRO}>{erro}</div>}
 
-      {!proj ? (
+      {aba === "playground" ? (
+        <EngineeringPlayground perfis={perfis} />
+      ) : !proj ? (
         <ListaProjetos projetos={projetos} loading={loading} onNovo={novo} onAbrir={abrir} />
       ) : (
         <ProjetoDetalhe
@@ -228,7 +244,8 @@ function ProjetoDetalhe({ data, perfis, onVoltar, onReload }) {
                     modo {s.predim.resumo.modoGovernante} · esbeltez λ={s.predim.resumo.esbeltez}{s.predim.resumo.esbeltezOk ? "" : " ⚠>200"}
                   </span>
                   <span style={{ fontSize: 12, color: "var(--muted)" }}>Vento q={s.predim.vento.q_kN_m2} kN/m² (Vk {s.predim.vento.vk} m/s)</span>
-                  <button onClick={s.salvarPreDim} disabled={s.savingPd} style={{ ...BTN_GHOST, marginLeft: "auto" }}>
+                  <button onClick={s.abrirAuditoria} style={{ ...BTN_GHOST, marginLeft: "auto" }}>🔍 Auditar cálculo</button>
+                  <button onClick={s.salvarPreDim} disabled={s.savingPd} style={BTN_GHOST}>
                     {s.savingPd ? "Salvando…" : "Salvar análise"}
                   </button>
                 </div>
@@ -311,6 +328,9 @@ function ProjetoDetalhe({ data, perfis, onVoltar, onReload }) {
 
       {/* Aprovação técnica (Fase 10) */}
       <ApprovalPanel projeto={s.projeto} aprovacoes={data.aprovacoes} onReload={onReload} />
+
+      {/* Modo Auditoria — memória de cálculo completa */}
+      {s.auditoria && <AuditPanel auditoria={s.auditoria} onClose={s.fecharAuditoria} />}
     </div>
   );
 }

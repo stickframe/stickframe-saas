@@ -1,0 +1,30 @@
+name: Unit & Engine Tests
+
+# Suíte de regressão (Vitest), incluindo o motor de cálculo estrutural do
+# StickFEM™. Roda em todo push e PR. Para bloquear de fato merge/deploy quando
+# falhar, marque este job como "required status check" na proteção do branch
+# main (GitHub → Settings → Branches → Branch protection rules).
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run unit + engine regression tests
+        run: npm test

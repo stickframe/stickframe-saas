@@ -9,6 +9,7 @@ import { gerarOrcamentoEstrutural } from "../../../services/stickfem/orcamentoBr
 import { sugerirPerfisInteligentes } from "../../../services/stickfem/perfilInteligente";
 import { pressaoVento, combinarCargas } from "../../../services/stickfem/cargas";
 import { preDimensionar } from "../../../services/stickfem/preDimensionamento";
+import { auditarPreDimensionamento } from "../../../services/stickfem/auditoria";
 import {
   salvarArquivoCad, salvarElementos, salvarAnalise, atualizarStatusProjeto,
   listarOrcamentosStickFem,
@@ -130,6 +131,24 @@ export function useProjetoEstrutural({ data, perfis, onReload }) {
     setPredim({ ...res, comb, vento: pressaoVento({ v0: Number(carga.v0) || 40 }) });
   }
 
+  // ── Modo "Auditar cálculo" (memória de cálculo completa) ───────────────────
+  const [auditoria, setAuditoria] = useState(null);
+  function abrirAuditoria() {
+    const perfil = perfis.find((p) => p.id === perfMont);
+    if (!perfil) { setErro("Selecione um perfil de montante para auditar."); return; }
+    setAuditoria(auditarPreDimensionamento({
+      perfil, material: { fy_mpa: 250, e_mpa: 200000 },
+      peDireitoM: projeto.pe_direito_m,
+      espacMontanteM: (projeto.espac_montante_mm || 400) / 1000,
+      larguraTributariaM: Number(carga.largTrib) || 0,
+      gPerm_kNm2: Number(carga.gPerm) || 0,
+      qSobre_kNm2: Number(carga.qSobre) || 0,
+      v0_ms: Number(carga.v0) || 40,
+      meta: { projeto: projeto.nome, tipologia },
+    }));
+  }
+  const fecharAuditoria = () => setAuditoria(null);
+
   async function salvarPreDim() {
     if (!predim) return;
     setSavingPd(true);
@@ -207,6 +226,7 @@ export function useProjetoEstrutural({ data, perfis, onReload }) {
     layerCfg, layers, onLayerCfgChange,
     setEl, reprocessar, validarTodas,
     carga, setC, predim, savingPd, rodarPreDim, salvarPreDim,
+    auditoria, abrirAuditoria, fecharAuditoria,
     onDxf, salvarTudo,
   };
 }
