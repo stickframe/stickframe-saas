@@ -19,22 +19,28 @@ export default function ViewerCAD({ geometria, elementos, perfis }) {
   };
 
   const handleElementClick = (el) => {
-    // Fase 2: Detalhes ao clicar & Fase 5: IA Explicável
+    // Fase 2: Detalhes ao clicar & IA Explicável (confiança numérica + fatores).
     const perfilNome = perfis.find(p => p.id === el.perfil_id)?.nome || 'Não atribuído';
-    const motivos = (el.motivosConfianca || ['N/A']).join('\\n  - ');
+    const motivos = (el.motivosConfianca || ['N/A']).join('\n  - ');
+    const fatores = (el.confiancaFatores || [])
+      .map((f) => `  ${f.ativacao > 0 ? '＋' : '－'} ${f.label}: ${f.contribuicao} de ${Math.round(f.peso * 100)} (peso ${f.peso})`)
+      .join('\n');
 
-    const info = `
-      Elemento: ${el.nome}
-      ---------------------------
-      Layer: ${el.layer_origem}
-      Tipo: ${el.tipo}
-      Perfil: ${perfilNome}
-      Comprimento: ${el.comprimento_m?.toFixed(2) || 'N/A'} m
-      Confiança: ${el.confianca}
-      ---------------------------
-      Decisão da IA:
-      - ${motivos}
-    `;
+    const info = [
+      `Elemento: ${el.nome}`,
+      '---------------------------',
+      `Layer: ${el.layer_origem}`,
+      `Tipo: ${el.tipo}`,
+      `Perfil: ${perfilNome}`,
+      `Comprimento: ${el.comprimento_m?.toFixed(2) || 'N/A'} m`,
+      `Confiança: ${el.confiancaScore != null ? el.confiancaScore + '%' : el.confianca} (${el.confianca})`,
+      '---------------------------',
+      'Fatores da confiança (o que somou):',
+      fatores || '  N/A',
+      '---------------------------',
+      'Decisão da IA:',
+      `  - ${motivos}`,
+    ].join('\n');
     alert(info);
   };
 

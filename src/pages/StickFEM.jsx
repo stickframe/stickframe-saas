@@ -180,14 +180,16 @@ function ProjetoDetalhe({ data, perfis, onVoltar, onReload }) {
               <ViewerCAD geometria={s.geometria} elementos={s.elementos} perfis={perfis} />
             </div>
             <div style={{ width: '280px' }}>
-              <ReviewAssistant elementos={s.elementos} conflitos={s.conflitos} />
+              <ReviewAssistant elementos={s.elementos} conflitos={s.conflitos}
+                onAceitarSugestao={s.aceitarSugestaoRevisao} onCorrigir={s.corrigirManual} />
             </div>
           </div>
 
           <LayerSelector layers={s.layers} layerCfg={s.layerCfg} onLayerCfgChange={s.onLayerCfgChange} onReprocessar={s.reprocessar} />
 
           <ElementTable elementos={s.elementos} perfis={perfis} resumo={s.resumo}
-            perfMont={s.perfMont} perfGuia={s.perfGuia} onSetEl={s.setEl} onValidarTodas={s.validarTodas} />
+            perfMont={s.perfMont} perfGuia={s.perfGuia} onSetEl={s.setEl} onValidarTodas={s.validarTodas}
+            foco={s.focoElemento} onFocoConsumido={() => s.setFocoElemento(null)} />
 
           {/* Perfis + Quantitativo */}
           <div style={CARD}>
@@ -327,7 +329,7 @@ function ProjetoDetalhe({ data, perfis, onVoltar, onReload }) {
       {s.erro && <div style={ERRO}>{s.erro}</div>}
 
       {/* Aprovação técnica (Fase 10) */}
-      <ApprovalPanel projeto={s.projeto} aprovacoes={data.aprovacoes} onReload={onReload} />
+      <ApprovalPanel projeto={s.projeto} aprovacoes={data.aprovacoes} onReload={onReload} onGerarMemorial={s.gerarMemorial} />
 
       {/* Modo Auditoria — memória de cálculo completa */}
       {s.auditoria && <AuditPanel auditoria={s.auditoria} onClose={s.fecharAuditoria} />}

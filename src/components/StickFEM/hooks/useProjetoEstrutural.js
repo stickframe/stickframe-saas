@@ -10,6 +10,7 @@ import { sugerirPerfisInteligentes } from "../../../services/stickfem/perfilInte
 import { pressaoVento, combinarCargas } from "../../../services/stickfem/cargas";
 import { preDimensionar } from "../../../services/stickfem/preDimensionamento";
 import { auditarPreDimensionamento } from "../../../services/stickfem/auditoria";
+import { montarMemorial, gerarMemorialPDF } from "../../../services/stickfem/memorial";
 import {
   salvarArquivoCad, salvarElementos, salvarAnalise, atualizarStatusProjeto,
   listarOrcamentosStickFem,
@@ -47,11 +48,11 @@ export function useProjetoEstrutural({ data, perfis, onReload }) {
     if (!geometria) return null;
     const elementosComPerfil = elementos.map((e) => (e.tipo === "parede" ? { ...e, perfil_id: e.perfil_id || perfMont } : e));
 
-    const conflitosDetectados = detectarConflitos({ elementos: elementosComPerfil, geometria });
+    const conflitosDetectados = detectarConflitos({ elementos: elementosComPerfil, geometria, perfis });
     setConflitos(conflitosDetectados);
 
     return computeStickScore({ elementos: elementosComPerfil, geometria, conflitos: conflitosDetectados });
-  }, [elementos, geometria, perfMont]);
+  }, [elementos, geometria, perfMont, perfis]);
 
   const handleScoreClick = () => {
     if (!stickScoreResult) return;
@@ -111,6 +112,18 @@ export function useProjetoEstrutural({ data, perfis, onReload }) {
     setElementos((prev) => prev.map((e) => ({ ...e, validado: true })));
   }
 
+  // ── Assistente de Revisão: ações que realmente alteram o modelo ─────────────
+  const [focoElemento, setFocoElemento] = useState(null);
+  function aceitarSugestaoRevisao(idx) {
+    setElementos((prev) => prev.map((e, i) => {
+      if (i !== idx) return e;
+      const patch = { validado: true, confianca: "alta", confiancaScore: Math.min(100, (e.confiancaScore ?? 60) + 15) };
+      if (e.sugestaoPerfil?.perfil_id_sugerido) patch.perfil_id = e.sugestaoPerfil.perfil_id_sugerido;
+      return { ...e, ...patch };
+    }));
+  }
+  function corrigirManual(idx) { setFocoElemento(idx); }
+
   // ── Fase 5 — cargas + pré-dimensionamento (preliminar) ─────────────────────
   const [carga, setCarga] = useState({ gPerm: 1.5, qSobre: 1.5, largTrib: 2.5, v0: 40 });
   const [predim, setPredim] = useState(null);
@@ -133,10 +146,9 @@ export function useProjetoEstrutural({ data, perfis, onReload }) {
 
   // ── Modo "Auditar cálculo" (memória de cálculo completa) ───────────────────
   const [auditoria, setAuditoria] = useState(null);
-  function abrirAuditoria() {
+  function dimParaAuditoria() {
     const perfil = perfis.find((p) => p.id === perfMont);
-    if (!perfil) { setErro("Selecione um perfil de montante para auditar."); return; }
-    setAuditoria(auditarPreDimensionamento({
+    return {
       perfil, material: { fy_mpa: 250, e_mpa: 200000 },
       peDireitoM: projeto.pe_direito_m,
       espacMontanteM: (projeto.espac_montante_mm || 400) / 1000,
@@ -145,9 +157,26 @@ export function useProjetoEstrutural({ data, perfis, onReload }) {
       qSobre_kNm2: Number(carga.qSobre) || 0,
       v0_ms: Number(carga.v0) || 40,
       meta: { projeto: projeto.nome, tipologia },
-    }));
+    };
+  }
+  function abrirAuditoria() {
+    if (!perfis.find((p) => p.id === perfMont)) { setErro("Selecione um perfil de montante para auditar."); return; }
+    setAuditoria(auditarPreDimensionamento(dimParaAuditoria()));
   }
   const fecharAuditoria = () => setAuditoria(null);
+
+  // ── Memorial de Engenharia (PDF completo, com hash + versão do engine) ──────
+  function gerarMemorial() {
+    const perfil = perfis.find((p) => p.id === perfMont);
+    if (!perfil) { setErro("Selecione um perfil de montante para gerar o memorial."); return; }
+    const ultimaAprov = (data.aprovacoes || [])[0];
+    const memorial = montarMemorial({
+      design: dimParaAuditoria(), projeto,
+      engenheiro: ultimaAprov ? { nome: ultimaAprov.engenheiro_nome, crea: ultimaAprov.engenheiro_crea } : null,
+      aprovacoes: data.aprovacoes || [],
+    });
+    gerarMemorialPDF(memorial);
+  }
 
   async function salvarPreDim() {
     if (!predim) return;
@@ -225,8 +254,9 @@ export function useProjetoEstrutural({ data, perfis, onReload }) {
     orcs, precoKg, setPrecoKg, areaM2, setAreaM2, tipologia, setTipologia, gerando, gerarOrc,
     layerCfg, layers, onLayerCfgChange,
     setEl, reprocessar, validarTodas,
+    focoElemento, setFocoElemento, aceitarSugestaoRevisao, corrigirManual,
     carga, setC, predim, savingPd, rodarPreDim, salvarPreDim,
-    auditoria, abrirAuditoria, fecharAuditoria,
+    auditoria, abrirAuditoria, fecharAuditoria, gerarMemorial,
     onDxf, salvarTudo,
   };
 }

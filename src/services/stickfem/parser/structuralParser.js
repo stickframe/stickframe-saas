@@ -7,6 +7,8 @@
  * camada de IA (StickAI Engineer™) refina isso numa fase posterior.
  */
 
+import { computarConfianca } from "./confianca";
+
 const norm = (s) => (s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 
 const LAYER_HINTS = [
@@ -85,31 +87,30 @@ export function parseEstrutura(geometria, opts = {}) {
     const override = layerConfig[s.layer];
     if (override === "ignorar") continue;
 
-    let tipo, confianca;
+    const layerTipo = classificarPorLayer(s.layer);
+    let tipo;
     const motivosConfianca = [];
 
     if (override) {
       tipo = override;
-      confianca = "alta";
       motivosConfianca.push(`Classificado como '${tipo}' pela configuração do engenheiro.`);
+    } else if (layerTipo) {
+      tipo = layerTipo;
+      motivosConfianca.push(`Reconhecido como '${tipo}' pelo nome do layer ('${s.layer}').`);
     } else {
-      tipo = classificarPorLayer(s.layer);
-      if (tipo) {
-        confianca = "alta";
-        motivosConfianca.push(`Reconhecido como '${tipo}' pelo nome do layer ('${s.layer}').`);
-      } else {
-        // Se não classificou pelo layer, assume parede e ajusta confiança
-        tipo = "parede";
-        if (L > 1.0) { // Segmentos longos são provavelmente paredes
-          confianca = "media";
-          motivosConfianca.push(`Assumido como 'parede' por ter comprimento significativo (${L.toFixed(2)}m).`);
-        } else {
-          confianca = "baixa";
-          motivosConfianca.push(`Assumido como 'parede' com baixa confiança (comprimento curto, layer '${s.layer}' não reconhecido).`);
-        }
-      }
+      tipo = "parede";
+      motivosConfianca.push(L > 1.0
+        ? `Assumido como 'parede' por ter comprimento significativo (${L.toFixed(2)}m).`
+        : `Assumido como 'parede' com baixa confiança (comprimento curto, layer '${s.layer}' não reconhecido).`);
     }
     if (tipo === "eixo") continue;
+
+    // IA Explicável — índice numérico de confiança + fatores/pesos.
+    const conf = computarConfianca({
+      geometriaValida: true, layerReconhecido: !!layerTipo,
+      comprimento_m: L, confirmadoEngenheiro: !!override,
+    });
+    const confianca = conf.nivel;
 
     idx += 1;
     const prefixo = tipo === "parede" ? "P" : tipo === "viga" ? "V" : "E";
@@ -124,7 +125,9 @@ export function parseEstrutura(geometria, opts = {}) {
       altura_m: tipo === "parede" ? peDireito : null,
       layer_origem: s.layer,
       confianca,
-      motivosConfianca, // IA Explicável (Fase 5)
+      confiancaScore: conf.score,       // IA Explicável — índice numérico 0–100
+      confiancaFatores: conf.fatores,   // fatores + pesos que compõem o score
+      motivosConfianca,                 // explicação textual
       quantidade: 1,
       propriedades: {},
     });
@@ -134,12 +137,15 @@ export function parseEstrutura(geometria, opts = {}) {
   for (const b of geometria.blocks || []) {
     if (BLOCK_ABERTURA.test(norm(b.nome))) {
       idx += 1;
+      const confAb = computarConfianca({ geometriaValida: true, layerReconhecido: true, comprimento_m: 0 });
       elementos.push({
         tipo: "abertura",
         nome: `A${idx}`,
         geometria: { x1: +b.x.toFixed(3), y1: +b.y.toFixed(3), x2: +b.x.toFixed(3), y2: +b.y.toFixed(3) },
         comprimento_m: null, altura_m: null, layer_origem: b.layer,
-        confianca: "media",
+        confianca: confAb.nivel,
+        confiancaScore: confAb.score,
+        confiancaFatores: confAb.fatores,
         motivosConfianca: [`Reconhecido como 'abertura' pelo nome do bloco ('${b.nome}').`],
         quantidade: 1, propriedades: { bloco: b.nome },
       });
@@ -154,6 +160,9 @@ export function parseEstrutura(geometria, opts = {}) {
     vigas: elementos.filter((e) => e.tipo === "viga").length,
     aberturas: elementos.filter((e) => e.tipo === "abertura").length,
     comprimentoParedes_m: +paredes.reduce((s, e) => s + (e.comprimento_m || 0), 0).toFixed(2),
+    confiancaScoreMedia: elementos.length
+      ? Math.round(elementos.reduce((s, e) => s + (e.confiancaScore ?? 0), 0) / elementos.length)
+      : 0,
     confiancaGlobal: paredes.length && paredes.every((p) => p.confianca === "baixa") ? "baixa" : "media",
   };
 

@@ -3,7 +3,7 @@ import { registrarAprovacao, atualizarStatusProjeto } from "../../../services/st
 import { CARD, INPUT, BTN_PRIMARY, BTN_GHOST } from "../utils/styles";
 
 // ── 7 · Aprovação técnica (Fase 10) ──────────────────────────────────────────
-export default function ApprovalPanel({ projeto, aprovacoes, onReload }) {
+export default function ApprovalPanel({ projeto, aprovacoes, onReload, onGerarMemorial }) {
   const [nome, setNome] = useState("");
   const [crea, setCrea] = useState("");
   const [obs, setObs] = useState("");
@@ -22,8 +22,13 @@ export default function ApprovalPanel({ projeto, aprovacoes, onReload }) {
 
   return (
     <div style={{ ...CARD, marginTop: 18 }}>
-      <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-muted, #57514a)", marginBottom: 8 }}>
-        7 · Aprovação técnica <span style={{ fontWeight: 400, color: "var(--muted)" }}>(engenheiro revisa → aprova → emite documento)</span>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, gap: 8, flexWrap: "wrap" }}>
+        <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-muted, #57514a)" }}>
+          7 · Aprovação técnica <span style={{ fontWeight: 400, color: "var(--muted)" }}>(engenheiro revisa → aprova → emite documento)</span>
+        </div>
+        {onGerarMemorial && (
+          <button onClick={onGerarMemorial} style={{ ...BTN_PRIMARY, background: "#6d557e" }}>📄 Gerar Memorial</button>
+        )}
       </div>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
         <input placeholder="Engenheiro responsável" value={nome} onChange={(e) => setNome(e.target.value)} style={INPUT} />
