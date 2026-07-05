@@ -11,12 +11,21 @@ import { computarConfianca } from "./confianca";
 
 const norm = (s) => (s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 
-const LAYER_HINTS = [
-  { tipo: "parede",   re: /parede|wall|muro|alvenaria|lsf|steel|montante|vedac/ },
-  { tipo: "viga",     re: /viga|beam|verga|padieira/ },
-  { tipo: "eixo",     re: /eixo|axis|grid|referen/ },
-  { tipo: "abertura", re: /porta|janela|door|window|vao|abertura/ },
-];
+// Classificação por TOKENS do nome do layer (convenções BR/AutoCAD: ARQ-ALV,
+// NV1-ARQ-PAR etc.). Ordem de prioridade: parede > viga > abertura > eixo > ignorar.
+const T_PAREDE   = ["parede", "paredes", "par", "wall", "walls", "muro", "alvenaria", "alv", "lsf", "steel", "montante", "vedacao"];
+const T_VIGA     = ["viga", "vigas", "beam", "verga", "padieira"];
+const T_EIXO     = ["eixo", "eixos", "axis", "grid", "referencia"];
+const T_ABERTURA = ["porta", "portas", "janela", "janelas", "door", "window", "vao", "vaos", "abertura", "esquadria", "esq"];
+// Não-estrutural típico de planta arquitetônica → ignorar por padrão.
+const T_IGNORE   = ["hatch", "texto", "text", "txt", "leg", "legenda", "cota", "cotas", "dim", "mob", "mobiliario",
+  "eqp", "equip", "equipamento", "vis", "pis", "piso", "cob", "forro", "hid", "hidraulica", "ele", "eletrica",
+  "layout", "smb", "simbolo", "cta", "prj", "proj", "edf", "ind", "gra", "opc", "carimbo", "margem", "folha",
+  "xref", "anot", "annot", "detalhe", "det", "htc", "plantas", "hachura"];
+
+function layerTokens(layer) {
+  return norm(layer).split(/[^a-z0-9]+/).filter(Boolean);
+}
 
 const BLOCK_ABERTURA = /porta|janela|door|window/;
 
@@ -44,9 +53,23 @@ function segmentos(geometria) {
 }
 
 function classificarPorLayer(layer) {
-  const n = norm(layer);
-  for (const h of LAYER_HINTS) if (h.re.test(n)) return h.tipo;
-  return null;
+  const toks = layerTokens(layer);
+  const has = (lista) => toks.some((t) => lista.includes(t));
+  if (has(T_PAREDE))   return "parede";
+  if (has(T_VIGA))     return "viga";
+  if (has(T_ABERTURA)) return "abertura";
+  if (has(T_EIXO))     return "eixo";
+  if (has(T_IGNORE))   return "ignorar";
+  return null; // desconhecido — decisão depende do contexto do arquivo
+}
+
+/**
+ * Sugestão default para layer desconhecido: em arquivo arquitetônico (muitos
+ * layers) o seguro é IGNORAR e deixar o engenheiro ligar o que é estrutura;
+ * em arquivo simples (≤3 layers, ex.: só "0") assumimos parede com confiança baixa.
+ */
+function defaultDesconhecido(totalLayers) {
+  return totalLayers > 3 ? "ignorar" : "parede";
 }
 
 /**
@@ -56,12 +79,15 @@ function classificarPorLayer(layer) {
 export function layersDetectados(geometria) {
   const cont = {};
   const push = (layer) => {
-    if (!cont[layer]) cont[layer] = { layer, segmentos: 0, sugerido: classificarPorLayer(layer) || "parede" };
+    if (!cont[layer]) cont[layer] = { layer, segmentos: 0, sugerido: classificarPorLayer(layer) };
     cont[layer].segmentos += 1;
   };
   (geometria.lines || []).forEach((l) => push(l.layer || "0"));
   (geometria.polylines || []).forEach((p) => push(p.layer || "0"));
-  return Object.values(cont).sort((a, b) => b.segmentos - a.segmentos);
+  const lista = Object.values(cont);
+  const def = defaultDesconhecido(lista.length);
+  lista.forEach((l) => { if (!l.sugerido) l.sugerido = def; });
+  return lista.sort((a, b) => b.segmentos - a.segmentos);
 }
 
 /**
@@ -79,6 +105,8 @@ export function parseEstrutura(geometria, opts = {}) {
   let idx = 0;
 
   const layerConfig = opts.layerConfig || {};
+  const totalLayers = new Set(segs.map((s) => s.layer || "0")).size;
+  const def = defaultDesconhecido(totalLayers);
 
   for (const s of segs) {
     const L = dist(s.x1, s.y1, s.x2, s.y2);
@@ -98,12 +126,12 @@ export function parseEstrutura(geometria, opts = {}) {
       tipo = layerTipo;
       motivosConfianca.push(`Reconhecido como '${tipo}' pelo nome do layer ('${s.layer}').`);
     } else {
-      tipo = "parede";
-      motivosConfianca.push(L > 1.0
-        ? `Assumido como 'parede' por ter comprimento significativo (${L.toFixed(2)}m).`
-        : `Assumido como 'parede' com baixa confiança (comprimento curto, layer '${s.layer}' não reconhecido).`);
+      tipo = def;
+      motivosConfianca.push(def === "ignorar"
+        ? `Layer '${s.layer}' não reconhecido — ignorado por padrão (planta com múltiplos layers). Confirme em 'Confirmar layers' se for estrutura.`
+        : `Assumido como 'parede' com baixa confiança (layer '${s.layer}' não reconhecido, arquivo com poucos layers).`);
     }
-    if (tipo === "eixo") continue;
+    if (tipo === "eixo" || tipo === "ignorar") continue;
 
     // IA Explicável — índice numérico de confiança + fatores/pesos.
     const conf = computarConfianca({

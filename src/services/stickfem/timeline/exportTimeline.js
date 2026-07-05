@@ -1,8 +1,8 @@
 /**
  * StickFEM™ — Linha do Tempo: exportação (CSV, JSON, PDF).
  */
-import { printHtml } from "../../utils/printHtml";
-import { LOGO_STICKFRAME } from "../../utils/cdn";
+import { printHtml } from "../../../utils/printHtml";
+import { LOGO_STICKFRAME } from "../../../utils/cdn";
 
 const slug = (s) => String(s || "timeline").replace(/\s+/g, "-").replace(/[^\w-]/g, "").toLowerCase();
 const baixar = (conteudo, nome, mime) => {

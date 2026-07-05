@@ -5,8 +5,8 @@
  */
 import { STATUS_META } from "./diffEngine";
 import { ENGINE_VERSION } from "../engine/version";
-import { printHtml } from "../../utils/printHtml";
-import { LOGO_STICKFRAME } from "../../utils/cdn";
+import { printHtml } from "../../../utils/printHtml";
+import { LOGO_STICKFRAME } from "../../../utils/cdn";
 
 const fmtN = (v, d = 0) => (v == null ? "—" : Number(v).toLocaleString("pt-BR", { minimumFractionDigits: d, maximumFractionDigits: d }));
 const fmtBRL = (v) => (v == null ? "—" : Number(v).toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }));
