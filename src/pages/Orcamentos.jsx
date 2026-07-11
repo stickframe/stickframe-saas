@@ -22,6 +22,7 @@ import CatalogoPicker from "../components/orcamento/CatalogoPicker";
 import { listarStickQuotesDoOrcamento, listarStickQuotesParaVincular, vincularStickQuoteAoOrcamento } from "../services/stickquoteService";
 import KpiCard, { KpiGrid } from "../components/KpiCard";
 import { CATALOGO_PRODUTOS } from "../utils/insumosSF";
+import CalculadoraLeadsCRM from "../components/crm/CalculadoraLeadsCRM";
 
 const _catalogoMap = Object.fromEntries(CATALOGO_PRODUTOS.map(p => [p.id, p]));
 
@@ -1318,7 +1319,6 @@ export default function Orcamentos() {
   const [sqLivres,     setSqLivres]     = useState([]);
   const [sqSel,        setSqSel]        = useState("");
   const [calculadora,  setCalculadora]  = useState(false);
-  const [preOrcamentos, setPreOrcamentos] = useState([]);
   const [preOrcAtivo, setPreOrcAtivo] = useState(null); // ID do lead sendo convertido
   const [estimativo, setEstimativoRaw] = useState(() => {
     try {
@@ -1330,17 +1330,26 @@ export default function Orcamentos() {
   const [estimativoAberto, setEstimativoAberto] = useState(false);
   const [memorialOrcamento, setMemorialOrcamento] = useState(null);
 
-  // Carrega pré-orçamentos novos
-  useEffect(() => {
-    const empId = getEmpresaId();
-    if (!empId) return;
-    sb.from("pre_orcamentos")
-      .select("*")
-      .eq("empresa_id", empId)
-      .eq("status", "Novo")
-      .order("created_at", { ascending: false })
-      .then(({ data }) => setPreOrcamentos(data || []));
-  }, []);
+  const handleConvertLead = (p) => {
+    let clienteId = p.cliente_id;
+    if (!clienteId) {
+      const existing = clientes.find((c) => c.contato === p.contato || c.nome === p.nome);
+      clienteId = existing?.id || clientes[0]?.id || "";
+    }
+    const leadPadrao = p.padrao || "Padrão";
+    const leadPreco = PRECOS[leadPadrao] || PRECOS["Padrão"];
+    setForm({
+      ...FORM_VAZIO,
+      cliente_id: clienteId,
+      area: p.area_m2 || p.area || 48,
+      padrao: leadPadrao,
+      valor_m2_custom: leadPreco ? leadPreco.m2 : 3500,
+      unidades: 1,
+      origem: p.origem || "Calculadora",
+    });
+    setPreOrcAtivo(p.id);
+    setModal("novo");
+  };
 
   // Realtime local (broadcast) e database changes para orçamentos aceitos online
   useEffect(() => {
@@ -1451,10 +1460,9 @@ export default function Orcamentos() {
       origem:     form.origem || "Manual",
       status_funil: "orcamento_criado",
       ultima_interacao: new Date().toISOString(),
+      lead_id:    preOrcAtivo || null,
     });
     if (preOrcAtivo) {
-      sb.from("pre_orcamentos").update({ status: "Analisado" }).eq("id", preOrcAtivo).then(() => {});
-      setPreOrcamentos((prev) => prev.filter((x) => x.id !== preOrcAtivo));
       setPreOrcAtivo(null);
     }
     setModal(false);
@@ -2004,104 +2012,8 @@ export default function Orcamentos() {
           </div>
         </div>
 
-        {/* Pré-orçamentos da calculadora */}
-        {preOrcamentos.length > 0 && (
-          <div style={{ background: "#3f7a4b11", border: "1px solid #3f7a4b44", borderRadius: 12, padding: "16px 20px", marginBottom: 20 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-              <div>
-                <div style={{ fontSize: 14, fontWeight: 800, color: "#3f7a4b" }}><Bell size={13} /> {preOrcamentos.length} pré-orçamento(s) novo(s)</div>
-                <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>Leads da calculadora aguardando sua análise</div>
-              </div>
-            </div>
-            {preOrcamentos.map((p) => {
-              const kitId = p.origem?.startsWith("Kit-") ? p.origem.replace("Kit-", "") : null;
-              const KIT_NOMES = { studio: "Studio Compact 42m²", vila: "Vila 78m²", casa120: "Casa Serena 120m²", sobrado160: "Sobrado Vivo 160m²", alto200: "Residência Alto 200m²", vigo273: "Casa Vigo 273m²" };
-              const kitNome = kitId ? KIT_NOMES[kitId] : null;
-              return (
-              <div key={p.id} style={{ background: C.surface, border: `1px solid ${kitId ? "#981915" : C.border}`, borderRadius: 8, padding: "12px 16px", marginBottom: 8 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2, flexWrap: "wrap" }}>
-                      <span style={{ fontSize: 13, fontWeight: 700 }}>{p.nome}</span>
-                      {(() => { const t = temperaturaLead(p); return (
-                        <span title={`Lead ${t.nivel} (score ${t.score}/6)`} style={{ fontSize: 10, fontWeight: 800, background: t.cor + "18", color: t.cor, borderRadius: 4, padding: "2px 7px", border: `1px solid ${t.cor}33` }}>
-                          {t.icon} {t.nivel}
-                        </span>
-                      ); })()}
-                      {(() => { const b = origemBadge(p.origem); return (
-                        <span title={`Origem: ${b.label}`} style={{ fontSize: 10, fontWeight: 700, background: b.cor + "14", color: b.cor, borderRadius: 4, padding: "2px 7px", border: `1px solid ${b.cor}2e` }}>
-                          {b.dot} {b.label}
-                        </span>
-                      ); })()}
-                      {kitNome && (
-                        <span style={{ fontSize: 10, fontWeight: 800, background: "#98191518", color: "#981915", borderRadius: 4, padding: "2px 7px", border: "1px solid #98191533" }}>
-                           Kit: {kitNome}
-                        </span>
-                      )}
-                    </div>
-                    <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>
-                      {p.area}m² · {p.padrao} · {p.pavimentos || "—"} · {p.cidade || "—"}
-                    </div>
-                    <div style={{ fontSize: 11, color: "#3f7a4b", marginTop: 2, fontWeight: 700 }}>
-                      R$ {Number(p.valor_min).toLocaleString("pt-BR")} – R$ {Number(p.valor_max).toLocaleString("pt-BR")}
-                    </div>
-                    <div style={{ fontSize: 10, color: C.muted, marginTop: 2 }}>
-                      {new Date(p.created_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })} · {p.contato}
-                    </div>
-                  </div>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 6, flexShrink: 0 }}>
-                    {kitId && (
-                      <button onClick={() => {
-                        localStorage.setItem("sf_kit_lead", JSON.stringify({ kitId, padrao: p.padrao }));
-                        setActivePage("calculadora");
-                      }} style={{ background: "#98191518", border: "1px solid #98191544", borderRadius: 6, color: "#981915", fontSize: 11, fontWeight: 700, padding: "6px 12px", cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap" }}>
-                         Simular na Calculadora
-                      </button>
-                    )}
-                    <button onClick={() => {
-                      let clienteId = p.cliente_id;
-                      if (!clienteId) {
-                        const existing = clientes.find((c) => c.contato === p.contato || c.nome === p.nome);
-                        clienteId = existing?.id || clientes[0]?.id || "";
-                      }
-                      const leadPadrao = p.padrao || "Padrão";
-                      const leadPreco = PRECOS[leadPadrao] || PRECOS["Padrão"];
-                      setForm({
-                        ...FORM_VAZIO,
-                        cliente_id: clienteId,
-                        area: p.area_m2 || p.area || 48,
-                        padrao: leadPadrao,
-                        valor_m2_custom: leadPreco ? leadPreco.m2 : 3500,
-                        unidades: 1,
-                        origem: p.origem || "Calculadora",
-                      });
-                      setPreOrcAtivo(p.id);
-                      setModal("novo");
-                    }} style={{ background: "#3f7a4b22", border: "1px solid #3f7a4b44", borderRadius: 6, color: "#3f7a4b", fontSize: 11, fontWeight: 700, padding: "6px 12px", cursor: "pointer", fontFamily: "inherit" }}>
-                       Criar Orçamento
-                    </button>
-                    <div style={{ display: "flex", gap: 6 }}>
-                      <button onClick={async () => {
-                        await sb.from("pre_orcamentos").update({ status: "Analisado" }).eq("id", p.id);
-                        setPreOrcamentos((prev) => prev.filter((x) => x.id !== p.id));
-                      }} style={{ background: "#99999918", border: "1px solid #99999933", borderRadius: 6, color: "#999", fontSize: 11, fontWeight: 700, padding: "5px 10px", cursor: "pointer", fontFamily: "inherit", flex: 1 }}>
-                         Dispensar
-                      </button>
-                      <button onClick={() => {
-                        const num = (p.contato || "").replace(/\D/g, "");
-                        const msg = `Olá ${p.nome}! \n\nRecebi sua simulação de Steel Frame${kitNome ? ` — ${kitNome}` : ` (${p.area}m² · ${p.padrao})`}.\n\nVou preparar uma proposta detalhada para você. Posso entrar em contato agora?\n\nStick Frame · Santo André/SP`;
-                        window.open(`https://wa.me/${num.startsWith("55") ? num : "55" + num}?text=${encodeURIComponent(msg)}`, "_blank");
-                      }} style={{ background: "#3f7a4b22", border: "1px solid #3f7a4b44", borderRadius: 6, color: "#3f7a4b", fontSize: 11, fontWeight: 700, padding: "5px 10px", cursor: "pointer", fontFamily: "inherit", flex: 1 }}>
-                        <Smartphone size={13} />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              );
-            })}
-          </div>
-        )}
+        {/* CRM de Leads da Calculadora Pública */}
+        <CalculadoraLeadsCRM onConvertLead={handleConvertLead} />
 
         {/* Estimativo aplicado */}
         {estimativo && (

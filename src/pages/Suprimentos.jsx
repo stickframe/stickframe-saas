@@ -11,6 +11,8 @@ import {
 } from "../services/repositories/suprimentosRepository";
 import { sb, getEmpresaId } from "../services/supabase";
 import { exportarPedidosExcel, exportarEstoqueExcel } from "../utils/exportExcel";
+import { publishEvent } from "../hooks/useEventBus";
+import { EVENT_TYPES, ORIGIN_MODULES, VISIBILITY_LEVELS } from "../utils/eventTypes";
 
 const URGENCIAS     = ["Normal", "Urgente", "Crítico"];
 const STATUS_PED    = ["Pendente", "Aprovado", "Em trânsito", "Entregue", "Cancelado"];
@@ -60,7 +62,7 @@ export default function Suprimentos() {
   const [confirm, setConfirm]         = useState(null);
 
   const loadObras = useCallback(async () => {
-    const { data } = await sb.from("obras").select("id,nome").eq("empresa_id", getEmpresaId()).order("nome");
+    const { data } = await sb.from("obras").select("id,nome,stickflow_id").eq("empresa_id", getEmpresaId()).order("nome");
     setObras(data || []);
   }, []);
 
@@ -116,8 +118,52 @@ export default function Suprimentos() {
       quantidade: Number(pedForm.quantidade),
       valor_unitario: pedForm.valor_unitario ? Number(pedForm.valor_unitario) : null,
     };
-    if (pedEdit) await atualizarPedido(pedEdit, payload); else await criarPedido(payload);
-    setPedModal(false); loadPedidos();
+
+    const anterior = pedEdit ? pedidos.find((p) => p.id === pedEdit) : null;
+    let data;
+
+    if (pedEdit) {
+      data = await atualizarPedido(pedEdit, payload);
+    } else {
+      data = await criarPedido(payload);
+    }
+
+    setPedModal(false);
+    loadPedidos();
+
+    // Fase 3: Publicar eventos no Event Bus
+    if (payload.obra_id) {
+      const obraRecord = obras.find((o) => o.id === payload.obra_id);
+      const stickflowId = obraRecord?.stickflow_id;
+      if (stickflowId) {
+        try {
+          const statusMudou = !anterior || anterior.status !== data.status;
+          if (statusMudou) {
+            if (data.status === "Aprovado" || data.status === "Em trânsito") {
+              await publishEvent({
+                type: EVENT_TYPES.COMPRA_REALIZADA,
+                stickflowId,
+                payload: { pedido_id: data.id, item: data.item, quantidade: data.quantidade, valor_total: (data.quantidade * (data.valor_unitario || 0)) },
+                originModule: ORIGIN_MODULES.SUPRIMENTOS,
+                visibility: VISIBILITY_LEVELS.INTERNO,
+                descricao: `Ordem de compra aprovada para ${data.quantidade}x ${data.item}`
+              });
+            } else if (data.status === "Entregue") {
+              await publishEvent({
+                type: EVENT_TYPES.MATERIAL_RECEBIDO,
+                stickflowId,
+                payload: { pedido_id: data.id, item: data.item, quantidade: data.quantidade },
+                originModule: ORIGIN_MODULES.SUPRIMENTOS,
+                visibility: VISIBILITY_LEVELS.INTERNO,
+                descricao: `Material recebido no canteiro: ${data.quantidade}x ${data.item}`
+              });
+            }
+          }
+        } catch (err) {
+          console.error("[Suprimentos] Erro ao publicar evento de compra/recebimento:", err);
+        }
+      }
+    }
   }
 
   //  Dar entrada no estoque 
@@ -135,6 +181,27 @@ export default function Suprimentos() {
       obs: `Entrada via pedido: ${ped.item}${ped.obra?.nome ? ` — ${ped.obra.nome}` : ""}`,
     });
     await sb.from("suprimentos_estoque").update({ quantidade: item.quantidade + qtd }).eq("id", item.id);
+
+    // Fase 3: Disparar evento MATERIAL_RECEBIDO
+    if (ped.obra_id) {
+      const obraRecord = obras.find((o) => o.id === ped.obra_id);
+      const stickflowId = obraRecord?.stickflow_id;
+      if (stickflowId) {
+        try {
+          await publishEvent({
+            type: EVENT_TYPES.MATERIAL_RECEBIDO,
+            stickflowId,
+            payload: { pedido_id: ped.id, item: ped.item, quantidade: qtd },
+            originModule: ORIGIN_MODULES.SUPRIMENTOS,
+            visibility: VISIBILITY_LEVELS.INTERNO,
+            descricao: `Material entregue no canteiro via estoque: ${qtd}x ${ped.item}`
+          });
+        } catch (err) {
+          console.error("[Suprimentos] Erro ao disparar MATERIAL_RECEBIDO no darEntrada:", err);
+        }
+      }
+    }
+
     setEntradaModal(null);
     setEntradaEstoqueId("");
     loadPedidos();

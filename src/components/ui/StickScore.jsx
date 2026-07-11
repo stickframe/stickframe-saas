@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { STICK_SCORE_DIMENSOES, STICK_SCORE_EXEC_DIMENSOES, carregarHistoricoScore, gerarInsights } from "../../utils/stickScore";
+import { STICK_SCORE_DIMENSOES, STICK_SCORE_EXEC_DIMENSOES, carregarHistoricoScore, gerarInsights, calcularStickScoreEngenharia } from "../../utils/stickScore";
+import { sb, getEmpresaId } from "../../services/supabase";
 import useAppStore from "../../store/useAppStore";
 import ModalUpgradePro from "./ModalUpgradePro";
 
@@ -312,32 +313,77 @@ export function StickScoreHero({ obras, financeiroPorObra = {} }) {
   const plano = useAppStore(s => s.user?.plano);
   const [showUpgrade, setShowUpgrade] = useState(false);
 
+  // Carregar outros slices
+  const orcamentos = useAppStore(s => s.orcamentos || []);
+  const allBimModelos = useAppStore(s => s.bimModelos || {});
+  const allVistorias = useAppStore(s => s.vistorias || {});
+  const horasTrabalhadas = useAppStore(s => s.horasTrabalhadas || []);
+  const stickflows = useAppStore(s => s.stickflows || []);
+  const [pedidos, setPedidos] = useState([]);
+
+  useEffect(() => {
+    const empId = getEmpresaId();
+    if (!empId) return;
+    sb.from("suprimentos_pedidos")
+      .select("*")
+      .eq("empresa_id", empId)
+      .then(({ data }) => {
+        if (data) setPedidos(data);
+      });
+  }, [empresaId]);
+
   const obrasAtivas = obras.filter(o => o.status === "Em andamento");
   if (obrasAtivas.length === 0) return null;
 
-  // Score médio ponderado pelo valor do contrato
-  const scores = obrasAtivas.map(o => {
+  // 1. StickScore Comercial/Operacional (Média ponderada)
+  const scoresComercial = obrasAtivas.map(o => {
     const fins = Object.values(financeiroPorObra[o.id] || {}).flat?.() ||
                  (financeiroPorObra[o.id]?.lancamentos || []);
     return calcularStickScoreLocal(o, fins);
   });
 
-  const totalPeso = obrasAtivas.reduce((s, o) => s + (o.contrato || 1), 0);
-  const scoreGlobal = Math.round(
-    scores.reduce((s, sc, i) => s + sc.total * ((obrasAtivas[i].contrato || 1) / totalPeso), 0)
+  const totalContratos = obrasAtivas.reduce((s, o) => s + (o.contrato || 1), 0);
+  const scoreComercialGlobal = Math.round(
+    scoresComercial.reduce((s, sc, i) => s + sc.total * ((obrasAtivas[i].contrato || 1) / totalContratos), 0)
   );
 
-  // Delta: compara com histórico de cada obra
-  const deltas = obrasAtivas.map((o, i) => {
-    const hist = carregarHistoricoScore(empresaId, o.id);
-    if (hist.length < 2) return null;
-    return hist[hist.length - 1].total - hist[hist.length - 2].total;
-  }).filter(d => d !== null);
-  const deltaGlobal = deltas.length > 0
-    ? Math.round(deltas.reduce((s, d) => s + d, 0) / deltas.length)
-    : null;
+  // 2. StickScore Engenharia (Média ponderada)
+  const scoresEngenharia = obrasAtivas.map(o => {
+    const flow = stickflows.find(f => f.id === o.stickflow_id || f.obra_id === o.id);
+    const fins = Object.values(financeiroPorObra[o.id] || {}).flat?.() ||
+                 (financeiroPorObra[o.id]?.lancamentos || []);
+    const orc = orcamentos.find(or => or.id === o.orcamento_id || or.cliente_id === o.cliente_id);
+    const bim = allBimModelos[o.id] || [];
+    const vist = allVistorias[o.id] || [];
+    const pts = horasTrabalhadas.filter(h => h.obra_id === o.id);
+    const comps = pedidos.filter(p => p.obra_id === o.id);
 
-  const { nivel, cor } = classGlobal(scoreGlobal);
+    return calcularStickScoreEngenharia(flow, {
+      financeiro: fins,
+      orcamento: orc,
+      bimModelos: bim,
+      vistorias: vist,
+      pontos: pts,
+      compras: comps
+    });
+  });
+
+  const scoreEngenhariaGlobal = Math.round(
+    scoresEngenharia.reduce((s, sc, i) => s + sc.total * ((obrasAtivas[i].contrato || 1) / totalContratos), 0)
+  );
+
+  // Médias das sub-dimensões da Engenharia para exibição consolidada
+  const dimMedias = {
+    financeiro: Math.round(scoresEngenharia.reduce((s, sc) => s + sc.scores.financeiro, 0) / scoresEngenharia.length),
+    bim: Math.round(scoresEngenharia.reduce((s, sc) => s + sc.scores.bim, 0) / scoresEngenharia.length),
+    cronograma: Math.round(scoresEngenharia.reduce((s, sc) => s + sc.scores.cronograma, 0) / scoresEngenharia.length),
+    compras: Math.round(scoresEngenharia.reduce((s, sc) => s + sc.scores.compras, 0) / scoresEngenharia.length),
+    produtividade: Math.round(scoresEngenharia.reduce((s, sc) => s + sc.scores.produtividade, 0) / scoresEngenharia.length),
+    qualidade: Math.round(scoresEngenharia.reduce((s, sc) => s + sc.scores.qualidade, 0) / scoresEngenharia.length),
+  };
+
+  const { nivel: nivelComercial, cor: corComercial } = classGlobal(scoreComercialGlobal);
+  const { nivel: nivelEngenharia, cor: corEngenharia } = classGlobal(scoreEngenhariaGlobal);
 
   if (plano === "free") {
     return (
@@ -367,56 +413,90 @@ export function StickScoreHero({ obras, financeiroPorObra = {} }) {
   return (
     <div style={{
       background: "linear-gradient(135deg, #0f0f14 0%, #1a1a2e 100%)",
-      borderRadius: 16, padding: "20px 24px", marginBottom: 20,
-      border: `1px solid ${cor}30`, boxShadow: `0 4px 24px ${cor}15`,
-      display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap",
+      borderRadius: 16, padding: "24px 28px", marginBottom: 20,
+      border: "1px solid rgba(255,255,255,0.06)", 
+      boxShadow: "0 10px 30px rgba(0,0,0,0.25)",
+      display: "flex", flexDirection: "column", gap: 20
     }}>
-      {/* Anel */}
-      <div style={{ position: "relative", display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-        <ScoreRing total={scoreGlobal} cor={cor} size={72} />
-        <div style={{ position: "absolute", textAlign: "center" }}>
-          <div style={{ fontSize: 20, fontWeight: 900, color: cor, lineHeight: 1 }}>{scoreGlobal}</div>
-          <div style={{ fontSize: 7, color: "rgba(255,255,255,0.35)" }}>/ 100</div>
+      {/* Cabeçalho */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div>
+          <h2 style={{ fontSize: 18, fontWeight: 800, color: "#fff", margin: 0, letterSpacing: 0.5 }}>StickScore™ Geral da Empresa</h2>
+          <p style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", margin: "4px 0 0 0" }}>Consolidado de {obrasAtivas.length} obra{obrasAtivas.length !== 1 ? "s" : ""} ativas</p>
         </div>
+        <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", backgroundColor: "rgba(255,255,255,0.05)", padding: "4px 10px", borderRadius: 20, color: "rgba(255,255,255,0.6)" }}>
+          Diretoria
+        </span>
       </div>
 
-      {/* Texto */}
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 2, color: cor, textTransform: "uppercase", marginBottom: 2 }}>
-          StickScore™
-        </div>
-        <div style={{ display: "flex", alignItems: "baseline", gap: 10, flexWrap: "wrap" }}>
-          <span style={{ fontSize: 20, fontWeight: 900, color: "#fff" }}>{nivel}</span>
-          {deltaGlobal !== null && (
-            <span style={{
-              fontSize: 13, fontWeight: 700,
-              color: deltaGlobal >= 0 ? "#6ee7b7" : "#fca5a5",
-            }}>
-              {deltaGlobal >= 0 ? "↑ +" : "↓ "}{deltaGlobal} pts nos últimos 30 dias
-            </span>
-          )}
-        </div>
-        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 3 }}>
-          Média ponderada de {obrasAtivas.length} obra{obrasAtivas.length !== 1 ? "s" : ""} ativas
-        </div>
-      </div>
-
-      {/* Mini score por obra */}
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-        {obrasAtivas.slice(0, 4).map((o, i) => {
-          const sc = scores[i];
-          return (
-            <div key={o.id} style={{
-              background: sc.cor + "18", border: `1px solid ${sc.cor}30`,
-              borderRadius: 10, padding: "8px 12px", textAlign: "center", minWidth: 56,
-            }}>
-              <div style={{ fontSize: 16, fontWeight: 900, color: sc.cor }}>{sc.total}</div>
-              <div style={{ fontSize: 9, color: "rgba(255,255,255,0.4)", marginTop: 2, maxWidth: 60, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {o.nome}
-              </div>
+      {/* Grid de Scores (Comercial vs Engenharia) */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 24, borderBottom: "1px solid rgba(255,255,255,0.08)", paddingBottom: 20 }}>
+        
+        {/* Score Comercial */}
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          <div style={{ position: "relative", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+            <ScoreRing total={scoreComercialGlobal} cor={corComercial} size={76} />
+            <div style={{ position: "absolute", textAlign: "center" }}>
+              <div style={{ fontSize: 20, fontWeight: 900, color: corComercial }}>{scoreComercialGlobal}</div>
+              <div style={{ fontSize: 7, color: "rgba(255,255,255,0.35)" }}>/ 100</div>
             </div>
-          );
-        })}
+          </div>
+          <div>
+            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1.5, color: corComercial, textTransform: "uppercase" }}>StickScore™ Comercial</div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: "#fff", marginTop: 2 }}>{nivelComercial}</div>
+            <p style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", margin: "2px 0 0 0", lineHeight: 1.3 }}>Performance comercial, prazos e faturamento.</p>
+          </div>
+        </div>
+
+        {/* Score Engenharia */}
+        <div style={{ display: "flex", alignItems: "center", gap: 16, borderLeft: "1px solid rgba(255,255,255,0.08)", paddingLeft: 24 }}>
+          <div style={{ position: "relative", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+            <ScoreRing total={scoreEngenhariaGlobal} cor={corEngenharia} size={76} />
+            <div style={{ position: "absolute", textAlign: "center" }}>
+              <div style={{ fontSize: 20, fontWeight: 900, color: corEngenharia }}>{scoreEngenhariaGlobal}</div>
+              <div style={{ fontSize: 7, color: "rgba(255,255,255,0.35)" }}>/ 100</div>
+            </div>
+          </div>
+          <div>
+            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1.5, color: corEngenharia, textTransform: "uppercase" }}>StickScore Engenharia™</div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: "#fff", marginTop: 2 }}>{nivelEngenharia}</div>
+            <p style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", margin: "2px 0 0 0", lineHeight: 1.3 }}>Performance física, desvios BIM, produtividade e qualidade.</p>
+          </div>
+        </div>
+
+      </div>
+
+      {/* Sub-Dimensões Consolidadas da Engenharia */}
+      <div>
+        <div style={{ fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.35)", letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 12 }}>
+          Detalhamento de Engenharia (Eixos de Performance)
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: 12 }}>
+          {[
+            { label: "Desvio Financeiro", score: dimMedias.financeiro, peso: "35%" },
+            { label: "Quantitativos BIM", score: dimMedias.bim, peso: "20%" },
+            { label: "Cronograma", score: dimMedias.cronograma, peso: "15%" },
+            { label: "Compras", score: dimMedias.compras, peso: "10%" },
+            { label: "Produtividade", score: dimMedias.produtividade, peso: "10%" },
+            { label: "Qualidade", score: dimMedias.qualidade, peso: "10%" },
+          ].map((d, i) => {
+            const { cor } = classGlobal(d.score);
+            return (
+              <div key={i} style={{ backgroundColor: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 8, padding: "8px 12px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                  <span style={{ fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.6)" }}>{d.label}</span>
+                  <span style={{ fontSize: 8, color: "rgba(255,255,255,0.3)" }}>{d.peso}</span>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontSize: 14, fontWeight: 800, color: cor }}>{d.score}</span>
+                  <div style={{ height: 4, flex: 1, backgroundColor: "rgba(255,255,255,0.08)", borderRadius: 2, overflow: "hidden" }}>
+                    <div style={{ height: "100%", width: `${d.score}%`, backgroundColor: cor, borderRadius: 2 }} />
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

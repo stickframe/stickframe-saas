@@ -22,6 +22,7 @@ import { useToast } from "../hooks/useToast";
 import { C, FASES } from "../utils/constants";
 import { calcularStickScore } from "../utils/stickScore";
 import { StickScoreCard } from "../components/ui/StickScore";
+import StickFlowTimeline from "../components/ui/StickFlowTimeline";
 import { exportarObrasExcel } from "../utils/exportExcel";
 import useAppStore from "../store/useAppStore";
 import { useModuleLoad } from "../hooks/useModuleLoad";
@@ -1910,7 +1911,7 @@ export default function GestaoObras() {
                 {/* Abas */}
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: `1px solid ${C.border}` }}>
                 <div style={{ display: "flex", flex: 1, overflowX: "auto", scrollbarWidth: "thin" }}>
-                  {[["fases", "Fases"], ["tarefas", " Tarefas"], ["boas_praticas", "Boas Práticas"], ["financeiro", "Financeiro"], ["fluxo", "Fluxo"], ["cronograma", "Cronograma"], ["diario", "Diário"], ["quantitativos", "Quantitativos"], ["fotos", "Fotos"], ["arquivos", "Arquivos"], ["ncr", "NCR"], ["rfis", "RFIs"], ["rastreio", "Rastreio"], ["historico", "Histórico"], ...(obra.status === "Concluída" ? [["garantia", "Garantia"]] : []), ["garantias", "Garantias"], ...(perfil === "diretor" ? [["membros", "Membros"]] : []), ["presenca", "Presença"], ["comentarios", "Comentários"], ["chat", " Chat"]].map(([k, l]) => (
+                  {[["fases", "Fases"], ["tarefas", " Tarefas"], ["boas_praticas", "Boas Práticas"], ["financeiro", "Financeiro"], ["fluxo", "Fluxo"], ["cronograma", "Cronograma"], ["diario", "Diário"], ["quantitativos", "Quantitativos"], ["fotos", "Fotos"], ["arquivos", "Arquivos"], ["ncr", "NCR"], ["rfis", "RFIs"], ["rastreio", "Rastreio"], ["historico", "Histórico"], ["timeline", "Timeline (StickFlow™)"], ...(obra.status === "Concluída" ? [["garantia", "Garantia"]] : []), ["garantias", "Garantias"], ...(perfil === "diretor" ? [["membros", "Membros"]] : []), ["presenca", "Presença"], ["comentarios", "Comentários"], ["chat", " Chat"]].map(([k, l]) => (
                     <button key={k} onClick={() => {
                       if (k === "diario" && userId) {
                         const pendentes = arqObra.filter((a) => a.disciplina && a.status_doc !== "Desatualizado" && !(a.cientes_uids || []).includes(userId));
@@ -2516,6 +2517,21 @@ export default function GestaoObras() {
                     })}
                   </div>
                 )}
+
+                {/* ABA TIMELINE (STICKFLOW) */}
+                {abaAtiva === "timeline" && (
+                  <div style={{ background: C.surface, borderRadius: "0 0 12px 12px", border: `1px solid ${C.border}`, borderTop: "none", padding: 22 }}>
+                    <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 16, color: C.text }}>Timeline da Jornada (StickFlow™)</h3>
+                    {obra?.stickflow_id ? (
+                      <StickFlowTimeline stickflowId={obra.stickflow_id} portalMode={false} />
+                    ) : (
+                      <div style={{ textAlign: "center", padding: 30, color: C.muted, fontStyle: "italic", fontSize: 13 }}>
+                        Nenhuma jornada do StickFlow associada a esta obra.
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* ABA RASTREIO */}
                 {abaAtiva === "rastreio" && (() => {
                   const BASE = window.location.origin;

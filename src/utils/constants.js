@@ -165,3 +165,15 @@ export const COR_TIPO_EVENTO = {
 //  CLIMAS 
 export const CLIMAS = [" Ensolarado"," Nublado"," Chuvoso"," Tempestade"," Neblina"];
 export const TURNOS = ["Manhã","Tarde","Integral"];
+
+//  STATUS DE LEAD (CRM)
+export const LEAD_STATUS = {
+  NOVO: "Novo",
+  ATENDIMENTO: "Em Atendimento",
+  ORCAMENTO: "Orçamento Enviado",
+  NEGOCIACAO: "Negociação",
+  CONVERTIDO: "Convertido",
+  PERDIDO: "Perdido",
+  ARQUIVADO: "Arquivado",
+};
+

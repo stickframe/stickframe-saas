@@ -11,6 +11,8 @@ import StickQuoteDWGModal from "../components/bim/StickQuoteDWGModal";
 import StickQuoteVisionModal from "../components/bim/StickQuoteVisionModal";
 import { useToast } from "../components/ui/Toast";
 import { criarOrcamento } from "../services/repositories/orcamentoRepository";
+import { publishEvent } from "../hooks/useEventBus";
+import { EVENT_TYPES, ORIGIN_MODULES, VISIBILITY_LEVELS } from "../utils/eventTypes";
 
 const PATHS = {
   cube3d:  <><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></>,
@@ -198,6 +200,11 @@ function TabModelos({ obraId, empresaId, modelos, carregarModelos, deletando, se
   const [uploading, setUploading] = useState(false);
   const [erroUpload, setErroUpload] = useState(null);
 
+  // Fase 3: Obter a obra para achar o stickflow_id
+  const obras = useAppStore((s) => s.obras);
+  const obra = obras?.find((o) => o.id === obraId);
+  const stickflowId = obra?.stickflow_id;
+
   async function handleFile(e) {
     const file = e.target.files[0];
     if (!file) return;
@@ -205,8 +212,20 @@ function TabModelos({ obraId, empresaId, modelos, carregarModelos, deletando, se
     setErroUpload(null);
     try {
       const { path, publicUrl } = await uploadIFC(obraId, empresaId, file);
-      await criarModelo({ obra_id: obraId, nome: file.name, storage_path: path, url: publicUrl });
+      const data = await criarModelo({ obra_id: obraId, nome: file.name, storage_path: path, url: publicUrl });
       await carregarModelos();
+
+      // Fase 3: Publicar evento de IFC importado
+      if (stickflowId) {
+        await publishEvent({
+          type: EVENT_TYPES.IFC_IMPORTADO,
+          stickflowId: stickflowId,
+          payload: { model_id: data.id, model_name: file.name, size: file.size || 0 },
+          originModule: ORIGIN_MODULES.BIM,
+          visibility: VISIBILITY_LEVELS.INTERNO,
+          descricao: `Modelo BIM IFC "${file.name}" importado com sucesso`
+        });
+      }
     } catch (err) {
       console.error(err);
       setErroUpload(err?.message || String(err));

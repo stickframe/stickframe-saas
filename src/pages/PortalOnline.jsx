@@ -4,6 +4,7 @@ import { sb } from "../services/supabase";
 import { FASES } from "../utils/constants";
 import { fmt } from "../utils/format";
 import { LOGO_STICKFRAME, storageUrl } from "../utils/cdn";
+import StickFlowTimeline from "../components/ui/StickFlowTimeline";
 
 export default function PortalOnline() {
   const { token } = useParams();
@@ -223,6 +224,13 @@ export default function PortalOnline() {
             );
           })}
         </Card>
+
+        {/* Timeline da Jornada */}
+        {obra?.stickflow_id && (
+          <Card title="Timeline da Jornada">
+            <StickFlowTimeline stickflowId={obra.stickflow_id} portalMode={true} />
+          </Card>
+        )}
 
         {/* Financeiro detalhado */}
         {financeiro.contrato > 0 && (

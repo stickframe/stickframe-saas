@@ -60,6 +60,36 @@ export default function PropostaOnline() {
     })();
   }, [token]);
 
+  useEffect(() => {
+    if (!orc || !orc.lead_id) return;
+    sb.from("lead_historico").insert({
+      lead_id: orc.lead_id,
+      empresa_id: orc.empresa_id,
+      usuario: "Cliente (Online)",
+      status_anterior: orc.status || "Aguardando resposta",
+      status_novo: orc.status || "Aguardando resposta",
+      observacao: "Visualizou a proposta comercial online.",
+      tipo: "pdf_opened",
+      meta: { browser: navigator.userAgent }
+    }).then(() => {});
+  }, [orc?.id]);
+
+  async function handleDownload() {
+    if (orc && orc.lead_id) {
+      await sb.from("lead_historico").insert({
+        lead_id: orc.lead_id,
+        empresa_id: orc.empresa_id,
+        usuario: "Cliente (Online)",
+        status_anterior: orc.status || "Aguardando resposta",
+        status_novo: orc.status || "Aguardando resposta",
+        observacao: "Baixou ou imprimiu a proposta comercial em PDF.",
+        tipo: "pdf_downloaded",
+        meta: { event: "click_download" }
+      }).then(() => {});
+    }
+    window.print();
+  }
+
   async function confirmarAceite() {
     if (!aceite.nome.trim() || !aceite.aceito) return;
     setEnviando(true);
@@ -72,6 +102,21 @@ export default function PropostaOnline() {
         opcionais_selecionados: opcionaisSel.map((i) => orc.opcionais?.[i]).filter(Boolean),
       }).eq("proposta_token", token);
       setAceiteFeito(true);
+
+      // Atualizar o CRM comercial de forma automática se houver link com lead
+      if (orc && orc.lead_id) {
+        await sb.from("lead_historico").insert({
+          lead_id: orc.lead_id,
+          empresa_id: orc.empresa_id,
+          usuario: aceite.nome,
+          status_anterior: orc.status || "Aguardando resposta",
+          status_novo: "Convertido",
+          observacao: `Assinou digitalmente a proposta no valor de R$ ${Number(orc.valor || 0).toLocaleString("pt-BR")}.`,
+          tipo: "pdf_signed",
+          meta: { aceite_nome: aceite.nome }
+        });
+        await sb.from("pre_orcamentos").update({ status: "Convertido" }).eq("id", orc.lead_id);
+      }
 
       // Transmissão em tempo real (broadcast) do aceite para o comercial
       const empId = orc?.empresa_id;
@@ -386,7 +431,7 @@ export default function PropostaOnline() {
       {/* Floating PDF download button */}
       <button
         className="no-print"
-        onClick={() => window.print()}
+        onClick={handleDownload}
         style={{
           position: "fixed", bottom: 24, right: 24,
           background: "#981915", color: "#fff",

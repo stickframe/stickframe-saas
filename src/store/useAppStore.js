@@ -15,6 +15,7 @@ import { createFornecedoresSlice } from "./slices/fornecedoresSlice";
 import { createGarantiaSlice }     from "./slices/garantiaSlice";
 import { createOnboardingSlice }   from "./slices/onboardingSlice";
 import { createTourSlice }         from "./slices/tourSlice";
+import { createStickflowSlice }    from "./slices/stickflowSlice";
 
 //  ESTADO BASE (loading + loaded + activePage)
 function getInitialPage() {
@@ -36,6 +37,7 @@ const createBaseSlice = (set) => ({
     auth:false, clientes:false, obras:false, orcamentos:false,
     financeiro:false, contratos:false, diario:false, medicoes:false,
     eventos:false, historico:false, arquivos:false, colaboradores:false, fornecedores:false,
+    stickflows:false,
   },
   setLoading: (modulo, val) =>
     set((s) => ({ loading: { ...s.loading, [modulo]: val } })),
@@ -43,6 +45,7 @@ const createBaseSlice = (set) => ({
   loaded: {
     clientes:false, obras:false, orcamentos:false, financeiro:false,
     contratos:false, diario:{}, medicoes:{}, eventos:false, historico:false, arquivos:{}, colaboradores:false, fornecedores:false,
+    stickflows:false,
   },
 
   savedViews: [],
@@ -83,6 +86,7 @@ const useAppStore = create(
       ...createGarantiaSlice(...a),
       ...createOnboardingSlice(...a),
       ...createTourSlice(...a),
+      ...createStickflowSlice(...a),
     }),
     {
       name: "stickframe-storage",

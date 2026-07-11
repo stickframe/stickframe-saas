@@ -347,3 +347,107 @@ export function calcularStickScoreExecutivo(obras, financeiroPorObra = {}) {
   return { total, scores, nivel, cor };
 }
 
+/**
+ * calcularStickScoreEngenharia
+ * 
+ * Calcula o score ponderado (0-100) da engenharia para um StickFlow.
+ * 
+ * Eixos:
+ * 1. Desvio Financeiro (35%)
+ * 2. Desvio de Quantitativos BIM (20%)
+ * 3. Atraso Cronograma (15%)
+ * 4. Compras (10%)
+ * 5. Produtividade (10%)
+ * 6. Qualidade (10%)
+ */
+export function calcularStickScoreEngenharia(stickflow, {
+  financeiro = [],
+  orcamento = null,
+  bimModelos = [],
+  tarefas = [],
+  compras = [],
+  pontos = [],
+  vistorias = []
+} = {}) {
+  const scores = {};
+
+  // 1. DESVIO FINANCEIRO (35%)
+  let finScore = 100;
+  if (orcamento && Number(orcamento.valor) > 0) {
+    const despesas = financeiro.filter(f => f.tipo === "despesa").reduce((s, f) => s + (Number(f.valor) || 0), 0);
+    const orcado = Number(orcamento.valor);
+    const desvio = (despesas - orcado) / orcado;
+    if (desvio > 0) {
+      finScore = Math.max(0, 100 - (desvio * 100 * 2.5));
+    }
+  }
+  scores.financeiro = clamp(Math.round(finScore));
+
+  // 2. DESVIO QUANTITATIVOS BIM (20%)
+  let bimScore = 100;
+  if (bimModelos && bimModelos.length > 0) {
+    // Se há um desvio quantitativo registrado no metadados do StickFlow
+    const desvioBim = Number(stickflow?.metadados?.desvio_quantitativos) || 0;
+    if (desvioBim > 0) {
+      bimScore = Math.max(0, 100 - (desvioBim * 100 * 3));
+    } else {
+      bimScore = 95; // Padrão base se há modelo mas sem desvio calculado
+    }
+  }
+  scores.bim = clamp(Math.round(bimScore));
+
+  // 3. ATRASO CRONOGRAMA (15%)
+  let cronScore = 100;
+  if (tarefas && tarefas.length > 0) {
+    const hoje = new Date();
+    const criticas = tarefas.filter(t => t.critica || t.prioridade === "alta" || t.prioridade === "crítica");
+    const baseTarefas = criticas.length > 0 ? criticas : tarefas;
+    const vencidas = baseTarefas.filter(t => t.status !== "concluido" && t.status !== "Feito" && t.data_fim && new Date(t.data_fim) < hoje);
+    cronScore = Math.max(0, 100 - (vencidas.length / baseTarefas.length) * 100);
+  }
+  scores.cronograma = clamp(Math.round(cronScore));
+
+  // 4. COMPRAS (10%)
+  let compScore = 100;
+  if (compras && compras.length > 0) {
+    // Compara valor real vs planejado nos itens de compra
+    const itensAcima = compras.filter(c => c.valor_unitario && c.valor_planejado && Number(c.valor_unitario) > Number(c.valor_planejado)).length;
+    compScore = Math.max(0, 100 - (itensAcima / compras.length * 50));
+  }
+  scores.compras = clamp(Math.round(compScore));
+
+  // 5. PRODUTIVIDADE (10%)
+  let prodScore = 100;
+  if (pontos && pontos.length > 0 && stickflow?.progresso > 0) {
+    // Total de horas registradas no ponto
+    const totalHoras = pontos.reduce((s, p) => s + (Number(p.horas_trabalhadas) || 8), 0);
+    const progresso = stickflow.progresso;
+    const horasPorProgresso = totalHoras / progresso;
+    if (horasPorProgresso > 10) {
+      prodScore = Math.max(0, 100 - Math.min(80, (horasPorProgresso - 10) * 4));
+    }
+  }
+  scores.produtividade = clamp(Math.round(prodScore));
+
+  // 6. QUALIDADE (10%)
+  let qualScore = 100;
+  if (vistorias && vistorias.length > 0) {
+    const ncAtivas = vistorias.filter(v => v.status === "aberta" || v.status === "pendente" || v.status === "não-conforme").length;
+    qualScore = Math.max(0, 100 - (ncAtivas * 15));
+  }
+  scores.qualidade = clamp(Math.round(qualScore));
+
+  // Cálculo ponderado
+  const total = clamp(Math.round(
+    scores.financeiro * 0.35 +
+    scores.bim * 0.20 +
+    scores.cronograma * 0.15 +
+    scores.compras * 0.10 +
+    scores.produtividade * 0.10 +
+    scores.qualidade * 0.10
+  ));
+
+  const { nivel, cor } = classificar(total);
+  return { total, scores, nivel, cor };
+}
+
