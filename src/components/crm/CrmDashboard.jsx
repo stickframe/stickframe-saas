@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { C } from "../../utils/constants";
 import { calcularTemperatura } from "../../utils/crm";
+import { TrendingUp, DollarSign, BarChart2, AlertTriangle, Link, MapPin, Building2 } from "../ui/Icon";
 
 export default function CrmDashboard({ leads }) {
   const stats = useMemo(() => {
@@ -98,7 +99,7 @@ export default function CrmDashboard({ leads }) {
     boxShadow: "0 2px 6px rgba(0,0,0,0.01)"
   };
 
-  const labelStyle = { fontSize: 11, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 0.6 };
+  const labelStyle = { fontSize: 11, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 0.6, display: "flex", alignItems: "center", gap: 6 };
   const valStyle = { fontSize: 20, fontWeight: 800, color: C.text };
 
   return (
@@ -107,25 +108,25 @@ export default function CrmDashboard({ leads }) {
       {/* Grid de KPIs Financeiros */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 14 }}>
         <div style={cardStyle}>
-          <span style={labelStyle}>📈 Taxa de Conversão</span>
+          <span style={labelStyle}><TrendingUp size={12} style={{ color: C.success }} /> Taxa de Conversão</span>
           <span style={{ ...valStyle, color: C.success }}>{stats.txConversao.toFixed(1)}%</span>
           <span style={{ fontSize: 11, color: C.muted }}>{stats.ganhosCount} fechados de {stats.total} leads</span>
         </div>
 
         <div style={cardStyle}>
-          <span style={labelStyle}>💼 Pipeline Ativo</span>
+          <span style={labelStyle}><TrendingUp size={12} style={{ color: C.purple }} /> Pipeline Ativo</span>
           <span style={{ ...valStyle, color: C.purple }}>R$ {stats.pipelineAtivo.toLocaleString("pt-BR")}</span>
           <span style={{ fontSize: 11, color: C.muted }}>{stats.ativosCount} oportunidades em andamento</span>
         </div>
 
         <div style={cardStyle}>
-          <span style={labelStyle}>💰 Valor Ganho</span>
+          <span style={labelStyle}><DollarSign size={12} style={{ color: C.success }} /> Valor Ganho</span>
           <span style={{ ...valStyle, color: C.success }}>R$ {stats.pipelineGanho.toLocaleString("pt-BR")}</span>
           <span style={{ fontSize: 11, color: C.muted }}>Conversões bem-sucedidas</span>
         </div>
 
         <div style={cardStyle}>
-          <span style={labelStyle}>🎯 Ticket Médio</span>
+          <span style={labelStyle}><BarChart2 size={12} style={{ color: C.text }} /> Ticket Médio</span>
           <span style={valStyle}>R$ {stats.ticketMedio.toLocaleString("pt-BR", { maximumFractionDigits: 0 })}</span>
           <span style={{ fontSize: 11, color: C.muted }}>Média por contrato fechado</span>
         </div>
@@ -136,17 +137,16 @@ export default function CrmDashboard({ leads }) {
         
         {/* Distribuição de Temperatura */}
         <div style={{ ...cardStyle, flex: 1 }}>
-          <h4 style={{ fontSize: 13, fontWeight: 800, margin: "0 0 12px" }}>🌡️ Qualificação dos Leads ativos</h4>
+          <h4 style={{ fontSize: 13, fontWeight: 800, margin: "0 0 12px", display: "flex", alignItems: "center", gap: 6 }}><AlertTriangle size={13} style={{ color: C.warning }} /> Qualificação dos Leads ativos</h4>
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {["Quente", "Morno", "Frio"].map(lvl => {
               const count = stats.tempCount[lvl] || 0;
               const percent = stats.total > 0 ? (count / stats.total) * 100 : 0;
               const color = lvl === "Quente" ? C.danger : lvl === "Morno" ? C.warning : C.steel;
-              const icon = lvl === "Quente" ? "🔥" : lvl === "Morno" ? "🟡" : "❄️";
               return (
                 <div key={lvl}>
                   <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 4 }}>
-                    <span style={{ fontWeight: 600 }}>{icon} {lvl}</span>
+                    <span style={{ fontWeight: 600 }}>{lvl}</span>
                     <span style={{ color: C.muted }}>{count} leads ({percent.toFixed(0)}%)</span>
                   </div>
                   <div style={{ height: 8, background: C.border, borderRadius: 4, overflow: "hidden" }}>
@@ -160,7 +160,7 @@ export default function CrmDashboard({ leads }) {
 
         {/* Origens que mais Convertem */}
         <div style={{ ...cardStyle, flex: 1 }}>
-          <h4 style={{ fontSize: 13, fontWeight: 800, margin: "0 0 12px" }}>🔗 Conversão por Origem</h4>
+          <h4 style={{ fontSize: 13, fontWeight: 800, margin: "0 0 12px", display: "flex", alignItems: "center", gap: 6 }}><Link size={13} style={{ color: C.purple }} /> Conversão por Origem</h4>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {stats.origensRanking.slice(0, 4).map(o => (
               <div key={o.name} style={{ display: "flex", alignItems: "center", justifyItems: "center", justifyClass: "space-between", fontSize: 12 }}>
@@ -179,11 +179,11 @@ export default function CrmDashboard({ leads }) {
 
         {/* Cidades mais Ativas */}
         <div style={{ ...cardStyle, flex: 1 }}>
-          <h4 style={{ fontSize: 13, fontWeight: 800, margin: "0 0 12px" }}>📍 Regiões mais Ativas (Top Cidades)</h4>
+          <h4 style={{ fontSize: 13, fontWeight: 800, margin: "0 0 12px", display: "flex", alignItems: "center", gap: 6 }}><MapPin size={13} style={{ color: C.red }} /> Regiões mais Ativas (Top Cidades)</h4>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {stats.cidadesRanking.map(c => (
               <div key={c.name} style={{ display: "flex", alignItems: "center", justifyItems: "center", fontSize: 12 }}>
-                <span style={{ flex: 1, fontWeight: 600 }}>🏙️ {c.name}</span>
+                <span style={{ flex: 1, fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}><Building2 size={12} style={{ color: C.muted }} /> {c.name}</span>
                 <span style={{ color: C.muted, marginRight: 12 }}>{c.total} simulações</span>
                 <span style={{ fontSize: 11, fontWeight: 700, color: C.text }}>
                   {c.ganho} fechadas
