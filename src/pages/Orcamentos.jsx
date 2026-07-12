@@ -1320,6 +1320,35 @@ export default function Orcamentos() {
   const [sqSel,        setSqSel]        = useState("");
   const [calculadora,  setCalculadora]  = useState(false);
   const [preOrcAtivo, setPreOrcAtivo] = useState(null); // ID do lead sendo convertido
+  const [preOrcamentos, setPreOrcamentos] = useState([]);
+
+  useEffect(() => {
+    const empId = getEmpresaId();
+    if (!empId) return;
+
+    const carregarLeadsNovos = () => {
+      sb.from("pre_orcamentos")
+        .select("id")
+        .eq("empresa_id", empId)
+        .eq("status", "Novo")
+        .then(({ data }) => {
+          if (data) setPreOrcamentos(data);
+        });
+    };
+
+    carregarLeadsNovos();
+
+    const ch = sb.channel("orcamentos-leads-novos-realtime")
+      .on("postgres_changes", { event: "*", schema: "public", table: "pre_orcamentos", filter: `empresa_id=eq.${empId}` },
+        () => {
+          carregarLeadsNovos();
+        })
+      .subscribe();
+
+    return () => {
+      ch.unsubscribe();
+    };
+  }, []);
   const [estimativo, setEstimativoRaw] = useState(() => {
     try {
       const v = JSON.parse(localStorage.getItem("sf_estimativo") || "null");
