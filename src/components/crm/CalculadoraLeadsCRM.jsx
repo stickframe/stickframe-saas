@@ -10,6 +10,9 @@ import LeadDetailsDrawer from "./LeadDetailsDrawer";
 import CrmKanban from "./CrmKanban";
 import CrmDashboard from "./CrmDashboard";
 import CrmAlerts from "./CrmAlerts";
+import { Zap, Phone, FileText, Users, CheckCircle, XCircle, Box, Search } from "../ui/Icon";
+
+const STATUS_ICONS = { Zap, Phone, FileText, Users, CheckCircle, XCircle, Box };
 
 export default function CalculadoraLeadsCRM({ onConvertLead }) {
   const user = useAppStore((s) => s.user);
@@ -211,6 +214,7 @@ export default function CalculadoraLeadsCRM({ onConvertLead }) {
           {Object.keys(STATUS_CONFIG).map((st) => {
             const cfg = STATUS_CONFIG[st];
             const active = activeStatus === st;
+            const IconComponent = STATUS_ICONS[cfg.icon];
             return (
               <button
                 key={st}
@@ -223,7 +227,7 @@ export default function CalculadoraLeadsCRM({ onConvertLead }) {
                   color: active ? cfg.cor : C.muted
                 }}
               >
-                <span>{cfg.icon}</span>
+                {IconComponent && <IconComponent size={12} />}
                 <span>{cfg.label}</span>
                 <span style={{ background: active ? cfg.cor : C.border, color: active ? "#fff" : C.text, borderRadius: 10, padding: "1px 5px", fontSize: 9 }}>
                   {contadoresStatus[st] || 0}
@@ -237,33 +241,36 @@ export default function CalculadoraLeadsCRM({ onConvertLead }) {
       {/* Barra de Filtros / Busca */}
       {viewMode !== "metricas" && (
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 16, alignItems: "center" }}>
-          <input
-            type="text"
-            value={busca}
-            onChange={(e) => setBusca(e.target.value)}
-            placeholder="🔎 Buscar..."
-            style={{ flex: 1, minWidth: 150, padding: "8px 12px", borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 12, fontFamily: "inherit", boxSizing: "border-box" }}
-          />
+          <div style={{ position: "relative", flex: 1, minWidth: 150 }}>
+            <Search size={13} style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: C.muted }} />
+            <input
+              type="text"
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+              placeholder="Buscar..."
+              style={{ width: "100%", padding: "8px 12px 8px 30px", borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 12, fontFamily: "inherit", boxSizing: "border-box" }}
+            />
+          </div>
 
           <select value={filtroCidade} onChange={(e) => setFiltroCidade(e.target.value)} style={dropdownEstilo}>
-            <option value="todas">📍 Cidades: Todas</option>
+            <option value="todas">Cidades: Todas</option>
             {cidadesDisponiveis.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
 
           <select value={filtroOrigem} onChange={(e) => setFiltroOrigem(e.target.value)} style={dropdownEstilo}>
-            <option value="todas">🔗 Origem: Todas</option>
+            <option value="todas">Origem: Todas</option>
             {origensDisponiveis.map(o => <option key={o} value={o}>{o}</option>)}
           </select>
 
           <select value={filtroTemp} onChange={(e) => setFiltroTemp(e.target.value)} style={dropdownEstilo}>
-            <option value="todas">🌡️ Qualificação: Todas</option>
-            <option value="Quente">🔥 Quente</option>
-            <option value="Morno">🟡 Morno</option>
-            <option value="Frio">❄️ Frio</option>
+            <option value="todas">Qualificação: Todas</option>
+            <option value="Quente">Quente</option>
+            <option value="Morno">Morno</option>
+            <option value="Frio">Frio</option>
           </select>
 
           <select value={filtroData} onChange={(e) => setFiltroData(e.target.value)} style={dropdownEstilo}>
-            <option value="todas">📅 Período: Todos</option>
+            <option value="todas">Período: Todos</option>
             <option value="hoje">Hoje</option>
             <option value="semana">7 dias</option>
             <option value="mes">30 dias</option>
@@ -271,10 +278,10 @@ export default function CalculadoraLeadsCRM({ onConvertLead }) {
 
           {viewMode === "lista" && (
             <select value={ordenacao} onChange={(e) => setOrdenacao(e.target.value)} style={dropdownEstilo}>
-              <option value="recente">排序 Recentes</option>
-              <option value="antigo">排序 Antigos</option>
-              <option value="valor_maior">💸 Maior valor</option>
-              <option value="valor_menor">💸 Menor valor</option>
+              <option value="recente">Mais recentes</option>
+              <option value="antigo">Mais antigos</option>
+              <option value="valor_maior">Maior orçamento</option>
+              <option value="valor_menor">Menor orçamento</option>
             </select>
           )}
         </div>

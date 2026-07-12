@@ -25,9 +25,9 @@ export function calcularTemperatura(p) {
   else if (ageH <= 72) score += 2;
   else if (ageH <= 168) score += 1;
   
-  if (score >= 7) return { nivel: "Quente", icon: "🔥", cor: C.danger, score };
-  if (score >= 4) return { nivel: "Morno",  icon: "🟡", cor: C.warning, score };
-  return { nivel: "Frio", icon: "❄️", cor: C.steel, score };
+  if (score >= 7) return { nivel: "Quente", icon: "Zap", cor: C.danger, score };
+  if (score >= 4) return { nivel: "Morno",  icon: "AlertTriangle", cor: C.warning, score };
+  return { nivel: "Frio", icon: "TrendingDown", cor: C.steel, score };
 }
 
 /**
@@ -35,16 +35,16 @@ export function calcularTemperatura(p) {
  */
 export function resolverOrigem(origem = "") {
   const o = String(origem).toLowerCase();
-  if (o.includes("calculadora")) return { label: "Calculadora", cor: C.success, dot: "🎯" };
-  if (o.includes("pdf")) return { label: "PDF", cor: C.danger, dot: "📄" };
-  if (o.includes("dwg")) return { label: "DWG", cor: C.steel, dot: "📐" };
-  if (o.includes("vision") || o.includes("ia")) return { label: "AI Vision", cor: C.purple, dot: "🤖" };
-  if (o.includes("bim")) return { label: "BIM", cor: "#805ad5", dot: "🧊" };
-  if (o.includes("portal")) return { label: "Portal", cor: "#3182ce", dot: "🌐" };
-  if (o.includes("manual")) return { label: "Manual", cor: C.muted, dot: "✍️" };
+  if (o.includes("calculadora")) return { label: "Calculadora", cor: C.success, icon: "Calculator" };
+  if (o.includes("pdf")) return { label: "PDF", cor: C.danger, icon: "FileText" };
+  if (o.includes("dwg")) return { label: "DWG", cor: C.steel, icon: "Ruler" };
+  if (o.includes("vision") || o.includes("ia")) return { label: "AI Vision", cor: C.purple, icon: "Brain" };
+  if (o.includes("bim")) return { label: "BIM", cor: "#805ad5", icon: "Box" };
+  if (o.includes("portal")) return { label: "Portal", cor: "#3182ce", icon: "Link" };
+  if (o.includes("manual")) return { label: "Manual", cor: C.muted, icon: "Pencil" };
   
   // Default fallback
-  return { label: origem || "Outra", cor: C.muted, dot: "🔗" };
+  return { label: origem || "Outra", cor: C.muted, icon: "Link" };
 }
 
 /**
@@ -53,49 +53,49 @@ export function resolverOrigem(origem = "") {
 export const STATUS_CONFIG = {
   "Novo": {
     label: "Novos",
-    icon: "🔥",
+    icon: "Zap",
     cor: C.danger,
     bg: C.danger + "18",
     border: C.danger + "33"
   },
   "Em Atendimento": {
     label: "Atendimento",
-    icon: "🟡",
+    icon: "Phone",
     cor: C.warning,
     bg: C.warning + "18",
     border: C.warning + "33"
   },
   "Orçamento Enviado": {
     label: "Orçamentos",
-    icon: "📄",
+    icon: "FileText",
     cor: C.purple,
     bg: C.purple + "18",
     border: C.purple + "33"
   },
   "Negociação": {
     label: "Negociação",
-    icon: "🤝",
+    icon: "Users",
     cor: C.ochre,
     bg: C.ochre + "18",
     border: C.ochre + "33"
   },
   "Convertido": {
     label: "Convertidos",
-    icon: "✅",
+    icon: "CheckCircle",
     cor: C.success,
     bg: C.success + "18",
     border: C.success + "33"
   },
   "Perdido": {
     label: "Perdidos",
-    icon: "❌",
+    icon: "XCircle",
     cor: "#c53030",
     bg: "#c5303018",
     border: "#c5303033"
   },
   "Arquivado": {
     label: "Arquivados",
-    icon: "📦",
+    icon: "Box",
     cor: C.muted,
     bg: C.muted + "18",
     border: C.muted + "33"
@@ -160,20 +160,20 @@ export function calcularLeadScore(lead, timeline = []) {
  * Mapeia todos os tipos de eventos suportados na timeline comercial expandida.
  */
 export const TIMELINE_EVENTOS = {
-  "status_change": { label: "Mudança de Status", icon: "🔄", cor: C.purple },
-  "lead_created": { label: "Lead Criado", icon: "🚀", cor: C.success },
-  "quote_sent": { label: "Orçamento Enviado", icon: "📄", cor: C.purple },
-  "pdf_opened": { label: "PDF Visualizado", icon: "👁️", cor: C.warning },
-  "pdf_downloaded": { label: "PDF Baixado", icon: "📥", cor: C.warning },
-  "pdf_signed": { label: "Contrato Assinado", icon: "✍️", cor: C.success },
-  "pdf_declined": { label: "Orçamento Recusado", icon: "❌", cor: C.danger },
-  "whatsapp_sent": { label: "WhatsApp Enviado", icon: "💬", cor: "#25D366" },
-  "whatsapp_received": { label: "WhatsApp Recebido", icon: "📥", cor: "#25D366" },
-  "comment": { label: "Comentário", icon: "💬", cor: C.muted },
-  "note": { label: "Observação", icon: "📝", cor: C.muted },
-  "call": { label: "Telefonema", icon: "📞", cor: "#3182ce" },
-  "meeting": { label: "Reunião", icon: "👥", cor: "#3182ce" },
-  "visit": { label: "Visita Técnica", icon: "📐", cor: C.ochre },
-  "contract_created": { label: "Contrato Criado", icon: "📜", cor: C.success },
-  "work_created": { label: "Obra Iniciada", icon: "🏗️", cor: C.success },
+  "status_change": { label: "Mudança de Status", icon: "RefreshCw", cor: C.purple },
+  "lead_created": { label: "Lead Criado", icon: "Zap", cor: C.success },
+  "quote_sent": { label: "Orçamento Enviado", icon: "FileText", cor: C.purple },
+  "pdf_opened": { label: "PDF Visualizado", icon: "Eye", cor: C.warning },
+  "pdf_downloaded": { label: "PDF Baixado", icon: "Download", cor: C.warning },
+  "pdf_signed": { label: "Contrato Assinado", icon: "FileCheck", cor: C.success },
+  "pdf_declined": { label: "Orçamento Recusado", icon: "XCircle", cor: C.danger },
+  "whatsapp_sent": { label: "WhatsApp Enviado", icon: "Smartphone", cor: "#25D366" },
+  "whatsapp_received": { label: "WhatsApp Recebido", icon: "Smartphone", cor: "#25D366" },
+  "comment": { label: "Comentário", icon: "Pencil", cor: C.muted },
+  "note": { label: "Observação", icon: "Pencil", cor: C.muted },
+  "call": { label: "Telefonema", icon: "Phone", cor: "#3182ce" },
+  "meeting": { label: "Reunião", icon: "Users", cor: "#3182ce" },
+  "visit": { label: "Visita Técnica", icon: "Ruler", cor: C.ochre },
+  "contract_created": { label: "Contrato Criado", icon: "FileCheck", cor: C.success },
+  "work_created": { label: "Obra Iniciada", icon: "HardHat", cor: C.success },
 };

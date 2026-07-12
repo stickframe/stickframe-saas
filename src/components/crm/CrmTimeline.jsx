@@ -1,6 +1,11 @@
 import { useState } from "react";
 import { C } from "../../utils/constants";
 import { TIMELINE_EVENTOS } from "../../utils/crm";
+import { Zap, Phone, FileText, Users, CheckCircle, XCircle, Box, Calendar, Brain, Smartphone, ClipboardList, RefreshCw, Eye, Download, FileCheck, Pencil, Ruler, HardHat } from "../ui/Icon";
+
+const TIMELINE_ICONS = {
+  Zap, Phone, FileText, Users, CheckCircle, XCircle, Box, Calendar, Brain, Smartphone, ClipboardList, RefreshCw, Eye, Download, FileCheck, Pencil, Ruler, HardHat
+};
 
 export default function CrmTimeline({ lead, timeline, onAddLog }) {
   const [tipoLog, setTipoLog] = useState("note");
@@ -8,10 +13,10 @@ export default function CrmTimeline({ lead, timeline, onAddLog }) {
   const [submitting, setSubmitting] = useState(false);
 
   const LOG_OPTIONS = [
-    { key: "note", label: "Nota", icon: "📝", placeholder: "Escreva uma anotação privada..." },
-    { key: "call", label: "Ligação", icon: "📞", placeholder: "Resuma o telefonema com o cliente..." },
-    { key: "meeting", label: "Reunião", icon: "👥", placeholder: "Descreva os pontos acordados na reunião..." },
-    { key: "visit", label: "Visita", icon: "📐", placeholder: "Registre as observações da visita técnica..." }
+    { key: "note", label: "Nota", icon: Pencil, placeholder: "Escreva uma anotação privada..." },
+    { key: "call", label: "Ligação", icon: Phone, placeholder: "Resuma o telefonema com o cliente..." },
+    { key: "meeting", label: "Reunião", icon: Users, placeholder: "Descreva os pontos acordados na reunião..." },
+    { key: "visit", label: "Visita", icon: Ruler, placeholder: "Registre as observações da visita técnica..." }
   ];
 
   async function handleSubmit() {
@@ -47,10 +52,17 @@ export default function CrmTimeline({ lead, timeline, onAddLog }) {
                     cursor: "pointer", border: `1px solid ${active ? C.purple : C.border}`,
                     background: active ? C.purple + "14" : "transparent",
                     color: active ? C.purple : C.muted,
-                    fontFamily: "inherit", transition: "all .15s"
+                    fontFamily: "inherit", transition: "all .15s",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 4
                   }}
                 >
-                  {opt.icon} {opt.label}
+                  {(() => {
+                    const IconComp = opt.icon;
+                    return IconComp ? <IconComp size={10} style={{ color: active ? C.purple : C.muted }} /> : null;
+                  })()}
+                  <span>{opt.label}</span>
                 </button>
               );
             })}
@@ -76,7 +88,7 @@ export default function CrmTimeline({ lead, timeline, onAddLog }) {
               cursor: txtLog.trim() ? "pointer" : "not-allowed", marginTop: 8, fontFamily: "inherit"
             }}
           >
-            {submitting ? "Registrando..." : `💾 Registrar ${activeOpt.label}`}
+            {submitting ? "Registrando..." : `Registrar ${activeOpt.label}`}
           </button>
         </div>
       )}
@@ -107,8 +119,12 @@ export default function CrmTimeline({ lead, timeline, onAddLog }) {
                   </div>
 
                   <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: C.text }}>
-                      {conf.icon} {conf.label}
+                    <span style={{ fontSize: 11, fontWeight: 700, color: C.text, display: "inline-flex", alignItems: "center", gap: 4 }}>
+                      {(() => {
+                        const IconComp = TIMELINE_ICONS[conf.icon];
+                        return IconComp ? <IconComp size={11} style={{ color: conf.cor }} /> : null;
+                      })()}
+                      <span>{conf.label}</span>
                     </span>
                     {h.status_anterior && h.status_novo && (
                       <span style={{ fontSize: 10, color: C.muted }}>

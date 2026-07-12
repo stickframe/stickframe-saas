@@ -1,5 +1,10 @@
 import { C } from "../../utils/constants";
 import { calcularTemperatura, resolverOrigem, STATUS_CONFIG } from "../../utils/crm";
+import { Zap, Phone, FileText, Users, CheckCircle, XCircle, Box, Calculator, Ruler, Brain, Link, AlertTriangle, TrendingDown, MapPin } from "../ui/Icon";
+
+const LEAD_ICONS = {
+  Zap, Phone, FileText, Users, CheckCircle, XCircle, Box, Calculator, Ruler, Brain, Link, AlertTriangle, TrendingDown, MapPin
+};
 
 /**
  * Cartão individual que exibe os detalhes resumidos do Lead no pipeline.
@@ -65,7 +70,11 @@ export default function LeadCard({ lead, onClick }) {
                 whiteSpace: "nowrap"
               }}
             >
-              {temp.icon} {temp.nivel}
+              {(() => {
+                const IconComp = LEAD_ICONS[temp.icon];
+                return IconComp ? <IconComp size={10} style={{ color: temp.cor, marginRight: 4, verticalAlign: "middle" }} /> : null;
+              })()}
+              <span style={{ verticalAlign: "middle" }}>{temp.nivel}</span>
             </span>
 
             <span
@@ -81,13 +90,22 @@ export default function LeadCard({ lead, onClick }) {
                 whiteSpace: "nowrap"
               }}
             >
-              {orig.dot} {orig.label}
+              {(() => {
+                const IconComp = LEAD_ICONS[orig.icon];
+                return IconComp ? <IconComp size={10} style={{ color: orig.cor, marginRight: 4, verticalAlign: "middle" }} /> : null;
+              })()}
+              <span style={{ verticalAlign: "middle" }}>{orig.label}</span>
             </span>
           </div>
 
           {/* Área e Padrão */}
-          <div style={{ fontSize: 12, color: C.muted, marginBottom: 6 }}>
-            📍 {lead.cidade || "Cidade não informada"} · 📏 <strong>{lead.area || lead.area_m2 || "—"} m²</strong> ({lead.padrao || "Padrão"}) · {lead.pavimentos || "Térreo"}
+          <div style={{ fontSize: 12, color: C.muted, marginBottom: 6, display: "flex", alignItems: "center", gap: 4, flexWrap: "wrap" }}>
+            <MapPin size={11} style={{ color: C.muted }} />
+            <span>{lead.cidade || "Cidade não informada"}</span>
+            <span>·</span>
+            <span>📏 <strong>{lead.area || lead.area_m2 || "—"} m²</strong> ({lead.padrao || "Padrão"})</span>
+            <span>·</span>
+            <span>{lead.pavimentos || "Térreo"}</span>
           </div>
 
           {/* Faixa de Valor */}

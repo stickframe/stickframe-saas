@@ -1,5 +1,8 @@
 import { C } from "../../utils/constants";
 import { STATUS_CONFIG, calcularLeadScore, resolverOrigem } from "../../utils/crm";
+import { Zap, Phone, FileText, Users, CheckCircle, XCircle, Box } from "../ui/Icon";
+
+const STATUS_ICONS = { Zap, Phone, FileText, Users, CheckCircle, XCircle, Box };
 
 export default function CrmKanban({ leads, onMoveLead, onSelectLead }) {
   
@@ -74,7 +77,10 @@ export default function CrmKanban({ leads, onMoveLead, onSelectLead }) {
               }}
             >
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <span style={{ fontSize: 14 }}>{cfg.icon}</span>
+                {(() => {
+                  const IconComp = STATUS_ICONS[cfg.icon];
+                  return IconComp ? <IconComp size={13} style={{ color: cfg.cor }} /> : null;
+                })()}
                 <span style={{ fontSize: 12, fontWeight: 800, color: C.text }}>{cfg.label}</span>
                 <span style={{
                   background: cfg.cor + "18", color: cfg.cor, borderRadius: 10,

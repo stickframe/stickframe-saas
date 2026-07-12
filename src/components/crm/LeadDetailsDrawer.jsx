@@ -9,6 +9,9 @@ import useAppStore from "../../store/useAppStore";
 import CrmTimeline from "./CrmTimeline";
 import CrmIaAdvisor from "./CrmIaAdvisor";
 import CrmWhatsAppChat from "./CrmWhatsAppChat";
+import { Zap, Phone, FileText, Users, CheckCircle, XCircle, Box, Calendar, Brain, Smartphone, ClipboardList } from "../ui/Icon";
+
+const STATUS_ICONS = { Zap, Phone, FileText, Users, CheckCircle, XCircle, Box };
 
 export default function LeadDetailsDrawer({ lead, onClose, onUpdateStatus, onConvert, onReactivate }) {
   const user = useAppStore((s) => s.user);
@@ -147,10 +150,10 @@ export default function LeadDetailsDrawer({ lead, onClose, onUpdateStatus, onCon
   }, [lead.created_at, lead.status, timeline]);
 
   const tabs = [
-    { key: "cadastro", label: "Cadastro", icon: "📋" },
-    { key: "timeline", label: "Timeline", icon: "⏱️" },
-    { key: "ia", label: "✨ IA Advisor", icon: "" },
-    { key: "whatsapp", label: "WhatsApp", icon: "💬" }
+    { key: "cadastro", label: "Cadastro", icon: ClipboardList },
+    { key: "timeline", label: "Timeline", icon: Calendar },
+    { key: "ia", label: "IA Advisor", icon: Brain },
+    { key: "whatsapp", label: "WhatsApp", icon: Smartphone }
   ];
 
   return (
@@ -169,11 +172,15 @@ export default function LeadDetailsDrawer({ lead, onClose, onUpdateStatus, onCon
         <div style={{ padding: "16px 20px", borderBottom: `1px solid ${C.border}`, display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10 }}>
           <div>
             <div style={{ display: "flex", gap: 6, marginBottom: 4, flexWrap: "wrap", alignItems: "center" }}>
-              <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 4, background: orig.cor + "14", color: orig.cor, border: `1px solid ${orig.cor}2e` }}>
-                {orig.dot} {orig.label}
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 4, background: orig.cor + "14", color: orig.cor, border: `1px solid ${orig.cor}2e` }}>
+                {(() => {
+                  const IconComp = STATUS_ICONS[orig.icon];
+                  return IconComp ? <IconComp size={9} style={{ color: orig.cor }} /> : null;
+                })()}
+                <span>{orig.label}</span>
               </span>
               <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 4, background: scoreObj.cor + "14", color: scoreObj.cor, border: `1px solid ${scoreObj.cor}2e` }}>
-                ⭐ {scoreObj.score} — {scoreObj.nivel}
+                Score: {scoreObj.score} — {scoreObj.nivel}
               </span>
             </div>
             <h2 style={{ fontSize: 16, fontWeight: 800, color: C.text, margin: 0 }}>{lead.nome}</h2>
@@ -195,7 +202,10 @@ export default function LeadDetailsDrawer({ lead, onClose, onUpdateStatus, onCon
                 cursor: "pointer", fontFamily: "inherit"
               }}
             >
-              {t.icon} {t.label}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
+                {t.icon && <t.icon size={11} />}
+                <span>{t.label}</span>
+              </div>
             </button>
           ))}
         </div>
@@ -217,7 +227,7 @@ export default function LeadDetailsDrawer({ lead, onClose, onUpdateStatus, onCon
 
               {/* Informações Básicas */}
               <div>
-                <h3 style={{ fontSize: 10, fontWeight: 800, color: C.muted, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 8 }}>📞 Dados de Contato</h3>
+                <h3 style={{ fontSize: 10, fontWeight: 800, color: C.muted, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 8, display: "flex", alignItems: "center", gap: 4 }}><Phone size={11} /> Dados de Contato</h3>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, fontSize: 12 }}>
                   <div>
                     <div style={{ color: C.muted, fontSize: 9 }}>WhatsApp / Telefone</div>
@@ -240,7 +250,7 @@ export default function LeadDetailsDrawer({ lead, onClose, onUpdateStatus, onCon
 
               {/* Detalhes do Projeto */}
               <div>
-                <h3 style={{ fontSize: 10, fontWeight: 800, color: C.muted, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 8 }}>📐 Dimensionamento</h3>
+                <h3 style={{ fontSize: 10, fontWeight: 800, color: C.muted, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 8, display: "flex", alignItems: "center", gap: 4 }}><Users size={11} /> Dimensionamento</h3>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, fontSize: 12 }}>
                   <div>
                     <div style={{ color: C.muted, fontSize: 9 }}>Área</div>
@@ -261,7 +271,7 @@ export default function LeadDetailsDrawer({ lead, onClose, onUpdateStatus, onCon
 
               {/* Formulador de Próxima Ação */}
               <div style={{ background: C.surface2, border: `1px solid ${C.border}`, borderRadius: 10, padding: "14px" }}>
-                <h3 style={{ fontSize: 10, fontWeight: 800, color: C.purple, letterSpacing: 0.8, textTransform: "uppercase", margin: "0 0 10px" }}>📅 Agendar Próxima Ação</h3>
+                <h3 style={{ fontSize: 10, fontWeight: 800, color: C.purple, letterSpacing: 0.8, textTransform: "uppercase", margin: "0 0 10px", display: "flex", alignItems: "center", gap: 4 }}><Calendar size={11} /> Agendar Próxima Ação</h3>
                 
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   <select
@@ -299,7 +309,7 @@ export default function LeadDetailsDrawer({ lead, onClose, onUpdateStatus, onCon
 
               {/* Status do Lead */}
               <div>
-                <h3 style={{ fontSize: 10, fontWeight: 800, color: C.muted, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 8 }}>⚙️ Gestão de Status</h3>
+                <h3 style={{ fontSize: 10, fontWeight: 800, color: C.muted, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 8, display: "flex", alignItems: "center", gap: 4 }}><Users size={11} /> Gestão de Status</h3>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                   {Object.keys(STATUS_CONFIG).map(st => {
                     const cfg = STATUS_CONFIG[st];
@@ -313,10 +323,17 @@ export default function LeadDetailsDrawer({ lead, onClose, onUpdateStatus, onCon
                           cursor: "pointer", border: `1px solid ${active ? cfg.cor : C.border}`,
                           background: active ? cfg.bg : "transparent",
                           color: active ? cfg.cor : C.muted,
-                          fontFamily: "inherit"
+                          fontFamily: "inherit",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 4
                         }}
                       >
-                        {cfg.icon} {cfg.label}
+                        {(() => {
+                          const IconComp = STATUS_ICONS[cfg.icon];
+                          return IconComp ? <IconComp size={10} style={{ color: active ? cfg.cor : C.muted }} /> : null;
+                        })()}
+                        <span>{cfg.label}</span>
                       </button>
                     );
                   })}

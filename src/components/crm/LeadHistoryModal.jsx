@@ -3,6 +3,9 @@ import Modal from "../ui/Modal";
 import { listarHistoricoLead } from "../../services/repositories/leadHistoricoRepository";
 import { C } from "../../utils/constants";
 import { STATUS_CONFIG } from "../../utils/crm";
+import { Zap, Phone, FileText, Users, CheckCircle, XCircle, Box } from "../ui/Icon";
+
+const STATUS_ICONS = { Zap, Phone, FileText, Users, CheckCircle, XCircle, Box };
 
 /**
  * Modal de visualização do histórico de auditoria/CRM do Lead.
@@ -33,8 +36,8 @@ export default function LeadHistoryModal({ lead, onClose }) {
             <div style={{ position: "absolute", left: 4, top: 8, bottom: 8, width: 2, background: C.border }} />
 
             {historico.map((h) => {
-              const confAnt = STATUS_CONFIG[h.status_anterior] || { icon: "❓", cor: C.muted, bg: "#eee", border: "#ddd" };
-              const confNovo = STATUS_CONFIG[h.status_novo] || { icon: "❓", cor: C.muted, bg: "#eee", border: "#ddd" };
+              const confAnt = STATUS_CONFIG[h.status_anterior] || { icon: "Zap", cor: C.muted, bg: "#eee", border: "#ddd" };
+              const confNovo = STATUS_CONFIG[h.status_novo] || { icon: "Zap", cor: C.muted, bg: "#eee", border: "#ddd" };
               return (
                 <div key={h.id} style={{ display: "flex", gap: 12, position: "relative" }}>
                   {/* Marcador colorido na timeline */}
@@ -53,16 +56,26 @@ export default function LeadHistoryModal({ lead, onClose }) {
                     <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 6 }}>
                       <span style={{
                         fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 4,
-                        background: confAnt.bg, color: confAnt.cor, border: `1px solid ${confAnt.border}`
+                        background: confAnt.bg, color: confAnt.cor, border: `1px solid ${confAnt.border}`,
+                        display: "inline-flex", alignItems: "center", gap: 4
                       }}>
-                        {confAnt.icon} {h.status_anterior}
+                        {(() => {
+                          const IconComp = STATUS_ICONS[confAnt.icon];
+                          return IconComp ? <IconComp size={10} style={{ color: confAnt.cor }} /> : null;
+                        })()}
+                        <span>{h.status_anterior}</span>
                       </span>
                       <span style={{ color: C.muted, fontSize: 12 }}>→</span>
                       <span style={{
                         fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 4,
-                        background: confNovo.bg, color: confNovo.cor, border: `1px solid ${confNovo.border}`
+                        background: confNovo.bg, color: confNovo.cor, border: `1px solid ${confNovo.border}`,
+                        display: "inline-flex", alignItems: "center", gap: 4
                       }}>
-                        {confNovo.icon} {h.status_novo}
+                        {(() => {
+                          const IconComp = STATUS_ICONS[confNovo.icon];
+                          return IconComp ? <IconComp size={10} style={{ color: confNovo.cor }} /> : null;
+                        })()}
+                        <span>{h.status_novo}</span>
                       </span>
                     </div>
 

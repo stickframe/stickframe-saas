@@ -8,7 +8,7 @@ import {
   FileText, Wrench, HardHat, Brain, Factory, Ruler, BookOpen,
   ClipboardCheck, ClipboardList, Box, Hash, FileCheck, History,
   Calculator, Receipt, CheckSquare, LayoutDashboard,
-  Smartphone, Link, Zap, Save,
+  Smartphone, Link, Zap, Save, MapPin
 } from "lucide-react";
 
 export {
@@ -21,5 +21,5 @@ export {
   FileText, Wrench, HardHat, Brain, Factory, Ruler, BookOpen,
   ClipboardCheck, ClipboardList, Box, Hash, FileCheck, History,
   Calculator, Receipt, CheckSquare, LayoutDashboard,
-  Smartphone, Link, Zap, Save,
+  Smartphone, Link, Zap, Save, MapPin
 };
